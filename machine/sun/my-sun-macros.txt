@@ -1,0 +1,18 @@
+# $Id: my-sun-macros.txt,v 1.1 2003/08/12 23:00:15 fredette Exp $
+
+## my-sun-macros.txt - keyboard macros for generating
+## keysyms found on Sun keyboards that probably aren't
+## on your keyboard.  You are encouraged to edit this
+## file to match your keyboard and preferences.
+
+# these macros generate L1 through L10:
+Control_R F1 = L1
+Control_R F2 = L2
+Control_R F3 = L3
+Control_R F4 = L4
+Control_R F5 = L5
+Control_R F6 = L6
+Control_R F7 = L7
+Control_R F8 = L8
+Control_R F9 = L9
+Control_R F10 = L10

@@ -1,0 +1,861 @@
+dnl Process this file with autoconf to produce a configure script.
+
+dnl $Id: configure.in,v 1.20 2010/06/05 19:56:37 fredette Exp $
+
+dnl Copyright (c) 2001, 2003 Matt Fredette
+dnl All rights reserved.
+dnl
+dnl Redistribution and use in source and binary forms, with or without
+dnl modification, are permitted provided that the following conditions
+dnl are met:
+dnl 1. Redistributions of source code must retain the above copyright
+dnl    notice, this list of conditions and the following disclaimer.
+dnl 2. Redistributions in binary form must reproduce the above copyright
+dnl    notice, this list of conditions and the following disclaimer in the
+dnl    documentation and/or other materials provided with the distribution.
+dnl 3. All advertising materials mentioning features or use of this software
+dnl    must display the following acknowledgement:
+dnl      This product includes software developed by Matt Fredette.
+dnl 4. The name of the author may not be used to endorse or promote products
+dnl    derived from this software without specific prior written permission.
+dnl
+dnl THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+dnl IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+dnl WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+dnl DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+dnl INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+dnl (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+dnl SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+dnl HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+dnl STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+dnl ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+dnl POSSIBILITY OF SUCH DAMAGE.
+
+dnl Checks that we are given a good source directory.
+AC_INIT(ic/m68k/m68k-impl.h)
+AC_CANONICAL_SYSTEM
+AM_INIT_AUTOMAKE(tme, 0.8)
+
+dnl Write configuration out to config.h through config.h.in.
+AM_CONFIG_HEADER(config.h)
+
+dnl Checks for programs.
+AC_PROG_CC
+AC_PROG_CPP
+AC_PROG_YACC
+AC_PROG_INSTALL
+AC_PROG_MAKE_SET
+
+dnl Checks for header files.
+AC_HEADER_STDC
+AC_CHECK_HEADERS(unistd.h stdio.h memory.h stdarg.h limits.h float.h)
+AC_CHECK_HEADERS(sys/ioctl.h sys/sockio.h sys/socketio.h net/if_dl.h ioctls.h)
+AC_CHECK_HEADERS(sys/bswap.h)
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_BIGENDIAN
+AC_C_CONST
+AC_C_INLINE
+AC_C_VOLATILE
+AC_C_LONG_DOUBLE
+AC_TYPE_SIZE_T
+AC_TYPE_SIGNAL
+AC_CHECK_SIZEOF(long, 4)
+AC_CHECK_SIZEOF(int, 4)
+AC_CHECK_SIZEOF(short, 2)
+AC_CHECK_SIZEOF(float, 4)
+AC_CHECK_SIZEOF(double, 8)
+if test $ac_cv_c_long_double = yes; then
+  AC_CHECK_SIZEOF(long double, 12)
+fi
+if test $ac_cv_sizeof_int != 4 && test $ac_cv_sizeof_long != 4; then
+  AC_MSG_ERROR([can't find a 32-bit type])
+fi
+if test $ac_cv_sizeof_int != 2 && test $ac_cv_sizeof_short != 2; then
+  AC_MSG_ERROR([can't find a 16-bit type])
+fi
+if test $ac_cv_sizeof_long = 8; then
+  AC_CHECK_ALIGNOF(64)
+  AC_CHECK_SHIFTMAX(64)
+  AC_CHECK_SHIFTSIGNED(64)
+fi
+AC_CHECK_ALIGNOF(32)
+AC_CHECK_ALIGNOF(16)
+AC_CHECK_SHIFTMAX(8)
+AC_CHECK_SHIFTMAX(16)
+AC_CHECK_SHIFTMAX(32)
+AC_CHECK_SHIFTSIGNED(8)
+AC_CHECK_SHIFTSIGNED(16)
+AC_CHECK_SHIFTSIGNED(32)
+AC_CHECK_FLOAT_FORMAT(float)
+AC_CHECK_FLOAT_LIMITS(float, FLT_MAX/FLT_MIN)
+AC_CHECK_FLOAT_FORMAT(double)
+AC_CHECK_FLOAT_LIMITS(double, DBL_MAX/DBL_MIN)
+if test $ac_cv_c_long_double = yes; then
+  AC_CHECK_FLOAT_FORMAT(long double)
+  AC_CHECK_FLOAT_LIMITS(long double, LDBL_MAX/LDBL_MIN)
+fi
+AC_SYS_SOCKADDR_SA_LEN
+
+dnl Checks for library functions and prototypes.
+AC_PROG_GCC_TRADITIONAL
+AC_FUNC_MEMCMP
+AC_FUNC_MMAP
+AC_CHECK_FUNC_LONG(bswap16, [
+  unsigned int x;
+
+  x = bswap16(0x1122);
+], [ 
+#ifdef HAVE_SYS_BSWAP_H
+#include <sys/bswap.h>
+#endif
+])
+AC_CHECK_FUNC_LONG(bswap32, [
+  unsigned int x;
+
+  x = bswap32(0x11223344);
+], [ 
+#ifdef HAVE_SYS_BSWAP_H
+#include <sys/bswap.h>
+#endif
+])
+if test $ac_cv_sizeof_long = 8; then
+  AC_CHECK_FUNC_LONG(bswap64, [
+  unsigned long x;
+
+  x = bswap64(0x11223344);
+], [ 
+#ifdef HAVE_SYS_BSWAP_H
+#include <sys/bswap.h>
+#endif
+  ])
+fi
+AC_CHECK_FUNC_LONG(isinff, 
+[
+  float x;
+  int y;
+
+  x = 1;
+  y = isinff(x);
+], [
+#include <math.h>
+], -lm)
+
+dnl Checks for perl.
+AC_PATH_PROGS(PERL, perl4.036 perl4 perl perl5, no)
+AC_SUBST(PERL)
+
+dnl Start the list of host support.
+TME_HOSTS="posix"
+
+dnl Checks for AF_LINK.
+AC_MSG_CHECKING([for AF_LINK support])
+AC_EGREP_CPP(_tme_has_af_link,
+[
+#include <sys/socket.h>
+#ifdef AF_LINK
+_tme_has_af_link
+#endif
+], [ 
+AC_MSG_RESULT(yes)
+AC_DEFINE(HAVE_AF_LINK, [], [Define if you have AF_LINK.])
+], [
+AC_MSG_RESULT(no)
+])
+
+dnl Checks for BPF.
+tme_raw_type=
+AC_CHECK_HEADER(net/bpf.h, 
+[AC_EGREP_CPP(found_BIOCSHDRCMPLT, 
+[#include <net/bpf.h>
+#ifdef BIOCSHDRCMPLT
+found_BIOCSHDRCMPLT
+#endif
+], [tme_raw_type=bpf])])
+AC_MSG_CHECKING([for raw Ethernet access method])
+case "x$tme_raw_type" in
+xbpf) TME_HOSTS="${TME_HOSTS} bsd" ;;
+x) tme_raw_type=none ;;
+esac
+AC_MSG_RESULT($tme_raw_type)
+
+dnl Checks for X11.
+AC_PATH_XTRA
+
+dnl Checks for GTK.
+AM_PATH_GTK_2_0([], have_gtk=true, have_gtk=false)
+if $have_gtk; then
+  AC_DEFINE(HAVE_GTK, [], [Define if you are compiling with GTK.])
+  TME_HOSTS="${TME_HOSTS} gtk"
+fi
+
+dnl Characterize any graphics displays and remember the areas of
+dnl the smallest and largest screens.
+TME_FB_XLAT_DST=
+area_smallest=0
+area_largest=0
+
+# if --with-tme-host-displays is given, characterize those given displays:
+AC_ARG_WITH(tme-host-displays,
+[  --with-tme-host-displays=DISPLAYS  support host displays with these display formats])
+for dst_key in ${with_tme_host_displays}; do
+
+  dnl Make brackets safe to use.
+  changequote(<<, >>)dnl
+
+   this_width=`echo ${dst_key} | sed -e 's/^\([0-9][0-9]*\)x\([0-9][0-9]*\)\(.*\)$/\1/'`
+  this_height=`echo ${dst_key} | sed -e 's/^\([0-9][0-9]*\)x\([0-9][0-9]*\)\(.*\)$/\2/'`
+      dst_key=`echo ${dst_key} | sed -e 's/^\([0-9][0-9]*\)x\([0-9][0-9]*\)\(.*\)$/\3/'`
+  this_area=`expr ${this_width} \* ${this_height}`
+
+  if test ${area_smallest} = 0 || test `expr ${this_area} \< ${area_smallest}` = 1; then
+    area_smallest=${this_area}
+  fi
+  if test `expr ${this_area} \> ${area_largest}` = 1; then
+    area_largest=${this_area}
+  fi
+  
+  # add in this destination display key:
+  if echo " ${TME_FB_XLAT_DST} " | grep " ${dst_key} " > /dev/null 2>&1; then :; else
+    TME_FB_XLAT_DST="${TME_FB_XLAT_DST} ${dst_key}"
+  fi
+
+  dnl Make brackets the quote characters again.
+  changequote([, ])dnl
+done
+
+# if DISPLAY is set and xdpyinfo appears to work, characterize this X display:
+if test "x${DISPLAY}" != x && xdpyinfo >/dev/null 2>&1; then
+  AC_MSG_CHECKING(characteristics of X display ${DISPLAY})
+
+  dnl Make brackets safe to use.
+  changequote(<<, >>)dnl
+
+  # get the format this display uses for bitmaps:
+  bitmap_info=`xdpyinfo | grep 'bitmap unit' | sed -e 's/bitmap unit, *bit order, *padding: *\(.*\)$/\1/'`
+  bitmap_order=`echo ${bitmap_info} | sed -e 's/\([0-9][0-9]*\), *\([LM]\)SBFirst, *\([0-9][0-9]*\).*/\2/'`
+    bitmap_pad=`echo ${bitmap_info} | sed -e 's/\([0-9][0-9]*\), *\([LM]\)SBFirst, *\([0-9][0-9]*\).*/\3/'`
+  bitmap_order=`echo ${bitmap_order} | tr A-Z a-z`
+
+  # get the format this display uses for images at its default depth.  we
+  # assume that the root window is at the default depth:
+  pixmap_order=`xdpyinfo | grep 'image byte order'`
+  pixmap_order=`echo ${pixmap_order} | sed -e 's/.*image byte order: *\([LM]\)SBFirst.*/\1/' | tr A-Z a-z`
+  pixmap_depth=`xwininfo -root | grep 'Depth:'`
+  pixmap_depth=`echo ${pixmap_depth} | sed -e 's/.*Depth: *\([0-9][0-9]*\).*/\1/'`
+  pixmap_infos=`xdpyinfo | grep bits_per_pixel | tr '\n' %`
+  save_IFS=$IFS
+  IFS=%
+  for pixmap_info in $pixmap_infos; do
+    IFS=$save_IFS
+    if test "x$pixmap_info" = x; then continue; fi
+    this_pixmap_depth=`echo ${pixmap_info} | sed -e 's/.*depth \([0-9][0-9]*\), *bits_per_pixel \([0-9][0-9]*\), *scanline_pad \([0-9][0-9]*\).*/\1/'`
+     this_pixmap_bipp=`echo ${pixmap_info} | sed -e 's/.*depth \([0-9][0-9]*\), *bits_per_pixel \([0-9][0-9]*\), *scanline_pad \([0-9][0-9]*\).*/\2/'`
+      this_pixmap_pad=`echo ${pixmap_info} | sed -e 's/.*depth \([0-9][0-9]*\), *bits_per_pixel \([0-9][0-9]*\), *scanline_pad \([0-9][0-9]*\).*/\3/'`
+    if test "x${this_pixmap_depth}" = "x${pixmap_depth}"; then
+      pixmap_bipp=${this_pixmap_bipp}
+      pixmap_pad=${this_pixmap_pad}
+      break
+    fi
+  done
+  IFS=$save_IFS
+
+  # if this display's greatest depth is one, we use its
+  # bitmap format:
+  if test "x${pixmap_bipp}" = x; then
+    pixmap_bipp=1
+    pixmap_pad=${bitmap_pad}
+
+    # our translation functions can't handle the case when the bitmap
+    # bit order is different from the image byte order - doing so
+    # requires dealing with the bitmap unit size.  since this
+    # situation is rare, just bail:
+    if test ${bitmap_order} != ${pixmap_order}; then
+      changequote([, ])dnl
+      AC_MSG_WARN([the X display ${DISPLAY} is monochrome and needs bitmaps with a bit order that the generic code doesn't support])
+      changequote(<<, >>)dnl
+      pixmap_bipp=
+    fi
+  fi
+
+  # if this display seems usable:
+  if test "x${pixmap_bipp}" != x; then
+
+    # check the dimensions of all screens on this display:
+    dimensions=`xdpyinfo | grep dimensions | tr '\n' %`
+    save_IFS=$IFS
+    IFS=%
+    for dimension in $dimensions; do
+      IFS=$save_IFS
+      if test "x$dimension" = x; then continue; fi
+       this_width=`echo ${dimension} | sed -e 's/.*dimensions: *\([0-9][0-9]*\)x\([0-9][0-9]*\).*/\1/'`
+      this_height=`echo ${dimension} | sed -e 's/.*dimensions: *\([0-9][0-9]*\)x\([0-9][0-9]*\).*/\2/'`
+      this_area=`expr ${this_width} \* ${this_height}`
+      if test ${area_smallest} = 0 || test `expr ${this_area} \< ${area_smallest}` = 1; then
+        area_smallest=${this_area}
+      fi
+      if test `expr ${this_area} \> ${area_largest}` = 1; then
+        area_largest=${this_area}
+      fi
+    done
+    IFS=$save_IFS
+
+    # assume an unknown set of masks and an unknown mapping type:
+    dst_masks=_r0x0_g0x0_b0x0
+    dst_map=
+    value_visual=", unknown visual"
+
+    # if the depth is greater than one:
+    if test "x${pixmap_depth}" != 1; then
+
+	# we assume that the root window uses the default visual:
+	visual=`xwininfo -root | grep 'Visual Class:' | sed -e 's/^  *Visual Class: *\([A-Za-z][A-Za-z]*\).*$/\1/'`
+
+	# get any primary masks for this visual:
+	case "x${visual}" in
+	xDirectColor | xTrueColor)
+	    dst_masks=`xdpyinfo | $EGREP '(visual id|class|blue masks):' | $EGREP -C1 $visual | grep 'blue masks' | head -1`
+	    dst_masks=`echo ${dst_masks} | sed -e 's/^.*blue masks:  *\(.*\)/\1/'`
+	    value_visual=", rgb masks ${dst_masks}"
+	    dst_masks=`echo ${dst_masks} | sed -e 's/^/_r/' -e 's/, /_g/' -e 's/, /_b/'`
+	    ;;
+	xStaticGray | xGrayScale | xStaticColor | xPseudoColor)	
+	    dst_masks=
+	    value_visual=", no subfields"
+	    ;;
+	*) ;;
+	esac
+
+	# get the mapping type for this visual:
+	case "x${visual}" in
+	xStaticGray | xStaticColor | xPseudoColor)
+	    dst_map="ml"
+	    ;;
+	xDirectColor)
+	    dst_map="mi"
+	    value_visual="${value_visual}, indexed"
+	    ;;
+	xGrayScale | xTrueColor)
+	    dst_map="ml"
+	    value_visual="${value_visual}, linear"
+	    ;;
+	*) ;;
+	esac
+    fi
+
+    dnl Make brackets the quote characters again.
+    changequote([, ])dnl
+
+    # finish the characterization:
+    if test "x${pixmap_bipp}" = "x${pixmap_depth}"; then
+      value=
+    else
+      value=" (${pixmap_bipp} bits per pixel)"
+    fi
+    AC_MSG_RESULT([${pixmap_depth}-bit${value} ${pixmap_order}sb-first images with ${pixmap_pad}-bit padding${value_visual}])
+    dst_key="d${pixmap_depth}b${pixmap_bipp}s0p${pixmap_pad}o${pixmap_order}${dst_map}${dst_masks}"
+    
+    # add in this destination display key:
+    if echo " ${TME_FB_XLAT_DST} " | grep " ${dst_key} " > /dev/null 2>&1; then :; else
+      TME_FB_XLAT_DST="${TME_FB_XLAT_DST} ${dst_key}"
+    fi
+  fi
+fi
+AC_SUBST(TME_FB_XLAT_DST)
+
+dnl Configures for the system(s) to emulate.
+systems=all
+if echo " ${systems} " | grep ' all ' > /dev/null 2>&1; then
+  systems="sun2 sun3 sun4"
+  if test $ac_cv_sizeof_long = 8 || test "x${GCC}" = "xyes"; then
+    systems="${systems} sunultra1"
+  fi
+fi
+TME_MACHINE_SUBDIRS=
+TME_IC_SUBDIRS=
+TME_ICS=
+TME_SERIAL_SUBDIRS=
+TME_SERIALS=
+TME_BUS_SUBDIRS=
+TME_FB_XLAT_SRC=
+bus_size_max=32
+recode_size_guest_max=0
+for system in $systems; do
+
+    # dispatch on the machine type to get more machines, ICs, and
+    # buses to compile:
+    case ${system} in
+
+    # the sun2:
+    sun2)
+	machines="sun sun2"
+	ics="m68k am9513 mm58167 z8530 i825x6"
+	buses="multibus"
+	fb_xlats="1152x900d1b1s0p32om"
+	bus_size=32
+	recode_size_guest=0
+	;;
+
+    # the sun3:
+    sun3)
+	machines="sun sun3"
+	ics="m68k isil7170 z8530 i825x6 ieee754 ncr5380"
+	buses="multibus"
+	fb_xlats="1152x900d1b1s0p32om 1152x900d8b8s0p32ommi8 1152x900d1b1s0p32omccmi8"
+	bus_size=32
+	recode_size_guest=0
+	;;
+
+    # the sun4:
+    sun4)
+	machines="sun sun4"
+	ics="sparc isil7170 z8530 am7930 am7990 ieee754 ncr53c9x mk48txx lsi64854 nec765"
+	buses="sbus"
+	fb_xlats="1152x900d1b1s0p32om 1152x900d8b8s0p32ommi8 1152x900d1b1s0p32omccmi8"
+	bus_size=32
+	recode_size_guest=32
+	;;
+
+    # the sun Ultra-1:
+    sunultra1)
+	machines="sun sun4u"
+	ics="sparc stp22xx z8530 am7990 ieee754 ncr53c9x ncr89c105 mk48txx lsi64854 nec765 stp2024 ad184x"
+	buses="sbus"
+	fb_xlats="1152x900d1b1s0p32om 1152x900d8b8s0p32ommi8 1152x900d1b1s0p32omccmi8"
+	bus_size=64
+	recode_size_guest=64
+	;;
+
+    *)
+	AC_MSG_ERROR([don't know how to emulate ${machine}])
+	;;
+    esac
+
+    # update the maximum bus size:
+    if test `expr ${bus_size_max} \< ${bus_size}` = 1; then
+       bus_size_max=$bus_size
+    fi
+
+    # update the maximum recode guest size:
+    if test `expr ${recode_size_guest_max} \< ${recode_size_guest}` = 1; then
+       recode_size_guest_max=$recode_size_guest
+    fi
+
+    # add in the new machines, ICs, serials, and buses to compile:
+    for machine in $machines; do
+	if echo " ${TME_MACHINE_SUBDIRS} " | grep " ${machine} " > /dev/null 2>&1; then :; else
+	    TME_MACHINE_SUBDIRS="${TME_MACHINE_SUBDIRS} ${machine}"
+	fi
+    done
+    for ic in $ics; do
+	if test -d $srcdir/ic/$ic; then
+	    if echo " ${TME_IC_SUBDIRS} " | grep " ${ic} " > /dev/null 2>&1; then :; else
+		TME_IC_SUBDIRS="${TME_IC_SUBDIRS} ${ic}"
+	    fi
+	else
+	    ic="tme_ic_${ic}.la"
+	    if echo " ${TME_ICS} " | grep " ${ic} " > /dev/null 2>&1; then :; else
+		TME_ICS="${TME_ICS} ${ic}"
+	    fi
+	fi
+    done
+    for serial in $serials; do
+	if test -d $srcdir/serial/$serial; then
+	    if echo " ${TME_SERIAL_SUBDIRS} " | grep " ${serial} " > /dev/null 2>&1; then :; else
+		TME_SERIAL_SUBDIRS="${TME_SERIAL_SUBDIRS} ${serial}"
+	    fi
+	else
+	    serial="tme_serial_${serial}.la"
+	    if echo " ${TME_SERIALS} " | grep " ${serial} " > /dev/null 2>&1; then :; else
+		TME_SERIALS="${TME_SERIALS} ${serial}"
+	    fi
+	fi
+    done
+    for bus in $buses; do
+	if echo " ${TME_BUS_SUBDIRS} " | grep " ${bus} " > /dev/null 2>&1; then :; else
+	    TME_BUS_SUBDIRS="${TME_BUS_SUBDIRS} ${bus}"
+	fi
+    done
+	
+    # add in the new frame buffer translations to compile:
+    for fb_xlat in $fb_xlats; do
+ 	if echo " ${TME_FB_XLAT_SRC} " | grep " ${fb_xlat} " > /dev/null 2>&1; then :; else
+	    TME_FB_XLAT_SRC="${TME_FB_XLAT_SRC} ${fb_xlat}"
+	fi
+
+	dnl Make brackets safe to use.
+	changequote(<<, >>)dnl
+
+	# calculate the area of this frame buffer multiplied by 100:
+	 this_width=`echo ${fb_xlat} | sed -e 's/^\([0-9][0-9]*\)x\([0-9][0-9]*\)\(.*\)$/\1/'`
+	this_height=`echo ${fb_xlat} | sed -e 's/^\([0-9][0-9]*\)x\([0-9][0-9]*\)\(.*\)$/\2/'`
+	this_area=`expr ${this_width} \* ${this_height} \* 100`
+
+	dnl Make brackets the quote characters again.
+	changequote([, ])dnl
+
+	# if this frame buffer would consume at least 70 percent of
+	# the smallest destination screen, make an xlat function that
+	# scales this frame buffer down by two:
+	if test ${area_smallest} = 0; then
+	    percentage=100
+	else
+	    percentage=`expr ${this_area} / ${area_smallest}`
+	fi
+	if test `expr ${percentage} \> 70` = 1; then
+	    src_key="${fb_xlat}_h"
+	    if echo " ${TME_FB_XLAT_SRC} " | grep " ${src_key} " > /dev/null 2>&1; then :; else
+		TME_FB_XLAT_SRC="${TME_FB_XLAT_SRC} ${src_key}"
+	    fi
+	fi
+	  
+	# if this frame buffer would consume less than 30 percent of
+	# the largest destination screen, make an xlat function that
+	# scales this frame buffer up by two:
+	if test ${area_largest} = 0; then
+	    percentage=0
+	else
+	    percentage=`expr ${this_area} / ${area_largest}`
+	fi
+	if test `expr ${percentage} \< 30` = 1; then
+	    src_key="${fb_xlat}_d"
+	    if echo " ${TME_FB_XLAT_SRC} " | grep " ${src_key} " > /dev/null 2>&1; then :; else
+		TME_FB_XLAT_SRC="${TME_FB_XLAT_SRC} ${src_key}"
+	    fi
+	fi
+    done
+done
+AC_SUBST(TME_MACHINE_SUBDIRS)
+AC_SUBST(TME_IC_SUBDIRS)
+AC_SUBST(TME_ICS)
+AC_SUBST(TME_SERIAL_SUBDIRS)
+AC_SUBST(TME_SERIALS)
+AC_SUBST(TME_BUS_SUBDIRS)
+AC_SUBST(TME_FB_XLAT_SRC)
+
+dnl The list of host support is finished.
+AC_SUBST(TME_HOSTS)
+
+dnl Configure recode.
+AC_ARG_ENABLE(recode,
+[  --enable-recode         enable recode (dynamic binary translation) (default=if target supports)],
+[ ], [enable_recode=])
+if test "${recode_size_guest_max}" = 0; then
+    enable_recode=no
+    recode_size_guest_max=1
+fi
+if test "x${enable_recode}" = no; then
+    recode_hosts=
+else
+    AC_MSG_CHECKING([for target recode support])
+
+    dnl Make brackets safe to use.
+    changequote(<<, >>)dnl
+
+    # get the host maximum guest size:
+    case "${target_cpu}" in
+    i[3456789]86)
+	recode_size_guest_max_host=64
+	;;
+    x86_64)
+	recode_size_guest_max_host=128
+	;;
+    *) recode_size_guest_max_host= ;;
+    esac
+
+    # get the host recode parts:
+    case "${target}" in
+    i[3456789]86-*-netbsd* | x86_64-*-netbsd* | i[3456789]86-*-linux*)
+	recode_hosts="mmap x86"
+	;;
+    *) recode_hosts= ;;
+    esac
+
+    dnl Make brackets the quote characters again.
+    changequote([, ])dnl
+
+    if test "x${recode_hosts}" = x; then
+	AC_MSG_RESULT([no])
+	if test "x${enable_recode}" = xrequired; then
+	    AC_MSG_ERROR([recode required but not supported on ${target}])
+	fi
+    else
+	if test "x${recode_size_guest_max_host}" = x; then
+	    AC_MSG_ERROR([internal error - no maximum recode guest size for ${target_cpu}])
+	fi
+	if test `expr ${recode_size_guest_max} \> ${recode_size_guest_max_host}` = 1; then
+	    recode_size_guest_max=$recode_size_guest_max_host
+	fi
+	AC_MSG_RESULT([up to ${recode_size_guest_max}-bit guests using ${recode_hosts}])
+    fi
+fi
+
+dnl Configure miscellaneous target support.
+AC_MSG_CHECKING([for target miscellaneous support])
+changequote(<<, >>)dnl
+case "${target}" in
+i[3456789]86-* | x86_64-*) misc_hosts="x86" ;;
+*) misc_hosts=no ;;
+esac
+changequote([, ])dnl
+AC_MSG_RESULT([${misc_hosts}])
+if test "x${misc_hosts}" = no; then
+    misc_hosts=
+fi
+
+dnl Configure for libtool.
+AC_LIBLTDL_INSTALLABLE
+AC_SUBST(INCLTDL)
+AC_SUBST(LIBLTDL)
+AC_LIBTOOL_DLOPEN
+AM_PROG_LIBTOOL
+AC_SUBST(LTLIBOBJS)
+AC_CONFIG_SUBDIRS(libltdl)
+TME_PREOPEN=
+if test $enable_shared = no; then
+  TME_PREOPEN='`sort -u $(top_builddir)/tme-preopen.txt`'
+fi
+AC_SUBST(TME_PREOPEN)
+
+dnl Configure debugging and/or warnings.
+AC_ARG_ENABLE(debug,
+[  --enable-debug          compile debuggable libraries and programs (default=don't)],
+[ ], [enable_debug=no])
+if test "x$enable_debug" = "xyes"; then
+  CFLAGS="${CFLAGS-} -g -O0"
+  CXXFLAGS="${CXXFLAGS-} -g3 -O0"
+else
+  CPPFLAGS="${CPPFLAGS-} -DTME_NO_LOG -DTME_NO_DEBUG_LOCKS -DTME_NO_AUDIT_ATOMICS -DNDEBUG"
+fi
+AC_ARG_ENABLE(warnings,
+[  --disable-warnings      don't compile with warnings turned on (default=do)],
+[ ], [enable_warnings=yes])
+if test "x$enable_warnings" = "xyes" -a "x$GCC" = "xyes"; then
+  CFLAGS="${CFLAGS-} -Wundef -Wall -Werror"
+  CXXFLAGS="${CXXFLAGS-} -W"
+fi
+
+dnl Some code isn't alias-clean.
+CFLAGS_NO_STRICT_ALIASING=
+if test "x$GCC" = "xyes"; then
+  CFLAGS_NO_STRICT_ALIASING=" -fno-strict-aliasing"
+fi
+AC_SUBST(CFLAGS_NO_STRICT_ALIASING)
+
+dnl Generate tmeconfig.h.  The whether-to-generate logic is cribbed 
+dnl from glib-1.2.1's configure.in.
+dnl See that file for an explanation.
+AC_OUTPUT_COMMANDS([
+          
+## Generate our configure-time sources in two 
+## cases:
+## 1. `config.status' is run either explicitly, or via configure.
+##     Esp. not when it is run in `Makefile' to generate makefiles and
+##     config.h
+## 2. CONFIG_OTHER is set explicitly
+##
+## Case 1 is difficult.  We know that `automake' sets one of
+## CONFIG_FILES or CONFIG_HEADERS to empty.  This heuristic works
+## only when AM_CONFIG_HEADER is set, however.
+
+case "x$CONFIG_OTHER" in
+*tmeconfig.h) gen_tmeconfig_h=yes
+;;
+esac
+if test -n "${CONFIG_FILES}" && test -n "${CONFIG_HEADERS}"; then
+  # Both CONFIG_FILES and CONFIG_HEADERS are non-empty ==> Case 1
+  if test "x${CONFIG_OTHER}" = x; then
+    gen_tmeconfig_h=yes
+  fi
+fi
+
+## If we're generating tmeconfig.h:
+if test "x$gen_tmeconfig_h" = xyes; then
+  outfile=tmeconfig.h
+  echo "$as_me: creating $outfile"
+  cat <<TMEEOF > ${outfile}-tmp
+/* tmeconfig.h
+ * 
+ * This is an automatically generated file - please modify 'configure.in'.
+ */
+
+#ifndef _TMECONFIG_H
+#define _TMECONFIG_H
+
+TMEEOF
+  (for word in HAVE_ TIME_ PROTO_ ALIGNOF_ SIZEOF_ WORDS_BIGENDIAN; do \
+    grep $word config.h | sed 's/#define[ 	]\{1,\}/&_TME_/' ; \
+  done) | sort | uniq >> ${outfile}-tmp
+  grep FLOAT_FORMAT config.h | \
+    sed 's/#define[ 	]\{1,\}\([A-Za-z0-9_]\{1,\}\)[ 	]\{1,\}\([A-Za-z0-9_]\{1,\}\)/#define TME_\1 TME_FLOAT_FORMAT_\2/' >> ${outfile}-tmp
+  echo '#define TME_BUSMAX_LOG2 TME_BUS'${bus_size_max}'_LOG2' >> ${outfile}-tmp
+  echo '#define TME_HAVE_RECODE (' \
+    `if test "x${recode_hosts}" = x; then echo 0; else echo 1; fi` ')' >> ${outfile}-tmp
+  echo '#define TME_RECODE_SIZE_GUEST_MAX TME_RECODE_SIZE_'${recode_size_guest_max} >> ${outfile}-tmp
+  echo '#define TME_RELEASE_MAJOR (' \
+    `echo $VERSION | sed -e 's,^\([0-9][0-9]*\)\.[0-9][0-9]*$,\1,'` ')' >> ${outfile}-tmp
+  echo '#define TME_RELEASE_MINOR (' \
+    `echo $VERSION | sed -e 's,^[0-9][0-9]*\.\([0-9][0-9]*\)$,\1,'` ')' >> ${outfile}-tmp
+  echo '#define TME_BUILD_TARGET "'$target'"' >> ${outfile}-tmp
+  if test $ac_cv_sizeof_long = 8; then
+    echo '#define TME_HAVE_INT64_T' >> ${outfile}-tmp
+    echo '#define _TME_PRI64 "l"' >> ${outfile}-tmp
+    echo 'typedef signed long tme_int64_t;' >> ${outfile}-tmp
+    echo 'typedef unsigned long tme_uint64_t;' >> ${outfile}-tmp
+  fi
+  if test $ac_cv_sizeof_int = 4; then
+    echo '#define _TME_PRI32 ""' >> ${outfile}-tmp
+    echo 'typedef signed int tme_int32_t;' >> ${outfile}-tmp
+    echo 'typedef unsigned int tme_uint32_t;' >> ${outfile}-tmp
+  elif test $ac_cv_sizeof_long = 4; then
+    echo '#define _TME_PRI32 "l"' >> ${outfile}-tmp
+    echo 'typedef signed long tme_int32_t;' >> ${outfile}-tmp
+    echo 'typedef unsigned long tme_uint32_t;' >> ${outfile}-tmp
+  fi
+  if test $ac_cv_sizeof_int = 2; then
+    echo 'typedef signed int tme_int16_t;' >> ${outfile}-tmp
+    echo 'typedef unsigned int tme_uint16_t;' >> ${outfile}-tmp
+  elif test $ac_cv_sizeof_short = 2; then
+    echo 'typedef signed short tme_int16_t;' >> ${outfile}-tmp
+    echo 'typedef unsigned short tme_uint16_t;' >> ${outfile}-tmp
+  fi
+  echo 'typedef signed char tme_int8_t;' >> ${outfile}-tmp
+  echo 'typedef unsigned char tme_uint8_t;' >> ${outfile}-tmp
+  cat <<TMEEOF >> ${outfile}-tmp
+
+/* features that aren't currently controlled by a configure option: */
+#define TME_THREADS_SJLJ
+
+#endif /* !_TMECONFIG_H */
+TMEEOF
+  if cmp -s ${outfile}-tmp $outfile; then
+    echo "$as_me: $outfile is unchanged"
+    rm -f ${outfile}-tmp
+  else
+    mv ${outfile}-tmp ${outfile}
+  fi
+
+  outfile=tme/recode-host.h
+  echo "$as_me: creating $outfile"
+  cat <<TMEEOF > ${outfile}-tmp
+/* recode-host.h
+ * 
+ * This is an automatically generated file - please modify 'configure.in'.
+ */
+
+TMEEOF
+  for host in ${recode_hosts}; do
+    echo '#include <tme/host/recode-'${host}'.h>' >> ${outfile}-tmp
+  done
+  delim='#define TME_RECODE_HOST_IC \'
+  for host in ${recode_hosts}; do
+    echo ${delim} >> ${outfile}-tmp
+    echo -n '  TME_RECODE_'`echo ${host} | tr '[a-z]' '[A-Z]'`'_IC' >> ${outfile}-tmp
+    delim='; \'
+  done
+  echo '' >> ${outfile}-tmp
+  if cmp -s ${outfile}-tmp $outfile; then
+    echo "$as_me: $outfile is unchanged"
+    rm -f ${outfile}-tmp
+  else
+    mv ${outfile}-tmp ${outfile}
+  fi
+
+  outfile=libtme/recode-host.c
+  echo "$as_me: creating $outfile"
+  cat <<TMEEOF > ${outfile}-tmp
+/* recode-host.c
+ * 
+ * This is an automatically generated file - please modify 'configure.in'.
+ */
+
+TMEEOF
+  for host in ${recode_hosts}; do
+    if test -d ${srcdir}/libtme/host/${host}; then
+      echo '#include "libtme/host/'${host}'/recode-'${host}'.c"' >> ${outfile}-tmp
+    else
+      echo '#include "libtme/host/recode-'${host}'.c"' >> ${outfile}-tmp
+    fi
+  done
+  if cmp -s ${outfile}-tmp $outfile; then
+    echo "$as_me: $outfile is unchanged"
+    rm -f ${outfile}-tmp
+  else
+    mv ${outfile}-tmp ${outfile}
+  fi
+
+  outfile=libtme/misc-host.c
+  echo "$as_me: creating $outfile"
+  cat <<TMEEOF > ${outfile}-tmp
+/* misc-host.c
+ * 
+ * This is an automatically generated file - please modify 'configure.in'.
+ */
+
+TMEEOF
+  for host in ${misc_hosts}; do
+    if test -d ${srcdir}/libtme/host/${host}; then
+      echo '#include "libtme/host/'${host}'/misc-'${host}'.c"' >> ${outfile}-tmp
+    else
+      echo '#include "libtme/host/misc-'${host}'.c"' >> ${outfile}-tmp
+    fi
+  done
+  echo '#include "libtme/misc.c"' >> ${outfile}-tmp
+  if cmp -s ${outfile}-tmp $outfile; then
+    echo "$as_me: $outfile is unchanged"
+    rm -f ${outfile}-tmp
+  else
+    mv ${outfile}-tmp ${outfile}
+  fi
+
+fi
+], [
+recode_hosts="$recode_hosts"
+recode_size_guest_max="$recode_size_guest_max"
+misc_hosts="$misc_hosts"
+srcdir="$srcdir"
+PACKAGE="$PACKAGE"
+VERSION="$VERSION"
+target="$target"
+ac_cv_sizeof_int="$ac_cv_sizeof_int"
+ac_cv_sizeof_long="$ac_cv_sizeof_long"
+ac_cv_sizeof_short="$ac_cv_sizeof_short"
+bus_size_max="$bus_size_max"
+])
+
+dnl Writes files.
+AC_OUTPUT(Makefile
+	  tme/Makefile
+	  tme/ic/Makefile
+	  tme/machine/Makefile
+	  tme/generic/Makefile
+	  tme/scsi/Makefile
+	  tme/host/Makefile
+	  tme/bus/Makefile
+	  libtme/Makefile
+	  libtme/host/Makefile
+	  libtme/host/x86/Makefile
+	  ic/Makefile
+	  ic/m68k/Makefile
+	  ic/ieee754/Makefile
+	  ic/sparc/Makefile
+	  ic/stp22xx/Makefile
+	  machine/Makefile
+	  machine/sun/Makefile
+	  machine/sun2/Makefile
+	  machine/sun3/Makefile
+	  machine/sun4/Makefile
+	  machine/sun4u/Makefile
+          host/Makefile
+          host/posix/Makefile
+          host/bsd/Makefile
+          host/gtk/Makefile
+          bus/Makefile
+          bus/multibus/Makefile
+          bus/sbus/Makefile
+          serial/Makefile
+          scsi/Makefile
+          generic/Makefile
+	  tmesh/Makefile
+	  tools/Makefile)
+
