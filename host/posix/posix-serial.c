@@ -32,7 +32,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-
+#define _XOPEN_SOURCE
 #include <tme/common.h>
 _TME_RCSID("$Id: posix-serial.c,v 1.11 2007/08/24 00:57:01 fredette Exp $");
 
@@ -846,6 +846,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
   int arg_i;
   int saved_errno;
   int emulate_break;
+  int unix98_pts;
 
   /* initialize: */
   filename_in = NULL;
@@ -853,6 +854,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
   emulate_break = FALSE;
   arg_i = 1;
   usage = FALSE;
+  unix98_pts = FALSE;
 
   /* loop reading our arguments: */
   for (;;) {
@@ -932,7 +934,15 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
     fd_out = STDOUT_FILENO;
   }
   if (fd_in < 0) {
-    if (strcmp(filename_in, filename_out) == 0) {
+    if (strstr(filename_in, "ptmx") != NULL) {
+      fd_in = fd_out = posix_openpt( O_RDWR );
+      filename_out= ptsname(fd_in);
+      if(filename_out == NULL) {
+	tme_output_append_error(_output, "could not open serial device %s", filename_in);
+	return (errno);
+      } else
+	unix98_pts= TRUE;
+    } else if (strcmp(filename_in, filename_out) == 0) {
       fd_in = fd_out = open(filename_in, O_RDWR | O_NONBLOCK);
     }
     else {
@@ -977,5 +987,16 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
   element->tme_element_private = serial;
   element->tme_element_connections_new = _tme_posix_serial_connections_new;
 
+  if(unix98_pts) {
+    if((grantpt(fd_in) < 0) ||
+       (unlockpt(fd_in) < 0)) {
+      tme_output_append_error(_output, "could not open serial device %s", filename_out);
+      return (errno);
+    }
+    tme_output_append_error(_output, "using serial device %s", filename_out);
+    /*    tme_log(&element->tme_element_log_handle, 0, TME_OK,
+	    (&element->tme_element_log_handle,
+	    "using interface %s", filename_in));*/
+  }
   return (TME_OK);
 }
