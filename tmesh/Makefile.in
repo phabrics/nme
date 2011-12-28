@@ -333,7 +333,7 @@ clean-binPROGRAMS:
 	done
 tmesh$(EXEEXT): $(tmesh_OBJECTS) $(tmesh_DEPENDENCIES) 
 	@rm -f tmesh$(EXEEXT)
-	$(tmesh_LINK) $(tmesh_OBJECTS) $(tmesh_LDADD) $(LIBS)
+	$(tmesh_LINK) $(tmesh_OBJECTS) $(tmesh_LDADD) $(LIBS) -lX11
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
