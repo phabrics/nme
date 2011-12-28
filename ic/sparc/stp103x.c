@@ -3839,7 +3839,8 @@ _tme_stp103x_external_check(struct tme_sparc *ic,
       tme_mutex_unlock(&ic->tme_sparc_external_mutex);
     }
     ic->_tme_sparc_mode = TME_SPARC_MODE_HALT;
-    tme_sparc_redispatch(ic);
+    //    tme_sparc_redispatch(ic);
+    return;
   }
 
   /* if XIR has been asserted since the last check: */
