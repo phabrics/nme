@@ -83,6 +83,7 @@ struct tme_module {
 
 /* globals: */
 static tme_mutex_t _tme_module_mutex;
+extern const lt_dlsymlist lt_preloaded_symbols[];
 
 /* this initializes modules: */
 int
