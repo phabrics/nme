@@ -2,7 +2,8 @@
 # Makefile.am for The Machine Emulator:
 
 AUTOMAKE_OPTIONS = 1.4 gnu
-SUBDIRS = tme libltdl libtme generic ic machine host bus serial scsi tmesh tools
+ACLOCAL_AMFLAGS = -I m4
+SUBDIRS = tme libtme generic ic machine host bus serial scsi tmesh tools
 EXTRA_DIST = modules dist
 pkglib_DATA = tmeconfig.h
 
