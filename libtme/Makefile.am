@@ -5,7 +5,7 @@ AUTOMAKE_OPTIONS = 1.4 gnu
 
 SUBDIRS = host
 
-INCLUDES = -I$(top_srcdir) -I$(srcdir) -I. $(INCLTDL) $(GTK_CFLAGS) -D_TME_IMPL
+INCLUDES = -I$(top_srcdir) -I$(srcdir) -I. $(LTDLINCL) $(GTK_CFLAGS) -D_TME_IMPL
 
 lib_LTLIBRARIES = libtme.la
 pkginclude_HEADERS = memory-auto.h
@@ -48,4 +48,4 @@ memory-auto.lo: memory-auto.h
 # is using:
 module.lo: shlibvar.h
 shlibvar.h: $(top_builddir)/libltdl/config.h
-	grep LTDL_SHLIBPATH_VAR $(top_builddir)/libltdl/config.h > $@
+	grep LT_MODULE_PATH_VAR $(top_builddir)/libltdl/config.h > $@

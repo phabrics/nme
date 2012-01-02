@@ -113,7 +113,7 @@ _tme_float_exceptions_update(int at_least_one)
 }
 
 /* our SIGFPE handler: */
-static RETSIGTYPE
+static void
 _tme_float_sigfpe_handler(int unused)
 {
 

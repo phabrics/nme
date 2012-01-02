@@ -83,7 +83,8 @@ struct tme_module {
 
 /* globals: */
 static tme_mutex_t _tme_module_mutex;
-extern const lt_dlsymlist lt_preloaded_symbols[];
+#define lt_preloaded_symbols	lt__PROGRAM__LTX_preloaded_symbols
+extern LT_DLSYM_CONST lt_dlsymlist lt__PROGRAM__LTX_preloaded_symbols[];
 
 /* this initializes modules: */
 int
@@ -120,7 +121,7 @@ _tme_modules_find(const char *top_name,
     search_path = NULL;
     switch (pass) {
     case 1: search_path = getenv("LTDL_LIBRARY_PATH"); break;
-    case 2: search_path = getenv(LTDL_SHLIBPATH_VAR); break;
+    case 2: search_path = getenv(LT_MODULE_PATH_VAR); break;
     default: assert(FALSE);
     }
     if (search_path == NULL) {
