@@ -641,7 +641,7 @@ if test $enable_shared = no; then
   TME_PREOPEN='`sort -u $(top_builddir)/tme-preopen.txt`'
 fi
 AC_SUBST(TME_PREOPEN)
-
+CPPFLAGS="${CPPFLAGS-} -D_BSD_SOURCE -D_XOPEN_SOURCE=700"
 dnl Configure debugging and/or warnings.
 AC_ARG_ENABLE(debug,
 [  --enable-debug          compile debuggable libraries and programs (default=don't)],
@@ -656,7 +656,7 @@ AC_ARG_ENABLE(warnings,
 [  --disable-warnings      don't compile with warnings turned on (default=do)],
 [ ], [enable_warnings=yes])
 if test "x$enable_warnings" = "xyes" -a "x$GCC" = "xyes"; then
-  CFLAGS="${CFLAGS-} -Wundef -Wall -Werror"
+  CFLAGS="${CFLAGS-} -Wundef -Wall -Werror -Wno-unused-but-set-variable -Wno-array-bounds"
   CXXFLAGS="${CXXFLAGS-} -W"
 fi
 
