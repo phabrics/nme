@@ -1324,7 +1324,7 @@ TME_SPARC_FORMAT3(tme_sparc32_ldb, tme_uint32_t)
   tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
   tme_sparc_log(ic, 1000, TME_OK,
                (TME_SPARC_LOG_HANDLE(ic),
-                _("ldb	0x%02x:0x%08" TME_PRIx32 ":	0x%02" TME_PRIx32),
+                _("ldb\t0x%02x:0x%08" TME_PRIx32 ":\t0x%02" TME_PRIx32),
                 TME_SPARC_ASI_MASK_WHICH(ic->tme_sparc_asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 TME_SPARC_FORMAT3_RD));
@@ -1363,7 +1363,7 @@ TME_SPARC_FORMAT3(tme_sparc32_stb, tme_uint32_t)
   /* log the value stored: */
   tme_sparc_log(ic, 1000, TME_OK, 
                (TME_SPARC_LOG_HANDLE(ic),
-                _("stb	0x%02x:0x%08" TME_PRIx32 ":	0x%02" TME_PRIx8),
+                _("stb\t0x%02x:0x%08" TME_PRIx32 ":\t0x%02" TME_PRIx8),
                 TME_SPARC_ASI_MASK_WHICH(ic->tme_sparc_asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 (tme_uint8_t) TME_SPARC_FORMAT3_RD));
@@ -1541,7 +1541,7 @@ TME_SPARC_FORMAT3(tme_sparc32_ldh, tme_uint32_t)
   tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
   tme_sparc_log(ic, 1000, TME_OK,
                (TME_SPARC_LOG_HANDLE(ic),
-                _("ldh	0x%02x:0x%08" TME_PRIx32 ":	0x%04" TME_PRIx32),
+                _("ldh\t0x%02x:0x%08" TME_PRIx32 ":\t0x%04" TME_PRIx32),
                 TME_SPARC_ASI_MASK_WHICH(ic->tme_sparc_asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 TME_SPARC_FORMAT3_RD));
@@ -1580,7 +1580,7 @@ TME_SPARC_FORMAT3(tme_sparc32_sth, tme_uint32_t)
   /* log the value stored: */
   tme_sparc_log(ic, 1000, TME_OK, 
                (TME_SPARC_LOG_HANDLE(ic),
-                _("sth	0x%02x:0x%08" TME_PRIx32 ":	0x%04" TME_PRIx16),
+                _("sth\t0x%02x:0x%08" TME_PRIx32 ":\t0x%04" TME_PRIx16),
                 TME_SPARC_ASI_MASK_WHICH(ic->tme_sparc_asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 (tme_uint16_t) TME_SPARC_FORMAT3_RD));
@@ -1755,7 +1755,7 @@ TME_SPARC_FORMAT3(tme_sparc32_ld, tme_uint32_t)
   tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
   tme_sparc_log(ic, 1000, TME_OK,
                (TME_SPARC_LOG_HANDLE(ic),
-                _("ld	0x%02x:0x%08" TME_PRIx32 ":	0x%08" TME_PRIx32),
+                _("ld\t0x%02x:0x%08" TME_PRIx32 ":\t0x%08" TME_PRIx32),
                 TME_SPARC_ASI_MASK_WHICH(ic->tme_sparc_asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 TME_SPARC_FORMAT3_RD));
@@ -1794,7 +1794,7 @@ TME_SPARC_FORMAT3(tme_sparc32_st, tme_uint32_t)
   /* log the value stored: */
   tme_sparc_log(ic, 1000, TME_OK, 
                (TME_SPARC_LOG_HANDLE(ic),
-                _("st	0x%02x:0x%08" TME_PRIx32 ":	0x%08" TME_PRIx32),
+                _("st\t0x%02x:0x%08" TME_PRIx32 ":\t0x%08" TME_PRIx32),
                 TME_SPARC_ASI_MASK_WHICH(ic->tme_sparc_asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 (tme_uint32_t) TME_SPARC_FORMAT3_RD));
@@ -1981,7 +1981,7 @@ TME_SPARC_FORMAT3(tme_sparc32_ldd, tme_uint32_t)
   tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD_ODD(tme_ic_ireg_uint32));
   tme_sparc_log(ic, 1000, TME_OK,
                (TME_SPARC_LOG_HANDLE(ic),
-                _("ldd	0x%02x:0x%08" TME_PRIx32 ":	0x%08" TME_PRIx32 " 0x%08" TME_PRIx32 ""),
+                _("ldd\t0x%02x:0x%08" TME_PRIx32 ":\t0x%08" TME_PRIx32 " 0x%08" TME_PRIx32 ""),
                 TME_SPARC_ASI_MASK_WHICH(ic->tme_sparc_asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 TME_SPARC_FORMAT3_RD,
@@ -2025,7 +2025,7 @@ TME_SPARC_FORMAT3(tme_sparc32_std, tme_uint32_t)
   /* log the values stored: */
   tme_sparc_log(ic, 1000, TME_OK, 
                (TME_SPARC_LOG_HANDLE(ic),
-                _("std	0x%02x:0x%08" TME_PRIx32 ":	0x%08" TME_PRIx32 " 0x%08" TME_PRIx32),
+                _("std\t0x%02x:0x%08" TME_PRIx32 ":\t0x%08" TME_PRIx32 " 0x%08" TME_PRIx32),
                 TME_SPARC_ASI_MASK_WHICH(ic->tme_sparc_asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 (tme_uint32_t) TME_SPARC_FORMAT3_RD,
@@ -2198,7 +2198,7 @@ TME_SPARC_FORMAT3(tme_sparc32_ldstub, tme_uint32_t)
       tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
       tme_sparc_log(ic, 1000, TME_OK,
                    (TME_SPARC_LOG_HANDLE(ic),
-                    _("ldstub	0x%02x:0x%08" TME_PRIx32 ":	0x%02" TME_PRIx32),
+                    _("ldstub\t0x%02x:0x%08" TME_PRIx32 ":\t0x%02" TME_PRIx32),
                     TME_SPARC_ASI_MASK_WHICH(ic->tme_sparc_asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                     address,
                     TME_SPARC_FORMAT3_RD));
@@ -2221,7 +2221,7 @@ TME_SPARC_FORMAT3(tme_sparc32_ldstub, tme_uint32_t)
   tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
   tme_sparc_log(ic, 1000, TME_OK,
                (TME_SPARC_LOG_HANDLE(ic),
-                _("ldstub	0x%02x:0x%08" TME_PRIx32 ":	0x%02" TME_PRIx32),
+                _("ldstub\t0x%02x:0x%08" TME_PRIx32 ":\t0x%02" TME_PRIx32),
                 TME_SPARC_ASI_MASK_WHICH(ic->tme_sparc_asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 TME_SPARC_FORMAT3_RD));
@@ -2320,7 +2320,7 @@ TME_SPARC_FORMAT3(tme_sparc32_ldstuba, tme_uint32_t)
       tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
       tme_sparc_log(ic, 1000, TME_OK,
                    (TME_SPARC_LOG_HANDLE(ic),
-                    _("ldstuba	0x%02x:0x%08" TME_PRIx32 ":	0x%02" TME_PRIx32),
+                    _("ldstuba\t0x%02x:0x%08" TME_PRIx32 ":\t0x%02" TME_PRIx32),
                     TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                     address,
                     TME_SPARC_FORMAT3_RD));
@@ -2343,7 +2343,7 @@ TME_SPARC_FORMAT3(tme_sparc32_ldstuba, tme_uint32_t)
   tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
   tme_sparc_log(ic, 1000, TME_OK,
                (TME_SPARC_LOG_HANDLE(ic),
-                _("ldstuba	0x%02x:0x%08" TME_PRIx32 ":	0x%02" TME_PRIx32),
+                _("ldstuba\t0x%02x:0x%08" TME_PRIx32 ":\t0x%02" TME_PRIx32),
                 TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 TME_SPARC_FORMAT3_RD));
@@ -2382,7 +2382,7 @@ TME_SPARC_FORMAT3(tme_sparc32_swap, tme_uint32_t)
   /* log the value stored: */
   tme_sparc_log(ic, 1000, TME_OK, 
                (TME_SPARC_LOG_HANDLE(ic),
-                _("swap	0x%02x:0x%08" TME_PRIx32 ":	0x%08" TME_PRIx32),
+                _("swap\t0x%02x:0x%08" TME_PRIx32 ":\t0x%08" TME_PRIx32),
                 TME_SPARC_ASI_MASK_WHICH(ic->tme_sparc_asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 (tme_uint32_t) TME_SPARC_FORMAT3_RD));
@@ -2448,7 +2448,7 @@ TME_SPARC_FORMAT3(tme_sparc32_swap, tme_uint32_t)
       tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
       tme_sparc_log(ic, 1000, TME_OK,
                    (TME_SPARC_LOG_HANDLE(ic),
-                    _("swap	0x%02x:0x%08" TME_PRIx32 ":	0x%08" TME_PRIx32),
+                    _("swap\t0x%02x:0x%08" TME_PRIx32 ":\t0x%08" TME_PRIx32),
                     TME_SPARC_ASI_MASK_WHICH(ic->tme_sparc_asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                     address,
                     TME_SPARC_FORMAT3_RD));
@@ -2475,7 +2475,7 @@ TME_SPARC_FORMAT3(tme_sparc32_swap, tme_uint32_t)
   tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
   tme_sparc_log(ic, 1000, TME_OK,
                (TME_SPARC_LOG_HANDLE(ic),
-                _("swap	0x%02x:0x%08" TME_PRIx32 ":	0x%08" TME_PRIx32),
+                _("swap\t0x%02x:0x%08" TME_PRIx32 ":\t0x%08" TME_PRIx32),
                 TME_SPARC_ASI_MASK_WHICH(ic->tme_sparc_asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 TME_SPARC_FORMAT3_RD));
@@ -2518,7 +2518,7 @@ TME_SPARC_FORMAT3(tme_sparc32_swapa, tme_uint32_t)
   /* log the value stored: */
   tme_sparc_log(ic, 1000, TME_OK, 
                (TME_SPARC_LOG_HANDLE(ic),
-                _("swapa	0x%02x:0x%08" TME_PRIx32 ":	0x%08" TME_PRIx32),
+                _("swapa\t0x%02x:0x%08" TME_PRIx32 ":\t0x%08" TME_PRIx32),
                 TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 (tme_uint32_t) TME_SPARC_FORMAT3_RD));
@@ -2586,7 +2586,7 @@ TME_SPARC_FORMAT3(tme_sparc32_swapa, tme_uint32_t)
       tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
       tme_sparc_log(ic, 1000, TME_OK,
                    (TME_SPARC_LOG_HANDLE(ic),
-                    _("swapa	0x%02x:0x%08" TME_PRIx32 ":	0x%08" TME_PRIx32),
+                    _("swapa\t0x%02x:0x%08" TME_PRIx32 ":\t0x%08" TME_PRIx32),
                     TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                     address,
                     TME_SPARC_FORMAT3_RD));
@@ -2613,7 +2613,7 @@ TME_SPARC_FORMAT3(tme_sparc32_swapa, tme_uint32_t)
   tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
   tme_sparc_log(ic, 1000, TME_OK,
                (TME_SPARC_LOG_HANDLE(ic),
-                _("swapa	0x%02x:0x%08" TME_PRIx32 ":	0x%08" TME_PRIx32),
+                _("swapa\t0x%02x:0x%08" TME_PRIx32 ":\t0x%08" TME_PRIx32),
                 TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 TME_SPARC_FORMAT3_RD));
@@ -2713,7 +2713,7 @@ TME_SPARC_FORMAT3(tme_sparc32_ldba, tme_uint32_t)
       tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
       tme_sparc_log(ic, 1000, TME_OK,
                    (TME_SPARC_LOG_HANDLE(ic),
-                    _("ldba	0x%02x:0x%08" TME_PRIx32 ":	0x%02" TME_PRIx32),
+                    _("ldba\t0x%02x:0x%08" TME_PRIx32 ":\t0x%02" TME_PRIx32),
                     TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                     address,
                     TME_SPARC_FORMAT3_RD));
@@ -2743,7 +2743,7 @@ TME_SPARC_FORMAT3(tme_sparc32_ldba, tme_uint32_t)
   tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
   tme_sparc_log(ic, 1000, TME_OK,
                (TME_SPARC_LOG_HANDLE(ic),
-                _("ldba	0x%02x:0x%08" TME_PRIx32 ":	0x%02" TME_PRIx32),
+                _("ldba\t0x%02x:0x%08" TME_PRIx32 ":\t0x%02" TME_PRIx32),
                 TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 TME_SPARC_FORMAT3_RD));
@@ -2786,7 +2786,7 @@ TME_SPARC_FORMAT3(tme_sparc32_stba, tme_uint32_t)
   /* log the value stored: */
   tme_sparc_log(ic, 1000, TME_OK, 
                (TME_SPARC_LOG_HANDLE(ic),
-                _("stba	0x%02x:0x%08" TME_PRIx32 ":	0x%02" TME_PRIx8),
+                _("stba\t0x%02x:0x%08" TME_PRIx32 ":\t0x%02" TME_PRIx8),
                 TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 (tme_uint8_t) TME_SPARC_FORMAT3_RD));
@@ -2959,7 +2959,7 @@ TME_SPARC_FORMAT3(tme_sparc32_ldha, tme_uint32_t)
       tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
       tme_sparc_log(ic, 1000, TME_OK,
                    (TME_SPARC_LOG_HANDLE(ic),
-                    _("ldha	0x%02x:0x%08" TME_PRIx32 ":	0x%04" TME_PRIx32),
+                    _("ldha\t0x%02x:0x%08" TME_PRIx32 ":\t0x%04" TME_PRIx32),
                     TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                     address,
                     TME_SPARC_FORMAT3_RD));
@@ -2990,7 +2990,7 @@ TME_SPARC_FORMAT3(tme_sparc32_ldha, tme_uint32_t)
   tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
   tme_sparc_log(ic, 1000, TME_OK,
                (TME_SPARC_LOG_HANDLE(ic),
-                _("ldha	0x%02x:0x%08" TME_PRIx32 ":	0x%04" TME_PRIx32),
+                _("ldha\t0x%02x:0x%08" TME_PRIx32 ":\t0x%04" TME_PRIx32),
                 TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 TME_SPARC_FORMAT3_RD));
@@ -3033,7 +3033,7 @@ TME_SPARC_FORMAT3(tme_sparc32_stha, tme_uint32_t)
   /* log the value stored: */
   tme_sparc_log(ic, 1000, TME_OK, 
                (TME_SPARC_LOG_HANDLE(ic),
-                _("stha	0x%02x:0x%08" TME_PRIx32 ":	0x%04" TME_PRIx16),
+                _("stha\t0x%02x:0x%08" TME_PRIx32 ":\t0x%04" TME_PRIx16),
                 TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 (tme_uint16_t) TME_SPARC_FORMAT3_RD));
@@ -3209,7 +3209,7 @@ TME_SPARC_FORMAT3(tme_sparc32_lda, tme_uint32_t)
       tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
       tme_sparc_log(ic, 1000, TME_OK,
                    (TME_SPARC_LOG_HANDLE(ic),
-                    _("lda	0x%02x:0x%08" TME_PRIx32 ":	0x%08" TME_PRIx32),
+                    _("lda\t0x%02x:0x%08" TME_PRIx32 ":\t0x%08" TME_PRIx32),
                     TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                     address,
                     TME_SPARC_FORMAT3_RD));
@@ -3234,7 +3234,7 @@ TME_SPARC_FORMAT3(tme_sparc32_lda, tme_uint32_t)
   tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
   tme_sparc_log(ic, 1000, TME_OK,
                (TME_SPARC_LOG_HANDLE(ic),
-                _("lda	0x%02x:0x%08" TME_PRIx32 ":	0x%08" TME_PRIx32),
+                _("lda\t0x%02x:0x%08" TME_PRIx32 ":\t0x%08" TME_PRIx32),
                 TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 TME_SPARC_FORMAT3_RD));
@@ -3277,7 +3277,7 @@ TME_SPARC_FORMAT3(tme_sparc32_sta, tme_uint32_t)
   /* log the value stored: */
   tme_sparc_log(ic, 1000, TME_OK, 
                (TME_SPARC_LOG_HANDLE(ic),
-                _("sta	0x%02x:0x%08" TME_PRIx32 ":	0x%08" TME_PRIx32),
+                _("sta\t0x%02x:0x%08" TME_PRIx32 ":\t0x%08" TME_PRIx32),
                 TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 (tme_uint32_t) TME_SPARC_FORMAT3_RD));
@@ -3462,7 +3462,7 @@ TME_SPARC_FORMAT3(tme_sparc32_ldda, tme_uint32_t)
       tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD_ODD(tme_ic_ireg_uint32));
       tme_sparc_log(ic, 1000, TME_OK,
                    (TME_SPARC_LOG_HANDLE(ic),
-                    _("ldda	0x%02x:0x%08" TME_PRIx32 ":	0x%08" TME_PRIx32 " 0x%08" TME_PRIx32 ""),
+                    _("ldda\t0x%02x:0x%08" TME_PRIx32 ":\t0x%08" TME_PRIx32 " 0x%08" TME_PRIx32 ""),
                     TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                     address,
                     TME_SPARC_FORMAT3_RD,
@@ -3492,7 +3492,7 @@ TME_SPARC_FORMAT3(tme_sparc32_ldda, tme_uint32_t)
   tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD_ODD(tme_ic_ireg_uint32));
   tme_sparc_log(ic, 1000, TME_OK,
                (TME_SPARC_LOG_HANDLE(ic),
-                _("ldda	0x%02x:0x%08" TME_PRIx32 ":	0x%08" TME_PRIx32 " 0x%08" TME_PRIx32 ""),
+                _("ldda\t0x%02x:0x%08" TME_PRIx32 ":\t0x%08" TME_PRIx32 " 0x%08" TME_PRIx32 ""),
                 TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 TME_SPARC_FORMAT3_RD,
@@ -3540,7 +3540,7 @@ TME_SPARC_FORMAT3(tme_sparc32_stda, tme_uint32_t)
   /* log the values stored: */
   tme_sparc_log(ic, 1000, TME_OK, 
                (TME_SPARC_LOG_HANDLE(ic),
-                _("stda	0x%02x:0x%08" TME_PRIx32 ":	0x%08" TME_PRIx32 " 0x%08" TME_PRIx32),
+                _("stda\t0x%02x:0x%08" TME_PRIx32 ":\t0x%08" TME_PRIx32 " 0x%08" TME_PRIx32),
                 TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 (tme_uint32_t) TME_SPARC_FORMAT3_RD,
@@ -4104,7 +4104,7 @@ tme_sparc32_load(struct tme_sparc *ic,
     (*ic->_tme_sparc_ls_bus_cycle)(ic, ls);
     tme_sparc_log(ic, 10000, TME_OK,
                  (TME_SPARC_LOG_HANDLE(ic),
-                  _("cycle-load%u	0x%08" TME_PRIx32),
+                  _("cycle-load%u\t0x%08" TME_PRIx32),
                   (unsigned int) (ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_size * 8),
                   (tme_bus_addr32_t) ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_address));
 
@@ -4235,7 +4235,7 @@ tme_sparc32_store(struct tme_sparc *ic,
     (*ic->_tme_sparc_ls_bus_cycle)(ic, ls);
     tme_sparc_log(ic, 10000, TME_OK,
                  (TME_SPARC_LOG_HANDLE(ic),
-                  _("cycle-store%u	0x%08" TME_PRIx32),
+                  _("cycle-store%u\t0x%08" TME_PRIx32),
                   (unsigned int) (ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_size * 8),
                   (tme_bus_addr32_t) ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_address));
 
@@ -6314,7 +6314,7 @@ TME_SPARC_FORMAT3(tme_sparc64_ldb, tme_uint64_t)
   tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
   tme_sparc_log(ic, 1000, TME_OK,
                (TME_SPARC_LOG_HANDLE(ic),
-                _("ldb	0x%02x:0x%016" TME_PRIx64 ":	0x%02" TME_PRIx64),
+                _("ldb\t0x%02x:0x%016" TME_PRIx64 ":\t0x%02" TME_PRIx64),
                 TME_SPARC_ASI_MASK_WHICH(ic->tme_sparc_asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 TME_SPARC_FORMAT3_RD));
@@ -6354,7 +6354,7 @@ TME_SPARC_FORMAT3(tme_sparc64_stb, tme_uint64_t)
   /* log the value stored: */
   tme_sparc_log(ic, 1000, TME_OK, 
                (TME_SPARC_LOG_HANDLE(ic),
-                _("stb	0x%02x:0x%016" TME_PRIx64 ":	0x%02" TME_PRIx8),
+                _("stb\t0x%02x:0x%016" TME_PRIx64 ":\t0x%02" TME_PRIx8),
                 TME_SPARC_ASI_MASK_WHICH(ic->tme_sparc_asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 (tme_uint8_t) TME_SPARC_FORMAT3_RD));
@@ -6555,7 +6555,7 @@ TME_SPARC_FORMAT3(tme_sparc64_ldh, tme_uint64_t)
   tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
   tme_sparc_log(ic, 1000, TME_OK,
                (TME_SPARC_LOG_HANDLE(ic),
-                _("ldh	0x%02x:0x%016" TME_PRIx64 ":	0x%04" TME_PRIx64),
+                _("ldh\t0x%02x:0x%016" TME_PRIx64 ":\t0x%04" TME_PRIx64),
                 TME_SPARC_ASI_MASK_WHICH(ic->tme_sparc_asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 TME_SPARC_FORMAT3_RD));
@@ -6595,7 +6595,7 @@ TME_SPARC_FORMAT3(tme_sparc64_sth, tme_uint64_t)
   /* log the value stored: */
   tme_sparc_log(ic, 1000, TME_OK, 
                (TME_SPARC_LOG_HANDLE(ic),
-                _("sth	0x%02x:0x%016" TME_PRIx64 ":	0x%04" TME_PRIx16),
+                _("sth\t0x%02x:0x%016" TME_PRIx64 ":\t0x%04" TME_PRIx16),
                 TME_SPARC_ASI_MASK_WHICH(ic->tme_sparc_asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 (tme_uint16_t) TME_SPARC_FORMAT3_RD));
@@ -6800,7 +6800,7 @@ TME_SPARC_FORMAT3(tme_sparc64_ld, tme_uint64_t)
   tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
   tme_sparc_log(ic, 1000, TME_OK,
                (TME_SPARC_LOG_HANDLE(ic),
-                _("ld	0x%02x:0x%016" TME_PRIx64 ":	0x%08" TME_PRIx64),
+                _("ld\t0x%02x:0x%016" TME_PRIx64 ":\t0x%08" TME_PRIx64),
                 TME_SPARC_ASI_MASK_WHICH(ic->tme_sparc_asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 TME_SPARC_FORMAT3_RD));
@@ -6840,7 +6840,7 @@ TME_SPARC_FORMAT3(tme_sparc64_st, tme_uint64_t)
   /* log the value stored: */
   tme_sparc_log(ic, 1000, TME_OK, 
                (TME_SPARC_LOG_HANDLE(ic),
-                _("st	0x%02x:0x%016" TME_PRIx64 ":	0x%08" TME_PRIx32),
+                _("st\t0x%02x:0x%016" TME_PRIx64 ":\t0x%08" TME_PRIx32),
                 TME_SPARC_ASI_MASK_WHICH(ic->tme_sparc_asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 (tme_uint32_t) TME_SPARC_FORMAT3_RD));
@@ -7050,7 +7050,7 @@ TME_SPARC_FORMAT3(tme_sparc64_ldd, tme_uint64_t)
   tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD_ODD(tme_ic_ireg_uint64));
   tme_sparc_log(ic, 1000, TME_OK,
                (TME_SPARC_LOG_HANDLE(ic),
-                _("ldd	0x%02x:0x%016" TME_PRIx64 ":	0x%016" TME_PRIx64 " 0x%016" TME_PRIx64 ""),
+                _("ldd\t0x%02x:0x%016" TME_PRIx64 ":\t0x%016" TME_PRIx64 " 0x%016" TME_PRIx64 ""),
                 TME_SPARC_ASI_MASK_WHICH(ic->tme_sparc_asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 TME_SPARC_FORMAT3_RD,
@@ -7095,7 +7095,7 @@ TME_SPARC_FORMAT3(tme_sparc64_std, tme_uint64_t)
   /* log the values stored: */
   tme_sparc_log(ic, 1000, TME_OK, 
                (TME_SPARC_LOG_HANDLE(ic),
-                _("std	0x%02x:0x%016" TME_PRIx64 ":	0x%08" TME_PRIx32 " 0x%08" TME_PRIx32),
+                _("std\t0x%02x:0x%016" TME_PRIx64 ":\t0x%08" TME_PRIx32 " 0x%08" TME_PRIx32),
                 TME_SPARC_ASI_MASK_WHICH(ic->tme_sparc_asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 (tme_uint32_t) TME_SPARC_FORMAT3_RD,
@@ -7286,7 +7286,7 @@ TME_SPARC_FORMAT3(tme_sparc64_ldstub, tme_uint64_t)
       tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
       tme_sparc_log(ic, 1000, TME_OK,
                    (TME_SPARC_LOG_HANDLE(ic),
-                    _("ldstub	0x%02x:0x%016" TME_PRIx64 ":	0x%02" TME_PRIx64),
+                    _("ldstub\t0x%02x:0x%016" TME_PRIx64 ":\t0x%02" TME_PRIx64),
                     TME_SPARC_ASI_MASK_WHICH(ic->tme_sparc_asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                     address,
                     TME_SPARC_FORMAT3_RD));
@@ -7317,7 +7317,7 @@ TME_SPARC_FORMAT3(tme_sparc64_ldstub, tme_uint64_t)
   tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
   tme_sparc_log(ic, 1000, TME_OK,
                (TME_SPARC_LOG_HANDLE(ic),
-                _("ldstub	0x%02x:0x%016" TME_PRIx64 ":	0x%02" TME_PRIx64),
+                _("ldstub\t0x%02x:0x%016" TME_PRIx64 ":\t0x%02" TME_PRIx64),
                 TME_SPARC_ASI_MASK_WHICH(ic->tme_sparc_asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 TME_SPARC_FORMAT3_RD));
@@ -7444,7 +7444,7 @@ TME_SPARC_FORMAT3(tme_sparc64_ldstuba, tme_uint64_t)
       tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
       tme_sparc_log(ic, 1000, TME_OK,
                    (TME_SPARC_LOG_HANDLE(ic),
-                    _("ldstuba	0x%02x:0x%016" TME_PRIx64 ":	0x%02" TME_PRIx64),
+                    _("ldstuba\t0x%02x:0x%016" TME_PRIx64 ":\t0x%02" TME_PRIx64),
                     TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                     address,
                     TME_SPARC_FORMAT3_RD));
@@ -7475,7 +7475,7 @@ TME_SPARC_FORMAT3(tme_sparc64_ldstuba, tme_uint64_t)
   tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
   tme_sparc_log(ic, 1000, TME_OK,
                (TME_SPARC_LOG_HANDLE(ic),
-                _("ldstuba	0x%02x:0x%016" TME_PRIx64 ":	0x%02" TME_PRIx64),
+                _("ldstuba\t0x%02x:0x%016" TME_PRIx64 ":\t0x%02" TME_PRIx64),
                 TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 TME_SPARC_FORMAT3_RD));
@@ -7515,7 +7515,7 @@ TME_SPARC_FORMAT3(tme_sparc64_swap, tme_uint64_t)
   /* log the value stored: */
   tme_sparc_log(ic, 1000, TME_OK, 
                (TME_SPARC_LOG_HANDLE(ic),
-                _("swap	0x%02x:0x%016" TME_PRIx64 ":	0x%08" TME_PRIx32),
+                _("swap\t0x%02x:0x%016" TME_PRIx64 ":\t0x%08" TME_PRIx32),
                 TME_SPARC_ASI_MASK_WHICH(ic->tme_sparc_asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 (tme_uint32_t) TME_SPARC_FORMAT3_RD));
@@ -7587,7 +7587,7 @@ TME_SPARC_FORMAT3(tme_sparc64_swap, tme_uint64_t)
       tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
       tme_sparc_log(ic, 1000, TME_OK,
                    (TME_SPARC_LOG_HANDLE(ic),
-                    _("swap	0x%02x:0x%016" TME_PRIx64 ":	0x%08" TME_PRIx64),
+                    _("swap\t0x%02x:0x%016" TME_PRIx64 ":\t0x%08" TME_PRIx64),
                     TME_SPARC_ASI_MASK_WHICH(ic->tme_sparc_asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                     address,
                     TME_SPARC_FORMAT3_RD));
@@ -7622,7 +7622,7 @@ TME_SPARC_FORMAT3(tme_sparc64_swap, tme_uint64_t)
   tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
   tme_sparc_log(ic, 1000, TME_OK,
                (TME_SPARC_LOG_HANDLE(ic),
-                _("swap	0x%02x:0x%016" TME_PRIx64 ":	0x%08" TME_PRIx64),
+                _("swap\t0x%02x:0x%016" TME_PRIx64 ":\t0x%08" TME_PRIx64),
                 TME_SPARC_ASI_MASK_WHICH(ic->tme_sparc_asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 TME_SPARC_FORMAT3_RD));
@@ -7667,7 +7667,7 @@ TME_SPARC_FORMAT3(tme_sparc64_swapa, tme_uint64_t)
   /* log the value stored: */
   tme_sparc_log(ic, 1000, TME_OK, 
                (TME_SPARC_LOG_HANDLE(ic),
-                _("swapa	0x%02x:0x%016" TME_PRIx64 ":	0x%08" TME_PRIx32),
+                _("swapa\t0x%02x:0x%016" TME_PRIx64 ":\t0x%08" TME_PRIx32),
                 TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 (tme_uint32_t) TME_SPARC_FORMAT3_RD));
@@ -7761,7 +7761,7 @@ TME_SPARC_FORMAT3(tme_sparc64_swapa, tme_uint64_t)
       tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
       tme_sparc_log(ic, 1000, TME_OK,
                    (TME_SPARC_LOG_HANDLE(ic),
-                    _("swapa	0x%02x:0x%016" TME_PRIx64 ":	0x%08" TME_PRIx64),
+                    _("swapa\t0x%02x:0x%016" TME_PRIx64 ":\t0x%08" TME_PRIx64),
                     TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                     address,
                     TME_SPARC_FORMAT3_RD));
@@ -7796,7 +7796,7 @@ TME_SPARC_FORMAT3(tme_sparc64_swapa, tme_uint64_t)
   tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
   tme_sparc_log(ic, 1000, TME_OK,
                (TME_SPARC_LOG_HANDLE(ic),
-                _("swapa	0x%02x:0x%016" TME_PRIx64 ":	0x%08" TME_PRIx64),
+                _("swapa\t0x%02x:0x%016" TME_PRIx64 ":\t0x%08" TME_PRIx64),
                 TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 TME_SPARC_FORMAT3_RD));
@@ -7921,7 +7921,7 @@ TME_SPARC_FORMAT3(tme_sparc64_ldba, tme_uint64_t)
       tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
       tme_sparc_log(ic, 1000, TME_OK,
                    (TME_SPARC_LOG_HANDLE(ic),
-                    _("ldba	0x%02x:0x%016" TME_PRIx64 ":	0x%02" TME_PRIx64),
+                    _("ldba\t0x%02x:0x%016" TME_PRIx64 ":\t0x%02" TME_PRIx64),
                     TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                     address,
                     TME_SPARC_FORMAT3_RD));
@@ -7959,7 +7959,7 @@ TME_SPARC_FORMAT3(tme_sparc64_ldba, tme_uint64_t)
   tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
   tme_sparc_log(ic, 1000, TME_OK,
                (TME_SPARC_LOG_HANDLE(ic),
-                _("ldba	0x%02x:0x%016" TME_PRIx64 ":	0x%02" TME_PRIx64),
+                _("ldba\t0x%02x:0x%016" TME_PRIx64 ":\t0x%02" TME_PRIx64),
                 TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 TME_SPARC_FORMAT3_RD));
@@ -8004,7 +8004,7 @@ TME_SPARC_FORMAT3(tme_sparc64_stba, tme_uint64_t)
   /* log the value stored: */
   tme_sparc_log(ic, 1000, TME_OK, 
                (TME_SPARC_LOG_HANDLE(ic),
-                _("stba	0x%02x:0x%016" TME_PRIx64 ":	0x%02" TME_PRIx8),
+                _("stba\t0x%02x:0x%016" TME_PRIx64 ":\t0x%02" TME_PRIx8),
                 TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 (tme_uint8_t) TME_SPARC_FORMAT3_RD));
@@ -8233,7 +8233,7 @@ TME_SPARC_FORMAT3(tme_sparc64_ldha, tme_uint64_t)
       tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
       tme_sparc_log(ic, 1000, TME_OK,
                    (TME_SPARC_LOG_HANDLE(ic),
-                    _("ldha	0x%02x:0x%016" TME_PRIx64 ":	0x%04" TME_PRIx64),
+                    _("ldha\t0x%02x:0x%016" TME_PRIx64 ":\t0x%04" TME_PRIx64),
                     TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                     address,
                     TME_SPARC_FORMAT3_RD));
@@ -8272,7 +8272,7 @@ TME_SPARC_FORMAT3(tme_sparc64_ldha, tme_uint64_t)
   tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
   tme_sparc_log(ic, 1000, TME_OK,
                (TME_SPARC_LOG_HANDLE(ic),
-                _("ldha	0x%02x:0x%016" TME_PRIx64 ":	0x%04" TME_PRIx64),
+                _("ldha\t0x%02x:0x%016" TME_PRIx64 ":\t0x%04" TME_PRIx64),
                 TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 TME_SPARC_FORMAT3_RD));
@@ -8317,7 +8317,7 @@ TME_SPARC_FORMAT3(tme_sparc64_stha, tme_uint64_t)
   /* log the value stored: */
   tme_sparc_log(ic, 1000, TME_OK, 
                (TME_SPARC_LOG_HANDLE(ic),
-                _("stha	0x%02x:0x%016" TME_PRIx64 ":	0x%04" TME_PRIx16),
+                _("stha\t0x%02x:0x%016" TME_PRIx64 ":\t0x%04" TME_PRIx16),
                 TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 (tme_uint16_t) TME_SPARC_FORMAT3_RD));
@@ -8550,7 +8550,7 @@ TME_SPARC_FORMAT3(tme_sparc64_lda, tme_uint64_t)
       tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
       tme_sparc_log(ic, 1000, TME_OK,
                    (TME_SPARC_LOG_HANDLE(ic),
-                    _("lda	0x%02x:0x%016" TME_PRIx64 ":	0x%08" TME_PRIx64),
+                    _("lda\t0x%02x:0x%016" TME_PRIx64 ":\t0x%08" TME_PRIx64),
                     TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                     address,
                     TME_SPARC_FORMAT3_RD));
@@ -8589,7 +8589,7 @@ TME_SPARC_FORMAT3(tme_sparc64_lda, tme_uint64_t)
   tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
   tme_sparc_log(ic, 1000, TME_OK,
                (TME_SPARC_LOG_HANDLE(ic),
-                _("lda	0x%02x:0x%016" TME_PRIx64 ":	0x%08" TME_PRIx64),
+                _("lda\t0x%02x:0x%016" TME_PRIx64 ":\t0x%08" TME_PRIx64),
                 TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 TME_SPARC_FORMAT3_RD));
@@ -8634,7 +8634,7 @@ TME_SPARC_FORMAT3(tme_sparc64_sta, tme_uint64_t)
   /* log the value stored: */
   tme_sparc_log(ic, 1000, TME_OK, 
                (TME_SPARC_LOG_HANDLE(ic),
-                _("sta	0x%02x:0x%016" TME_PRIx64 ":	0x%08" TME_PRIx32),
+                _("sta\t0x%02x:0x%016" TME_PRIx64 ":\t0x%08" TME_PRIx32),
                 TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 (tme_uint32_t) TME_SPARC_FORMAT3_RD));
@@ -8875,7 +8875,7 @@ TME_SPARC_FORMAT3(tme_sparc64_ldda, tme_uint64_t)
       tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD_ODD(tme_ic_ireg_uint64));
       tme_sparc_log(ic, 1000, TME_OK,
                    (TME_SPARC_LOG_HANDLE(ic),
-                    _("ldda	0x%02x:0x%016" TME_PRIx64 ":	0x%016" TME_PRIx64 " 0x%016" TME_PRIx64 ""),
+                    _("ldda\t0x%02x:0x%016" TME_PRIx64 ":\t0x%016" TME_PRIx64 " 0x%016" TME_PRIx64 ""),
                     TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                     address,
                     TME_SPARC_FORMAT3_RD,
@@ -8913,7 +8913,7 @@ TME_SPARC_FORMAT3(tme_sparc64_ldda, tme_uint64_t)
   tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD_ODD(tme_ic_ireg_uint64));
   tme_sparc_log(ic, 1000, TME_OK,
                (TME_SPARC_LOG_HANDLE(ic),
-                _("ldda	0x%02x:0x%016" TME_PRIx64 ":	0x%016" TME_PRIx64 " 0x%016" TME_PRIx64 ""),
+                _("ldda\t0x%02x:0x%016" TME_PRIx64 ":\t0x%016" TME_PRIx64 " 0x%016" TME_PRIx64 ""),
                 TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 TME_SPARC_FORMAT3_RD,
@@ -8963,7 +8963,7 @@ TME_SPARC_FORMAT3(tme_sparc64_stda, tme_uint64_t)
   /* log the values stored: */
   tme_sparc_log(ic, 1000, TME_OK, 
                (TME_SPARC_LOG_HANDLE(ic),
-                _("stda	0x%02x:0x%016" TME_PRIx64 ":	0x%08" TME_PRIx32 " 0x%08" TME_PRIx32),
+                _("stda\t0x%02x:0x%016" TME_PRIx64 ":\t0x%08" TME_PRIx32 " 0x%08" TME_PRIx32),
                 TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 (tme_uint32_t) TME_SPARC_FORMAT3_RD,
@@ -9599,7 +9599,7 @@ TME_SPARC_FORMAT3(tme_sparc64_ldx, tme_uint64_t)
   tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
   tme_sparc_log(ic, 1000, TME_OK,
                (TME_SPARC_LOG_HANDLE(ic),
-                _("ldx	0x%02x:0x%016" TME_PRIx64 ":	0x%016" TME_PRIx64),
+                _("ldx\t0x%02x:0x%016" TME_PRIx64 ":\t0x%016" TME_PRIx64),
                 TME_SPARC_ASI_MASK_WHICH(ic->tme_sparc_asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 TME_SPARC_FORMAT3_RD));
@@ -9639,7 +9639,7 @@ TME_SPARC_FORMAT3(tme_sparc64_stx, tme_uint64_t)
   /* log the value stored: */
   tme_sparc_log(ic, 1000, TME_OK, 
                (TME_SPARC_LOG_HANDLE(ic),
-                _("stx	0x%02x:0x%016" TME_PRIx64 ":	0x%016" TME_PRIx64),
+                _("stx\t0x%02x:0x%016" TME_PRIx64 ":\t0x%016" TME_PRIx64),
                 TME_SPARC_ASI_MASK_WHICH(ic->tme_sparc_asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 (tme_uint64_t) TME_SPARC_FORMAT3_RD));
@@ -9849,7 +9849,7 @@ TME_SPARC_FORMAT3(tme_sparc64_ldxa, tme_uint64_t)
       tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
       tme_sparc_log(ic, 1000, TME_OK,
                    (TME_SPARC_LOG_HANDLE(ic),
-                    _("ldxa	0x%02x:0x%016" TME_PRIx64 ":	0x%016" TME_PRIx64),
+                    _("ldxa\t0x%02x:0x%016" TME_PRIx64 ":\t0x%016" TME_PRIx64),
                     TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                     address,
                     TME_SPARC_FORMAT3_RD));
@@ -9882,7 +9882,7 @@ TME_SPARC_FORMAT3(tme_sparc64_ldxa, tme_uint64_t)
   tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
   tme_sparc_log(ic, 1000, TME_OK,
                (TME_SPARC_LOG_HANDLE(ic),
-                _("ldxa	0x%02x:0x%016" TME_PRIx64 ":	0x%016" TME_PRIx64),
+                _("ldxa\t0x%02x:0x%016" TME_PRIx64 ":\t0x%016" TME_PRIx64),
                 TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 TME_SPARC_FORMAT3_RD));
@@ -9927,7 +9927,7 @@ TME_SPARC_FORMAT3(tme_sparc64_stxa, tme_uint64_t)
   /* log the value stored: */
   tme_sparc_log(ic, 1000, TME_OK, 
                (TME_SPARC_LOG_HANDLE(ic),
-                _("stxa	0x%02x:0x%016" TME_PRIx64 ":	0x%016" TME_PRIx64),
+                _("stxa\t0x%02x:0x%016" TME_PRIx64 ":\t0x%016" TME_PRIx64),
                 TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 (tme_uint64_t) TME_SPARC_FORMAT3_RD));
@@ -10272,7 +10272,7 @@ TME_SPARC_FORMAT3(tme_sparc64_casa, tme_uint64_t)
   /* log the value stored: */
   tme_sparc_log(ic, 1000, TME_OK, 
                (TME_SPARC_LOG_HANDLE(ic),
-                _("casa	0x%02x:0x%016" TME_PRIx64 ":	0x%08" TME_PRIx32),
+                _("casa\t0x%02x:0x%016" TME_PRIx64 ":\t0x%08" TME_PRIx32),
                 TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 (tme_uint32_t) TME_SPARC_FORMAT3_RD));
@@ -10366,7 +10366,7 @@ TME_SPARC_FORMAT3(tme_sparc64_casa, tme_uint64_t)
       tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
       tme_sparc_log(ic, 1000, TME_OK,
                    (TME_SPARC_LOG_HANDLE(ic),
-                    _("casa	0x%02x:0x%016" TME_PRIx64 ":	0x%08" TME_PRIx64),
+                    _("casa\t0x%02x:0x%016" TME_PRIx64 ":\t0x%08" TME_PRIx64),
                     TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                     address,
                     TME_SPARC_FORMAT3_RD));
@@ -10405,7 +10405,7 @@ TME_SPARC_FORMAT3(tme_sparc64_casa, tme_uint64_t)
   tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
   tme_sparc_log(ic, 1000, TME_OK,
                (TME_SPARC_LOG_HANDLE(ic),
-                _("casa	0x%02x:0x%016" TME_PRIx64 ":	0x%08" TME_PRIx64),
+                _("casa\t0x%02x:0x%016" TME_PRIx64 ":\t0x%08" TME_PRIx64),
                 TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 TME_SPARC_FORMAT3_RD));
@@ -10453,7 +10453,7 @@ TME_SPARC_FORMAT3(tme_sparc64_casxa, tme_uint64_t)
   /* log the value stored: */
   tme_sparc_log(ic, 1000, TME_OK, 
                (TME_SPARC_LOG_HANDLE(ic),
-                _("casxa	0x%02x:0x%016" TME_PRIx64 ":	0x%016" TME_PRIx64),
+                _("casxa\t0x%02x:0x%016" TME_PRIx64 ":\t0x%016" TME_PRIx64),
                 TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 (tme_uint64_t) TME_SPARC_FORMAT3_RD));
@@ -10547,7 +10547,7 @@ TME_SPARC_FORMAT3(tme_sparc64_casxa, tme_uint64_t)
       tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
       tme_sparc_log(ic, 1000, TME_OK,
                    (TME_SPARC_LOG_HANDLE(ic),
-                    _("casxa	0x%02x:0x%016" TME_PRIx64 ":	0x%016" TME_PRIx64),
+                    _("casxa\t0x%02x:0x%016" TME_PRIx64 ":\t0x%016" TME_PRIx64),
                     TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                     address,
                     TME_SPARC_FORMAT3_RD));
@@ -10586,7 +10586,7 @@ TME_SPARC_FORMAT3(tme_sparc64_casxa, tme_uint64_t)
   tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);
   tme_sparc_log(ic, 1000, TME_OK,
                (TME_SPARC_LOG_HANDLE(ic),
-                _("casxa	0x%02x:0x%016" TME_PRIx64 ":	0x%016" TME_PRIx64),
+                _("casxa\t0x%02x:0x%016" TME_PRIx64 ":\t0x%016" TME_PRIx64),
                 TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),
                 address,
                 TME_SPARC_FORMAT3_RD));
@@ -10875,7 +10875,7 @@ tme_sparc64_load(struct tme_sparc *ic,
     (*ic->_tme_sparc_ls_bus_cycle)(ic, ls);
     tme_sparc_log(ic, 10000, TME_OK,
                  (TME_SPARC_LOG_HANDLE(ic),
-                  _("cycle-load%u	0x%016" TME_PRIx64),
+                  _("cycle-load%u\t0x%016" TME_PRIx64),
                   (unsigned int) (ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_size * 8),
                   (tme_bus_addr64_t) ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_address));
 
@@ -11006,7 +11006,7 @@ tme_sparc64_store(struct tme_sparc *ic,
     (*ic->_tme_sparc_ls_bus_cycle)(ic, ls);
     tme_sparc_log(ic, 10000, TME_OK,
                  (TME_SPARC_LOG_HANDLE(ic),
-                  _("cycle-store%u	0x%016" TME_PRIx64),
+                  _("cycle-store%u\t0x%016" TME_PRIx64),
                   (unsigned int) (ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_size * 8),
                   (tme_bus_addr64_t) ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_address));
 

@@ -3935,7 +3935,7 @@ tme_m68k_read_memx8(struct tme_m68k *ic)
   tme_m68k_verify_mem8(ic, ic->_tme_m68k_ea_function_code, ic->_tme_m68k_ea_address, ic->tme_m68k_ireg_memx8, TME_BUS_CYCLE_READ);
   tme_m68k_log(ic, 1000, TME_OK,
                (TME_M68K_LOG_HANDLE(ic),
-                _("read_memx8	%d:0x%08x:	0x%02x"),
+                _("read_memx8\t%d:0x%08x:\t0x%02x"),
                 ic->_tme_m68k_ea_function_code,
                 ic->_tme_m68k_ea_address,
                 ic->tme_m68k_ireg_memx8));
@@ -3999,7 +3999,7 @@ tme_m68k_read_mem8(struct tme_m68k *ic, int ireg)
   tme_m68k_verify_mem8(ic, ic->_tme_m68k_ea_function_code, ic->_tme_m68k_ea_address, ic->tme_m68k_ireg_uint8(ireg), TME_BUS_CYCLE_READ);
   tme_m68k_log(ic, 1000, TME_OK,
                (TME_M68K_LOG_HANDLE(ic),
-                _("read_mem8	%d:0x%08x:	0x%02x"),
+                _("read_mem8\t%d:0x%08x:\t0x%02x"),
                 ic->_tme_m68k_ea_function_code,
                 ic->_tme_m68k_ea_address,
                 ic->tme_m68k_ireg_uint8(ireg)));
@@ -4024,7 +4024,7 @@ tme_m68k_write_memx8(struct tme_m68k *ic)
   tme_m68k_verify_mem8(ic, ic->_tme_m68k_ea_function_code, ic->_tme_m68k_ea_address, ic->tme_m68k_ireg_memx8, TME_BUS_CYCLE_WRITE);
   tme_m68k_log(ic, 1000, TME_OK, 
                (TME_M68K_LOG_HANDLE(ic),
-                _("write_memx8	%d:0x%08x:	0x%02x"),
+                _("write_memx8\t%d:0x%08x:\t0x%02x"),
                 ic->_tme_m68k_ea_function_code,
                 ic->_tme_m68k_ea_address,
                 ic->tme_m68k_ireg_memx8));
@@ -4088,7 +4088,7 @@ tme_m68k_write_mem8(struct tme_m68k *ic, int ireg)
   tme_m68k_verify_mem8(ic, ic->_tme_m68k_ea_function_code, ic->_tme_m68k_ea_address, ic->tme_m68k_ireg_uint8(ireg), TME_BUS_CYCLE_WRITE);
   tme_m68k_log(ic, 1000, TME_OK, 
                (TME_M68K_LOG_HANDLE(ic),
-                _("write_mem8	%d:0x%08x:	0x%02x"),
+                _("write_mem8\t%d:0x%08x:\t0x%02x"),
                 ic->_tme_m68k_ea_function_code,
                 ic->_tme_m68k_ea_address,
                 ic->tme_m68k_ireg_uint8(ireg)));
@@ -4193,7 +4193,7 @@ tme_m68k_read_memx16(struct tme_m68k *ic)
   tme_m68k_verify_mem16(ic, ic->_tme_m68k_ea_function_code, ic->_tme_m68k_ea_address, ic->tme_m68k_ireg_memx16, TME_BUS_CYCLE_READ);
   tme_m68k_log(ic, 1000, TME_OK,
                (TME_M68K_LOG_HANDLE(ic),
-                _("read_memx16	%d:0x%08x:	0x%04x"),
+                _("read_memx16\t%d:0x%08x:\t0x%04x"),
                 ic->_tme_m68k_ea_function_code,
                 ic->_tme_m68k_ea_address,
                 ic->tme_m68k_ireg_memx16));
@@ -4259,7 +4259,7 @@ tme_m68k_read_mem16(struct tme_m68k *ic, int ireg)
   tme_m68k_verify_mem16(ic, ic->_tme_m68k_ea_function_code, ic->_tme_m68k_ea_address, ic->tme_m68k_ireg_uint16(ireg), TME_BUS_CYCLE_READ);
   tme_m68k_log(ic, 1000, TME_OK,
                (TME_M68K_LOG_HANDLE(ic),
-                _("read_mem16	%d:0x%08x:	0x%04x"),
+                _("read_mem16\t%d:0x%08x:\t0x%04x"),
                 ic->_tme_m68k_ea_function_code,
                 ic->_tme_m68k_ea_address,
                 ic->tme_m68k_ireg_uint16(ireg)));
@@ -4378,7 +4378,7 @@ tme_m68k_fetch16(struct tme_m68k *ic, tme_uint32_t pc)
   tme_m68k_verify_mem16(ic, function_code, pc, *((tme_uint16_t *) (((tme_uint8_t *) &ic->_tme_m68k_insn_fetch_buffer[0]) + fetch_slow_next)), TME_BUS_CYCLE_READ);
   tme_m68k_log(ic, 1000, TME_OK,
                (TME_M68K_LOG_HANDLE(ic),
-                _("fetch16	%d:0x%08x:	0x%04x"),
+                _("fetch16\t%d:0x%08x:\t0x%04x"),
                 function_code,
                 pc,
                 *((tme_uint16_t *) (((tme_uint8_t *) &ic->_tme_m68k_insn_fetch_buffer[0]) + fetch_slow_next))));
@@ -4451,7 +4451,7 @@ tme_m68k_pop16(struct tme_m68k *ic, tme_uint16_t *_value)
   tme_m68k_verify_mem16(ic, function_code, ic->tme_m68k_ireg_a7, *_value, TME_BUS_CYCLE_READ);
   tme_m68k_log(ic, 1000, TME_OK,
                (TME_M68K_LOG_HANDLE(ic),
-                _("pop16	%d:0x%08x:	0x%04x"),
+                _("pop16\t%d:0x%08x:\t0x%04x"),
                 function_code,
                 ic->tme_m68k_ireg_a7,
                 *_value));
@@ -4480,7 +4480,7 @@ tme_m68k_write_memx16(struct tme_m68k *ic)
   tme_m68k_verify_mem16(ic, ic->_tme_m68k_ea_function_code, ic->_tme_m68k_ea_address, ic->tme_m68k_ireg_memx16, TME_BUS_CYCLE_WRITE);
   tme_m68k_log(ic, 1000, TME_OK, 
                (TME_M68K_LOG_HANDLE(ic),
-                _("write_memx16	%d:0x%08x:	0x%04x"),
+                _("write_memx16\t%d:0x%08x:\t0x%04x"),
                 ic->_tme_m68k_ea_function_code,
                 ic->_tme_m68k_ea_address,
                 ic->tme_m68k_ireg_memx16));
@@ -4546,7 +4546,7 @@ tme_m68k_write_mem16(struct tme_m68k *ic, int ireg)
   tme_m68k_verify_mem16(ic, ic->_tme_m68k_ea_function_code, ic->_tme_m68k_ea_address, ic->tme_m68k_ireg_uint16(ireg), TME_BUS_CYCLE_WRITE);
   tme_m68k_log(ic, 1000, TME_OK, 
                (TME_M68K_LOG_HANDLE(ic),
-                _("write_mem16	%d:0x%08x:	0x%04x"),
+                _("write_mem16\t%d:0x%08x:\t0x%04x"),
                 ic->_tme_m68k_ea_function_code,
                 ic->_tme_m68k_ea_address,
                 ic->tme_m68k_ireg_uint16(ireg)));
@@ -4612,7 +4612,7 @@ tme_m68k_push16(struct tme_m68k *ic, tme_uint16_t value)
   tme_m68k_verify_mem16(ic, function_code, linear_address_first, value, TME_BUS_CYCLE_WRITE);
   tme_m68k_log(ic, 1000, TME_OK, 
                (TME_M68K_LOG_HANDLE(ic),
-                _("push16	%d:0x%08x:	0x%04x"),
+                _("push16\t%d:0x%08x:\t0x%04x"),
                 function_code,
                 linear_address_first,
                 value));
@@ -4721,7 +4721,7 @@ tme_m68k_read_memx32(struct tme_m68k *ic)
   tme_m68k_verify_mem32(ic, ic->_tme_m68k_ea_function_code, ic->_tme_m68k_ea_address, ic->tme_m68k_ireg_memx32, TME_BUS_CYCLE_READ);
   tme_m68k_log(ic, 1000, TME_OK,
                (TME_M68K_LOG_HANDLE(ic),
-                _("read_memx32	%d:0x%08x:	0x%08x"),
+                _("read_memx32\t%d:0x%08x:\t0x%08x"),
                 ic->_tme_m68k_ea_function_code,
                 ic->_tme_m68k_ea_address,
                 ic->tme_m68k_ireg_memx32));
@@ -4787,7 +4787,7 @@ tme_m68k_read_mem32(struct tme_m68k *ic, int ireg)
   tme_m68k_verify_mem32(ic, ic->_tme_m68k_ea_function_code, ic->_tme_m68k_ea_address, ic->tme_m68k_ireg_uint32(ireg), TME_BUS_CYCLE_READ);
   tme_m68k_log(ic, 1000, TME_OK,
                (TME_M68K_LOG_HANDLE(ic),
-                _("read_mem32	%d:0x%08x:	0x%08x"),
+                _("read_mem32\t%d:0x%08x:\t0x%08x"),
                 ic->_tme_m68k_ea_function_code,
                 ic->_tme_m68k_ea_address,
                 ic->tme_m68k_ireg_uint32(ireg)));
@@ -4906,7 +4906,7 @@ tme_m68k_fetch32(struct tme_m68k *ic, tme_uint32_t pc)
   tme_m68k_verify_mem32(ic, function_code, pc, *((tme_uint32_t *) (((tme_uint8_t *) &ic->_tme_m68k_insn_fetch_buffer[0]) + fetch_slow_next)), TME_BUS_CYCLE_READ);
   tme_m68k_log(ic, 1000, TME_OK,
                (TME_M68K_LOG_HANDLE(ic),
-                _("fetch32	%d:0x%08x:	0x%08x"),
+                _("fetch32\t%d:0x%08x:\t0x%08x"),
                 function_code,
                 pc,
                 *((tme_uint32_t *) (((tme_uint8_t *) &ic->_tme_m68k_insn_fetch_buffer[0]) + fetch_slow_next))));
@@ -4979,7 +4979,7 @@ tme_m68k_pop32(struct tme_m68k *ic, tme_uint32_t *_value)
   tme_m68k_verify_mem32(ic, function_code, ic->tme_m68k_ireg_a7, *_value, TME_BUS_CYCLE_READ);
   tme_m68k_log(ic, 1000, TME_OK,
                (TME_M68K_LOG_HANDLE(ic),
-                _("pop32	%d:0x%08x:	0x%08x"),
+                _("pop32\t%d:0x%08x:\t0x%08x"),
                 function_code,
                 ic->tme_m68k_ireg_a7,
                 *_value));
@@ -5008,7 +5008,7 @@ tme_m68k_write_memx32(struct tme_m68k *ic)
   tme_m68k_verify_mem32(ic, ic->_tme_m68k_ea_function_code, ic->_tme_m68k_ea_address, ic->tme_m68k_ireg_memx32, TME_BUS_CYCLE_WRITE);
   tme_m68k_log(ic, 1000, TME_OK, 
                (TME_M68K_LOG_HANDLE(ic),
-                _("write_memx32	%d:0x%08x:	0x%08x"),
+                _("write_memx32\t%d:0x%08x:\t0x%08x"),
                 ic->_tme_m68k_ea_function_code,
                 ic->_tme_m68k_ea_address,
                 ic->tme_m68k_ireg_memx32));
@@ -5074,7 +5074,7 @@ tme_m68k_write_mem32(struct tme_m68k *ic, int ireg)
   tme_m68k_verify_mem32(ic, ic->_tme_m68k_ea_function_code, ic->_tme_m68k_ea_address, ic->tme_m68k_ireg_uint32(ireg), TME_BUS_CYCLE_WRITE);
   tme_m68k_log(ic, 1000, TME_OK, 
                (TME_M68K_LOG_HANDLE(ic),
-                _("write_mem32	%d:0x%08x:	0x%08x"),
+                _("write_mem32\t%d:0x%08x:\t0x%08x"),
                 ic->_tme_m68k_ea_function_code,
                 ic->_tme_m68k_ea_address,
                 ic->tme_m68k_ireg_uint32(ireg)));
@@ -5140,7 +5140,7 @@ tme_m68k_push32(struct tme_m68k *ic, tme_uint32_t value)
   tme_m68k_verify_mem32(ic, function_code, linear_address_first, value, TME_BUS_CYCLE_WRITE);
   tme_m68k_log(ic, 1000, TME_OK, 
                (TME_M68K_LOG_HANDLE(ic),
-                _("push32	%d:0x%08x:	0x%08x"),
+                _("push32\t%d:0x%08x:\t0x%08x"),
                 function_code,
                 linear_address_first,
                 value));
