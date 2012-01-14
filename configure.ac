@@ -633,6 +633,7 @@ dnl Configure for libtool.
 #AM_PROG_LIBTOOL
 #AC_SUBST(LTLIBOBJS)
 #AC_CONFIG_SUBDIRS(libltdl)
+LT_PREREQ([2.4])
 LT_CONFIG_LTDL_DIR([libltdl])
 LT_INIT([dlopen])
 LTDL_INIT([installable])
