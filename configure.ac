@@ -657,7 +657,7 @@ AC_ARG_ENABLE(warnings,
 [  --disable-warnings      don't compile with warnings turned on (default=do)],
 [ ], [enable_warnings=yes])
 if test "x$enable_warnings" = "xyes" -a "x$GCC" = "xyes"; then
-  CFLAGS="${CFLAGS-} -Wundef -Wall -Werror -Wno-unused-but-set-variable -Wno-array-bounds"
+  CFLAGS="${CFLAGS-} -Wundef -Wall -Werror"
   CXXFLAGS="${CXXFLAGS-} -W"
 fi
 
@@ -719,7 +719,8 @@ TMEEOF
   echo '# endif' >> ${outfile}-tmp
   echo '#else' >> ${outfile}-tmp
   echo '# ifndef _TME_WORDS_BIGENDIAN' >> ${outfile}-tmp
-  if [[ ! $(grep -c "undef WORDS_BIGENDIAN" config.h) ]]; then
+  words_be_num=`grep -c "undef WORDS_BIGENDIAN" config.h`
+  if [[ $words_be_num -eq 0 ]]; then
     echo '#  define _TME_WORDS_BIGENDIAN 1' >> ${outfile}-tmp
   fi
   echo '# endif' >> ${outfile}-tmp
