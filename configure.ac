@@ -709,10 +709,9 @@ if test "x$gen_tmeconfig_h" = xyes; then
 #define _TMECONFIG_H
 
 TMEEOF
-  (for word in HAVE_ TIME_ PROTO_ ALIGNOF_ SIZEOF_; do \
-    grep $word config.h | sed 's/#define[ 	]\{1,\}/&_TME_/' ; \
+  (for word in HAVE_ TIME_ PROTO_ ALIGNOF_ SIZEOF_ AC_APPLE_UNIVERSAL_BUILD; do \
+    grep $word config.h | sed -e 's/#define[ 	]\{1,\}/&_TME_/' -e 's/#if.*//g' ; \
   done) | sort | uniq >> ${outfile}-tmp
-  grep "#define.*AC_APPLE_UNIVERSAL_BUILD" config.h | sed 's/#define[ 	]\{1,\}/&_TME_/' >> ${outfile}-tmp
   echo '#if defined _TME_AC_APPLE_UNIVERSAL_BUILD' >> ${outfile}-tmp
   echo '# if defined __BIG_ENDIAN__' >> ${outfile}-tmp
   echo '#  define _TME_WORDS_BIGENDIAN 1' >> ${outfile}-tmp
