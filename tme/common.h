@@ -50,10 +50,10 @@
 /* netinet/in.h is needed to get the hton and ntoh functions: */
 #include <netinet/in.h>
 
-#ifdef _TME_HAVE_SYS_BSWAP_H
-/* sys/bswap.h is needed for the bswap functions: */
-#include <sys/bswap.h>
-#endif /* _TME_HAVE_SYS_BSWAP_H */
+#ifdef _TME_HAVE_BYTESWAP_H
+/* byteswap.h is needed for the bswap functions: */
+#include <byteswap.h>
+#endif /* _TME_HAVE_BYTESWAP_H */
 
 /* macros: */
 #undef FALSE
@@ -183,16 +183,30 @@ _TME_RCSID("$Id: common.h,v 1.16 2010/02/18 01:23:20 fredette Exp $");
 #ifdef _TME_HAVE_BSWAP16
 #define tme_bswap_u16(x) ((tme_uint16_t) bswap16((tme_uint16_t) (x)))
 #else  /* !_TME_HAVE_BSWAP16 */
+#ifdef _TME_HAVE_BSWAP_16
+#define tme_bswap_u16(x) ((tme_uint16_t) bswap_16((tme_uint16_t) (x)))
+#else  /* !_TME_HAVE_BSWAP_16 */
+#ifdef _TME_HAVE_SWAP16
+#define tme_bswap_u16(x) ((tme_uint16_t) swap16((tme_uint16_t) (x)))
+#else  /* !_TME_HAVE_SWAP16 */
 static _tme_inline tme_uint16_t
 tme_bswap_u16(tme_uint16_t x)
 {
   return ((((x) & 0xff00) >> 8)
 	  | (((x) & 0x00ff) << 8));
 }
+#endif /* !_TME_HAVE_SWAP16 */
+#endif /* !_TME_HAVE_BSWAP_16 */
 #endif /* !_TME_HAVE_BSWAP16 */
 #ifdef _TME_HAVE_BSWAP32
 #define tme_bswap_u32(x) ((tme_uint32_t) bswap32((tme_uint32_t) (x)))
 #else  /* !_TME_HAVE_BSWAP32 */
+#ifdef _TME_HAVE_BSWAP_32
+#define tme_bswap_u32(x) ((tme_uint32_t) bswap_32((tme_uint32_t) (x)))
+#else  /* !_TME_HAVE_BSWAP_32 */
+#ifdef _TME_HAVE_SWAP32
+#define tme_bswap_u32(x) ((tme_uint32_t) swap32((tme_uint32_t) (x)))
+#else  /* !_TME_HAVE_SWAP32 */
 static _tme_inline tme_uint32_t
 tme_bswap_u32(tme_uint32_t x)
 {
@@ -201,6 +215,8 @@ tme_bswap_u32(tme_uint32_t x)
 	  | (((x) & 0x0000ff00) << 8)
 	  | (((x) & 0x000000ff) << 24));
 }
+#endif /* !_TME_HAVE_SWAP32 */
+#endif /* !_TME_HAVE_BSWAP_32 */
 #endif /* !_TME_HAVE_BSWAP32 */
 #endif /* _TME_WORDS_BIGENDIAN */
 
@@ -301,12 +317,20 @@ union tme_value64 *_tme_value64_set _TME_P((union tme_value64 *, _tme_const tme_
 #ifdef _TME_HAVE_BSWAP64
 #define tme_bswap_u64(x) ((tme_uint64_t) bswap64((tme_uint64_t) (x)))
 #else  /* !_TME_HAVE_BSWAP64 */
+#ifdef _TME_HAVE_BSWAP_64
+#define tme_bswap_u64(x) ((tme_uint64_t) bswap_64((tme_uint64_t) (x)))
+#else  /* !_TME_HAVE_BSWAP64 */
+#ifdef _TME_HAVE_SWAP64
+#define tme_bswap_u64(x) ((tme_uint64_t) swap64((tme_uint64_t) (x)))
+#else  /* !_TME_HAVE_SWAP64 */
 static _tme_inline tme_uint64_t
 tme_bswap_u64(tme_uint64_t x)
 {
   return ((((tme_uint64_t) tme_bswap_u32((tme_uint32_t) x)) << 32)
 	  | tme_bswap_u32((tme_uint32_t) (x >> 32)));
 }
+#endif /* !_TME_HAVE_SWAP64 */
+#endif /* !_TME_HAVE_BSWAP_64 */
 #endif /* !_TME_HAVE_BSWAP64 */
 #endif /* TME_HAVE_INT64_T */
 

@@ -46,8 +46,8 @@ AC_CONFIG_HEADERS([config.h])
 
 dnl Checks for programs.
 AC_PROG_AWK
-AC_PROG_CC
-AC_PROG_CPP
+AC_PROG_CC_C99
+AC_PROG_CPP_WERROR
 AC_PROG_YACC
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
@@ -60,7 +60,7 @@ dnl Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([unistd.h stdio.h memory.h stdarg.h limits.h float.h])
 AC_CHECK_HEADERS([sys/ioctl.h sys/sockio.h sys/socketio.h net/if_dl.h ioctls.h])
-AC_CHECK_HEADERS([sys/bswap.h])
+AC_CHECK_HEADERS([byteswap.h])
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h netinet/in.h sys/param.h sys/socket.h sys/time.h termios.h])
 
 dnl Checks for typedefs, structures, and compiler characteristics.
@@ -128,18 +128,14 @@ AC_CHECK_FUNC_LONG(bswap16, [
 
   x = bswap16(0x1122);
 ], [ 
-#ifdef HAVE_SYS_BSWAP_H
-#include <sys/bswap.h>
-#endif
+#include <sys/types.h>
 ])
 AC_CHECK_FUNC_LONG(bswap32, [
   unsigned int x;
 
   x = bswap32(0x11223344);
 ], [ 
-#ifdef HAVE_SYS_BSWAP_H
-#include <sys/bswap.h>
-#endif
+#include <sys/types.h>
 ])
 if test $ac_cv_sizeof_long = 8; then
   AC_CHECK_FUNC_LONG(bswap64, [
@@ -147,9 +143,59 @@ if test $ac_cv_sizeof_long = 8; then
 
   x = bswap64(0x11223344);
 ], [ 
-#ifdef HAVE_SYS_BSWAP_H
-#include <sys/bswap.h>
+#include <sys/types.h>
+  ])
+fi
+AC_CHECK_FUNC_LONG(bswap_16, [
+  unsigned int x;
+
+  x = bswap_16(0x1122);
+], [ 
+#ifdef HAVE_BYTESWAP_H
+#include <byteswap.h>
 #endif
+])
+AC_CHECK_FUNC_LONG(bswap_32, [
+  unsigned int x;
+
+  x = bswap_32(0x11223344);
+], [ 
+#ifdef HAVE_BYTESWAP_H
+#include <byteswap.h>
+#endif
+])
+if test $ac_cv_sizeof_long = 8; then
+  AC_CHECK_FUNC_LONG(bswap_64, [
+  unsigned long x;
+
+  x = bswap_64(0x11223344);
+], [ 
+#ifdef HAVE_BYTESWAP_H
+#include <byteswap.h>
+#endif
+  ])
+fi
+AC_CHECK_FUNC_LONG(swap16, [
+  unsigned int x;
+
+  x = swap16(0x1122);
+], [ 
+#include <sys/types.h>
+])
+AC_CHECK_FUNC_LONG(swap32, [
+  unsigned int x;
+
+  x = swap32(0x11223344);
+], [ 
+#include <sys/types.h>
+])
+if test $ac_cv_sizeof_long = 8; then
+  AC_CHECK_FUNC_LONG(swap64, [
+  unsigned long x;
+
+  x = swap64(0x11223344);
+], [ 
+#include <sys/types.h>
   ])
 fi
 AC_CHECK_FUNC_LONG(isinff, 
