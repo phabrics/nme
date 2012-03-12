@@ -46,8 +46,8 @@ AC_CONFIG_HEADERS([config.h])
 
 dnl Checks for programs.
 AC_PROG_AWK
-AC_PROG_CC_C99
-AC_PROG_CPP_WERROR
+AC_PROG_CC
+AC_PROG_CPP
 AC_PROG_YACC
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
@@ -74,6 +74,7 @@ if test $ac_cv_c_long_double = yes; then
   AC_DEFINE([HAVE_LONG_DOUBLE],[1],[Define to 1 if the type `long double' works and has more range or
 	 precision than `double'.])
 fi
+AC_TYPE_LONG_LONG_INT
 AC_TYPE_SIZE_T
 AC_TYPE_SSIZE_T
 AC_CHECK_SIZEOF(long, 4)
@@ -84,16 +85,25 @@ AC_CHECK_SIZEOF(double, 8)
 if test $ac_cv_c_long_double = yes; then
   AC_CHECK_SIZEOF(long double, 12)
 fi
+if test $ac_cv_type_long_long_int = yes; then
+  AC_CHECK_SIZEOF(long long int, 8)
+else
+  ac_cv_sizeof_long_long_int=$ac_cv_sizeof_long  
+fi
 if test $ac_cv_sizeof_int != 4 && test $ac_cv_sizeof_long != 4; then
   AC_MSG_ERROR([can't find a 32-bit type])
 fi
 if test $ac_cv_sizeof_int != 2 && test $ac_cv_sizeof_short != 2; then
   AC_MSG_ERROR([can't find a 16-bit type])
 fi
-if test $ac_cv_sizeof_long = 8; then
+if test $ac_cv_sizeof_long_long_int != 8 && test $ac_cv_sizeof_long != 8; then
+  AC_MSG_WARN([can't find a 64-bit type])
+  have_int64=no
+else
   AC_CHECK_ALIGNOF(64)
   AC_CHECK_SHIFTMAX(64)
   AC_CHECK_SHIFTSIGNED(64)
+  have_int64=yes
 fi
 AC_CHECK_ALIGNOF(32)
 AC_CHECK_ALIGNOF(16)
@@ -137,7 +147,7 @@ AC_CHECK_FUNC_LONG(bswap32, [
 ], [ 
 #include <sys/types.h>
 ])
-if test $ac_cv_sizeof_long = 8; then
+if test $have_int64 = yes; then
   AC_CHECK_FUNC_LONG(bswap64, [
   unsigned long x;
 
@@ -164,7 +174,7 @@ AC_CHECK_FUNC_LONG(bswap_32, [
 #include <byteswap.h>
 #endif
 ])
-if test $ac_cv_sizeof_long = 8; then
+if test $have_int64 = yes; then
   AC_CHECK_FUNC_LONG(bswap_64, [
   unsigned long x;
 
@@ -189,7 +199,7 @@ AC_CHECK_FUNC_LONG(swap32, [
 ], [ 
 #include <sys/types.h>
 ])
-if test $ac_cv_sizeof_long = 8; then
+if test $have_int64 = yes; then
   AC_CHECK_FUNC_LONG(swap64, [
   unsigned long x;
 
@@ -435,7 +445,7 @@ dnl Configures for the system(s) to emulate.
 systems=all
 if echo " ${systems} " | grep ' all ' > /dev/null 2>&1; then
   systems="sun2 sun3 sun4"
-  if test $ac_cv_sizeof_long = 8 || test "x${GCC}" = "xyes"; then
+  if test $have_int64 = yes; then
     systems="${systems} sunultra1"
   fi
 fi
@@ -612,7 +622,7 @@ if test "${recode_size_guest_max}" = 0; then
     enable_recode=no
     recode_size_guest_max=1
 fi
-if test "x${enable_recode}" = no; then
+if test "x${enable_recode}" = xno; then
     recode_hosts=
 else
     AC_MSG_CHECKING([for target recode support])
@@ -786,6 +796,11 @@ TMEEOF
     echo '#define _TME_PRI64 "l"' >> ${outfile}-tmp
     echo 'typedef signed long tme_int64_t;' >> ${outfile}-tmp
     echo 'typedef unsigned long tme_uint64_t;' >> ${outfile}-tmp
+  elif test $ac_cv_sizeof_long_long_int = 8; then
+    echo '#define TME_HAVE_INT64_T' >> ${outfile}-tmp
+    echo '#define _TME_PRI64 "ll"' >> ${outfile}-tmp
+    echo 'typedef signed long long int tme_int64_t;' >> ${outfile}-tmp
+    echo 'typedef unsigned long long int tme_uint64_t;' >> ${outfile}-tmp
   fi
   if test $ac_cv_sizeof_int = 4; then
     echo '#define _TME_PRI32 ""' >> ${outfile}-tmp

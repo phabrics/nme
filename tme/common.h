@@ -246,22 +246,6 @@ tme_bswap_u32(tme_uint32_t x)
 /* i18n: */
 #define _(x) x
 
-/* 64-bit values: */
-#ifndef TME_HAVE_INT64_T
-
-/* gcc has a `long long' type that is defined to be twice as long as
-   an int: */
-/* XXX when exactly did this feature appear? */
-#if defined(__GNUC__) && (__GNUC__ >= 2) && (_TME_SIZEOF_INT == 4)
-#define TME_HAVE_INT64_T
-#define _TME_ALIGNOF_INT64_T _TME_ALIGNOF_INT32_T
-#define _TME_SHIFTMAX_INT64_T (63)
-#define _TME_PRI64 "ll"
-typedef signed long long int tme_int64_t;
-typedef unsigned long long int tme_uint64_t;
-#endif /* __GNUC__ && __GNUC__ >= 2 */
-
-#endif /* TME_HAVE_INT64_T */
 union tme_value64 {
 #ifdef TME_HAVE_INT64_T
   tme_int64_t tme_value64_int;
