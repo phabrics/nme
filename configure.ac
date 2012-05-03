@@ -60,7 +60,7 @@ dnl Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([unistd.h stdio.h memory.h stdarg.h limits.h float.h])
 AC_CHECK_HEADERS([sys/ioctl.h sys/sockio.h sys/socketio.h net/if_dl.h ioctls.h])
-AC_CHECK_HEADERS([byteswap.h])
+AC_CHECK_HEADERS([byteswap.h sys/endian.h])
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h netinet/in.h sys/param.h sys/socket.h sys/time.h termios.h])
 
 dnl Checks for typedefs, structures, and compiler characteristics.
@@ -139,6 +139,9 @@ AC_CHECK_FUNC_LONG(bswap16, [
   x = bswap16(0x1122);
 ], [ 
 #include <sys/types.h>
+#ifdef HAVE_SYS_ENDIAN_H
+#include <sys/endian.h>
+#endif
 ])
 AC_CHECK_FUNC_LONG(bswap32, [
   unsigned int x;
@@ -146,14 +149,20 @@ AC_CHECK_FUNC_LONG(bswap32, [
   x = bswap32(0x11223344);
 ], [ 
 #include <sys/types.h>
+#ifdef HAVE_SYS_ENDIAN_H
+#include <sys/endian.h>
+#endif
 ])
 if test $have_int64 = yes; then
   AC_CHECK_FUNC_LONG(bswap64, [
-  unsigned long x;
+  unsigned long long int x;
 
-  x = bswap64(0x11223344);
+  x = bswap64(0x1122334455667788);
 ], [ 
 #include <sys/types.h>
+#ifdef HAVE_SYS_ENDIAN_H
+#include <sys/endian.h>
+#endif
   ])
 fi
 AC_CHECK_FUNC_LONG(bswap_16, [
@@ -176,9 +185,9 @@ AC_CHECK_FUNC_LONG(bswap_32, [
 ])
 if test $have_int64 = yes; then
   AC_CHECK_FUNC_LONG(bswap_64, [
-  unsigned long x;
+  unsigned long long int x;
 
-  x = bswap_64(0x11223344);
+  x = bswap_64(0x1122334455667788);
 ], [ 
 #ifdef HAVE_BYTESWAP_H
 #include <byteswap.h>
@@ -201,9 +210,9 @@ AC_CHECK_FUNC_LONG(swap32, [
 ])
 if test $have_int64 = yes; then
   AC_CHECK_FUNC_LONG(swap64, [
-  unsigned long x;
+  unsigned long long int x;
 
-  x = swap64(0x11223344);
+  x = swap64(0x1122334455667788);
 ], [ 
 #include <sys/types.h>
   ])
@@ -918,6 +927,7 @@ VERSION="$VERSION"
 target="$target"
 ac_cv_sizeof_int="$ac_cv_sizeof_int"
 ac_cv_sizeof_long="$ac_cv_sizeof_long"
+ac_cv_sizeof_long_long_int="$ac_cv_sizeof_long_long_int"
 ac_cv_sizeof_short="$ac_cv_sizeof_short"
 bus_size_max="$bus_size_max"
 ]])
