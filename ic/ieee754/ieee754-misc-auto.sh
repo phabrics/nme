@@ -474,8 +474,8 @@ tme_ieee754_${precision}_value_from_builtin(tme_ieee754_${precision}_builtin_t x
 
   /* x must not be a NaN or an infinity: */
 #if (TME_FLOAT_FORMAT_IEEE754_${capprecision}_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
-  assert (!isnanf(x_builtin));
-  assert (!isinff(x_builtin));
+  assert (!isnan(x_builtin));
+  assert (!isinf(x_builtin));
 #elif (TME_FLOAT_FORMAT_IEEE754_${capprecision}_BUILTIN == TME_FLOAT_FORMAT_DOUBLE)
   assert (!isnan(x_builtin));
   assert (!isinf(x_builtin));

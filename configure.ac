@@ -217,16 +217,6 @@ if test $have_int64 = yes; then
 #include <sys/types.h>
   ])
 fi
-AC_CHECK_FUNC_LONG(isinff, 
-[
-  float x;
-  int y;
-
-  x = 1;
-  y = isinff(x);
-], [
-#include <math.h>
-], -lm)
 
 dnl Checks for perl.
 AC_PATH_PROGS(PERL, perl4.036 perl4 perl perl5, no)
@@ -260,7 +250,7 @@ found_BIOCSHDRCMPLT
 #endif
 ], [tme_raw_type=bpf])])
 AC_MSG_CHECKING([for raw Ethernet access method])
-case "x$tme_raw_type" in
+case "x${tme_raw_type}" in
 xbpf) TME_HOSTS="${TME_HOSTS} bsd" ;;
 x) tme_raw_type=none ;;
 esac
@@ -335,7 +325,7 @@ if test "x${DISPLAY}" != x && xdpyinfo >/dev/null 2>&1; then
   IFS=%
   for pixmap_info in $pixmap_infos; do
     IFS=$save_IFS
-    if test "x$pixmap_info" = x; then continue; fi
+    if test "x${pixmap_info}" = x; then continue; fi
     this_pixmap_depth=`echo ${pixmap_info} | sed -e 's/.*depth \([0-9][0-9]*\), *bits_per_pixel \([0-9][0-9]*\), *scanline_pad \([0-9][0-9]*\).*/\1/'`
      this_pixmap_bipp=`echo ${pixmap_info} | sed -e 's/.*depth \([0-9][0-9]*\), *bits_per_pixel \([0-9][0-9]*\), *scanline_pad \([0-9][0-9]*\).*/\2/'`
       this_pixmap_pad=`echo ${pixmap_info} | sed -e 's/.*depth \([0-9][0-9]*\), *bits_per_pixel \([0-9][0-9]*\), *scanline_pad \([0-9][0-9]*\).*/\3/'`
@@ -374,7 +364,7 @@ if test "x${DISPLAY}" != x && xdpyinfo >/dev/null 2>&1; then
     IFS=%
     for dimension in $dimensions; do
       IFS=$save_IFS
-      if test "x$dimension" = x; then continue; fi
+      if test "x${dimension}" = x; then continue; fi
        this_width=`echo ${dimension} | sed -e 's/.*dimensions: *\([0-9][0-9]*\)x\([0-9][0-9]*\).*/\1/'`
       this_height=`echo ${dimension} | sed -e 's/.*dimensions: *\([0-9][0-9]*\)x\([0-9][0-9]*\).*/\2/'`
       this_area=`expr ${this_width} \* ${this_height}`
@@ -686,7 +676,7 @@ i[3456789]86-* | x86_64-*) misc_hosts="x86" ;;
 esac
 changequote([, ])dnl
 AC_MSG_RESULT([${misc_hosts}])
-if test "x${misc_hosts}" = no; then
+if test "x${misc_hosts}" = "xno"; then
     misc_hosts=
 fi
 
@@ -703,16 +693,19 @@ LT_CONFIG_LTDL_DIR([libltdl])
 LT_INIT([dlopen])
 LTDL_INIT([installable])
 TME_PREOPEN=
-if test $enable_shared = no; then
+if test "x${enable_shared}" = "xno"; then
   TME_PREOPEN='`sort -u $(top_builddir)/tme-preopen.txt`'
 fi
 AC_SUBST(TME_PREOPEN)
-CPPFLAGS="${CPPFLAGS-} -D_BSD_SOURCE -D_XOPEN_SOURCE=700"
+case "${host_os}" in
+netbsd*) CPPFLAGS="${CPPFLAGS-} -D_NETBSD_SOURCE -D_XOPEN_SOURCE=600" ;;
+*) CPPFLAGS="${CPPFLAGS-} -D_BSD_SOURCE -D_XOPEN_SOURCE=600" ;;
+esac
 dnl Configure debugging and/or warnings.
 AC_ARG_ENABLE(debug,
 [  --enable-debug          compile debuggable libraries and programs (default=don't)],
 [ ], [enable_debug=no])
-if test "x$enable_debug" = "xyes"; then
+if test "x${enable_debug}" = "xyes"; then
   CFLAGS="${CFLAGS-} -g -O0"
   CXXFLAGS="${CXXFLAGS-} -g3 -O0"
 else
@@ -721,14 +714,14 @@ fi
 AC_ARG_ENABLE(warnings,
 [  --disable-warnings      don't compile with warnings turned on (default=do)],
 [ ], [enable_warnings=yes])
-if test "x$enable_warnings" = "xyes" -a "x$GCC" = "xyes"; then
+if test "x${enable_warnings}" = "xyes" -a "x${GCC}" = "xyes"; then
   CFLAGS="${CFLAGS-} -Wundef -Wall -Werror"
   CXXFLAGS="${CXXFLAGS-} -W"
 fi
 
 dnl Some code isn't alias-clean.
 CFLAGS_NO_STRICT_ALIASING=
-if test "x$GCC" = "xyes"; then
+if test "x${GCC}" = "xyes"; then
   CFLAGS_NO_STRICT_ALIASING=" -fno-strict-aliasing"
 fi
 AC_SUBST(CFLAGS_NO_STRICT_ALIASING)
@@ -749,7 +742,7 @@ AC_CONFIG_COMMANDS([default-1],[[
 ## CONFIG_FILES or CONFIG_HEADERS to empty.  This heuristic works
 ## only when AM_CONFIG_HEADER is set, however.
 
-case "x$CONFIG_OTHER" in
+case "x${CONFIG_OTHER}" in
 *tmeconfig.h) gen_tmeconfig_h=yes
 ;;
 esac
@@ -761,7 +754,7 @@ if test -n "${CONFIG_FILES}" && test -n "${CONFIG_HEADERS}"; then
 fi
 
 ## If we're generating tmeconfig.h:
-if test "x$gen_tmeconfig_h" = xyes; then
+if test "x${gen_tmeconfig_h}" = xyes; then
   outfile=tmeconfig.h
   echo "$as_me: creating $outfile"
   cat <<TMEEOF > ${outfile}-tmp
@@ -784,7 +777,7 @@ TMEEOF
   echo '#else' >> ${outfile}-tmp
   echo '# ifndef _TME_WORDS_BIGENDIAN' >> ${outfile}-tmp
   words_be_num=`grep -c "undef WORDS_BIGENDIAN" config.h`
-  if [[ $words_be_num -eq 0 ]]; then
+  if test $words_be_num = 0; then
     echo '#  define _TME_WORDS_BIGENDIAN 1' >> ${outfile}-tmp
   fi
   echo '# endif' >> ${outfile}-tmp

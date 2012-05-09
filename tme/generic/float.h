@@ -350,7 +350,7 @@ tme_float_assert_formats(_tme_const struct tme_float *x, unsigned int formats)
        ? (tme_float_value_ieee754_exponent_quad(x) == 0x7fff \
 	  && tme_float_value_ieee754_fracor_quad(x) != 0) \
        : tme_float_is_format(x, formats, TME_FLOAT_FORMAT_FLOAT) \
-       ? isnanf((x)->tme_float_value_float) \
+       ? isnan((x)->tme_float_value_float) \
        : tme_float_is_format(x, formats, TME_FLOAT_FORMAT_DOUBLE) \
        ? isnan((x)->tme_float_value_double) \
        : TME_FLOAT_IF_LONG_DOUBLE(isnan((x)->tme_float_value_long_double) ||) FALSE))
@@ -371,7 +371,7 @@ tme_float_assert_formats(_tme_const struct tme_float *x, unsigned int formats)
        ? (tme_float_value_ieee754_exponent_quad(x) == 0x7fff \
 	  && tme_float_value_ieee754_fracor_quad(x) == 0) \
        : tme_float_is_format(x, formats, TME_FLOAT_FORMAT_FLOAT) \
-       ? isinff((x)->tme_float_value_float) \
+       ? isinf((x)->tme_float_value_float) \
        : tme_float_is_format(x, formats, TME_FLOAT_FORMAT_DOUBLE) \
        ? isinf((x)->tme_float_value_double) \
        : TME_FLOAT_IF_LONG_DOUBLE(isinf((x)->tme_float_value_long_double) ||) FALSE))
@@ -491,8 +491,27 @@ long double tme_float_radix10_scale_long_double _TME_P((long double, tme_int32_t
 #endif /* _TME_HAVE_LONG_DOUBLE */
 
 /* prototypes for missing standard functions: */
-#ifndef _TME_HAVE_ISINFF
-int isinff _TME_P((float));
-#endif /* !_TME_HAVE_ISINFF */
+#ifndef isnan
+# define isnan(x)						 \
+  (sizeof (x) == sizeof (long double) ? isnan_ld (x)		 \
+   : sizeof (x) == sizeof (double) ? isnan_d (x)		 \
+   : isnan_f (x))
+static inline int isnan_f  _TME_P((float       x)) { return x != x; }
+static inline int isnan_d  _TME_P((double      x)) { return x != x; }
+static inline int isnan_ld _TME_P((long double x)) { return x != x; }
+#endif
+
+#ifndef isinf
+# define isinf(x)						 \
+  (sizeof (x) == sizeof (long double) ? isinf_ld (x)		 \
+   : sizeof (x) == sizeof (double) ? isinf_d (x)		 \
+   : isinf_f (x))
+static inline int isinf_f  _TME_P((float       x))
+{ return !isnan (x) && isnan (x - x); }
+static inline int isinf_d  _TME_P((double      x))
+{ return !isnan (x) && isnan (x - x); }
+static inline int isinf_ld _TME_P((long double x))
+{ return !isnan (x) && isnan (x - x); }
+#endif
 
 #endif /* _TME_GENERIC_FLOAT_H */
