@@ -698,6 +698,7 @@ if test "x${enable_shared}" = "xno"; then
 fi
 AC_SUBST(TME_PREOPEN)
 case "${host_os}" in
+freebsd*) ;;
 netbsd*) CPPFLAGS="${CPPFLAGS-} -D_NETBSD_SOURCE -D_XOPEN_SOURCE=600" ;;
 *) CPPFLAGS="${CPPFLAGS-} -D_BSD_SOURCE -D_XOPEN_SOURCE=600" ;;
 esac

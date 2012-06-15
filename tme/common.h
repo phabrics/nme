@@ -46,6 +46,9 @@
 #endif /* HAVE_CONFIG_H */
 #endif /* _TME_IMPL */
 #include <sys/types.h>
+#ifdef HAVE_SYS_ENDIAN_H
+#include <sys/endian.h>
+#endif
 
 /* netinet/in.h is needed to get the hton and ntoh functions: */
 #include <netinet/in.h>
