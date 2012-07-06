@@ -45,9 +45,11 @@ _TME_RCSID("$Id: posix-serial.c,v 1.11 2007/08/24 00:57:01 fredette Exp $");
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/ioctl.h>
+#include <pty.h>
 
 /* macros: */
 #define TME_POSIX_SERIAL_BUFFER_SIZE	(4096)
+#define PTMDEV "/dev/ptm"
 
 /* structures: */
 struct tme_posix_serial {
@@ -845,15 +847,17 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
   int arg_i;
   int saved_errno;
   int emulate_break;
-  int unix98_pts;
+#ifdef HAVE_PTSNAME
+  int unix98_pts_in, unix98_pts_out;
 
+  unix98_pts_in = unix98_pts_out = FALSE;
+#endif
   /* initialize: */
   filename_in = NULL;
   filename_out = NULL;
   emulate_break = FALSE;
   arg_i = 1;
   usage = FALSE;
-  unix98_pts = FALSE;
 
   /* loop reading our arguments: */
   for (;;) {
@@ -933,15 +937,22 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
     fd_out = STDOUT_FILENO;
   }
   if (fd_in < 0) {
-    if (strstr(filename_in, "ptmx") != NULL) {
-      fd_in = fd_out = posix_openpt( O_RDWR );
-      filename_out= ptsname(fd_in);
-      if(filename_out == NULL) {
+#ifdef HAVE_PTSNAME
+    if (strstr(filename_in, PTMDEV) != NULL) {
+      fd_in = posix_openpt( O_RDWR );
+      if (strcmp(filename_in, filename_out) == 0) {
+	fd_out = fd_in;
+	filename_out = filename_in = ptsname(fd_in);
+      } else
+	filename_in=ptsname(fd_in);
+      if(filename_in == NULL) {
 	tme_output_append_error(_output, "could not open serial device %s", filename_in);
 	return (errno);
       } else
-	unix98_pts= TRUE;
-    } else if (strcmp(filename_in, filename_out) == 0) {
+	unix98_pts_in= TRUE;
+    } else 
+#endif
+      if (strcmp(filename_in, filename_out) == 0) {
       fd_in = fd_out = open(filename_in, O_RDWR | O_NONBLOCK);
     }
     else {
@@ -953,7 +964,18 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
     }
   }
   if (fd_out < 0) {
-    fd_out = open(filename_out, O_WRONLY | O_NONBLOCK);
+#ifdef HAVE_PTSNAME
+    if (strstr(filename_out, PTMDEV) != NULL) {
+      fd_out = posix_openpt( O_RDWR );
+      filename_out=ptsname(fd_out);
+      if(filename_out == NULL) {
+	tme_output_append_error(_output, "could not open serial device %s", filename_out);
+	return (errno);
+      } else
+	unix98_pts_out= TRUE;
+    } else
+#endif
+      fd_out = open(filename_out, O_WRONLY | O_NONBLOCK);
     if (fd_out < 0) {
       saved_errno = errno;
       close(fd_in);
@@ -986,16 +1008,29 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
   element->tme_element_private = serial;
   element->tme_element_connections_new = _tme_posix_serial_connections_new;
 
-  if(unix98_pts) {
+#ifdef HAVE_PTSNAME
+  if(unix98_pts_in) {
     if((grantpt(fd_in) < 0) ||
        (unlockpt(fd_in) < 0)) {
-      tme_output_append_error(_output, "could not open serial device %s", filename_out);
+      tme_output_append_error(_output, "could not open serial input slave device %s", filename_in);
       return (errno);
     }
-    tme_output_append_error(_output, "using serial device %s", filename_out);
+    tme_output_append_error(_output, "using serial input slave device %s", filename_in);
     /*    tme_log(&element->tme_element_log_handle, 0, TME_OK,
 	    (&element->tme_element_log_handle,
 	    "using interface %s", filename_in));*/
   }
+  if(unix98_pts_out) {
+    if((grantpt(fd_out) < 0) ||
+       (unlockpt(fd_out) < 0)) {
+      tme_output_append_error(_output, "could not open serial output slave device %s", filename_out);
+      return (errno);
+    }
+    tme_output_append_error(_output, "using serial output slave device %s", filename_out);
+    /*    tme_log(&element->tme_element_log_handle, 0, TME_OK,
+	    (&element->tme_element_log_handle,
+	    "using interface %s", filename_out));*/
+  }
+#endif
   return (TME_OK);
 }
