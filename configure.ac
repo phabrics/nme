@@ -240,6 +240,21 @@ AC_DEFINE(HAVE_AF_LINK, [], [Define if you have AF_LINK.])
 AC_MSG_RESULT(no)
 ])
 
+dnl Checks for AF_PACKET.
+AC_MSG_CHECKING([for AF_PACKET support])
+AC_EGREP_CPP(_tme_has_af_packet,
+[
+#include <sys/socket.h>
+#ifdef AF_PACKET
+_tme_has_af_packet
+#endif
+], [ 
+AC_MSG_RESULT(yes)
+AC_DEFINE(HAVE_AF_PACKET, [], [Define if you have AF_PACKET.])
+], [
+AC_MSG_RESULT(no)
+])
+
 dnl Checks for BPF.
 tme_raw_type=
 AC_CHECK_HEADER(net/bpf.h, 
@@ -248,7 +263,9 @@ AC_CHECK_HEADER(net/bpf.h,
 #ifdef BIOCSHDRCMPLT
 found_BIOCSHDRCMPLT
 #endif
-], [tme_raw_type=bpf])])
+], [tme_raw_type=bpf])],
+[AC_CHECK_HEADER(linux/filter.h, [tme_raw_type=bpf])])
+
 AC_MSG_CHECKING([for raw Ethernet access method])
 case "x${tme_raw_type}" in
 xbpf) TME_HOSTS="${TME_HOSTS} bsd" ;;

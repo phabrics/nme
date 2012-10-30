@@ -37,7 +37,9 @@
 _TME_RCSID("$Id: bsd-bpf.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 
 /* includes: */
+#ifndef AF_PACKET
 #include "bsd-impl.h"
+#endif
 #include <tme/generic/ethernet.h>
 #include <tme/threads.h>
 #include <tme/misc.h>
@@ -72,7 +74,20 @@ _TME_RCSID("$Id: bsd-bpf.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #include <net/if_dl.h>
 #endif /* HAVE_NET_IF_DL_H */
 #include <arpa/inet.h>
+#ifdef HAVE_AF_PACKET
+#include <linux/filter.h>
+#include <linux/if_ether.h>
+#define TME_BSD_BPF_INSN struct sock_filter 
+#define TME_BSD_BPF_PROG struct sock_fprog
+#define TME_BSD_BPF_INSNS(x) x.filter
+#define TME_BSD_BPF_LEN(x) x.len
+#else
 #include <net/bpf.h>
+#define TME_BSD_BPF_INSN struct bpf_insn
+#define TME_BSD_BPF_PROG struct bpf_program
+#define TME_BSD_BPF_INSNS(x) x.bf_insns
+#define TME_BSD_BPF_LEN(x) x.bf_len
+#endif
 
 /* macros: */
 
@@ -153,8 +168,8 @@ struct tme_net_ipv4_header {
 };
 
 /* the accept and reject packet insns: */
-static const struct bpf_insn _tme_bsd_bpf_insn_accept = BPF_STMT(BPF_RET + BPF_K, (u_int) -1);
-static const struct bpf_insn _tme_bsd_bpf_insn_reject = BPF_STMT(BPF_RET + BPF_K, 0);
+static const TME_BSD_BPF_INSN _tme_bsd_bpf_insn_accept = BPF_STMT(BPF_RET + BPF_K, (u_int) -1);
+static const TME_BSD_BPF_INSN _tme_bsd_bpf_insn_reject = BPF_STMT(BPF_RET + BPF_K, 0);
 
 /* this creates a BPF filter that accepts Ethernet packets with
    destination addresses in the configured set.  the broadcast address
@@ -163,7 +178,7 @@ static int
 _tme_bsd_bpf_filter(struct tme_ethernet_config *config, 
 		    const tme_uint8_t *prefix,
 		    unsigned int prefix_len,
-		    struct bpf_insn *bpf_filter,
+		    TME_BSD_BPF_INSN *bpf_filter,
 		    int bpf_filter_size,
 		    int *_first_pc)
 {
@@ -237,17 +252,17 @@ _tme_bsd_bpf_filter(struct tme_ethernet_config *config,
 /* this dumps a BPF filter.  not all insns are supported, just
    those used by our address matching filters: */
 void
-_tme_bsd_bpf_dump_filter(const struct bpf_program *program)
+_tme_bsd_bpf_dump_filter(const TME_BSD_BPF_PROG *program)
 {
   unsigned int pc;
   FILE *fp;
-  const struct bpf_insn *insn;
+  const TME_BSD_BPF_INSN *insn;
   char ldsize;
   const char *opc;
 
   fp = stderr;
-  for (pc = 0, insn = program->bf_insns;
-       pc < (unsigned int) program->bf_len;
+  for (pc = 0, insn = TME_BSD_BPF_INSNS((*program));
+       pc < (unsigned int) TME_BSD_BPF_LEN((*program));
        pc++, insn++) {
     
     /* the PC: */
@@ -523,8 +538,8 @@ _tme_bsd_bpf_config(struct tme_ethernet_connection *conn_eth,
 		    struct tme_ethernet_config *config)
 {
   struct tme_bsd_bpf *bpf;
-  struct bpf_insn *bpf_filter;
-  struct bpf_program program;
+  TME_BSD_BPF_INSN *bpf_filter;
+  TME_BSD_BPF_PROG program;
   int bpf_filter_size, first_pc;
   int rc;
 
@@ -546,7 +561,7 @@ _tme_bsd_bpf_config(struct tme_ethernet_connection *conn_eth,
 		     + ((1 + 1)
 			* TME_ETHERNET_ADDR_SIZE
 			* config->tme_ethernet_config_addr_count));
-  bpf_filter = tme_new(struct bpf_insn, bpf_filter_size);
+  bpf_filter = tme_new(TME_BSD_BPF_INSN, bpf_filter_size);
   first_pc = bpf_filter_size;
 
   /* if this Ethernet is promiscuous, we will accept all packets: */
@@ -579,9 +594,13 @@ _tme_bsd_bpf_config(struct tme_ethernet_connection *conn_eth,
   }
 
   /* set the filter on the BPF device: */
-  program.bf_len = bpf_filter_size - first_pc;
-  program.bf_insns = bpf_filter + first_pc;
+  TME_BSD_BPF_LEN(program) = bpf_filter_size - first_pc;
+  TME_BSD_BPF_INSNS(program) = bpf_filter + first_pc;
+#ifdef AF_PACKET
+  if (setsockopt(bpf->tme_bsd_bpf_fd, SOL_SOCKET, SO_ATTACH_FILTER, &program, sizeof(program)) == -1) {
+#else
   if (ioctl(bpf->tme_bsd_bpf_fd, BIOCSETF, &program) < 0) {
+#endif
     tme_log(&bpf->tme_bsd_bpf_element->tme_element_log_handle, 1, errno,
 	    (&bpf->tme_bsd_bpf_element->tme_element_log_handle,
 	     _("failed to set the filter")));
@@ -1028,6 +1047,14 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
     return (EINVAL);
   }
 
+#ifdef AF_PACKET
+  if ((bpf_fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) >= 0) {
+      tme_log(&element->tme_element_log_handle, 1, TME_OK,
+	      (&element->tme_element_log_handle,
+	       "opened %s",
+	       dev_bpf_filename));
+  }
+#else
   /* find the interface we will use: */
   rc = tme_bsd_if_find(ifr_name_user, &ifr, NULL, NULL);
   if (rc != TME_OK) {
@@ -1071,7 +1098,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
     /* otherwise, we have failed: */
     return (saved_errno);
   }
-
   /* this macro helps in closing the BPF socket on error: */
 #define _TME_BPF_RAW_OPEN_ERROR(x) saved_errno = errno; x; errno = saved_errno
 
@@ -1152,6 +1178,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
     _TME_BPF_RAW_OPEN_ERROR(close(bpf_fd));
     return (errno);
   }
+#endif
   
   /* start our data structure: */
   bpf = tme_new0(struct tme_bsd_bpf, 1);
