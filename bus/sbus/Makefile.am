@@ -3,7 +3,7 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
-INCLUDES = -I$(top_srcdir) -I$(srcdir) -I. -D_TME_IMPL
+AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I. -D_TME_IMPL
 
 pkglib_LTLIBRARIES = tme_bus_sbus.la
 tme_bus_sbus_la_SOURCES = \

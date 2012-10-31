@@ -33,13 +33,13 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.68])
-AC_INIT
+AC_INIT([tme], [0.9])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
 #AC_CONFIG_AUX_DIR([libltdl/config])
 #AC_CONFIG_MACRO_DIR([libltdl/m4])
-AM_INIT_AUTOMAKE(tme, 0.8)
+AM_INIT_AUTOMAKE
 
 dnl Write configuration out to config.h through config.h.in.
 AC_CONFIG_HEADERS([config.h])
@@ -257,14 +257,14 @@ AC_MSG_RESULT(no)
 
 dnl Checks for BPF.
 tme_raw_type=
-AC_CHECK_HEADER(net/bpf.h, 
+AC_CHECK_HEADER(linux/filter.h, [tme_raw_type=bpf],
+[AC_CHECK_HEADER(net/bpf.h, 
 [AC_EGREP_CPP(found_BIOCSHDRCMPLT, 
 [#include <net/bpf.h>
 #ifdef BIOCSHDRCMPLT
 found_BIOCSHDRCMPLT
 #endif
-], [tme_raw_type=bpf])],
-[AC_CHECK_HEADER(linux/filter.h, [tme_raw_type=bpf])])
+], [tme_raw_type=bpf])])])
 
 AC_MSG_CHECKING([for raw Ethernet access method])
 case "x${tme_raw_type}" in

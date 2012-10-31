@@ -3,7 +3,7 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
-INCLUDES = -I$(top_srcdir) -I$(srcdir) -I. -D_TME_IMPL
+AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I. -D_TME_IMPL
 
 pkglib_LTLIBRARIES = tme_host_bsd.la
 tme_host_bsd_la_SOURCES = bsd-if.c bsd-bpf.c bsd-impl.h

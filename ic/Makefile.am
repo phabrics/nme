@@ -3,7 +3,7 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
-INCLUDES = -I$(top_srcdir) -I$(srcdir) -I. -D_TME_IMPL
+AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I. -D_TME_IMPL
 
 SUBDIRS = @TME_IC_SUBDIRS@
 DIST_SUBDIRS = m68k ieee754 sparc stp22xx
