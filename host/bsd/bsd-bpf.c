@@ -37,7 +37,7 @@
 _TME_RCSID("$Id: bsd-bpf.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 
 /* includes: */
-#ifndef AF_PACKET
+#ifndef HAVE_AF_PACKET
 #include "bsd-impl.h"
 #endif
 #include <tme/generic/ethernet.h>
@@ -66,6 +66,9 @@ _TME_RCSID("$Id: bsd-bpf.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #ifdef HAVE_NET_IF_ETHER_H
 #include <net/if_ether.h>
 #endif /* HAVE_NET_IF_ETHER_H */
+#ifdef HAVE_NETPACKET_PACKET_H
+#include <netpacket/packet.h>
+#endif /* HAVE_NETPACKET_PACKET_H */
 #ifdef HAVE_NET_ETHERNET_H
 #include <net/ethernet.h>
 #endif /* HAVE_NET_ETHERNET_H */
@@ -596,7 +599,7 @@ _tme_bsd_bpf_config(struct tme_ethernet_connection *conn_eth,
   /* set the filter on the BPF device: */
   TME_BSD_BPF_LEN(program) = bpf_filter_size - first_pc;
   TME_BSD_BPF_INSNS(program) = bpf_filter + first_pc;
-#ifdef AF_PACKET
+#ifdef HAVE_AF_PACKET
   if (setsockopt(bpf->tme_bsd_bpf_fd, SOL_SOCKET, SO_ATTACH_FILTER, &program, sizeof(program)) == -1) {
 #else
   if (ioctl(bpf->tme_bsd_bpf_fd, BIOCSETF, &program) < 0) {
@@ -987,9 +990,14 @@ _tme_bsd_bpf_connections_new(struct tme_element *element,
 TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
   struct tme_bsd_bpf *bpf;
   int bpf_fd;
+#ifdef HAVE_AF_PACKET
+  struct sockaddr_ll sll;
+  struct packet_mreq mr;
+#else
 #define DEV_BPF_FORMAT "/dev/bpf%d"
   char dev_bpf_filename[sizeof(DEV_BPF_FORMAT) + (sizeof(int) * 3) + 1];
   int minor;
+#endif
   int saved_errno;
   u_int bpf_opt;
   struct bpf_version version;
@@ -1047,14 +1055,12 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
     return (EINVAL);
   }
 
-#ifdef AF_PACKET
+#ifdef HAVE_AF_PACKET
   if ((bpf_fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) >= 0) {
       tme_log(&element->tme_element_log_handle, 1, TME_OK,
 	      (&element->tme_element_log_handle,
-	       "opened %s",
-	       dev_bpf_filename));
+	       "opened packet socket"));
   }
-#else
   /* find the interface we will use: */
   rc = tme_bsd_if_find(ifr_name_user, &ifr, NULL, NULL);
   if (rc != TME_OK) {
@@ -1065,7 +1071,23 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
 	  (&element->tme_element_log_handle, 
 	   "using interface %s",
 	   ifr->ifr_name));
-
+  sll.sll_protocol = AF_INET;
+  sll.sll_ifindex = ifr->ifr_ifindex;
+  if (bind(bpf_fd, (struct sockaddr *)&sll, sizeof(sll)) == -1) {
+    tme_log(&element->tme_element_log_handle, 1, errno,
+	    (&element->tme_element_log_handle,
+	     _("failed to bind packet socket to interface")));
+  }
+  mr.mr_ifindex = ifr->ifr_ifindex;
+  mr.mr_type = PACKET_MR_PROMISC;
+  if (setsockopt(bpf_fd, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mr, sizeof(mr)) == -1) {
+    tme_log(&element->tme_element_log_handle, 1, errno,
+	    (&element->tme_element_log_handle,
+	     _("failed to set promiscuous mode on interface")));
+    _TME_BPF_RAW_OPEN_ERROR(close(bpf_fd));
+    return (errno);
+  }
+#else
   /* loop trying to open a /dev/bpf device: */
   for (minor = 0;; minor++) {
     
