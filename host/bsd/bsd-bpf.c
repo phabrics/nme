@@ -37,9 +37,7 @@
 _TME_RCSID("$Id: bsd-bpf.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 
 /* includes: */
-#ifndef HAVE_AF_PACKET
 #include "bsd-impl.h"
-#endif
 #include <tme/generic/ethernet.h>
 #include <tme/threads.h>
 #include <tme/misc.h>
@@ -709,10 +707,10 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
 	   + the_bpf_header.bh_datalen)
 	!= bpf->tme_bsd_bpf_buffer_end))
       buffer_offset_next =
-	(bpf->tme_bsd_bpf_buffer_offset
-	 + BPF_WORDALIGN(the_bpf_header.bh_hdrlen
-			 + the_bpf_header.bh_datalen)));
-
+	bpf->tme_bsd_bpf_buffer_offset
+	+ BPF_WORDALIGN(the_bpf_header.bh_hdrlen
+			+ the_bpf_header.bh_datalen);
+    
     bpf->tme_bsd_bpf_buffer_offset += the_bpf_header.bh_hdrlen;
 
     /* if we're missing some part of the packet: */
@@ -1065,12 +1063,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
     return (EINVAL);
   }
 
-#ifdef HAVE_AF_PACKET
-  if ((bpf_fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) >= 0) {
-      tme_log(&element->tme_element_log_handle, 1, TME_OK,
-	      (&element->tme_element_log_handle,
-	       "opened packet socket"));
-  }
   /* find the interface we will use: */
   rc = tme_bsd_if_find(ifr_name_user, &ifr, NULL, NULL);
   if (rc != TME_OK) {
@@ -1081,6 +1073,14 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
 	  (&element->tme_element_log_handle, 
 	   "using interface %s",
 	   ifr->ifr_name));
+
+#ifdef HAVE_AF_PACKET
+  if ((bpf_fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) >= 0) {
+      tme_log(&element->tme_element_log_handle, 1, TME_OK,
+	      (&element->tme_element_log_handle,
+	       "opened packet socket"));
+  }
+  memset(&sll, 0, sizeof(sll));
   sll.sll_protocol = AF_INET;
   sll.sll_ifindex = ifr->ifr_ifindex;
   if (bind(bpf_fd, (struct sockaddr *)&sll, sizeof(sll)) == -1) {

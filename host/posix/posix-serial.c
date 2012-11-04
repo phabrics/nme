@@ -45,7 +45,7 @@ _TME_RCSID("$Id: posix-serial.c,v 1.11 2007/08/24 00:57:01 fredette Exp $");
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/ioctl.h>
-#include <pty.h>
+//#include <pty.h>
 
 /* macros: */
 #define TME_POSIX_SERIAL_BUFFER_SIZE	(4096)
