@@ -659,7 +659,9 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
 		  unsigned int flags)
 {
   struct tme_bsd_bpf *bpf;
+#ifndef HAVE_AF_PACKET
   struct bpf_hdr the_bpf_header;
+#endif
   struct tme_ethernet_frame_chunk frame_chunk_buffer;
   size_t buffer_offset_next;
   const struct tme_ethernet_header *ethernet_header;
@@ -681,7 +683,8 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
   /* loop until we have a good captured packet or until we 
      exhaust the buffer: */
   for (;;) {
-    
+    buffer_offset_next = bpf->tme_bsd_bpf_buffer_end;
+#ifndef HAVE_AF_PACKET    
     /* if there's not enough for a BPF header, flush the buffer: */
     if ((bpf->tme_bsd_bpf_buffer_offset
 	 + sizeof(the_bpf_header))
@@ -701,15 +704,15 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
 	   bpf->tme_bsd_bpf_buffer
 	   + bpf->tme_bsd_bpf_buffer_offset,
 	   sizeof(the_bpf_header));
-    buffer_offset_next
-      = (((bpf->tme_bsd_bpf_buffer_offset
+    if(((bpf->tme_bsd_bpf_buffer_offset
 	   + the_bpf_header.bh_hdrlen
 	   + the_bpf_header.bh_datalen)
-	  == bpf->tme_bsd_bpf_buffer_end)
-	 ? bpf->tme_bsd_bpf_buffer_end
-	 : (bpf->tme_bsd_bpf_buffer_offset
-	    + BPF_WORDALIGN(the_bpf_header.bh_hdrlen
-			    + the_bpf_header.bh_datalen)));
+	!= bpf->tme_bsd_bpf_buffer_end))
+      buffer_offset_next =
+	(bpf->tme_bsd_bpf_buffer_offset
+	 + BPF_WORDALIGN(the_bpf_header.bh_hdrlen
+			 + the_bpf_header.bh_datalen)));
+
     bpf->tme_bsd_bpf_buffer_offset += the_bpf_header.bh_hdrlen;
 
     /* if we're missing some part of the packet: */
@@ -782,13 +785,17 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
 	break;
       }
     }
-
+#endif
     /* form the single frame chunk: */
     frame_chunk_buffer.tme_ethernet_frame_chunk_next = NULL;
     frame_chunk_buffer.tme_ethernet_frame_chunk_bytes
       = bpf->tme_bsd_bpf_buffer + bpf->tme_bsd_bpf_buffer_offset;
     frame_chunk_buffer.tme_ethernet_frame_chunk_bytes_count
+#ifdef HAVE_AF_PACKET
+      = buffer_offset_next;
+#else
       = the_bpf_header.bh_datalen;
+#endif
 
     /* some network interfaces haven't removed the CRC yet when they
        pass a packet to BPF.  packets in a tme ethernet connection
@@ -870,9 +877,10 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
 
     /* if this is a peek: */
     if (flags & TME_ETHERNET_READ_PEEK) {
-
+#ifndef HAVE_AF_PACKET
       /* rewind the buffer pointer: */
       bpf->tme_bsd_bpf_buffer_offset -= the_bpf_header.bh_hdrlen;
+#endif
     }
 
     /* otherwise, this isn't a peek: */
@@ -1000,7 +1008,9 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
 #endif
   int saved_errno;
   u_int bpf_opt;
+#ifndef HAVE_AF_PACKET
   struct bpf_version version;
+#endif
   u_int packet_buffer_size;
   const char *ifr_name_user;
   struct ifreq *ifr;
@@ -1084,7 +1094,9 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
     tme_log(&element->tme_element_log_handle, 1, errno,
 	    (&element->tme_element_log_handle,
 	     _("failed to set promiscuous mode on interface")));
-    _TME_BPF_RAW_OPEN_ERROR(close(bpf_fd));
+    saved_errno = errno;
+    close(bpf_fd);
+    errno = saved_errno;
     return (errno);
   }
 #else
@@ -1171,9 +1183,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
 	    (&element->tme_element_log_handle,
 	     _("failed to point BPF socket at %s"),
 	     ifr->ifr_name));
-    saved_errno = errno;
-    close(bpf_fd);
-    errno = saved_errno;
+    _TME_BPF_RAW_OPEN_ERROR(close(bpf_fd));
     return (errno);
   }
 
