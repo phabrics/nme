@@ -602,11 +602,15 @@ _tme_bsd_bpf_config(struct tme_ethernet_connection *conn_eth,
 #else
   if (ioctl(bpf->tme_bsd_bpf_fd, BIOCSETF, &program) < 0) {
 #endif
-    tme_log(&bpf->tme_bsd_bpf_element->tme_element_log_handle, 1, errno,
+    tme_log(&bpf->tme_bsd_bpf_element->tme_element_log_handle, 0, errno,
 	    (&bpf->tme_bsd_bpf_element->tme_element_log_handle,
 	     _("failed to set the filter")));
     rc = errno;
   }
+
+  tme_log(&bpf->tme_bsd_bpf_element->tme_element_log_handle, 0, TME_OK,
+	  (&bpf->tme_bsd_bpf_element->tme_element_log_handle,
+	   _("set the filter")));
 
   /* free the filter: */
   tme_free(bpf_filter);
@@ -1066,32 +1070,33 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
   /* find the interface we will use: */
   rc = tme_bsd_if_find(ifr_name_user, &ifr, NULL, NULL);
   if (rc != TME_OK) {
-    tme_output_append_error(_output, _("couldn't find an interface"));
+    if(!ifr_name_user) ifr_name_user="";
+    tme_output_append_error(_output, _("couldn't find an interface %s"), ifr_name_user);
     return (ENOENT);
   }
-  tme_log(&element->tme_element_log_handle, 1, TME_OK, 
+  tme_log(&element->tme_element_log_handle, 0, TME_OK, 
 	  (&element->tme_element_log_handle, 
 	   "using interface %s",
 	   ifr->ifr_name));
 
 #ifdef HAVE_AF_PACKET
   if ((bpf_fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) >= 0) {
-      tme_log(&element->tme_element_log_handle, 1, TME_OK,
+      tme_log(&element->tme_element_log_handle, 0, TME_OK,
 	      (&element->tme_element_log_handle,
 	       "opened packet socket"));
   }
   memset(&sll, 0, sizeof(sll));
-  sll.sll_protocol = AF_INET;
+  sll.sll_protocol = htons(ETH_P_ALL);
   sll.sll_ifindex = ifr->ifr_ifindex;
   if (bind(bpf_fd, (struct sockaddr *)&sll, sizeof(sll)) == -1) {
-    tme_log(&element->tme_element_log_handle, 1, errno,
+    tme_log(&element->tme_element_log_handle, 0, errno,
 	    (&element->tme_element_log_handle,
 	     _("failed to bind packet socket to interface")));
   }
   mr.mr_ifindex = ifr->ifr_ifindex;
   mr.mr_type = PACKET_MR_PROMISC;
   if (setsockopt(bpf_fd, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mr, sizeof(mr)) == -1) {
-    tme_log(&element->tme_element_log_handle, 1, errno,
+    tme_log(&element->tme_element_log_handle, 0, errno,
 	    (&element->tme_element_log_handle,
 	     _("failed to set promiscuous mode on interface")));
     saved_errno = errno;

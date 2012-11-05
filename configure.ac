@@ -724,6 +724,7 @@ AC_ARG_ENABLE(debug,
 [  --enable-debug          compile debuggable libraries and programs (default=don't)],
 [ ], [enable_debug=no])
 if test "x${enable_debug}" = "xyes"; then
+  CPPFLAGS="${CPPFLAGS-} -DTME_NO_DEBUG_LOCKS"
   CFLAGS="${CFLAGS-} -g -O0"
   CXXFLAGS="${CXXFLAGS-} -g3 -O0"
 else

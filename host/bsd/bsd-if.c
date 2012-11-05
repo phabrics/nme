@@ -175,7 +175,7 @@ tme_bsd_if_find(const char *ifr_name_user, struct ifreq **_ifreq, tme_uint8_t **
     if (ifr_user == NULL
 	&& (ifr_name_user != NULL
 	    ? !strncmp(ifr->ifr_name, ifr_name_user, sizeof(ifr->ifr_name))
-	    : !(ifr->ifr_flags & IFF_LOOPBACK))) {
+	    : !(saved_flags & IFF_LOOPBACK))) {
       ifr_user = ifr;
     }
   }
