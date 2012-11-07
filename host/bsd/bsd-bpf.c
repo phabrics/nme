@@ -1086,6 +1086,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
 	       "opened packet socket"));
   }
   memset(&sll, 0, sizeof(sll));
+  sll.sll_family = AF_PACKET;
   sll.sll_protocol = htons(ETH_P_ALL);
   sll.sll_ifindex = ifr->ifr_ifindex;
   if (bind(bpf_fd, (struct sockaddr *)&sll, sizeof(sll)) == -1) {
@@ -1104,6 +1105,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
     errno = saved_errno;
     return (errno);
   }
+  packet_buffer_size = 16384;
 #else
   /* loop trying to open a /dev/bpf device: */
   for (minor = 0;; minor++) {
