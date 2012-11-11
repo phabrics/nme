@@ -686,11 +686,13 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
      exhaust the buffer: */
   for (;;) {
     buffer_offset_next = bpf->tme_bsd_bpf_buffer_end;
-#ifndef HAVE_AF_PACKET    
     /* if there's not enough for a BPF header, flush the buffer: */
-    if ((bpf->tme_bsd_bpf_buffer_offset
-	 + sizeof(the_bpf_header))
-	> bpf->tme_bsd_bpf_buffer_end) {
+#ifdef HAVE_AF_PACKET
+    if (bpf->tme_bsd_bpf_buffer_offset >= bpf->tme_bsd_bpf_buffer_end)
+#else
+    if ((bpf->tme_bsd_bpf_buffer_offset + sizeof(the_bpf_header)) > bpf->tme_bsd_bpf_buffer_end)
+#endif
+    {
       if (bpf->tme_bsd_bpf_buffer_offset
 	  != bpf->tme_bsd_bpf_buffer_end) {
 	tme_log(&bpf->tme_bsd_bpf_element->tme_element_log_handle, 1, TME_OK,
@@ -701,6 +703,7 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
       break;
     }
 
+#ifndef HAVE_AF_PACKET
     /* get the BPF header and check it: */
     memcpy(&the_bpf_header,
 	   bpf->tme_bsd_bpf_buffer
