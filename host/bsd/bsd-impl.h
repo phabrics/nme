@@ -44,10 +44,13 @@ _TME_RCSID("$Id: bsd-impl.h,v 1.1 2003/05/18 00:02:23 fredette Exp $");
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <net/if.h>
+#include <ifaddrs.h>
 
 /* macros: */
 
 /* prototypes: */
 int tme_bsd_if_find _TME_P((_tme_const char *, struct ifreq **, tme_uint8_t **, unsigned int *));
+
+int tme_bsd_ifaddrs_find _TME_P((_tme_const char *, struct ifaddrs **, tme_uint8_t **, unsigned int *));
 
 #endif /* !_HOST_BSD_IMPL_H */

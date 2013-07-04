@@ -77,7 +77,7 @@ _TME_RCSID("$Id: bsd-if.c,v 1.3 2003/10/16 02:48:23 fredette Exp $");
 #define SIZEOF_IFREQ(ifr) (sizeof(struct ifreq))
 #endif /* !HAVE_SOCKADDR_SA_LEN */
 
-/* this finds a network interface: */
+/* this finds a network interface via traditional ioctls: */
 int
 tme_bsd_if_find(const char *ifr_name_user, struct ifreq **_ifreq, tme_uint8_t **_if_addr, unsigned int *_if_addr_size)
 {
@@ -161,6 +161,14 @@ tme_bsd_if_find(const char *ifr_name_user, struct ifreq **_ifreq, tme_uint8_t **
       break;
     }
     saved_flags = ifr->ifr_flags;
+
+    /*
+    if (ioctl(dummy_fd, SIOCGIFINDEX, ifr) < 0) {
+      ifr = NULL;
+      break;
+    }
+    */
+
     *((struct sockaddr_in *) & ifr->ifr_addr) = saved_ip_address;
 
     /* ignore this interface if it isn't up and running: */
@@ -233,6 +241,71 @@ tme_bsd_if_find(const char *ifr_name_user, struct ifreq **_ifreq, tme_uint8_t **
 
 #endif /* HAVE_AF_LINK */
 
+  /* done: */
+  return (TME_OK);
+}
+
+/* this finds a network interface via the ifaddrs api: */
+int
+tme_bsd_ifaddrs_find(const char *ifa_name_user, struct ifaddrs **_ifaddr, tme_uint8_t **_if_addr, unsigned int *_if_addr_size)
+{
+  struct ifaddrs *ifaddr, *ifa;
+  struct ifaddrs *ifa_user = NULL;
+
+  if (getifaddrs(&ifaddr) == -1) {
+    return (-1);
+  }
+
+  /* Walk through linked list, maintaining head pointer so we
+     can free list later */
+
+  for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+    if (ifa->ifa_addr == NULL)
+      continue;
+
+    /* ignore this interface if it doesn't do IP: */
+    /* XXX is this actually important? */
+    if (ifa->ifa_addr->sa_family != AF_INET) {
+      continue;
+    }
+
+    /* ignore this interface if it isn't up and running: */
+    if ((ifa->ifa_flags & (IFF_UP | IFF_RUNNING))
+	!= (IFF_UP | IFF_RUNNING)) {
+      continue;
+    }
+
+    /* if we don't have an interface yet, take this one depending on
+       whether the user asked for an interface by name or not.  if he
+       did, and this is it, take this one.  if he didn't, and this
+       isn't a loopback interface, take this one: */
+    if (ifa_user == NULL
+	&& (ifa_name_user != NULL
+	    ? !strncmp(ifa->ifa_name, ifa_name_user, sizeof(ifa->ifa_name))
+	    : !(ifa->ifa_flags & IFF_LOOPBACK))) {
+      ifa_user = ifa;
+      break;
+    }
+
+  }
+
+  /* if we don't have an interface to return: */
+  if (ifa_user == NULL) {
+    return ENOENT;
+  }
+
+  /* return this interface: */
+  *_ifaddr = (struct ifaddrs *) tme_memdup(ifa_user, sizeof(*ifa_user));
+
+  /* assume that we can't find this interface's hardware address: */
+  if (_if_addr != NULL) {
+    *_if_addr = NULL;
+  }
+  if (_if_addr_size != NULL) {
+    *_if_addr_size = 0;
+  }
+
+  freeifaddrs(ifaddr);
   /* done: */
   return (TME_OK);
 }
