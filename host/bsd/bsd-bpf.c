@@ -1015,21 +1015,18 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
   u_int bpf_opt;
 #ifndef HAVE_AF_PACKET
   struct bpf_version version;
-  struct ifreq *ifr;
-#else
-  struct ifaddrs *ifa;
 #endif
+  struct ifreq ifr;
+  struct ifaddrs *ifa;
   u_int packet_buffer_size;
-  const char *ifr_name_user;
   unsigned long delay_time;
   int arg_i;
   int usage;
   int rc;
-  int if_index;
 
   /* check our arguments: */
   usage = 0;
-  ifr_name_user = NULL;
+  ifr.ifr_name[0] = '\0';
   delay_time = 0;
   arg_i = 1;
   for (;;) {
@@ -1037,7 +1034,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
     /* the interface we're supposed to use: */
     if (TME_ARG_IS(args[arg_i + 0], "interface")
 	&& args[arg_i + 1] != NULL) {
-      ifr_name_user = args[arg_i + 1];
+      strncpy(ifr.ifr_name, args[arg_i + 1], sizeof(ifr.ifr_name));
       arg_i += 2;
     }
 
@@ -1074,28 +1071,19 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
   }
 
   /* find the interface we will use: */
-#ifdef HAVE_AF_PACKET
-  rc = tme_bsd_ifaddrs_find(ifr_name_user, &ifa, NULL, NULL);
-#else
-  rc = tme_bsd_if_find(ifr_name_user, &ifr, NULL, NULL);
-#endif
+  rc = tme_bsd_ifaddrs_find(ifr.ifr_name, &ifa, NULL, NULL);
 
   if (rc != TME_OK) {
-    if(!ifr_name_user) ifr_name_user="";
-    tme_output_append_error(_output, _("couldn't find an interface %s"), ifr_name_user);
+    tme_output_append_error(_output, _("couldn't find an interface %s"), ifr.ifr_name);
     return (ENOENT);
   }
 
-#ifdef HAVE_AF_PACKET
-  if_index = if_nametoindex(ifa->ifa_name);
-#else
-  if_index = ifr->ifr_ifindex;
-#endif
+  strncpy(ifr.ifr_name, ifa->ifa_name, sizeof(ifr.ifr_name));
 
   tme_log(&element->tme_element_log_handle, 0, TME_OK, 
 	  (&element->tme_element_log_handle, 
-	   "using interface %s %d",
-	   ifa->ifa_name, if_index));
+	   "using interface %s",
+	   ifr.ifr_name));
 
 #ifdef HAVE_AF_PACKET
   if ((bpf_fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) >= 0) {
@@ -1106,7 +1094,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
   memset(&sll, 0, sizeof(sll));
   sll.sll_family = AF_PACKET;
   sll.sll_protocol = htons(ETH_P_ALL);
-  sll.sll_ifindex = if_index;
+  sll.sll_ifindex = if_nametoindex(ifr.ifr_name);
   if (bind(bpf_fd, (struct sockaddr *)&sll, sizeof(sll)) == -1) {
     tme_log(&element->tme_element_log_handle, 0, errno,
 	    (&element->tme_element_log_handle,
@@ -1114,7 +1102,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
   }
 
   memset(&mr, 0, sizeof(mr));
-  mr.mr_ifindex = if_index;
+  mr.mr_ifindex = if_nametoindex(ifr.ifr_name);
   mr.mr_type = PACKET_MR_PROMISC;
   if (setsockopt(bpf_fd, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mr, sizeof(mr)) == -1) {
     tme_log(&element->tme_element_log_handle, 0, errno,
@@ -1181,7 +1169,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
     close(bpf_fd);
     return (ENXIO);
   }
-
+ 
   /* put the BPF device into immediate mode: */
   bpf_opt = TRUE;
   if (ioctl(bpf_fd, BIOCIMMEDIATE, &bpf_opt) < 0) {
@@ -1205,11 +1193,11 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
   }
 
   /* point the BPF device at the interface we're using: */
-  if (ioctl(bpf_fd, BIOCSETIF, ifr) < 0) {
+  if (ioctl(bpf_fd, BIOCSETIF, &ifr) < 0) {
     tme_log(&element->tme_element_log_handle, 1, errno,
 	    (&element->tme_element_log_handle,
 	     _("failed to point BPF socket at %s"),
-	     ifr->ifr_name));
+	     ifr.ifr_name));
     _TME_BPF_RAW_OPEN_ERROR(close(bpf_fd));
     return (errno);
   }

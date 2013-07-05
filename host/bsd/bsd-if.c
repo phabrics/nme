@@ -280,7 +280,7 @@ tme_bsd_ifaddrs_find(const char *ifa_name_user, struct ifaddrs **_ifaddr, tme_ui
        did, and this is it, take this one.  if he didn't, and this
        isn't a loopback interface, take this one: */
     if (ifa_user == NULL
-	&& (ifa_name_user != NULL
+	&& ((ifa_name_user != NULL && strlen(ifa_name_user))
 	    ? !strncmp(ifa->ifa_name, ifa_name_user, sizeof(ifa->ifa_name))
 	    : !(ifa->ifa_flags & IFF_LOOPBACK))) {
       ifa_user = ifa;
