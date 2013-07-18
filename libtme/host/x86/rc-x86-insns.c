@@ -338,7 +338,7 @@ _tme_recode_x86_insn_ext(struct tme_recode_ic *ic,
   /* get the size of the source operand: */
   extend = insn->tme_recode_insn_operand_src[1];
   assert (extend >= TME_RECODE_SIZE_8
-	  && extend < ic->tme_recode_ic_reg_size);
+	  && extend <= ic->tme_recode_ic_reg_size);
 
   /* assume that this is not an extension from eight bits, and start
      any rex prefix with the source register: */

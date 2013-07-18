@@ -95,7 +95,7 @@ _TME_RCSID("$Id: sparc-rc-cc.c,v 1.2 2009/08/28 01:41:45 fredette Exp $");
       ((struct tme_sparc *) (ic))->tme_sparc32_ireg_psr		\
 	= ((((struct tme_sparc *) (ic))->tme_sparc32_ireg_psr	\
 	    & ~TME_SPARC_ICC(ccr_need))				\
-	   | TME_SPARC_ICC(ccr_need));				\
+	   | TME_SPARC_ICC(ccr));				\
     }								\
   } while (/* CONSTCOND */ 0)
 

@@ -1006,8 +1006,18 @@ tme_sparc_recode_init(struct tme_sparc *ic)
 
 #endif /* _TME_SPARC_RECODE_VERIFY */
 
+#ifdef TME_RECODE_DEBUG
+
+  /* dumps the ic flags/conds: */
+  tme_sparc_recode_dump_ic(ic);
+
+  /* dumps the instructions: */
+  tme_sparc_recode_dump_insns(ic);
+#endif
+
 #else  /* !TME_HAVE_RECODE */
   /* unused: */
   ic = 0;
 #endif /* !TME_HAVE_RECODE */
+
 }

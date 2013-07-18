@@ -659,7 +659,7 @@ else
 
     # get the host recode parts:
     case "${target}" in
-    i[3456789]86-*-netbsd* | x86_64-*-netbsd* | i[3456789]86-*-linux*)
+    i[3456789]86-*-netbsd* | x86_64-*-netbsd* | i[3456789]86-*-linux* | x86_64-*-linux*)
 	recode_hosts="mmap x86"
 	;;
     *) recode_hosts= ;;
@@ -724,7 +724,7 @@ AC_ARG_ENABLE(debug,
 [  --enable-debug          compile debuggable libraries and programs (default=don't)],
 [ ], [enable_debug=no])
 if test "x${enable_debug}" = "xyes"; then
-  CPPFLAGS="${CPPFLAGS-} -DTME_NO_DEBUG_LOCKS"
+  CPPFLAGS="${CPPFLAGS-} -DTME_NO_DEBUG_LOCKS -DTME_RECODE_DEBUG -D_TME_SPARC_STATS"
   CFLAGS="${CFLAGS-} -g -O0"
   CXXFLAGS="${CXXFLAGS-} -g3 -O0"
 else
