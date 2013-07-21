@@ -1,0 +1,384 @@
+! $Id: m68k-iset.txt,v 1.9 2007/08/25 20:50:32 fredette Exp $
+
+! ic/m68k/m68k-iset.txt: the m68k instruction set
+
+! Copyright (c) 2002, 2003, 2004 Matt Fredette
+! All rights reserved.
+!
+! Redistribution and use in source and binary forms, with or without
+! modification, are permitted provided that the following conditions
+! are met:
+! 1. Redistributions of source code must retain the above copyright
+!    notice, this list of conditions and the following disclaimer.
+! 2. Redistributions in binary form must reproduce the above copyright
+!    notice, this list of conditions and the following disclaimer in the
+!    documentation and/or other materials provided with the distribution.
+! 3. All advertising materials mentioning features or use of this software
+!    must display the following acknowledgement:
+!      This product includes software developed by Matt Fredette.
+! 4. The name of the author may not be used to endorse or promote products
+!    derived from this software without specific prior written permission.
+!
+! THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+! IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+! WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+! DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+! INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+! (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+! SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+! HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+! STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+! ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+! POSSIBILITY OF SUCH DAMAGE.
+
+! load some common EA categories:
+eax-cat all ro		yyyyyyyyyyyynnn
+eax-cat data ro		ynyyyyyyyyyynnn
+eax-cat datalt rw	ynyyyyyyynnnnnn ! example: andi pp 122
+eax-cat memalt rw	nnyyyyyyynnnnnn
+eax-cat control un	nnynnyyyyyynnnn 
+
+0000 0000 0011 1100 ori_ccr #8			! ori_ccr pp 258
+0000 0000 0111 1100 ori_sr #16			! ori_sr pp 480
+0000 0000 ssxx xxxx or.s #s, xs/datalt		! ori pp 256
+
+0000 0010 0011 1100 andi_ccr #8			! andi_ccr pp 123
+0000 0010 0111 1100 andi_sr #16			! andi_sr pp 455
+0000 0010 ssxx xxxx and.s #s, xs/datalt		! andi pp 121
+
+0000 0100 ssxx xxxx sub.s #s, xs/datalt		! subi pp 282
+
+.if m68020
+0000 0110 1100 0ddd rtm %d.32			! rtm pp 270
+0000 0110 1100 1aaa rtm %a.32			! rtm pp 270
+0000 0110 11xx xxxx callm #8, x0/control	! callm pp 167
+.endif
+
+0000 0110 ssxx xxxx add.s #s, xs/datalt		! addi pp 112
+
+.if m68020 || m68030
+specop specop16 cmp2_chk2
+0000 0ss0 11xx xxxx cmp2_chk2 X, x0/control	! chk2 pp 174, cmp2 pp 185
+specop specop16 cas.s
+0000 1010 11xx xxxx cas8 X, x0/memalt/un	! cas pp 169
+0000 1100 11xx xxxx cas16 X, x0/memalt/un	! cas pp 169
+0000 1110 11xx xxxx cas32 X, x0/memalt/un	! cas pp 169
+specop specop16 cas2_16 cas2_32
+0000 1100 1111 1100 cas2_16 #16			! cas2 pp 169
+0000 1110 1111 1100 cas2_32 #16			! cas2 pp 169
+.endif
+
+0000 1010 0011 1100 eori_ccr #8			! eori_ccr pp 207
+0000 1010 0111 1100 eori_sr #16			! eori_sr pp 463
+0000 1010 ssxx xxxx eor.s #s, xs/datalt		! eori pp 205
+
+! cmpi addressing modes are unusual. per pp 183, immediate is 
+! never allowed, and on the 000 and 010, PC-relative addressing 
+! modes are not allowed:
+.if m68000 || m68010
+eax-cat cmpi ro ynyyyyyyynnnnnn
+.endif
+.if m68020 || m68030
+eax-cat cmpi ro ynyyyyyyyyynnnn
+.endif
+0000 1100 ssxx xxxx cmp.s #s, xs/cmpi		! cmpi pp 182
+
+eax-cat bitro ro nnyyyyyyyyyynnn
+eax-cat bitrw rw nnyyyyyyynnnnnn
+0000 1000 0000 0ddd btst32 #8, %d.32		! btst pp 164
+0000 1000 00xx xxxx btst8 #8, x8/bitro		! btst pp 164
+0000 1000 0100 0ddd bchg32 #8, %d.32		! bchg pp 130
+0000 1000 01xx xxxx bchg8 #8, x8/bitrw		! bchg pp 130
+0000 1000 1000 0ddd bclr32 #8, %d.32		! bclr pp 133
+0000 1000 10xx xxxx bclr8 #8, x8/bitrw		! bclr pp 133
+0000 1000 1100 0ddd bset32 #8, %d.32		! bset pp 159
+0000 1000 11xx xxxx bset8 #8, x8/bitrw		! bset pp 159
+
+.if m68010 || m68020 || m68030
+specop specop16 moves.s
+0000 1110 ssxx xxxx moves.s X, x0/memalt/un	! moves pp 477
+.endif
+
+0000 ddd1 0000 0DDD btst32 %d.8, %D.32		! btst pp 164
+0000 ddd1 00xx xxxx btst8 %d.8, x8/bitro	! btst pp 164
+0000 ddd1 0100 0DDD bchg32 %d.8, %D.32		! bchg pp 130
+0000 ddd1 01xx xxxx bchg8 %d.8, x8/bitrw	! bchg pp 130
+0000 ddd1 1000 0DDD bclr32 %d.8, %D.32		! bclr pp 133
+0000 ddd1 10xx xxxx bclr8 %d.8, x8/bitrw	! bclr pp 133
+0000 ddd1 1100 0DDD bset32 %d.8, %D.32		! bset pp 159
+0000 ddd1 11xx xxxx bset8 %d.8, x8/bitrw	! bset pp 159
+
+! we don't decode the data register field, to allow for better EA
+! submap reuse, and this is a rare function anyways:
+0000 ddd1 0000 1aaa movep_mr16 X, %a.32		! movep pp 234
+0000 ddd1 0100 1aaa movep_mr32 X, %a.32		! movep pp 234
+0000 ddd1 1000 1aaa movep_rm16 X, %a.32		! movep pp 234
+0000 ddd1 1100 1aaa movep_rm32 X, %a.32		! movep pp 234
+
+0010 aaa0 01xx xxxx movea32 %a.32, x32/all	! movea pp 222
+0011 aaa0 01xx xxxx movea16 %a.32, x16/all	! movea pp 222
+
+00SS yyyy yyxx xxxx move.S yS/datalt/wo, xS/all	! move pp 219
+
+! move_from_sr isn't privileged on the 68000:
+.if m68000
+0100 0000 11xx xxxx move_from_sr0 X, x16/datalt	! move_from_sr pp 228
+.endif
+.if m68010 || m68020 || m68030
+0100 0000 11xx xxxx move_from_sr X, x16/datalt/wo	! move_from_sr pp 470
+0100 0010 11xx xxxx move_from_ccr X, x16/datalt/wo	! move_from_ccr pp 224
+.endif
+
+0100 0000 ssxx xxxx negx.s X, xs/datalt		! negx pp 249
+
+! the EA is read before it is written on on the 68000, pp 177
+.if m68000
+0100 0010 ssxx xxxx clr.s X, xs/datalt		! clr pp 176
+.endif
+.if m68010 || m68020 || m68030
+0100 0010 ssxx xxxx clr.s X, xs/datalt/wo	! clr pp 176
+.endif
+
+0100 0100 11xx xxxx move_to_ccr X, x16/data	! move_to_ccr pp 226
+
+0100 0100 ssxx xxxx neg.s X, xs/datalt		! neg pp 246
+
+0100 0110 11xx xxxx move_to_sr X, x16/data	! move_to_sr pp 472
+
+0100 0110 ssxx xxxx not.s X, xs/datalt		! not pp 251
+
+0100 1000 1000 0ddd extw X, %d.16		! ext pp 209
+0100 1000 1100 0ddd extl X, %d.32		! ext pp 209
+.if m68020 || m68030
+0100 1001 1100 0ddd extbl X, %d.32		! ext pp 209
+.endif
+
+.if m68020 || m68030
+0100 1000 0000 1aaa link #32, %a.32		! link pp 214
+.endif
+
+0100 1000 00xx xxxx nbcd X, x8/datalt		! nbcd pp 244
+
+0100 1000 0100 0ddd swap X, %d.32		! swap pp 288
+
+.if m68010 || m68020 || m68030
+0100 1000 0100 1??? bkpt			! bkpt pp 157
+.endif
+
+0100 1000 01xx xxxx pea	X, x0/control		! pea pp 262
+
+0100 1010 1111 1100 illegal			! illegal pp 210
+
+0100 1010 1100 0ddd tas_r X, %d.8		! tas pp 289
+0100 1010 11xx xxxx tas X, x0/memalt/un		! tas pp 289
+
+! tst addressing modes are unusual. per pp 296, on the 68000
+! and 68010, PC-relative addressing modes and immediates are not 
+! allowed:
+.if m68000 || m68010
+eax-cat tst ro ynyyyyyyynnnnnn
+0100 1010 ssxx xxxx tst.s X, xs/tst		! tst pp 295
+.endif
+.if m68020 || m68030
+0100 1010 ssxx xxxx tst.s X, xs/all		! tst pp 295
+.endif
+
+.if m68020 || m68030
+specop specop16 mull divl
+0100 1100 00xx xxxx mull X, x32/data		! mulsl pp 238, mulul pp 241
+0100 1100 01xx xxxx divl X, x32/data		! divsl pp 195, divul pp 199
+.endif
+
+0100 1110 0100 ???? trap			! trap pp 291
+
+0100 1110 0101 0aaa link #16S32, %a.32		! link pp 214
+
+0100 1110 0101 1aaa unlk %a.32			! unlk pp 297
+
+0100 1110 0110 ?aaa move_usp X, %a.32		! move_usp pp 474
+
+0100 1110 0111 0000 reset			! reset pp 536
+
+0100 1110 0111 0001 nop				! nop pp 250
+
+specop specop16 stop
+0100 1110 0111 0010 stop			! stop pp 538
+
+0100 1110 0111 0011 rte				! rte pp 537
+
+.if m68010 || m68020 || m68030
+0100 1110 0111 0100 rtd #16S32			! rtd pp 269
+.endif
+
+0100 1110 0111 0101 rts				! rts pp 272
+
+0100 1110 0111 0110 trapv			! trapv pp 294
+
+0100 1110 0111 0111 rtr				! rtr pp 271
+
+.if m68010 || m68020 || m68030
+specop specop16 movec
+0100 1110 0111 101? movec			! movec pp 475
+.endif
+
+0100 1110 10xx xxxx jsr X, x0/control		! jsr pp 212
+0100 1110 11xx xxxx jmp X, x0/control		! jmp pp 211
+
+eax-cat movem_rm un nnynyyyyynnnnnn
+eax-cat movem_mr un nnyynyyyyyynnnn
+specop specop16 movem_rm.s movem_mr.s
+0100 1000 10xx xxxx movem_rm16 X, x0/movem_rm	! movem pp 231
+0100 1000 11xx xxxx movem_rm32 X, x0/movem_rm	! movem pp 231
+0100 1100 10xx xxxx movem_mr16 X, x0/movem_mr	! movem pp 231
+0100 1100 11xx xxxx movem_mr32 X, x0/movem_mr	! movem pp 231
+
+0100 aaa1 11xx xxxx lea %a.32, x0/control	! lea pp 213
+
+0100 ddd1 00xx xxxx chk32 %d.32, x32/data	! chk pp 173
+0100 ddd1 10xx xxxx chk16 %d.16, x16/data	! chk pp 173
+
+eax-cat alterable rw ynyyyyyyynnnnnn
+0101 qqq0 ss00 1aaa adda32 #q.32, %a.32		! addq pp 114
+0101 qqq0 ssxx xxxx add.s #q.s, xs/alterable	! addq pp 114
+0101 qqq1 ss00 1aaa suba32 #q.32, %a.32		! subq pp 284
+0101 qqq1 ssxx xxxx sub.s #q.s, xs/alterable	! subq pp 284
+
+0101 cccc 1100 1ddd dbcc %d.16, #16		! dbcc pp 193
+
+.if m68020 || m68030
+0101 cccc 1111 1010 trapcc #16			! trapcc pp 292
+0101 cccc 1111 1011 trapcc #32			! trapcc pp 292
+0101 cccc 1111 1100 trapcc			! trapcc pp 292
+.endif
+
+0101 cccc 11xx xxxx scc X, x8/datalt		! scc pp 275
+
+0110 0001 0000 0000 bsrl*** #16S32		! bsr pp 162
+.if m68020 || m68030
+0110 0001 1111 1111 bsrl*** #32			! bsr pp 162
+.endif
+0110 0001 ???? ???? bsr*    			! bsr pp 162
+0110 cccc 0000 0000 bccl* #16S32		! bcc pp 128
+.if m68020 || m68030
+0110 cccc 1111 1111 bccl* #32			! bcc pp 128
+.endif
+0110 cccc ???? ???? bcc    			! bcc pp 128
+
+0111 ddd0 ???? ???? moveq32 X, %d.32		! moveq pp 237
+
+1000 ddd0 11xx xxxx divu #d, x16/data		! divu pp 199
+
+1000 ???1 0000 ???? sbcd			! sbcd pp 273
+.if m68020 || m68030
+specop specop16 pack unpk
+1000 ???1 0100 ???? pack			! pack pp 259
+1000 ???1 1000 ???? unpk			! unpk pp 298
+.endif
+
+1000 ddd1 11xx xxxx divs #d, x16/data		! divs pp 195
+
+1000 ddd0 ssxx xxxx or.s xs/data, %d.s		! or pp 253
+1000 ddd1 ssxx xxxx or.s %d.s, xs/memalt	! or pp 253
+
+1001 ???1 ss00 ???? subx.s			! subx pp 286
+
+1001 ddd0 ssxx xxxx sub.s xs/all, %d.s		! sub pp 277
+1001 ddd1 ssxx xxxx sub.s %d.s, xs/memalt	! sub pp 277
+1001 aaa0 11xx xxxx suba16 x16/all, %a.32	! suba pp 280
+1001 aaa1 11xx xxxx suba32 x32/all, %a.32	! suba pp 280
+
+1011 ???1 ss00 1??? cmpm.s			! cmpm pp 184
+
+1011 ddd0 ssxx xxxx cmp.s xs/all, %d.s		! cmp pp 178
+1011 ddd1 ssxx xxxx eor.s %d.s, xs/datalt	! eor pp 203
+1011 aaa0 11xx xxxx cmpa16 x16/all, %a.32	! cmpa pp 180
+1011 aaa1 11xx xxxx cmp32 x32/all, %a.32	! cmpa pp 180
+
+1100 ddd0 11xx xxxx mulu #d, x16/data		! mulu pp 241
+
+1100 ???1 0000 ???? abcd			! abcd pp 105
+
+1100 ddd1 11xx xxxx muls #d, x16/data		! muls pp 238
+
+1100 ddd1 0100 0DDD exg %d.32, %D.32		! exg pp 208
+1100 aaa1 0100 1AAA exg %a.32, %A.32		! exg pp 208
+1100 ddd1 1000 1aaa exg %d.32, %a.32		! exg pp 208
+
+1100 ddd0 ssxx xxxx and.s xs/data, %d.s		! and pp 118
+1100 ddd1 ssxx xxxx and.s %d.s, xs/memalt	! and pp 118
+
+1101 ???1 ss00 ???? addx.s			! addx pp 116
+
+1101 ddd0 ssxx xxxx add.s xs/all, %d.s		! add pp 107
+1101 ddd1 ssxx xxxx add.s %d.s, xs/memalt	! add pp 107
+1101 aaa0 11xx xxxx adda16 x16/all, %a.32	! adda pp 110
+1101 aaa1 11xx xxxx adda32 x32/all, %a.32	! adda pp 110
+
+1110 0000 11xx xxxx asr16 #1.8, x16/memalt	! asr pp 124
+1110 0001 11xx xxxx asl16 #1.8, x16/memalt	! asl pp 124
+
+1110 0010 11xx xxxx lsr16 #1.8, x16/memalt	! lsr pp 216
+1110 0011 11xx xxxx lsl16 #1.8, x16/memalt	! lsl pp 216
+
+1110 0100 11xx xxxx roxr16 #1.8, x16/memalt	! roxr pp 263
+1110 0101 11xx xxxx roxl16 #1.8, x16/memalt	! roxl pp 263
+
+1110 0110 11xx xxxx ror16 #1.8, x16/memalt	! ror pp 263
+1110 0111 11xx xxxx rol16 #1.8, x16/memalt	! rol pp 263
+
+.if m68020 || m68030
+eax-cat bitfieldro un nnynnyyyyyynnnn
+eax-cat bitfieldrw un nnynnyyyynnnnnn
+specop specop16 bftst bfextu bfchg bfexts bfclr bfffo bfset bfins
+1110 1000 1100 0ddd bftst			! bftst pp 154
+1110 1000 11xx xxxx bftst X, x0/bitfieldro	! bftst pp 154
+1110 1001 1100 0ddd bfextu			! bfextu pp 143
+1110 1001 11xx xxxx bfextu X, x0/bitfieldro	! bfextu pp 143
+1110 1010 1100 0ddd bfchg			! bfchg pp 137
+1110 1010 11xx xxxx bfchg X, x0/bitfieldrw	! bfchg pp 137
+1110 1011 1100 0ddd bfexts			! bfexts pp 141
+1110 1011 11xx xxxx bfexts X, x0/bitfieldro	! bfexts pp 141
+1110 1100 1100 0ddd bfclr			! bfclr pp 138
+1110 1100 11xx xxxx bfclr X, x0/bitfieldrw	! bfclr pp 138
+1110 1101 1100 0ddd bfffo			! bfffo pp 146
+1110 1101 11xx xxxx bfffo X, x0/bitfieldro	! bfffo pp 146
+1110 1110 1100 0ddd bfset			! bfset pp 152
+1110 1110 11xx xxxx bfset X, x0/bitfieldrw	! bfset pp 152
+1110 1111 1100 0ddd bfins			! bfins pp 149
+1110 1111 11xx xxxx bfins X, x0/bitfieldrw	! bfins pp 149
+.endif
+
+1110 qqq0 ss00 0ddd asr.s #q.8, %d.s		! asr pp 124
+1110 DDD0 ss10 0ddd asr.s %D.8, %d.s		! asr pp 124
+1110 qqq1 ss00 0ddd asl.s #q.8, %d.s		! asl pp 124
+1110 DDD1 ss10 0ddd asl.s %D.8, %d.s		! asl pp 124
+
+1110 qqq0 ss00 1ddd lsr.s #q.8, %d.s		! lsr pp 216
+1110 DDD0 ss10 1ddd lsr.s %D.8, %d.s		! lsr pp 216
+1110 qqq1 ss00 1ddd lsl.s #q.8, %d.s		! lsl pp 216
+1110 DDD1 ss10 1ddd lsl.s %D.8, %d.s		! lsl pp 216
+
+1110 qqq0 ss01 0ddd roxr.s #q.8, %d.s		! roxr pp 263
+1110 DDD0 ss11 0ddd roxr.s %D.8, %d.s		! roxr pp 263
+1110 qqq1 ss01 0ddd roxl.s #q.8, %d.s		! roxl pp 263
+1110 DDD1 ss11 0ddd roxl.s %D.8, %d.s		! roxl pp 263
+
+1110 qqq0 ss01 1ddd ror.s #q.8, %d.s		! ror pp 263
+1110 DDD0 ss11 1ddd ror.s %D.8, %d.s		! ror pp 263
+1110 qqq1 ss01 1ddd rol.s #q.8, %d.s		! rol pp 263
+1110 DDD1 ss11 1ddd rol.s %D.8, %d.s		! rol pp 263
+
+.if m68020 || m68030
+specop fpgen fpgen
+1111 0010 00xx xxxx fpgen X, x32/all		! cpgen pp 189
+specop specop16 fdbcc ftrapcc fscc
+1111 0010 0100 1ddd fdbcc %d.16, #16		! fdbcc pp 335
+1111 0010 0111 1010 ftrapcc #16			! ftrapcc pp 446
+1111 0010 0111 1011 ftrapcc #32			! ftrapcc pp 446
+1111 0010 0111 1100 ftrapcc			! ftrapcc pp 446
+1111 0010 01xx xxxx fscc X, x8/datalt		! fscc pp 411
+1111 0010 10?? ???? fbcc #16S32			! fbcc pp 324
+1111 0010 11?? ???? fbcc #32			! fbcc pp 324
+1111 0011 00xx xxxx fsave X, x0/movem_rm	! fsave pp 467
+1111 0011 01xx xxxx frestore X,	x0/movem_mr	! frestore pp 464
+.endif

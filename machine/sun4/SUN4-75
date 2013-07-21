@@ -1,0 +1,123 @@
+# $Id: SUN4-75,v 1.3 2010/06/05 19:26:31 fredette Exp $
+
+## SUN4-75 - example tmesh commands to create a Sun 4/75 (SPARCstation 2)
+## machine:
+
+## the basic Sun 4/75 "Calvin" board, CPU, and sbus:
+##
+board0: tme/machine/sun4 name Calvin
+cpu0 at board0: tme/ic/cy7c601 fpu-type tms390-c602A fpu-compliance partial fpu-incomplete trap
+sbus0: tme/generic/bus size 4GB slot-addr 0xf8000000 slot-size 32MB slot 0 slot 1 slot 2 slot 3
+sbus0 controller at board0 sbus
+
+## the sun4c mainbus RAM, ROM, and devices:
+##
+## NOTE THAT THE ram0 SIZE MUST BE A MULTIPLE OF 16MB, which is
+## the maximum bank size of the SS2, AND NO MORE THAN 64MB.
+## Once ram0 has reached 64MB, uncomment the ram1 line for 96MB of
+## total memory, and then the ram2 line for 128MB of total memory:
+##
+alias mainbus0 sbus0
+ram0 at mainbus0 addr 0x0: tme/host/posix/memory ram 16MB
+#ram1 at mainbus0 addr 0x08000000: tme/host/posix/memory ram 32MB
+#ram2 at mainbus0 addr 0x0a000000: tme/host/posix/memory ram 32MB
+rom0 at mainbus0 addr 0xf6000000: tme/host/posix/memory rom sun4-75-rev-2.9.bin
+zs0 at mainbus0 addr 0xf1000000 ipl 12: tme/machine/sun4/zs
+zs1 at mainbus0 addr 0xf0000000 ipl 12: tme/machine/sun4/zs
+nvram0 at mainbus0 addr 0xf2000000: tme/host/posix/memory persistent my-sun4c-nvram.bin
+clock0 at mainbus0 addr 0xf20007f8: tme/machine/sun4/clock type tme/ic/mk48t02
+board0 timer at mainbus0 addr 0xf3000000
+board0 memerr at mainbus0 addr 0xf4000000
+board0 intreg at mainbus0 addr 0xf5000000
+fdc0 at mainbus0 addr 0xf7200000 ipl 11: tme/machine/sun4/fdc type tme/ic/i82072
+audioamd0 at mainbus0 addr 0xf7201000 ipl 13: tme/ic/am7930
+board0 auxreg at mainbus0 addr 0xf7400003
+
+## the Sun type-4 keyboard and mouse:
+##
+kbd0 at zs1 channel A: tme/serial/keyboard type sun-type-4-us macros my-sun-macros.txt map sun-keyboards.txt rate 20
+ms0 at zs1 channel B: tme/serial/mouse type mousesystems-5
+
+## IF YOU DO NOT ATTACH kbd0 at zs1 channel A, THEN YOU MUST ATTACH
+## sink0 at zs1 channel A, otherwise the PROM's keyboard poll never
+## finishes:
+##
+#sink0 at zs1 channel A: tme/serial/sink
+
+## ttya:
+##
+# comment the first line, and uncomment the following line if you
+# aren't using the GTK-based display console.  this will connect ttya
+# to the master side of a pseudo-tty (in this case, /dev/ttyr0), which
+# you can connect to using tip or some other serial communications
+# program on the slave side (in this case, /dev/ptyr0):
+#
+sink1 at zs0 channel A: tme/serial/sink
+#console0 at zs0 channel A: tme/host/posix/serial device /dev/ttyr0 break-carats
+
+## the SBus esp SCSI:
+##
+esp0 at sbus0 slot 0 offset 0x800000 ipl 3: tme/ic/lsi64854 revision "1+" channel scsi
+esp0 dma at sbus0 slot 0 offset 0x400000
+ncr0 at esp0 master: tme/ic/ncr53c9x variant esp100
+scsibus0 at ncr0: tme/scsi/bus
+
+## the SBus LANCE Ethernet:
+##
+# uncomment the bpf0 line if you have read/write permission on one
+# of your /dev/bpfN devices and you want actual network access:
+#
+le0 at sbus0 slot 0 offset 0xc00000 ipl 5 dma-offset 0xff000000: tme/ic/am7990
+#bpf0 at le0: tme/host/bsd/bpf
+
+## an SBus cgthree:
+##
+cgthree0 at sbus0 slot 1 offset 0x0 ipl 7: tme/bus/sbus/cgthree
+cgthreerom0 at sbus0 slot 1 offset 0x0: tme/host/posix/memory rom "SUNW,501-1415.bin"
+
+## an SBus bwtwo:
+##
+# uncomment these lines if you want a bwtwo either in addition to, or
+# instead of, the cgthree:
+#
+#bwtwo0 at sbus0 slot 2 offset 0x0 ipl 7: tme/bus/sbus/bwtwo
+#bwtworom0 at sbus0 slot 2 offset 0x0: tme/host/posix/memory rom "SUNW,501-1561.bin"
+
+## the GTK-based display console:
+##
+# comment out these lines, and the bwtwo0 and cgthree0 declarations
+# above, if you don't have GTK or you don't want a display console:
+#
+display0: tme/host/gtk/display
+display0 at cgthree0
+#display0 at bwtwo0
+display0 at kbd0
+display0 at ms0
+
+## a SCSI disk:
+##
+#
+sd0 at scsibus0: tme/scsi/disk id 3 type tme-scsi-1
+disk0 at sd0: tme/host/posix/disk file my-sun4c-disk.img
+
+## a SCSI tape:
+##
+st0 at scsibus0: tme/scsi/tape id 4 type tme-scsi-1
+tape0 at st0: tme/host/posix/tape
+
+## set the idle type, so tmesh doesn't consume all of the host CPU:
+##
+# use the appropriate type for the guest operating system:
+#
+# NetBSD/sparc 1.6 through 4.99.19: netbsd32-type-0
+# NetBSD/sparc 4.99.20 through this writing: netbsd32-type-1
+# SunOS 4.1.x: sunos32-type-0
+#
+command cpu0 idle-type netbsd32-type-1
+
+## power up the machine:
+##
+# uncomment this line to automatically power up the machine when
+# tmesh starts:
+#
+#command board0 power up

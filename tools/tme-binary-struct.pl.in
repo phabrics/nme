@@ -1,0 +1,643 @@
+#! /usr/pkg/bin/perl -w
+
+# $Id: tme-binary-struct.pl.in,v 1.2 2005/01/14 11:40:50 fredette Exp $
+
+# tools/tme-binary-struct.pl.in - common framework for scripts that
+# manipulate files containing binary structures:
+#
+
+# Copyright (c) 2004 Matt Fredette
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+# 3. All advertising materials mentioning features or use of this software
+#    must display the following acknowledgement:
+#      This product includes software developed by Matt Fredette.
+# 4. The name of the author may not be used to endorse or promote products
+#    derived from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+# STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
+# silence perl -w:
+#
+undef($bad);
+undef($packed);
+undef(%name_to_values);
+
+# globals:
+#
+$0 =~ /^(.*\/)?([^\/]+)$/; $PROG = $2;
+
+# check our command line:
+#
+$usage = 0;
+$verbose = 0;
+$all = 0;
+undef($format_input);
+undef($format_output);
+for (; @ARGV > 0 && $ARGV[0] =~ /^-/; ) {
+    $option = shift(@ARGV);
+    if ($option eq '--verbose') {
+	$verbose++;
+    }
+    elsif ($option eq '--all') {
+	$all = 1;
+    }
+    elsif ($option =~ /^--format-input=(\S+)$/) {
+	$format_input = $1;
+    }
+    elsif ($option =~ /^--format-output=(\S+)$/) {
+	$format_output = $1;
+    }
+    else {
+	if ($option ne "-h"
+	    && $option ne "--help"
+	    && $option ne "-?") {
+	    print STDERR "$PROG error: unknown option `$option'\n";
+	}
+	$usage = 1;
+	last;
+    }
+}
+if (defined($format_input)
+    && $format_input ne 'text'
+    && $format_input ne 'binary') {
+    print STDERR "$PROG error: unknown input format $format_input\n";
+    $usage = 1;
+}
+if (defined($format_output)
+    && $format_output ne 'text'
+    && $format_output ne 'binary') {
+    print STDERR "$PROG error: unknown input format $format_output\n";
+    $usage = 1;
+}
+if (@ARGV > 0) {
+    print STDERR "$PROG error: `$ARGV[0]' unexpected\n";
+    $usage = 1;
+}
+if ($usage) {
+    print STDERR <<"EOF;";
+usage: $PROG [ OPTIONS ]
+where OPTIONS are:
+  --verbose                 include comments in text output
+  --all                     display normally hidden fields in text output
+  --format-input=FORMAT     set the input format to FORMAT, one of: text binary
+  --format-output=FORMAT    set the output format to FORMAT, one of: text binary
+EOF;
+    exit (1);
+}
+
+# the set of related types:
+#
+%types_related = split(/[\r\n\s]+/, <<'EOF;');
+generic_char_hex	generic_integral
+generic_char_dec	generic_integral
+generic_shorteb_hex	generic_integral
+generic_shorteb_dec	generic_integral
+generic_shortel_hex	generic_integral
+generic_shortel_dec	generic_integral
+generic_longeb_hex	generic_integral
+generic_longeb_dec	generic_integral
+generic_longel_hex	generic_integral
+generic_longel_dec	generic_integral
+EOF;
+
+# get the structure definition:
+#
+$struct_definition = &binary_struct();
+
+# process the structure definition and make the default input:
+#
+$input_default = "";
+@comments = ("");
+$comments_new = 0;
+for ($line_start = 0;
+     $line_start < length($struct_definition); ) {
+
+    # get the offset of the next line separator:
+    #
+    $line_end = index($struct_definition, "\n", $line_start);
+    if ($line_end < 0) {
+	$line_end = length($struct_definition) + 1;
+    }
+    
+    # get the next line:
+    #
+    $_ = substr($struct_definition, $line_start, $line_end - $line_start);
+    $line_start = $line_end + 1;
+
+    # ignore comments and blank lines:
+    #
+    if ($_ !~ /\S/ || /^\s*\#/) {
+	if ($comments_new) {
+	    push(@comments, "");
+	    $comments_new = 0;
+	}
+	$comments[$#comments] .= $_."\n";
+	next;
+    }
+
+    # tokenize this line:
+    #
+    ($offset, $name, $type, $values) = split(' ', $_, 4);
+
+    # make sure this name isn't multiply-defined:
+    #
+    if (defined($name_to_offset{$name})) {
+	print STDERR "$PROG internal error: $name multiply defined\n";
+	exit (1);
+    }
+
+    # convert the offset:
+    #
+    $offset = hex($offset);
+
+    # canonicalize the type and count:
+    #
+    if ($type =~ /^(.*\D)(\d+)$/) {
+	($type, $count) = ($1, $2);
+    }
+    else {
+	$count = 1;
+    }
+
+    # make sure this type is known:
+    #
+    $func = $types_related{$type};
+    if (!defined($func)) {
+	$func = $type;
+    }
+    unless (eval("defined(\&type_${func}_pack);")) {
+	print STDERR "$PROG internal error: unknown type $func\n";
+	exit (1);
+    }
+
+    # remember this name:
+    #
+    push (@names, $name);
+    $name_to_offset{$name} = $offset;
+    $name_to_type{$name} = $type;
+    $name_to_count{$name} = $count;
+    $name_to_values{$name} = $values;
+    $name_to_func{$name} = $func;
+    $name_to_comments{$name} = $#comments;
+
+    # get the default value for this field:
+    #
+    eval("(\$value) = \&type_${func}_values(\$type, \$count, \$values);");
+
+    # if the default value has an alias, use the alias:
+    #
+    if ($value =~ s/=([^=]+)$//) {
+	$value = $1;
+    }
+
+    # add this value to the default input:
+    #
+    $input_default .= "$name $value\n";
+
+    # the next comment starts a new comment:
+    #
+    $comments_new = 1;
+}
+
+# if our standard input is a terminal:
+#
+if (-t STDIN) {
+
+    # if the user specified the input format, and it's not text, that's an error:
+    #
+    if (defined($format_input)
+	&& $format_input ne 'text') {
+	print STDERR "$PROG error: the input format can't be $format_input when standard input is a terminal\n";
+	exit (1);
+    }
+    $format_input = 'text';
+
+    # there is no standard input:
+    #
+    $input = "";
+}
+
+# otherwise, our standard input is not a terminal:
+#
+else {
+
+    # read in standard input:
+    #
+    $input = "";
+    for (;;) {
+	undef($_);
+	$size = sysread(STDIN, $_, 1024);
+	if (!defined($size)) {
+	    print STDERR "fatal: could not read stdin: $!\n";
+	    exit (1);
+	}
+	elsif ($size == 0) {
+	    last;
+	}
+	$input .= $_;
+    }
+
+    # if we don't know if the input format is text or binary, try to
+    # figure it out:
+    #
+    if (!defined($format_input)) {
+	$format_input = ($input =~ /[\000-\011\013-\036]/ ? 'binary' : 'text');
+	print STDERR "$PROG notice: input format is $format_input\n";
+    }
+}
+
+# if we don't know the output format, it's the opposite of the input format:
+#
+if (!defined($format_output)) {
+    $format_output = ($format_input eq 'text' ? 'binary' : 'text');
+    print STDERR "$PROG notice: output format is $format_output\n";
+}
+
+# if the output format is binary, --verbose and --all don't make sense:
+#
+if ($format_output eq 'binary'
+    && ($verbose
+	|| $all)) {
+    print STDERR "$PROG error: --verbose and --all don't make sense for binary output\n";
+    exit (1);
+}
+
+# if our input is text:
+#
+if ($format_input eq 'text') {
+
+    # prepend the default input to the input, to provide values for
+    # any names that the user doesn't provide:
+    #
+    $input = $input_default."\n".$input;
+
+    # process the lines of the input:
+    #
+    for ($line_start = 0;
+	 $line_start < length($input); ) {
+
+	# get the offset of the next line separator:
+	#
+	$line_end = index($input, "\n", $line_start);
+	if ($line_end < 0) {
+	    $line_end = length($input) + 1;
+	}
+    
+	# get the next line:
+	#
+	$_ = substr($input, $line_start, $line_end - $line_start);
+	$line_start = $line_end + 1;
+
+	# ignore comments and blank lines:
+	#
+	if ($_ !~ /\S/ || /^\s*\#/) {
+	    next;
+	}
+    
+	# tokenize this line:
+	#
+	($name, $value) = split(' ', $_, 2);
+
+	# if this name is unknown:
+	#
+	if (!defined($name_to_offset{$name})) {
+	    print STDERR "$PROG error: unknown name `$name'\n";
+	    exit (1);
+	}
+
+	# save this value:
+	#
+	$name_to_value{$name} = $value;
+    }
+}
+
+# otherwise, if our input is binary:
+#
+elsif ($format_input eq 'binary') {
+
+    # extract values from the image:
+    #
+    foreach $name (@names) {
+
+	# get this name's type, function, count, and offset:
+	#
+	$type = $name_to_type{$name};
+	$func = $name_to_func{$name};
+	$count = $name_to_count{$name};
+	$offset = $name_to_offset{$name};
+
+	# unpack this value:
+	#
+	eval("\$value = \&type_${func}_unpack(\$type, \$count, substr(\$input, \$offset));");
+	
+	# save this value:
+	#
+	$name_to_value{$name} = $value;
+    }
+}
+
+# loop over the names:
+#
+$image = "";
+foreach $name (@names) {
+
+    # get everything about this name:
+    #
+    $type = $name_to_type{$name};
+    $func = $name_to_func{$name};
+    $count = $name_to_count{$name};
+    $offset = $name_to_offset{$name};
+    $value = $name_to_value{$name};
+    eval("\@values = \&type_${func}_values(\$type, \$count, \$name_to_values{\$name});");
+
+    # pack the possibilities and get any aliases:
+    #
+    @aliases = ();
+    @packeds = ();
+    undef($wild_alias);
+    foreach $_ (@values) {
+	
+	# strip any alias:
+	#
+	if (/^(.*)=([^=]+)$/) {
+	    $_ = $1;
+	    push (@aliases, $2);
+	}
+	else {
+	    push (@aliases, '');
+	}
+
+	# if this is the wildcard:
+	#
+	if ($_ eq '*'
+	    && $aliases[$#aliases] ne '') {
+	    $wild_alias = $aliases[$#aliases];
+	    push(@packeds, '');
+	}
+
+	# otherwise, this is not the wildcard:
+	#
+	else {
+
+	    # this value must pack:
+	    #
+	    eval("(\$bad, \$packed) = \&type_${func}_pack(\$type, \$count, \$_);");
+	    if (defined($bad)
+		|| !defined($packed)) {
+		print STDERR "$PROG internal error: bad value for $name ($_)\n";
+		exit (1);
+	    }
+	    push (@packeds, $packed);
+	}
+    }
+
+    # try to pack this value:
+    #
+    eval("(\$value_packed_bad, \$value_packed) = \&type_${func}_pack(\$type, \$count, \$value);");
+
+    # see if this value is on the list of possibilities, and is an
+    # alias or has an alias:
+    #
+    $value_ok = 0;
+    $value_alias = '';
+    for ($value_i = 0; $value_i < @values; $value_i++) {
+	
+	# if this possibility has an alias, and the given value matches
+	# the alias, stop now:
+	#
+	if ($aliases[$value_i] ne ''
+	    && $value eq $aliases[$value_i]) {
+	    $value_ok = 1;
+	    $value_alias = $aliases[$value_i];
+	    $value_packed = $packeds[$value_i];
+	    last;
+	}
+
+	# if this value packed, and it matches this packed
+	# possibility, remember that this value is on the list of
+	# possibilities, and any alias:
+	#
+	if (!defined($value_packed_bad)
+	    && $value_packed eq $packeds[$value_i]) {
+	    $value_ok = 1;
+	    $value_alias = $aliases[$value_i];
+	}
+    }
+
+    # if there is a list of possible values:
+    #
+    if (@values > 1) {
+
+	# if this value isn't one of them:
+	#
+	if (!$value_ok) {
+
+	    # if the wildcard is accepted:
+	    #
+	    if ($wild_alias ne '') {
+		$value_alias = $wild_alias;
+	    }
+
+	    # otherwise, complain:
+	    #
+	    else {
+		print STDERR "$PROG error: bad value `$value' for $name, must be one of:";
+		for ($value_i = 0; $value_i < @values; $value_i++) {
+		    print STDERR ' '.($aliases[$value_i] ne '' ? $aliases[$value_i] : $values[$value_i]);
+		}
+		if (defined($value_packed_bad)) {
+		    print STDERR " (bad $value_packed_bad)";
+		}
+		print STDERR "\n";
+		exit (1);
+	    }
+	}
+    }
+
+    # otherwise, there isn't a list of possible values.  if this value
+    # failed to pack:
+    #
+    elsif (defined($value_packed_bad)) {
+	print STDERR "$PROG error: bad value `$value' for $name\n";
+	exit (1);
+    }
+
+    # if our output is text:
+    #
+    if ($format_output eq 'text') {
+
+	# display this variable if it's not normally hidden, or if
+	# we're displaying all variables:
+	#
+	if ($name !~ /^\./ || $all) {
+	    
+	    # if we're being verbose, display this variable's comment:
+	    #
+	    if ($verbose) {
+		print $comments[$name_to_comments{$name}];
+		$comments[$name_to_comments{$name}] = '';
+	    }
+
+	    # display the variable and its alias or value:
+	    #
+	    print "$name ".($value_alias ne '' ? $value_alias : $value)."\n";
+	}
+    }
+
+    # otherwise, if our output is binary:
+    #
+    else {
+
+	# add this packed value to the image:
+	#
+	if (length($image) < ($offset + length($value_packed))) {
+	    $image .= pack('C', 0) x ($offset + length($value_packed) - length($image));
+	}
+	substr($image, $offset, length($value_packed)) = $value_packed;
+    }
+}
+
+# if our output is binary, output the image:
+#
+if ($format_output eq 'binary') {
+    print $image;
+}
+
+# done:
+#
+exit(0);
+
+# this parses a set of integral values:
+#
+sub type_generic_integral_values {
+    my ($type, $count, $values) = @_;
+    if (!defined($values)) {
+	('');
+    }
+    else {
+	split(' ', $values);
+    }
+}
+
+# this returns the Perl pack template character for an integral type:
+#
+sub type_generic_integral_template {
+    my ($type) = @_;
+
+    if ($type =~ /^generic_char_/) {
+	$type = 'C';
+    }
+    elsif ($type =~ /^generic_shorteb_/) {
+	$type = 'n';
+    }
+    elsif ($type =~ /^generic_longeb_/) {
+	$type = 'N';
+    }
+    else {
+	print STDERR "$PROG fatal: unknown integral type $type\n";
+	exit (1);
+    }
+    $type;
+}
+
+# this packs an integral value:
+#
+sub type_generic_integral_pack {
+    my ($type, $count, $value) = @_;
+    my ($template, $bad, @parts);
+    
+    @parts = split(/,/, $value);
+    for (; @parts < $count; ) { push(@parts, '0'); }
+    foreach (@parts) {
+	if (/^0x[0-9A-Fa-f]+$/) {
+	    $_ = hex($_) + 0;
+	}
+	elsif (/^\'(.)\'$/) {
+	    $_ = ord($_) + 0;
+	}
+	elsif (/^\d+$/) {
+	    $_ += 0;
+	}
+	else {
+	    $bad = $_;
+	    $_ = 0;
+	}
+    }
+    $template = &type_generic_integral_template($type);
+    ($bad, pack("$template$count", @parts));
+}
+
+# this unpacks an integral value:
+#
+sub type_generic_integral_unpack {
+    my ($type, $count, $packed) = @_;
+    my ($template, @parts);
+    
+    $template = &type_generic_integral_template($type);
+    @parts = unpack("$template$count", $packed);
+    for (; @parts > ($count > 1 ? 0 : 1) && $parts[$#parts] == 0; ) { pop(@parts); }
+    if ($type =~ /_hex$/) {
+	foreach (@parts) {
+	    $_ = sprintf("0x%0".(length(pack($template, 0)) * 2)."x", $_);
+	}
+    }
+    else {
+	foreach (@parts) {
+	    $_ = "$_";
+	}
+    }
+    join(',', @parts);
+}
+
+# this parses a set of generic string buffer values:
+#
+sub type_generic_string_buffer_values {
+    if (!defined($values)) {
+	$values = '';
+    }
+    ($values);
+}
+
+# this packs a generic string buffer value:
+#
+sub type_generic_string_buffer_pack {
+    my ($type, $count, $value) = @_;
+    my ($bad);
+    if (length($value) < $count) {
+	$value .= pack('C', 0) x ($count - length($value));
+    }
+    elsif (length($value) > $count) {
+	$bad = $value;
+    }
+    ($bad, $value);
+}
+
+# this unpacks a generic string buffer value:
+#
+sub type_generic_string_buffer_unpack {
+    my ($type, $count, $packed) = @_;
+    $lc = index($packed, pack('C', 0));
+    if ($lc >= 0) {
+	$packed = substr($packed, 0, $lc);
+    }
+    $packed;
+}

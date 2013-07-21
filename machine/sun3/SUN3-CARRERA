@@ -1,0 +1,109 @@
+# $Id: SUN3-CARRERA,v 1.6 2007/08/24 01:18:05 fredette Exp $
+
+## SUN3-CARRERA - example tmesh commands to create a Sun3 "Carrera" VME
+## machine:
+
+## the sun3 common buses and devices:
+##
+mainbus0: tme/machine/sun3 my-sun3-idprom.bin
+cpu0 at mainbus0: tme/ic/m68020 fpu-type m68881 fpu-compliance unknown fpu-incomplete line-f
+obio0 at mainbus0 obio: tme/generic/bus size 16MB
+obmem0 at mainbus0 obmem: tme/generic/bus size 4GB
+ram0 at obmem0 addr 0x0: tme/host/posix/memory ram 8MB
+rom0 at obmem0 addr 0x0fef0000: tme/host/posix/memory rom sun3-carrera-rev-3.0.bin
+
+## the sun3 common obio devices:
+##
+zs0 at obio0 addr 0x020000 ipl 6: tme/machine/sun3/zs
+zs1 at obio0 addr 0x000000 ipl 6: tme/machine/sun3/zs
+eeprom0	at obio0 addr 0x040000: tme/host/posix/memory persistent my-sun3-eeprom.bin
+clock0 at obio0 addr 0x060000: tme/machine/sun3/clock
+mainbus0 memerr	at obio0 addr 0x080000 ipl 7
+mainbus0 intreg	at obio0 addr 0x0A0000
+
+## the Sun Intel Ethernet on-board:
+##
+# uncomment these lines if you have read/write permission on one
+# of your /dev/bpfN devices and you want an Ethernet device:
+#
+#obie0: tme/machine/sun3/obie
+#obie0 csr at obio0 addr 0x0c0000 ipl 3
+#obie0 memory at mainbus0
+#ie0 at obie0: tme/ic/i82586
+#bpf1 at ie0: tme/host/bsd/bpf
+
+## the Sun type-3 keyboard and mouse:
+##
+kbd0 at zs1 channel A: tme/serial/keyboard type sun-type-3 macros my-sun-macros.txt map sun-keyboards.txt rate 20
+ms0 at zs1 channel B: tme/serial/mouse type mousesystems-5
+
+## the Sun bwtwo on-board:
+##
+bwtwo0 at obmem0 addr 0xff000000: tme/machine/sun3/bwtwo type old-onboard
+
+## ttya:
+##
+# uncomment the following line if you aren't using the GTK-based
+# display console.  this will connect ttya to the master side of
+# a pseudo-tty (in this case, /dev/ttyr0), which you can connect to
+# using tip or some other serial communications program on the slave
+# side (in this case, /dev/ptyr0):
+#
+#console0 at zs0 channel A: tme/host/posix/serial device /dev/ttyr0 break-carats
+
+## the sun3 VME buses:
+##
+vme0: tme/generic/bus size 4GB
+mainbus0 vme at vme0 addr 0x00000
+
+## the Sun "SCSI-2" VME board (shares the Multibus implementation):
+##
+#sc0 at vme0 addr 0xff200000 ipl 2: tme/bus/multibus/sun-sc vme
+#scsibus0 at sc0: tme/scsi/bus
+#zs2 at vme0 addr 0xff200800 ipl 6: tme/machine/sun3/zs
+#zs3 at vme0 addr 0xff201000 ipl 6: tme/machine/sun3/zs
+
+## the Sun "SCSI-3" VME board
+##
+si0: tme/machine/sun3/si type vme
+si0 csr at vme0 addr 0xff200000 ipl 2
+ncr0 at si0: tme/ic/ncr5380
+scsibus0 at ncr0: tme/scsi/bus
+
+## the Sun cgthree VME board (handled by the cgtwo emulation):
+##
+cgthree0 at vme0 addr 0xff400000 ipl 4: tme/machine/sun3/cgtwo type sun3
+
+## the GTK-based display console:
+##
+# comment out these lines, and the bwtwo0 and cgthree0 declarations
+# above, if you don't have GTK or you don't want a display console:
+#
+display0: tme/host/gtk/display
+display0 at bwtwo0
+display0 at cgthree0
+display0 at kbd0
+display0 at ms0
+
+## a SCSI disk:
+##
+# if you're using SunOS, change the disk type from tme-scsi-1 to
+# acb4000, to get an Adaptec ACB-4000 compatible disk:
+#
+sd0 at scsibus0: tme/scsi/disk id 0 type tme-scsi-1
+disk0 at sd0: tme/host/posix/disk file my-sun3-disk.img
+
+## a SCSI tape:
+##
+# if you're using SunOS, remove the vendor EMULEX and product "MT-02 QIC" 
+# to get a 100% Emulex MT-02 compatible tape:
+#
+st0 at scsibus0: tme/scsi/tape id 4 type emulex-mt02 vendor EMULEX product "MT-02 QIC"
+tape0 at st0: tme/host/posix/tape
+
+## power up the machine:
+##
+# uncomment this line to automatically power up the machine when
+# tmesh starts:
+#
+# command mainbus0 power up
