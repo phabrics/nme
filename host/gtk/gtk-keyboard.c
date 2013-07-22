@@ -94,7 +94,7 @@ _tme_gtk_keyboard_x11_new(struct tme_gtk_display *display)
        keycode++) {
     keycode_to_modifier[keycode] = TME_KEYBOARD_MODIFIER_NONE;
   }
-  modifier_keymap = XGetModifierMapping(GDK_DISPLAY());
+  modifier_keymap = XGetModifierMapping(gdk_x11_get_default_xdisplay());
   for (x_modifier = 0;
        x_modifier < 8;
        x_modifier++) {
@@ -127,10 +127,10 @@ _tme_gtk_keyboard_x11_new(struct tme_gtk_display *display)
   XFreeModifiermap(modifier_keymap);
 
   /* get the keycode range: */
-  XDisplayKeycodes(GDK_DISPLAY(), &keycode_min, &keycode_max);
+  XDisplayKeycodes(gdk_x11_get_default_xdisplay(), &keycode_min, &keycode_max);
 
   /* get the keyboard mapping: */
-  keymap = XGetKeyboardMapping(GDK_DISPLAY(), 
+  keymap = XGetKeyboardMapping(gdk_x11_get_default_xdisplay(), 
 			       keycode_min,
 			       (keycode_max - keycode_min) + 1,
 			       &keymap_width);
@@ -469,7 +469,7 @@ _tme_gtk_keyboard_lookup(struct tme_keyboard_connection *conn_keyboard,
     
     /* if GDK doesn't know a keysym for this name, or if the string
        for this keysym isn't the same name, find an unused keysym: */
-    if (keysym->tme_gtk_keysym_keysym == GDK_VoidSymbol
+    if (keysym->tme_gtk_keysym_keysym == GDK_KEY_VoidSymbol
 	|| (string_other = gdk_keyval_name(keysym->tme_gtk_keysym_keysym)) == NULL
 	|| strcmp(string, string_other)) {
       
@@ -481,7 +481,7 @@ _tme_gtk_keyboard_lookup(struct tme_keyboard_connection *conn_keyboard,
 	  abort();
 	}
 	if (_keysym != TME_KEYBOARD_KEYVAL_UNDEF
-	    && _keysym != GDK_VoidSymbol
+	    && _keysym != GDK_KEY_VoidSymbol
 	    && gdk_keyval_name(_keysym) == NULL) {
 	  break;
 	}
@@ -707,21 +707,21 @@ _tme_gtk_keyboard_attach(struct tme_gtk_screen *screen)
 			 | GDK_KEY_RELEASE_MASK);
 
   /* set a signal handler for these events: */
-  gtk_signal_connect(GTK_OBJECT(screen->tme_gtk_screen_event_box),
-		     "enter_notify_event",
-		     GTK_SIGNAL_FUNC(_tme_gtk_display_enter_focus),
-		     NULL);
-  gtk_signal_connect_after(GTK_OBJECT(screen->tme_gtk_screen_event_box),
-			   "key_press_event",
-			   GTK_SIGNAL_FUNC(_tme_gtk_keyboard_key_event), 
-			   screen);
-  gtk_signal_connect_after(GTK_OBJECT(screen->tme_gtk_screen_event_box),
-			   "key_release_event",
-			   GTK_SIGNAL_FUNC(_tme_gtk_keyboard_key_event), 
-			   screen);
-
+  g_signal_connect(screen->tme_gtk_screen_event_box,
+		   "enter_notify_event",
+		   G_CALLBACK(_tme_gtk_display_enter_focus),
+		   NULL);
+  g_signal_connect_after(screen->tme_gtk_screen_event_box,
+			 "key_press_event",
+			 G_CALLBACK(_tme_gtk_keyboard_key_event), 
+			 screen);
+  g_signal_connect_after(screen->tme_gtk_screen_event_box,
+			 "key_release_event",
+			 G_CALLBACK(_tme_gtk_keyboard_key_event), 
+			 screen);
+  
   /* the event box can focus, and have it grab the focus now: */
-  GTK_WIDGET_SET_FLAGS(screen->tme_gtk_screen_event_box, GTK_CAN_FOCUS);
+  gtk_widget_set_can_focus(screen->tme_gtk_screen_event_box, TRUE);
   gtk_widget_grab_focus(screen->tme_gtk_screen_event_box);
 }
 

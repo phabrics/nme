@@ -282,21 +282,8 @@ _tme_gtk_screen_mode_change(struct tme_fb_connection *conn_fb)
   conn_fb->tme_fb_connection_scanline_pad = _tme_gtk_gdkpixbuf_scanline_pad(gdkpixbuf);
   conn_fb->tme_fb_connection_order = TME_ENDIAN_NATIVE;
   conn_fb->tme_fb_connection_buffer = gdk_pixbuf_get_pixels(gdkpixbuf);
-  switch (visual->type) {
-  case GDK_VISUAL_STATIC_GRAY: 
-  case GDK_VISUAL_GRAYSCALE:
-    conn_fb->tme_fb_connection_class = TME_FB_XLAT_CLASS_MONOCHROME;
-    break;
-  default:
-    assert(FALSE);
-    /* FALLTHROUGH */
-  case GDK_VISUAL_STATIC_COLOR:
-  case GDK_VISUAL_PSEUDO_COLOR:
-  case GDK_VISUAL_DIRECT_COLOR:
-  case GDK_VISUAL_TRUE_COLOR:
-    conn_fb->tme_fb_connection_class = TME_FB_XLAT_CLASS_COLOR;
-    break;
-  }
+  conn_fb->tme_fb_connection_class = TME_FB_XLAT_CLASS_COLOR;
+
   switch (visual->type) {
   case GDK_VISUAL_DIRECT_COLOR:
     /* we set the primary maps to anything non-NULL, to indicate that
@@ -560,7 +547,7 @@ _tme_gtk_screen_scale_double(GtkWidget *widget,
 }
 
 /* this creates the Screen scaling submenu: */
-static GtkSignalFunc
+static GCallback
 _tme_gtk_screen_submenu_scaling(void *_screen,
 				struct tme_gtk_display_menu_item *menu_item)
 {
@@ -572,17 +559,17 @@ _tme_gtk_screen_submenu_scaling(void *_screen,
   case 0:
     menu_item->tme_gtk_display_menu_item_string = _("Default");
     menu_item->tme_gtk_display_menu_item_widget = &screen->tme_gtk_screen_scale_default;
-    return (GTK_SIGNAL_FUNC(_tme_gtk_screen_scale_default));
+    return (G_CALLBACK(_tme_gtk_screen_scale_default));
   case 1:
     menu_item->tme_gtk_display_menu_item_string = _("Half");
     menu_item->tme_gtk_display_menu_item_widget = &screen->tme_gtk_screen_scale_half;
-    return (GTK_SIGNAL_FUNC(_tme_gtk_screen_scale_half));
+    return (G_CALLBACK(_tme_gtk_screen_scale_half));
   case 2:
     menu_item->tme_gtk_display_menu_item_string = _("Full");
-    return (GTK_SIGNAL_FUNC(_tme_gtk_screen_scale_none));
+    return (G_CALLBACK(_tme_gtk_screen_scale_none));
   case 3:
     menu_item->tme_gtk_display_menu_item_string = _("Double");
-    return (GTK_SIGNAL_FUNC(_tme_gtk_screen_scale_double));
+    return (G_CALLBACK(_tme_gtk_screen_scale_double));
   default:
     break;
   }
@@ -631,7 +618,7 @@ _tme_gtk_screen_new(struct tme_gtk_display *display)
 
   /* create the outer vertical packing box: */
   screen->tme_gtk_screen_vbox0
-    = gtk_vbox_new(FALSE, 0);
+    = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
 
   /* add the outer vertical packing box to the window: */
   gtk_container_add(GTK_CONTAINER(screen->tme_gtk_screen_window),

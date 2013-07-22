@@ -176,7 +176,7 @@ _tme_gtk_display_menu_radio(void *state,
   GtkWidget *menu;
   GSList *menu_group;
   struct tme_gtk_display_menu_item menu_item_buffer;
-  GtkSignalFunc menu_func;
+  GCallback menu_func;
   GtkWidget *menu_item;
 
   /* create the menu: */
@@ -188,7 +188,7 @@ _tme_gtk_display_menu_radio(void *state,
        ;
        menu_item_buffer.tme_gtk_display_menu_item_which++) {
     menu_func = (*menu_items)(state, &menu_item_buffer);
-    if (menu_func == GTK_SIGNAL_FUNC(NULL)) {
+    if (menu_func == G_CALLBACK(NULL)) {
       break;
     }
     menu_item
@@ -199,10 +199,10 @@ _tme_gtk_display_menu_radio(void *state,
     }
     menu_group
       = gtk_radio_menu_item_group(GTK_RADIO_MENU_ITEM(menu_item));
-    gtk_signal_connect(GTK_OBJECT(menu_item), 
-		       "activate",
-		       menu_func,
-		       (gpointer) state);
+    g_signal_connect(menu_item, 
+		     "activate",
+		     menu_func,
+		     (gpointer) state);
     gtk_menu_append(GTK_MENU(menu), menu_item);
     gtk_widget_show(menu_item);
   }
@@ -290,9 +290,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   /* start our data structure: */
   display = tme_new0(struct tme_gtk_display, 1);
   display->tme_gtk_display_element = element;
-
-  /* create the tooltips group: */
-  display->tme_gtk_display_tooltips = gtk_tooltips_new();
 
   /* create the keyboard: */
   _tme_gtk_keyboard_new(display);

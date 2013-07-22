@@ -97,6 +97,8 @@ struct tme_gtk_screen {
   GtkWidget *tme_gtk_screen_event_box;
   GdkPixbuf *tme_gtk_screen_gdkpixbuf;
   GtkWidget *tme_gtk_screen_gtkimage;
+  GdkWindow *tme_gtk_screen_gtkwin;
+  GdkDevice *tme_gtk_screen_pointer;
 
   /* the translation function: */
   int (*tme_gtk_screen_fb_xlat) _TME_P((struct tme_fb_connection *, 
@@ -186,8 +188,6 @@ struct tme_gtk_display {
   /* the callout flags: */
   unsigned int tme_gtk_display_callout_flags;
 
-  /* the tooltips group: */
-  GtkTooltips *tme_gtk_display_tooltips;
 };
 
 /* a menu item: */
@@ -204,7 +204,7 @@ struct tme_gtk_display_menu_item {
 };
 
 /* this generates menu items: */
-typedef GtkSignalFunc (*tme_gtk_display_menu_items_t) _TME_P((void *, struct tme_gtk_display_menu_item *));
+typedef GCallback (*tme_gtk_display_menu_items_t) _TME_P((void *, struct tme_gtk_display_menu_item *));
 
 /* prototypes: */
 struct tme_gtk_screen *_tme_gtk_screen_new _TME_P((struct tme_gtk_display *));
