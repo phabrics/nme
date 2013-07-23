@@ -51,19 +51,13 @@ _TME_RCSID("$Id: threads-sjlj.c,v 1.18 2010/06/05 19:10:28 fredette Exp $");
 #define G_ENABLE_DEBUG (0)
 #endif /* !G_ENABLE_DEBUG */
 #include <gtk/gtk.h>
-#if GTK_MAJOR_VERSION >= 3
-typedef int GdkInputCondition;
-#define GDK_INPUT_READ		TME_BIT(0)
-#define GDK_INPUT_WRITE		TME_BIT(1)
-#define GDK_INPUT_EXCEPTION	TME_BIT(2)
-#endif
 #else  /* !HAVE_GTK */
 typedef int gint;
 typedef int GdkInputCondition;
 typedef void *gpointer;
-#define GDK_INPUT_READ		TME_BIT(0)
-#define GDK_INPUT_WRITE		TME_BIT(1)
-#define GDK_INPUT_EXCEPTION	TME_BIT(2)
+#define G_IO_IN		TME_BIT(0)
+#define G_IO_OUT		TME_BIT(1)
+#define G_IO_ERR	TME_BIT(2)
 #endif /* !HAVE_GTK */
 
 /* thread states: */
@@ -146,7 +140,7 @@ static fd_set tme_sjlj_main_fdset_except;
 
 /* for each file descriptor, any threads blocked on it: */
 static struct {
-  GdkInputCondition tme_sjlj_fd_thread_conditions;
+  GIOCondition tme_sjlj_fd_thread_conditions;
   struct tme_sjlj_thread *tme_sjlj_fd_thread_read;
   struct tme_sjlj_thread *tme_sjlj_fd_thread_write;
   struct tme_sjlj_thread *tme_sjlj_fd_thread_except;
@@ -391,7 +385,7 @@ _tme_sjlj_threads_dispatching_timeout(void)
    the dispatching list: */
 static void
 _tme_sjlj_threads_dispatching_fd(int fd,
-				 GdkInputCondition fd_conditions)
+				 GIOCondition fd_conditions)
 {
   struct tme_sjlj_thread *thread;
 
@@ -401,9 +395,9 @@ _tme_sjlj_threads_dispatching_fd(int fd,
        fd_conditions &= (fd_conditions - 1)) {
 
     /* move the thread for this condition to the dispatching list: */
-    thread = ((fd_conditions & GDK_INPUT_READ)
+    thread = ((fd_conditions & G_IO_IN)
 	      ? tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_read
-	      : (fd_conditions & GDK_INPUT_WRITE)
+	      : (fd_conditions & G_IO_OUT)
 	      ? tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_write
 	      : tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_except);
     assert (thread != NULL);
@@ -564,10 +558,10 @@ _tme_sjlj_gtk_callback_timeout(gpointer callback_pointer)
 }
 
 /* this handles a GTK callback for a file descriptor: */
-static void
-_tme_sjlj_gtk_callback_fd(gpointer callback_pointer,
-			  gint fd,
-			  GdkInputCondition fd_conditions)
+static gboolean
+_tme_sjlj_gtk_callback_fd(GIOChannel *chan,
+			  GIOCondition fd_conditions,
+			  gpointer callback_pointer)
 {
 
   /* we were in GTK for an unknown amount of time: */
@@ -575,7 +569,7 @@ _tme_sjlj_gtk_callback_fd(gpointer callback_pointer,
 
   /* move all threads that match the conditions on this file
      descriptor to the dispatching list: */
-  _tme_sjlj_threads_dispatching_fd(fd, fd_conditions);
+  _tme_sjlj_threads_dispatching_fd(g_io_channel_unix_get_fd(chan), fd_conditions);
 
   /* dispatch: */
   tme_sjlj_dispatch(1);
@@ -585,6 +579,8 @@ _tme_sjlj_gtk_callback_fd(gpointer callback_pointer,
 
   /* unused: */
   callback_pointer = 0;
+
+  return TRUE;
 }
 
 /* this handles a GTK callback for an idle: */
@@ -711,9 +707,9 @@ tme_sjlj_threads_gtk_yield(void)
     if (!tme_sjlj_idle_set) {
 
       /* set the idle callback: */
-      gtk_idle_add_priority(G_PRIORITY_DEFAULT_IDLE,
-			    _tme_sjlj_gtk_callback_idle,
-			    NULL);
+      g_idle_add_full(G_PRIORITY_DEFAULT_IDLE,
+		      _tme_sjlj_gtk_callback_idle,
+		      NULL, NULL);
       tme_sjlj_idle_set = TRUE;
     }
   }
@@ -729,7 +725,7 @@ tme_sjlj_threads_run(void)
   fd_set fdset_read_out;
   fd_set fdset_write_out;
   fd_set fdset_except_out;
-  GdkInputCondition fd_conditions;
+  GIOCondition fd_conditions;
   struct timeval timeout_buffer;
   struct timeval *timeout;
   int rc;
@@ -808,13 +804,13 @@ tme_sjlj_threads_run(void)
       for (fd = tme_sjlj_main_max_fd; fd >= 0; fd--) {
 	fd_conditions = 0;
 	if (FD_ISSET(fd, &fdset_read_out)) {
-	  fd_conditions |= GDK_INPUT_READ;
+	  fd_conditions |= G_IO_IN;
 	}
 	if (FD_ISSET(fd, &fdset_write_out)) {
-	  fd_conditions |= GDK_INPUT_WRITE;
+	  fd_conditions |= G_IO_OUT;
 	}
 	if (FD_ISSET(fd, &fdset_except_out)) {
-	  fd_conditions |= GDK_INPUT_EXCEPTION;
+	  fd_conditions |= G_IO_ERR;
 	}
 	if (fd_conditions != 0) {
 
@@ -934,10 +930,11 @@ tme_sjlj_yield(void)
   int max_fd_old;
   int max_fd_new;
   int max_fd, fd;
-  GdkInputCondition fd_condition_old;
-  GdkInputCondition fd_condition_new;
+  GIOCondition fd_condition_old;
+  GIOCondition fd_condition_new;
   struct tme_sjlj_thread **_thread_prev;
   struct tme_sjlj_thread *thread_other;
+  GIOChannel *chan;
 
   /* get the active thread: */
   thread = tme_sjlj_thread_active;
@@ -973,9 +970,9 @@ do {					\
     fd_condition_old |= condition;	\
   }					\
 } while (/* CONSTCOND */ 0)
-      CHECK_FD_SET(tme_sjlj_thread_fdset_read, GDK_INPUT_READ);
-      CHECK_FD_SET(tme_sjlj_thread_fdset_write, GDK_INPUT_WRITE);
-      CHECK_FD_SET(tme_sjlj_thread_fdset_except, GDK_INPUT_EXCEPTION);
+      CHECK_FD_SET(tme_sjlj_thread_fdset_read, G_IO_IN);
+      CHECK_FD_SET(tme_sjlj_thread_fdset_write, G_IO_OUT);
+      CHECK_FD_SET(tme_sjlj_thread_fdset_except, G_IO_ERR);
 #undef CHECK_FD_SET
     }
 
@@ -991,9 +988,9 @@ do {							\
     FD_CLR(fd, &thread->fd_set);			\
   }							\
 } while (/* CONSTCOND */ 0)
-      CHECK_FD_SET(tme_sjlj_thread_fdset_read, GDK_INPUT_READ);
-      CHECK_FD_SET(tme_sjlj_thread_fdset_write, GDK_INPUT_WRITE);
-      CHECK_FD_SET(tme_sjlj_thread_fdset_except, GDK_INPUT_EXCEPTION);
+      CHECK_FD_SET(tme_sjlj_thread_fdset_read, G_IO_IN);
+      CHECK_FD_SET(tme_sjlj_thread_fdset_write, G_IO_OUT);
+      CHECK_FD_SET(tme_sjlj_thread_fdset_except, G_IO_ERR);
 #undef CHECK_FD_SET
     }
 
@@ -1015,7 +1012,7 @@ do {							\
 	     currently in a callback for it.  if we happen to get a
 	     callback for it later anyways, _tme_sjlj_gtk_callback_fd()
 	     will ignore it: */
-	  gdk_input_remove(tme_sjlj_fd_tag[fd]);
+	  g_source_remove(tme_sjlj_fd_tag[fd]);
 	}
 	else
 #endif /* HAVE_GTK */
@@ -1055,9 +1052,9 @@ do {							\
     tme_sjlj_fd_thread[fd].fd_thread = thread;		\
   }							\
 } while	(/* CONSTCOND */ 0)
-      UPDATE_FD_THREAD(tme_sjlj_fd_thread_read, GDK_INPUT_READ);
-      UPDATE_FD_THREAD(tme_sjlj_fd_thread_write, GDK_INPUT_WRITE);
-      UPDATE_FD_THREAD(tme_sjlj_fd_thread_except, GDK_INPUT_EXCEPTION);
+      UPDATE_FD_THREAD(tme_sjlj_fd_thread_read, G_IO_IN);
+      UPDATE_FD_THREAD(tme_sjlj_fd_thread_write, G_IO_OUT);
+      UPDATE_FD_THREAD(tme_sjlj_fd_thread_except, G_IO_ERR);
 #undef UPDATE_FD_THREAD    
 
       /* get the conditions for all threads for this fd: */
@@ -1068,24 +1065,26 @@ do {							\
 
 #ifdef HAVE_GTK
 	if (tme_sjlj_using_gtk) {
+	  chan = g_io_channel_unix_new(fd);
 	  tme_sjlj_fd_tag[fd] = 
-	    gdk_input_add(fd,
-			  fd_condition_new,
-			  _tme_sjlj_gtk_callback_fd,
-			  NULL);
+	    g_io_add_watch(chan,
+			   fd_condition_new,
+			   _tme_sjlj_gtk_callback_fd,
+			   NULL);
+	  g_io_channel_unref(chan);
 	}
 	else
 #endif /* HAVE_GTK */
 	  {
 
 	    /* add this fd to main loop's relevant fd sets: */
-	    if (fd_condition_new & GDK_INPUT_READ) {
+	    if (fd_condition_new & G_IO_IN) {
 	      FD_SET(fd, &tme_sjlj_main_fdset_read);
 	    }
-	    if (fd_condition_new & GDK_INPUT_WRITE) {
+	    if (fd_condition_new & G_IO_OUT) {
 	      FD_SET(fd, &tme_sjlj_main_fdset_write);
 	    }
-	    if (fd_condition_new & GDK_INPUT_EXCEPTION) {
+	    if (fd_condition_new & G_IO_ERR) {
 	      FD_SET(fd, &tme_sjlj_main_fdset_except);
 	    }
 	    if (fd > tme_sjlj_main_max_fd) {

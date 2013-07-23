@@ -164,7 +164,6 @@ _tme_gtk_screen_mode_change(struct tme_fb_connection *conn_fb)
   tme_uint32_t map_pixel_count_old;  
   tme_uint32_t colorset;
   GdkPixbuf *gdkpixbuf;
-  GdkVisual *visual;
   tme_uint32_t color_count, color_i;
   tme_uint32_t color_count_distinct;
   tme_uint32_t color_j;
@@ -219,9 +218,6 @@ _tme_gtk_screen_mode_change(struct tme_fb_connection *conn_fb)
     screen->tme_gtk_screen_fb_scale = -scale;
   }
 
-  /* get the system's default visual: */
-  visual = gdk_visual_get_system();
-
   /* get the required dimensions for the GdkPixbuf: */
   width = ((conn_fb_other->tme_fb_connection_width
 	    * scale)
@@ -251,9 +247,8 @@ _tme_gtk_screen_mode_change(struct tme_fb_connection *conn_fb)
     cairo_surface_destroy (surface);
 
     /* set the new image on the image widget: */
-    gtk_image_set(GTK_IMAGE(screen->tme_gtk_screen_gtkimage),
-		  gdkpixbuf,
-		  NULL);
+    gtk_image_set_from_pixbuf(GTK_IMAGE(screen->tme_gtk_screen_gtkimage),
+			      gdkpixbuf);
 
     /* destroy the previous gdkpixbuf and remember the new one: */
     g_object_unref(screen->tme_gtk_screen_gdkpixbuf);
@@ -277,33 +272,18 @@ _tme_gtk_screen_mode_change(struct tme_fb_connection *conn_fb)
   conn_fb->tme_fb_connection_width = width;
   conn_fb->tme_fb_connection_height = height;
   conn_fb->tme_fb_connection_depth = _tme_gtk_gdkpixbuf_bipp(gdkpixbuf);
-  conn_fb->tme_fb_connection_bits_per_pixel = conn_fb->tme_fb_connection_depth;
+  conn_fb->tme_fb_connection_bits_per_pixel = _tme_gtk_gdkpixbuf_bipp(gdkpixbuf);
   conn_fb->tme_fb_connection_skipx = gdk_pixbuf_get_rowstride(gdkpixbuf) - width;
   conn_fb->tme_fb_connection_scanline_pad = _tme_gtk_gdkpixbuf_scanline_pad(gdkpixbuf);
   conn_fb->tme_fb_connection_order = TME_ENDIAN_NATIVE;
   conn_fb->tme_fb_connection_buffer = gdk_pixbuf_get_pixels(gdkpixbuf);
   conn_fb->tme_fb_connection_class = TME_FB_XLAT_CLASS_COLOR;
+  conn_fb->tme_fb_connection_mask_g = 0x00ff00;
+  conn_fb->tme_fb_connection_mask_r = 0x0000ff;
+  conn_fb->tme_fb_connection_mask_b = 0xff0000;
+  screen->tme_gtk_screen_colorset = TME_FB_COLORSET_NONE;
 
-  switch (visual->type) {
-  case GDK_VISUAL_DIRECT_COLOR:
-    /* we set the primary maps to anything non-NULL, to indicate that
-       primaries are index mapped: */
-    conn_fb->tme_fb_connection_map_g = conn_fb;
-    conn_fb->tme_fb_connection_map_r = conn_fb;
-    conn_fb->tme_fb_connection_map_b = conn_fb;
-    /* FALLTHROUGH */
-  case GDK_VISUAL_TRUE_COLOR:
-    conn_fb->tme_fb_connection_mask_g = visual->green_mask;
-    conn_fb->tme_fb_connection_mask_r = visual->red_mask;
-    conn_fb->tme_fb_connection_mask_b = visual->blue_mask;
-    break;
-  default:
-    conn_fb->tme_fb_connection_mask_g = 0;
-    conn_fb->tme_fb_connection_mask_r = 0;
-    conn_fb->tme_fb_connection_mask_b = 0;
-    break;
-  }
-
+#if 0
   /* get the needed colors: */
   colorset = tme_fb_xlat_colors_get(conn_fb_other, scale, conn_fb, &colors_tme);
   color_count = conn_fb->tme_fb_connection_map_pixel_count;
@@ -326,6 +306,7 @@ _tme_gtk_screen_mode_change(struct tme_fb_connection *conn_fb)
     conn_fb->tme_fb_connection_map_pixel = map_pixel_old;
     conn_fb->tme_fb_connection_map_pixel_count = map_pixel_count_old;
   }
+
 
   /* otherwise, we may need to free and/or allocate colors: */
   else {
@@ -414,7 +395,7 @@ _tme_gtk_screen_mode_change(struct tme_fb_connection *conn_fb)
       tme_fb_xlat_colors_set(conn_fb_other, scale, conn_fb, colors_tme);
     }
   }
-
+#endif
   /* compose the framebuffer translation question: */
   fb_xlat_q.tme_fb_xlat_width			= conn_fb_other->tme_fb_connection_width;
   fb_xlat_q.tme_fb_xlat_height			= conn_fb_other->tme_fb_connection_height;
@@ -478,7 +459,7 @@ _tme_gtk_screen_scale_set(GtkWidget *widget,
   int rc;
 
   /* return now if the menu item isn't active: */
-  if (!GTK_CHECK_MENU_ITEM(GTK_MENU_ITEM(widget))->active) {
+  if (!gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(GTK_MENU_ITEM(widget)))) {
     return;
   }
 
@@ -613,8 +594,7 @@ _tme_gtk_screen_new(struct tme_gtk_display *display)
      and auto-shrink: */
   screen->tme_gtk_screen_window
     = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-  gtk_window_set_policy(GTK_WINDOW(screen->tme_gtk_screen_window),
-			FALSE, FALSE, TRUE);
+  gtk_window_set_resizable(GTK_WINDOW(screen->tme_gtk_screen_window), FALSE);
 
   /* create the outer vertical packing box: */
   screen->tme_gtk_screen_vbox0
@@ -644,14 +624,14 @@ _tme_gtk_screen_new(struct tme_gtk_display *display)
   menu_item = gtk_menu_item_new_with_label(_("Scale"));
   gtk_widget_show(menu_item);
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), submenu);
-  gtk_menu_append(GTK_MENU(menu), menu_item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
 
   /* create the Screen menu bar item, attach the menu to it, and 
      attach the menu bar item to the menu bar: */
   menu_item = gtk_menu_item_new_with_label("Screen");
   gtk_widget_show(menu_item);
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), menu);
-  gtk_menu_bar_append(GTK_MENU_BAR(menu_bar), menu_item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(menu_bar), menu_item);
 
   /* create an event box for the framebuffer area: */
   screen->tme_gtk_screen_event_box

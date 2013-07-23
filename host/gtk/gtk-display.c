@@ -198,12 +198,12 @@ _tme_gtk_display_menu_radio(void *state,
       *menu_item_buffer.tme_gtk_display_menu_item_widget = menu_item;
     }
     menu_group
-      = gtk_radio_menu_item_group(GTK_RADIO_MENU_ITEM(menu_item));
+      = gtk_radio_menu_item_get_group(GTK_RADIO_MENU_ITEM(menu_item));
     g_signal_connect(menu_item, 
 		     "activate",
 		     menu_func,
 		     (gpointer) state);
-    gtk_menu_append(GTK_MENU(menu), menu_item);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
     gtk_widget_show(menu_item);
   }
 
