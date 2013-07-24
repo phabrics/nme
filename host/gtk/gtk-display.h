@@ -97,7 +97,6 @@ struct tme_gtk_screen {
   GtkWidget *tme_gtk_screen_event_box;
   GdkPixbuf *tme_gtk_screen_gdkpixbuf;
   GtkWidget *tme_gtk_screen_gtkimage;
-  GdkWindow *tme_gtk_screen_gtkwin;
   GdkDevice *tme_gtk_screen_pointer;
 
   /* the translation function: */

@@ -164,13 +164,8 @@ _tme_gtk_screen_mode_change(struct tme_fb_connection *conn_fb)
   tme_uint32_t map_pixel_count_old;  
   tme_uint32_t colorset;
   GdkPixbuf *gdkpixbuf;
-  tme_uint32_t color_count, color_i;
-  tme_uint32_t color_count_distinct;
-  tme_uint32_t color_j;
+  tme_uint32_t color_count;
   struct tme_fb_color *colors_tme;
-  GdkColor *colors_gdk;
-  gboolean *success;
-  gboolean warned_color_alloc;
   cairo_surface_t *surface;
   int stride;
 
@@ -269,21 +264,19 @@ _tme_gtk_screen_mode_change(struct tme_fb_connection *conn_fb)
   conn_fb->tme_fb_connection_map_pixel_count = 0;
 
   /* update our framebuffer connection: */
-  conn_fb->tme_fb_connection_width = width;
-  conn_fb->tme_fb_connection_height = height;
-  conn_fb->tme_fb_connection_depth = _tme_gtk_gdkpixbuf_bipp(gdkpixbuf);
+  conn_fb->tme_fb_connection_width = gdk_pixbuf_get_width(gdkpixbuf);
+  conn_fb->tme_fb_connection_height = gdk_pixbuf_get_height(gdkpixbuf);
+  conn_fb->tme_fb_connection_depth = _tme_gtk_gdkpixbuf_bipp(gdkpixbuf) - 8;
   conn_fb->tme_fb_connection_bits_per_pixel = _tme_gtk_gdkpixbuf_bipp(gdkpixbuf);
-  conn_fb->tme_fb_connection_skipx = gdk_pixbuf_get_rowstride(gdkpixbuf) - width;
+  conn_fb->tme_fb_connection_skipx = gdk_pixbuf_get_rowstride(gdkpixbuf) / gdk_pixbuf_get_n_channels(gdkpixbuf) - conn_fb->tme_fb_connection_width;
   conn_fb->tme_fb_connection_scanline_pad = _tme_gtk_gdkpixbuf_scanline_pad(gdkpixbuf);
   conn_fb->tme_fb_connection_order = TME_ENDIAN_NATIVE;
   conn_fb->tme_fb_connection_buffer = gdk_pixbuf_get_pixels(gdkpixbuf);
   conn_fb->tme_fb_connection_class = TME_FB_XLAT_CLASS_COLOR;
   conn_fb->tme_fb_connection_mask_g = 0x00ff00;
-  conn_fb->tme_fb_connection_mask_r = 0x0000ff;
-  conn_fb->tme_fb_connection_mask_b = 0xff0000;
-  screen->tme_gtk_screen_colorset = TME_FB_COLORSET_NONE;
-
-#if 0
+  conn_fb->tme_fb_connection_mask_b = 0x0000ff;
+  conn_fb->tme_fb_connection_mask_r = 0xff0000;
+  
   /* get the needed colors: */
   colorset = tme_fb_xlat_colors_get(conn_fb_other, scale, conn_fb, &colors_tme);
   color_count = conn_fb->tme_fb_connection_map_pixel_count;
@@ -325,77 +318,16 @@ _tme_gtk_screen_mode_change(struct tme_fb_connection *conn_fb)
       tme_free((void *) map_b_old);
     }
     if (map_pixel_old != NULL) {
-
-      /* recreate the array of GdkColor: */
-      colors_gdk = tme_new(GdkColor, map_pixel_count_old);
-      color_i = 0;
-      do {
-	colors_gdk[color_i].pixel = map_pixel_old[color_i];
-      } while (++color_i < map_pixel_count_old);
-
-      /* free the colors: */
-      gdk_colormap_free_colors(gdk_colormap_get_system(),
-			       colors_gdk,
-			       map_pixel_count_old);
-      tme_free(colors_gdk);
       tme_free((void *) map_pixel_old);
     }
 
     /* if we need to allocate colors: */
     if (color_count > 0) {
-
-      /* make the GdkColor array, and count the number of distinct colors: */
-      colors_gdk = tme_new(GdkColor, color_count * 2);
-      color_count_distinct = 0;
-      for (color_i = 0; color_i < color_count; color_i++) {
-	color_j = colors_tme[color_i].tme_fb_color_pixel;
-	colors_gdk[color_j].green = colors_tme[color_i].tme_fb_color_value_g;
-	colors_gdk[color_j].red   = colors_tme[color_i].tme_fb_color_value_r;
-	colors_gdk[color_j].blue  = colors_tme[color_i].tme_fb_color_value_b;
-	if (color_j >= color_count_distinct) {
-	  color_count_distinct = color_j + 1;
-	}
-      }
-      success = tme_new(gboolean, color_count_distinct);
-
-      /* allocate exact matches for as many colors as possible: */
-      gdk_colormap_alloc_colors(gdk_colormap_get_system(),
-				colors_gdk,
-				color_count_distinct,
-				FALSE,
-				FALSE,
-				success);
-
-      /* allocate read-only best matches for any colors we failed to
-	 allocate exactly: */
-      warned_color_alloc = FALSE;
-      for (color_i = 0; color_i < color_count; color_i++) {
-	color_j = colors_tme[color_i].tme_fb_color_pixel;
-	if (!success[color_j]) {
-	  if (!gdk_colormap_alloc_color(gdk_colormap_get_system(),
-					&colors_gdk[color_j],
-					FALSE,
-					TRUE)) {
-	    if (!warned_color_alloc) {
-	      warned_color_alloc = TRUE;
-	      tme_log(&display->tme_gtk_display_element->tme_element_log_handle, 0, ENOMEM,
-		      (&display->tme_gtk_display_element->tme_element_log_handle,
-		       _("could not allocate all colors")));
-	    }
-	  }
-	}
-	colors_tme[color_i].tme_fb_color_pixel = colors_gdk[color_j].pixel;
-      }
-
-      /* free the arrays used with gdk_colormap_alloc_colors(): */
-      tme_free(success);
-      tme_free(colors_gdk);
-
       /* set the needed colors: */
       tme_fb_xlat_colors_set(conn_fb_other, scale, conn_fb, colors_tme);
     }
   }
-#endif
+
   /* compose the framebuffer translation question: */
   fb_xlat_q.tme_fb_xlat_width			= conn_fb_other->tme_fb_connection_width;
   fb_xlat_q.tme_fb_xlat_height			= conn_fb_other->tme_fb_connection_height;
@@ -562,6 +494,8 @@ struct tme_gtk_screen *
 _tme_gtk_screen_new(struct tme_gtk_display *display)
 {
   struct tme_gtk_screen *screen, **_prev;
+  GdkDisplay *gdkdisplay;
+  GdkDeviceManager *devices;
   GtkWidget *menu_bar;
   GtkWidget *menu;
   GtkWidget *submenu;
@@ -580,6 +514,12 @@ _tme_gtk_screen_new(struct tme_gtk_display *display)
   /* the backpointer to the display: */
   screen->tme_gtk_screen_display = display;
   
+  gdkdisplay = gdk_display_get_default();
+
+  devices = gdk_display_get_device_manager(gdkdisplay);
+
+  screen->tme_gtk_screen_pointer = gdk_device_manager_get_client_pointer(devices);
+
   /* there is no framebuffer connection yet: */
   screen->tme_gtk_screen_fb = NULL;
 

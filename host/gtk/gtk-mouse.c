@@ -97,7 +97,7 @@ _tme_gtk_mouse_mouse_event(GtkWidget *widget,
 
     /* this event must have happened in the gtkimage: */
     assert (gdk_event_raw->motion.window
-	    == screen->tme_gtk_screen_gtkwin);
+	    == gtk_widget_get_window(screen->tme_gtk_screen_gtkimage));
 
     /* set the event time: */
     tme_event.tme_mouse_event_time
@@ -147,7 +147,7 @@ _tme_gtk_mouse_mouse_event(GtkWidget *widget,
 
     /* this event must have happened in the gtkimage: */
     assert (gdk_event_raw->button.window
-	    == screen->tme_gtk_screen_gtkwin);
+	    == gtk_widget_get_window(screen->tme_gtk_screen_gtkimage));
 
     /* set the event time: */
     tme_event.tme_mouse_event_time
@@ -279,7 +279,7 @@ _tme_gtk_mouse_ebox_event(GtkWidget *widget,
 
   /* get the current width and height of the framebuffer gtkimage, and
      halve them to get the warp center: */
-  gdk_window_get_geometry(screen->tme_gtk_screen_gtkwin,
+  gdk_window_get_geometry(gtk_widget_get_window(screen->tme_gtk_screen_gtkimage),
 			  &junk,
 			  &junk,
 			  &screen->tme_gtk_screen_mouse_warp_x,
@@ -293,7 +293,7 @@ _tme_gtk_mouse_ebox_event(GtkWidget *widget,
   /* grab the pointer: */
   rc
     = gdk_device_grab(screen->tme_gtk_screen_pointer,
-		      screen->tme_gtk_screen_gtkwin,
+		      gtk_widget_get_window(screen->tme_gtk_screen_gtkimage),
 		      GDK_OWNERSHIP_NONE,
 		      TRUE,
 		      GDK_POINTER_MOTION_MASK
