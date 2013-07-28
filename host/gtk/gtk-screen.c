@@ -124,9 +124,14 @@ _tme_gtk_screen_th_update(struct tme_gtk_display *display)
 
 /* this recovers the bits-per-pixel value for a GdkPixbuf: */
 static unsigned int
-_tme_gtk_gdkpixbuf_bipp(GdkPixbuf *image)
+_tme_gtk_gdkpixbuf_bipp(GdkPixbuf *image, unsigned int *depth)
 {
-  return gdk_pixbuf_get_bits_per_sample(image) * gdk_pixbuf_get_n_channels(image);
+  unsigned int bipc = gdk_pixbuf_get_bits_per_sample(image),
+    bipp = bipc * gdk_pixbuf_get_n_channels(image);
+
+  if(depth) *depth = bipp - (gdk_pixbuf_get_has_alpha(image) ? bipc : 0);
+
+  return bipp;
 }
 
 /* this recovers the scanline-pad value for a GdkPixbuf: */
@@ -233,18 +238,11 @@ _tme_gtk_screen_mode_change(struct tme_fb_connection *conn_fb)
   gdkpixbuf = screen->tme_gtk_screen_gdkpixbuf;
   if (gdk_pixbuf_get_width(gdkpixbuf) != width
       || gdk_pixbuf_get_height(gdkpixbuf) != (height + height_extra)) {
-    surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height + height_extra);
     /* allocate a new gdkpixbuf: */
-    gdkpixbuf = gdk_pixbuf_get_from_surface(surface,
-					    0, 0,
-					    width, height + height_extra);
-
-    cairo_surface_destroy (surface);
-
+    gdkpixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, width, height + height_extra);
     /* set the new image on the image widget: */
     gtk_image_set_from_pixbuf(GTK_IMAGE(screen->tme_gtk_screen_gtkimage),
 			      gdkpixbuf);
-
     /* destroy the previous gdkpixbuf and remember the new one: */
     g_object_unref(screen->tme_gtk_screen_gdkpixbuf);
     screen->tme_gtk_screen_gdkpixbuf = gdkpixbuf;
@@ -266,16 +264,15 @@ _tme_gtk_screen_mode_change(struct tme_fb_connection *conn_fb)
   /* update our framebuffer connection: */
   conn_fb->tme_fb_connection_width = gdk_pixbuf_get_width(gdkpixbuf);
   conn_fb->tme_fb_connection_height = gdk_pixbuf_get_height(gdkpixbuf);
-  conn_fb->tme_fb_connection_depth = _tme_gtk_gdkpixbuf_bipp(gdkpixbuf) - 8;
-  conn_fb->tme_fb_connection_bits_per_pixel = _tme_gtk_gdkpixbuf_bipp(gdkpixbuf);
+  conn_fb->tme_fb_connection_bits_per_pixel = _tme_gtk_gdkpixbuf_bipp(gdkpixbuf, &conn_fb->tme_fb_connection_depth);
   conn_fb->tme_fb_connection_skipx = gdk_pixbuf_get_rowstride(gdkpixbuf) / gdk_pixbuf_get_n_channels(gdkpixbuf) - conn_fb->tme_fb_connection_width;
   conn_fb->tme_fb_connection_scanline_pad = _tme_gtk_gdkpixbuf_scanline_pad(gdkpixbuf);
   conn_fb->tme_fb_connection_order = TME_ENDIAN_NATIVE;
   conn_fb->tme_fb_connection_buffer = gdk_pixbuf_get_pixels(gdkpixbuf);
   conn_fb->tme_fb_connection_class = TME_FB_XLAT_CLASS_COLOR;
   conn_fb->tme_fb_connection_mask_g = 0x00ff00;
-  conn_fb->tme_fb_connection_mask_b = 0x0000ff;
-  conn_fb->tme_fb_connection_mask_r = 0xff0000;
+  conn_fb->tme_fb_connection_mask_r = 0x0000ff;
+  conn_fb->tme_fb_connection_mask_b = 0xff0000;
   
   /* get the needed colors: */
   colorset = tme_fb_xlat_colors_get(conn_fb_other, scale, conn_fb, &colors_tme);

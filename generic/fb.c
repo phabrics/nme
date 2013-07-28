@@ -360,12 +360,19 @@ _tme_fb_xlat_colors_get_set(const struct tme_fb_connection *src,
 
   /* if the destination is color and has subfields: */
   else if (dst->tme_fb_connection_class == TME_FB_XLAT_CLASS_COLOR
-	   && dst->tme_fb_connection_mask_g != 0) {
+	   && (dst->tme_fb_connection_mask_g != 0
+	       || dst->tme_fb_connection_map_g != NULL)) {
 	
     /* if the destination maps intensities linearly, we don't need to
        allocate colors at all: */
-    if (dst->tme_fb_connection_map_g == NULL) {
+    if (dst->tme_fb_connection_map_g == NULL 
+	|| dst->tme_fb_connection_mask_g == 0) {
 
+      if(dst->tme_fb_connection_mask_g == 0) {
+	dst->tme_fb_connection_mask_g = (uintptr_t)dst->tme_fb_connection_map_g;
+	dst->tme_fb_connection_map_g = NULL;
+      }
+      
       /* however, we can't do this yet with a source framebuffer that
 	 is inverted: */
       if (src->tme_fb_connection_inverted) {
@@ -484,7 +491,8 @@ _tme_fb_xlat_colors_get_set(const struct tme_fb_connection *src,
     compress_colors
       = ((color_count >> dst->tme_fb_connection_depth) > 0
 	 && (dst->tme_fb_connection_class == TME_FB_XLAT_CLASS_MONOCHROME
-	     || dst->tme_fb_connection_mask_g == 0)
+	     || (dst->tme_fb_connection_mask_g == 0
+		 && dst->tme_fb_connection_map_g == NULL))
 	 && src_map_g == NULL);
     if (compress_colors) {
 
@@ -519,6 +527,39 @@ _tme_fb_xlat_colors_get_set(const struct tme_fb_connection *src,
     for (src_shift_g = 0; (src_mask_g & 1) == 0; src_shift_g++, src_mask_g >>= 1);
     for (src_shift_r = 0; (src_mask_r & 1) == 0; src_shift_r++, src_mask_r >>= 1);
     for (src_shift_b = 0; (src_mask_b & 1) == 0; src_shift_b++, src_mask_b >>= 1);
+
+/* this linearly maps a value from one mask to another: */
+#define _TME_FB_XLAT_MAP_LINEAR(value, mask_in, mask_out)	\
+								\
+  /* if the value does not need to be scaled up: */		\
+  (((TME_FB_XLAT_MAP_BASE_MASK(mask_out)			\
+     <= TME_FB_XLAT_MAP_BASE_MASK(mask_in))			\
+    ?								\
+								\
+    /* extract the value and scale it down: */			\
+    (TME_FIELD_MASK_EXTRACTU(value, mask_in)			\
+     / TME_FB_XLAT_MAP_LINEAR_SCALE(mask_in, mask_out))		\
+								\
+    /* otherwise, the value needs to be scaled up: */		\
+    :								\
+								\
+    /* extract the value: */					\
+    ((TME_FIELD_MASK_EXTRACTU(value, mask_in)			\
+								\
+      /* scale it up: */					\
+      * TME_FB_XLAT_MAP_LINEAR_SCALE(mask_in, mask_out))	\
+								\
+     /* if the least significant bit of the value is set, add	\
+	in the scale minus one.  this makes the linear mapping	\
+	at least cover the entire range: */			\
+     + (((value /						\
+	  _TME_FIELD_MASK_FACTOR(mask_in))			\
+	 & 1)							\
+	* (TME_FB_XLAT_MAP_LINEAR_SCALE(mask_in, mask_out)	\
+	   - 1))))						\
+								\
+   /* finally, shift the value into position: */		\
+   * _TME_FIELD_MASK_FACTOR(mask_out))
 
     /* allocate the color array: */
     colors = tme_new0(struct tme_fb_color, color_count);
@@ -565,16 +606,40 @@ _tme_fb_xlat_colors_get_set(const struct tme_fb_connection *src,
 	}
       }
 
-      /* scale the intensities to 16 bits and possibly invert them: */
-      value_g = ((0xffff * value_g) / src_max_g) ^ invert_mask;
-      value_r = ((0xffff * value_r) / src_max_r) ^ invert_mask;
-      value_b = ((0xffff * value_b) / src_max_b) ^ invert_mask;
-
       /* if the source class is monochrome, use only the green primary: */
       if (src->tme_fb_connection_class == TME_FB_XLAT_CLASS_MONOCHROME) {
 	value_r = value_g;
 	value_b = value_g;
       }
+
+      /* If we are given a mask, but no map, perform linear mapping here */
+      if(dst->tme_fb_connection_mask_g != 0
+	 && dst->tme_fb_connection_map_g == NULL) {
+	color_j =  _TME_FB_XLAT_MAP_LINEAR(value_r, src_max_r, dst->tme_fb_connection_mask_r);
+	color_j |= _TME_FB_XLAT_MAP_LINEAR(value_g, src_max_g, dst->tme_fb_connection_mask_g);
+	color_j |= _TME_FB_XLAT_MAP_LINEAR(value_b, src_max_b, dst->tme_fb_connection_mask_b);
+	/* Assume an alpha channel if we have 8 extra bits */
+	if(dst->tme_fb_connection_depth == 24
+	   && dst->tme_fb_connection_bits_per_pixel == 32) {
+	  color_j |= 0xff000000;
+	}
+	if(src->tme_fb_connection_inverted) {
+	  color_j ^= dst->tme_fb_connection_mask_r
+	    + dst->tme_fb_connection_mask_g
+	    + dst->tme_fb_connection_mask_b;
+	}
+      }
+
+      if(dst->tme_fb_connection_mask_g == 0
+	 && dst->tme_fb_connection_map_g != NULL) {
+	dst->tme_fb_connection_mask_g = (uintptr_t)dst->tme_fb_connection_map_g;
+	dst->tme_fb_connection_map_g = NULL;
+      }
+
+      /* scale the intensities to 16 bits and possibly invert them: */
+      value_g = ((0xffff * value_g) / src_max_g) ^ invert_mask;
+      value_r = ((0xffff * value_r) / src_max_r) ^ invert_mask;
+      value_b = ((0xffff * value_b) / src_max_b) ^ invert_mask;
 
       /* allocate this color: */
       colors[color_i].tme_fb_color_pixel = color_j;
