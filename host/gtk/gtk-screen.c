@@ -171,8 +171,12 @@ _tme_gtk_screen_mode_change(struct tme_fb_connection *conn_fb)
   GdkPixbuf *gdkpixbuf;
   tme_uint32_t color_count;
   struct tme_fb_color *colors_tme;
+#if 0
+  cairo_t *cr;
   cairo_surface_t *surface;
+  cairo_surface_type_t stype;
   int stride;
+#endif
 
   /* recover our data structures: */
   display = conn_fb->tme_fb_connection.tme_connection_element->tme_element_private;
@@ -246,6 +250,11 @@ _tme_gtk_screen_mode_change(struct tme_fb_connection *conn_fb)
     /* destroy the previous gdkpixbuf and remember the new one: */
     g_object_unref(screen->tme_gtk_screen_gdkpixbuf);
     screen->tme_gtk_screen_gdkpixbuf = gdkpixbuf;
+#if 0
+    cr = gdk_cairo_create(gtk_widget_get_window(screen->tme_gtk_screen_gtkimage));
+    surface = cairo_get_target(cr);
+    stype = cairo_surface_get_type(surface);
+#endif
   }
 
   /* remember all previously allocated maps and colors, but otherwise
@@ -616,6 +625,9 @@ _tme_gtk_screen_new(struct tme_gtk_display *display)
   /* create the GtkImage for the framebuffer area: */
   screen->tme_gtk_screen_gtkimage 
     = gtk_image_new_from_pixbuf(screen->tme_gtk_screen_gdkpixbuf);
+
+  /* Turn off double-buffering to save rendering time (since it's done already) */
+  gtk_widget_set_double_buffered(screen->tme_gtk_screen_gtkimage, FALSE);
 
   /* add the GtkImage to the event box: */
   gtk_container_add(GTK_CONTAINER(screen->tme_gtk_screen_event_box), 

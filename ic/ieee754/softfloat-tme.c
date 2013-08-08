@@ -155,9 +155,9 @@ do {						\
 
 /* include either the 32-bit or 64-bit SoftFloat macros: */
 #ifdef TME_HAVE_INT64_T
-#include "dist/softfloat/softfloat/bits64/softfloat-macros"
+#include "edist/softfloat/softfloat/bits64/softfloat-macros"
 #else  /* !TME_HAVE_INT64_T */
-#include "dist/softfloat/softfloat/bits32/softfloat-macros"
+#include "edist/softfloat/softfloat/bits32/softfloat-macros"
 #endif /* !TME_HAVE_INT64_T */
 
 /*----------------------------------------------------------------------------
@@ -566,7 +566,7 @@ propagateFloat128NaN( float128 a, float128 b )
 
 /* include either the 32-bit or 64-bit SoftFloat implementation: */
 #ifdef TME_HAVE_INT64_T
-#include "dist/softfloat/softfloat/bits64/softfloat.c"
+#include "edist/softfloat/softfloat/bits64/softfloat.c"
 #else  /* !TME_HAVE_INT64_T */
-#include "dist/softfloat/softfloat/bits32/softfloat.c"
+#include "edist/softfloat/softfloat/bits32/softfloat.c"
 #endif /* !TME_HAVE_INT64_T */
