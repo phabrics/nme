@@ -773,7 +773,8 @@ _tme_recode_x86_insn_guest(struct tme_recode_ic *ic,
 				     TME_RECODE_X86_REG_HOST_FREE_CALL);
 	tme_recode_regs_dst_specific(ic,
 				     insn,
-				     2);
+				     (insn->tme_recode_insn_operand_src[0] != TME_RECODE_OPERAND_UNDEF) +
+				     (insn->tme_recode_insn_operand_src[1] != TME_RECODE_OPERAND_UNDEF));
 
 	/* free all host registers that will be destroyed by the call,
 	   except for the first one, which we are using for the
