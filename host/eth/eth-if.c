@@ -69,6 +69,13 @@ _TME_RCSID("$Id: eth-if.c,v 1.3 2003/10/16 02:48:23 fredette Exp $");
 #endif /* HAVE_NET_IF_DL_H */
 #include <arpa/inet.h>
 
+/* the callout flags: */
+#define TME_ETH_CALLOUT_CHECK	(0)
+#define TME_ETH_CALLOUT_RUNNING	TME_BIT(0)
+#define TME_ETH_CALLOUTS_MASK	(-2)
+#define TME_ETH_CALLOUT_CTRL	TME_BIT(1)
+#define TME_ETH_CALLOUT_READ	TME_BIT(2)
+
 /* this macro helps us size a struct ifreq: */
 #ifdef HAVE_SOCKADDR_SA_LEN
 #define SIZEOF_IFREQ(ifr) (sizeof(ifr->ifr_name) + ifr->ifr_addr.sa_len)
@@ -310,8 +317,333 @@ tme_eth_ifaddrs_find(const char *ifa_name_user, struct ifaddrs **_ifaddr, tme_ui
   return (TME_OK);
 }
 
+/* the ethernet callout function.  it must be called with the mutex locked: */
+static void
+_tme_eth_callout(struct tme_ethernet *eth, int new_callouts)
+{
+  struct tme_ethernet_connection *conn_eth;
+  int callouts, later_callouts;
+  unsigned int ctrl;
+  int rc;
+  int status;
+  tme_ethernet_fid_t frame_id;
+  struct tme_ethernet_frame_chunk frame_chunk_buffer;
+  tme_uint8_t frame[TME_ETHERNET_FRAME_MAX];
+  
+  /* add in any new callouts: */
+  eth->tme_eth_callout_flags |= new_callouts;
+
+  /* if this function is already running in another thread, simply
+     return now.  the other thread will do our work: */
+  if (eth->tme_eth_callout_flags & TME_ETH_CALLOUT_RUNNING) {
+    return;
+  }
+
+  /* callouts are now running: */
+  eth->tme_eth_callout_flags |= TME_ETH_CALLOUT_RUNNING;
+
+  /* assume that we won't need any later callouts: */
+  later_callouts = 0;
+
+  /* loop while callouts are needed: */
+  for (; (callouts = eth->tme_eth_callout_flags) & TME_ETH_CALLOUTS_MASK; ) {
+
+    /* clear the needed callouts: */
+    eth->tme_eth_callout_flags = callouts & ~TME_ETH_CALLOUTS_MASK;
+    callouts &= TME_ETH_CALLOUTS_MASK;
+
+    /* get our Ethernet connection: */
+    conn_eth = eth->tme_eth_eth_connection;
+
+    /* if we need to call out new control information: */
+    if (callouts & TME_ETH_CALLOUT_CTRL) {
+
+      /* form the new ctrl: */
+      ctrl = 0;
+      if (eth->tme_eth_buffer_offset
+	  < eth->tme_eth_buffer_end) {
+	ctrl |= TME_ETHERNET_CTRL_OK_READ;
+      }
+
+      /* unlock the mutex: */
+      tme_mutex_unlock(&eth->tme_eth_mutex);
+      
+      /* do the callout: */
+      rc = (conn_eth != NULL
+	    ? ((*conn_eth->tme_ethernet_connection_ctrl)
+	       (conn_eth,
+		ctrl))
+	    : TME_OK);
+	
+      /* lock the mutex: */
+      tme_mutex_lock(&eth->tme_eth_mutex);
+      
+      /* if the callout was unsuccessful, remember that at some later
+	 time this callout should be attempted again: */
+      if (rc != TME_OK) {
+	later_callouts |= TME_ETH_CALLOUT_CTRL;
+      }
+    }
+      
+    /* if the Ethernet is readable: */
+    if (callouts & TME_ETH_CALLOUT_READ) {
+
+      /* unlock the mutex: */
+      tme_mutex_unlock(&eth->tme_eth_mutex);
+      
+      /* make a frame chunk to receive this frame: */
+      frame_chunk_buffer.tme_ethernet_frame_chunk_next = NULL;
+      frame_chunk_buffer.tme_ethernet_frame_chunk_bytes = frame;
+      frame_chunk_buffer.tme_ethernet_frame_chunk_bytes_count
+	= sizeof(frame);
+
+      /* do the callout: */
+      rc = (conn_eth == NULL
+	    ? TME_OK
+	    : ((*conn_eth->tme_ethernet_connection_read)
+	       (conn_eth,
+		&frame_id,
+		&frame_chunk_buffer,
+		TME_ETHERNET_READ_NEXT)));
+      
+      /* lock the mutex: */
+      tme_mutex_lock(&eth->tme_eth_mutex);
+      
+      /* if the read was successful: */
+      if (rc > 0) {
+
+	/* check the size of the frame: */
+	assert(rc <= sizeof(frame));
+
+	/* do the write: */
+	status = tme_thread_write(eth->tme_eth_fd, frame, rc);
+
+	/* writes must succeed: */
+	assert (status == rc);
+
+	/* mark that we need to loop to callout to read more frames: */
+	eth->tme_eth_callout_flags |= TME_ETH_CALLOUT_READ;
+      }
+
+      /* otherwise, the read failed.  convention dictates that we
+	 forget that the connection was readable, which we already
+	 have done by clearing the CALLOUT_READ flag: */
+    }
+
+  }
+  
+  /* put in any later callouts, and clear that callouts are running: */
+  eth->tme_eth_callout_flags = later_callouts;
+}
+
+/* the ETH reader thread: */
+static void
+_tme_eth_th_reader(struct tme_ethernet *eth)
+{
+  ssize_t buffer_end;
+  unsigned long sleep_usec;
+  
+  /* lock the mutex: */
+  tme_mutex_lock(&eth->tme_eth_mutex);
+
+  /* loop forever: */
+  for (;;) {
+
+    /* if the delay sleeping flag is set: */
+    if (eth->tme_eth_delay_sleeping) {
+
+      /* clear the delay sleeping flag: */
+      eth->tme_eth_delay_sleeping = FALSE;
+      
+      /* call out that we can be read again: */
+      _tme_eth_callout(eth, TME_ETH_CALLOUT_CTRL);
+    }
+
+    /* if a delay has been requested: */
+    sleep_usec = eth->tme_eth_delay_sleep;
+    if (sleep_usec > 0) {
+
+      /* clear the delay sleep time: */
+      eth->tme_eth_delay_sleep = 0;
+
+      /* set the delay sleeping flag: */
+      eth->tme_eth_delay_sleeping = TRUE;
+
+      /* unlock our mutex: */
+      tme_mutex_unlock(&eth->tme_eth_mutex);
+      
+      /* sleep for the delay sleep time: */
+      tme_thread_sleep_yield(0, sleep_usec);
+      
+      /* lock our mutex: */
+      tme_mutex_lock(&eth->tme_eth_mutex);
+      
+      continue;
+    }
+
+    /* if the buffer is not empty, wait until either it is,
+       or we're asked to do a delay: */
+    if (eth->tme_eth_buffer_offset
+	< eth->tme_eth_buffer_end) {
+      tme_cond_wait_yield(&eth->tme_eth_cond_reader,
+			  &eth->tme_eth_mutex);
+      continue;
+    }
+
+    /* unlock the mutex: */
+    tme_mutex_unlock(&eth->tme_eth_mutex);
+
+    /* read the ETH socket: */
+    tme_log(&eth->tme_eth_element->tme_element_log_handle, 1, TME_OK,
+	    (&eth->tme_eth_element->tme_element_log_handle,
+	     _("calling read")));
+    buffer_end = 
+      tme_thread_read_yield(eth->tme_eth_fd,
+			    eth->tme_eth_buffer,
+			    eth->tme_eth_buffer_size);
+
+    /* lock the mutex: */
+    tme_mutex_lock(&eth->tme_eth_mutex);
+
+    /* if the read failed: */
+    if (buffer_end <= 0) {
+      tme_log(&eth->tme_eth_element->tme_element_log_handle, 1, errno,
+	      (&eth->tme_eth_element->tme_element_log_handle,
+	       _("failed to read packets")));
+      continue;
+    }
+
+    /* the read succeeded: */
+    tme_log(&eth->tme_eth_element->tme_element_log_handle, 1, TME_OK,
+	    (&eth->tme_eth_element->tme_element_log_handle,
+	     _("read %ld bytes of packets"), (long) buffer_end));
+    eth->tme_eth_buffer_offset = 0;
+    eth->tme_eth_buffer_end = buffer_end;
+
+    /* call out that we can be read again: */
+    _tme_eth_callout(eth, TME_ETH_CALLOUT_CTRL);
+  }
+  /* NOTREACHED */
+}
+
+/* this makes a new Ethernet connection: */
+static int
+_tme_eth_connection_make(struct tme_connection *conn, unsigned int state)
+{
+  struct tme_eth *eth;
+  struct tme_ethernet_connection *conn_eth;
+  struct tme_ethernet_connection *conn_eth_other;
+
+  /* recover our data structures: */
+  eth = conn->tme_connection_element->tme_element_private;
+  conn_eth = (struct tme_ethernet_connection *) conn;
+  conn_eth_other = (struct tme_ethernet_connection *) conn->tme_connection_other;
+
+  /* both sides must be Ethernet connections: */
+  assert(conn->tme_connection_type == TME_CONNECTION_ETHERNET);
+  assert(conn->tme_connection_other->tme_connection_type == TME_CONNECTION_ETHERNET);
+
+  /* we're always set up to answer calls across the connection, so we
+     only have to do work when the connection has gone full, namely
+     taking the other side of the connection: */
+  if (state == TME_CONNECTION_FULL) {
+
+    /* lock our mutex: */
+    tme_mutex_lock(&eth->tme_eth_mutex);
+
+    /* save our connection: */
+    eth->tme_eth_eth_connection = conn_eth_other;
+
+    /* unlock our mutex: */
+    tme_mutex_unlock(&eth->tme_eth_mutex);
+  }
+
+  return (TME_OK);
+}
+
+/* this breaks a connection: */
+static int
+_tme_eth_connection_break(struct tme_connection *conn, unsigned int state)
+{
+  abort();
+}
+
+/* this is called when control lines change: */
+static int
+_tme_eth_ctrl(struct tme_ethernet_connection *conn_eth, 
+		  unsigned int ctrl)
+{
+  struct tme_ethernet *eth;
+  int new_callouts;
+
+  /* recover our data structures: */
+  eth = conn_eth->tme_ethernet_connection.tme_connection_element->tme_element_private;
+
+  /* assume that we won't need any new callouts: */
+  new_callouts = 0;
+
+  /* lock the mutex: */
+  tme_mutex_lock(&eth->tme_eth_mutex);
+
+  /* if this connection is readable, call out a read: */
+  if (ctrl & TME_ETHERNET_CTRL_OK_READ) {
+    new_callouts |= TME_ETH_CALLOUT_READ;
+  }
+
+  /* make any new callouts: */
+  _tme_eth_callout(eth, new_callouts);
+
+  /* unlock the mutex: */
+  tme_mutex_unlock(&eth->tme_eth_mutex);
+
+  return (TME_OK);
+}
+
+/* this makes a new connection side for a ETH: */
+static int
+_tme_eth_connections_new(struct tme_element *element, 
+			     const char * const *args, 
+			     struct tme_connection **_conns,
+			     char **_output)
+{
+  struct tme_eth *eth;
+  struct tme_ethernet_connection *conn_eth;
+  struct tme_connection *conn;
+
+  /* recover our data structure: */
+  eth = (struct tme_eth *) element->tme_element_private;
+
+  /* if we already have an Ethernet connection, do nothing: */
+  if (eth->tme_eth_eth_connection != NULL) {
+    return (TME_OK);
+  }
+
+  /* allocate the new Ethernet connection: */
+  conn_eth = tme_new0(struct tme_ethernet_connection, 1);
+  conn = &conn_eth->tme_ethernet_connection;
+  
+  /* fill in the generic connection: */
+  conn->tme_connection_next = *_conns;
+  conn->tme_connection_type = TME_CONNECTION_ETHERNET;
+  conn->tme_connection_score = tme_ethernet_connection_score;
+  conn->tme_connection_make = _tme_eth_connection_make;
+  conn->tme_connection_break = _tme_eth_connection_break;
+
+  /* fill in the Ethernet connection: */
+  conn_eth->tme_ethernet_connection_config = _tme_eth_config;
+  conn_eth->tme_ethernet_connection_ctrl = _tme_eth_ctrl;
+  conn_eth->tme_ethernet_connection_read = _tme_eth_read;
+
+  /* return the connection side possibility: */
+  *_conns = conn;
+
+  /* done: */
+  return (TME_OK);
+}
+
 /* Allocate an ethernet device */
-int tme_eth_alloc(char *dev, int flags) {
+int tme_eth_alloc(char *dev, int flags) 
+{
   struct ifreq ifr;
   int fd, err;
   char *dev_tap_filename = "/dev/net/tun";
@@ -387,4 +719,82 @@ int tme_eth_alloc(char *dev, int flags) {
   /* this is the special file descriptor that the caller will use to talk
    * with the virtual interface */
   return fd;
+}
+
+/* retrieve ethernet arguments */
+int tme_eth_args(const char *args[], struct ifreq *ifr, unsigned long *delay)
+{
+  int arg_i;
+  int usage;
+
+  /* check our arguments: */
+  usage = 0;
+  ifr->ifr_name[0] = '\0';
+  delay_time = 0;
+  arg_i = 1;
+  for (;;) {
+
+    /* the interface we're supposed to use: */
+    if (TME_ARG_IS(args[arg_i + 0], "interface")
+	&& args[arg_i + 1] != NULL) {
+      strncpy(ifr->ifr_name, args[arg_i + 1], sizeof(ifr->ifr_name));
+      arg_i += 2;
+    }
+
+    /* a delay time in microseconds: */
+    else if (TME_ARG_IS(args[arg_i + 0], "delay")
+	     && (delay_time = tme_misc_unumber_parse(args[arg_i + 1], 0)) > 0) {
+      arg_i += 2;
+    }
+    
+    /* if we ran out of arguments: */
+    else if (args[arg_i + 0] == NULL) {
+      break;
+    }
+
+    /* otherwise this is a bad argument: */
+    else {
+      tme_output_append_error(_output,
+			      "%s %s", 
+			      args[arg_i],
+			      _("unexpected"));
+      usage = TRUE;
+      break;
+    }
+  }
+
+  if (usage) {
+    tme_output_append_error(_output,
+			    "%s %s [ interface %s ] [ delay %s ]",
+			    _("usage:"),
+			    args[0],
+			    _("INTERFACE"),
+			    _("MICROSECONDS"));
+    return (EINVAL);
+  }
+}
+
+int tme_eth_init(struct tme_element *element, int fd, u_int sz, unsigned long delay) 
+{
+  struct tme_ethernet *eth;
+
+  /* start our data structure: */
+  eth = tme_new0(struct tme_ethernet, 1);
+  eth->tme_eth_element = element;
+  eth->tme_eth_fd = fd;
+  eth->tme_eth_buffer_size = sz;
+  eth->tme_eth_buffer = tme_new(tme_uint8_t, sz);
+  eth->tme_eth_delay_time = delay;
+
+  /* start the threads: */
+  tme_mutex_init(&eth->tme_eth_mutex);
+  tme_cond_init(&eth->tme_eth_cond_reader);
+  tme_thread_create((tme_thread_t) _tme_eth_th_reader, eth);
+
+  /* fill the element: */
+  element->tme_element_private = eth;
+  element->tme_element_connections_new = _tme_eth_connections_new;
+
+
+  return (TME_OK);
 }
