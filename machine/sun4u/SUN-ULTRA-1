@@ -1,0 +1,136 @@
+# $Id: SUN-ULTRA-1,v 1.2 2010/06/05 19:30:55 fredette Exp $
+
+## SUN-ULTRA-1 - example tmesh commands to create a Sun Ultra-1
+## machine:
+
+## the Ultra-1 system controller, CPU, I/O bridge, and RAM:
+##
+sc0: tme/ic/stp2200
+cpu0 at sc0 addr 0x1c000000000: tme/ic/stp1030 tick-frequency 167M fpu-type builtin fpu-compliance partial fpu-incomplete trap
+sbus0 at sc0 addr 0x1fe00000000: tme/ic/stp2220
+##
+## NOTE THAT THE SIZE OF EACH ramN BANK CAN ONLY BE 32MB,
+## OR 64MB, OR 128MB, OR 256MB.  DO NOT USE ANY OTHER
+## SIZES OR ADD MORE BANKS.  ram0 MUST EXIST.
+##
+ram0 at sc0 addr 0x00000000: tme/host/posix/memory ram 32MB
+#ram1 at sc0 addr 0x10000000: tme/host/posix/memory ram 32MB
+#ram2 at sc0 addr 0x20000000: tme/host/posix/memory ram 32MB
+#ram3 at sc0 addr 0x30000000: tme/host/posix/memory ram 32MB
+
+## the SLAVIO devices:
+##
+flash0 at sbus0 slot 15 offset 0x0000000: tme/host/posix/memory rom "SUNW,501-3082-update7.bin"
+zs0 at sbus0 slot 15 offset 0x1100000: tme/ic/ncr89c105/z85c30
+zs1 at sbus0 slot 15 offset 0x1000000: tme/ic/ncr89c105/z85c30
+nvram0 at sbus0 slot 15 offset 0x1200000: tme/host/posix/memory persistent my-sun4u-nvram.bin
+clock0 at sbus0 slot 15 offset 0x1201ff0: tme/machine/sun4/clock type tme/ic/mk48t59
+sc0 at sbus0 slot 15 offset 0x1300000
+fdtwo0 at sbus0 slot 15 offset 0x1400000: tme/ic/ncr89c105/i82077
+auxio0 at sbus0 slot 15 offset 0x1900000: tme/ic/ncr89c105/auxio
+
+## the Aurora Personality Chip and CS4231:
+##
+apcdma0 at sbus0 slot 13 offset 0x0: tme/ic/stp2024 id 0x3
+audiocs0 at apcdma0 codec: tme/ic/cs4231A
+
+## the Sun type-4 keyboard and mouse:
+##
+kbd0 at zs1 channel A: tme/serial/keyboard type sun-type-4-us macros my-sun-macros.txt map sun-keyboards.txt rate 20
+ms0 at zs1 channel B: tme/serial/mouse type mousesystems-5
+
+## IF YOU DO NOT ATTACH kbd0 at zs1 channel A, THEN YOU MUST ATTACH
+## sink0 at zs1 channel A, otherwise the PROM's keyboard poll never
+## finishes:
+##
+#sink0 at zs1 channel A: tme/serial/sink
+
+## ttya:
+##
+# comment the first line, and uncomment the following line if you
+# aren't using the GTK-based display console.  this will connect ttya
+# to the master side of a pseudo-tty (in this case, /dev/ttyr0), which
+# you can connect to using tip or some other serial communications
+# program on the slave side (in this case, /dev/ptyr0):
+#
+sink1 at zs0 channel A: tme/serial/sink
+#console0 at zs0 channel A: tme/host/posix/serial device /dev/ttyr0 break-carats
+
+## the SBus esp SCSI:
+##
+esp0 at sbus0 slot 14 offset 0x8800000: tme/ic/lsi64854 revision "1+" channel scsi
+esp0 dma at sbus0 slot 14 offset 0x8400000
+ncr0 at esp0 master: tme/ic/ncr53c9x variant esp100
+scsibus0 at ncr0: tme/scsi/bus
+
+## the SBus LANCE Ethernet:
+##
+# uncomment the bpf0 line if you have read/write permission on one
+# of your /dev/bpfN devices and you want actual network access:
+#
+ledma0 dma at sbus0 slot 14 offset 0x8400010: tme/ic/lsi64854 revision 2 channel ethernet
+ledma0 at sbus0 slot 14 offset 0x8c00000
+le0 at ledma0 master: tme/ic/am7990
+#bpf0 at le0: tme/host/bsd/bpf
+
+## the SBus parallel port:
+##
+bpp0 at sbus0 slot 14 offset 0xc800000: tme/ic/lsi64854 revision "1+" channel parallel
+
+## an SBus cgsix:
+##
+## NOTE: the cgsix emulation is extremely poor; it's enabled
+## by default only because NetBSD/sparc64 currently does not
+## support a cgthree console.  THIS WILL NOT RUN X:
+##
+cgsix0 at sbus0 slot 0 offset 0x0: tme/bus/sbus/cgsix type 501-2325
+cgsixrom0 at sbus0 slot 0 offset 0x0: tme/host/posix/memory rom "SUNW,501-2325.bin"
+
+## an SBus cgthree:
+##
+#cgthree0 at sbus0 slot 0 offset 0x0: tme/bus/sbus/cgthree
+#cgthreerom0 at sbus0 slot 0 offset 0x0: tme/host/posix/memory rom "SUNW,501-1415.bin"
+
+## an SBus bwtwo:
+##
+#bwtwo0 at sbus0 slot 1 offset 0x0: tme/bus/sbus/bwtwo
+#bwtworom0 at sbus0 slot 1 offset 0x0: tme/host/posix/memory rom "SUNW,501-1561.bin"
+
+## the GTK-based display console:
+##
+# comment out these lines, and the SBus framebuffer declarations
+# above, if you don't have GTK or you don't want a display console:
+#
+display0: tme/host/gtk/display
+display0 at cgsix0
+#display0 at cgthree0
+#display0 at bwtwo0
+display0 at kbd0
+display0 at ms0
+
+## a SCSI disk:
+##
+#
+sd0 at scsibus0: tme/scsi/disk id 0 type tme-scsi-1
+disk0 at sd0: tme/host/posix/disk file my-sun4u-disk.img
+
+## a SCSI tape:
+##
+st0 at scsibus0: tme/scsi/tape id 4 type tme-scsi-1
+tape0 at st0: tme/host/posix/tape
+
+## set the idle type, so tmesh doesn't consume all of the host CPU:
+##
+# use the appropriate type for the guest operating system:
+#
+# NetBSD/sparc64 1.6 through 4.99.19: netbsd64-type-0
+# NetBSD/sparc64 4.99.21 through this writing: netbsd64-type-1
+#
+command cpu0 idle-type netbsd64-type-1
+
+## power up the machine:
+##
+# uncomment this line to automatically power up the machine when
+# tmesh starts:
+#
+#command sc0 power

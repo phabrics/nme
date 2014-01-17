@@ -1,0 +1,70 @@
+# $Id: sun3-carrera-eeprom.txt,v 1.1 2005/05/14 19:17:28 fredette Exp $
+
+# sun3-carrera-eeprom.txt - input for tme-sun-eeprom to make an EEPROM
+# image for Sun3 Carrera system:
+#
+
+# amount of memory installed and tested, in MB:
+#
+installed-#megs 8
+selftest-#megs 0
+
+# screen resolution:
+#
+screen-resolution 1152x900
+screen-#columns 80
+screen-#rows 34
+
+# the console device:
+#
+console-device color-fb
+
+# true if the watchdog causes a reset.
+#
+watchdog-reboot? false
+
+# any boot device:
+#
+boot-device? true
+boot-device sd(0,0,0)
+
+# any OEM banner and/or logo bitmap.
+#
+oem-banner? false
+oem-banner 
+oem-logo? false
+oem-logo 
+
+# keyboard parameters.
+#
+keyboard-type sun
+keyboard-locale 
+keyboard-id 
+keyboard-click? false
+
+# the "diagnostic" boot device and file:
+#
+diag-device ie(0,0,0)
+diag-file 
+
+# inverse video (white-on-black, not implemented?)
+#
+inverse-video? false
+
+# default parameters for ttya and ttyb:
+#
+ttya-mode 9600,8,n,1,-
+ttyb-mode 9600,8,n,1,-
+
+# security mode and password (only on PROM revisions > 2.7.0).
+#
+security-mode none
+security-password 
+
+# the 3/80 diagnostic "switch".
+#
+diag-switch? false
+
+# "Factory Defined"
+#
+last-hardware-update 
