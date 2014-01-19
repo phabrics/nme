@@ -37,6 +37,9 @@
 _TME_RCSID("$Id: eth-if.c,v 1.3 2003/10/16 02:48:23 fredette Exp $");
 
 /* includes: */
+#include <tme/generic/ethernet.h>
+#include <tme/threads.h>
+#include <tme/misc.h>
 #include "eth-impl.h"
 #include <string.h>
 #include <errno.h>
@@ -530,7 +533,7 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
 static int
 _tme_eth_connection_make(struct tme_connection *conn, unsigned int state)
 {
-  struct tme_eth *eth;
+  struct tme_ethernet *eth;
   struct tme_ethernet_connection *conn_eth;
   struct tme_ethernet_connection *conn_eth_other;
 
@@ -568,6 +571,14 @@ _tme_eth_connection_break(struct tme_connection *conn, unsigned int state)
   abort();
 }
 
+/* this is called when the ethernet configuration changes: */
+static int
+_tme_eth_config(struct tme_ethernet_connection *conn_eth, 
+		    struct tme_ethernet_config *config)
+{
+  abort();
+}
+
 /* this is called when control lines change: */
 static int
 _tme_eth_ctrl(struct tme_ethernet_connection *conn_eth, 
@@ -599,19 +610,29 @@ _tme_eth_ctrl(struct tme_ethernet_connection *conn_eth,
   return (TME_OK);
 }
 
-/* this makes a new connection side for a ETH: */
+/* this is called to read a frame: */
 static int
-_tme_eth_connections_new(struct tme_element *element, 
-			     const char * const *args, 
-			     struct tme_connection **_conns,
-			     char **_output)
+_tme_eth_read(struct tme_ethernet_connection *conn_eth, 
+		  tme_ethernet_fid_t *_frame_id,
+		  struct tme_ethernet_frame_chunk *frame_chunks,
+		  unsigned int flags)
 {
-  struct tme_eth *eth;
+  abort();
+}
+
+/* this makes a new connection side for a ETH: */
+int
+tme_eth_connections_new(struct tme_element *element, 
+			const char * const *args, 
+			struct tme_connection **_conns,
+			char **_output)
+{
+  struct tme_ethernet *eth;
   struct tme_ethernet_connection *conn_eth;
   struct tme_connection *conn;
 
   /* recover our data structure: */
-  eth = (struct tme_eth *) element->tme_element_private;
+  eth = (struct tme_ethernet *) element->tme_element_private;
 
   /* if we already have an Ethernet connection, do nothing: */
   if (eth->tme_eth_eth_connection != NULL) {
@@ -641,88 +662,11 @@ _tme_eth_connections_new(struct tme_element *element,
   return (TME_OK);
 }
 
-/* Allocate an ethernet device */
-int tme_eth_alloc(char *dev, int flags) 
-{
-  struct ifreq ifr;
-  int fd, err;
-  char *dev_tap_filename = "/dev/net/tun";
-
-  /* Arguments taken by the function:
-   *
-   * char *dev: the name of an interface (or '\0'). MUST have enough
-   *   space to hold the interface name if '\0' is passed
-   * int flags: interface flags (eg, IFF_TUN etc.)
-   */
-
-   /* open the clone device */
-   if( (fd = open(dev_tap_filename, O_RDWR)) < 0 ) {
-     /* loop trying to open a /dev/tap device: */
-     for (minor = 0;; minor++) {
-       
-       /* form the name of the next device to try, then try opening
-	  it. if we succeed, we're done: */
-       sprintf(dev_tap_filename, DEV_TAP_FORMAT, minor);
-       tme_log(&element->tme_element_log_handle, 1, TME_OK,
-	       (&element->tme_element_log_handle,
-		"trying %s",
-		dev_tap_filename));
-       if ((tap_fd = open(dev_tap_filename, O_RDWR)) >= 0) {
-	 tme_log(&element->tme_element_log_handle, 1, TME_OK,
-		 (&element->tme_element_log_handle,
-		  "opened %s",
-		  dev_tap_filename));
-	 break;
-       }
-       
-       /* we failed to open this device.  if this device was simply
-	  busy, loop: */
-       saved_errno = errno;
-       tme_log(&element->tme_element_log_handle, 1, saved_errno,
-	       (&element->tme_element_log_handle, 
-		"%s", dev_tap_filename));
-       if (saved_errno == EBUSY
-	   || saved_errno == EACCES) {
-	 continue;
-       }
-       
-       /* otherwise, we have failed: */
-       return (saved_errno);
-     }
-     return fd;
-   }
-
-   /* preparation of the struct ifr, of type "struct ifreq" */
-   memset(&ifr, 0, sizeof(ifr));
-
-   ifr.ifr_flags = flags;   /* IFF_TUN or IFF_TAP, plus maybe IFF_NO_PI */
-
-   if (*dev) {
-     /* if a device name was specified, put it in the structure; otherwise,
-      * the kernel will try to allocate the "next" device of the
-      * specified type */
-     strncpy(ifr.ifr_name, dev, IFNAMSIZ);
-   }
-
-   /* try to create the device */
-   if( (err = ioctl(fd, TUNSETIFF, (void *) &ifr)) < 0 ) {
-     close(fd);
-     return err;
-   }
-
-  /* if the operation was successful, write back the name of the
-   * interface to the variable "dev", so the caller can know
-   * it. Note that the caller MUST reserve space in *dev (see calling
-   * code below) */
-  strcpy(dev, ifr.ifr_name);
-
-  /* this is the special file descriptor that the caller will use to talk
-   * with the virtual interface */
-  return fd;
-}
-
 /* retrieve ethernet arguments */
-int tme_eth_args(const char *args[], struct ifreq *ifr, unsigned long *delay)
+int tme_eth_args(const char * const args[], 
+		 struct ifreq *ifr, 
+		 unsigned long *delay, 
+		 char **_output)
 {
   int arg_i;
   int usage;
@@ -730,7 +674,7 @@ int tme_eth_args(const char *args[], struct ifreq *ifr, unsigned long *delay)
   /* check our arguments: */
   usage = 0;
   ifr->ifr_name[0] = '\0';
-  delay_time = 0;
+  *delay = 0;
   arg_i = 1;
   for (;;) {
 
@@ -743,7 +687,7 @@ int tme_eth_args(const char *args[], struct ifreq *ifr, unsigned long *delay)
 
     /* a delay time in microseconds: */
     else if (TME_ARG_IS(args[arg_i + 0], "delay")
-	     && (delay_time = tme_misc_unumber_parse(args[arg_i + 1], 0)) > 0) {
+	     && (*delay = tme_misc_unumber_parse(args[arg_i + 1], 0)) > 0) {
       arg_i += 2;
     }
     
@@ -774,7 +718,11 @@ int tme_eth_args(const char *args[], struct ifreq *ifr, unsigned long *delay)
   }
 }
 
-int tme_eth_init(struct tme_element *element, int fd, u_int sz, unsigned long delay) 
+int tme_eth_init(struct tme_element *element, 
+		 int fd, 
+		 u_int sz, 
+		 unsigned long delay, 
+		 typeof(tme_eth_connections_new) eth_connections_new)
 {
   struct tme_ethernet *eth;
 
@@ -793,7 +741,7 @@ int tme_eth_init(struct tme_element *element, int fd, u_int sz, unsigned long de
 
   /* fill the element: */
   element->tme_element_private = eth;
-  element->tme_element_connections_new = _tme_eth_connections_new;
+  element->tme_element_connections_new = eth_connections_new;
 
 
   return (TME_OK);

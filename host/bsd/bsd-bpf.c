@@ -37,10 +37,10 @@
 _TME_RCSID("$Id: bsd-bpf.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 
 /* includes: */
-#include "eth-impl.h"
 #include <tme/generic/ethernet.h>
 #include <tme/threads.h>
 #include <tme/misc.h>
+#include "eth-impl.h"
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -597,6 +597,23 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
   return (rc);
 }
 
+/* this makes a new connection side for a ETH: */
+static int
+_tme_bsd_bpf_connections_new(struct tme_element *element, 
+			     const char * const *args, 
+			     struct tme_connection **_conns,
+			     char **_output)
+{
+  struct tme_ethernet_connection *conn_eth;
+
+  tme_eth_connections_new(element, args, _conns, _output);
+  conn_eth = (struct tme_ethernet_connection *) (*_conns);
+  conn_eth->tme_ethernet_connection_config = _tme_bsd_bpf_config;
+  conn_eth->tme_ethernet_connection_read = _tme_bsd_bpf_read;
+  
+  return (TME_OK);
+}
+
 /* the new BPF function: */
 TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
   int bpf_fd;
@@ -620,7 +637,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
   int rc;
 
   /* get the arguments: */
-  rc = tme_eth_args(args, &ifr, &delay_time);
+  rc = tme_eth_args(args, &ifr, &delay_time, _output);
 
   /* find the interface we will use: */
   rc = tme_eth_ifaddrs_find(ifr.ifr_name, &ifa, NULL, NULL);
@@ -779,7 +796,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
   }
 #endif
   
-  return tme_eth_init(bpf, element, bpf_fd, packet_buffer_size, delay_time);
+  return tme_eth_init(element, bpf_fd, packet_buffer_size, delay_time, _tme_bsd_bpf_connections_new);
 
 #undef _TME_BPF_RAW_OPEN_ERROR
 }

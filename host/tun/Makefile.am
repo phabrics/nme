@@ -3,7 +3,7 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
-AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I../eth -I. -D_TME_IMPL
+AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(srcdir)/../eth -I. -D_TME_IMPL
 
 pkglib_LTLIBRARIES = tme_host_tun.la
 tme_host_tun_la_SOURCES = tun-tap.c

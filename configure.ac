@@ -257,8 +257,8 @@ AC_MSG_RESULT(no)
 
 dnl Checks for Ethernet.
 tme_raw_type=
-AC_CHECK_HEADER(linux/if_tun.h, [tme_raw_type=tap],
-[AC_CHECK_HEADER(net/if_tun.h, [tme_raw_type=tap])])
+#AC_CHECK_HEADER(linux/if_tun.h, [tme_raw_type=tap],
+#[AC_CHECK_HEADER(net/if_tun.h, [tme_raw_type=tap])])
 
 AC_CHECK_HEADER(linux/filter.h, [tme_raw_type=${tme_raw_type}bpf],
 [AC_CHECK_HEADER(net/bpf.h, 
@@ -271,9 +271,9 @@ found_BIOCSHDRCMPLT
 
 AC_MSG_CHECKING([for raw Ethernet access method])
 case "x${tme_raw_type}" in
-xtap) TME_HOSTS="${TME_HOSTS} dev tun" ;;
-xbpf) TME_HOSTS="${TME_HOSTS} dev bsd" ;;
-xtapbpf) TME_HOSTS="${TME_HOSTS} dev tun bsd" ;;
+xtap) TME_HOSTS="${TME_HOSTS} eth tun" ;;
+xbpf) TME_HOSTS="${TME_HOSTS} eth bsd" ;;
+xtapbpf) TME_HOSTS="${TME_HOSTS} eth tun bsd" ;;
 x) tme_raw_type=none ;;
 esac
 AC_MSG_RESULT($tme_raw_type)
@@ -974,7 +974,9 @@ AC_CONFIG_FILES([Makefile
 	  machine/sun4u/Makefile
           host/Makefile
           host/posix/Makefile
+          host/eth/Makefile
           host/bsd/Makefile
+          host/tun/Makefile
           host/gtk/Makefile
           bus/Makefile
           bus/multibus/Makefile

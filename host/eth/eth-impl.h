@@ -118,8 +118,33 @@ struct tme_ethernet {
 };
 
 /* prototypes: */
-int tme_eth_if_find _TME_P((_tme_const char *, struct ifreq **, tme_uint8_t **, unsigned int *));
+int tme_eth_if_find _TME_P((_tme_const char *, 
+			    struct ifreq **, 
+			    tme_uint8_t **, 
+			    unsigned int *));
 
-int tme_eth_ifaddrs_find _TME_P((_tme_const char *, struct ifaddrs **, tme_uint8_t **, unsigned int *));
+int tme_eth_ifaddrs_find _TME_P((_tme_const char *, 
+				 struct ifaddrs **, 
+				 tme_uint8_t **, 
+				 unsigned int *));
+
+int tme_eth_connections_new _TME_P((struct tme_element *element, 
+				    const char * const *args, 
+				    struct tme_connection **_conns,
+				    char **_output));
+
+int tme_eth_alloc _TME_P((char *dev, 
+			  int flags));
+
+int tme_eth_args _TME_P((const char * const args[], 
+			 struct ifreq *ifr, 
+			 unsigned long *delay,
+			 char **_output));
+
+int tme_eth_init _TME_P((struct tme_element *element, 
+			 int fd, 
+			 u_int sz, 
+			 unsigned long delay, 
+			 typeof(tme_eth_connections_new) eth_connections_new));
 
 #endif /* !_HOST_ETH_IMPL_H */
