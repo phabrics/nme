@@ -41,6 +41,7 @@ _TME_RCSID("$Id: eth-if.c,v 1.3 2003/10/16 02:48:23 fredette Exp $");
 #include <tme/threads.h>
 #include <tme/misc.h>
 #include "eth-impl.h"
+#include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -618,6 +619,51 @@ _tme_eth_read(struct tme_ethernet_connection *conn_eth,
 		  unsigned int flags)
 {
   abort();
+}
+
+/* Allocate an ethernet device */
+int tme_eth_alloc(struct tme_element *element, char *dev_filename) 
+{
+  int fd, minor, saved_errno;
+  char dev_minor[4];
+
+  /* open the clone device */
+  if( (fd = open(dev_filename, O_RDWR)) < 0 ) {
+    /* loop trying to open a minor device: */
+    for (minor = 0;; minor++) {
+      /* form the name of the next device to try, then try opening
+	 it. if we succeed, we're done: */
+      sprintf(dev_minor, "%d", minor);
+      strncat(dev_filename, dev_minor, 4);
+      tme_log(&element->tme_element_log_handle, 1, TME_OK,
+	      (&element->tme_element_log_handle,
+	       "trying %s",
+	       dev_filename));
+      if ((fd = open(dev_filename, O_RDWR)) >= 0) {
+	tme_log(&element->tme_element_log_handle, 1, TME_OK,
+		(&element->tme_element_log_handle,
+		 "opened %s",
+		 dev_filename));
+	break;
+      }
+      
+      /* we failed to open this device.  if this device was simply
+	 busy, loop: */
+      saved_errno = errno;
+      tme_log(&element->tme_element_log_handle, 1, saved_errno,
+	      (&element->tme_element_log_handle, 
+	       "%s", dev_filename));
+      if (saved_errno == EBUSY
+	  || saved_errno == EACCES) {
+	continue;
+      }
+      
+      /* otherwise, we have failed: */
+      return (saved_errno);
+    }
+  }
+
+  return fd;
 }
 
 /* this makes a new connection side for a ETH: */

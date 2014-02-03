@@ -621,9 +621,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
   struct sockaddr_ll sll;
   struct packet_mreq mr;
 #else
-#define DEV_BPF_FORMAT "/dev/bpf%d"
-  char dev_bpf_filename[sizeof(DEV_BPF_FORMAT) + (sizeof(int) * 3) + 1];
-  int minor;
+#define DEV_BPF_FORMAT "/dev/bpf"
+  char dev_bpf_filename[sizeof(DEV_BPF_FORMAT) + 4];
 #endif
   int saved_errno;
   u_int bpf_opt;
@@ -684,38 +683,9 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
   }
   packet_buffer_size = 16384;
 #else
-  /* loop trying to open a /dev/bpf device: */
-  for (minor = 0;; minor++) {
-    
-    /* form the name of the next device to try, then try opening
-       it. if we succeed, we're done: */
-    sprintf(dev_bpf_filename, DEV_BPF_FORMAT, minor);
-    tme_log(&element->tme_element_log_handle, 1, TME_OK,
-	    (&element->tme_element_log_handle,
-	     "trying %s",
-	     dev_bpf_filename));
-    if ((bpf_fd = open(dev_bpf_filename, O_RDWR)) >= 0) {
-      tme_log(&element->tme_element_log_handle, 1, TME_OK,
-	      (&element->tme_element_log_handle,
-	       "opened %s",
-	       dev_bpf_filename));
-      break;
-    }
+  sprintf(dev_bpf_filename, DEV_BPF_FORMAT);
+  bpf_fd = tme_eth_alloc(element, dev_bpf_filename);
 
-    /* we failed to open this device.  if this device was simply
-       busy, loop: */
-    saved_errno = errno;
-    tme_log(&element->tme_element_log_handle, 1, saved_errno,
-	    (&element->tme_element_log_handle, 
-	     "%s", dev_bpf_filename));
-    if (saved_errno == EBUSY
-	|| saved_errno == EACCES) {
-      continue;
-    }
-
-    /* otherwise, we have failed: */
-    return (saved_errno);
-  }
   /* this macro helps in closing the BPF socket on error: */
 #define _TME_BPF_RAW_OPEN_ERROR(x) saved_errno = errno; x; errno = saved_errno
 

@@ -995,90 +995,11 @@ _tme_tun_tap_connections_new(struct tme_element *element,
   return (TME_OK);
 }
 
-/* Allocate an ethernet device */
-int tme_eth_alloc(char *dev, int flags) 
-{
-  struct ifreq ifr;
-  int fd, err;
-  char *dev_tap_filename = "/dev/net/tun";
-
-  /* Arguments taken by the function:
-   *
-   * char *dev: the name of an interface (or '\0'). MUST have enough
-   *   space to hold the interface name if '\0' is passed
-   * int flags: interface flags (eg, IFF_TUN etc.)
-   */
-
-   /* open the clone device */
-   if( (fd = open(dev_tap_filename, O_RDWR)) < 0 ) {
-     /* loop trying to open a /dev/tap device: */
-     for (minor = 0;; minor++) {
-       
-       /* form the name of the next device to try, then try opening
-	  it. if we succeed, we're done: */
-       sprintf(dev_tap_filename, DEV_TAP_FORMAT, minor);
-       tme_log(&element->tme_element_log_handle, 1, TME_OK,
-	       (&element->tme_element_log_handle,
-		"trying %s",
-		dev_tap_filename));
-       if ((tap_fd = open(dev_tap_filename, O_RDWR)) >= 0) {
-	 tme_log(&element->tme_element_log_handle, 1, TME_OK,
-		 (&element->tme_element_log_handle,
-		  "opened %s",
-		  dev_tap_filename));
-	 break;
-       }
-       
-       /* we failed to open this device.  if this device was simply
-	  busy, loop: */
-       saved_errno = errno;
-       tme_log(&element->tme_element_log_handle, 1, saved_errno,
-	       (&element->tme_element_log_handle, 
-		"%s", dev_tap_filename));
-       if (saved_errno == EBUSY
-	   || saved_errno == EACCES) {
-	 continue;
-       }
-       
-       /* otherwise, we have failed: */
-       return (saved_errno);
-     }
-     return fd;
-   }
-
-   /* preparation of the struct ifr, of type "struct ifreq" */
-   memset(&ifr, 0, sizeof(ifr));
-
-   ifr.ifr_flags = flags;   /* IFF_TUN or IFF_TAP, plus maybe IFF_NO_PI */
-
-   if (*dev) {
-     /* if a device name was specified, put it in the structure; otherwise,
-      * the kernel will try to allocate the "next" device of the
-      * specified type */
-     strncpy(ifr.ifr_name, dev, IFNAMSIZ);
-   }
-
-   /* try to create the device */
-   if( (err = ioctl(fd, TUNSETIFF, (void *) &ifr)) < 0 ) {
-     close(fd);
-     return err;
-   }
-
-  /* if the operation was successful, write back the name of the
-   * interface to the variable "dev", so the caller can know
-   * it. Note that the caller MUST reserve space in *dev (see calling
-   * code below) */
-  strcpy(dev, ifr.ifr_name);
-
-  /* this is the special file descriptor that the caller will use to talk
-   * with the virtual interface */
-  return fd;
-}
-
 /* the new TAP function: */
 TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   struct tme_tun_tap *tap;
   int tap_fd;
+  char *dev_tap_filename = "/dev/net/tun";
   int saved_errno;
   u_int tap_opt;
 #ifndef HAVE_AF_PACKET
@@ -1137,9 +1058,23 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     return (EINVAL);
   }
 
+  tap_fd = tme_eth_alloc(element, dev_tap_filename);
+
+  ifr.ifr_flags = IFF_TAP | IFF_NO_PI;   /* IFF_TUN or IFF_TAP, plus maybe IFF_NO_PI */
+  
   /* this macro helps in closing the TAP socket on error: */
 #define _TME_TAP_RAW_OPEN_ERROR(x) saved_errno = errno; x; errno = saved_errno
 
+  /* try to create the device */
+  if (ioctl(tap_fd, TUNSETIFF, (void *) &ifr) < 0 ) {
+    tme_log(&element->tme_element_log_handle, 1, errno,
+	    (&element->tme_element_log_handle,
+	     _("failed to set the TAP interface on %s"),
+	     dev_tap_filename));
+    _TME_TAP_RAW_OPEN_ERROR(close(tap_fd));
+    return (errno);
+  }
+  
   /* check the TAP version: */
   if (ioctl(tap_fd, BIOCVERSION, &version) < 0) {
     tme_log(&element->tme_element_log_handle, 1, errno,
