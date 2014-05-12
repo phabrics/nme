@@ -37,10 +37,10 @@
 _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 
 /* includes: */
-#include "tun-impl.h"
 #include <tme/generic/ethernet.h>
 #include <tme/threads.h>
 #include <tme/misc.h>
+#include "eth-impl.h"
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -76,18 +76,17 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #endif /* HAVE_NET_IF_DL_H */
 #include <arpa/inet.h>
 #ifdef HAVE_AF_PACKET
-#include <linux/filter.h>
-#include <linux/if_ether.h>
-#define TME_TUN_TAP_INSN struct sock_filter 
-#define TME_TUN_TAP_PROG struct sock_fprog
-#define TME_TUN_TAP_INSNS(x) x.filter
-#define TME_TUN_TAP_LEN(x) x.len
+#include <linux/if_tun.h>
+#define TME_TUN_TAP_INSN tme_uint8_t
+#define TME_TUN_TAP_PROG struct tun_filter
+#define TME_TUN_TAP_INSNS(x) (x)->addr
+#define TME_TUN_TAP_LEN(x) (x)->count
 #else
 #include <net/tap.h>
 #define TME_TUN_TAP_INSN struct tap_insn
 #define TME_TUN_TAP_PROG struct tap_program
-#define TME_TUN_TAP_INSNS(x) x.bf_insns
-#define TME_TUN_TAP_LEN(x) x.bf_len
+#define TME_TUN_TAP_INSNS(x) x->bf_insns
+#define TME_TUN_TAP_LEN(x) x->bf_len
 #endif
 
 /* macros: */
@@ -151,174 +150,6 @@ struct tme_tun_tap {
   /* when nonzero, the packet delay is sleeping: */
   int tme_tun_tap_delay_sleeping;
 };
-
-/* a crude ARP header: */
-struct tme_net_arp_header {
-  tme_uint8_t tme_net_arp_header_hardware[2];
-  tme_uint8_t tme_net_arp_header_protocol[2];
-  tme_uint8_t tme_net_arp_header_hardware_length;
-  tme_uint8_t tme_net_arp_header_protocol_length;
-  tme_uint8_t tme_net_arp_header_opcode[2];
-};
-
-/* a crude partial IPv4 header: */
-struct tme_net_ipv4_header {
-  tme_uint8_t tme_net_ipv4_header_v_hl;
-  tme_uint8_t tme_net_ipv4_header_tos;
-  tme_uint8_t tme_net_ipv4_header_length[2];
-};
-
-/* this creates a TAP filter that accepts Ethernet packets with
-   destination addresses in the configured set.  the broadcast address
-   must be in this set, it isn't accepted automatically: */
-static int
-_tme_tun_tap_filter(struct tme_ethernet_config *config, 
-		    const tme_uint8_t *prefix,
-		    unsigned int prefix_len,
-		    TME_TUN_TAP_INSN *tap_filter,
-		    int tap_filter_size,
-		    int *_first_pc)
-{
-  unsigned int addr_i;
-  tme_uint8_t byte;
-  tme_uint8_t byte_bitmap[(1 << (8 * sizeof(byte))) >> 3];
-  int match_pc, miss_pc, this_pc;
-
-  /* clear the byte bitmap: */
-  memset(byte_bitmap, 0, sizeof(byte_bitmap));
-
-  /* the last instruction jumps to the reject insn when it fails: */
-  miss_pc = tap_filter_size - 1;
-
-  /* loop over all of the addresses: */
-  for (addr_i = 0;
-       addr_i < config->tme_ethernet_config_addr_count;
-       addr_i++) {
-
-    /* skip this address if it doesn't match the prefix: */
-    if (prefix_len > 0
-	&& memcmp(config->tme_ethernet_config_addrs[addr_i],
-		  prefix,
-		  prefix_len)) {
-      continue;
-    }
-
-    /* get the next byte, and skip this address if this byte has
-       already been done: */
-    byte = config->tme_ethernet_config_addrs[addr_i][prefix_len];
-    if (byte_bitmap[byte >> 3] & TME_BIT(byte & 7)) {
-      continue;
-    }
-    byte_bitmap[byte >> 3] |= TME_BIT(byte & 7);
-
-    /* get the PC of the instruction to branch to if this byte
-       matches.  if this is the last byte of the address, the branch
-       target is the accept insn, otherwise recurse and get the first
-       insn of the rest of the matcher: */
-    match_pc = ((prefix_len == (TME_ETHERNET_ADDR_SIZE - 1))
-		? tap_filter_size - 2
-		: _tme_tun_tap_filter(config,
-				      config->tme_ethernet_config_addrs[addr_i],
-				      prefix_len + 1,
-				      tap_filter,
-				      tap_filter_size,
-				      _first_pc));
-
-    /* add this testing instruction: */
-    this_pc = --(*_first_pc);
-    assert(this_pc >= 0);
-    tap_filter[this_pc].code = TAP_JMP + TAP_JEQ + TAP_K;
-    tap_filter[this_pc].jt = match_pc - (this_pc + 1);
-    tap_filter[this_pc].jf = miss_pc - (this_pc + 1);
-    tap_filter[this_pc].k = byte;
-
-    /* update the miss pc: */
-    miss_pc = this_pc;
-  }
-
-  /* add this load instruction: */
-  this_pc = --(*_first_pc);
-  assert(this_pc >= 0);
-  tap_filter[this_pc].code = TAP_LD + TAP_B + TAP_ABS;
-  tap_filter[this_pc].k = prefix_len;
-
-  /* return our pc: */
-  return (this_pc);
-}
-
-/* this dumps a TAP filter.  not all insns are supported, just
-   those used by our address matching filters: */
-void
-_tme_tun_tap_dump_filter(const TME_TUN_TAP_PROG *program)
-{
-  unsigned int pc;
-  FILE *fp;
-  const TME_TUN_TAP_INSN *insn;
-  char ldsize;
-  const char *opc;
-
-  fp = stderr;
-  for (pc = 0, insn = TME_TUN_TAP_INSNS((*program));
-       pc < (unsigned int) TME_TUN_TAP_LEN((*program));
-       pc++, insn++) {
-    
-    /* the PC: */
-    fprintf(fp, "%d:\t", pc);
-
-    /* dispatch on the instruction class: */
-    switch (TAP_CLASS(insn->code)) {
-
-    case TAP_LD:
-
-      switch (TAP_SIZE(insn->code)) {
-      case TAP_B: ldsize = 'b'; break;
-      case TAP_H: ldsize = 'w'; break;
-      case TAP_W: ldsize = 'l'; break;
-      default: ldsize = '?'; break;
-      }
-      fprintf(fp, "ld.%c ", ldsize);
-
-      switch (TAP_MODE(insn->code)) {
-      case TAP_ABS: fprintf(fp, "0x%x", insn->k); break;
-      default: fprintf(fp, "??");
-      }
-
-      break;
-
-    case TAP_JMP:
-
-      switch (TAP_OP(insn->code)) {
-      case TAP_JEQ: opc = "jeq"; break;
-      default: opc = "??"; break;
-      }
-      fprintf(fp, "%s ", opc);
-
-      switch (TAP_SRC(insn->code)) {
-      case TAP_K: fprintf(fp, "#0x%x", insn->k); break;
-      case TAP_X: fprintf(fp, "x"); break;
-      default: fprintf(fp, "??"); break;
-      }
-
-      fprintf(fp, ", %d, %d", pc + 1 + insn->jt, pc + 1 + insn->jf);
-      break;
-
-    case TAP_RET:
-      switch (TAP_RVAL(insn->code)) {
-      case TAP_A: fprintf(fp, "ret a"); break;
-      case TAP_X: fprintf(fp, "ret x"); break;
-      case TAP_K: fprintf(fp, "ret #0x%x", insn->k); break;
-      default: fprintf(fp, "ret ??"); break;
-      }
-      break;
-
-    default:
-      fprintf(fp, "??");
-      break;
-    }
-
-    putc('\n', fp);
-  }
-}
 
 /* the tap callout function.  it must be called with the mutex locked: */
 static void
@@ -536,8 +367,7 @@ _tme_tun_tap_config(struct tme_ethernet_connection *conn_eth,
 {
   struct tme_tun_tap *tap;
   TME_TUN_TAP_INSN *tap_filter;
-  TME_TUN_TAP_PROG program;
-  int tap_filter_size, first_pc;
+  int tap_filter_size;
   int rc;
 
   /* recover our data structures: */
@@ -553,50 +383,31 @@ _tme_tun_tap_config(struct tme_ethernet_connection *conn_eth,
      accept, one insn for the packet reject, and TME_ETHERNET_ADDR_SIZE
      * 2 insns for each address - one insn to load an address byte and
      one insn to test it and branch: */
-  tap_filter_size = (1
-		     + 1
-		     + ((1 + 1)
-			* TME_ETHERNET_ADDR_SIZE
-			* config->tme_ethernet_config_addr_count));
-  tap_filter = tme_new(TME_TUN_TAP_INSN, tap_filter_size);
-  first_pc = tap_filter_size;
+  tap_filter_size = TME_ETHERNET_ADDR_SIZE * config->tme_ethernet_config_addr_count;
+  tap_filter = tme_new0(TME_TUN_TAP_INSN, tap_filter_size + sizeof(TME_TUN_TAP_PROG));
 
   /* if this Ethernet is promiscuous, we will accept all packets: */
   if (config->tme_ethernet_config_flags & TME_ETHERNET_CONFIG_PROMISC) {
-    tap_filter[--first_pc] = _tme_tun_tap_insn_accept;
+    tap_filter_size = 0;
   }
 
   /* if this Ethernet does have a set of addresses, we will accept all
      packets for one of those addresses: */
   else if (config->tme_ethernet_config_addr_count > 0) {
-
-    /* the last insn in the filter is always the packet reject,
-       and the next-to-last insn in the filter is always the
-       packet accept.  _tme_tun_tap_filter depends on this: */
-    tap_filter[--first_pc] = _tme_tun_tap_insn_reject;
-    tap_filter[--first_pc] = _tme_tun_tap_insn_accept;
-
-    /* make the address filter: */
-    _tme_tun_tap_filter(config, 
-			NULL,
-			0,
-			tap_filter,
-			tap_filter_size,
-			&first_pc);
+    memcpy(tap_filter + sizeof(TME_TUN_TAP_PROG), config->tme_ethernet_config_addrs, tap_filter_size);
   }
 
   /* otherwise this filter doesn't need to accept any packets: */
   else {
-    tap_filter[--first_pc] = _tme_tun_tap_insn_reject;
+    // how do we reject all packets???
   }
 
   /* set the filter on the TAP device: */
-  TME_TUN_TAP_LEN(program) = tap_filter_size - first_pc;
-  TME_TUN_TAP_INSNS(program) = tap_filter + first_pc;
+  TME_TUN_TAP_LEN((TME_TUN_TAP_PROG *)tap_filter) = tap_filter_size;
 #ifdef HAVE_AF_PACKET
-  if (setsockopt(tap->tme_tun_tap_fd, SOL_SOCKET, SO_ATTACH_FILTER, &program, sizeof(program)) == -1) {
+  if (ioctl(tap->tme_tun_tap_fd, TUNSETTXFILTER, tap_filter) < 0) {
 #else
-  if (ioctl(tap->tme_tun_tap_fd, BIOCSETF, &program) < 0) {
+  if (ioctl(tap->tme_tun_tap_fd, BIOCSETF, tap_filter) < 0) {
 #endif
     tme_log(&tap->tme_tun_tap_element->tme_element_log_handle, 0, errno,
 	    (&tap->tme_tun_tap_element->tme_element_log_handle,
@@ -1074,7 +885,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     _TME_TAP_RAW_OPEN_ERROR(close(tap_fd));
     return (errno);
   }
-  
+
+#ifndef HAVE_AF_PACKET  
   /* check the TAP version: */
   if (ioctl(tap_fd, BIOCVERSION, &version) < 0) {
     tme_log(&element->tme_element_log_handle, 1, errno,
@@ -1151,6 +963,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     return (errno);
   }
   
+#endif
   /* start our data structure: */
   tap = tme_new0(struct tme_tun_tap, 1);
   tap->tme_tun_tap_element = element;

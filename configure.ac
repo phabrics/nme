@@ -257,8 +257,8 @@ AC_MSG_RESULT(no)
 
 dnl Checks for Ethernet.
 tme_raw_type=
-#AC_CHECK_HEADER(linux/if_tun.h, [tme_raw_type=tap],
-#[AC_CHECK_HEADER(net/if_tun.h, [tme_raw_type=tap])])
+AC_CHECK_HEADER(linux/if_tun.h, [tme_raw_type=tap],
+[AC_CHECK_HEADER(net/if_tun.h, [tme_raw_type=tap])])
 
 AC_CHECK_HEADER(linux/filter.h, [tme_raw_type=${tme_raw_type}bpf],
 [AC_CHECK_HEADER(net/bpf.h, 
