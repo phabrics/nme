@@ -482,9 +482,10 @@ _tme_gtk_keyboard_lookup(struct tme_keyboard_connection *conn_keyboard,
 	}
 	if (_keysym != TME_KEYBOARD_KEYVAL_UNDEF
 	    && _keysym != GDK_KEY_VoidSymbol
-	    && gdk_keyval_name(_keysym) == NULL) {
-	  break;
-	}
+	    && ((string_other = gdk_keyval_name(_keysym)) == NULL
+		|| gdk_keyval_from_name(string_other) == GDK_KEY_VoidSymbol)) {
+	    break;
+	  }
 	_keysym++;
       }
       display->tme_gtk_display_keyboard_keysym_alloc_next = _keysym + 1;
