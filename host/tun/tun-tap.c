@@ -817,7 +817,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   struct tap_version version;
 #endif
   struct ifreq ifr;
-  u_int packet_buffer_size;
   unsigned long delay_time;
   int arg_i;
   int usage;
@@ -886,101 +885,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     return (errno);
   }
 
-#ifndef HAVE_AF_PACKET  
-  /* check the TAP version: */
-  if (ioctl(tap_fd, BIOCVERSION, &version) < 0) {
-    tme_log(&element->tme_element_log_handle, 1, errno,
-	    (&element->tme_element_log_handle,
-	     _("failed to get the TAP version on %s"),
-	     dev_tap_filename));
-    _TME_TAP_RAW_OPEN_ERROR(close(tap_fd));
-    return (errno);
-  }
-  if (version.bv_major != TAP_MAJOR_VERSION
-      || version.bv_minor < TAP_MINOR_VERSION) {
-    tme_log(&element->tme_element_log_handle, 1, errno,
-	    (&element->tme_element_log_handle,
-	     _("kernel TAP version is %d.%d, my TAP version is %d.%d"),
-	     version.bv_major, version.bv_minor,
-	     TAP_MAJOR_VERSION, TAP_MINOR_VERSION));
-    close(tap_fd);
-    return (ENXIO);
-  }
- 
-  /* put the TAP device into immediate mode: */
-  tap_opt = TRUE;
-  if (ioctl(tap_fd, BIOCIMMEDIATE, &tap_opt) < 0) {
-    tme_log(&element->tme_element_log_handle, 1, errno,
-	    (&element->tme_element_log_handle,
-	     _("failed to put %s into immediate mode"),
-	     dev_tap_filename));
-    _TME_TAP_RAW_OPEN_ERROR(close(tap_fd));
-    return (errno);
-  }
+  return tme_eth_init(element, tap_fd, 4096, delay_time, _tme_tun_tap_connections_new);
 
-  /* tell the TAP device we're providing complete Ethernet headers: */
-  tap_opt = TRUE;
-  if (ioctl(tap_fd, BIOCSHDRCMPLT, &tap_opt) < 0) {
-    tme_log(&element->tme_element_log_handle, 1, errno,
-	    (&element->tme_element_log_handle,
-	     _("failed to put %s into complete-headers mode"),
-	     dev_tap_filename));
-    _TME_TAP_RAW_OPEN_ERROR(close(tap_fd));
-    return (errno);
-  }
-
-  /* point the TAP device at the interface we're using: */
-  if (ioctl(tap_fd, BIOCSETIF, &ifr) < 0) {
-    tme_log(&element->tme_element_log_handle, 1, errno,
-	    (&element->tme_element_log_handle,
-	     _("failed to point TAP socket at %s"),
-	     ifr.ifr_name));
-    _TME_TAP_RAW_OPEN_ERROR(close(tap_fd));
-    return (errno);
-  }
-
-  /* get the TAP read buffer size: */
-  if (ioctl(tap_fd, BIOCGBLEN, &packet_buffer_size) < 0) {
-    tme_log(&element->tme_element_log_handle, 1, errno,
-	    (&element->tme_element_log_handle,
-	     _("failed to read the buffer size for %s"),
-	     dev_tap_filename));
-    _TME_TAP_RAW_OPEN_ERROR(close(tap_fd));
-    return (errno);
-  }
-  tme_log(&element->tme_element_log_handle, 1, errno,
-	  (&element->tme_element_log_handle,
-	   _("buffer size for %s is %u"),
-	   dev_tap_filename, packet_buffer_size));
-
-  /* set the interface into promiscuous mode: */
-  if (ioctl(tap_fd, BIOCPROMISC) < 0) {
-    tme_log(&element->tme_element_log_handle, 1, errno,
-	    (&element->tme_element_log_handle,
-	     _("failed to set promiscuous mode on %s"),
-	     dev_tap_filename));
-    _TME_TAP_RAW_OPEN_ERROR(close(tap_fd));
-    return (errno);
-  }
-  
-#endif
-  /* start our data structure: */
-  tap = tme_new0(struct tme_tun_tap, 1);
-  tap->tme_tun_tap_element = element;
-  tap->tme_tun_tap_fd = tap_fd;
-  tap->tme_tun_tap_buffer_size = packet_buffer_size;
-  tap->tme_tun_tap_buffer = tme_new(tme_uint8_t, packet_buffer_size);
-  tap->tme_tun_tap_delay_time = delay_time;
-
-  /* start the threads: */
-  tme_mutex_init(&tap->tme_tun_tap_mutex);
-  tme_cond_init(&tap->tme_tun_tap_cond_reader);
-  tme_thread_create((tme_thread_t) _tme_tun_tap_th_reader, tap);
-
-  /* fill the element: */
-  element->tme_element_private = tap;
-  element->tme_element_connections_new = _tme_tun_tap_connections_new;
-
-  return (TME_OK);
 #undef _TME_TAP_RAW_OPEN_ERROR
 }
