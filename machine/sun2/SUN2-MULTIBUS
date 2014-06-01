@@ -1,0 +1,103 @@
+# $Id: SUN2-MULTIBUS,v 1.11 2005/04/30 15:12:12 fredette Exp $
+
+## SUN2-MULTIBUS - example tmesh commands to create a Sun2 Multibus
+## machine:
+
+## the Multibus and VME sun2 common buses and devices:
+##
+mainbus0: tme/machine/sun2 multibus my-sun2-idprom.bin
+cpu0 at mainbus0: tme/ic/m68010
+obio0 at mainbus0 obio: tme/generic/bus size 8MB
+obmem0 at mainbus0 obmem: tme/generic/bus size 16MB
+ram0 at obmem0 addr 0x0: tme/host/posix/memory ram 4MB
+rom0 at obmem0 addr 0xef0000: tme/host/posix/memory rom sun2-multi-rev-R.bin
+rom0 at obmem0 addr 0xef8000
+
+## the Multibus sun2 obio devices:
+##
+clock0 at obio0 addr 0x2800: tme/machine/sun2/clock
+tod0 at obio0 addr 0x3800: tme/machine/sun2/tod
+zs0 at obio0 addr 0x2000 ipl 6: tme/machine/sun2/zs
+
+## the Multibus sun2 Multibus buses:
+##
+mbio0 at mainbus0 mbio: tme/generic/bus size 8MB
+mbmem0: tme/generic/bus size 8MB
+mainbus0 mbmem at mbmem0 addr 0x00000
+
+## the Sun "SCSI-2" Multibus board:
+##
+sc0 at mbmem0 addr 0x80000 ipl 2: tme/bus/multibus/sun-sc
+scsibus0 at sc0: tme/scsi/bus
+#zs2 at mbmem0 addr 0x80800 ipl 6: tme/machine/sun2/zs
+#zs3 at mbmem0 addr 0x81000 ipl 6: tme/machine/sun2/zs
+
+## the 3Com 3C400 Ethernet Multibus board:
+##
+# uncomment these two lines if you have read/write permission on one
+# of your /dev/bpfN devices and you want an Ethernet device:
+#
+#ec0 at mbmem0 addr 0xe0000 ipl 3: tme/bus/multibus/3c400 ether "00:01:02:03:04:05"
+#bpf0 at ec0: tme/host/bsd/bpf
+
+## the Sun Intel Ethernet Multibus board:
+##
+## NB that the mie "memory" attachment argument must match the
+## low 20 bits of the address of the memory's bus attachment:
+##
+# uncomment these lines if you have read/write permission on one
+# of your /dev/bpfN devices and you want an Ethernet device:
+#
+#mie0: tme/bus/multibus/sun-mie
+#mie0 csr at mbmem0 addr 0x88000 ipl 3
+#mie0 memory 0xa0000 at mbmem0 addr 0xa0000
+#ie0 at mie0: tme/ic/i82586
+#bpf1 at ie0: tme/host/bsd/bpf delay 10000
+
+## the Sun bwtwo Multibus board, Sun type-2 keyboard and mouse, and
+## the GTK-based display to drive them all:
+##
+# comment out these eight lines if you don't have GTK or you don't
+# want a display console:
+#
+bwtwo0 at obmem0 addr 0x700000 ipl 4: tme/machine/sun2/bwtwo type multibus
+zs1 at obmem0 addr 0x780000 ipl 6: tme/machine/sun2/zs
+kbd0 at zs1 channel A: tme/serial/keyboard type sun-type-2 macros my-sun-macros.txt map sun-keyboards.txt rate 20
+ms0 at zs1 channel B: tme/serial/mouse type mousesystems-5
+display0: tme/host/gtk/display
+display0 at bwtwo0
+display0 at kbd0
+display0 at ms0
+
+## ttya:
+##
+# uncomment the following line if you aren't using the GTK-based
+# display console above.  this will connect ttya to the master side of
+# a pseudo-tty (in this case, /dev/ttyr0), which you can connect to
+# using tip or some other serial communications program on the slave
+# side (in this case, /dev/ptyr0):
+#
+#console0 at zs0 channel A: tme/host/posix/serial device /dev/ttyr0 break-carats
+
+## a SCSI disk:
+##
+# if you're using SunOS, change the disk type from tme-scsi-1 to
+# acb4000, to get an Adaptec ACB-4000 compatible disk:
+#
+sd0 at scsibus0: tme/scsi/disk id 0 type tme-scsi-1
+disk0 at sd0: tme/host/posix/disk file my-sun2-disk.img
+
+## a SCSI tape:
+##
+# if you're using SunOS, remove the vendor EMULEX and product "MT-02 QIC" 
+# to get a 100% Emulex MT-02 compatible tape:
+#
+st0 at scsibus0: tme/scsi/tape id 4 type emulex-mt02 vendor EMULEX product "MT-02 QIC"
+tape0 at st0: tme/host/posix/tape
+
+## power up the machine:
+##
+# uncomment this line to automatically power up the machine when
+# tmesh starts:
+#
+# command mainbus0 power up
