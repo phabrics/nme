@@ -270,8 +270,8 @@ _tme_gtk_mouse_ebox_event(GtkWidget *widget,
      never been saved, save them now, and add the mouse events: */
   if (screen->tme_gtk_screen_mouse_events_old == 0) {
     screen->tme_gtk_screen_mouse_events_old
-      = gdk_window_get_events(gtk_widget_get_window(screen->tme_gtk_screen_event_box));
-    gtk_widget_add_events(screen->tme_gtk_screen_event_box,
+      = gdk_window_get_events(gtk_widget_get_window(screen->tme_gtk_screen_gtkframe));
+    gtk_widget_add_events(screen->tme_gtk_screen_gtkframe,
 			  GDK_POINTER_MOTION_MASK
 			  | GDK_BUTTON_PRESS_MASK
 			  | GDK_BUTTON_RELEASE_MASK);
@@ -327,7 +327,7 @@ _tme_gtk_mouse_mode_off(struct tme_gtk_screen *screen,
   gdk_device_ungrab(screen->tme_gtk_screen_pointer, time);
 
   /* restore the old events mask on the event box: */
-  gdk_window_set_events(gtk_widget_get_window(screen->tme_gtk_screen_event_box),
+  gdk_window_set_events(gtk_widget_get_window(screen->tme_gtk_screen_gtkframe),
 			screen->tme_gtk_screen_mouse_events_old);
 
   /* pop our message off of the statusbar: */
@@ -561,15 +561,15 @@ _tme_gtk_mouse_attach(struct tme_gtk_screen *screen)
 
   /* although the event mask doesn't include these events yet,
      set a signal handler for the mouse events: */
-  g_signal_connect(screen->tme_gtk_screen_event_box,
+  g_signal_connect(screen->tme_gtk_screen_gtkframe,
 		   "motion_notify_event",
 		   G_CALLBACK(_tme_gtk_mouse_mouse_event), 
 		   screen);
-  g_signal_connect(screen->tme_gtk_screen_event_box,
+  g_signal_connect(screen->tme_gtk_screen_gtkframe,
 		   "button_press_event",
 		   G_CALLBACK(_tme_gtk_mouse_mouse_event), 
 		   screen);
-  g_signal_connect(screen->tme_gtk_screen_event_box,
+  g_signal_connect(screen->tme_gtk_screen_gtkframe,
 		   "button_release_event",
 		   G_CALLBACK(_tme_gtk_mouse_mouse_event), 
 		   screen);

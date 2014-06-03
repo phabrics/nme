@@ -36,11 +36,6 @@
 #include <tme/common.h>
 _TME_RCSID("$Id: gtk-screen.c,v 1.11 2009/08/30 21:39:03 fredette Exp $");
 
-/* we are aware of the problems with gdk_image_new_bitmap, and we cope
-   with them, so we define GDK_ENABLE_BROKEN to get its prototype
-   under GTK 2: */
-#define GDK_ENABLE_BROKEN
-
 /* includes: */
 #include "gtk-display.h"
 #include <stdlib.h>
@@ -93,14 +88,14 @@ _tme_gtk_screen_th_update(struct tme_gtk_display *display)
 	screen->tme_gtk_screen_full_redraw = FALSE;
       }
 
+      cairo_surface_flush(screen->tme_gtk_screen_surface);
+
       /* translate this framebuffer's contents: */
-      changed = (*screen->tme_gtk_screen_fb_xlat)
-	(((struct tme_fb_connection *) 
-	  screen->tme_gtk_screen_fb->tme_fb_connection.tme_connection_other),
-	 screen->tme_gtk_screen_fb);
+      changed = (*screen->tme_gtk_screen_fb_xlat)(conn_fb_other, screen->tme_gtk_screen_fb);
 
       /* if those contents changed, redraw the widget: */
       if (changed) {
+	cairo_surface_mark_dirty(screen->tme_gtk_screen_surface);
 	gtk_widget_queue_draw(screen->tme_gtk_screen_gtkframe);
       }
     }
@@ -114,24 +109,10 @@ _tme_gtk_screen_th_update(struct tme_gtk_display *display)
   /* NOTREACHED */
 }
 
-/* this recovers the bits-per-pixel value for a GdkPixbuf: */
+/* this recovers the scanline-pad value for an image buffer: */
 static unsigned int
-_tme_gtk_gdkpixbuf_bipp(GdkPixbuf *image, unsigned int *depth)
+_tme_gtk_scanline_pad(int bpl)
 {
-  unsigned int bipc = gdk_pixbuf_get_bits_per_sample(image),
-    bipp = bipc * gdk_pixbuf_get_n_channels(image);
-
-  if(depth) *depth = bipp - (gdk_pixbuf_get_has_alpha(image) ? bipc : 0);
-
-  return bipp;
-}
-
-/* this recovers the scanline-pad value for a GdkPixbuf: */
-static unsigned int
-_tme_gtk_gdkpixbuf_scanline_pad(GdkPixbuf *image)
-{
-  int bpl = gdk_pixbuf_get_rowstride(image);
-  
   if ((bpl % sizeof(tme_uint32_t)) == 0) {
     return (32);
   }
@@ -148,21 +129,9 @@ _tme_gtk_screen_mode_change(struct tme_fb_connection *conn_fb)
   struct tme_gtk_display *display;
   struct tme_gtk_screen *screen;
   struct tme_fb_connection *conn_fb_other;
-  struct tme_fb_xlat fb_xlat_q;
-  const struct tme_fb_xlat *fb_xlat_a;
-  int width, height;
-  int scale;
   unsigned long fb_area, avail_area, percentage;
-  gint width, height;
-  gint height_extra;
-  const void *map_g_old;
-  const void *map_r_old;
-  const void *map_b_old;
-  const tme_uint32_t *map_pixel_old;
-  tme_uint32_t map_pixel_count_old;  
-  tme_uint32_t colorset;
-  tme_uint32_t color_count;
-  struct tme_fb_color *colors_tme;
+  int width, height;
+  int height_extra, scale;
 
   /* recover our data structures: */
   display = conn_fb->tme_fb_connection.tme_connection_element->tme_element_private;
@@ -225,141 +194,12 @@ _tme_gtk_screen_mode_change(struct tme_fb_connection *conn_fb)
        : 1);
   
   /* if the previous gtkframe isn't the right size: */
-  if (cairo_image_surface_get_width(screen->tme_gtk_screen_surface) != width
-      || cairo_image_surface_get_height(screen->tme_gtk_screen_surface) != (height + height_extra)) {
+  if (gtk_widget_get_allocated_width(screen->tme_gtk_screen_gtkframe) != width
+      || gtk_widget_get_allocated_height(screen->tme_gtk_screen_gtkframe) != (height + height_extra)) {
     /* set a minimum size */
     gtk_widget_set_size_request(screen->tme_gtk_screen_gtkframe, width, height + height_extra);
-    if(screen->tme_gtk_screen_surface)
-      cairo_surface_destroy(screen->tme_gtk_screen_surface);
-    screen->tme_gtk_screen_surface
-      = gdk_window_create_similar_image_surface(gtk_widget_get_window(screen->tme_gtk_screen_gtkframe),
-						CAIRO_FORMAT_ARGB32,
-						gtk_widget_get_allocated_width(screen->tme_gtk_screen_gtkframe),
-						gtk_widget_get_allocated_height(screen->tme_gtk_screen_gtkframe),
-						0);
+    gtk_widget_queue_resize_no_redraw(screen->tme_gtk_screen_gtkframe);
   }
-
-  /* remember all previously allocated maps and colors, but otherwise
-     remove them from our framebuffer structure: */
-  map_g_old = conn_fb->tme_fb_connection_map_g;
-  map_r_old = conn_fb->tme_fb_connection_map_r;
-  map_b_old = conn_fb->tme_fb_connection_map_b;
-  map_pixel_old = conn_fb->tme_fb_connection_map_pixel;
-  map_pixel_count_old = conn_fb->tme_fb_connection_map_pixel_count;
-  conn_fb->tme_fb_connection_map_g = NULL;
-  conn_fb->tme_fb_connection_map_r = NULL;
-  conn_fb->tme_fb_connection_map_b = NULL;
-  conn_fb->tme_fb_connection_map_pixel = NULL;
-  conn_fb->tme_fb_connection_map_pixel_count = 0;
-
-  /* update our framebuffer connection: */
-  conn_fb->tme_fb_connection_width = gdk_pixbuf_get_width(gdkpixbuf);
-  conn_fb->tme_fb_connection_height = gdk_pixbuf_get_height(gdkpixbuf);
-  conn_fb->tme_fb_connection_bits_per_pixel = _tme_gtk_gdkpixbuf_bipp(gdkpixbuf, &conn_fb->tme_fb_connection_depth);
-  conn_fb->tme_fb_connection_skipx = gdk_pixbuf_get_rowstride(gdkpixbuf) / gdk_pixbuf_get_n_channels(gdkpixbuf) - conn_fb->tme_fb_connection_width;
-  conn_fb->tme_fb_connection_scanline_pad = _tme_gtk_gdkpixbuf_scanline_pad(gdkpixbuf);
-  conn_fb->tme_fb_connection_order = TME_ENDIAN_NATIVE;
-  conn_fb->tme_fb_connection_buffer = gdk_pixbuf_get_pixels(gdkpixbuf);
-  conn_fb->tme_fb_connection_class = TME_FB_XLAT_CLASS_COLOR;
-  conn_fb->tme_fb_connection_mask_g = 0x00ff00;
-  conn_fb->tme_fb_connection_mask_r = 0x0000ff;
-  conn_fb->tme_fb_connection_mask_b = 0xff0000;
-  
-  /* get the needed colors: */
-  colorset = tme_fb_xlat_colors_get(conn_fb_other, scale, conn_fb, &colors_tme);
-  color_count = conn_fb->tme_fb_connection_map_pixel_count;
-
-  /* if we need to allocate colors, but the colorset is not tied to
-     the source framebuffer characteristics, and is identical to the
-     currently allocated colorset, we can reuse the previously
-     allocated maps and colors: */
-  if (color_count > 0
-      && colorset != TME_FB_COLORSET_NONE
-      && colorset == screen->tme_gtk_screen_colorset) {
-
-    /* free the requested color array: */
-    tme_free(colors_tme);
-
-    /* restore the previously allocated maps and colors: */
-    conn_fb->tme_fb_connection_map_g = map_g_old;
-    conn_fb->tme_fb_connection_map_r = map_r_old;
-    conn_fb->tme_fb_connection_map_b = map_b_old;
-    conn_fb->tme_fb_connection_map_pixel = map_pixel_old;
-    conn_fb->tme_fb_connection_map_pixel_count = map_pixel_count_old;
-  }
-
-
-  /* otherwise, we may need to free and/or allocate colors: */
-  else {
-
-    /* save the colorset signature: */
-    screen->tme_gtk_screen_colorset = colorset;
-
-    /* free any previously allocated maps and colors: */
-    if (map_g_old != NULL) {
-      tme_free((void *) map_g_old);
-    }
-    if (map_r_old != NULL) {
-      tme_free((void *) map_r_old);
-    }
-    if (map_b_old != NULL) {
-      tme_free((void *) map_b_old);
-    }
-    if (map_pixel_old != NULL) {
-      tme_free((void *) map_pixel_old);
-    }
-
-    /* if we need to allocate colors: */
-    if (color_count > 0) {
-      /* set the needed colors: */
-      tme_fb_xlat_colors_set(conn_fb_other, scale, conn_fb, colors_tme);
-    }
-  }
-
-  /* compose the framebuffer translation question: */
-  fb_xlat_q.tme_fb_xlat_width			= conn_fb_other->tme_fb_connection_width;
-  fb_xlat_q.tme_fb_xlat_height			= conn_fb_other->tme_fb_connection_height;
-  fb_xlat_q.tme_fb_xlat_scale			= (unsigned int) scale;
-  fb_xlat_q.tme_fb_xlat_src_depth		= conn_fb_other->tme_fb_connection_depth;
-  fb_xlat_q.tme_fb_xlat_src_bits_per_pixel	= conn_fb_other->tme_fb_connection_bits_per_pixel;
-  fb_xlat_q.tme_fb_xlat_src_skipx		= conn_fb_other->tme_fb_connection_skipx;
-  fb_xlat_q.tme_fb_xlat_src_scanline_pad	= conn_fb_other->tme_fb_connection_scanline_pad;
-  fb_xlat_q.tme_fb_xlat_src_order		= conn_fb_other->tme_fb_connection_order;
-  fb_xlat_q.tme_fb_xlat_src_class		= conn_fb_other->tme_fb_connection_class;
-  fb_xlat_q.tme_fb_xlat_src_map			= (conn_fb_other->tme_fb_connection_map_g != NULL
-						   ? TME_FB_XLAT_MAP_INDEX
-						   : TME_FB_XLAT_MAP_LINEAR);
-  fb_xlat_q.tme_fb_xlat_src_map_bits		= conn_fb_other->tme_fb_connection_map_bits;
-  fb_xlat_q.tme_fb_xlat_src_mask_g		= conn_fb_other->tme_fb_connection_mask_g;
-  fb_xlat_q.tme_fb_xlat_src_mask_r		= conn_fb_other->tme_fb_connection_mask_r;
-  fb_xlat_q.tme_fb_xlat_src_mask_b		= conn_fb_other->tme_fb_connection_mask_b;
-  fb_xlat_q.tme_fb_xlat_dst_depth		= conn_fb->tme_fb_connection_depth;
-  fb_xlat_q.tme_fb_xlat_dst_bits_per_pixel	= conn_fb->tme_fb_connection_bits_per_pixel;
-  fb_xlat_q.tme_fb_xlat_dst_skipx		= conn_fb->tme_fb_connection_skipx;
-  fb_xlat_q.tme_fb_xlat_dst_scanline_pad	= conn_fb->tme_fb_connection_scanline_pad;
-  fb_xlat_q.tme_fb_xlat_dst_order		= conn_fb->tme_fb_connection_order;
-  fb_xlat_q.tme_fb_xlat_dst_map			= (conn_fb->tme_fb_connection_map_g != NULL
-						   ? TME_FB_XLAT_MAP_INDEX
-						   : TME_FB_XLAT_MAP_LINEAR);
-  fb_xlat_q.tme_fb_xlat_dst_mask_g		= conn_fb->tme_fb_connection_mask_g;
-  fb_xlat_q.tme_fb_xlat_dst_mask_r		= conn_fb->tme_fb_connection_mask_r;
-  fb_xlat_q.tme_fb_xlat_dst_mask_b		= conn_fb->tme_fb_connection_mask_b;
-
-  /* ask the framebuffer translation question: */
-  fb_xlat_a = tme_fb_xlat_best(&fb_xlat_q);
-
-  /* if this translation isn't optimal, log a note: */
-  if (!tme_fb_xlat_is_optimal(fb_xlat_a)) {
-    tme_log(&display->tme_gtk_display_element->tme_element_log_handle, 0, TME_OK,
-	    (&display->tme_gtk_display_element->tme_element_log_handle,
-	     _("no optimal framebuffer translation function available")));
-  }
-
-  /* save the translation function: */
-  screen->tme_gtk_screen_fb_xlat = fb_xlat_a->tme_fb_xlat_func;
-
-  /* force the next translation to do a complete redraw: */
-  screen->tme_gtk_screen_full_redraw = TRUE;
 
   /* unlock our mutex: */
   tme_mutex_unlock(&display->tme_gtk_display_mutex);
@@ -477,6 +317,221 @@ _tme_gtk_screen_submenu_scaling(void *_screen,
   return (NULL);
 }
 
+/* Create a new surface of the appropriate size to store our scribbles */
+static void
+_tme_gtk_screen_init(GtkWidget         *widget,
+		     struct tme_gtk_screen *screen)
+{
+  tme_uint8_t *bitmap_data;
+  int bitmap_width, bitmap_height;
+  unsigned int y;
+
+  screen->tme_gtk_screen_surface
+    = gdk_window_create_similar_image_surface(gtk_widget_get_window(widget),
+					      CAIRO_FORMAT_A1,
+					      gtk_widget_get_allocated_width(widget),
+					      gtk_widget_get_allocated_height(widget),
+					      0);
+  
+  /* create an image surface of an alternating-bits area. */
+  bitmap_data = cairo_image_surface_get_data(screen->tme_gtk_screen_surface);
+  assert(bitmap_data != NULL);
+  bitmap_width = cairo_image_surface_get_width(screen->tme_gtk_screen_surface) / 8;
+  bitmap_height = cairo_image_surface_get_height(screen->tme_gtk_screen_surface);
+  cairo_surface_flush(screen->tme_gtk_screen_surface);
+  for (y = 0;
+       y < bitmap_height;
+       y++) {
+    memset(bitmap_data + y * bitmap_width,
+	   (y & 1
+	    ? 0x33
+	    : 0xcc),
+	   bitmap_width);
+  }
+  cairo_surface_mark_dirty(screen->tme_gtk_screen_surface);
+}
+
+/* Create a new surface of the appropriate size to store our scribbles */
+static gboolean
+_tme_gtk_screen_configure(GtkWidget         *widget,
+			  GdkEventConfigure *event,
+			  gpointer          _screen)
+{
+  struct tme_gtk_screen *screen;
+  struct tme_gtk_display *display;
+  struct tme_fb_connection *conn_fb;
+  struct tme_fb_connection *conn_fb_other;
+  struct tme_fb_xlat fb_xlat_q;
+  const struct tme_fb_xlat *fb_xlat_a;
+  const void *map_g_old;
+  const void *map_r_old;
+  const void *map_b_old;
+  const tme_uint32_t *map_pixel_old;
+  tme_uint32_t map_pixel_count_old;  
+  tme_uint32_t colorset;
+  tme_uint32_t color_count;
+  struct tme_fb_color *colors_tme;
+  int scale;
+
+  screen = (struct tme_gtk_screen *) _screen;
+
+  /* get the display: */
+  display = screen->tme_gtk_screen_display;
+
+  /* lock our mutex: */
+  tme_mutex_lock(&display->tme_gtk_display_mutex);
+
+  if(screen->tme_gtk_screen_surface == NULL) {
+    _tme_gtk_screen_init(widget, screen);
+    return TRUE;
+  }
+  
+  cairo_surface_destroy(screen->tme_gtk_screen_surface);
+
+  screen->tme_gtk_screen_surface
+    = gdk_window_create_similar_image_surface(gtk_widget_get_window(screen->tme_gtk_screen_gtkframe),
+					      CAIRO_FORMAT_ARGB32,
+					      gtk_widget_get_allocated_width(screen->tme_gtk_screen_gtkframe),
+					      gtk_widget_get_allocated_height(screen->tme_gtk_screen_gtkframe),
+					      0);
+
+  conn_fb = screen->tme_gtk_screen_fb;
+
+  /* remember all previously allocated maps and colors, but otherwise
+     remove them from our framebuffer structure: */
+  map_g_old = conn_fb->tme_fb_connection_map_g;
+  map_r_old = conn_fb->tme_fb_connection_map_r;
+  map_b_old = conn_fb->tme_fb_connection_map_b;
+  map_pixel_old = conn_fb->tme_fb_connection_map_pixel;
+  map_pixel_count_old = conn_fb->tme_fb_connection_map_pixel_count;
+  conn_fb->tme_fb_connection_map_g = NULL;
+  conn_fb->tme_fb_connection_map_r = NULL;
+  conn_fb->tme_fb_connection_map_b = NULL;
+  conn_fb->tme_fb_connection_map_pixel = NULL;
+  conn_fb->tme_fb_connection_map_pixel_count = 0;
+
+  /* update our framebuffer connection: */
+  conn_fb->tme_fb_connection_width = cairo_image_surface_get_width(screen->tme_gtk_screen_surface);
+  conn_fb->tme_fb_connection_height = cairo_image_surface_get_height(screen->tme_gtk_screen_surface);
+  conn_fb->tme_fb_connection_bits_per_pixel = 32;
+  conn_fb->tme_fb_connection_skipx = cairo_image_surface_get_stride(screen->tme_gtk_screen_surface) - conn_fb->tme_fb_connection_width;
+  conn_fb->tme_fb_connection_scanline_pad = _tme_gtk_scanline_pad(cairo_image_surface_get_stride(screen->tme_gtk_screen_surface));
+  conn_fb->tme_fb_connection_order = TME_ENDIAN_NATIVE;
+  conn_fb->tme_fb_connection_buffer = cairo_image_surface_get_data(screen->tme_gtk_screen_surface);
+  conn_fb->tme_fb_connection_class = TME_FB_XLAT_CLASS_COLOR;
+  conn_fb->tme_fb_connection_mask_g = 0x00ff00;
+  conn_fb->tme_fb_connection_mask_r = 0x0000ff;
+  conn_fb->tme_fb_connection_mask_b = 0xff0000;
+  
+  conn_fb_other = (struct tme_fb_connection *)conn_fb->tme_fb_connection.tme_connection_other;
+
+  /* if the user hasn't specified a scaling, pick one: */
+  scale = screen->tme_gtk_screen_fb_scale;
+  if (scale < 0) scale = -scale;
+  
+  /* get the needed colors: */
+  colorset = tme_fb_xlat_colors_get(conn_fb_other, scale, conn_fb, &colors_tme);
+  color_count = conn_fb->tme_fb_connection_map_pixel_count;
+
+  /* if we need to allocate colors, but the colorset is not tied to
+     the source framebuffer characteristics, and is identical to the
+     currently allocated colorset, we can reuse the previously
+     allocated maps and colors: */
+  if (color_count > 0
+      && colorset != TME_FB_COLORSET_NONE
+      && colorset == screen->tme_gtk_screen_colorset) {
+
+    /* free the requested color array: */
+    tme_free(colors_tme);
+
+    /* restore the previously allocated maps and colors: */
+    conn_fb->tme_fb_connection_map_g = map_g_old;
+    conn_fb->tme_fb_connection_map_r = map_r_old;
+    conn_fb->tme_fb_connection_map_b = map_b_old;
+    conn_fb->tme_fb_connection_map_pixel = map_pixel_old;
+    conn_fb->tme_fb_connection_map_pixel_count = map_pixel_count_old;
+  }
+
+
+  /* otherwise, we may need to free and/or allocate colors: */
+  else {
+
+    /* save the colorset signature: */
+    screen->tme_gtk_screen_colorset = colorset;
+
+    /* free any previously allocated maps and colors: */
+    if (map_g_old != NULL) {
+      tme_free((void *) map_g_old);
+    }
+    if (map_r_old != NULL) {
+      tme_free((void *) map_r_old);
+    }
+    if (map_b_old != NULL) {
+      tme_free((void *) map_b_old);
+    }
+    if (map_pixel_old != NULL) {
+      tme_free((void *) map_pixel_old);
+    }
+
+    /* if we need to allocate colors: */
+    if (color_count > 0) {
+      /* set the needed colors: */
+      tme_fb_xlat_colors_set(conn_fb_other, scale, conn_fb, colors_tme);
+    }
+  }
+
+  /* compose the framebuffer translation question: */
+  fb_xlat_q.tme_fb_xlat_width			= conn_fb_other->tme_fb_connection_width;
+  fb_xlat_q.tme_fb_xlat_height			= conn_fb_other->tme_fb_connection_height;
+  fb_xlat_q.tme_fb_xlat_scale			= (unsigned int) scale;
+  fb_xlat_q.tme_fb_xlat_src_depth		= conn_fb_other->tme_fb_connection_depth;
+  fb_xlat_q.tme_fb_xlat_src_bits_per_pixel	= conn_fb_other->tme_fb_connection_bits_per_pixel;
+  fb_xlat_q.tme_fb_xlat_src_skipx		= conn_fb_other->tme_fb_connection_skipx;
+  fb_xlat_q.tme_fb_xlat_src_scanline_pad	= conn_fb_other->tme_fb_connection_scanline_pad;
+  fb_xlat_q.tme_fb_xlat_src_order		= conn_fb_other->tme_fb_connection_order;
+  fb_xlat_q.tme_fb_xlat_src_class		= conn_fb_other->tme_fb_connection_class;
+  fb_xlat_q.tme_fb_xlat_src_map			= (conn_fb_other->tme_fb_connection_map_g != NULL
+						   ? TME_FB_XLAT_MAP_INDEX
+						   : TME_FB_XLAT_MAP_LINEAR);
+  fb_xlat_q.tme_fb_xlat_src_map_bits		= conn_fb_other->tme_fb_connection_map_bits;
+  fb_xlat_q.tme_fb_xlat_src_mask_g		= conn_fb_other->tme_fb_connection_mask_g;
+  fb_xlat_q.tme_fb_xlat_src_mask_r		= conn_fb_other->tme_fb_connection_mask_r;
+  fb_xlat_q.tme_fb_xlat_src_mask_b		= conn_fb_other->tme_fb_connection_mask_b;
+  fb_xlat_q.tme_fb_xlat_dst_depth		= conn_fb->tme_fb_connection_depth;
+  fb_xlat_q.tme_fb_xlat_dst_bits_per_pixel	= conn_fb->tme_fb_connection_bits_per_pixel;
+  fb_xlat_q.tme_fb_xlat_dst_skipx		= conn_fb->tme_fb_connection_skipx;
+  fb_xlat_q.tme_fb_xlat_dst_scanline_pad	= conn_fb->tme_fb_connection_scanline_pad;
+  fb_xlat_q.tme_fb_xlat_dst_order		= conn_fb->tme_fb_connection_order;
+  fb_xlat_q.tme_fb_xlat_dst_map			= (conn_fb->tme_fb_connection_map_g != NULL
+						   ? TME_FB_XLAT_MAP_INDEX
+						   : TME_FB_XLAT_MAP_LINEAR);
+  fb_xlat_q.tme_fb_xlat_dst_mask_g		= conn_fb->tme_fb_connection_mask_g;
+  fb_xlat_q.tme_fb_xlat_dst_mask_r		= conn_fb->tme_fb_connection_mask_r;
+  fb_xlat_q.tme_fb_xlat_dst_mask_b		= conn_fb->tme_fb_connection_mask_b;
+
+  /* ask the framebuffer translation question: */
+  fb_xlat_a = tme_fb_xlat_best(&fb_xlat_q);
+
+  /* if this translation isn't optimal, log a note: */
+  if (!tme_fb_xlat_is_optimal(fb_xlat_a)) {
+    tme_log(&display->tme_gtk_display_element->tme_element_log_handle, 0, TME_OK,
+	    (&display->tme_gtk_display_element->tme_element_log_handle,
+	     _("no optimal framebuffer translation function available")));
+  }
+
+  /* save the translation function: */
+  screen->tme_gtk_screen_fb_xlat = fb_xlat_a->tme_fb_xlat_func;
+
+  /* force the next translation to do a complete redraw: */
+  screen->tme_gtk_screen_full_redraw = TRUE;
+
+  /* unlock our mutex: */
+  tme_mutex_unlock(&display->tme_gtk_display_mutex);
+
+  /* We've handled the configure event, no need for further processing. */
+  return TRUE;
+}
+
 /* Redraw the screen from the surface. Note that the ::draw
  * signal receives a ready-to-be-used cairo_t that is already
  * clipped to only draw the exposed areas of the widget
@@ -506,9 +561,6 @@ _tme_gtk_screen_new(struct tme_gtk_display *display)
   GtkWidget *menu;
   GtkWidget *submenu;
   GtkWidget *menu_item;
-  tme_uint8_t *bitmap_data;
-  int bitmap_width, bitmap_height;
-  unsigned int y;
 
 #define BLANK_SIDE (16 * 8)
 
@@ -586,46 +638,19 @@ _tme_gtk_screen_new(struct tme_gtk_display *display)
   /* set a minimum size */
   gtk_widget_set_size_request(screen->tme_gtk_screen_gtkframe, BLANK_SIDE, BLANK_SIDE);
 
-  screen->tme_gtk_screen_surface
-    = gdk_window_create_similar_image_surface(gtk_widget_get_window(screen->tme_gtk_screen_gtkframe),
-					      CAIRO_FORMAT_A1,
-					      gtk_widget_get_allocated_width(screen->tme_gtk_screen_gtkframe),
-					      gtk_widget_get_allocated_height(screen->tme_gtk_screen_gtkframe),
-					      0);
-  
-  /* create an image surface of an alternating-bits area. */
-  bitmap_data = cairo_image_surface_get_data(screen->tme_gtk_screen_surface);
-  assert(bitmap_data != NULL);
-  bitmap_width = cairo_image_surface_get_width(screen->tme_gtk_screen_surface) / 8;
-  bitmap_height = cairo_image_surface_get_height(screen->tme_gtk_screen_surface);
-  cairo_surface_flush(screen->tme_gtk_screen_surface);
-  for (y = 0;
-       y < bitmap_height;
-       y++) {
-    memset(bitmap_data + y * bitmap_width,
-	   (y & 1
-	    ? 0x33
-	    : 0xcc),
-	   bitmap_width);
-  }
-  cairo_surface_mark_dirty(screen->tme_gtk_screen_surface);
-
-  g_signal_connect(screen->tme_gtk_screen_gtkframe, "draw",
-		   G_CALLBACK(_tme_gtk_screen_draw), screen);
-
   /* pack the Gtkframe into the outer vertical packing box: */
   gtk_box_pack_start(GTK_BOX(screen->tme_gtk_screen_vbox0), 
 		     screen->tme_gtk_screen_gtkframe,
 		     FALSE, FALSE, 0);
 
-  /* show the Gtkframe: */
-  gtk_widget_show(screen->tme_gtk_screen_gtkframe);
+  g_signal_connect(screen->tme_gtk_screen_gtkframe, "draw",
+		   G_CALLBACK(_tme_gtk_screen_draw), screen);
 
-  /* show the outer vertical packing box: */
-  gtk_widget_show(screen->tme_gtk_screen_vbox0);
+  g_signal_connect(screen->tme_gtk_screen_gtkframe, "configure-event",
+		   G_CALLBACK(_tme_gtk_screen_configure), screen);
 
   /* show the top-level window: */
-  gtk_widget_show(screen->tme_gtk_screen_window);
+  gtk_widget_show_all(screen->tme_gtk_screen_window);
 
   /* there is no translation function: */
   screen->tme_gtk_screen_fb_xlat = NULL;
