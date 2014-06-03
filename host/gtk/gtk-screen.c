@@ -88,10 +88,13 @@ _tme_gtk_screen_th_update(struct tme_gtk_display *display)
 	screen->tme_gtk_screen_full_redraw = FALSE;
       }
 
-      cairo_surface_flush(screen->tme_gtk_screen_surface);
+      changed = FALSE;
+      if (screen->tme_gtk_screen_fb_xlat) {
+	cairo_surface_flush(screen->tme_gtk_screen_surface);
 
-      /* translate this framebuffer's contents: */
-      changed = (*screen->tme_gtk_screen_fb_xlat)(conn_fb_other, screen->tme_gtk_screen_fb);
+	/* translate this framebuffer's contents: */
+	changed = (*screen->tme_gtk_screen_fb_xlat)(conn_fb_other, screen->tme_gtk_screen_fb);
+      }
 
       /* if those contents changed, redraw the widget: */
       if (changed) {
@@ -414,7 +417,7 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
   conn_fb->tme_fb_connection_width = cairo_image_surface_get_width(screen->tme_gtk_screen_surface);
   conn_fb->tme_fb_connection_height = cairo_image_surface_get_height(screen->tme_gtk_screen_surface);
   conn_fb->tme_fb_connection_bits_per_pixel = 32;
-  conn_fb->tme_fb_connection_skipx = cairo_image_surface_get_stride(screen->tme_gtk_screen_surface) - conn_fb->tme_fb_connection_width;
+  conn_fb->tme_fb_connection_skipx = cairo_image_surface_get_stride(screen->tme_gtk_screen_surface) - conn_fb->tme_fb_connection_width * 4;
   conn_fb->tme_fb_connection_scanline_pad = _tme_gtk_scanline_pad(cairo_image_surface_get_stride(screen->tme_gtk_screen_surface));
   conn_fb->tme_fb_connection_order = TME_ENDIAN_NATIVE;
   conn_fb->tme_fb_connection_buffer = cairo_image_surface_get_data(screen->tme_gtk_screen_surface);
