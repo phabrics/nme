@@ -45,10 +45,15 @@ void
 _tme_gtk_screen_th_update(struct tme_gtk_display *display)
 {
   struct tme_gtk_screen *screen;
+  struct tme_fb_connection *conn_fb;
   struct tme_fb_connection *conn_fb_other;
   int changed;
   int rc;
-  
+#ifdef DEBUG_CAIRO
+  tme_uint32_t *i;
+  tme_uint32_t last_i, j;
+#endif
+
   /* loop forever: */
   for (;;) {
 
@@ -61,14 +66,12 @@ _tme_gtk_screen_th_update(struct tme_gtk_display *display)
 	 screen = screen->tme_gtk_screen_next) {
 
       /* skip this screen if it's unconnected: */
-      if (screen->tme_gtk_screen_fb == NULL) {
+      if ((conn_fb = screen->tme_gtk_screen_fb) == NULL) {
 	continue;
       }
 
       /* get the other side of this connection: */
-      conn_fb_other
-	= ((struct tme_fb_connection *) 
-	   screen->tme_gtk_screen_fb->tme_fb_connection.tme_connection_other);
+      conn_fb_other = (struct tme_fb_connection *)conn_fb->tme_fb_connection.tme_connection_other;
 
       /* if the framebuffer has an update function, call it: */
       if (conn_fb_other->tme_fb_connection_update != NULL) {
@@ -93,11 +96,20 @@ _tme_gtk_screen_th_update(struct tme_gtk_display *display)
 	cairo_surface_flush(screen->tme_gtk_screen_surface);
 
 	/* translate this framebuffer's contents: */
-	changed = (*screen->tme_gtk_screen_fb_xlat)(conn_fb_other, screen->tme_gtk_screen_fb);
-      }
+	changed = (*screen->tme_gtk_screen_fb_xlat)(conn_fb_other, conn_fb);
+     } 
 
       /* if those contents changed, redraw the widget: */
       if (changed) {
+#ifdef DEBUG_CAIRO
+	i = (tme_uint32_t *)conn_fb->tme_fb_connection_buffer;
+	last_i = *i;
+	printf("%8x: %8x\n", i, last_i);
+	for(j=0;j<conn_fb->tme_fb_connection_buffsz;j+=sizeof(tme_uint32_t)) {
+	  if(last_i != *i) { last_i = *i; printf("%8x: %8x\n", i, last_i); }
+	  i++;
+	}
+#endif
 	cairo_surface_mark_dirty(screen->tme_gtk_screen_surface);
 	gtk_widget_queue_draw(screen->tme_gtk_screen_gtkframe);
       }
@@ -135,6 +147,14 @@ _tme_gtk_screen_mode_change(struct tme_fb_connection *conn_fb)
   unsigned long fb_area, avail_area, percentage;
   int width, height;
   int height_extra, scale;
+  const void *map_g_old;
+  const void *map_r_old;
+  const void *map_b_old;
+  const tme_uint32_t *map_pixel_old;
+  tme_uint32_t map_pixel_count_old;  
+  tme_uint32_t colorset;
+  tme_uint32_t color_count;
+  struct tme_fb_color *colors_tme;
 
   /* recover our data structures: */
   display = conn_fb->tme_fb_connection.tme_connection_element->tme_element_private;
@@ -201,7 +221,78 @@ _tme_gtk_screen_mode_change(struct tme_fb_connection *conn_fb)
       || gtk_widget_get_allocated_height(screen->tme_gtk_screen_gtkframe) != (height + height_extra)) {
     /* set a minimum size */
     gtk_widget_set_size_request(screen->tme_gtk_screen_gtkframe, width, height + height_extra);
-    gtk_widget_queue_resize_no_redraw(screen->tme_gtk_screen_gtkframe);
+    //gtk_widget_queue_resize_no_redraw(screen->tme_gtk_screen_gtkframe);
+  }
+
+  /* remember all previously allocated maps and colors, but otherwise
+     remove them from our framebuffer structure: */
+  map_g_old = conn_fb->tme_fb_connection_map_g;
+  map_r_old = conn_fb->tme_fb_connection_map_r;
+  map_b_old = conn_fb->tme_fb_connection_map_b;
+  map_pixel_old = conn_fb->tme_fb_connection_map_pixel;
+  map_pixel_count_old = conn_fb->tme_fb_connection_map_pixel_count;
+  conn_fb->tme_fb_connection_map_g = NULL;
+  conn_fb->tme_fb_connection_map_r = NULL;
+  conn_fb->tme_fb_connection_map_b = NULL;
+  conn_fb->tme_fb_connection_map_pixel = NULL;
+  conn_fb->tme_fb_connection_map_pixel_count = 0;
+
+  conn_fb->tme_fb_connection_bits_per_pixel = 32;
+  conn_fb->tme_fb_connection_depth = 24;
+  conn_fb->tme_fb_connection_class = TME_FB_XLAT_CLASS_COLOR;
+  conn_fb->tme_fb_connection_mask_g = 0x00ff00;
+  conn_fb->tme_fb_connection_mask_b = 0x0000ff;
+  conn_fb->tme_fb_connection_mask_r = 0xff0000;
+  
+  /* get the needed colors: */
+  colorset = tme_fb_xlat_colors_get(conn_fb_other, scale, conn_fb, &colors_tme);
+  color_count = conn_fb->tme_fb_connection_map_pixel_count;
+
+  /* if we need to allocate colors, but the colorset is not tied to
+     the source framebuffer characteristics, and is identical to the
+     currently allocated colorset, we can reuse the previously
+     allocated maps and colors: */
+  if (color_count > 0
+      && colorset != TME_FB_COLORSET_NONE
+      && colorset == screen->tme_gtk_screen_colorset) {
+
+    /* free the requested color array: */
+    tme_free(colors_tme);
+
+    /* restore the previously allocated maps and colors: */
+    conn_fb->tme_fb_connection_map_g = map_g_old;
+    conn_fb->tme_fb_connection_map_r = map_r_old;
+    conn_fb->tme_fb_connection_map_b = map_b_old;
+    conn_fb->tme_fb_connection_map_pixel = map_pixel_old;
+    conn_fb->tme_fb_connection_map_pixel_count = map_pixel_count_old;
+  }
+
+
+  /* otherwise, we may need to free and/or allocate colors: */
+  else {
+
+    /* save the colorset signature: */
+    screen->tme_gtk_screen_colorset = colorset;
+
+    /* free any previously allocated maps and colors: */
+    if (map_g_old != NULL) {
+      tme_free((void *) map_g_old);
+    }
+    if (map_r_old != NULL) {
+      tme_free((void *) map_r_old);
+    }
+    if (map_b_old != NULL) {
+      tme_free((void *) map_b_old);
+    }
+    if (map_pixel_old != NULL) {
+      tme_free((void *) map_pixel_old);
+    }
+
+    /* if we need to allocate colors: */
+    if (color_count > 0) {
+      /* set the needed colors: */
+      tme_fb_xlat_colors_set(conn_fb_other, scale, conn_fb, colors_tme);
+    }
   }
 
   /* unlock our mutex: */
@@ -366,14 +457,6 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
   struct tme_fb_connection *conn_fb_other;
   struct tme_fb_xlat fb_xlat_q;
   const struct tme_fb_xlat *fb_xlat_a;
-  const void *map_g_old;
-  const void *map_r_old;
-  const void *map_b_old;
-  const tme_uint32_t *map_pixel_old;
-  tme_uint32_t map_pixel_count_old;  
-  tme_uint32_t colorset;
-  tme_uint32_t color_count;
-  struct tme_fb_color *colors_tme;
   int scale;
 
   screen = (struct tme_gtk_screen *) _screen;
@@ -400,94 +483,24 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
 
   conn_fb = screen->tme_gtk_screen_fb;
 
-  /* remember all previously allocated maps and colors, but otherwise
-     remove them from our framebuffer structure: */
-  map_g_old = conn_fb->tme_fb_connection_map_g;
-  map_r_old = conn_fb->tme_fb_connection_map_r;
-  map_b_old = conn_fb->tme_fb_connection_map_b;
-  map_pixel_old = conn_fb->tme_fb_connection_map_pixel;
-  map_pixel_count_old = conn_fb->tme_fb_connection_map_pixel_count;
-  conn_fb->tme_fb_connection_map_g = NULL;
-  conn_fb->tme_fb_connection_map_r = NULL;
-  conn_fb->tme_fb_connection_map_b = NULL;
-  conn_fb->tme_fb_connection_map_pixel = NULL;
-  conn_fb->tme_fb_connection_map_pixel_count = 0;
-
   /* update our framebuffer connection: */
   conn_fb->tme_fb_connection_width = cairo_image_surface_get_width(screen->tme_gtk_screen_surface);
   conn_fb->tme_fb_connection_height = cairo_image_surface_get_height(screen->tme_gtk_screen_surface);
-  conn_fb->tme_fb_connection_bits_per_pixel = 32;
-  conn_fb->tme_fb_connection_depth = 24;
-  conn_fb->tme_fb_connection_skipx = cairo_image_surface_get_stride(screen->tme_gtk_screen_surface) - conn_fb->tme_fb_connection_width * 4;
+  conn_fb->tme_fb_connection_skipx = cairo_image_surface_get_stride(screen->tme_gtk_screen_surface) - conn_fb->tme_fb_connection_width * sizeof(tme_uint32_t);
   conn_fb->tme_fb_connection_scanline_pad = _tme_gtk_scanline_pad(cairo_image_surface_get_stride(screen->tme_gtk_screen_surface));
   conn_fb->tme_fb_connection_order = TME_ENDIAN_NATIVE;
   conn_fb->tme_fb_connection_buffer = cairo_image_surface_get_data(screen->tme_gtk_screen_surface);
-  conn_fb->tme_fb_connection_class = TME_FB_XLAT_CLASS_COLOR;
-  conn_fb->tme_fb_connection_mask_g = 0x00ff00;
-  conn_fb->tme_fb_connection_mask_b = 0x0000ff;
-  conn_fb->tme_fb_connection_mask_r = 0xff0000;
-  
+  conn_fb->tme_fb_connection_buffsz = cairo_image_surface_get_stride(screen->tme_gtk_screen_surface) * conn_fb->tme_fb_connection_height;
   conn_fb_other = (struct tme_fb_connection *)conn_fb->tme_fb_connection.tme_connection_other;
-
+  
   /* if the user hasn't specified a scaling, pick one: */
   scale = screen->tme_gtk_screen_fb_scale;
   if (scale < 0) scale = -scale;
   
-  /* get the needed colors: */
-  colorset = tme_fb_xlat_colors_get(conn_fb_other, scale, conn_fb, &colors_tme);
-  color_count = conn_fb->tme_fb_connection_map_pixel_count;
-
-  /* if we need to allocate colors, but the colorset is not tied to
-     the source framebuffer characteristics, and is identical to the
-     currently allocated colorset, we can reuse the previously
-     allocated maps and colors: */
-  if (color_count > 0
-      && colorset != TME_FB_COLORSET_NONE
-      && colorset == screen->tme_gtk_screen_colorset) {
-
-    /* free the requested color array: */
-    tme_free(colors_tme);
-
-    /* restore the previously allocated maps and colors: */
-    conn_fb->tme_fb_connection_map_g = map_g_old;
-    conn_fb->tme_fb_connection_map_r = map_r_old;
-    conn_fb->tme_fb_connection_map_b = map_b_old;
-    conn_fb->tme_fb_connection_map_pixel = map_pixel_old;
-    conn_fb->tme_fb_connection_map_pixel_count = map_pixel_count_old;
-  }
-
-
-  /* otherwise, we may need to free and/or allocate colors: */
-  else {
-
-    /* save the colorset signature: */
-    screen->tme_gtk_screen_colorset = colorset;
-
-    /* free any previously allocated maps and colors: */
-    if (map_g_old != NULL) {
-      tme_free((void *) map_g_old);
-    }
-    if (map_r_old != NULL) {
-      tme_free((void *) map_r_old);
-    }
-    if (map_b_old != NULL) {
-      tme_free((void *) map_b_old);
-    }
-    if (map_pixel_old != NULL) {
-      tme_free((void *) map_pixel_old);
-    }
-
-    /* if we need to allocate colors: */
-    if (color_count > 0) {
-      /* set the needed colors: */
-      tme_fb_xlat_colors_set(conn_fb_other, scale, conn_fb, colors_tme);
-    }
-  }
-
   /* compose the framebuffer translation question: */
   fb_xlat_q.tme_fb_xlat_width			= conn_fb_other->tme_fb_connection_width;
   fb_xlat_q.tme_fb_xlat_height			= conn_fb_other->tme_fb_connection_height;
-  fb_xlat_q.tme_fb_xlat_scale			= (unsigned int) scale;
+  fb_xlat_q.tme_fb_xlat_scale			= scale;
   fb_xlat_q.tme_fb_xlat_src_depth		= conn_fb_other->tme_fb_connection_depth;
   fb_xlat_q.tme_fb_xlat_src_bits_per_pixel	= conn_fb_other->tme_fb_connection_bits_per_pixel;
   fb_xlat_q.tme_fb_xlat_src_skipx		= conn_fb_other->tme_fb_connection_skipx;

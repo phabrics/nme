@@ -136,6 +136,7 @@ struct tme_fb_connection {
 
   /* the real framebuffer memory: */
   tme_uint8_t *tme_fb_connection_buffer;
+  tme_uint32_t tme_fb_connection_buffsz;
 
   /* the offsets of the first and last bytes updated in the real
      framebuffer memory.  if the first offset is greater than the last
