@@ -155,6 +155,7 @@ _tme_gtk_screen_mode_change(struct tme_fb_connection *conn_fb)
   tme_uint32_t colorset;
   tme_uint32_t color_count;
   struct tme_fb_color *colors_tme;
+  int redraw;
 
   /* recover our data structures: */
   display = conn_fb->tme_fb_connection.tme_connection_element->tme_element_private;
@@ -216,12 +217,13 @@ _tme_gtk_screen_mode_change(struct tme_fb_connection *conn_fb)
        ? 2
        : 1);
   
+  redraw = TRUE;
   /* if the previous gtkframe isn't the right size: */
   if (gtk_widget_get_allocated_width(screen->tme_gtk_screen_gtkframe) != width
       || gtk_widget_get_allocated_height(screen->tme_gtk_screen_gtkframe) != (height + height_extra)) {
     /* set a minimum size */
     gtk_widget_set_size_request(screen->tme_gtk_screen_gtkframe, width, height + height_extra);
-    //gtk_widget_queue_resize_no_redraw(screen->tme_gtk_screen_gtkframe);
+    redraw = FALSE;
   }
 
   /* remember all previously allocated maps and colors, but otherwise
@@ -294,6 +296,9 @@ _tme_gtk_screen_mode_change(struct tme_fb_connection *conn_fb)
       tme_fb_xlat_colors_set(conn_fb_other, scale, conn_fb, colors_tme);
     }
   }
+
+  /* force the next translation to do a complete redraw: */
+  screen->tme_gtk_screen_full_redraw = redraw;
 
   /* unlock our mutex: */
   tme_mutex_unlock(&display->tme_gtk_display_mutex);
