@@ -217,15 +217,14 @@ _tme_gtk_screen_mode_change(struct tme_fb_connection *conn_fb)
        ? 2
        : 1);
   
-  redraw = TRUE;
-  /* if the previous gtkframe isn't the right size: */
-  if (gtk_widget_get_allocated_width(screen->tme_gtk_screen_gtkframe) != width
-      || gtk_widget_get_allocated_height(screen->tme_gtk_screen_gtkframe) != (height + height_extra)) {
-    /* set a minimum size */
-    gtk_widget_set_size_request(screen->tme_gtk_screen_gtkframe, width, height + height_extra);
-    redraw = FALSE;
-  }
+  height += height_extra;
 
+  redraw = gtk_widget_get_allocated_width(screen->tme_gtk_screen_gtkframe) != width
+    || gtk_widget_get_allocated_height(screen->tme_gtk_screen_gtkframe) != height;
+
+  /* set a minimum size */
+  if(redraw) gtk_widget_set_size_request(screen->tme_gtk_screen_gtkframe, width, height);
+  
   /* remember all previously allocated maps and colors, but otherwise
      remove them from our framebuffer structure: */
   map_g_old = conn_fb->tme_fb_connection_map_g;
@@ -295,10 +294,10 @@ _tme_gtk_screen_mode_change(struct tme_fb_connection *conn_fb)
       /* set the needed colors: */
       tme_fb_xlat_colors_set(conn_fb_other, scale, conn_fb, colors_tme);
     }
-  }
 
-  /* force the next translation to do a complete redraw: */
-  screen->tme_gtk_screen_full_redraw = redraw;
+    /* force the next translation to do a complete redraw (if not already doing so): */
+    if(!redraw) screen->tme_gtk_screen_full_redraw = TRUE;
+  }
 
   /* unlock our mutex: */
   tme_mutex_unlock(&display->tme_gtk_display_mutex);
