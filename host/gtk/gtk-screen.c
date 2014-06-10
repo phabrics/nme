@@ -413,6 +413,31 @@ _tme_gtk_screen_submenu_scaling(void *_screen,
   return (NULL);
 }
 
+/* Create a similar image surface to the screen's target surface (i.e., backing store) */
+static inline cairo_surface_t *
+_tme_gtk_screen_create_similar_image(GdkWindow *window,
+				     cairo_format_t format,
+				     int width,
+				     int height) 
+{
+  cairo_surface_t *surface;
+
+#if GTK_MINOR_VERSION < 10
+  surface = 
+    cairo_image_surface_create(format,
+			       width,
+			       height);
+#else
+  surface = 
+    gdk_window_create_similar_image_surface(window,
+					    format,
+					    width,
+					    height,
+					    0);
+#endif
+    return surface;
+}
+
 /* Create a new surface of the appropriate size to store our scribbles */
 static void
 _tme_gtk_screen_init(GtkWidget         *widget,
@@ -422,13 +447,12 @@ _tme_gtk_screen_init(GtkWidget         *widget,
   int bitmap_width, bitmap_height;
   unsigned int y;
 
-  screen->tme_gtk_screen_surface
-    = gdk_window_create_similar_image_surface(gtk_widget_get_window(widget),
-					      CAIRO_FORMAT_A1,
-					      gtk_widget_get_allocated_width(widget),
-					      gtk_widget_get_allocated_height(widget),
-					      0);
-  
+  screen->tme_gtk_screen_surface = 
+    _tme_gtk_screen_create_similar_image(gtk_widget_get_window(widget),
+					 CAIRO_FORMAT_A1,
+					 gtk_widget_get_allocated_width(widget),
+					 gtk_widget_get_allocated_height(widget));
+
   /* create an image surface of an alternating-bits area. */
   bitmap_data = cairo_image_surface_get_data(screen->tme_gtk_screen_surface);
   assert(bitmap_data != NULL);
@@ -477,11 +501,10 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
   cairo_surface_destroy(screen->tme_gtk_screen_surface);
 
   screen->tme_gtk_screen_surface
-    = gdk_window_create_similar_image_surface(gtk_widget_get_window(screen->tme_gtk_screen_gtkframe),
-					      CAIRO_FORMAT_ARGB32,
-					      gtk_widget_get_allocated_width(screen->tme_gtk_screen_gtkframe),
-					      gtk_widget_get_allocated_height(screen->tme_gtk_screen_gtkframe),
-					      0);
+    = _tme_gtk_screen_create_similar_image(gtk_widget_get_window(screen->tme_gtk_screen_gtkframe),
+					   CAIRO_FORMAT_ARGB32,
+					   gtk_widget_get_allocated_width(screen->tme_gtk_screen_gtkframe),
+					   gtk_widget_get_allocated_height(screen->tme_gtk_screen_gtkframe));
 
   conn_fb = screen->tme_gtk_screen_fb;
 
