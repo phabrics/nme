@@ -40,7 +40,7 @@ _TME_RCSID("$Id: gtk-mouse.c,v 1.3 2007/03/03 15:33:22 fredette Exp $");
 #include "gtk-display.h"
 #include <gdk/gdkkeysyms.h>
 
-/* this warps the pointer to the middle of the GtkImage: */
+/* this warps the pointer to the middle of the Gtkframe: */
 static void
 _tme_gtk_mouse_warp_pointer(struct tme_gtk_screen *screen)
 {
@@ -51,7 +51,7 @@ _tme_gtk_mouse_warp_pointer(struct tme_gtk_screen *screen)
 }
 
 /* this is for debugging only: */
-#if 0
+#if 1
 #include <stdio.h>
 void
 _tme_gtk_mouse_debug(const struct tme_mouse_event *event)
@@ -95,9 +95,9 @@ _tme_gtk_mouse_mouse_event(GtkWidget *widget,
   /* if this is motion: */
   if (gdk_event_raw->type == GDK_MOTION_NOTIFY) {
 
-    /* this event must have happened in the gtkimage: */
+    /* this event must have happened in the gtkframe: */
     assert (gdk_event_raw->motion.window
-	    == gtk_widget_get_window(screen->tme_gtk_screen_gtkimage));
+	    == gtk_widget_get_window(screen->tme_gtk_screen_gtkframe));
 
     /* set the event time: */
     tme_event.tme_mouse_event_time
@@ -110,8 +110,8 @@ _tme_gtk_mouse_mouse_event(GtkWidget *widget,
     /* if the pointer position hasn't changed either, return now.
        every time we warp the pointer we will get a motion event, and
        this should ignore those events: */
-    x = gdk_event_raw->motion.x;
-    y = gdk_event_raw->motion.y;
+    x = gdk_event_raw->motion.x_root;
+    y = gdk_event_raw->motion.y_root;
     if (x == screen->tme_gtk_screen_mouse_warp_x
 	&& y == screen->tme_gtk_screen_mouse_warp_y) {
       
@@ -145,17 +145,17 @@ _tme_gtk_mouse_mouse_event(GtkWidget *widget,
     assert (gdk_event_raw->type == GDK_BUTTON_PRESS
 	    || gdk_event_raw->type == GDK_BUTTON_RELEASE);
 
-    /* this event must have happened in the gtkimage: */
+    /* this event must have happened in the gtkframe: */
     assert (gdk_event_raw->button.window
-	    == gtk_widget_get_window(screen->tme_gtk_screen_gtkimage));
+	    == gtk_widget_get_window(screen->tme_gtk_screen_gtkframe));
 
     /* set the event time: */
     tme_event.tme_mouse_event_time
       = gdk_event_raw->button.time;
 
     /* get the pointer position: */
-    x = gdk_event_raw->button.x;
-    y = gdk_event_raw->button.y;
+    x = gdk_event_raw->button.x_root;
+    y = gdk_event_raw->button.y_root;
 
     /* make the buttons mask: */
     buttons = 0;
@@ -223,8 +223,8 @@ _tme_gtk_mouse_ebox_event(GtkWidget *widget,
 {
   struct tme_gtk_display *display;
   int rc;
-  gint junk;
   char *status;
+  GdkWindow *window;
 
   /* if this is an enter notify event, grab the focus and continue
      propagating the event: */
@@ -266,34 +266,34 @@ _tme_gtk_mouse_ebox_event(GtkWidget *widget,
 		     status);
   tme_free(status);
   
+  window = gtk_widget_get_window(screen->tme_gtk_screen_gtkframe);
+
   /* if the original events mask on the framebuffer event box have
      never been saved, save them now, and add the mouse events: */
   if (screen->tme_gtk_screen_mouse_events_old == 0) {
     screen->tme_gtk_screen_mouse_events_old
-      = gdk_window_get_events(gtk_widget_get_window(screen->tme_gtk_screen_event_box));
-    gtk_widget_add_events(screen->tme_gtk_screen_event_box,
+      = gdk_window_get_events(window);
+    gtk_widget_add_events(screen->tme_gtk_screen_gtkframe,
 			  GDK_POINTER_MOTION_MASK
 			  | GDK_BUTTON_PRESS_MASK
 			  | GDK_BUTTON_RELEASE_MASK);
   }
 
-  /* get the current width and height of the framebuffer gtkimage, and
+  /* get the current width and height of the framebuffer gtkframe, and
      halve them to get the warp center: */
-  gdk_window_get_geometry(gtk_widget_get_window(screen->tme_gtk_screen_gtkimage),
-			  &junk,
-			  &junk,
-			  &screen->tme_gtk_screen_mouse_warp_x,
-			  &screen->tme_gtk_screen_mouse_warp_y);
-  screen->tme_gtk_screen_mouse_warp_x >>= 1;
-  screen->tme_gtk_screen_mouse_warp_y >>= 1;
-  
+  gdk_window_get_root_coords(window,
+			     gdk_window_get_width(window)>>1,
+			     gdk_window_get_height(window)>>1,
+			     &screen->tme_gtk_screen_mouse_warp_x,
+			     &screen->tme_gtk_screen_mouse_warp_y);
+
   /* warp the pointer to center: */
   _tme_gtk_mouse_warp_pointer(screen);
   
   /* grab the pointer: */
   rc
     = gdk_device_grab(screen->tme_gtk_screen_pointer,
-		      gtk_widget_get_window(screen->tme_gtk_screen_gtkimage),
+		      window,
 		      GDK_OWNERSHIP_NONE,
 		      TRUE,
 		      GDK_POINTER_MOTION_MASK
@@ -327,7 +327,7 @@ _tme_gtk_mouse_mode_off(struct tme_gtk_screen *screen,
   gdk_device_ungrab(screen->tme_gtk_screen_pointer, time);
 
   /* restore the old events mask on the event box: */
-  gdk_window_set_events(gtk_widget_get_window(screen->tme_gtk_screen_event_box),
+  gdk_window_set_events(gtk_widget_get_window(screen->tme_gtk_screen_gtkframe),
 			screen->tme_gtk_screen_mouse_events_old);
 
   /* pop our message off of the statusbar: */
@@ -561,15 +561,15 @@ _tme_gtk_mouse_attach(struct tme_gtk_screen *screen)
 
   /* although the event mask doesn't include these events yet,
      set a signal handler for the mouse events: */
-  g_signal_connect(screen->tme_gtk_screen_event_box,
+  g_signal_connect(screen->tme_gtk_screen_gtkframe,
 		   "motion_notify_event",
 		   G_CALLBACK(_tme_gtk_mouse_mouse_event), 
 		   screen);
-  g_signal_connect(screen->tme_gtk_screen_event_box,
+  g_signal_connect(screen->tme_gtk_screen_gtkframe,
 		   "button_press_event",
 		   G_CALLBACK(_tme_gtk_mouse_mouse_event), 
 		   screen);
-  g_signal_connect(screen->tme_gtk_screen_event_box,
+  g_signal_connect(screen->tme_gtk_screen_gtkframe,
 		   "button_release_event",
 		   G_CALLBACK(_tme_gtk_mouse_mouse_event), 
 		   screen);

@@ -699,31 +699,31 @@ _tme_gtk_keyboard_attach(struct tme_gtk_screen *screen)
      to both the event box widget itself, and the top-level window,
      since GTK 1.x appears to not select KeyRelease events at the
      top-level: */
-  gtk_widget_add_events(screen->tme_gtk_screen_event_box,
+  gtk_widget_add_events(screen->tme_gtk_screen_gtkframe,
 			GDK_ENTER_NOTIFY_MASK
 			| GDK_KEY_PRESS_MASK
 			| GDK_KEY_RELEASE_MASK);
-  gtk_widget_add_events (gtk_widget_get_toplevel(screen->tme_gtk_screen_event_box),
+  gtk_widget_add_events (gtk_widget_get_toplevel(screen->tme_gtk_screen_gtkframe),
 			 GDK_KEY_PRESS_MASK
 			 | GDK_KEY_RELEASE_MASK);
 
   /* set a signal handler for these events: */
-  g_signal_connect(screen->tme_gtk_screen_event_box,
+  g_signal_connect(screen->tme_gtk_screen_gtkframe,
 		   "enter_notify_event",
 		   G_CALLBACK(_tme_gtk_display_enter_focus),
 		   NULL);
-  g_signal_connect_after(screen->tme_gtk_screen_event_box,
+  g_signal_connect_after(screen->tme_gtk_screen_gtkframe,
 			 "key_press_event",
 			 G_CALLBACK(_tme_gtk_keyboard_key_event), 
 			 screen);
-  g_signal_connect_after(screen->tme_gtk_screen_event_box,
+  g_signal_connect_after(screen->tme_gtk_screen_gtkframe,
 			 "key_release_event",
 			 G_CALLBACK(_tme_gtk_keyboard_key_event), 
 			 screen);
   
   /* the event box can focus, and have it grab the focus now: */
-  gtk_widget_set_can_focus(screen->tme_gtk_screen_event_box, TRUE);
-  gtk_widget_grab_focus(screen->tme_gtk_screen_event_box);
+  gtk_widget_set_can_focus(screen->tme_gtk_screen_gtkframe, TRUE);
+  gtk_widget_grab_focus(screen->tme_gtk_screen_gtkframe);
 }
 
 /* this initializes keyboard part of the display: */
