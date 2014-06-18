@@ -3,4 +3,4 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 SUBDIRS = @TME_HOSTS@
-DIST_SUBDIRS = posix bsd gtk
+DIST_SUBDIRS = posix gtk eth bsd tun
