@@ -97,6 +97,7 @@ tme_stp222x_aspaces_rebuild(struct tme_stp222x *stp222x)
   tme_uint32_t conn_index;
   const struct tme_bus_connection *conn_bus;
   const struct tme_bus_connection *conn_bus_other;
+  const struct tme_connection *conn_other;
   tme_bus_addr32_t conn_offset;
   const struct tme_bus_subregion *subregion;
   tme_bus_addr64_t address_first;
@@ -123,10 +124,11 @@ tme_stp222x_aspaces_rebuild(struct tme_stp222x *stp222x)
     /* loop over the connections: */
     for (conn_index = 0; conn_index < TME_STP222X_CONN_NULL; conn_index++) {
       conn_bus = stp222x->tme_stp222x.tme_stp22xx_conns[conn_index].tme_stp22xx_conn_bus;
-      if (conn_bus == NULL) {
-	continue;
-      }
-      conn_bus_other = (struct tme_bus_connection *) conn_bus->tme_bus_connection.tme_connection_other;
+
+      if (conn_bus == (void *)NULL) continue;
+
+      conn_other = &conn_bus->tme_bus_connection;
+      if (conn_other == (void *)NULL) continue;
 
       /* get the offset and subregions for this connection in this
 	 space: */
@@ -137,14 +139,17 @@ tme_stp222x_aspaces_rebuild(struct tme_stp222x *stp222x)
 	/* FALLTHROUGH */
       case TME_STP2222_ASPACE_PCI_MEMORY(0):
       case TME_STP2222_ASPACE_PCI_MEMORY(1):
+	conn_bus_other = conn_other->tme_connection_other;
 	subregion = &conn_bus_other->tme_bus_subregions;
 	break;
       case TME_STP2222_ASPACE_PCI_IO(0):
       case TME_STP2222_ASPACE_PCI_IO(1):
 	abort();
+	break;
       default:
 	assert (aspace_i == TME_STP2222_ASPACE_PCI_CONFIGURATION);
 	abort();
+	break;
       }
 
       /* set the offset for this connection in this space: */
