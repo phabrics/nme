@@ -270,13 +270,18 @@ found_BIOCSHDRCMPLT
 #endif
 ], [tme_raw_type=${tme_raw_type}bpf])])])
 
+if test "x${tme_raw_type}" != x; then
+TME_HOSTS="${TME_HOSTS} eth"
+fi
+
 AC_MSG_CHECKING([for raw Ethernet access method])
 case "x${tme_raw_type}" in
-xtap) TME_HOSTS="${TME_HOSTS} eth tun" ;;
-xbpf) TME_HOSTS="${TME_HOSTS} eth bsd" ;;
-xtapbpf) TME_HOSTS="${TME_HOSTS} eth tun bsd" ;;
+xtap) TME_HOSTS="${TME_HOSTS} tun" ;;
+xbpf) TME_HOSTS="${TME_HOSTS} bsd" ;;
+xtapbpf) TME_HOSTS="${TME_HOSTS} tun bsd" ;;
 x) tme_raw_type=none ;;
 esac
+
 AC_MSG_RESULT($tme_raw_type)
 
 dnl Checks for X11.
@@ -472,7 +477,7 @@ if echo " ${systems} " | grep ' all ' > /dev/null 2>&1; then
   fi
 fi
 TME_MACHINE_SUBDIRS=
-TME_IC_SUBDIRS=
+TME_IC_SUBDIRS=ieee754
 TME_ICS=
 TME_SERIAL_SUBDIRS=
 TME_SERIALS=
@@ -734,14 +739,14 @@ if test "x${enable_debug}" = "xyes"; then
   CFLAGS="${CFLAGS-} -Og"
   CXXFLAGS="${CXXFLAGS-} -g3 -Og"
 else
-  CPPFLAGS="${CPPFLAGS-} -DTME_NO_DEBUG_LOCKS -DTME_NO_AUDIT_ATOMICS -DNDEBUG -DTME_RECODE_DEBUG -D_TME_SPARC_STATS -DGTK_DISABLE_SINGLE_INCLUDES"
-  CFLAGS="${CFLAGS-} -O1"
+  CPPFLAGS="${CPPFLAGS-} -DTME_NO_LOG -DTME_NO_DEBUG_LOCKS -DTME_NO_AUDIT_ATOMICS -DNDEBUG"
+  CFLAGS="${CFLAGS-}"
 fi
 AC_ARG_ENABLE(warnings,
 [  --disable-warnings      don't compile with warnings turned on (default=do)],
 [ ], [enable_warnings=yes])
 if test "x${enable_warnings}" = "xyes" -a "x${GCC}" = "xyes"; then
-  CFLAGS="${CFLAGS-} -Wundef -Wall -Werror"
+  CFLAGS="${CFLAGS-} -Wundef -Wall -Wextra"
   CXXFLAGS="${CXXFLAGS-} -W"
 fi
 

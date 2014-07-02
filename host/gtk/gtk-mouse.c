@@ -51,7 +51,7 @@ _tme_gtk_mouse_warp_pointer(struct tme_gtk_screen *screen)
 }
 
 /* this is for debugging only: */
-#if 1
+#if 0
 #include <stdio.h>
 void
 _tme_gtk_mouse_debug(const struct tme_mouse_event *event)

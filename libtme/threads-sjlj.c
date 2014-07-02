@@ -462,10 +462,11 @@ tme_sjlj_dispatch(volatile int passes)
   struct tme_sjlj_thread **_thread_timeout_prev;
   struct tme_sjlj_thread *thread_timeout_next;
   struct tme_sjlj_thread *thread_other;
+  volatile int _passes;
   int rc_one;
 
   /* dispatch the given number of passes over the dispatching threads: */
-  for (; passes-- > 0; ) {
+  for (_passes = passes; _passes-- > 0; ) {
     for (tme_sjlj_thread_active = tme_sjlj_threads_dispatching;
 	 (thread = tme_sjlj_thread_active) != NULL; ) {
 
