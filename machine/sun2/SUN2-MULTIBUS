@@ -46,13 +46,17 @@ scsibus0 at sc0: tme/scsi/bus
 ## low 20 bits of the address of the memory's bus attachment:
 ##
 # uncomment these lines if you have read/write permission on one
-# of your /dev/bpfN devices and you want an Ethernet device:
+# of your /dev/bpfN devices (on *BSD) OR have cap_net_raw+ep capability (on Linux)
+# and you want an Ethernet device:
 #
 #mie0: tme/bus/multibus/sun-mie
 #mie0 csr at mbmem0 addr 0x88000 ipl 3
 #mie0 memory 0xa0000 at mbmem0 addr 0xa0000
 #ie0 at mie0: tme/ic/i82586
 #bpf1 at ie0: tme/host/bsd/bpf delay 10000
+# OR enable tap ethernet device, an alternative method for network access
+# if you have read/write permission on tap device or have cap_net_admin+ep capability (on Linux)
+#tap1 at ie0: tme/host/tun/tap
 
 ## the Sun bwtwo Multibus board, Sun type-2 keyboard and mouse, and
 ## the GTK-based display to drive them all:
@@ -78,6 +82,9 @@ display0 at ms0
 # side (in this case, /dev/ptyr0):
 #
 #console0 at zs0 channel A: tme/host/posix/serial device /dev/ttyr0 break-carats
+# OR enable POSIX pseudo-terminal master (if available) using the ptmx clone device:
+# the tmesh console will display the slave device to connect to (e.g., /dev/pts/3)
+#console0 at zs0 channel A: tme/host/posix/serial device /dev/ptmx break-carats
 
 ## a SCSI disk:
 ##

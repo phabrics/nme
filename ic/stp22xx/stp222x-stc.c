@@ -326,8 +326,16 @@ tme_stp222x_stc_regs_diag(struct tme_stp222x *stp222x,
 
   /* if this is a write: */
   if (reg->tme_stp222x_reg_write) {
-
-    abort();
+    switch (reggroup_0_3) {
+    case 0x8: /* STP2220 0x58, STP2222 0xb4 or 0xc4 */
+    case 0x9:
+      if (__tme_predict_false(reggroup_index >= TME_STP222X_STC_ENTRY_COUNT)) {
+	abort();
+      }
+      break;
+    default:
+      abort();
+    }
   }
 
   /* otherwise, this is a read: */

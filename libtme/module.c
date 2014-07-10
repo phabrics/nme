@@ -115,13 +115,14 @@ _tme_modules_find(const char *top_name,
   FILE *modules_index;
 
   /* pass over the search path environment variables: */
-  for (pass = 0; ++pass <= 2; ) {
+  for (pass = 0; ++pass <= 3; ) {
 
     /* get the next search path environment variable value: */
     search_path = NULL;
     switch (pass) {
     case 1: search_path = getenv("LTDL_LIBRARY_PATH"); break;
     case 2: search_path = getenv(LT_MODULE_PATH_VAR); break;
+    case 3: search_path = getenv("TME_MODULE_PATH"); break;
     default: assert(FALSE);
     }
     if (search_path == NULL) {
