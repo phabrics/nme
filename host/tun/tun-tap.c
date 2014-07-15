@@ -76,13 +76,20 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #endif /* HAVE_NET_IF_DL_H */
 #include <arpa/inet.h>
 #ifdef HAVE_AF_PACKET
+#ifdef HAVE_LINUX_IF_TUN_H
 #include <linux/if_tun.h>
+#endif
 #define TME_TUN_TAP_INSN tme_uint8_t
 #define TME_TUN_TAP_PROG struct tun_filter
 #define TME_TUN_TAP_INSNS(x) (x)->addr
 #define TME_TUN_TAP_LEN(x) (x)->count
 #else
-#include <net/tap.h>
+#ifdef HAVE_NET_IF_TAP_H
+#include <net/if_tap.h>
+#endif
+#ifdef HAVE_NET_IF_TUN_H
+#include <net/if_tun.h>
+#endif
 #define TME_TUN_TAP_INSN struct tap_insn
 #define TME_TUN_TAP_PROG struct tap_program
 #define TME_TUN_TAP_INSNS(x) x->bf_insns
@@ -810,7 +817,7 @@ _tme_tun_tap_connections_new(struct tme_element *element,
 TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   struct tme_tun_tap *tap;
   int tap_fd;
-  char *dev_tap_filename = "/dev/net/tun";
+  char *dev_tap_filename = DEV_TAP_FILENAME;
   int saved_errno;
   u_int tap_opt;
 #ifndef HAVE_AF_PACKET
@@ -822,51 +829,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   int usage;
   int rc;
 
-  /* check our arguments: */
-  usage = 0;
-  ifr.ifr_name[0] = '\0';
-  delay_time = 0;
-  arg_i = 1;
-  for (;;) {
-
-    /* the interface we're supposed to use: */
-    if (TME_ARG_IS(args[arg_i + 0], "interface")
-	&& args[arg_i + 1] != NULL) {
-      strncpy(ifr.ifr_name, args[arg_i + 1], sizeof(ifr.ifr_name));
-      arg_i += 2;
-    }
-
-    /* a delay time in microseconds: */
-    else if (TME_ARG_IS(args[arg_i + 0], "delay")
-	     && (delay_time = tme_misc_unumber_parse(args[arg_i + 1], 0)) > 0) {
-      arg_i += 2;
-    }
-    
-    /* if we ran out of arguments: */
-    else if (args[arg_i + 0] == NULL) {
-      break;
-    }
-
-    /* otherwise this is a bad argument: */
-    else {
-      tme_output_append_error(_output,
-			      "%s %s", 
-			      args[arg_i],
-			      _("unexpected"));
-      usage = TRUE;
-      break;
-    }
-  }
-
-  if (usage) {
-    tme_output_append_error(_output,
-			    "%s %s [ interface %s ] [ delay %s ]",
-			    _("usage:"),
-			    args[0],
-			    _("INTERFACE"),
-			    _("MICROSECONDS"));
-    return (EINVAL);
-  }
+  /* get the arguments: */
+  rc = tme_eth_args(args, &ifr, &delay_time, _output);
 
   tap_fd = tme_eth_alloc(element, dev_tap_filename);
 

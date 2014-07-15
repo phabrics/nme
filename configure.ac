@@ -128,7 +128,6 @@ AC_CHECK_MEMBERS([struct stat.st_blksize])
 AC_SYS_SOCKADDR_SA_LEN
 
 dnl Checks for library functions and prototypes.
-AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
 AC_FUNC_MALLOC
 AC_FUNC_MMAP
@@ -258,8 +257,7 @@ AC_MSG_RESULT(no)
 
 dnl Checks for Ethernet.
 tme_raw_type=
-AC_CHECK_HEADER(linux/if_tun.h, [tme_raw_type=tap],
-[AC_CHECK_HEADER(net/if_tun.h, [tme_raw_type=tap])])
+AC_CHECK_HEADERS([linux/if_tun.h net/if_tap.h net/if_tun.h], [tme_raw_type=tap])
 
 AC_CHECK_HEADER(linux/filter.h, [tme_raw_type=${tme_raw_type}bpf],
 [AC_CHECK_HEADER(net/bpf.h, 
@@ -726,18 +724,33 @@ if test "x${enable_shared}" = "xno"; then
 fi
 AC_SUBST(TME_PREOPEN)
 case "${host_os}" in
-freebsd*) ;;
-netbsd*) CPPFLAGS="${CPPFLAGS-} -D_NETBSD_SOURCE -D_XOPEN_SOURCE=600" ;;
+netbsd*) 
+   CPPFLAGS="${CPPFLAGS-} -D_NETBSD_SOURCE -D_XOPEN_SOURCE=600"
+   DEV_TAP_FILENAME='"/dev/tap"'
+   ;;
+openbsd*) DEV_TAP_FILENAME='"/dev/tun"' ;;
+freebsd*) DEV_TAP_FILENAME='"/dev/tap"' ;;
+linux*) DEV_TAP_FILENAME='"/dev/net/tun"' ;;
 *) CPPFLAGS="${CPPFLAGS-} -D_BSD_SOURCE -D_XOPEN_SOURCE=600" ;;
 esac
+AC_SUBST(DEV_TAP_FILENAME)
 dnl Configure debugging and/or warnings.
 AC_ARG_ENABLE(debug,
 [  --enable-debug          compile debuggable libraries and programs (default=don't)],
 [ ], [enable_debug=no])
 if test "x${enable_debug}" = "xyes"; then
   CPPFLAGS="${CPPFLAGS-} -DTME_NO_DEBUG_LOCKS -DTME_RECODE_DEBUG -D_TME_SPARC_STATS -DGTK_DISABLE_SINGLE_INCLUDES"
+  AC_MSG_CHECKING([for gcc -Og support])
+  AC_EGREP_CPP(_gcc_has_Og,
+  [
+  #if __GNUC__ > 3 && __GNUC_MINOR__ > 7
+  _gcc_has_Og
+  #endif
+  ], [
+  AC_MSG_RESULT(yes)
   CFLAGS="${CFLAGS-} -Og"
   CXXFLAGS="${CXXFLAGS-} -g3 -Og"
+  ], [ AC_MSG_RESULT(no) ])
 else
   CPPFLAGS="${CPPFLAGS-} -DTME_NO_LOG -DTME_NO_DEBUG_LOCKS -DTME_NO_AUDIT_ATOMICS -DNDEBUG"
   CFLAGS="${CFLAGS-}"
