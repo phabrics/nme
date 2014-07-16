@@ -726,11 +726,11 @@ AC_SUBST(TME_PREOPEN)
 case "${host_os}" in
 netbsd*) 
    CPPFLAGS="${CPPFLAGS-} -D_NETBSD_SOURCE -D_XOPEN_SOURCE=600"
-   DEV_TAP_FILENAME='"/dev/tap"'
+   DEV_TAP_FILENAME='"\"/dev/tap\""'
    ;;
-openbsd*) DEV_TAP_FILENAME='"/dev/tun"' ;;
-freebsd*) DEV_TAP_FILENAME='"/dev/tap"' ;;
-linux*) DEV_TAP_FILENAME='"/dev/net/tun"' ;;
+openbsd*) DEV_TAP_FILENAME='"\"/dev/tun\""' ;;
+freebsd*) DEV_TAP_FILENAME='"\"/dev/tap\""' ;;
+linux*) DEV_TAP_FILENAME='"\"/dev/net/tun\""' ;;
 *) CPPFLAGS="${CPPFLAGS-} -D_BSD_SOURCE -D_XOPEN_SOURCE=600" ;;
 esac
 AC_SUBST(DEV_TAP_FILENAME)

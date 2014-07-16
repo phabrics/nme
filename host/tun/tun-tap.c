@@ -75,26 +75,22 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #include <net/if_dl.h>
 #endif /* HAVE_NET_IF_DL_H */
 #include <arpa/inet.h>
-#ifdef HAVE_AF_PACKET
 #ifdef HAVE_LINUX_IF_TUN_H
 #include <linux/if_tun.h>
 #endif
-#define TME_TUN_TAP_INSN tme_uint8_t
-#define TME_TUN_TAP_PROG struct tun_filter
-#define TME_TUN_TAP_INSNS(x) (x)->addr
-#define TME_TUN_TAP_LEN(x) (x)->count
-#else
 #ifdef HAVE_NET_IF_TAP_H
 #include <net/if_tap.h>
 #endif
 #ifdef HAVE_NET_IF_TUN_H
 #include <net/if_tun.h>
 #endif
-#define TME_TUN_TAP_INSN struct tap_insn
-#define TME_TUN_TAP_PROG struct tap_program
-#define TME_TUN_TAP_INSNS(x) x->bf_insns
-#define TME_TUN_TAP_LEN(x) x->bf_len
+#ifdef HAVE_AF_PACKET
+#define TME_TUN_TAP_INSN tme_uint8_t
+#define TME_TUN_TAP_PROG struct tun_filter
+#define TME_TUN_TAP_INSNS(x) (x)->addr
+#define TME_TUN_TAP_LEN(x) (x)->count
 #endif
+
 
 /* macros: */
 
@@ -373,7 +369,9 @@ _tme_tun_tap_config(struct tme_ethernet_connection *conn_eth,
 		    struct tme_ethernet_config *config)
 {
   struct tme_tun_tap *tap;
+#ifdef HAVE_AF_PACKET
   TME_TUN_TAP_INSN *tap_filter;
+#endif
   int tap_filter_size;
   int rc;
 
@@ -383,6 +381,7 @@ _tme_tun_tap_config(struct tme_ethernet_connection *conn_eth,
   /* assume we will succeed: */
   rc = TME_OK;
 
+#ifdef HAVE_AF_PACKET
   /* lock the mutex: */
   tme_mutex_lock(&tap->tme_tun_tap_mutex);
 
@@ -411,11 +410,7 @@ _tme_tun_tap_config(struct tme_ethernet_connection *conn_eth,
 
   /* set the filter on the TAP device: */
   TME_TUN_TAP_LEN((TME_TUN_TAP_PROG *)tap_filter) = tap_filter_size;
-#ifdef HAVE_AF_PACKET
   if (ioctl(tap->tme_tun_tap_fd, TUNSETTXFILTER, tap_filter) < 0) {
-#else
-  if (ioctl(tap->tme_tun_tap_fd, BIOCSETF, tap_filter) < 0) {
-#endif
     tme_log(&tap->tme_tun_tap_element->tme_element_log_handle, 0, errno,
 	    (&tap->tme_tun_tap_element->tme_element_log_handle,
 	     _("failed to set the filter")));
@@ -432,6 +427,7 @@ _tme_tun_tap_config(struct tme_ethernet_connection *conn_eth,
   /* unlock the mutex: */
   tme_mutex_unlock(&tap->tme_tun_tap_mutex);
 
+#endif
   /* done: */
   return (rc);
 }
@@ -475,9 +471,6 @@ _tme_tun_tap_read(struct tme_ethernet_connection *conn_eth,
 		  unsigned int flags)
 {
   struct tme_tun_tap *tap;
-#ifndef HAVE_AF_PACKET
-  struct tap_hdr the_tap_header;
-#endif
   struct tme_ethernet_frame_chunk frame_chunk_buffer;
   size_t buffer_offset_next;
   const struct tme_ethernet_header *ethernet_header;
@@ -501,11 +494,7 @@ _tme_tun_tap_read(struct tme_ethernet_connection *conn_eth,
   for (;;) {
     buffer_offset_next = tap->tme_tun_tap_buffer_end;
     /* if there's not enough for a TAP header, flush the buffer: */
-#ifdef HAVE_AF_PACKET
     if (tap->tme_tun_tap_buffer_offset >= tap->tme_tun_tap_buffer_end)
-#else
-    if ((tap->tme_tun_tap_buffer_offset + sizeof(the_tap_header)) > tap->tme_tun_tap_buffer_end)
-#endif
     {
       if (tap->tme_tun_tap_buffer_offset
 	  != tap->tme_tun_tap_buffer_end) {
@@ -517,104 +506,12 @@ _tme_tun_tap_read(struct tme_ethernet_connection *conn_eth,
       break;
     }
 
-#ifndef HAVE_AF_PACKET
-    /* get the TAP header and check it: */
-    memcpy(&the_tap_header,
-	   tap->tme_tun_tap_buffer
-	   + tap->tme_tun_tap_buffer_offset,
-	   sizeof(the_tap_header));
-    if(((tap->tme_tun_tap_buffer_offset
-	   + the_tap_header.bh_hdrlen
-	   + the_tap_header.bh_datalen)
-	!= tap->tme_tun_tap_buffer_end))
-      buffer_offset_next =
-	tap->tme_tun_tap_buffer_offset
-	+ TAP_WORDALIGN(the_tap_header.bh_hdrlen
-			+ the_tap_header.bh_datalen);
-    
-    tap->tme_tun_tap_buffer_offset += the_tap_header.bh_hdrlen;
-
-    /* if we're missing some part of the packet: */
-    if (the_tap_header.bh_caplen != the_tap_header.bh_datalen
-	|| ((tap->tme_tun_tap_buffer_offset + the_tap_header.bh_datalen)
-	    > tap->tme_tun_tap_buffer_end)) {
-      tme_log(&tap->tme_tun_tap_element->tme_element_log_handle, 1, TME_OK,
-	      (&tap->tme_tun_tap_element->tme_element_log_handle,
-	       _("flushed truncated TAP packet")));
-      tap->tme_tun_tap_buffer_offset = buffer_offset_next;
-      continue;
-    }
-
-    /* if this packet isn't big enough to even have an Ethernet header: */
-    if (the_tap_header.bh_datalen < sizeof(struct tme_ethernet_header)) {
-      tme_log(&tap->tme_tun_tap_element->tme_element_log_handle, 1, TME_OK,
-	      (&tap->tme_tun_tap_element->tme_element_log_handle,
-	       _("flushed short TAP packet")));
-      tap->tme_tun_tap_buffer_offset = buffer_offset_next;
-      continue;
-    }
-
-    /* if packets need to be delayed: */
-    if (tap->tme_tun_tap_delay_time > 0) {
-      
-      /* if the current release time is before this packet's time: */
-      if ((tap->tme_tun_tap_delay_release.tv_sec
-	   < the_tap_header.bh_tstamp.tv_sec)
-	  || ((tap->tme_tun_tap_delay_release.tv_sec
-	       == the_tap_header.bh_tstamp.tv_sec)
-	      && (tap->tme_tun_tap_delay_release.tv_usec
-		  < the_tap_header.bh_tstamp.tv_usec))) {
-
-	/* update the current release time, by taking the current time
-	   and subtracting the delay time: */
-	gettimeofday(&tap->tme_tun_tap_delay_release, NULL);
-	if (tap->tme_tun_tap_delay_release.tv_usec < tap->tme_tun_tap_delay_time) {
-	  tap->tme_tun_tap_delay_release.tv_usec += 1000000UL;
-	  tap->tme_tun_tap_delay_release.tv_sec--;
-	}
-	tap->tme_tun_tap_delay_release.tv_usec -= tap->tme_tun_tap_delay_time;
-      }
-
-      /* if the current release time is still before this packet's
-         time: */
-      if ((tap->tme_tun_tap_delay_release.tv_sec
-	   < the_tap_header.bh_tstamp.tv_sec)
-	  || ((tap->tme_tun_tap_delay_release.tv_sec
-	       == the_tap_header.bh_tstamp.tv_sec)
-	      && (tap->tme_tun_tap_delay_release.tv_usec
-		  < the_tap_header.bh_tstamp.tv_usec))) {
-
-	/* set the sleep time: */
-	assert ((tap->tme_tun_tap_delay_release.tv_sec
-		 == the_tap_header.bh_tstamp.tv_sec)
-		|| ((tap->tme_tun_tap_delay_release.tv_sec + 1)
-		    == the_tap_header.bh_tstamp.tv_sec));
-	tap->tme_tun_tap_delay_sleep
-	  = (((tap->tme_tun_tap_delay_release.tv_sec
-	       == the_tap_header.bh_tstamp.tv_sec)
-	      ? 0
-	      : 1000000UL)
-	     + the_tap_header.bh_tstamp.tv_usec
-	     - tap->tme_tun_tap_delay_release.tv_usec);
-
-	/* rewind the buffer pointer: */
-	tap->tme_tun_tap_buffer_offset -= the_tap_header.bh_hdrlen;
-
-	/* stop now: */
-	break;
-      }
-    }
-#endif
     /* form the single frame chunk: */
     frame_chunk_buffer.tme_ethernet_frame_chunk_next = NULL;
     frame_chunk_buffer.tme_ethernet_frame_chunk_bytes
       = tap->tme_tun_tap_buffer + tap->tme_tun_tap_buffer_offset;
     frame_chunk_buffer.tme_ethernet_frame_chunk_bytes_count
-#ifdef HAVE_AF_PACKET
       = buffer_offset_next;
-#else
-      = the_tap_header.bh_datalen;
-#endif
 
     /* some network interfaces haven't removed the CRC yet when they
        pass a packet to TAP.  packets in a tme ethernet connection
@@ -696,10 +593,6 @@ _tme_tun_tap_read(struct tme_ethernet_connection *conn_eth,
 
     /* if this is a peek: */
     if (flags & TME_ETHERNET_READ_PEEK) {
-#ifndef HAVE_AF_PACKET
-      /* rewind the buffer pointer: */
-      tap->tme_tun_tap_buffer_offset -= the_tap_header.bh_hdrlen;
-#endif
     }
 
     /* otherwise, this isn't a peek: */
@@ -820,9 +713,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   char *dev_tap_filename = DEV_TAP_FILENAME;
   int saved_errno;
   u_int tap_opt;
-#ifndef HAVE_AF_PACKET
-  struct tap_version version;
-#endif
   struct ifreq ifr;
   unsigned long delay_time;
   int arg_i;
@@ -834,6 +724,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 
   tap_fd = tme_eth_alloc(element, dev_tap_filename);
 
+#ifdef HAVE_AF_PACKET
   ifr.ifr_flags = IFF_TAP | IFF_NO_PI;   /* IFF_TUN or IFF_TAP, plus maybe IFF_NO_PI */
   
   /* this macro helps in closing the TAP socket on error: */
@@ -848,7 +739,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     _TME_TAP_RAW_OPEN_ERROR(close(tap_fd));
     return (errno);
   }
-
+#endif
   return tme_eth_init(element, tap_fd, 4096, delay_time, _tme_tun_tap_connections_new);
 
 #undef _TME_TAP_RAW_OPEN_ERROR
