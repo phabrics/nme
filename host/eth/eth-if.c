@@ -625,8 +625,9 @@ _tme_eth_read(struct tme_ethernet_connection *conn_eth,
 int tme_eth_alloc(struct tme_element *element, char *dev_filename) 
 {
   int fd, minor, saved_errno;
-  char dev_minor[4];
+  char *dev_minor;
 
+  dev_minor = dev_filename + strlen(dev_filename);
   /* open the clone device */
   if( (fd = open(dev_filename, O_RDWR)) < 0 ) {
     /* loop trying to open a minor device: */
@@ -634,7 +635,6 @@ int tme_eth_alloc(struct tme_element *element, char *dev_filename)
       /* form the name of the next device to try, then try opening
 	 it. if we succeed, we're done: */
       sprintf(dev_minor, "%d", minor);
-      strncat(dev_filename, dev_minor, 4);
       tme_log(&element->tme_element_log_handle, 1, TME_OK,
 	      (&element->tme_element_log_handle,
 	       "trying %s",
@@ -657,9 +657,9 @@ int tme_eth_alloc(struct tme_element *element, char *dev_filename)
 	  || saved_errno == EACCES) {
 	continue;
       }
-      
+      errno = saved_errno;
       /* otherwise, we have failed: */
-      return (saved_errno);
+      return (-1);
     }
   }
 

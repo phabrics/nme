@@ -710,7 +710,7 @@ _tme_tun_tap_connections_new(struct tme_element *element,
 TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   struct tme_tun_tap *tap;
   int tap_fd;
-  char *dev_tap_filename = DEV_TAP_FILENAME;
+  char dev_tap_filename[sizeof(DEV_TAP_FILENAME) + 4];
   int saved_errno;
   u_int tap_opt;
   struct ifreq ifr;
@@ -722,16 +722,30 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   /* get the arguments: */
   rc = tme_eth_args(args, &ifr, &delay_time, _output);
 
+  sprintf(dev_tap_filename, DEV_TAP_FILENAME);
   tap_fd = tme_eth_alloc(element, dev_tap_filename);
+
+  if (tap_fd < 0) {
+    saved_errno = errno;
+    tme_log(&element->tme_element_log_handle, 1, saved_errno,
+	    (&element->tme_element_log_handle,
+	     _("failed to open TAP device %s"),
+	     dev_tap_filename));
+    return (saved_errno);
+  }
+
+  /* this macro helps in closing the TAP socket on error: */
+#define _TME_TAP_RAW_OPEN_ERROR(x) saved_errno = errno; x; errno = saved_errno
 
 #ifdef HAVE_AF_PACKET
   ifr.ifr_flags = IFF_TAP | IFF_NO_PI;   /* IFF_TUN or IFF_TAP, plus maybe IFF_NO_PI */
   
-  /* this macro helps in closing the TAP socket on error: */
-#define _TME_TAP_RAW_OPEN_ERROR(x) saved_errno = errno; x; errno = saved_errno
-
   /* try to create the device */
-  if (ioctl(tap_fd, TUNSETIFF, (void *) &ifr) < 0 ) {
+  if (ioctl(tap_fd, TUNSETIFF, (void *) &ifr) < 0 )
+#else
+  if (ioctl(tap_fd, TAPGIFNAME, (void *) &ifr) < 0 )
+#endif
+  {
     tme_log(&element->tme_element_log_handle, 1, errno,
 	    (&element->tme_element_log_handle,
 	     _("failed to set the TAP interface on %s"),
@@ -739,7 +753,12 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     _TME_TAP_RAW_OPEN_ERROR(close(tap_fd));
     return (errno);
   }
-#endif
+   
+  tme_log(&element->tme_element_log_handle, 0, TME_OK, 
+	  (&element->tme_element_log_handle, 
+	   "using interface %s",
+	   ifr.ifr_name));
+
   return tme_eth_init(element, tap_fd, 4096, delay_time, _tme_tun_tap_connections_new);
 
 #undef _TME_TAP_RAW_OPEN_ERROR
