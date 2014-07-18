@@ -75,16 +75,17 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #include <net/if_dl.h>
 #endif /* HAVE_NET_IF_DL_H */
 #include <arpa/inet.h>
-#ifdef HAVE_LINUX_IF_TUN_H
-#include <linux/if_tun.h>
-#endif
 #ifdef HAVE_NET_IF_TAP_H
 #include <net/if_tap.h>
+#endif
+#ifdef HAVE_NET_TAP_IF_TAP_H
+#include <net/tap/if_tap.h>
 #endif
 #ifdef HAVE_NET_IF_TUN_H
 #include <net/if_tun.h>
 #endif
-#ifdef HAVE_AF_PACKET
+#ifdef HAVE_LINUX_IF_TUN_H
+#include <linux/if_tun.h>
 #define TME_TUN_TAP_INSN tme_uint8_t
 #define TME_TUN_TAP_PROG struct tun_filter
 #define TME_TUN_TAP_INSNS(x) (x)->addr
@@ -369,7 +370,7 @@ _tme_tun_tap_config(struct tme_ethernet_connection *conn_eth,
 		    struct tme_ethernet_config *config)
 {
   struct tme_tun_tap *tap;
-#ifdef HAVE_AF_PACKET
+#ifdef HAVE_LINUX_IF_TUN_H
   TME_TUN_TAP_INSN *tap_filter;
 #endif
   int tap_filter_size;
@@ -381,7 +382,7 @@ _tme_tun_tap_config(struct tme_ethernet_connection *conn_eth,
   /* assume we will succeed: */
   rc = TME_OK;
 
-#ifdef HAVE_AF_PACKET
+#ifdef HAVE_LINUX_IF_TUN_H
   /* lock the mutex: */
   tme_mutex_lock(&tap->tme_tun_tap_mutex);
 
@@ -737,14 +738,15 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   /* this macro helps in closing the TAP socket on error: */
 #define _TME_TAP_RAW_OPEN_ERROR(x) saved_errno = errno; x; errno = saved_errno
 
-#ifdef HAVE_AF_PACKET
+#ifdef HAVE_LINUX_IF_TUN_H
   ifr.ifr_flags = IFF_TAP | IFF_NO_PI;   /* IFF_TUN or IFF_TAP, plus maybe IFF_NO_PI */
   
   /* try to create the device */
   if (ioctl(tap_fd, TUNSETIFF, (void *) &ifr) < 0 )
-#else
+#elif defined(HAVE_NET_IF_TAP_H)
   if (ioctl(tap_fd, TAPGIFNAME, (void *) &ifr) < 0 )
 #endif
+#if defined(HAVE_LINUX_IF_TUN_H) || defined(HAVE_NET_IF_TAP_H)
   {
     tme_log(&element->tme_element_log_handle, 1, errno,
 	    (&element->tme_element_log_handle,
@@ -753,10 +755,10 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     _TME_TAP_RAW_OPEN_ERROR(close(tap_fd));
     return (errno);
   }
-   
+#endif
   tme_log(&element->tme_element_log_handle, 0, TME_OK, 
 	  (&element->tme_element_log_handle, 
-	   "using interface %s",
+	   "using tap interface %s",
 	   ifr.ifr_name));
 
   return tme_eth_init(element, tap_fd, 4096, delay_time, _tme_tun_tap_connections_new);

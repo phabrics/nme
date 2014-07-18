@@ -257,7 +257,7 @@ AC_MSG_RESULT(no)
 
 dnl Checks for Ethernet.
 tme_raw_type=
-AC_CHECK_HEADERS([linux/if_tun.h net/if_tap.h net/if_tun.h], [tme_raw_type=tap])
+AC_CHECK_HEADERS([linux/if_tun.h net/if_tap.h net/tap/if_tap.h net/if_tun.h], [tme_raw_type=tap])
 
 AC_CHECK_HEADER(linux/filter.h, [tme_raw_type=${tme_raw_type}bpf],
 [AC_CHECK_HEADER(net/bpf.h, 
@@ -668,7 +668,7 @@ else
 
     # get the host recode parts:
     case "${target}" in
-    i[3456789]86-*-netbsd* | x86_64-*-netbsd* | i[3456789]86-*-linux* | x86_64-*-linux*)
+    i[3456789]86-*bsd* | x86_64-*bsd* | i[3456789]86-*linux* | x86_64-*linux*)
 	recode_hosts="mmap x86"
 	;;
     *) recode_hosts= ;;
@@ -730,6 +730,7 @@ netbsd*)
    ;;
 openbsd*) DEV_TAP_FILENAME='"\"/dev/tun\""' ;;
 freebsd*) DEV_TAP_FILENAME='"\"/dev/tap\""' ;;
+dragonfly*) DEV_TAP_FILENAME='"\"/dev/tap\""' ;;
 linux*) DEV_TAP_FILENAME='"\"/dev/net/tun\""' ;;
 *) CPPFLAGS="${CPPFLAGS-} -D_BSD_SOURCE -D_XOPEN_SOURCE=600" ;;
 esac
