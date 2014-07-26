@@ -684,7 +684,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
   packet_buffer_size = 16384;
 #else
   sprintf(dev_bpf_filename, DEV_BPF_FORMAT);
-  bpf_fd = tme_eth_alloc(element, dev_bpf_filename);
+  bpf_fd = tme_eth_alloc(element, dev_bpf_filename, dev_bpf_filename + sizeof(DEV_BPF_FORMAT));
 
   /* this macro helps in closing the BPF socket on error: */
 #define _TME_BPF_RAW_OPEN_ERROR(x) saved_errno = errno; x; errno = saved_errno

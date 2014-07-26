@@ -711,7 +711,8 @@ _tme_tun_tap_connections_new(struct tme_element *element,
 TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   struct tme_tun_tap *tap;
   int tap_fd;
-  char dev_tap_filename[sizeof(DEV_TAP_FILENAME) + 4];
+  char dev_tap_filename[sizeof(DEV_TAP_FILENAME) + 5];
+  char *dev_minor;
   int saved_errno;
   u_int tap_opt;
   struct ifreq ifr;
@@ -719,19 +720,22 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   int arg_i;
   int usage;
   int rc;
-
+  
   memset(&ifr, 0, sizeof(ifr));
 
   /* get the arguments: */
   rc = tme_eth_args(args, &ifr, &delay_time, _output);
 
   sprintf(dev_tap_filename, DEV_TAP_FILENAME);
+
+  dev_minor = dev_tap_filename + sizeof(DEV_TAP_FILENAME);
 #ifndef HAVE_LINUX_IF_TUN_H
-  if(ifr.ifr_name[0] != '\0')
-    tap_fd = tme_eth_alloc(element, ifr.ifr_name, 0);
-  else
+  if(ifr.ifr_name[0] != '\0') {
+    strncpy(dev_tap_filename + 5, ifr.ifr_name, sizeof(DEV_TAP_FILENAME) - 1);
+    dev_minor = 0;
+  }
 #endif
-    tap_fd = tme_eth_alloc(element, dev_tap_filename, dev_tap_filename + sizeof(DEV_TAP_FILENAME));
+  tap_fd = tme_eth_alloc(element, dev_tap_filename, dev_minor);
 
   if (tap_fd < 0) {
     saved_errno = errno;
