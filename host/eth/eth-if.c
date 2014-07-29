@@ -622,14 +622,12 @@ _tme_eth_read(struct tme_ethernet_connection *conn_eth,
 }
 
 /* Allocate an ethernet device */
-int tme_eth_alloc(struct tme_element *element, char *dev_filename) 
+int tme_eth_alloc(struct tme_element *element, char *dev_filename, char *dev_minor) 
 {
   int fd, minor, saved_errno;
-  char *dev_minor;
 
-  dev_minor = dev_filename + strlen(dev_filename);
   /* open the clone device */
-  if( (fd = open(dev_filename, O_RDWR)) < 0 ) {
+  if( ((fd = open(dev_filename, O_RDWR)) < 0 ) && dev_minor) {
     /* loop trying to open a minor device: */
     for (minor = 0;; minor++) {
       /* form the name of the next device to try, then try opening

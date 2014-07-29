@@ -720,11 +720,18 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   int usage;
   int rc;
 
+  memset(&ifr, 0, sizeof(ifr));
+
   /* get the arguments: */
   rc = tme_eth_args(args, &ifr, &delay_time, _output);
 
   sprintf(dev_tap_filename, DEV_TAP_FILENAME);
-  tap_fd = tme_eth_alloc(element, dev_tap_filename);
+#ifndef HAVE_LINUX_IF_TUN_H
+  if(ifr.ifr_name[0] != '\0')
+    tap_fd = tme_eth_alloc(element, ifr.ifr_name, 0);
+  else
+#endif
+    tap_fd = tme_eth_alloc(element, dev_tap_filename, dev_tap_filename + sizeof(DEV_TAP_FILENAME));
 
   if (tap_fd < 0) {
     saved_errno = errno;

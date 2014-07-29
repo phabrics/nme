@@ -134,7 +134,8 @@ int tme_eth_connections_new _TME_P((struct tme_element *element,
 				    char **_output));
 
 int tme_eth_alloc _TME_P((struct tme_element *element, 
-			  char *dev_filename));
+			  char *dev_filename,
+			  char *dev_minor));
 
 int tme_eth_args _TME_P((const char * const args[], 
 			 struct ifreq *ifr, 
