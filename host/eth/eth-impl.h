@@ -54,6 +54,12 @@ _TME_RCSID("$Id: eth-impl.h,v 1.1 2003/05/18 00:02:23 fredette Exp $");
 #define TME_NET_ARP_OPCODE_REV_REQUEST	(0x0003)
 #define TME_NET_ARP_OPCODE_REV_REPLY	(0x0004)
 
+/* interface addresses: */
+#define TME_IP_ADDRS_INET (0)
+#define TME_IP_ADDRS_NETMASK (1)
+#define TME_IP_ADDRS_BCAST (2)
+#define TME_IP_ADDRS_TOTAL (3)
+
 /* a crude ARP header: */
 struct tme_net_arp_header {
   tme_uint8_t tme_net_arp_header_hardware[2];
@@ -138,8 +144,9 @@ int tme_eth_alloc _TME_P((struct tme_element *element,
 			  char *dev_minor));
 
 int tme_eth_args _TME_P((const char * const args[], 
-			 struct ifreq *ifr, 
+			 struct ifreq *ifr,
 			 unsigned long *delay,
+			 struct in_addr *ip_addrs,
 			 char **_output));
 
 int tme_eth_init _TME_P((struct tme_element *element, 

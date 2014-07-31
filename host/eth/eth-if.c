@@ -708,20 +708,25 @@ tme_eth_connections_new(struct tme_element *element,
 
 /* retrieve ethernet arguments */
 int tme_eth_args(const char * const args[], 
-		 struct ifreq *ifr, 
-		 unsigned long *delay, 
+		 struct ifreq *ifr,
+		 unsigned long *delay,
+		 struct in_addr *ip_addrs,
 		 char **_output)
 {
+  int ipaddr;
   int arg_i;
   int usage;
-
+  
   /* check our arguments: */
   usage = 0;
   ifr->ifr_name[0] = '\0';
   *delay = 0;
-  arg_i = 1;
-  for (;;) {
+  if(ip_addrs) memset(ip_addrs, 0, TME_IP_ADDRS_TOTAL * sizeof(struct in_addr));
 
+  arg_i = 1;
+  ipaddr = TME_IP_ADDRS_TOTAL;
+
+  for (;;) {
     /* the interface we're supposed to use: */
     if (TME_ARG_IS(args[arg_i + 0], "interface")
 	&& args[arg_i + 1] != NULL) {
@@ -735,6 +740,21 @@ int tme_eth_args(const char * const args[],
       arg_i += 2;
     }
     
+    else if(TME_ARG_IS(args[arg_i + 0], "inet") 
+	 && args[arg_i + 1] != NULL) {
+      ipaddr = TME_IP_ADDRS_INET;
+    }
+
+    else if (TME_ARG_IS(args[arg_i + 0], "netmask")
+	&& args[arg_i + 1] != NULL) {
+      ipaddr = TME_IP_ADDRS_NETMASK;
+    }
+
+    else if (TME_ARG_IS(args[arg_i + 0], "bcast")
+	&& args[arg_i + 1] != NULL) {
+      ipaddr = TME_IP_ADDRS_BCAST;
+    }
+
     /* if we ran out of arguments: */
     else if (args[arg_i + 0] == NULL) {
       break;
@@ -749,15 +769,24 @@ int tme_eth_args(const char * const args[],
       usage = TRUE;
       break;
     }
+
+    if(ipaddr != TME_IP_ADDRS_TOTAL) {
+      if(ip_addrs) inet_aton(args[arg_i + 1], ip_addrs + ipaddr);
+      arg_i += 2;
+      ipaddr = TME_IP_ADDRS_TOTAL;
+    }
   }
 
   if (usage) {
     tme_output_append_error(_output,
-			    "%s %s [ interface %s ] [ delay %s ]",
+			    "%s %s [ interface %s ] [ inet %s ] [ netmask %s ] [ bcast %s ] [ delay %s ]",
 			    _("usage:"),
 			    args[0],
 			    _("INTERFACE"),
-			    _("MICROSECONDS"));
+			    _("MICROSECONDS"),
+			    _("IPADDRESS"),
+			    _("IPADDRESS"),
+			    _("IPADDRESS"));
     return (EINVAL);
   }
 }

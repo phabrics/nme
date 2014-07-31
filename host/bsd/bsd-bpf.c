@@ -636,7 +636,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
   int rc;
 
   /* get the arguments: */
-  rc = tme_eth_args(args, &ifr, &delay_time, _output);
+  rc = tme_eth_args(args, &ifr, &delay_time, 0, _output);
 
   /* find the interface we will use: */
   rc = tme_eth_ifaddrs_find(ifr.ifr_name, &ifa, NULL, NULL);

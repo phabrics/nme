@@ -710,21 +710,22 @@ _tme_tun_tap_connections_new(struct tme_element *element,
 /* the new TAP function: */
 TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   struct tme_tun_tap *tap;
-  int tap_fd;
+  int tap_fd, dummy_fd;
   char dev_tap_filename[sizeof(DEV_TAP_FILENAME) + 5];
   char *dev_minor;
   int saved_errno;
   u_int tap_opt;
   struct ifreq ifr;
   unsigned long delay_time;
-  int arg_i;
+  struct in_addr ip_addrs[TME_IP_ADDRS_TOTAL];
+  int i;
   int usage;
   int rc;
   
   memset(&ifr, 0, sizeof(ifr));
 
   /* get the arguments: */
-  rc = tme_eth_args(args, &ifr, &delay_time, _output);
+  rc = tme_eth_args(args, &ifr, &delay_time, ip_addrs, _output);
 
   sprintf(dev_tap_filename, DEV_TAP_FILENAME);
 
@@ -771,6 +772,50 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 	  (&element->tme_element_log_handle, 
 	   "using tap interface %s",
 	   ifr.ifr_name));
+
+  /* make a dummy socket so we can configure the interface: */
+  if ((dummy_fd = socket(AF_INET, SOCK_DGRAM, 0)) >= 0) {
+    ifr.ifr_flags = IFF_UP | IFF_MULTICAST;
+    /* try to create the device */
+    if (ioctl(dummy_fd, SIOCSIFFLAGS, (void *) &ifr) < 0 ) {
+      tme_log(&element->tme_element_log_handle, 1, errno,
+	      (&element->tme_element_log_handle,
+	       _("failed to set the flags on iface %s"),
+	       ifr.ifr_name));
+    }
+    
+    ifr.ifr_addr.sa_family = AF_INET;
+    if(ip_addrs[TME_IP_ADDRS_INET].s_addr) {
+      memcpy(ifr.ifr_addr.sa_data + 2, &ip_addrs[TME_IP_ADDRS_INET], sizeof(struct in_addr));
+      if(ioctl(dummy_fd, SIOCSIFADDR, (void *) &ifr) < 0 ) {
+	tme_log(&element->tme_element_log_handle, 1, errno,
+		(&element->tme_element_log_handle,
+	       _("failed to set the address on iface %s"),
+		 ifr.ifr_name));
+      }
+    }
+
+    if(ip_addrs[TME_IP_ADDRS_NETMASK].s_addr) {
+      memcpy(ifr.ifr_netmask.sa_data + 2, &ip_addrs[TME_IP_ADDRS_NETMASK], sizeof(struct in_addr));
+      if(ioctl(dummy_fd, SIOCSIFNETMASK, (void *) &ifr) < 0 ) {
+	tme_log(&element->tme_element_log_handle, 1, errno,
+		(&element->tme_element_log_handle,
+	       _("failed to set the netmask on iface %s"),
+		 ifr.ifr_name));
+      }
+    }
+
+    if(ip_addrs[TME_IP_ADDRS_BCAST].s_addr) {
+      memcpy(ifr.ifr_broadaddr.sa_data + 2, &ip_addrs[TME_IP_ADDRS_BCAST], sizeof(struct in_addr));
+      if(ioctl(dummy_fd, SIOCSIFBRDADDR, (void *) &ifr) < 0 ) {
+	tme_log(&element->tme_element_log_handle, 1, errno,
+		(&element->tme_element_log_handle,
+	       _("failed to set the broadcast address on iface %s"),
+		 ifr.ifr_name));
+      }
+    }
+    close(dummy_fd);
+  }
 
   return tme_eth_init(element, tap_fd, 4096, delay_time, _tme_tun_tap_connections_new);
 
