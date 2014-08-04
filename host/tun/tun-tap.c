@@ -92,7 +92,6 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #define TME_TUN_TAP_LEN(x) (x)->count
 #endif
 
-
 /* macros: */
 
 /* ARP and RARP opcodes: */
@@ -716,6 +715,9 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   int saved_errno;
   u_int tap_opt;
   struct ifreq ifr;
+#ifdef SIOCAIFADDR
+  struct ifaliasreq ifra;
+#endif
   unsigned long delay_time;
   struct in_addr ip_addrs[TME_IP_ADDRS_TOTAL];
   int i;
@@ -784,9 +786,29 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 	       ifr.ifr_name));
     }
     
+#ifdef SIOCAIFADDR
+    if(ip_addrs[TME_IP_ADDRS_INET].s_addr
+      || ip_addrs[TME_IP_ADDRS_BCAST].s_addr
+      || ip_addrs[TME_IP_ADDRS_NETMASK].s_addr) {
+      strncpy(ifra.ifra_name, ifr.ifr_name, IFNAMSIZ);
+      ifra.ifra_addr.sa_family = AF_INET;
+      ((struct sockaddr_in *)&ifra.ifra_addr)->sin_addr = ip_addrs[TME_IP_ADDRS_INET];    
+      ifra.ifra_broadaddr.sa_family = AF_INET;
+      ((struct sockaddr_in *)&ifra.ifra_broadaddr)->sin_addr = ip_addrs[TME_IP_ADDRS_BCAST];    
+      ifra.ifra_mask.sa_family = AF_INET;
+      ((struct sockaddr_in *)&ifra.ifra_mask)->sin_addr = ip_addrs[TME_IP_ADDRS_NETMASK];    
+      if(ioctl(dummy_fd, SIOCAIFADDR, (void *) &ifra) < 0 ) {
+	tme_log(&element->tme_element_log_handle, 1, errno,
+		(&element->tme_element_log_handle,
+		 _("failed to set the addresses on iface %s"),
+		 ifra.ifra_name));
+      }
+    }
+    
+#else
     ifr.ifr_addr.sa_family = AF_INET;
     if(ip_addrs[TME_IP_ADDRS_INET].s_addr) {
-      memcpy(ifr.ifr_addr.sa_data + 2, &ip_addrs[TME_IP_ADDRS_INET], sizeof(struct in_addr));
+      ((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr = ip_addrs[TME_IP_ADDRS_INET];
       if(ioctl(dummy_fd, SIOCSIFADDR, (void *) &ifr) < 0 ) {
 	tme_log(&element->tme_element_log_handle, 1, errno,
 		(&element->tme_element_log_handle,
@@ -796,7 +818,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     }
 
     if(ip_addrs[TME_IP_ADDRS_NETMASK].s_addr) {
-      memcpy(ifr.ifr_netmask.sa_data + 2, &ip_addrs[TME_IP_ADDRS_NETMASK], sizeof(struct in_addr));
+      ((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr = ip_addrs[TME_IP_ADDRS_NETMASK];
       if(ioctl(dummy_fd, SIOCSIFNETMASK, (void *) &ifr) < 0 ) {
 	tme_log(&element->tme_element_log_handle, 1, errno,
 		(&element->tme_element_log_handle,
@@ -806,7 +828,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     }
 
     if(ip_addrs[TME_IP_ADDRS_BCAST].s_addr) {
-      memcpy(ifr.ifr_broadaddr.sa_data + 2, &ip_addrs[TME_IP_ADDRS_BCAST], sizeof(struct in_addr));
+      ((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr = ip_addrs[TME_IP_ADDRS_BCAST];
       if(ioctl(dummy_fd, SIOCSIFBRDADDR, (void *) &ifr) < 0 ) {
 	tme_log(&element->tme_element_log_handle, 1, errno,
 		(&element->tme_element_log_handle,
@@ -814,9 +836,9 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 		 ifr.ifr_name));
       }
     }
+#endif
     close(dummy_fd);
   }
-
   return tme_eth_init(element, tap_fd, 4096, delay_time, _tme_tun_tap_connections_new);
 
 #undef _TME_TAP_RAW_OPEN_ERROR
