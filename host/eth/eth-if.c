@@ -779,7 +779,7 @@ int tme_eth_args(const char * const args[],
 
   if (usage) {
     tme_output_append_error(_output,
-			    "%s %s [ interface %s ] [ inet %s ] [ netmask %s ] [ bcast %s ] [ delay %s ]",
+			    "%s %s [ interface %s ] [ delay %s ] [ inet %s ] [ netmask %s ] [ bcast %s ]",
 			    _("usage:"),
 			    args[0],
 			    _("INTERFACE"),

@@ -50,7 +50,9 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <net/if.h>
+#include <net/if_var.h>
 #include <netinet/in_systm.h>
+#include <netinet/in_var.h>
 #include <netinet/in.h>
 #if defined(HAVE_SYS_SOCKIO_H)
 #include <sys/sockio.h>
@@ -716,7 +718,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   u_int tap_opt;
   struct ifreq ifr;
 #ifdef SIOCAIFADDR
-  struct ifaliasreq ifra;
+  struct in_aliasreq ifra;
 #endif
   unsigned long delay_time;
   struct in_addr ip_addrs[TME_IP_ADDRS_TOTAL];
@@ -777,7 +779,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 
   /* make a dummy socket so we can configure the interface: */
   if ((dummy_fd = socket(AF_INET, SOCK_DGRAM, 0)) >= 0) {
-    ifr.ifr_flags = IFF_UP | IFF_MULTICAST;
+    ifr.ifr_flags = IFF_UP;
     /* try to create the device */
     if (ioctl(dummy_fd, SIOCSIFFLAGS, (void *) &ifr) < 0 ) {
       tme_log(&element->tme_element_log_handle, 1, errno,
@@ -785,23 +787,56 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 	       _("failed to set the flags on iface %s"),
 	       ifr.ifr_name));
     }
-    
+
 #ifdef SIOCAIFADDR
     if(ip_addrs[TME_IP_ADDRS_INET].s_addr
-      || ip_addrs[TME_IP_ADDRS_BCAST].s_addr
-      || ip_addrs[TME_IP_ADDRS_NETMASK].s_addr) {
+       || ip_addrs[TME_IP_ADDRS_BCAST].s_addr
+       || ip_addrs[TME_IP_ADDRS_NETMASK].s_addr) {
+      memset(&ifra, 0, sizeof(ifra));
       strncpy(ifra.ifra_name, ifr.ifr_name, IFNAMSIZ);
-      ifra.ifra_addr.sa_family = AF_INET;
-      ((struct sockaddr_in *)&ifra.ifra_addr)->sin_addr = ip_addrs[TME_IP_ADDRS_INET];    
-      ifra.ifra_broadaddr.sa_family = AF_INET;
-      ((struct sockaddr_in *)&ifra.ifra_broadaddr)->sin_addr = ip_addrs[TME_IP_ADDRS_BCAST];    
-      ifra.ifra_mask.sa_family = AF_INET;
-      ((struct sockaddr_in *)&ifra.ifra_mask)->sin_addr = ip_addrs[TME_IP_ADDRS_NETMASK];    
-      if(ioctl(dummy_fd, SIOCAIFADDR, (void *) &ifra) < 0 ) {
+      ifra.ifra_addr.sin_len = sizeof(ifra.ifra_addr);
+      ifra.ifra_addr.sin_family = AF_INET;
+      ifra.ifra_broadaddr.sin_len = sizeof(ifra.ifra_broadaddr);
+      ifra.ifra_broadaddr.sin_family = AF_INET;
+      ifra.ifra_mask.sin_len = sizeof(ifra.ifra_mask);
+      ifra.ifra_mask.sin_family = AF_INET;
+
+      /*
+      if(ioctl(dummy_fd, SIOCDIFADDR, (char *) &ifra) < 0 ) {
 	tme_log(&element->tme_element_log_handle, 1, errno,
 		(&element->tme_element_log_handle,
 		 _("failed to set the addresses on iface %s"),
 		 ifra.ifra_name));
+      }
+      */
+
+      ifra.ifra_addr.sin_addr = ip_addrs[TME_IP_ADDRS_INET];    
+      ifra.ifra_broadaddr.sin_addr = ip_addrs[TME_IP_ADDRS_BCAST];    
+      ifra.ifra_mask.sin_addr = ip_addrs[TME_IP_ADDRS_NETMASK];    
+      if(ioctl(dummy_fd, SIOCAIFADDR, (char *) &ifra) < 0 ) {
+	tme_log(&element->tme_element_log_handle, 1, errno,
+		(&element->tme_element_log_handle,
+		 _("failed to set the addresses on tap interface %s"),
+		 ifra.ifra_name));
+      } else {
+	if(ifra.ifra_addr.sin_addr.s_addr)
+         tme_log(&element->tme_element_log_handle, 0, TME_OK, 
+		 (&element->tme_element_log_handle, 
+		  "set address on tap interface %s to %s",
+		  ifra.ifra_name, 
+		  inet_ntoa(ifra.ifra_addr.sin_addr)));
+	if(ifra.ifra_broadaddr.sin_addr.s_addr)
+         tme_log(&element->tme_element_log_handle, 0, TME_OK, 
+		 (&element->tme_element_log_handle, 
+		  "set broadcast address on tap interface %s to %s",
+		  ifra.ifra_name, 
+		  inet_ntoa(ifra.ifra_broadaddr.sin_addr)));
+	if(ifra.ifra_mask.sin_addr.s_addr)
+         tme_log(&element->tme_element_log_handle, 0, TME_OK, 
+		 (&element->tme_element_log_handle, 
+		  "set netmask on tap interface %s to %s",
+		  ifra.ifra_name, 
+		  inet_ntoa(ifra.ifra_mask.sin_addr)));
       }
     }
     
