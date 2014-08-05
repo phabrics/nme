@@ -56,7 +56,7 @@ scsibus0 at sc0: tme/scsi/bus
 #bpf1 at ie0: tme/host/bsd/bpf delay 10000
 # OR enable tap ethernet device, an alternative method for network access
 # if you have read/write permission on tap device or have cap_net_admin+ep capability (on Linux)
-#tap1 at ie0: tme/host/tun/tap
+#tap1 at ie0: tme/host/tun/tap inet 10.0.77.1 netmask 255.255.255.0 bcast 10.0.77.255
 
 ## the Sun bwtwo Multibus board, Sun type-2 keyboard and mouse, and
 ## the GTK-based display to drive them all:

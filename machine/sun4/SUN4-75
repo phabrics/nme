@@ -75,7 +75,7 @@ le0 at sbus0 slot 0 offset 0xc00000 ipl 5 dma-offset 0xff000000: tme/ic/am7990
 #bpf0 at le0: tme/host/bsd/bpf
 # OR enable tap ethernet device, an alternative method for network access
 # if you have read/write permission on tap device or have cap_net_admin+ep capability (on Linux)
-#tap0 at le0: tme/host/tun/tap
+#tap0 at le0: tme/host/tun/tap inet 10.0.77.1 netmask 255.255.255.0 bcast 10.0.77.255
 
 ## an SBus cgthree:
 ##

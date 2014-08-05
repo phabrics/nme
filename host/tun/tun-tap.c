@@ -50,9 +50,13 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <net/if.h>
+#ifdef HAVE_NET_IF_VAR_H
 #include <net/if_var.h>
+#endif
 #include <netinet/in_systm.h>
+#ifdef HAVE_NETINET_IN_VAR_H
 #include <netinet/in_var.h>
+#endif
 #include <netinet/in.h>
 #if defined(HAVE_SYS_SOCKIO_H)
 #include <sys/sockio.h>
@@ -849,7 +853,12 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 		(&element->tme_element_log_handle,
 	       _("failed to set the address on iface %s"),
 		 ifr.ifr_name));
-      }
+      } else
+         tme_log(&element->tme_element_log_handle, 0, TME_OK, 
+		 (&element->tme_element_log_handle, 
+		  "set address on tap interface %s to %s",
+		  ifr.ifr_name, 
+		  inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr)));
     }
 
     if(ip_addrs[TME_IP_ADDRS_NETMASK].s_addr) {
@@ -859,7 +868,13 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 		(&element->tme_element_log_handle,
 	       _("failed to set the netmask on iface %s"),
 		 ifr.ifr_name));
-      }
+      } else
+         tme_log(&element->tme_element_log_handle, 0, TME_OK, 
+		 (&element->tme_element_log_handle, 
+		  "set netmask on tap interface %s to %s",
+		  ifr.ifr_name, 
+		  inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr)));
+
     }
 
     if(ip_addrs[TME_IP_ADDRS_BCAST].s_addr) {
@@ -869,7 +884,13 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 		(&element->tme_element_log_handle,
 	       _("failed to set the broadcast address on iface %s"),
 		 ifr.ifr_name));
-      }
+      } else
+         tme_log(&element->tme_element_log_handle, 0, TME_OK, 
+		 (&element->tme_element_log_handle, 
+		  "set broadcast address on tap interface %s to %s",
+		  ifr.ifr_name, 
+		  inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr)));
+
     }
 #endif
     close(dummy_fd);
