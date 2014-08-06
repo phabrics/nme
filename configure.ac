@@ -62,7 +62,29 @@ AC_CHECK_HEADERS([unistd.h stdio.h memory.h stdarg.h limits.h float.h])
 AC_CHECK_HEADERS([sys/ioctl.h sys/sockio.h sys/socketio.h net/if_dl.h ioctls.h netpacket/packet.h ifaddrs.h])
 AC_CHECK_HEADERS([byteswap.h sys/endian.h])
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h netinet/in.h sys/param.h sys/socket.h sys/time.h termios.h])
-AC_CHECK_HEADERS([net/if_var.h netinet/in_var.h])
+AC_CHECK_HEADERS([net/if.h net/if_var.h netinet/in_var.h], [], [],
+[#include <stdio.h>
+ #ifdef STDC_HEADERS
+ # include <stdlib.h>
+ # include <stddef.h>
+ #else
+ # ifdef HAVE_STDLIB_H
+ #  include <stdlib.h>
+ # endif
+ #endif
+ #ifdef HAVE_SYS_SOCKET_H
+ # include <sys/socket.h>
+ #endif
+ #ifdef HAVE_NET_IF_H
+ # include <net/if.h>
+ #endif
+ #ifdef HAVE_NET_IF_VAR_H
+ # include <net/if_var.h>
+ #endif
+ #ifdef HAVE_NETINET_IN_H
+ # include <netinet/in.h>
+ #endif
+])
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_BIGENDIAN

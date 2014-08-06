@@ -54,10 +54,10 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #include <net/if_var.h>
 #endif
 #include <netinet/in_systm.h>
+#include <netinet/in.h>
 #ifdef HAVE_NETINET_IN_VAR_H
 #include <netinet/in_var.h>
 #endif
-#include <netinet/in.h>
 #if defined(HAVE_SYS_SOCKIO_H)
 #include <sys/sockio.h>
 #elif defined(HAVE_SYS_SOCKETIO_H)
