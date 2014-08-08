@@ -10,9 +10,9 @@ tme_host_tun_la_SOURCES = tun-tap.c
 tme_host_tun_la_LDFLAGS = -module -version-info 0:0:0
 tme_host_tun_la_LIBADD = $(top_builddir)/libtme/libtme.la \
 	$(top_builddir)/generic/libtme-generic.la \
-	$(top_builddir)/host/eth/libtme_host_eth.la
+	../eth/libtme-host-eth.la
 include $(top_srcdir)/modules
-$(pkglib_LTLIBRARIES): $(top_builddir)/host/eth/libtme_host_eth.la
-$(top_builddir)/host/eth/libtme_host_eth.la: force
+$(pkglib_LTLIBRARIES): ../eth/libtme-host-eth.la
+../eth/libtme-host-eth.la: force
 	cd `dirname $@` && $(MAKE) `basename $@`
 force: ;
