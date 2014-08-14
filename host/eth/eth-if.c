@@ -652,7 +652,8 @@ int tme_eth_alloc(struct tme_element *element, char *dev_filename, char *dev_min
 	      (&element->tme_element_log_handle, 
 	       "%s", dev_filename));
       if (saved_errno == EBUSY
-	  || saved_errno == EACCES) {
+	  || saved_errno == EACCES
+	  || saved_errno == EPERM) {
 	continue;
       }
       errno = saved_errno;

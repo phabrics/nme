@@ -18,7 +18,7 @@ tme_ic_sparc_la_SOURCES = \
 tme_ic_sparc_la_LDFLAGS = -module -version-info 0:0:0
 tme_ic_sparc_la_LIBADD = $(top_builddir)/libtme/libtme.la \
 	$(top_builddir)/generic/libtme-generic.la \
-	$(top_builddir)/ic/ieee754/libtme-ieee754.la
+	../ieee754/libtme-ieee754.la
 BUILT_SOURCES = sparc-auto.h sparc-insns-auto.c sparc-bus-auto.c sparc-fpu-auto.c sparc-vis-auto.c
 EXTRA_DIST = sparc-impl.h \
 	sparc-misc-auto.sh \
@@ -56,9 +56,9 @@ sparc-vis-auto.c: sparc-vis-auto.sh
 	$(SHELL) $(srcdir)/sparc-vis-auto.sh > $@
 
 # dependencies on automatically-generated IEEE 754 sources:
-$(tme_ic_sparc_la_OBJECTS): $(top_builddir)/ic/ieee754/ieee754-auto.h $(top_builddir)/ic/ieee754/ieee754-ops-auto.h
-$(pkglib_LTLIBRARIES): $(top_builddir)/ic/ieee754/libtme-ieee754.la
-$(top_builddir)/ic/ieee754/ieee754-auto.h $(top_builddir)/ic/ieee754/ieee754-ops-auto.h $(top_builddir)/ic/ieee754/libtme-ieee754.la: force
+$(tme_ic_sparc_la_OBJECTS): ../ieee754/ieee754-auto.h ../ieee754/ieee754-ops-auto.h
+$(pkglib_LTLIBRARIES): ../ieee754/libtme-ieee754.la
+../ieee754/ieee754-auto.h ../ieee754/ieee754-ops-auto.h ../ieee754/libtme-ieee754.la: force
 	cd `dirname $@` && $(MAKE) `basename $@`
 force: ;
 

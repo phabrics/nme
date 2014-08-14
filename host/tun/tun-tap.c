@@ -258,11 +258,28 @@ _tme_tun_tap_callout(struct tme_tun_tap *tap, int new_callouts)
 	/* check the size of the frame: */
 	assert(rc <= sizeof(frame));
 
+	/* write the TAP socket: */
+	tme_log(&tap->tme_tun_tap_element->tme_element_log_handle, 1, TME_OK,
+		(&tap->tme_tun_tap_element->tme_element_log_handle,
+		 _("calling write")));
+
 	/* do the write: */
 	status = tme_thread_write(tap->tme_tun_tap_fd, frame, rc);
+	
+	/* if the write failed: */
+	if (status == rc) {
+	  /* the write succeeded: */
+	  tme_log(&tap->tme_tun_tap_element->tme_element_log_handle, 1, TME_OK,
+		  (&tap->tme_tun_tap_element->tme_element_log_handle,
+		   _("wrote %ld bytes of packets"), (long) rc));
+	} else {
+	  tme_log(&tap->tme_tun_tap_element->tme_element_log_handle, 1, errno,
+		  (&tap->tme_tun_tap_element->tme_element_log_handle,
+		   _("failed to write packets with status %d"), status));
+	}
 
 	/* writes must succeed: */
-	assert (status == rc);
+	//assert (status == rc);
 
 	/* mark that we need to loop to callout to read more frames: */
 	tap->tme_tun_tap_callout_flags |= TME_TUN_TAP_CALLOUT_READ;
