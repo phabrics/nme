@@ -146,7 +146,7 @@ if test $ac_cv_c_long_double = yes; then
   AC_CHECK_FLOAT_LIMITS(long double, LDBL_MAX/LDBL_MIN)
 fi
 
-AC_CHECK_MEMBERS([struct stat.st_blksize])
+AC_CHECK_MEMBERS([struct stat.st_rdev, struct stat.st_blksize])
 
 AC_SYS_SOCKADDR_SA_LEN
 
@@ -155,7 +155,7 @@ AC_FUNC_MEMCMP
 AC_FUNC_MALLOC
 AC_FUNC_MMAP
 AC_FUNC_REALLOC
-AC_CHECK_FUNCS([gettimeofday memmove memset munmap pow ptsname select socket sqrt strchr strerror strrchr strstr strtoul])
+AC_CHECK_FUNCS([gettimeofday memmove memset munmap pow ptsname select socket sqrt strchr strerror strrchr strstr strtoul devname fdevname])
 AC_CHECK_FUNC_LONG(bswap16, [
   unsigned int x;
 

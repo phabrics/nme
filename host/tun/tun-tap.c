@@ -741,6 +741,9 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 #ifdef SIOCAIFADDR
   struct in_aliasreq ifra;
 #endif
+#ifdef HAVE_STRUCT_STAT_ST_RDEV
+  struct stat tap_buf;
+#endif
   unsigned long delay_time;
   struct in_addr ip_addrs[TME_IP_ADDRS_TOTAL];
   int i;
@@ -782,6 +785,11 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   if (ioctl(tap_fd, TUNSETIFF, (void *) &ifr) < 0 )
 #elif defined(HAVE_NET_IF_TAP_H)
   if (ioctl(tap_fd, TAPGIFNAME, (void *) &ifr) < 0 )
+#elif defined(HAVE_FDEVNAME)
+  strncpy(ifr.ifr_name, fdevname(tap_fd), IFNAMSIZ);
+#elif defined(HAVE_DEVNAME) && defined(HAVE_STRUCT_STAT_ST_RDEV)
+  fstat(tap_fd, &tap_buf);
+  strncpy(ifr.ifr_name, devname(tap_buf.st_rdev, S_IFCHR), IFNAMSIZ);
 #endif
 #if defined(HAVE_LINUX_IF_TUN_H) || defined(HAVE_NET_IF_TAP_H)
   {
