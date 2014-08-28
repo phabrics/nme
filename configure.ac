@@ -61,8 +61,8 @@ AC_HEADER_STDC
 AC_CHECK_HEADERS([unistd.h stdio.h memory.h stdarg.h limits.h float.h])
 AC_CHECK_HEADERS([sys/ioctl.h sys/sockio.h sys/socketio.h net/if_dl.h ioctls.h netpacket/packet.h ifaddrs.h])
 AC_CHECK_HEADERS([byteswap.h sys/endian.h])
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h netinet/in.h sys/param.h sys/socket.h sys/time.h termios.h])
-AC_CHECK_HEADERS([net/if.h net/if_var.h netinet/in_var.h], [], [],
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h sys/param.h sys/socket.h sys/time.h termios.h])
+AC_CHECK_HEADERS([net/if.h net/if_var.h net/if_types.h net/if_arp.h netinet/in.h netinet/in_var.h netinet/if_ether.h], [], [],
 [#include <stdio.h>
  #ifdef STDC_HEADERS
  # include <stdlib.h>
@@ -81,8 +81,17 @@ AC_CHECK_HEADERS([net/if.h net/if_var.h netinet/in_var.h], [], [],
  #ifdef HAVE_NET_IF_VAR_H
  # include <net/if_var.h>
  #endif
+ #ifdef HAVE_NET_IF_TYPES_H
+ # include <net/if_types.h>
+ #endif
+ #ifdef HAVE_NET_IF_ARP_H
+ # include <net/if_arp.h>
+ #endif
  #ifdef HAVE_NETINET_IN_H
  # include <netinet/in.h>
+ #endif
+ #ifdef HAVE_NETINET_IN_VAR_H
+ # include <netinet/in_var.h>
  #endif
 ])
 

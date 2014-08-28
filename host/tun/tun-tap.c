@@ -53,6 +53,9 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #ifdef HAVE_NET_IF_VAR_H
 #include <net/if_var.h>
 #endif
+#ifdef HAVE_NET_IF_TYPES_H
+#include <net/if_types.h>
+#endif
 #include <netinet/in_systm.h>
 #include <netinet/in.h>
 #ifdef HAVE_NETINET_IN_VAR_H
@@ -67,8 +70,8 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #ifdef HAVE_IOCTLS_H
 #include <ioctls.h>
 #endif /* HAVE_IOCTLS_H */
-#ifdef HAVE_NET_IF_ETHER_H
-#include <net/if_ether.h>
+#ifdef HAVE_NETINET_IF_ETHER_H
+#include <netinet/if_ether.h>
 #endif /* HAVE_NET_IF_ETHER_H */
 #ifdef HAVE_NETPACKET_PACKET_H
 #include <netpacket/packet.h>
@@ -744,6 +747,12 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 #ifdef HAVE_STRUCT_STAT_ST_RDEV
   struct stat tap_buf;
 #endif
+#if defined(TUNGIFINFO) && !defined(TAPGIFINFO)
+  struct tuninfo info;
+#endif
+#ifdef HAVE_NETINET_IF_ETHER_H
+  struct ether_addr addr;
+#endif
   unsigned long delay_time;
   struct in_addr ip_addrs[TME_IP_ADDRS_TOTAL];
   int i;
@@ -801,6 +810,39 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     return (errno);
   }
 #endif
+
+#if defined(TUNGIFINFO) && !defined(TAPGIFINFO)
+  // Attempt to correct the interface type on, e.g., OpenBSD
+  if((ioctl(tap_fd, TUNGIFINFO, (void *) &info) >= 0) &&
+     (info.type == IFT_TUNNEL))
+  {
+    tme_log(&element->tme_element_log_handle, 0, TME_OK,
+	    (&element->tme_element_log_handle,
+	     "in tunnel mode, trying to set ethernet mode"));
+    info.flags = IFF_BROADCAST | IFF_MULTICAST;
+    info.flags |= IFF_SIMPLEX | IFF_LINK0;
+    info.type = IFT_ETHER;
+    if(ioctl(tap_fd, TUNSIFINFO, (void *) &info) < 0)
+      tme_log(&element->tme_element_log_handle, 1, errno,
+	      (&element->tme_element_log_handle,
+	       "failed setting to tap mode"));
+    if(ioctl(tap_fd, SIOCGIFADDR, (void *) &addr) < 0)
+      tme_log(&element->tme_element_log_handle, 1, errno,
+	      (&element->tme_element_log_handle,
+	       "failed to get ethernet address"));
+    else
+      tme_log(&element->tme_element_log_handle, 0, TME_OK,
+	      (&element->tme_element_log_handle,
+	       "ethernet address: %02x-%02x-%02x-%02x-%02x-%02x",
+	       addr[0],
+	       addr[1],
+	       addr[2],
+	       addr[3],
+	       addr[4],
+	       addr[5]));
+  }
+#endif
+  
   tme_log(&element->tme_element_log_handle, 0, TME_OK, 
 	  (&element->tme_element_log_handle, 
 	   "using tap interface %s",
