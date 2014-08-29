@@ -70,6 +70,9 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #ifdef HAVE_IOCTLS_H
 #include <ioctls.h>
 #endif /* HAVE_IOCTLS_H */
+#ifdef HAVE_NET_IF_ARP_H
+#include <net/if_arp.h>
+#endif
 #ifdef HAVE_NETINET_IF_ETHER_H
 #include <netinet/if_ether.h>
 #endif /* HAVE_NET_IF_ETHER_H */
@@ -749,9 +752,9 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 #endif
 #if defined(TUNGIFINFO) && !defined(TAPGIFINFO)
   struct tuninfo info;
-#endif
 #ifdef HAVE_NETINET_IF_ETHER_H
   struct ether_addr addr;
+#endif
 #endif
   unsigned long delay_time;
   struct in_addr ip_addrs[TME_IP_ADDRS_TOTAL];
@@ -826,6 +829,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
       tme_log(&element->tme_element_log_handle, 1, errno,
 	      (&element->tme_element_log_handle,
 	       "failed setting to tap mode"));
+#ifdef HAVE_NETINET_IF_ETHER_H
     if(ioctl(tap_fd, SIOCGIFADDR, (void *) &addr) < 0)
       tme_log(&element->tme_element_log_handle, 1, errno,
 	      (&element->tme_element_log_handle,
@@ -841,6 +845,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 	       addr[4],
 	       addr[5]));
   }
+#endif
 #endif
   
   tme_log(&element->tme_element_log_handle, 0, TME_OK, 
