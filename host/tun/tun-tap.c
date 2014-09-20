@@ -814,40 +814,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   }
 #endif
 
-#if defined(TUNGIFINFO) && !defined(TAPGIFINFO)
-  // Attempt to correct the interface type on, e.g., OpenBSD
-  if((ioctl(tap_fd, TUNGIFINFO, (void *) &info) >= 0) &&
-     (info.type == IFT_TUNNEL))
-  {
-    tme_log(&element->tme_element_log_handle, 0, TME_OK,
-	    (&element->tme_element_log_handle,
-	     "in tunnel mode, trying to set ethernet mode"));
-    info.flags = IFF_BROADCAST | IFF_MULTICAST;
-    info.flags |= IFF_SIMPLEX | IFF_LINK0;
-    info.type = IFT_ETHER;
-    if(ioctl(tap_fd, TUNSIFINFO, (void *) &info) < 0)
-      tme_log(&element->tme_element_log_handle, 1, errno,
-	      (&element->tme_element_log_handle,
-	       "failed setting to tap mode"));
-#ifdef HAVE_NETINET_IF_ETHER_H
-    if(ioctl(tap_fd, SIOCGIFADDR, (void *) &addr) < 0)
-      tme_log(&element->tme_element_log_handle, 1, errno,
-	      (&element->tme_element_log_handle,
-	       "failed to get ethernet address"));
-    else
-      tme_log(&element->tme_element_log_handle, 0, TME_OK,
-	      (&element->tme_element_log_handle,
-	       "ethernet address: %02x-%02x-%02x-%02x-%02x-%02x",
-	       addr[0],
-	       addr[1],
-	       addr[2],
-	       addr[3],
-	       addr[4],
-	       addr[5]));
-  }
-#endif
-#endif
-  
   tme_log(&element->tme_element_log_handle, 0, TME_OK, 
 	  (&element->tme_element_log_handle, 
 	   "using tap interface %s",
@@ -855,7 +821,12 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 
   /* make a dummy socket so we can configure the interface: */
   if ((dummy_fd = socket(AF_INET, SOCK_DGRAM, 0)) >= 0) {
+#if defined(TUNGIFINFO) && !defined(TAPGIFINFO)
+    // OpenBSD requires this to enable TAP mode on TUN interface
+    ifr.ifr_flags = IFF_LINK0;
+#else
     ifr.ifr_flags = IFF_UP;
+#endif
     /* try to create the device */
     if (ioctl(dummy_fd, SIOCSIFFLAGS, (void *) &ifr) < 0 ) {
       tme_log(&element->tme_element_log_handle, 1, errno,
