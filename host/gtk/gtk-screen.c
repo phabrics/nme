@@ -137,6 +137,65 @@ _tme_gtk_scanline_pad(int bpl)
   return (8);
 }
 
+/* set the translation function to use for this screen */
+static void
+_tme_gtk_screen_xlat_set(const struct tme_fb_connection *conn_fb, 
+			 struct tme_gtk_screen *screen) {
+  const struct tme_fb_connection *conn_fb_other;
+  struct tme_fb_xlat fb_xlat_q;
+  const struct tme_fb_xlat *fb_xlat_a;
+  int scale;
+  struct tme_gtk_display *display;
+  
+  scale = screen->tme_gtk_screen_fb_scale;
+  if (scale < 0) scale = -scale;
+  conn_fb_other = (const struct tme_fb_connection *) conn_fb->tme_fb_connection.tme_connection_other;
+  
+  /* compose the framebuffer translation question: */
+  fb_xlat_q.tme_fb_xlat_width			= conn_fb_other->tme_fb_connection_width;
+  fb_xlat_q.tme_fb_xlat_height			= conn_fb_other->tme_fb_connection_height;
+  fb_xlat_q.tme_fb_xlat_scale			= scale;
+  fb_xlat_q.tme_fb_xlat_src_depth		= conn_fb_other->tme_fb_connection_depth;
+  fb_xlat_q.tme_fb_xlat_src_bits_per_pixel	= conn_fb_other->tme_fb_connection_bits_per_pixel;
+  fb_xlat_q.tme_fb_xlat_src_skipx		= conn_fb_other->tme_fb_connection_skipx;
+  fb_xlat_q.tme_fb_xlat_src_scanline_pad	= conn_fb_other->tme_fb_connection_scanline_pad;
+  fb_xlat_q.tme_fb_xlat_src_order		= conn_fb_other->tme_fb_connection_order;
+  fb_xlat_q.tme_fb_xlat_src_class		= conn_fb_other->tme_fb_connection_class;
+  fb_xlat_q.tme_fb_xlat_src_map			= (conn_fb_other->tme_fb_connection_map_g != NULL
+						   ? TME_FB_XLAT_MAP_INDEX
+						   : TME_FB_XLAT_MAP_LINEAR);
+  fb_xlat_q.tme_fb_xlat_src_map_bits		= conn_fb_other->tme_fb_connection_map_bits;
+  fb_xlat_q.tme_fb_xlat_src_mask_g		= conn_fb_other->tme_fb_connection_mask_g;
+  fb_xlat_q.tme_fb_xlat_src_mask_r		= conn_fb_other->tme_fb_connection_mask_r;
+  fb_xlat_q.tme_fb_xlat_src_mask_b		= conn_fb_other->tme_fb_connection_mask_b;
+  fb_xlat_q.tme_fb_xlat_dst_depth		= conn_fb->tme_fb_connection_depth;
+  fb_xlat_q.tme_fb_xlat_dst_bits_per_pixel	= conn_fb->tme_fb_connection_bits_per_pixel;
+  fb_xlat_q.tme_fb_xlat_dst_skipx		= conn_fb->tme_fb_connection_skipx;
+  fb_xlat_q.tme_fb_xlat_dst_scanline_pad	= conn_fb->tme_fb_connection_scanline_pad;
+  fb_xlat_q.tme_fb_xlat_dst_order		= conn_fb->tme_fb_connection_order;
+  fb_xlat_q.tme_fb_xlat_dst_map			= (conn_fb->tme_fb_connection_map_g != NULL
+						   ? TME_FB_XLAT_MAP_INDEX
+						   : TME_FB_XLAT_MAP_LINEAR);
+  fb_xlat_q.tme_fb_xlat_dst_mask_g		= conn_fb->tme_fb_connection_mask_g;
+  fb_xlat_q.tme_fb_xlat_dst_mask_r		= conn_fb->tme_fb_connection_mask_r;
+  fb_xlat_q.tme_fb_xlat_dst_mask_b		= conn_fb->tme_fb_connection_mask_b;
+
+  /* ask the framebuffer translation question: */
+  fb_xlat_a = tme_fb_xlat_best(&fb_xlat_q);
+
+  display = screen->tme_gtk_screen_display;
+
+  /* if this translation isn't optimal, log a note: */
+  if (!tme_fb_xlat_is_optimal(fb_xlat_a)) {
+    tme_log(&display->tme_gtk_display_element->tme_element_log_handle, 0, TME_OK,
+	    (&display->tme_gtk_display_element->tme_element_log_handle,
+	     _("no optimal framebuffer translation function available")));
+  }
+
+  /* save the translation function: */
+  screen->tme_gtk_screen_fb_xlat = fb_xlat_a->tme_fb_xlat_func;
+}
+
 /* this is called for a mode change: */
 int
 _tme_gtk_screen_mode_change(struct tme_fb_connection *conn_fb)
@@ -155,6 +214,7 @@ _tme_gtk_screen_mode_change(struct tme_fb_connection *conn_fb)
   tme_uint32_t colorset;
   tme_uint32_t color_count;
   struct tme_fb_color *colors_tme;
+  gboolean config;
 
   /* recover our data structures: */
   display = conn_fb->tme_fb_connection.tme_connection_element->tme_element_private;
@@ -218,11 +278,12 @@ _tme_gtk_screen_mode_change(struct tme_fb_connection *conn_fb)
   
   height += height_extra;
 
-  if(gtk_widget_get_allocated_width(screen->tme_gtk_screen_gtkframe) != width
-     || gtk_widget_get_allocated_height(screen->tme_gtk_screen_gtkframe) != height)
+  if((config = 
+      (gtk_widget_get_allocated_width(screen->tme_gtk_screen_gtkframe) != width
+       || gtk_widget_get_allocated_height(screen->tme_gtk_screen_gtkframe) != height)))
     /* set a minimum size */
     gtk_widget_set_size_request(screen->tme_gtk_screen_gtkframe, width, height);
-  
+
   /* remember all previously allocated maps and colors, but otherwise
      remove them from our framebuffer structure: */
   map_g_old = conn_fb->tme_fb_connection_map_g;
@@ -292,6 +353,9 @@ _tme_gtk_screen_mode_change(struct tme_fb_connection *conn_fb)
       /* set the needed colors: */
       tme_fb_xlat_colors_set(conn_fb_other, scale, conn_fb, colors_tme);
     }
+
+    /* set the translation function */
+    if(!config) _tme_gtk_screen_xlat_set(conn_fb, screen);
   }
 
   /* force the next translation to do a complete redraw (if not already doing so): */
@@ -480,10 +544,6 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
   struct tme_gtk_screen *screen;
   struct tme_gtk_display *display;
   struct tme_fb_connection *conn_fb;
-  struct tme_fb_connection *conn_fb_other;
-  struct tme_fb_xlat fb_xlat_q;
-  const struct tme_fb_xlat *fb_xlat_a;
-  int scale;
 
   screen = (struct tme_gtk_screen *) _screen;
 
@@ -516,53 +576,9 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
   conn_fb->tme_fb_connection_order = TME_ENDIAN_NATIVE;
   conn_fb->tme_fb_connection_buffer = cairo_image_surface_get_data(screen->tme_gtk_screen_surface);
   conn_fb->tme_fb_connection_buffsz = cairo_image_surface_get_stride(screen->tme_gtk_screen_surface) * conn_fb->tme_fb_connection_height;
-  conn_fb_other = (struct tme_fb_connection *)conn_fb->tme_fb_connection.tme_connection_other;
   
-  /* if the user hasn't specified a scaling, pick one: */
-  scale = screen->tme_gtk_screen_fb_scale;
-  if (scale < 0) scale = -scale;
-  
-  /* compose the framebuffer translation question: */
-  fb_xlat_q.tme_fb_xlat_width			= conn_fb_other->tme_fb_connection_width;
-  fb_xlat_q.tme_fb_xlat_height			= conn_fb_other->tme_fb_connection_height;
-  fb_xlat_q.tme_fb_xlat_scale			= scale;
-  fb_xlat_q.tme_fb_xlat_src_depth		= conn_fb_other->tme_fb_connection_depth;
-  fb_xlat_q.tme_fb_xlat_src_bits_per_pixel	= conn_fb_other->tme_fb_connection_bits_per_pixel;
-  fb_xlat_q.tme_fb_xlat_src_skipx		= conn_fb_other->tme_fb_connection_skipx;
-  fb_xlat_q.tme_fb_xlat_src_scanline_pad	= conn_fb_other->tme_fb_connection_scanline_pad;
-  fb_xlat_q.tme_fb_xlat_src_order		= conn_fb_other->tme_fb_connection_order;
-  fb_xlat_q.tme_fb_xlat_src_class		= conn_fb_other->tme_fb_connection_class;
-  fb_xlat_q.tme_fb_xlat_src_map			= (conn_fb_other->tme_fb_connection_map_g != NULL
-						   ? TME_FB_XLAT_MAP_INDEX
-						   : TME_FB_XLAT_MAP_LINEAR);
-  fb_xlat_q.tme_fb_xlat_src_map_bits		= conn_fb_other->tme_fb_connection_map_bits;
-  fb_xlat_q.tme_fb_xlat_src_mask_g		= conn_fb_other->tme_fb_connection_mask_g;
-  fb_xlat_q.tme_fb_xlat_src_mask_r		= conn_fb_other->tme_fb_connection_mask_r;
-  fb_xlat_q.tme_fb_xlat_src_mask_b		= conn_fb_other->tme_fb_connection_mask_b;
-  fb_xlat_q.tme_fb_xlat_dst_depth		= conn_fb->tme_fb_connection_depth;
-  fb_xlat_q.tme_fb_xlat_dst_bits_per_pixel	= conn_fb->tme_fb_connection_bits_per_pixel;
-  fb_xlat_q.tme_fb_xlat_dst_skipx		= conn_fb->tme_fb_connection_skipx;
-  fb_xlat_q.tme_fb_xlat_dst_scanline_pad	= conn_fb->tme_fb_connection_scanline_pad;
-  fb_xlat_q.tme_fb_xlat_dst_order		= conn_fb->tme_fb_connection_order;
-  fb_xlat_q.tme_fb_xlat_dst_map			= (conn_fb->tme_fb_connection_map_g != NULL
-						   ? TME_FB_XLAT_MAP_INDEX
-						   : TME_FB_XLAT_MAP_LINEAR);
-  fb_xlat_q.tme_fb_xlat_dst_mask_g		= conn_fb->tme_fb_connection_mask_g;
-  fb_xlat_q.tme_fb_xlat_dst_mask_r		= conn_fb->tme_fb_connection_mask_r;
-  fb_xlat_q.tme_fb_xlat_dst_mask_b		= conn_fb->tme_fb_connection_mask_b;
-
-  /* ask the framebuffer translation question: */
-  fb_xlat_a = tme_fb_xlat_best(&fb_xlat_q);
-
-  /* if this translation isn't optimal, log a note: */
-  if (!tme_fb_xlat_is_optimal(fb_xlat_a)) {
-    tme_log(&display->tme_gtk_display_element->tme_element_log_handle, 0, TME_OK,
-	    (&display->tme_gtk_display_element->tme_element_log_handle,
-	     _("no optimal framebuffer translation function available")));
-  }
-
-  /* save the translation function: */
-  screen->tme_gtk_screen_fb_xlat = fb_xlat_a->tme_fb_xlat_func;
+  /* set the translation function */
+  _tme_gtk_screen_xlat_set(conn_fb, screen);
 
   /* force the next translation to do a complete redraw: */
   screen->tme_gtk_screen_full_redraw = TRUE;
