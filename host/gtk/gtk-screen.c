@@ -651,6 +651,7 @@ _tme_gtk_screen_new(struct tme_gtk_display *display)
      and auto-shrink: */
   screen->tme_gtk_screen_window
     = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+
   gtk_window_set_resizable(GTK_WINDOW(screen->tme_gtk_screen_window), FALSE);
 
   /* create the outer vertical packing box: */
@@ -742,7 +743,6 @@ _tme_gtk_screen_connection_make(struct tme_connection *conn,
   /* recover our data structures: */
   display = (struct tme_gtk_display *) conn->tme_connection_element->tme_element_private;
   conn_fb = (struct tme_fb_connection *) conn;
-  conn_fb_other = (struct tme_fb_connection *) conn->tme_connection_other;
 
   /* both sides must be framebuffer connections: */
   assert(conn->tme_connection_type
@@ -763,6 +763,9 @@ _tme_gtk_screen_connection_make(struct tme_connection *conn,
     if (screen->tme_gtk_screen_fb != NULL) {
       screen = _tme_gtk_screen_new(display);
     }
+
+    gtk_window_set_title(GTK_WINDOW(screen->tme_gtk_screen_window),
+			 conn->tme_connection_other->tme_connection_element->tme_element_args[0]);
 
     /* save our connection: */
     screen->tme_gtk_screen_fb = conn_fb;

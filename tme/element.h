@@ -94,6 +94,9 @@ struct tme_element {
   /* the module implementing the element: */
   void *tme_element_module;
 
+  /* the creation args of the element: */
+  char **tme_element_args;
+
   /* the element's private data structure: */
   void *tme_element_private;
 
