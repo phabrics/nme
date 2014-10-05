@@ -886,7 +886,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 		  inet_ntoa(ifra.ifra_mask.sin_addr)));
       }
     }
-    
+    setuid(getuid());
 #else
     ifr.ifr_addr.sa_family = AF_INET;
     if(ip_addrs[TME_IP_ADDRS_INET].s_addr) {
