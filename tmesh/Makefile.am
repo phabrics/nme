@@ -17,3 +17,6 @@ libtmesh_la_LDFLAGS = -version-info 0:0:0
 bin_PROGRAMS = tmesh
 tmesh_LDADD = $(top_builddir)/libtme/libtme.la libtmesh.la $(GTK_LIBS) -lX11
 tmesh_LDFLAGS = -dlpreopen self @TME_PREOPEN@
+
+install-exec-hook:
+	$(SETCAP) $(DESTDIR)$(bindir)/tmesh$(EXEEXT)

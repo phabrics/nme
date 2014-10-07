@@ -759,14 +759,30 @@ case "${host_os}" in
 netbsd*) 
    CPPFLAGS="${CPPFLAGS-} -D_NETBSD_SOURCE -D_XOPEN_SOURCE=600"
    DEV_TAP_FILENAME='"\"/dev/tap\""'
+   SETCAP="chmod u+s"
    ;;
-openbsd*) DEV_TAP_FILENAME='"\"/dev/tun\""' ;;
-freebsd*) DEV_TAP_FILENAME='"\"/dev/tap\""' ;;
-dragonfly*) DEV_TAP_FILENAME='"\"/dev/tap\""' ;;
-linux*) DEV_TAP_FILENAME='"\"/dev/net/tun\""' ;;
-*) CPPFLAGS="${CPPFLAGS-} -D_BSD_SOURCE -D_XOPEN_SOURCE=600" ;;
+openbsd*) 
+   DEV_TAP_FILENAME='"\"/dev/tun\""'
+   SETCAP="chmod u+s"
+   ;;
+freebsd*) 
+   DEV_TAP_FILENAME='"\"/dev/tap\""'
+   SETCAP="chmod u+s"
+   ;;
+dragonfly*) 
+   DEV_TAP_FILENAME='"\"/dev/tap\""'
+   SETCAP="chmod u+s"
+   ;;
+linux*) 
+   DEV_TAP_FILENAME='"\"/dev/net/tun\""'
+   SETCAP="setcap cap_net_admin+ep"
+   ;;
+*) CPPFLAGS="${CPPFLAGS-} -D_BSD_SOURCE -D_XOPEN_SOURCE=600"
+   SETCAP="chmod u+s"
+   ;;
 esac
 AC_SUBST(DEV_TAP_FILENAME)
+AC_SUBST(SETCAP)
 dnl Configure debugging and/or warnings.
 AC_ARG_ENABLE(debug,
 [  --enable-debug          compile debuggable libraries and programs (default=don't)],
