@@ -47,6 +47,9 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #include <fcntl.h>
 #include <netdb.h>
 #include <sys/param.h>
+#ifdef HAVE_SYS_LINKER_H
+#include <sys/linker.h>
+#endif
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <net/if.h>
@@ -761,11 +764,22 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   int i;
   int usage;
   int rc;
-  
+
   memset(&ifr, 0, sizeof(ifr));
 
   /* get the arguments: */
   rc = tme_eth_args(args, &ifr, &delay_time, ip_addrs, _output);
+#ifdef HAVE_KLDFIND
+  // A helper step to automate loading of the necessary kernel module on FreeBSD-derived platforms
+#define KLD_FILENAME "if_tap.ko"
+  if((kldfind(KLD_FILENAME)<0) &&
+     (kldload(KLD_FILENAME)<0))
+    tme_log(&element->tme_element_log_handle, 0, errno,
+	    (&element->tme_element_log_handle,
+	     _("failed to load the TAP kernel module...\ntry \"kldload %s\" in a root console"),
+	     KLD_FILENAME));
+#undef KLD_FILENAME
+#endif
 
   sprintf(dev_tap_filename, DEV_TAP_FILENAME);
 

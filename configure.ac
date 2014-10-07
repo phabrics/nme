@@ -61,7 +61,7 @@ AC_HEADER_STDC
 AC_CHECK_HEADERS([unistd.h stdio.h memory.h stdarg.h limits.h float.h])
 AC_CHECK_HEADERS([sys/ioctl.h sys/sockio.h sys/socketio.h net/if_dl.h ioctls.h netpacket/packet.h ifaddrs.h])
 AC_CHECK_HEADERS([byteswap.h sys/endian.h])
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h sys/param.h sys/socket.h sys/time.h termios.h])
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h sys/param.h sys/linker.h sys/socket.h sys/time.h termios.h])
 AC_CHECK_HEADERS([net/if.h net/if_var.h net/if_types.h net/if_arp.h netinet/in.h netinet/in_var.h netinet/if_ether.h], [], [],
 [#include <stdio.h>
  #ifdef STDC_HEADERS
@@ -164,7 +164,7 @@ AC_FUNC_MEMCMP
 AC_FUNC_MALLOC
 AC_FUNC_MMAP
 AC_FUNC_REALLOC
-AC_CHECK_FUNCS([gettimeofday memmove memset munmap pow ptsname select socket sqrt strchr strerror strrchr strstr strtoul devname fdevname])
+AC_CHECK_FUNCS([gettimeofday memmove memset munmap pow ptsname select socket sqrt strchr strerror strrchr strstr strtoul devname fdevname kldfind])
 AC_CHECK_FUNC_LONG(bswap16, [
   unsigned int x;
 
