@@ -1,1 +1,88 @@
-A README will appear here.
+Welcome to The Machine Emulator
+-------------------------------
+
+This is TME: The Machine Emulator, an extensible platform for creating & implementing dynamic machine specifications and running/testing/debugging them.
+Originally conceived by Matthew Fredette at MIT, this is hoped to be the continuation & expansion of that groundbreaking project.
+Under the auspices of the Phabrics project - to be unveiled at some unspecified later time - it is meant as an independent, standalone product.
+But, enough with the pleasantries -- on to the nitty-gritty!
+
+Supported Hosts:
+
+One of the major goals of TME is to work on as many hosts as possible.  This is done by design when test machines are available, but it is obviously impossible to cover
+all platforms, even the major ones.  Nonetheless, I have tried to cover Linux & the major BSDs in use today, but resource constraints & time considerations limit
+the testing to just a few as follows -
+
+1. NetBSD - the original host platform of choice for developing TME.  Runs on the most host machine platforms.
+2. OpenBSD - the most secure OS and arguably the hardest to develop for as well.  If it works here, it should work anywhere...
+3. FreeBSD - the most popular BSD.  Good for getting the word out.
+4. DragonflyBSD - a BSD with many modern features.  A good testbed for trying out optimizations.
+4. Fedora Linux - For now, the only Linux testbed, but other distros should follow.
+
+Another goal is to work on the latest versions of all these & more.  Expanding to other platforms is highly encouraged, and any successes or patches to make it work on
+others is encouraged.  Please send any patches or info about other platforms to phabrics@phabrics.com.  As it expands, we would like to incorporate any core patches that
+expand functionality to other platforms, while keeping the others working.  This requires a constant QA cycle across all supported platforms, so may not always be possible.
+In particular, any expansion should not break existing functionality on a known-good host.  This is another goal.
+
+It should be relatively easy to install directly from a source tarball (see below) on any of the hosts mentioned above.  Every effort has been made to make this possible with 
+minimal fuss and no extra configuration.  Another one of the main goals was to make this as self-contained a package as possible.  No other tools should be needed outside
+of the initial build process to get tmesh working.  All configuration is done with the tmesh scripts to keep things as simple as possible.
+
+Packages may be made available at some point for some of the hosts above, but should download original source from the site(s) documented below.  The original TME package 
+(which stopped at 0.8 as of this writing) is still packaged on most of these platforms.
+
+Prerequisites:
+If building from source tarball, you must have certain packages installed on your host platform of choice.  
+
+At a minimum, if not already installed, you should install these packages (latest versions should work) -
+1. bison 
+2. GTK+3
+
+Obtaining:
+Source tarball available via anonymous access at ftp://ftp.phabrics.com/phabrics/contrib/tme-<version>.tgz
+
+Installation:
+This should be the standard GNU install as documented in INSTALL.  Some general steps -
+
+1. tar xzf tme-<version>.tgz
+2. cd <builddir>
+3. <srcdir>/configure --prefix=<install prefix> --disable-warnings --enable-debug
+4. make
+5. su 
+6. make intall
+
+Installation step should usually be done as root if you want to configure tap devices with ip parameters in the tmesh descriptions.  On *BSD, it will run setuid to allow this, but 
+gives up privilege immediately after.  On Linux, it will install with cap_net_admin capability instead.
+
+Note: debug doesn't have to be enabled, unless you want to run 64-bit hosts.  For some reason, these only work in debug mode, but the other hosts should work fine without it.
+Note: to run setuid, be sure it is allowed on the installation filesystem, i.e., the nosuid bit should not be set there, which it is usually not for standard install locations such as /usr/local
+
+Running:
+tmesh can run in one of two modes:  headless or GUI.  
+To run headless, modify the tmesh script to create the machine with the terminal connected to a serial port and disable the screen.
+To run GUI, keep the screen configured.  See the tmesh site for more details.
+tmesh usage, as documented on the TME site should still work fine - http://people.csail.mit.edu/fredette/tme/
+More info to come on the phabrics.com website.
+
+Guest platforms:
+tmesh is meant to be an extensible platform, meaning that it should be good enough to run any machine description coded according to its standards.  The standards have yet to be
+documented outside of the source code.  Right now, the only guest machines available are sun2, sun3, sun4c, and sun4u (ultra-1).  These work reasonably well right now, but stability
+improvements are an ongoing affair.  They are meant for demonstration purposes alone, but will run relatively complete emulations of certain configurations as documented on the
+original TME site.  
+
+Some guest operating systems have been tested as well.  We will try to document these as we test things out further.  It is known that both NetBSD & OpenBSD (latest versions) are known
+to work pretty well on all the guest machines.  In addition, ethernet configuration has been one of the major points of effort in this latest version of TME (the other being upgrading
+from GTK+2 to GTK+3).
+
+Ethernet:
+Ethernet configuration can be done in one of two ways:  BPF or TAP device.
+
+The BPF device was the original method for ethernet configuration.  It still works & is still supported.  Support for this method has also been added on the Linux platform through
+the equivalent Linux Socket Filter (LSF) facility.  It allows a direct connection to an adapter, but may not work on all adapters, particularly on Linux hosts.  Because of this limitation, support for TAP devices was added.
+
+TAP devices make a tap device, which is basically a pseudo-ethernet adapter that is created on demand.  This is as opposed to a real hardware ethernet adapter.  It is basically
+an ethernet adapter that runs in software only in the kernel.  See the sample tmesh scripts for examples.  It can be configured with an ip address, which basically acts as a gateway
+to the host machine.  The guest machine can be configured with an ip address in the same subnet as the tap device, thus allowing for communication between host & guest.  Afterwards,
+a bridge or a NAT can be set up to the adapter, if communication with the external net is desired.
+
+Right now, bridge or NAT configuration must be done manually outside of TME.  The next version of TME should make it possible to do NAT within TME itself, so that it is more self-contained
+& doesn't require external tools or scripts.
