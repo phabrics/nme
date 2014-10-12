@@ -44,14 +44,19 @@ Installation:
 This should be the standard GNU install as documented in INSTALL.  Some general steps -
 
 1. tar xzf tme-<version>.tgz
-2. cd <builddir>
-3. <srcdir>/configure --prefix=<install prefix> --disable-warnings --enable-debug
-4. make
-5. su 
-6. make intall
+2. mkdir <builddir>
+3. cd <builddir>
+4. <srcdir>/configure --prefix=<installdir> --disable-warnings --enable-debug
+5. make
+6. su 
+7. make intall
+8. (sh,ksh,bash) export TME_MODULE_PATH=<installdir>/lib 
+   (csh,tcsh)    setenv TME_MODULE_PATH <installdir>/lib
 
 Installation step should usually be done as root if you want to configure tap devices with ip parameters in the tmesh descriptions.  On *BSD, it will run setuid to allow this, but 
-gives up privilege immediately after.  On Linux, it will install with cap_net_admin capability instead.
+gives up privilege immediately after.  On Linux, it will install with cap_net_admin capability instead.  The environment variable TME_MODULE_PATH must be set to the location of the 
+install library path... this is where the plugin modules live.  Plugin modules are normally libtool shared libraries, unless the package is configured with --disable-shared, in which case
+they are static libtool libraries.  Installable executable is normally done with shared enabled.  Setting LD_LIBRARY_PATH will not work for setuid executables, as it is simply ignored.
 
 Note: debug doesn't have to be enabled, unless you want to run 64-bit hosts.  For some reason, these only work in debug mode, but the other hosts should work fine without it.
 Note: to run setuid, be sure it is allowed on the installation filesystem, i.e., the nosuid bit should not be set there, which it is usually not for standard install locations such as /usr/local
