@@ -291,7 +291,7 @@ for fpop in fpop1 fpop2; do
 	#
 	opf_decimal=-1
 	while test ${opf_decimal} != 511; do
-	    opf_decimal=`expr ${opf_decimal} + 1`
+	    opf_decimal=`expr \( ${opf_decimal} \) + 1`
 
 	    # make the binary version of the opf field:
 	    #

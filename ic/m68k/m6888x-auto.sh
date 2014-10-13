@@ -97,7 +97,7 @@ EOF
 	#
 	opmode=-1
 	while test ${opmode} != 127; do
-	    opmode=`expr ${opmode} + 1`
+	    opmode=`expr \( ${opmode} \) + 1`
 
 	    # if we're generating the opmode bitmap, and this opmode
 	    # is in a new byte, emit the previous byte and reset for

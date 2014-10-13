@@ -100,15 +100,15 @@ while test ${i_width} != 32; do
 		#
 		placeholder=false
 		if test ${endian} = b; then
-		    i_lane_greatest=`expr -8 + ${i_width} - ${i_offset}`
-		    i_lane_least=`expr 8 + ${i_lane_greatest} - ${i_size}`
-		    if test `expr ${i_lane_least} \< 0` = 1; then
+		    i_lane_greatest=`expr 0 - 8 + ${i_width} - ${i_offset}`
+		    i_lane_least=`expr 8 + \( ${i_lane_greatest} \) - ${i_size}`
+		    if test `expr \( ${i_lane_least} \) \< 0` = 1; then
 			placeholder=true
 		    fi
 		else
 		    i_lane_least=$i_offset
-		    i_lane_greatest=`expr -8 + ${i_offset} + ${i_size}`
-		    if test `expr ${i_lane_greatest} \>= ${i_width}` = 1; then
+		    i_lane_greatest=`expr 0 - 8 + ${i_offset} + ${i_size}`
+		    if test `expr \( ${i_lane_greatest} \) \>= ${i_width}` = 1; then
 			placeholder=true
 		    fi
 		fi
@@ -123,7 +123,7 @@ while test ${i_width} != 32; do
 		    #
 		    r_lane_least=0
 		    while test `expr ${r_lane_least} \< ${i_width}` = 1; do
-			r_lane_greatest=`expr -8 + ${r_lane_least} + ${r_width}`
+			r_lane_greatest=`expr 0 - 8 + ${r_lane_least} + ${r_width}`
 
 			# emit the initiator information:
 			#
@@ -144,7 +144,7 @@ while test ${i_width} != 32; do
 			# part of the responder's port is outside of
 			# the initiator's port:
 			#
-			if test `expr ${r_lane_greatest} \>= ${i_width}` = 1; then
+			if test `expr \( ${r_lane_greatest} \) \>= ${i_width}` = 1; then
 			    echo ""
 			    echo -n "     (responder port not correctly positioned for this initiator)"
 			fi
@@ -166,7 +166,7 @@ while test ${i_width} != 32; do
 			    # see if this lane is on in the responder:
 			    #
 			    if test `expr ${lane} \>= ${r_lane_least}` = 1 \
-			       && test `expr ${lane} \<= ${r_lane_greatest}` = 1; then
+			       && test `expr ${lane} \<= \( ${r_lane_greatest} \)` = 1; then
 				r_lane_on=true
 			    else
 				r_lane_on=false
@@ -174,10 +174,10 @@ while test ${i_width} != 32; do
 
 			    # see if this lane is on in the initiator:
 			    #
-			    if test `expr ${lane} \>= ${i_lane_least}` = 1 \
-			       && test `expr ${lane} \<= ${i_lane_greatest}` = 1; then
+			    if test `expr ${lane} \>= \( ${i_lane_least} \)` = 1 \
+			       && test `expr ${lane} \<= \( ${i_lane_greatest} \)` = 1; then
 			        i_lane_on=true
-				route=`expr ${route} + ${route_increment}`
+				route=`expr \( ${route} + ${route_increment} \)`
 			    else
 				i_lane_on=false
 			    fi

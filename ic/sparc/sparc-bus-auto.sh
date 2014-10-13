@@ -138,7 +138,7 @@ if $header; then :; else
 		    # not be within the port:
 		    opn=`expr 4 - ${transfer}`
 		    opn_lane=`expr 3 - \( ${address} % ${port_size} \)`
-		    op3_lane=`expr ${opn_lane} - \( 3 - ${opn} \)`
+		    op3_lane=`expr \( ${opn_lane} \) - \( 3 - ${opn} \)`
 
 		    echo ""
 		    echo "  /* [sparc] initiator maximum cycle size: "`expr ${transfer} \* 8`" bits"
@@ -159,8 +159,8 @@ if $header; then :; else
 			    # reading at this transfer size and
 			    # address alignment:
 			    opn=`expr 3 - \( ${lane} - ${op3_lane} \)`
-			    if test `expr ${opn} \> 3` = 0 \
-			       && test `expr ${opn} \< \( 4 - ${transfer} \)` = 0; then
+			    if test `expr \( ${opn} \) \> 3` = 0 \
+			       && test `expr \( ${opn} \) \< \( 4 - ${transfer} \)` = 0; then
 				lane_read="OP(${opn})"
 
 			    # otherwise this lane isn't routed by the

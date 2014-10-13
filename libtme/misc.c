@@ -430,7 +430,7 @@ tme_misc_cycles_per_ms(void)
 union tme_value64
 tme_misc_cycles(void)
 {
-#ifdef TME_HAVE_INT64_T */
+#ifdef TME_HAVE_INT64_T
   struct timeval now;
   tme_uint64_t cycles;
   union tme_value64 value;
