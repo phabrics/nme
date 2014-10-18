@@ -90,4 +90,19 @@ to the host machine.  The guest machine can be configured with an ip address in 
 a bridge or a NAT can be set up to the adapter, if communication with the external net is desired.
 
 Right now, bridge or NAT configuration must be done manually outside of TME.  The next version of TME should make it possible to do NAT within TME itself, so that it is more self-contained
-& doesn't require external tools or scripts.
+& doesn't require external tools or scripts.Below are instructions for manually setting up NAT on a clean machine of different platforms. It is recommended to run TME on a clean machine, i.e., a virgin machine or machine that is not used for production purposes, with a network configuration that doesn't depend on having a fixed setup for security or other purposes. The instructions below may alter or destroy default network settings or firewall security policies, so it is recommended to do this behind another firewall if Internet access is desired. through the NAT interface. If you know what you're doing, you can change these to suit your purposes while preserving NAT for TME, but that exercise is left to the interested power user or system administrator. Be careful and ask for permission if required to do this.
+
+Linux/IPTABLES NAT Configuration
+
+As root or superuser, run the following commands from a shell as required. <iface0> is the external, physical network card to NAT to and <iface1> is the internal, tap device created by the TME configuration. To learn these, use "ifconfig -a" or "ip addr show" and note the names to use here.
+
+1. modprobe iptables_nat
+2. echo 1 > /proc/sys/net/ipv4/ip_forward
+3. iptables -F FORWARD
+4. iptables -t nat -A POSTROUTING -o <iface0> -j MASQUERADE
+5. iptables -A forward -i <iface0> -o <iface1> -m state --state RELATED,ESTABLISHED -j ACCEPT
+6. iptables -A forward -i <iface1> -o <iface0> -m state -j ACCEPT
+
+Note that step 2 flushes the forward chain of the filter table; this is to ensure that there are no rules that will block the NAT from working. You may or may not need to do this depending on your setup. If you omit this step and find that DNS is not working, this is probably why. Be sure you know what you are doing here, or consult your nearest system administrator or guru. There's a lot of documentation for IPTABLES available on the web and in manual pages. This is just a very basic setup to get you going with connecting your TME instance to the Internet.
+
+After NAT is setup, make sure your routes are set correctly in your guests. In particular, make sure the default gateway is set to the ip address of the tap device. Also, if you want to access the external network or Internet, you will have to set up DNS. Usually, you fill in the /etc/resolv.conf with the "nameserver xx.xx.xx.xx" line where xx.xx.xx.xx. is the ip address of the nameserver - usually the same as the host machine's. This is usually all done as part of the process of installing or configuring the guest OS; refer to the guest OS documentation for more details. It is basically the same as setting it up for an internal network as specified by the TME configuration.
