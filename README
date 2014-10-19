@@ -105,4 +105,18 @@ As root or superuser, run the following commands from a shell as required. <ifac
 
 Note that step 2 flushes the forward chain of the filter table; this is to ensure that there are no rules that will block the NAT from working. You may or may not need to do this depending on your setup. If you omit this step and find that DNS is not working, this is probably why. Be sure you know what you are doing here, or consult your nearest system administrator or guru. There's a lot of documentation for IPTABLES available on the web and in manual pages. This is just a very basic setup to get you going with connecting your TME instance to the Internet.
 
+{Net,Free,DragonFly}BSD/PF NAT Configuration
+
+1. kldload pf
+2. ({Free,Dragonfly}BSD) sysctl net.inet.ip.forwarding=1 
+   (NetBSD) sysctl -w net.inet.ip.forwarding=1
+3. pfctl -F all
+4. echo "pass from <iface1>:network to any keep state" | pfctl -f-
+5. echo "nat on <iface0> from <iface1>:network to any -> (<iface0>)" | pfctl -f-
+6. pfctl -e
+
+Your mileage may vary; this is what worked for me, but you may have a different setup/needs, so use your own discretion and consult who and whatever documentation is required. Again, there is much documentation on PF available. There are also other NAT solutions available on the BSDs, but this seems to be the most flexible and stable. It also has a stable ioctl API for directly programming the rules into a program. I'm also looking into using the new NPF facility in NetBSD, which seems to have an even nicer, functional programming API for direct integration into the tool. 
+
+OpenBSD has a newer PF with some differences, so I am still looking into that. Again, the goal here is to get the user up and running as quickly as possible with minimal fuss, so this is by no means a comprehensive way to do IP forwarding with NAT. Much documentation exists to assist you there, but hopefully we will have a minimal function built into the tool itself so that these steps won't be required to be done outside the tool.
+
 After NAT is setup, make sure your routes are set correctly in your guests. In particular, make sure the default gateway is set to the ip address of the tap device. Also, if you want to access the external network or Internet, you will have to set up DNS. Usually, you fill in the /etc/resolv.conf with the "nameserver xx.xx.xx.xx" line where xx.xx.xx.xx. is the ip address of the nameserver - usually the same as the host machine's. This is usually all done as part of the process of installing or configuring the guest OS; refer to the guest OS documentation for more details. It is basically the same as setting it up for an internal network as specified by the TME configuration.
