@@ -129,8 +129,8 @@ static struct tme_sjlj_thread tme_sjlj_thread_blocked;
 /* this is set if the active thread is exiting: */
 static int tme_sjlj_thread_exiting;
 
-/* this is a jmp_buf back to the dispatcher: */
-static jmp_buf tme_sjlj_dispatcher_jmp;
+/* this is a sigjmp_buf back to the dispatcher: */
+static sigjmp_buf tme_sjlj_dispatcher_jmp;
 
 /* the main loop fd sets: */
 static int tme_sjlj_main_max_fd;
@@ -494,7 +494,7 @@ tme_sjlj_dispatch(volatile int passes)
       
       /* when this active thread yields, we'll return here, where we
 	 will continue the inner dispatching loop: */
-      rc_one = setjmp(tme_sjlj_dispatcher_jmp);
+      rc_one = sigsetjmp(tme_sjlj_dispatcher_jmp, 0);
       if (rc_one) {
 	continue;
       }
@@ -1175,7 +1175,7 @@ do {							\
   }
 
   /* jump back to the dispatcher: */
-  longjmp(tme_sjlj_dispatcher_jmp, TRUE);
+  siglongjmp(tme_sjlj_dispatcher_jmp, TRUE);
 }
 
 /* this sleeps: */

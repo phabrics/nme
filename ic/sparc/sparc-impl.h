@@ -817,8 +817,8 @@ struct tme_sparc {
   struct tme_sparc_bus_connection *_tme_sparc_bus_connection;
   struct tme_bus_connection *_tme_sparc_bus_generic;
 
-  /* a jmp_buf back to the dispatcher: */
-  jmp_buf _tme_sparc_dispatcher;
+  /* a sigjmp_buf back to the dispatcher: */
+  sigjmp_buf _tme_sparc_dispatcher;
 
   /* the current mode of the CPU: */
   int _tme_sparc_mode;
