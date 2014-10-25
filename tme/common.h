@@ -350,6 +350,7 @@ tme_bswap_u64(tme_uint64_t x)
 /* time: */
 #ifdef HAVE_CLOCK_GETTIME
 #define tme_get_time(x) clock_gettime(CLOCK_REALTIME, x)
+#define tme_select(a,b,c,d,e) pselect(a,b,c,d,e,NULL)
 #define TME_TIME_EQ(x,y) ((x).tv_sec == (y).tv_sec \
 			  && (x).tv_nsec == (y).tv_nsec)
 #define TME_TIME_EQV(a,x,y) ((a).tv_sec == (x)	\
@@ -367,6 +368,26 @@ tme_bswap_u64(tme_uint64_t x)
 #define TME_TIME_INC(a,x) (a).tv_sec += (x).tv_sec; (a).tv_nsec += (x).tv_nsec;
 #define TME_TIME_SUB(a,x,y) (a).tv_sec = (x).tv_sec - (y).tv_sec; (a).tv_nsec = (x).tv_nsec - (y).tv_nsec;
 #define TME_TIME_DEC(a,x) (a).tv_sec -= (x).tv_sec; (a).tv_nsec -= (x).tv_nsec;
+#else
+#define tme_get_time(x) gettimeofday(x, NULL)
+#define tme_select(a,b,c,d,e) select(a,b,c,d,e)
+#define TME_TIME_EQ(x,y) ((x).tv_sec == (y).tv_sec \
+			  && (x).tv_usec == (y).tv_usec)
+#define TME_TIME_EQV(a,x,y) ((a).tv_sec == (x)	\
+			     && (a).tv_usec == (y))
+#define TME_TIME_GT(x,y) ((x).tv_sec > (y).tv_sec		\
+			  || ((x).tv_sec == (y).tv_sec		\
+			      && (x).tv_usec > (y).tv_usec))
+#define TME_TIME_SEC(a) (a).tv_sec
+#define TME_TIME_GET_USEC(a) (a).tv_usec
+#define TME_TIME_SET_USEC(a,x) ((a).tv_usec = (x))
+#define TME_TIME_INC_USEC(a,x) ((a).tv_usec += (x))
+#define TME_TIME_SETV(a,s,u) (a).tv_sec = (s); (a).tv_usec = (u);
+#define TME_TIME_ADD(a,x,y) (a).tv_sec = (x).tv_sec + (y).tv_sec; (a).tv_usec = (x).tv_usec + (y).tv_usec;
+#define TME_TIME_ADDV(a,s,u) (a).tv_sec += (s); (a).tv_usec += (u);
+#define TME_TIME_INC(a,x) (a).tv_sec += (x).tv_sec; (a).tv_usec += (x).tv_usec;
+#define TME_TIME_SUB(a,x,y) (a).tv_sec = (x).tv_sec - (y).tv_sec; (a).tv_usec = (x).tv_usec - (y).tv_usec;
+#define TME_TIME_DEC(a,x) (a).tv_sec -= (x).tv_sec; (a).tv_usec -= (x).tv_usec;
 #endif
 /* prototypes: */
 void *tme_malloc _TME_P((unsigned int));

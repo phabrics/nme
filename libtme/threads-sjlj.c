@@ -778,13 +778,12 @@ tme_sjlj_threads_run(void)
     }
 
     /* do the select: */
-    rc = pselect(tme_sjlj_main_max_fd + 1,
-		&fdset_read_out,
-		&fdset_write_out,
-		&fdset_except_out,
-		 timeout,
-		 NULL);
-
+    rc = tme_select(tme_sjlj_main_max_fd + 1,
+		    &fdset_read_out,
+		    &fdset_write_out,
+		    &fdset_except_out,
+		    timeout);
+    
     /* we were in select() for an unknown amount of time: */
     tme_thread_long();
 
@@ -1196,7 +1195,7 @@ tme_sjlj_sleep(unsigned long sec, unsigned long usec)
 
     /* do the select.  select returns 0 iff the timeout expires, so we
        can skip another gettimeofday and loop: */
-    rc = pselect(-1, NULL, NULL, NULL, &timeout, NULL);
+    rc = tme_select(-1, NULL, NULL, NULL, &timeout);
     tme_thread_long();
     if (rc == 0) {
       break;
@@ -1250,7 +1249,7 @@ tme_sjlj_select_yield(int nfds,
 
   /* do a polling select: */
   TME_TIME_SETV(timeout_out, 0, 0);
-  rc = pselect(nfds, fdset_read_in, fdset_write_in, fdset_except_in, &timeout_out, NULL);
+  rc = tme_select(nfds, fdset_read_in, fdset_write_in, fdset_except_in, &timeout_out);
   tme_thread_long();
   if (rc != 0
       || (timeout_in != NULL
