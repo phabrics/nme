@@ -36,6 +36,7 @@
 #include <tme/common.h>
 _TME_RCSID("$Id: stp103x.c,v 1.5 2010/06/05 18:57:04 fredette Exp $");
 
+#include <time.h>
 /* includes: */
 #include "sparc-impl.h"
 

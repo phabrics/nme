@@ -42,6 +42,7 @@ _TME_RCSID("$Id: threads-sjlj.c,v 1.18 2010/06/05 19:10:28 fredette Exp $");
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/time.h>
+#include <time.h>
 #include <setjmp.h>
 
 /* if we don't have GTK, fake a few definitions to keep things
@@ -369,7 +370,7 @@ _tme_sjlj_threads_dispatching_timeout(void)
        thread_timeout = thread_timeout->timeout_next) {
 
     /* if this timeout has not expired: */
-    if (TME_TIME_GT(thread_timeout->tme_sjlj_thread_timeout, *now)) {
+    if (TME_TIME_GT(thread_timeout->tme_sjlj_thread_timeout, now)) {
       break;
     }
 
@@ -432,8 +433,8 @@ _tme_sjlj_timeout_time(tme_time_t *timeout)
   }
 
   /* if the earliest timeout has already timed out: */
-  secs_other += TME_TIME_SECS(now);
-  secs = TME_TIME_SECS(thread_timeout->tme_sjlj_thread_timeout);
+  secs_other += TME_TIME_SEC(now);
+  secs = TME_TIME_SEC(thread_timeout->tme_sjlj_thread_timeout);
   if (__tme_predict_false(secs_other > secs
 			  || ((secs -= secs_other) == 0
 			      && usecs == 0))) {
@@ -469,7 +470,7 @@ tme_sjlj_dispatch(volatile int passes)
       /* if this thread is on the timeout list: */
       _thread_timeout_prev = thread->timeout_prev;
       assert ((_thread_timeout_prev != NULL)
-	      == (!TME_TIME_EQV(thread->tme_sjlj_thread_sleep), 0, 0));
+	      == (!TME_TIME_EQV(thread->tme_sjlj_thread_sleep, 0, 0)));
       if (_thread_timeout_prev != NULL) {
 
 	/* remove this thread from the timeout list: */
@@ -777,11 +778,12 @@ tme_sjlj_threads_run(void)
     }
 
     /* do the select: */
-    rc = select(tme_sjlj_main_max_fd + 1,
+    rc = pselect(tme_sjlj_main_max_fd + 1,
 		&fdset_read_out,
 		&fdset_write_out,
 		&fdset_except_out,
-		timeout);
+		 timeout,
+		 NULL);
 
     /* we were in select() for an unknown amount of time: */
     tme_thread_long();
@@ -1172,9 +1174,9 @@ tme_sjlj_sleep(unsigned long sec, unsigned long usec)
   /* get the wakeup time for the thread: */
   tme_gettimeofday(&then);
   for (; usec >= 1000000; sec++, usec -= 1000000);
-  if ((TME_TIME_SET_USEC(then) += usec) >= 1000000) {
+  if (TME_TIME_INC_USEC(then, usec) >= 1000000) {
     sec++;
-    TME_TIME_SET_USEC(then) -= 1000000;
+    TME_TIME_INC_USEC(then, -1000000);
   }
   TME_TIME_SEC(then) += sec;
   
@@ -1194,7 +1196,7 @@ tme_sjlj_sleep(unsigned long sec, unsigned long usec)
 
     /* do the select.  select returns 0 iff the timeout expires, so we
        can skip another gettimeofday and loop: */
-    rc = select(-1, NULL, NULL, NULL, &timeout);
+    rc = pselect(-1, NULL, NULL, NULL, &timeout, NULL);
     tme_thread_long();
     if (rc == 0) {
       break;
@@ -1248,7 +1250,7 @@ tme_sjlj_select_yield(int nfds,
 
   /* do a polling select: */
   TME_TIME_SETV(timeout_out, 0, 0);
-  rc = select(nfds, fdset_read_in, fdset_write_in, fdset_except_in, &timeout_out);
+  rc = pselect(nfds, fdset_read_in, fdset_write_in, fdset_except_in, &timeout_out, NULL);
   tme_thread_long();
   if (rc != 0
       || (timeout_in != NULL

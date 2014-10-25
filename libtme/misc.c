@@ -41,6 +41,7 @@ _TME_RCSID("$Id: misc.c,v 1.8 2010/06/05 19:02:38 fredette Exp $");
 #include <tme/module.h>
 #include <tme/misc.h>
 #include <ctype.h>
+#include <time.h>
 
 /* this initializes libtme: */
 int

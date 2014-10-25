@@ -38,6 +38,7 @@
 #include <tme/common.h>
 _TME_RCSID("$Id: stp222x-timer.c,v 1.3 2010/06/05 14:38:00 fredette Exp $");
 
+#include <time.h>
 /* includes: */
 #include "stp222x-impl.h"
 
@@ -108,7 +109,7 @@ _tme_stp222x_timer_update(struct tme_stp222x_timer *timer,
 
     /* set this timer's next limit time: */
     do {
-      TME_TIME_ADD(timer->tme_stp222x_timer_limit_next, timer->tme_stp222x_timer_period);
+      TME_TIME_INC(timer->tme_stp222x_timer_limit_next, timer->tme_stp222x_timer_period);
       if (__tme_predict_false(TME_TIME_GET_USEC(timer->tme_stp222x_timer_limit_next) >= 1000000)) {
 	TME_TIME_ADDV(timer->tme_stp222x_timer_limit_next, 1, -1000000);
       }
@@ -206,7 +207,7 @@ _tme_stp222x_timer_count(struct tme_stp222x_timer *timer)
   _tme_stp222x_timer_update(timer, &now, &sleep);
 
   /* get the absolute count until the next limit: */
-  count = TME_TIME_SEC(sleep)
+  count = TME_TIME_SEC(sleep);
   count *= 1000000;
   count += TME_TIME_GET_USEC(sleep);
 

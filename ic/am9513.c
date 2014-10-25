@@ -41,6 +41,7 @@ _TME_RCSID("$Id: am9513.c,v 1.17 2010/06/05 14:36:59 fredette Exp $");
 #include <tme/ic/am9513.h>
 #include <sys/types.h>
 #include <sys/time.h>
+#include <time.h>
 
 /* macros: */
 #define TME_AM9513_CMD_SET_BUS_16BIT		(0xffef)
@@ -467,7 +468,7 @@ _tme_am9513_th_timer(struct tme_am9513 *am9513)
 #ifdef TME_AM9513_TRACK_INT_RATE
 
       /* update the sample time: */
-      for (TME_TIME_INC_USEC(counter->tme_am9513_counter_int_sample_time, elapsed);
+      for (TME_TIME_INC_USEC(counter->tme_am9513_counter_int_sample_time, TME_TIME_GET_USEC(elapsed));
 	   TME_TIME_GET_USEC(counter->tme_am9513_counter_int_sample_time) >= 1000000;
 	   TME_TIME_INC_USEC(counter->tme_am9513_counter_int_sample_time, -1000000)) {
 	TME_TIME_SEC(counter->tme_am9513_counter_int_sample_time)++;

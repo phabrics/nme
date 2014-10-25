@@ -38,6 +38,7 @@ _TME_RCSID("$Id: sun4-timer.c,v 1.3 2010/06/05 14:38:23 fredette Exp $");
 
 /* includes: */
 #include <tme/generic/bus-device.h>
+#include <time.h>
 #include "sun4-impl.h"
 
 /* macros: */

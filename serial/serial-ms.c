@@ -36,6 +36,7 @@
 #include <tme/common.h>
 _TME_RCSID("$Id: serial-ms.c,v 1.4 2010/02/14 00:48:04 fredette Exp $");
 
+#include <time.h>
 /* includes: */
 #include "serial-ms.h"
 
