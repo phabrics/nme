@@ -433,14 +433,14 @@ static void _tme_stp103x_ls_address_map _TME_P((struct tme_sparc *, struct tme_s
 static inline void
 tme_misc_timeval_never(tme_time_t *tv)
 {
-  tv->tv_sec = 0;
-  tv->tv_sec--;
-  if (tv->tv_sec < 1) {
-    tv->tv_sec = 1;
-    tv->tv_sec <<= ((8 * sizeof(tv->tv_sec)) - 2);
-    tv->tv_sec += (tv->tv_sec - 1);
+  TME_TIME_SEC(*tv) = 0;
+  TME_TIME_SEC(*tv)--;
+  if (TME_TIME_SEC(*tv) < 1) {
+    TME_TIME_SEC(*tv) = 1;
+    TME_TIME_SEC(*tv) <<= ((8 * sizeof(TME_TIME_SEC(*tv))) - 2);
+    TME_TIME_SEC(*tv) += (TME_TIME_SEC(*tv) - 1);
   }
-  tv->tv_usec = 999999;
+  TME_TIME_SET_USEC(*tv, 999999);
 }
 
 /* this does an interrupt check: */
@@ -452,12 +452,12 @@ _tme_stp103x_interrupt_check(struct tme_sparc *ic,
   tme_uint32_t sir;
   tme_uint32_t ipl;
   tme_uint32_t trap;
-
+  
   /* if we're replaying instructions, return now: */
   if (tme_sparc_recode_verify_replay_last_pc(ic) != 0) {
     return;
   }
-
+  
   /* if PSTATE.IE is clear, return now: */
   if ((ic->tme_sparc64_ireg_pstate & TME_SPARC64_PSTATE_IE) == 0) {
     return;
@@ -1028,28 +1028,28 @@ TME_SPARC_FORMAT3(_tme_stp103x_wrasr, tme_uint64_t)
 
       case 0x17:
 	TME_STP103X(ic)->tme_stp103x_tcr = value_xor;
-
+	
 	/* if we're not replaying instructions: */
 	if (tme_sparc_recode_verify_replay_last_pc(ic) == 0) {
-
+	  
 	  /* if INT_DIS is set: */
 	  if (__tme_predict_false(value_xor & TME_STP103X_TCR_INT_DIS)) {
-
+	    
 	    /* the tick compare time is never: */
 	    tme_misc_timeval_never(&tick_compare_time);
 	  }
-
+	  
 	  /* otherwise, INT_DIS is clear: */
 	  else {
-
+	    
 	    /* get the current value of TICK.counter: */
 	    tick = tme_misc_cycles_scaled(&ic->tme_sparc_cycles_scaling, 0).tme_value64_uint;
 	    tick += ic->tme_sparc64_ireg_tick_offset;
 	    tick &= TME_SPARC64_TICK_COUNTER;
-
+	    
 	    /* get the current time: */
-	    tme_get_time(&tick_compare_time;
-
+	    tme_get_time(&tick_compare_time);
+			 
 	    /* get the number of cycles until the compare value is
 	       reached: */
 	    cycles_scaled = TME_STP103X(ic)->tme_stp103x_tcr - tick;
@@ -1062,8 +1062,8 @@ TME_SPARC_FORMAT3(_tme_stp103x_wrasr, tme_uint64_t)
 	      usec64 = cycles_scaled / ic->tme_sparc_cycles_scaled_per_usec;
 
 	      /* add in the whole seconds: */
-	      tick_compare_time.tv_sec += (usec64 / 1000000);
-
+	      TME_TIME_SEC(tick_compare_time) += (usec64 / 1000000);
+	      
 	      /* get the remaining microseconds: */
 	      usec32 = (usec64 % 1000000);
 	    }
@@ -1073,25 +1073,25 @@ TME_SPARC_FORMAT3(_tme_stp103x_wrasr, tme_uint64_t)
 
 	      /* convert cycles into microseconds: */
 	      usec32 = ((tme_uint32_t) cycles_scaled) / ic->tme_sparc_cycles_scaled_per_usec;
-
+	      
 	      /* if there is at least one whole second: */
 	      if (__tme_predict_false(usec32 >= 1000000)) {
-
+		
 		/* add in the whole seconds: */
-		tick_compare_time.tv_sec += (usec32 / 1000000);
-
+		TME_TIME_SEC(tick_compare_time) += (usec32 / 1000000);
+		
 		/* get the remaining microseconds: */
 		usec32 %= 1000000;
 	      }
 	    }
-
+			 
 	    /* add in the microseconds: */
-	    usec32 += tick_compare_time.tv_usec;
+	    usec32 += TME_TIME_GET_USEC(tick_compare_time);
 	    if (usec32 >= 1000000) {
-	      tick_compare_time.tv_sec++;
+	      TME_TIME_SEC(tick_compare_time)++;
 	      usec32 -= 1000000;
 	    }
-	    tick_compare_time.tv_usec = usec32;
+	    TME_TIME_SET_USEC(tick_compare_time, usec32);
 	  }
 
 	  /* lock the external mutex: */
@@ -3764,10 +3764,10 @@ _tme_stp103x_tick_compare_th(void *_ic)
     tme_gettimeofday(&now);
 
     /* if the current time is greater than or equal to the tick compare time: */
-    now_tv_sec = now.tv_sec;
-    now_tv_usec = now.tv_usec;
-    tick_compare_time_tv_sec = TME_STP103X(ic)->tme_stp103x_tick_compare_time.tv_sec;
-    tick_compare_time_tv_usec = TME_STP103X(ic)->tme_stp103x_tick_compare_time.tv_usec;
+    now_tv_sec = TME_TIME_SEC(now);
+    now_tv_usec = TME_TIME_GET_USEC(now);
+    tick_compare_time_tv_sec = TME_TIME_SEC(TME_STP103X(ic)->tme_stp103x_tick_compare_time);
+    tick_compare_time_tv_usec = TME_TIME_GET_USEC(TME_STP103X(ic)->tme_stp103x_tick_compare_time);
     if (now_tv_sec > tick_compare_time_tv_sec
 	|| (now_tv_sec == tick_compare_time_tv_sec
 	    && now_tv_usec >= tick_compare_time_tv_usec)) {
@@ -3795,8 +3795,8 @@ _tme_stp103x_tick_compare_th(void *_ic)
 	tick_compare_time_tv_sec--;
 	tick_compare_time_tv_usec += 1000000;
       }
-      sleep.tv_sec = TME_MIN(tick_compare_time_tv_sec - now_tv_sec, 60);
-      sleep.tv_usec = tick_compare_time_tv_usec - now_tv_usec;
+      TME_TIME_SEC(sleep) = TME_MIN(tick_compare_time_tv_sec - now_tv_sec, 60);
+      TME_TIME_SET_USEC(sleep, tick_compare_time_tv_usec - now_tv_usec);
 
       /* sleep on the tick compare condition: */
       tme_cond_sleep_yield(&TME_STP103X(ic)->tme_stp103x_tick_compare_cond,

@@ -156,10 +156,7 @@ _tme_sun4_timer_update(struct tme_sun4_timer *timer, tme_time_t *now, tme_time_t
 #ifdef TME_SUN4_TIMER_TRACK_INT_RATE
 
   /* if the sample time has finished: */
-  if (timer->tme_sun4_timer_track_sample.tv_sec < now->tv_sec
-      || (timer->tme_sun4_timer_track_sample.tv_sec == now->tv_sec
-	  && timer->tme_sun4_timer_track_sample.tv_usec <= now->tv_usec)) {
-
+  if (TME_TIME_GT(*now, timer->tme_sun4_timer_track_sample)) {
     /* if the timer has made any interrupts during the sample time: */
     if (timer->tme_sun4_timer_track_ints > 0) {
 
@@ -172,45 +169,37 @@ _tme_sun4_timer_update(struct tme_sun4_timer *timer, tme_time_t *now, tme_time_t
 		? 10
 		: 14),
 	       (timer->tme_sun4_timer_track_ints
-		/ (unsigned long) (now->tv_sec
-				   - (timer->tme_sun4_timer_track_sample.tv_sec
+		/ (unsigned long) (TME_TIME_SEC(*now)
+				   - (TME_TIME_SEC(timer->tme_sun4_timer_track_sample)
 				      - TME_SUN4_TIMER_TRACK_INT_RATE)))));
     }
 
     /* reset the sampling: */
     timer->tme_sun4_timer_track_ints = 0;
     timer->tme_sun4_timer_track_sample = *now;
-    timer->tme_sun4_timer_track_sample.tv_sec += TME_SUN4_TIMER_TRACK_INT_RATE;
+    TME_TIME_SEC(timer->tme_sun4_timer_track_sample) += TME_SUN4_TIMER_TRACK_INT_RATE;
   }
 
 #endif /* TME_SUN4_TIMER_TRACK_INT_RATE */
 
   /* if this timer has not reached its next limit: */
-  if (__tme_predict_false(timer->tme_sun4_timer_limit_next.tv_sec > now->tv_sec
-			  || (timer->tme_sun4_timer_limit_next.tv_sec == now->tv_sec
-			      && timer->tme_sun4_timer_limit_next.tv_usec > now->tv_usec))) {
+  if (__tme_predict_false(TME_TIME_GT(timer->tme_sun4_timer_limit_next, *now))) {
 
     /* sleep until this timer reaches its next limit: */
-    sleep->tv_sec = timer->tme_sun4_timer_limit_next.tv_sec - now->tv_sec;
-    sleep->tv_usec = timer->tme_sun4_timer_limit_next.tv_usec - now->tv_usec;
-    if (timer->tme_sun4_timer_limit_next.tv_usec < now->tv_usec) {
-      sleep->tv_sec--;
-      sleep->tv_usec += 1000000;
+    TME_TIME_SUB(*sleep, timer->tme_sun4_timer_limit_next, *now);
+    if (TME_TIME_GET_USEC(timer->tme_sun4_timer_limit_next) < TME_TIME_GET_USEC(*now)) {
+      TME_TIME_ADDV(*sleep, -1, 1000000);
     }
     return;
   }
 
   /* set this timer's next limit time: */
   do {
-    timer->tme_sun4_timer_limit_next.tv_sec += timer->tme_sun4_timer_period.tv_sec;
-    timer->tme_sun4_timer_limit_next.tv_usec += timer->tme_sun4_timer_period.tv_usec;
-    if (__tme_predict_false(timer->tme_sun4_timer_limit_next.tv_usec >= 1000000)) {
-      timer->tme_sun4_timer_limit_next.tv_usec -= 1000000;
-      timer->tme_sun4_timer_limit_next.tv_sec += 1;
+    TME_TIME_INC(timer->tme_sun4_timer_limit_next, timer->tme_sun4_timer_period);
+    if (__tme_predict_false(TME_TIME_GET_USEC(timer->tme_sun4_timer_limit_next) >= 1000000)) {
+      TME_TIME_ADDV(timer->tme_sun4_timer_limit_next, 1, -1000000);
     }
-  } while (timer->tme_sun4_timer_limit_next.tv_sec < now->tv_sec
-	   || (timer->tme_sun4_timer_limit_next.tv_sec == now->tv_sec
-	       && timer->tme_sun4_timer_limit_next.tv_usec <= now->tv_usec));
+  } while (TME_TIME_GT(*now, timer->tme_sun4_timer_limit_next));
 
   /* mark this timer as having reached its limit: */
 #ifdef TME_SUN4_TIMER_TRACK_INT_RATE
@@ -252,20 +241,18 @@ _tme_sun4_timer_reset(struct tme_sun4_timer *timer)
   /* convert the timer's period from 500ns ticks to a tme_time_t
      and save it: */
   usecs = ticks / 2;
-  timer->tme_sun4_timer_period.tv_sec = 0;
+  TME_TIME_SEC(timer->tme_sun4_timer_period) = 0;
   if (__tme_predict_false(usecs >= 1000000)) {
-    timer->tme_sun4_timer_period.tv_sec = usecs / 1000000;
+    TME_TIME_SEC(timer->tme_sun4_timer_period) = usecs / 1000000;
     usecs %= 1000000;
   }
-  timer->tme_sun4_timer_period.tv_usec = usecs;
+  TME_TIME_SET_USEC(timer->tme_sun4_timer_period, usecs);
 
   /* set the next limit time for this timer: */
   tme_get_time(&timer->tme_sun4_timer_limit_next);
-  timer->tme_sun4_timer_limit_next.tv_sec += timer->tme_sun4_timer_period.tv_sec;
-  timer->tme_sun4_timer_limit_next.tv_usec += timer->tme_sun4_timer_period.tv_usec;
-  if (timer->tme_sun4_timer_limit_next.tv_usec >= 1000000) {
-    timer->tme_sun4_timer_limit_next.tv_usec -= 1000000;
-    timer->tme_sun4_timer_limit_next.tv_sec += 1;
+  TME_TIME_INC(timer->tme_sun4_timer_limit_next, timer->tme_sun4_timer_period);
+  if (TME_TIME_GET_USEC(timer->tme_sun4_timer_limit_next) >= 1000000) {
+    TME_TIME_ADDV(timer->tme_sun4_timer_limit_next, 1, -1000000);
   }
 }
 
@@ -351,19 +338,17 @@ _tme_sun4_timer_cycle_control(void *_sun4, struct tme_bus_cycle *cycle_init)
 
       /* get the time of the last reset: */
       last_reset = timer->tme_sun4_timer_limit_next;
-      if (last_reset.tv_usec < timer->tme_sun4_timer_period.tv_usec) {
-	last_reset.tv_sec -= 1;
-	last_reset.tv_usec += 1000000;
+      if (TME_TIME_GET_USEC(last_reset) < TME_TIME_GET_USEC(timer->tme_sun4_timer_period)) {
+	TME_TIME_ADDV(last_reset, -1, 1000000);
       }
-      last_reset.tv_sec -= timer->tme_sun4_timer_period.tv_sec;
-      last_reset.tv_usec -= timer->tme_sun4_timer_period.tv_usec;
+      TME_TIME_DEC(last_reset, timer->tme_sun4_timer_period);
 
       /* get the number of microseconds since the last reset: */
-      usecs = now.tv_sec - last_reset.tv_sec;
+      usecs = TME_TIME_SEC(now) - TME_TIME_SEC(last_reset);
       usecs *= 1000000;
       usecs
-	+= (((tme_int32_t) now.tv_usec)
-	    - ((tme_int32_t) last_reset.tv_usec));
+	+= (((tme_int32_t) TME_TIME_GET_USEC(now))
+	    - ((tme_int32_t) TME_TIME_GET_USEC(last_reset)));
 
       /* to keep things simpler, we always use the sun4m 500ns tick: */
       counter_one = TME_SUN4_IS_SUN44C(sun4) ? 2 : 1;

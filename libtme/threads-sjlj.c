@@ -209,8 +209,7 @@ tme_sjlj_threads_init(void)
   /* initialize the thread-blocked structure: */
   tme_sjlj_thread_blocked.tme_sjlj_thread_cond = NULL;
   tme_sjlj_thread_blocked.tme_sjlj_thread_max_fd = -1;
-  tme_sjlj_thread_blocked.tme_sjlj_thread_sleep.tv_sec = 0;
-  tme_sjlj_thread_blocked.tme_sjlj_thread_sleep.tv_usec = 0;
+  TME_TIME_SETV(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep, 0, 0);
 }
 
 #ifdef HAVE_GTK
@@ -370,9 +369,7 @@ _tme_sjlj_threads_dispatching_timeout(void)
        thread_timeout = thread_timeout->timeout_next) {
 
     /* if this timeout has not expired: */
-    if (thread_timeout->tme_sjlj_thread_timeout.tv_sec > now.tv_sec
-	|| (thread_timeout->tme_sjlj_thread_timeout.tv_sec == now.tv_sec
-	    && thread_timeout->tme_sjlj_thread_timeout.tv_usec > now.tv_usec)) {
+    if (TME_TIME_GT(thread_timeout->tme_sjlj_thread_timeout, *now)) {
       break;
     }
 
@@ -423,10 +420,10 @@ _tme_sjlj_timeout_time(tme_time_t *timeout)
   assert (thread_timeout != NULL);
 
   /* subtract the now microseconds from the timeout microseconds: */
-  assert (thread_timeout->tme_sjlj_thread_timeout.tv_usec < 1000000);
-  usecs = thread_timeout->tme_sjlj_thread_timeout.tv_usec;
-  assert (now.tv_usec < 1000000);
-  usecs -= now.tv_usec;
+  assert (TME_TIME_GET_USEC(thread_timeout->tme_sjlj_thread_timeout) < 1000000);
+  usecs = TME_TIME_GET_USEC(thread_timeout->tme_sjlj_thread_timeout);
+  assert (TME_TIME_GET_USEC(now) < 1000000);
+  usecs -= TME_TIME_GET_USEC(now);
 
   /* make any seconds carry: */
   secs_other = (usecs < 0);
