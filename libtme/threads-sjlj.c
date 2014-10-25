@@ -432,8 +432,8 @@ _tme_sjlj_timeout_time(tme_time_t *timeout)
   }
 
   /* if the earliest timeout has already timed out: */
-  secs_other += now.tv_sec;
-  secs = thread_timeout->tme_sjlj_thread_timeout.tv_sec;
+  secs_other += TME_TIME_SECS(now);
+  secs = TME_TIME_SECS(thread_timeout->tme_sjlj_thread_timeout);
   if (__tme_predict_false(secs_other > secs
 			  || ((secs -= secs_other) == 0
 			      && usecs == 0))) {
@@ -447,8 +447,7 @@ _tme_sjlj_timeout_time(tme_time_t *timeout)
   }
 
   /* return the timeout time: */
-  timeout->tv_sec = secs;
-  timeout->tv_usec = usecs;
+  TME_TIME_SETV(*timeout, secs, usecs);
 }
 
 /* this dispatches all dispatching threads: */
@@ -470,8 +469,7 @@ tme_sjlj_dispatch(volatile int passes)
       /* if this thread is on the timeout list: */
       _thread_timeout_prev = thread->timeout_prev;
       assert ((_thread_timeout_prev != NULL)
-	      == (thread->tme_sjlj_thread_sleep.tv_sec != 0
-		  || thread->tme_sjlj_thread_sleep.tv_usec != 0));
+	      == (!TME_TIME_EQV(thread->tme_sjlj_thread_sleep), 0, 0));
       if (_thread_timeout_prev != NULL) {
 
 	/* remove this thread from the timeout list: */
@@ -641,9 +639,7 @@ tme_sjlj_threads_gtk_yield(void)
     thread_timeout = tme_sjlj_threads_timeout;
     if (_tme_sjlj_gtk_timeout_id != 0
 	&& (thread_timeout == NULL
-	    || _tme_sjlj_gtk_timeout.tv_sec != thread_timeout->tme_sjlj_thread_timeout.tv_sec
-	    || _tme_sjlj_gtk_timeout.tv_usec != thread_timeout->tme_sjlj_thread_timeout.tv_usec)) {
-
+	    || !TME_TIME_EQ(_tme_sjlj_gtk_timeout, thread_timeout->tme_sjlj_thread_timeout))) {
       /* remove the GTK timeout: */
       g_source_remove(_tme_sjlj_gtk_timeout_id);
       _tme_sjlj_gtk_timeout_id = 0;
@@ -664,8 +660,8 @@ tme_sjlj_threads_gtk_yield(void)
 
 	/* convert the timeout into milliseconds, and clip it at ten
 	   seconds: */
-	secs = timeout.tv_sec;
-	msecs = (timeout.tv_usec + 999) / 1000;
+	secs = TME_TIME_SEC(timeout);
+	msecs = (TME_TIME_GET_USEC(timeout) + 999) / 1000;
 	if (msecs == 1000) {
 	  secs++;
 	  msecs = 0;
@@ -776,8 +772,7 @@ tme_sjlj_threads_run(void)
 
     /* if there are runnable threads, make this a poll: */
     if (tme_sjlj_threads_runnable != NULL) {
-      timeout_buffer.tv_sec = 0;
-      timeout_buffer.tv_usec = 0;
+      TME_TIME_SETV(timeout_buffer, 0, 0);
       timeout = &timeout_buffer;
     }
 
@@ -852,8 +847,7 @@ tme_sjlj_thread_create(tme_thread_t func, void *func_private)
   thread->tme_sjlj_thread_func = func;
   thread->tme_sjlj_thread_cond = NULL;
   thread->tme_sjlj_thread_max_fd = -1;
-  thread->tme_sjlj_thread_sleep.tv_sec = 0;
-  thread->tme_sjlj_thread_sleep.tv_usec = 0;
+  TME_TIME_SETV(thread->tme_sjlj_thread_sleep, 0, 0);
   thread->timeout_prev = NULL;
 
   /* make this thread runnable: */
@@ -892,7 +886,7 @@ tme_sjlj_cond_sleep_yield(tme_cond_t *cond, tme_mutex_t *mutex, const tme_time_t
   tme_sjlj_thread_blocked.tme_sjlj_thread_cond = cond;
 
   /* sleep and yield: */
-  tme_sjlj_sleep_yield(sleep->tv_sec, sleep->tv_usec);
+  tme_sjlj_sleep_yield(TME_TIME_SEC(*sleep), TME_TIME_GET_USEC(*sleep));
 }
 
 /* this notifies one or more threads waiting on a condition: */
@@ -1096,21 +1090,16 @@ do {							\
   tme_sjlj_thread_blocked.tme_sjlj_thread_max_fd = -1;
 
   /* see if this thread is blocked for some amount of time: */
-  if (tme_sjlj_thread_blocked.tme_sjlj_thread_sleep.tv_sec != 0
-      || tme_sjlj_thread_blocked.tme_sjlj_thread_sleep.tv_usec != 0) {
+  if (!TME_TIME_EQV(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep, 0, 0)) {
 
-    assert(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep.tv_usec < 1000000);
+    assert(TME_TIME_GET_USEC(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep) < 1000000);
     blocked = TRUE;
 
     /* set the timeout for this thread: */
     tme_gettimeofday(&thread->tme_sjlj_thread_timeout);
-    thread->tme_sjlj_thread_timeout.tv_sec
-      += tme_sjlj_thread_blocked.tme_sjlj_thread_sleep.tv_sec;
-    thread->tme_sjlj_thread_timeout.tv_usec
-      += tme_sjlj_thread_blocked.tme_sjlj_thread_sleep.tv_usec;
-    if (thread->tme_sjlj_thread_timeout.tv_usec >= 1000000) {
-      thread->tme_sjlj_thread_timeout.tv_sec++;
-      thread->tme_sjlj_thread_timeout.tv_usec -= 1000000;
+    TME_TIME_INC(thread->tme_sjlj_thread_timeout, tme_sjlj_thread_blocked.tme_sjlj_thread_sleep);
+    if (TME_TIME_GET_USEC(thread->tme_sjlj_thread_timeout) >= 1000000) {
+      TME_TIME_ADDV(thread->tme_sjlj_thread_timeout, 1, -1000000);
     }
 
     /* insert this thread into the timeout list: */
@@ -1118,12 +1107,8 @@ do {							\
     for (_thread_prev = &tme_sjlj_threads_timeout;
 	 (thread_other = *_thread_prev) != NULL;
 	 _thread_prev = &thread_other->timeout_next) {
-      if ((thread_other->tme_sjlj_thread_timeout.tv_sec
-	   > thread->tme_sjlj_thread_timeout.tv_sec)
-	  || ((thread_other->tme_sjlj_thread_timeout.tv_sec
-	       == thread->tme_sjlj_thread_timeout.tv_sec)
-	      && (thread_other->tme_sjlj_thread_timeout.tv_usec
-		  >= thread->tme_sjlj_thread_timeout.tv_usec))) {
+      if (TME_TIME_GT(thread_other->tme_sjlj_thread_timeout,
+		      thread->tme_sjlj_thread_timeout)) {
 	break;
       }
     }
@@ -1135,8 +1120,7 @@ do {							\
     }
   }
   thread->tme_sjlj_thread_sleep = tme_sjlj_thread_blocked.tme_sjlj_thread_sleep;
-  tme_sjlj_thread_blocked.tme_sjlj_thread_sleep.tv_sec = 0;
-  tme_sjlj_thread_blocked.tme_sjlj_thread_sleep.tv_usec = 0;
+  TME_TIME_SETV(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep, 0, 0);
 
   /* if this thread is actually exiting, it must appear to be
      runnable, and it only isn't because it's exiting: */
@@ -1188,29 +1172,25 @@ tme_sjlj_sleep(unsigned long sec, unsigned long usec)
   /* get the wakeup time for the thread: */
   tme_gettimeofday(&then);
   for (; usec >= 1000000; sec++, usec -= 1000000);
-  if ((then.tv_usec += usec) >= 1000000) {
+  if ((TME_TIME_SET_USEC(then) += usec) >= 1000000) {
     sec++;
-    then.tv_usec -= 1000000;
+    TME_TIME_SET_USEC(then) -= 1000000;
   }
-  then.tv_sec += sec;
+  TME_TIME_SEC(then) += sec;
   
   /* select for the sleep period: */
   for (;;) {
 
     /* calculate the current timeout: */
     tme_gettimeofday(&now);
-    if ((now.tv_sec > then.tv_sec)
-	|| (now.tv_sec == then.tv_sec
-	    && now.tv_usec >= then.tv_usec)) {
+    if (TME_TIME_GT(now, then)) {
       break;
     }
     timeout = then;
-    if (timeout.tv_usec < now.tv_usec) {
-      timeout.tv_sec--;
-      timeout.tv_usec += 1000000;
+    if (TME_TIME_GET_USEC(timeout) < TME_TIME_GET_USEC(now)) {
+      TME_TIME_ADDV(timeout, -1, 1000000);
     }
-    timeout.tv_sec -= now.tv_sec;
-    timeout.tv_usec -= now.tv_usec;
+    TME_TIME_DEC(timeout, now);
 
     /* do the select.  select returns 0 iff the timeout expires, so we
        can skip another gettimeofday and loop: */
@@ -1234,8 +1214,7 @@ tme_sjlj_sleep_yield(unsigned long sec, unsigned long usec)
     sec++;
     usec -= 1000000;
   }
-  tme_sjlj_thread_blocked.tme_sjlj_thread_sleep.tv_sec = sec;
-  tme_sjlj_thread_blocked.tme_sjlj_thread_sleep.tv_usec = usec;
+  TME_TIME_SETV(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep, sec, usec);
 
   /* yield: */
   tme_thread_yield();
@@ -1268,13 +1247,12 @@ tme_sjlj_select_yield(int nfds,
   }
 
   /* do a polling select: */
-  timeout_out.tv_sec = timeout_out.tv_usec = 0;
+  TME_TIME_SETV(timeout_out, 0, 0);
   rc = select(nfds, fdset_read_in, fdset_write_in, fdset_except_in, &timeout_out);
   tme_thread_long();
   if (rc != 0
       || (timeout_in != NULL
-	  && timeout_in->tv_sec == 0
-	  && timeout_in->tv_usec == 0)) {
+	  && TME_TIME_EQV(*timeout_in, 0, 0))) {
     return (rc);
   }
 
@@ -1292,9 +1270,8 @@ tme_sjlj_select_yield(int nfds,
   }
   if (timeout_in != NULL) {
     tme_sjlj_thread_blocked.tme_sjlj_thread_sleep = *timeout_in;
-    for (; tme_sjlj_thread_blocked.tme_sjlj_thread_sleep.tv_usec >= 1000000; ) {
-      tme_sjlj_thread_blocked.tme_sjlj_thread_sleep.tv_sec++;
-      tme_sjlj_thread_blocked.tme_sjlj_thread_sleep.tv_usec -= 1000000;
+    for (; TME_TIME_GET_USEC(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep) >= 1000000; ) {
+      TME_TIME_ADDV(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep, 1, -1000000);
     }
   }
 

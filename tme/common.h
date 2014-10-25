@@ -348,8 +348,13 @@ tme_bswap_u64(tme_uint64_t x)
 #define TME_OK			(0)
 
 /* time: */
+#ifdef CLOCK_REALTIME
 typedef struct timespec tme_time_t;
 #define tme_get_time(x) clock_gettime(CLOCK_REALTIME, x)
+#define TME_TIME_EQ(x,y) ((x).tv_sec == (y).tv_sec \
+			  && (x).tv_usec == (y).tv_usec)
+#define TME_TIME_EQV(a,x,y) ((a).tv_sec == (x)	\
+			     && (a).tv_usec == (y))
 #define TME_TIME_GT(x,y) ((x).tv_sec > (y).tv_sec		\
 			  || ((x).tv_sec == (y).tv_sec		\
 			      && (x).tv_nsec > (y).tv_nsec))
@@ -363,7 +368,7 @@ typedef struct timespec tme_time_t;
 #define TME_TIME_INC(a,x) (a).tv_sec += (x).tv_sec; (a).tv_nsec += (x).tv_nsec;
 #define TME_TIME_SUB(a,x,y) (a).tv_sec = (x).tv_sec - (y).tv_sec; (a).tv_nsec = (x).tv_nsec - (y).tv_nsec;
 #define TME_TIME_DEC(a,x) (a).tv_sec -= (x).tv_sec; (a).tv_nsec -= (x).tv_nsec;
-
+#endif
 /* prototypes: */
 void *tme_malloc _TME_P((unsigned int));
 void *tme_malloc0 _TME_P((unsigned int));

@@ -426,44 +426,28 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
     if (bpf->tme_eth_delay_time > 0) {
       
       /* if the current release time is before this packet's time: */
-      if ((bpf->tme_eth_delay_release.tv_sec
-	   < the_bpf_header.bh_tstamp.tv_sec)
-	  || ((bpf->tme_eth_delay_release.tv_sec
-	       == the_bpf_header.bh_tstamp.tv_sec)
-	      && (bpf->tme_eth_delay_release.tv_usec
-		  < the_bpf_header.bh_tstamp.tv_usec))) {
-
+      if (TME_TIME_GT(the_bpf_header.bh_tstamp, bpf->tme_eth_delay_release)) {
 	/* update the current release time, by taking the current time
 	   and subtracting the delay time: */
 	tme_get_time(&bpf->tme_eth_delay_release);
-	if (bpf->tme_eth_delay_release.tv_usec < bpf->tme_eth_delay_time) {
-	  bpf->tme_eth_delay_release.tv_usec += 1000000UL;
-	  bpf->tme_eth_delay_release.tv_sec--;
+	if (TME_TIME_GET_USEC(bpf->tme_eth_delay_release) < bpf->tme_eth_delay_time) {
+	  TME_TIME_ADDV(bpf->tme_eth_delay_release, -1, 1000000UL);
 	}
-	bpf->tme_eth_delay_release.tv_usec -= bpf->tme_eth_delay_time;
+	TME_TIME_SET_USEC(bpf->tme_eth_delay_release, TME_TIME_GET_USEC(bpf->tme_eth_delay_release), bpf->tme_eth_delay_time);
       }
 
       /* if the current release time is still before this packet's
          time: */
-      if ((bpf->tme_eth_delay_release.tv_sec
-	   < the_bpf_header.bh_tstamp.tv_sec)
-	  || ((bpf->tme_eth_delay_release.tv_sec
-	       == the_bpf_header.bh_tstamp.tv_sec)
-	      && (bpf->tme_eth_delay_release.tv_usec
-		  < the_bpf_header.bh_tstamp.tv_usec))) {
-
+      if (TME_TIME_GT(the_bpf_header.bh_tstamp, bpf->tme_eth_delay_release)) {
 	/* set the sleep time: */
-	assert ((bpf->tme_eth_delay_release.tv_sec
-		 == the_bpf_header.bh_tstamp.tv_sec)
-		|| ((bpf->tme_eth_delay_release.tv_sec + 1)
-		    == the_bpf_header.bh_tstamp.tv_sec));
+	assert (TME_TIME_SEC(bpf->tme_eth_delay_release) - TME_TIME_SEC(the_bpf_header.bh_tstamp) <= 1);
 	bpf->tme_eth_delay_sleep
-	  = (((bpf->tme_eth_delay_release.tv_sec
-	       == the_bpf_header.bh_tstamp.tv_sec)
+	  = ((TME_TIME_SEC(bpf->tme_eth_delay_release)
+	      == TME_TIME_SECthe_bpf_header.bh_tstamp)
 	      ? 0
-	      : 1000000UL)
-	     + the_bpf_header.bh_tstamp.tv_usec
-	     - bpf->tme_eth_delay_release.tv_usec);
+	     : 1000000UL)
+	  + TME_TIME_GET_USEC(the_bpf_header.bh_tstamp) - 
+	  TME_TIME_GET_USEC(bpf->tme_eth_delay_release);
 
 	/* rewind the buffer pointer: */
 	bpf->tme_eth_buffer_offset -= the_bpf_header.bh_hdrlen;
