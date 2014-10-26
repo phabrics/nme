@@ -110,7 +110,7 @@ _tme_stp222x_timer_update(struct tme_stp222x_timer *timer,
     /* set this timer's next limit time: */
     do {
       TME_TIME_INC(timer->tme_stp222x_timer_limit_next, timer->tme_stp222x_timer_period);
-      if (__tme_predict_false(TME_TIME_GET_USEC(timer->tme_stp222x_timer_limit_next) >= 1000000)) {
+      if (__tme_predict_false(TME_TIME_GET_FRAC(timer->tme_stp222x_timer_limit_next) >= 1000000)) {
 	TME_TIME_ADDV(timer->tme_stp222x_timer_limit_next, 1, -1000000);
       }
     } while (TME_TIME_GT(*now, timer->tme_stp222x_timer_limit_next));
@@ -129,7 +129,7 @@ _tme_stp222x_timer_update(struct tme_stp222x_timer *timer,
 
   /* sleep until this timer reaches its next limit: */
   TME_TIME_SUB(*sleep, timer->tme_stp222x_timer_limit_next, *now);
-  if (TME_TIME_GET_USEC(timer->tme_stp222x_timer_limit_next) < TME_TIME_GET_USEC(*now)) {
+  if (TME_TIME_FRAC_LT(timer->tme_stp222x_timer_limit_next, *now)) {
     TME_TIME_ADDV(*sleep, -1, 1000000);
   }
 }
@@ -185,12 +185,12 @@ _tme_stp222x_timer_reset(struct tme_stp222x_timer *timer,
     TME_TIME_SEC(timer->tme_stp222x_timer_period) = period / 1000000;
     period %= 1000000;
   }
-  TME_TIME_SET_USEC(timer->tme_stp222x_timer_period, period);
+  TME_TIME_SET_FRAC(timer->tme_stp222x_timer_period, period);
 
   /* set the next limit time for this timer: */
   tme_get_time(&timer->tme_stp222x_timer_limit_next);
   TME_TIME_INC(timer->tme_stp222x_timer_limit_next, timer->tme_stp222x_timer_period);
-  if (TME_TIME_GET_USEC(timer->tme_stp222x_timer_limit_next) >= 1000000) {
+  if (TME_TIME_GET_FRAC(timer->tme_stp222x_timer_limit_next) >= 1000000) {
     TME_TIME_ADDV(timer->tme_stp222x_timer_limit_next, 1, -1000000);
   }
 }
@@ -209,7 +209,7 @@ _tme_stp222x_timer_count(struct tme_stp222x_timer *timer)
   /* get the absolute count until the next limit: */
   count = TME_TIME_SEC(sleep);
   count *= 1000000;
-  count += TME_TIME_GET_USEC(sleep);
+  count += TME_TIME_GET_FRAC(sleep);
 
   /* the count register value is that distance to the limit
      register: */

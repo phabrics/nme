@@ -1056,7 +1056,7 @@ _tme_ncr53c9x_cs_timeout(struct tme_ncr53c9x *ncr53c9x, unsigned int msec, unsig
 
   /* add the timeout length to get the timeout time: */
   TME_TIME_INC(ncr53c9x->tme_ncr53c9x_timeout_time, ncr53c9x->tme_ncr53c9x_timeout_length);
-  if (TME_TIME_GET_USEC(ncr53c9x->tme_ncr53c9x_timeout_time) >= 1000000) {
+  if (TME_TIME_GET_FRAC(ncr53c9x->tme_ncr53c9x_timeout_time) >= 1000000) {
     TME_TIME_ADDV(ncr53c9x->tme_ncr53c9x_timeout_time, 1, -1000000);
   }
 

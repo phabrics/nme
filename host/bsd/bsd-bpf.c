@@ -344,7 +344,42 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
 {
   struct tme_ethernet *bpf;
 #ifndef HAVE_AF_PACKET
+  tme_time_t tstamp;
+#ifdef BIOCSTSTAMP
+  // Assume timespec (nanosecond-accuracy) macros
+  struct bpf_xhdr the_bpf_header;
+#define TME_BPF_TIME_SEC(a) _TME_TIME_SEC(a,bt_sec)
+#define TME_BPF_TIME_EQ(x,y) _TME_TIME_EQ(x,y,bt_sec,bt_frac)
+#define TME_BPF_TIME_EQV(a,x,y) _TME_TIME_EQV(a,x,y,bt_sec,bt_frac)
+#define TME_BPF_TIME_GT(x,y) _TME_TIME_GT(x,y,bt_sec,bt_frac)
+#define TME_BPF_TIME_GET_FRAC(a) _TME_TIME_GET_FRAC(a,bt_frac)
+#define TME_BPF_TIME_SET_FRAC(a,x) _TME_TIME_SET_FRAC(a,x,bt_frac)
+#define TME_BPF_TIME_INC_FRAC(a,x) _TME_TIME_INC_FRAC(a,x,bt_frac)
+#define TME_BPF_TIME_FRAC_LT(x,y,t) _TME_TIME_FRAC_LT(x,y,t,bt_frac)
+#define TME_BPF_TIME_SETV(a,s,u) _TME_TIME_SETV(a,s,u,bt_sec,bt_frac)
+#define TME_BPF_TIME_ADD(a,x,y) _TME_TIME_ADD(a,x,y,bt_sec,bt_frac)
+#define TME_BPF_TIME_ADDV(a,s,u) _TME_TIME_ADDV(a,s,u,bt_sec,bt_frac)
+#define TME_BPF_TIME_INC(a,x) _TME_TIME_INC(a,x,bt_sec,bt_frac)
+#define TME_BPF_TIME_SUB(a,x,y) _TME_TIME_SUB(a,x,y,bt_sec,bt_frac)
+#define TME_BPF_TIME_DEC(a,x) _TME_TIME_DEC(a,x,bt_sec,bt_frac)
+#else
+  // Make timeval (microsecond-accuracy) macros
   struct bpf_hdr the_bpf_header;
+#define TME_BPF_TIME_SEC(a) _TME_TIME_SEC(a,tv_sec)
+#define TME_BPF_TIME_EQ(x,y) _TME_TIME_EQ(x,y,tv_sec,tv_usec)
+#define TME_BPF_TIME_EQV(a,x,y) _TME_TIME_EQV(a,x,y,tv_sec,tv_usec)
+#define TME_BPF_TIME_GT(x,y) _TME_TIME_GT(x,y,tv_sec,tv_usec)
+#define TME_BPF_TIME_GET_FRAC(a) _TME_TIME_GET_FRAC(a,tv_usec)
+#define TME_BPF_TIME_SET_FRAC(a,x) _TME_TIME_SET_FRAC(a,x,tv_usec)
+#define TME_BPF_TIME_INC_FRAC(a,x) _TME_TIME_INC_FRAC(a,x,tv_usec)
+#define TME_BPF_TIME_FRAC_LT(x,y) _TME_TIME_FRAC_LT(x,y,tv_usec)
+#define TME_BPF_TIME_SETV(a,s,u) _TME_TIME_SETV(a,s,u,tv_sec,tv_usec)
+#define TME_BPF_TIME_ADD(a,x,y) _TME_TIME_ADD(a,x,y,tv_sec,tv_usec)
+#define TME_BPF_TIME_ADDV(a,s,u) _TME_TIME_ADDV(a,s,u,tv_sec,tv_usec)
+#define TME_BPF_TIME_INC(a,x) _TME_TIME_INC(a,x,tv_sec,tv_usec)
+#define TME_BPF_TIME_SUB(a,x,y) _TME_TIME_SUB(a,x,y,tv_sec,tv_usec)
+#define TME_BPF_TIME_DEC(a,x) _TME_TIME_DEC(a,x,tv_sec,tv_usec)
+#endif
 #endif
   struct tme_ethernet_frame_chunk frame_chunk_buffer;
   size_t buffer_offset_next;
@@ -424,30 +459,32 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
 
     /* if packets need to be delayed: */
     if (bpf->tme_eth_delay_time > 0) {
-      
+      TME_TIME_SETV(tstamp, 
+		    TME_BPF_TIME_SEC(the_bpf_header.bh_tstamp), 
+		    TME_BPF_TIME_GET_FRAC(the_bpf_header.bh_tstamp));
       /* if the current release time is before this packet's time: */
-      if (TME_TIME_GT(the_bpf_header.bh_tstamp, bpf->tme_eth_delay_release)) {
+      if (TME_TIME_GT(tstamp, bpf->tme_eth_delay_release)) {
 	/* update the current release time, by taking the current time
 	   and subtracting the delay time: */
 	tme_get_time(&bpf->tme_eth_delay_release);
-	if (TME_TIME_GET_USEC(bpf->tme_eth_delay_release) < bpf->tme_eth_delay_time) {
+	if (TME_TIME_GET_FRAC(bpf->tme_eth_delay_release) < bpf->tme_eth_delay_time) {
 	  TME_TIME_ADDV(bpf->tme_eth_delay_release, -1, 1000000UL);
 	}
-	TME_TIME_SET_USEC(bpf->tme_eth_delay_release, TME_TIME_GET_USEC(bpf->tme_eth_delay_release), bpf->tme_eth_delay_time);
+	TME_TIME_INC_FRAC(bpf->tme_eth_delay_release, -bpf->tme_eth_delay_time);
       }
 
       /* if the current release time is still before this packet's
          time: */
-      if (TME_TIME_GT(the_bpf_header.bh_tstamp, bpf->tme_eth_delay_release)) {
+      if (TME_TIME_GT(tstamp, bpf->tme_eth_delay_release)) {
 	/* set the sleep time: */
-	assert (TME_TIME_SEC(bpf->tme_eth_delay_release) - TME_TIME_SEC(the_bpf_header.bh_tstamp) <= 1);
+	assert (TME_TIME_SEC(bpf->tme_eth_delay_release) - TME_TIME_SEC(tstamp) <= 1);
 	bpf->tme_eth_delay_sleep
 	  = ((TME_TIME_SEC(bpf->tme_eth_delay_release)
-	      == TME_TIME_SECthe_bpf_header.bh_tstamp)
+	      == TME_TIME_SEC(tstamp))
 	      ? 0
 	     : 1000000UL)
-	  + TME_TIME_GET_USEC(the_bpf_header.bh_tstamp) - 
-	  TME_TIME_GET_USEC(bpf->tme_eth_delay_release);
+	  + TME_TIME_GET_FRAC(tstamp) - 
+	  TME_TIME_GET_FRAC(bpf->tme_eth_delay_release);
 
 	/* rewind the buffer pointer: */
 	bpf->tme_eth_buffer_offset -= the_bpf_header.bh_hdrlen;
@@ -714,6 +751,18 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
     _TME_BPF_RAW_OPEN_ERROR(close(bpf_fd));
     return (errno);
   }
+
+#ifdef BIOCSTSTAMP
+  /* prefer timespec to timeval: */
+  if (ioctl(bpf_fd, BIOCSTSTAMP, BPF_T_NANOTIME) < 0) {
+    tme_log(&element->tme_element_log_handle, 1, errno,
+	    (&element->tme_element_log_handle,
+	     _("failed to put %s into nanotime (timespec) mode"),
+	     dev_bpf_filename));
+    _TME_BPF_RAW_OPEN_ERROR(close(bpf_fd));
+    return (errno);
+  }
+#endif
 
   /* point the BPF device at the interface we're using: */
   if (ioctl(bpf_fd, BIOCSETIF, &ifr) < 0) {

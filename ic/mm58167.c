@@ -131,7 +131,7 @@ _tme_mm58167_bus_cycle(void *_mm58167, struct tme_bus_cycle *cycle_init)
   /* sample the time, and drop from microsecond accuracy to
      millisecond accuracy: */
   tme_get_time(&now);
-  TME_TIME_SET_USEC(now, TME_TIME_GET_USEC(now)/1000);
+  TME_TIME_SET_FRAC(now, TME_TIME_GET_FRAC(now)/1000);
 
   /* if the seconds value has changed, convert it, and an update is
      rippling through the system: */
@@ -147,8 +147,8 @@ _tme_mm58167_bus_cycle(void *_mm58167, struct tme_bus_cycle *cycle_init)
 
   /* otherwise, if the centiseconds value has changed, an update
      is also rippling through the system: */
-  else if ((TME_TIME_GET_USEC(now) / 10)
-	   != (TME_TIME_GET_USEC(mm58167->tme_mm58167_sampled_time) / 10)) {
+  else if ((TME_TIME_GET_FRAC(now) / 10)
+	   != (TME_TIME_GET_FRAC(mm58167->tme_mm58167_sampled_time) / 10)) {
     mm58167->tme_mm58167_status |= TME_MM58167_STATUS_RIPPLING;
   }
 
@@ -191,10 +191,10 @@ _tme_mm58167_bus_cycle(void *_mm58167, struct tme_bus_cycle *cycle_init)
     /* dispatch on the register: */
     switch (reg) {
     case TME_MM58167_REG_MSEC_XXX:
-      value = (TME_TIME_GET_USEC(now) % 10) * 10;
+      value = (TME_TIME_GET_FRAC(now) % 10) * 10;
       break;
     case TME_MM58167_REG_CSEC:
-      value = (TME_TIME_GET_USEC(now) / 10);
+      value = (TME_TIME_GET_FRAC(now) / 10);
       break;
     case TME_MM58167_REG_SEC:
       value = now_tm->tm_sec;

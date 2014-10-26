@@ -436,7 +436,7 @@ _tme_isil7170_bus_cycle(void *_isil7170, struct tme_bus_cycle *cycle_init)
     now_tm = gmtime_r(&_now, &now_tm_buffer);
 
     /* put the time-of-day into the registers: */
-    isil7170->tme_isil7170_regs[TME_ISIL7170_REG_CSEC] = TME_TIME_GET_USEC(now) / 10000;
+    isil7170->tme_isil7170_regs[TME_ISIL7170_REG_CSEC] = TME_TIME_GET_FRAC(now) / 10000;
     isil7170->tme_isil7170_regs[TME_ISIL7170_REG_HOUR] = now_tm->tm_hour;
     isil7170->tme_isil7170_regs[TME_ISIL7170_REG_MIN] = now_tm->tm_min;
     isil7170->tme_isil7170_regs[TME_ISIL7170_REG_SEC] = now_tm->tm_sec;

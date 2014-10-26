@@ -441,7 +441,7 @@ tme_misc_timeval_never(tme_time_t *tv)
     TME_TIME_SEC(*tv) <<= ((8 * sizeof(TME_TIME_SEC(*tv))) - 2);
     TME_TIME_SEC(*tv) += (TME_TIME_SEC(*tv) - 1);
   }
-  TME_TIME_SET_USEC(*tv, 999999);
+  TME_TIME_SET_FRAC(*tv, 999999);
 }
 
 /* this does an interrupt check: */
@@ -1087,12 +1087,12 @@ TME_SPARC_FORMAT3(_tme_stp103x_wrasr, tme_uint64_t)
 	    }
 			 
 	    /* add in the microseconds: */
-	    usec32 += TME_TIME_GET_USEC(tick_compare_time);
+	    usec32 += TME_TIME_GET_FRAC(tick_compare_time);
 	    if (usec32 >= 1000000) {
 	      TME_TIME_SEC(tick_compare_time)++;
 	      usec32 -= 1000000;
 	    }
-	    TME_TIME_SET_USEC(tick_compare_time, usec32);
+	    TME_TIME_SET_FRAC(tick_compare_time, usec32);
 	  }
 
 	  /* lock the external mutex: */
@@ -3766,9 +3766,9 @@ _tme_stp103x_tick_compare_th(void *_ic)
 
     /* if the current time is greater than or equal to the tick compare time: */
     now_tv_sec = TME_TIME_SEC(now);
-    now_tv_usec = TME_TIME_GET_USEC(now);
+    now_tv_usec = TME_TIME_GET_FRAC(now);
     tick_compare_time_tv_sec = TME_TIME_SEC(TME_STP103X(ic)->tme_stp103x_tick_compare_time);
-    tick_compare_time_tv_usec = TME_TIME_GET_USEC(TME_STP103X(ic)->tme_stp103x_tick_compare_time);
+    tick_compare_time_tv_usec = TME_TIME_GET_FRAC(TME_STP103X(ic)->tme_stp103x_tick_compare_time);
     if (now_tv_sec > tick_compare_time_tv_sec
 	|| (now_tv_sec == tick_compare_time_tv_sec
 	    && now_tv_usec >= tick_compare_time_tv_usec)) {
@@ -3797,7 +3797,7 @@ _tme_stp103x_tick_compare_th(void *_ic)
 	tick_compare_time_tv_usec += 1000000;
       }
       TME_TIME_SEC(sleep) = TME_MIN(tick_compare_time_tv_sec - now_tv_sec, 60);
-      TME_TIME_SET_USEC(sleep, tick_compare_time_tv_usec - now_tv_usec);
+      TME_TIME_SET_FRAC(sleep, tick_compare_time_tv_usec - now_tv_usec);
 
       /* sleep on the tick compare condition: */
       tme_cond_sleep_yield(&TME_STP103X(ic)->tme_stp103x_tick_compare_cond,

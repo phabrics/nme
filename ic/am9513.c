@@ -359,7 +359,7 @@ _tme_am9513_th_timer(struct tme_am9513 *am9513)
     tme_get_time(&elapsed);
     then = am9513->tme_am9513_conn_last;
     am9513->tme_am9513_conn_last = elapsed;
-    if (TME_TIME_GET_USEC(elapsed) < TME_TIME_GET_USEC(then)) {
+    if (TME_TIME_FRAC_LT(elapsed, then)) {
       TME_TIME_ADDV(elapsed, -1, 1000000);
     }
     TME_TIME_DEC(elapsed, then);
@@ -367,7 +367,7 @@ _tme_am9513_th_timer(struct tme_am9513 *am9513)
     /* calculate the number of basic ticks that have elapsed: */
     basic_elapsed = am9513->tme_am9513_basic_clock;
     basic_elapsed *= TME_TIME_SEC(elapsed);
-    basic_elapsed += (am9513->tme_am9513_basic_clock_msec * TME_TIME_GET_USEC(elapsed)) / 1000;
+    basic_elapsed += (am9513->tme_am9513_basic_clock_msec * TME_TIME_GET_FRAC(elapsed)) / 1000;
 
     /* assume that we will sleep for one second: */
     basic_sleep = am9513->tme_am9513_basic_clock;
@@ -468,9 +468,9 @@ _tme_am9513_th_timer(struct tme_am9513 *am9513)
 #ifdef TME_AM9513_TRACK_INT_RATE
 
       /* update the sample time: */
-      for (TME_TIME_INC_USEC(counter->tme_am9513_counter_int_sample_time, TME_TIME_GET_USEC(elapsed));
-	   TME_TIME_GET_USEC(counter->tme_am9513_counter_int_sample_time) >= 1000000;
-	   TME_TIME_INC_USEC(counter->tme_am9513_counter_int_sample_time, -1000000)) {
+      for (TME_TIME_INC_FRAC(counter->tme_am9513_counter_int_sample_time, TME_TIME_GET_FRAC(elapsed));
+	   TME_TIME_GET_FRAC(counter->tme_am9513_counter_int_sample_time) >= 1000000;
+	   TME_TIME_INC_FRAC(counter->tme_am9513_counter_int_sample_time, -1000000)) {
 	TME_TIME_SEC(counter->tme_am9513_counter_int_sample_time)++;
       }
       TME_TIME_SEC(counter->tme_am9513_counter_int_sample_time) += TME_TIME_SEC(elapsed);

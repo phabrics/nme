@@ -705,7 +705,7 @@ _tme_sparc_timing_loop_start(struct tme_sparc *ic,
 	}
 
 	/* set the sleep time microseconds: */
-	TME_TIME_SET_USEC(sleep_buffer, usec32);
+	TME_TIME_SET_FRAC(sleep_buffer, usec32);
       }
 
       /* we won't block forever: */

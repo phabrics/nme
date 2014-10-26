@@ -348,46 +348,59 @@ tme_bswap_u64(tme_uint64_t x)
 #define TME_OK			(0)
 
 /* time: */
-#ifdef HAVE_CLOCK_GETTIME
+#define _TME_TIME_EQ(x,y,sec,frac) ((x).sec == (y).sec	\
+			  && (x).frac == (y).frac)
+#define _TME_TIME_EQV(a,x,y,sec,frac) ((a).sec == (x)	\
+			     && (a).frac == (y))
+#define _TME_TIME_GT(x,y,sec,frac) ((x).sec > (y).sec		\
+			  || ((x).sec == (y).sec		\
+			      && (x).frac > (y).frac))
+#define _TME_TIME_GET_FRAC(a,frac) (a).frac
+#define _TME_TIME_SET_FRAC(a,x,frac) ((a).frac = (x))
+#define _TME_TIME_INC_FRAC(a,x,frac) ((a).frac += (x))
+#define _TME_TIME_FRAC_LT(x,y,frac) ((x).frac < (y).frac)
+#define _TME_TIME_SETV(a,s,u,sec,frac) (a).sec = (s); (a).frac = (u);
+#define _TME_TIME_ADD(a,x,y,sec,frac) (a).sec = (x).sec + (y).sec; (a).frac = (x).frac + (y).frac;
+#define _TME_TIME_ADDV(a,s,u,sec,frac) (a).sec += (s); (a).frac += (u);
+#define _TME_TIME_INC(a,x,sec,frac) (a).sec += (x).sec; (a).frac += (x).frac;
+#define _TME_TIME_SUB(a,x,y,sec,frac) (a).sec = (x).sec - (y).sec; (a).frac = (x).frac - (y).frac;
+#define _TME_TIME_DEC(a,x,sec,frac) (a).sec -= (x).sec; (a).frac -= (x).frac;
+
+#define _TME_TIME_SEC(a,sec) (a).sec
+#ifdef _TME_HAVE_CLOCK_GETTIME
 #define tme_get_time(x) clock_gettime(CLOCK_REALTIME, x)
 #define tme_select(a,b,c,d,e) pselect(a,b,c,d,e,NULL)
-#define TME_TIME_EQ(x,y) ((x).tv_sec == (y).tv_sec \
-			  && (x).tv_nsec == (y).tv_nsec)
-#define TME_TIME_EQV(a,x,y) ((a).tv_sec == (x)	\
-			     && (a).tv_nsec == (y))
-#define TME_TIME_GT(x,y) ((x).tv_sec > (y).tv_sec		\
-			  || ((x).tv_sec == (y).tv_sec		\
-			      && (x).tv_nsec > (y).tv_nsec))
-#define TME_TIME_SEC(a) (a).tv_sec
-#define TME_TIME_GET_USEC(a) ((a).tv_nsec / 1000)
-#define TME_TIME_SET_USEC(a,x) ((a).tv_nsec = (x) * 1000)
-#define TME_TIME_INC_USEC(a,x) ((a).tv_nsec += (x) * 1000)
-#define TME_TIME_SETV(a,s,u) (a).tv_sec = (s); (a).tv_nsec = (u) * 1000;
-#define TME_TIME_ADD(a,x,y) (a).tv_sec = (x).tv_sec + (y).tv_sec; (a).tv_nsec = (x).tv_nsec + (y).tv_nsec;
-#define TME_TIME_ADDV(a,s,u) (a).tv_sec += (s); (a).tv_nsec += (u) * 1000;
-#define TME_TIME_INC(a,x) (a).tv_sec += (x).tv_sec; (a).tv_nsec += (x).tv_nsec;
-#define TME_TIME_SUB(a,x,y) (a).tv_sec = (x).tv_sec - (y).tv_sec; (a).tv_nsec = (x).tv_nsec - (y).tv_nsec;
-#define TME_TIME_DEC(a,x) (a).tv_sec -= (x).tv_sec; (a).tv_nsec -= (x).tv_nsec;
+#define TME_TIME_SEC(a) _TME_TIME_SEC(a,tv_sec)
+#define TME_TIME_EQ(x,y) _TME_TIME_EQ(x,y,tv_sec,tv_nsec)
+#define TME_TIME_EQV(a,x,y) _TME_TIME_EQV(a,x,y,tv_sec,tv_nsec)
+#define TME_TIME_GT(x,y) _TME_TIME_GT(x,y,tv_sec,tv_nsec)
+#define TME_TIME_GET_FRAC(a) (_TME_TIME_GET_FRAC(a,tv_nsec) / 1000)
+#define TME_TIME_SET_FRAC(a,x) _TME_TIME_SET_FRAC(a,(x) * 1000,tv_nsec)
+#define TME_TIME_INC_FRAC(a,x) _TME_TIME_INC_FRAC(a,(x) * 1000,tv_nsec)
+#define TME_TIME_FRAC_LT(x,y) _TME_TIME_FRAC_LT(x,y,tv_nsec)
+#define TME_TIME_SETV(a,s,u) _TME_TIME_SETV(a,s,(u) * 1000,tv_sec,tv_nsec)
+#define TME_TIME_ADD(a,x,y) _TME_TIME_ADD(a,x,y,tv_sec,tv_nsec)
+#define TME_TIME_ADDV(a,s,u) _TME_TIME_ADDV(a,s,(u) * 1000,tv_sec,tv_nsec)
+#define TME_TIME_INC(a,x) _TME_TIME_INC(a,x,tv_sec,tv_nsec)
+#define TME_TIME_SUB(a,x,y) _TME_TIME_SUB(a,x,y,tv_sec,tv_nsec)
+#define TME_TIME_DEC(a,x) _TME_TIME_DEC(a,x,tv_sec,tv_nsec)
 #else
 #define tme_get_time(x) gettimeofday(x, NULL)
 #define tme_select(a,b,c,d,e) select(a,b,c,d,e)
-#define TME_TIME_EQ(x,y) ((x).tv_sec == (y).tv_sec \
-			  && (x).tv_usec == (y).tv_usec)
-#define TME_TIME_EQV(a,x,y) ((a).tv_sec == (x)	\
-			     && (a).tv_usec == (y))
-#define TME_TIME_GT(x,y) ((x).tv_sec > (y).tv_sec		\
-			  || ((x).tv_sec == (y).tv_sec		\
-			      && (x).tv_usec > (y).tv_usec))
-#define TME_TIME_SEC(a) (a).tv_sec
-#define TME_TIME_GET_USEC(a) (a).tv_usec
-#define TME_TIME_SET_USEC(a,x) ((a).tv_usec = (x))
-#define TME_TIME_INC_USEC(a,x) ((a).tv_usec += (x))
-#define TME_TIME_SETV(a,s,u) (a).tv_sec = (s); (a).tv_usec = (u);
-#define TME_TIME_ADD(a,x,y) (a).tv_sec = (x).tv_sec + (y).tv_sec; (a).tv_usec = (x).tv_usec + (y).tv_usec;
-#define TME_TIME_ADDV(a,s,u) (a).tv_sec += (s); (a).tv_usec += (u);
-#define TME_TIME_INC(a,x) (a).tv_sec += (x).tv_sec; (a).tv_usec += (x).tv_usec;
-#define TME_TIME_SUB(a,x,y) (a).tv_sec = (x).tv_sec - (y).tv_sec; (a).tv_usec = (x).tv_usec - (y).tv_usec;
-#define TME_TIME_DEC(a,x) (a).tv_sec -= (x).tv_sec; (a).tv_usec -= (x).tv_usec;
+#define TME_TIME_SEC(a) _TME_TIME_SEC(a,tv_sec)
+#define TME_TIME_EQ(x,y) _TME_TIME_EQ(x,y,tv_sec,tv_usec)
+#define TME_TIME_EQV(a,x,y) _TME_TIME_EQV(a,x,y,tv_sec,tv_usec)
+#define TME_TIME_GT(x,y) _TME_TIME_GT(x,y,tv_sec,tv_usec)
+#define TME_TIME_GET_FRAC(a) _TME_TIME_GET_FRAC(a,tv_usec)
+#define TME_TIME_SET_FRAC(a,x) _TME_TIME_SET_FRAC(a,x,tv_usec)
+#define TME_TIME_INC_FRAC(a,x) _TME_TIME_INC_FRAC(a,x,tv_usec)
+#define TME_TIME_FRAC_LT(x,y) _TME_TIME_FRAC_LT(x,y,tv_usec)
+#define TME_TIME_SETV(a,s,u) _TME_TIME_SETV(a,s,u,tv_sec,tv_usec)
+#define TME_TIME_ADD(a,x,y) _TME_TIME_ADD(a,x,y,tv_sec,tv_usec)
+#define TME_TIME_ADDV(a,s,u) _TME_TIME_ADDV(a,s,u,tv_sec,tv_usec)
+#define TME_TIME_INC(a,x) _TME_TIME_INC(a,x,tv_sec,tv_usec)
+#define TME_TIME_SUB(a,x,y) _TME_TIME_SUB(a,x,y,tv_sec,tv_usec)
+#define TME_TIME_DEC(a,x) _TME_TIME_DEC(a,x,tv_sec,tv_usec)
 #endif
 /* prototypes: */
 void *tme_malloc _TME_P((unsigned int));

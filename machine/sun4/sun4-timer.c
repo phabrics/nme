@@ -188,7 +188,7 @@ _tme_sun4_timer_update(struct tme_sun4_timer *timer, tme_time_t *now, tme_time_t
 
     /* sleep until this timer reaches its next limit: */
     TME_TIME_SUB(*sleep, timer->tme_sun4_timer_limit_next, *now);
-    if (TME_TIME_GET_USEC(timer->tme_sun4_timer_limit_next) < TME_TIME_GET_USEC(*now)) {
+    if (TME_TIME_FRAC_LT(timer->tme_sun4_timer_limit_next, *now)) {
       TME_TIME_ADDV(*sleep, -1, 1000000);
     }
     return;
@@ -197,7 +197,7 @@ _tme_sun4_timer_update(struct tme_sun4_timer *timer, tme_time_t *now, tme_time_t
   /* set this timer's next limit time: */
   do {
     TME_TIME_INC(timer->tme_sun4_timer_limit_next, timer->tme_sun4_timer_period);
-    if (__tme_predict_false(TME_TIME_GET_USEC(timer->tme_sun4_timer_limit_next) >= 1000000)) {
+    if (__tme_predict_false(TME_TIME_GET_FRAC(timer->tme_sun4_timer_limit_next) >= 1000000)) {
       TME_TIME_ADDV(timer->tme_sun4_timer_limit_next, 1, -1000000);
     }
   } while (TME_TIME_GT(*now, timer->tme_sun4_timer_limit_next));
@@ -247,12 +247,12 @@ _tme_sun4_timer_reset(struct tme_sun4_timer *timer)
     TME_TIME_SEC(timer->tme_sun4_timer_period) = usecs / 1000000;
     usecs %= 1000000;
   }
-  TME_TIME_SET_USEC(timer->tme_sun4_timer_period, usecs);
+  TME_TIME_SET_FRAC(timer->tme_sun4_timer_period, usecs);
 
   /* set the next limit time for this timer: */
   tme_get_time(&timer->tme_sun4_timer_limit_next);
   TME_TIME_INC(timer->tme_sun4_timer_limit_next, timer->tme_sun4_timer_period);
-  if (TME_TIME_GET_USEC(timer->tme_sun4_timer_limit_next) >= 1000000) {
+  if (TME_TIME_GET_FRAC(timer->tme_sun4_timer_limit_next) >= 1000000) {
     TME_TIME_ADDV(timer->tme_sun4_timer_limit_next, 1, -1000000);
   }
 }
@@ -339,7 +339,7 @@ _tme_sun4_timer_cycle_control(void *_sun4, struct tme_bus_cycle *cycle_init)
 
       /* get the time of the last reset: */
       last_reset = timer->tme_sun4_timer_limit_next;
-      if (TME_TIME_GET_USEC(last_reset) < TME_TIME_GET_USEC(timer->tme_sun4_timer_period)) {
+      if (TME_TIME_FRAC_LT(last_reset, timer->tme_sun4_timer_period)) {
 	TME_TIME_ADDV(last_reset, -1, 1000000);
       }
       TME_TIME_DEC(last_reset, timer->tme_sun4_timer_period);
@@ -348,8 +348,8 @@ _tme_sun4_timer_cycle_control(void *_sun4, struct tme_bus_cycle *cycle_init)
       usecs = TME_TIME_SEC(now) - TME_TIME_SEC(last_reset);
       usecs *= 1000000;
       usecs
-	+= (((tme_int32_t) TME_TIME_GET_USEC(now))
-	    - ((tme_int32_t) TME_TIME_GET_USEC(last_reset)));
+	+= (((tme_int32_t) TME_TIME_GET_FRAC(now))
+	    - ((tme_int32_t) TME_TIME_GET_FRAC(last_reset)));
 
       /* to keep things simpler, we always use the sun4m 500ns tick: */
       counter_one = TME_SUN4_IS_SUN44C(sun4) ? 2 : 1;

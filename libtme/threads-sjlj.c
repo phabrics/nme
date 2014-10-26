@@ -421,10 +421,10 @@ _tme_sjlj_timeout_time(tme_time_t *timeout)
   assert (thread_timeout != NULL);
 
   /* subtract the now microseconds from the timeout microseconds: */
-  assert (TME_TIME_GET_USEC(thread_timeout->tme_sjlj_thread_timeout) < 1000000);
-  usecs = TME_TIME_GET_USEC(thread_timeout->tme_sjlj_thread_timeout);
-  assert (TME_TIME_GET_USEC(now) < 1000000);
-  usecs -= TME_TIME_GET_USEC(now);
+  assert (TME_TIME_GET_FRAC(thread_timeout->tme_sjlj_thread_timeout) < 1000000);
+  usecs = TME_TIME_GET_FRAC(thread_timeout->tme_sjlj_thread_timeout);
+  assert (TME_TIME_GET_FRAC(now) < 1000000);
+  usecs -= TME_TIME_GET_FRAC(now);
 
   /* make any seconds carry: */
   secs_other = (usecs < 0);
@@ -662,7 +662,7 @@ tme_sjlj_threads_gtk_yield(void)
 	/* convert the timeout into milliseconds, and clip it at ten
 	   seconds: */
 	secs = TME_TIME_SEC(timeout);
-	msecs = (TME_TIME_GET_USEC(timeout) + 999) / 1000;
+	msecs = (TME_TIME_GET_FRAC(timeout) + 999) / 1000;
 	if (msecs == 1000) {
 	  secs++;
 	  msecs = 0;
@@ -887,7 +887,7 @@ tme_sjlj_cond_sleep_yield(tme_cond_t *cond, tme_mutex_t *mutex, const tme_time_t
   tme_sjlj_thread_blocked.tme_sjlj_thread_cond = cond;
 
   /* sleep and yield: */
-  tme_sjlj_sleep_yield(TME_TIME_SEC(*sleep), TME_TIME_GET_USEC(*sleep));
+  tme_sjlj_sleep_yield(TME_TIME_SEC(*sleep), TME_TIME_GET_FRAC(*sleep));
 }
 
 /* this notifies one or more threads waiting on a condition: */
@@ -1093,13 +1093,13 @@ do {							\
   /* see if this thread is blocked for some amount of time: */
   if (!TME_TIME_EQV(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep, 0, 0)) {
 
-    assert(TME_TIME_GET_USEC(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep) < 1000000);
+    assert(TME_TIME_GET_FRAC(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep) < 1000000);
     blocked = TRUE;
 
     /* set the timeout for this thread: */
     tme_gettimeofday(&thread->tme_sjlj_thread_timeout);
     TME_TIME_INC(thread->tme_sjlj_thread_timeout, tme_sjlj_thread_blocked.tme_sjlj_thread_sleep);
-    if (TME_TIME_GET_USEC(thread->tme_sjlj_thread_timeout) >= 1000000) {
+    if (TME_TIME_GET_FRAC(thread->tme_sjlj_thread_timeout) >= 1000000) {
       TME_TIME_ADDV(thread->tme_sjlj_thread_timeout, 1, -1000000);
     }
 
@@ -1173,9 +1173,9 @@ tme_sjlj_sleep(unsigned long sec, unsigned long usec)
   /* get the wakeup time for the thread: */
   tme_gettimeofday(&then);
   for (; usec >= 1000000; sec++, usec -= 1000000);
-  if (TME_TIME_INC_USEC(then, usec) >= 1000000) {
+  if (TME_TIME_INC_FRAC(then, usec) >= 1000000) {
     sec++;
-    TME_TIME_INC_USEC(then, -1000000);
+    TME_TIME_INC_FRAC(then, -1000000);
   }
   TME_TIME_SEC(then) += sec;
   
@@ -1188,7 +1188,7 @@ tme_sjlj_sleep(unsigned long sec, unsigned long usec)
       break;
     }
     timeout = then;
-    if (TME_TIME_GET_USEC(timeout) < TME_TIME_GET_USEC(now)) {
+    if (TME_TIME_FRAC_LT(timeout, now)) {
       TME_TIME_ADDV(timeout, -1, 1000000);
     }
     TME_TIME_DEC(timeout, now);
@@ -1271,7 +1271,7 @@ tme_sjlj_select_yield(int nfds,
   }
   if (timeout_in != NULL) {
     tme_sjlj_thread_blocked.tme_sjlj_thread_sleep = *timeout_in;
-    for (; TME_TIME_GET_USEC(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep) >= 1000000; ) {
+    for (; TME_TIME_GET_FRAC(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep) >= 1000000; ) {
       TME_TIME_ADDV(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep, 1, -1000000);
     }
   }

@@ -408,12 +408,12 @@ tme_misc_cycles_per_ms(void)
     tme_get_time(&timeval_finish);
   } while ((TME_TIME_SEC(timeval_finish) == TME_TIME_SEC(timeval_start))
 	   || (TME_TIME_SEC(timeval_finish) == (TME_TIME_SEC(timeval_start) + 1)
-	       && TME_TIME_GET_USEC(timeval_finish) < TME_TIME_GET_USEC(timeval_start)));
+	       && TME_TIME_FRAC_LT(timeval_finish, timeval_start)));
 
   /* return the approximate cycle counter rate per millisecond: */
   TME_TIME_ADDV(timeval_finish, -1, 1000000);
   ms_elapsed = (TME_TIME_SEC(timeval_finish) - TME_TIME_SEC(timeval_start)) * 1000;
-  ms_elapsed += (TME_TIME_GET_USEC(timeval_finish) - TME_TIME_GET_USEC(timeval_start)) / 1000;
+  ms_elapsed += (TME_TIME_GET_FRAC(timeval_finish) - TME_TIME_GET_FRAC(timeval_start)) / 1000;
   (void) tme_value64_sub(&cycles_finish, &cycles_start);
   cycles_elapsed = cycles_finish.tme_value64_uint32_hi;
   cycles_elapsed *= 65536;
@@ -438,7 +438,7 @@ tme_misc_cycles(void)
   tme_get_time(&now);
   cycles = TME_TIME_SEC(now);
   cycles *= 1000000;
-  cycles += TME_TIME_GET_USEC(now);
+  cycles += TME_TIME_GET_FRAC(now);
   value.tme_value64_uint = cycles;
   return (value);
 #else  /* !TME_HAVE_INT64_T */
@@ -462,7 +462,7 @@ tme_misc_cycles(void)
 
   /* return the cycles: */
   cycles_lo = (cycles_sec % two_to_the_thirtysecond);
-  usec = TME_TIME_GET_USEC(now);
+  usec = TME_TIME_GET_FRAC(now);
   value.tme_value64_uint32_hi
     = (((tme_uint32_t) (cycles / two_to_the_thirtysecond))
        + (usec > ~cycles_lo));
