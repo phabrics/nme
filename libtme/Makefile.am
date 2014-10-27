@@ -47,5 +47,5 @@ memory-auto.lo: memory-auto.h
 # module.c needs to know the LTDL_SHLIBPATH_VAR that libltdl
 # is using:
 module.lo: shlibvar.h
-shlibvar.h: $(top_builddir)/libltdl/config.h
-	grep LT_MODULE_PATH_VAR $(top_builddir)/libltdl/config.h > $@
+shlibvar.h: $(top_builddir)/config.h
+	grep LT_MODULE_PATH_VAR $(top_builddir)/config.h > $@
