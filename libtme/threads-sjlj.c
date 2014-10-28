@@ -39,10 +39,10 @@ _TME_RCSID("$Id: threads-sjlj.c,v 1.18 2010/06/05 19:10:28 fredette Exp $");
 /* includes: */
 #include <tme/threads.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <sys/types.h>
 #include <sys/time.h>
 #include <time.h>
+#include <sys/select.h>
+#include <poll.h>
 #include <setjmp.h>
 
 /* if we don't have GTK, fake a few definitions to keep things
