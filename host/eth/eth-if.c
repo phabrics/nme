@@ -292,7 +292,7 @@ tme_eth_ifaddrs_find(const char *ifa_name_user, struct ifaddrs **_ifaddr, tme_ui
        isn't a loopback interface, take this one: */
     if (ifa_user == NULL
 	&& ((ifa_name_user != NULL && strlen(ifa_name_user))
-	    ? !strncmp(ifa->ifa_name, ifa_name_user, sizeof(ifa->ifa_name))
+	    ? !strncmp(ifa->ifa_name, ifa_name_user, strlen(ifa->ifa_name))
 	    : !(ifa->ifa_flags & IFF_LOOPBACK))) {
       ifa_user = ifa;
       break;
@@ -790,6 +790,7 @@ int tme_eth_args(const char * const args[],
 			    _("IPADDRESS"));
     return (EINVAL);
   }
+  return (TME_OK);
 }
 
 int tme_eth_init(struct tme_element *element, 

@@ -617,12 +617,12 @@ _TME_SPARC_EXECUTE_NAME(struct tme_sparc *ic)
 	/* if the current instruction TLB entry is not the invalid TLB
 	   entry, and there is an instructions thunk for this PC: */
 	if (__tme_predict_true(itlb_current != &itlb_invalid
-			       && (insns_thunk
+			       && ((insns_thunk
 				   = tme_sparc_recode(ic,
 						      itlb_current,
 						      ((const tme_shared tme_uint32_t *) 
 						       (itlb_current->tme_sparc_tlb_emulator_off_read
-							+ pc)))) != 0)) {
+							+ pc)))) != 0))) {
 
 	  /* begin verifying this instructions thunk: */
 	  tme_sparc_recode_verify_begin(ic);

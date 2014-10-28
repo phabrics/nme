@@ -69,7 +69,7 @@ for precision in single double quad; do
 
 /* this sets the floating-point condition codes after a
    ${precision}-precision operation: */
-static void inline
+static inline void
 _tme_sparc_fpu_fcc_${precision}(struct tme_sparc *ic, const struct tme_float *dst, int trap_on_nan)
 {
   tme_uint32_t fcc;

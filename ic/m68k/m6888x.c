@@ -447,7 +447,7 @@ _tme_m6888x_nan_from_nans_extended80(struct tme_ieee754_ctl *ctl,
 }
 
 /* this prepares to run an fpgen instruction: */
-static void inline
+static inline void
 _tme_m6888x_fpgen_enter(struct tme_m68k *ic, const struct tme_m6888x_fpgen *fpgen)
 {
   tme_int8_t rounding_mode;
@@ -495,7 +495,7 @@ _tme_m6888x_fpgen_enter(struct tme_m68k *ic, const struct tme_m6888x_fpgen *fpge
 }
 
 /* this sets the floating-point condition codes: */
-static void inline
+static inline void
 _tme_m6888x_fpcc(struct tme_m68k *ic, const struct tme_float *dst, unsigned int dst_formats)
 {
   tme_uint32_t fpcc;

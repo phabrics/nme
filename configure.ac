@@ -768,18 +768,22 @@ netbsd*)
    SETCAP="chmod u+s"
    ;;
 openbsd*) 
+   CPPFLAGS="${CPPFLAGS-} -D_BSD_SOURCE -D_XOPEN_SOURCE=600"
    DEV_TAP_FILENAME='"\"/dev/tun\""'
    SETCAP="chmod u+s"
    ;;
 freebsd*) 
+   CPPFLAGS="${CPPFLAGS-} -D_BSD_SOURCE -D_XOPEN_SOURCE=600"
    DEV_TAP_FILENAME='"\"/dev/tap\""'
    SETCAP="chmod u+s"
    ;;
 dragonfly*) 
+   CPPFLAGS="${CPPFLAGS-} -D_BSD_SOURCE -D_XOPEN_SOURCE=600"
    DEV_TAP_FILENAME='"\"/dev/tap\""'
    SETCAP="chmod u+s"
    ;;
 linux*) 
+   CPPFLAGS="${CPPFLAGS-} -D_BSD_SOURCE -D_XOPEN_SOURCE=600"
    DEV_TAP_FILENAME='"\"/dev/net/tun\""'
    SETCAP="setcap cap_net_admin+ep"
    ;;
@@ -787,6 +791,7 @@ linux*)
    SETCAP="chmod u+s"
    ;;
 esac
+
 AC_SUBST(DEV_TAP_FILENAME)
 AC_SUBST(SETCAP)
 dnl Configure debugging and/or warnings.
@@ -814,7 +819,7 @@ AC_ARG_ENABLE(warnings,
 [  --disable-warnings      don't compile with warnings turned on (default=do)],
 [ ], [enable_warnings=yes])
 if test "x${enable_warnings}" = "xyes" -a "x${GCC}" = "xyes"; then
-  CFLAGS="${CFLAGS-} -Wundef -Wall -Wextra"
+  CFLAGS="${CFLAGS-} -Wno-unused -Wno-sign-compare -Wno-type-limits -Wundef -Wall -Wextra"
   CXXFLAGS="${CXXFLAGS-} -W"
 fi
 

@@ -139,7 +139,7 @@ tme_stp222x_aspaces_rebuild(struct tme_stp222x *stp222x)
 	/* FALLTHROUGH */
       case TME_STP2222_ASPACE_PCI_MEMORY(0):
       case TME_STP2222_ASPACE_PCI_MEMORY(1):
-	conn_bus_other = conn_other->tme_connection_other;
+	conn_bus_other = (struct tme_bus_connection *)conn_other->tme_connection_other;
 	subregion = &conn_bus_other->tme_bus_subregions;
 	break;
       case TME_STP2222_ASPACE_PCI_IO(0):

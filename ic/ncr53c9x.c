@@ -1044,7 +1044,7 @@ _tme_ncr53c9x_reset(struct tme_ncr53c9x *ncr53c9x,
     break
 
 /* this latches the current time, plus a timeout in milliseconds: */
-static void inline
+static inline void
 _tme_ncr53c9x_cs_timeout(struct tme_ncr53c9x *ncr53c9x, unsigned int msec, unsigned int label)
 {
 
