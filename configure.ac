@@ -39,14 +39,15 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
 #AC_CONFIG_AUX_DIR([libltdl/config])
 #AC_CONFIG_MACRO_DIR([libltdl/m4])
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([subdir-objects])
+AM_PROG_CC_C_O
 
 dnl Write configuration out to config.h through config.h.in.
 AC_CONFIG_HEADERS([config.h])
 
 dnl Checks for programs.
 AC_PROG_AWK
-AC_PROG_CC
+#AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_YACC
 AC_PROG_INSTALL
@@ -755,7 +756,7 @@ dnl Configure for libtool.
 LT_PREREQ([2.4])
 LT_CONFIG_LTDL_DIR([libltdl])
 LT_INIT([dlopen])
-LTDL_INIT([installable])
+LTDL_INIT([recursive installable])
 TME_PREOPEN=
 if test "x${enable_shared}" = "xno"; then
   TME_PREOPEN='`sort -u $(top_builddir)/tme-preopen.txt`'
@@ -1043,6 +1044,7 @@ AC_CONFIG_FILES([Makefile
 	  tme/scsi/Makefile
 	  tme/host/Makefile
 	  tme/bus/Makefile
+	  libltdl/Makefile
 	  libtme/Makefile
 	  libtme/host/Makefile
 	  libtme/host/x86/Makefile
