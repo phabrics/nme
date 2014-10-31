@@ -40,7 +40,7 @@ _TME_RCSID("$Id: bsd-bpf.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #include <tme/generic/ethernet.h>
 #include <tme/threads.h>
 #include <tme/misc.h>
-#include "eth-impl.h"
+#include "eth-if.h"
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -335,6 +335,7 @@ _tme_bsd_bpf_config(struct tme_ethernet_connection *conn_eth,
   return (rc);
 }
 
+#ifndef HAVE_AF_PACKET
 /* this is called to read a frame: */
 static int
 _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth, 
@@ -343,7 +344,6 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
 		  unsigned int flags)
 {
   struct tme_ethernet *bpf;
-#ifndef HAVE_AF_PACKET
   tme_time_t tstamp;
 #ifdef BIOCSTSTAMP
   // Assume timespec (nanosecond-accuracy) macros
@@ -380,14 +380,10 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
 #define TME_BPF_TIME_SUB(a,x,y) _TME_TIME_SUB(a,x,y,tv_sec,tv_usec)
 #define TME_BPF_TIME_DEC(a,x) _TME_TIME_DEC(a,x,tv_sec,tv_usec)
 #endif
-#endif
   struct tme_ethernet_frame_chunk frame_chunk_buffer;
   size_t buffer_offset_next;
-  const struct tme_ethernet_header *ethernet_header;
-  const struct tme_net_arp_header *arp_header;
-  const struct tme_net_ipv4_header *ipv4_header;
-  tme_uint16_t ethertype;
   unsigned int count;
+  unsigned long delay_time;
   int rc;
 
   /* recover our data structure: */
@@ -399,16 +395,13 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
   /* assume that we won't be able to return a packet: */
   rc = -ENOENT;
 
+  delay_time = *(unsigned long *)bpf->tme_eth_data;
   /* loop until we have a good captured packet or until we 
      exhaust the buffer: */
   for (;;) {
     buffer_offset_next = bpf->tme_eth_buffer_end;
     /* if there's not enough for a BPF header, flush the buffer: */
-#ifdef HAVE_AF_PACKET
-    if (bpf->tme_eth_buffer_offset >= bpf->tme_eth_buffer_end)
-#else
     if ((bpf->tme_eth_buffer_offset + sizeof(the_bpf_header)) > bpf->tme_eth_buffer_end)
-#endif
     {
       if (bpf->tme_eth_buffer_offset
 	  != bpf->tme_eth_buffer_end) {
@@ -420,7 +413,6 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
       break;
     }
 
-#ifndef HAVE_AF_PACKET
     /* get the BPF header and check it: */
     memcpy(&the_bpf_header,
 	   bpf->tme_eth_buffer
@@ -458,7 +450,7 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
     }
 
     /* if packets need to be delayed: */
-    if (bpf->tme_eth_delay_time > 0) {
+    if (delay_time > 0) {
       TME_TIME_SETV(tstamp, 
 		    TME_BPF_TIME_SEC(the_bpf_header.bh_tstamp), 
 		    TME_BPF_TIME_GET_FRAC(the_bpf_header.bh_tstamp));
@@ -467,10 +459,10 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
 	/* update the current release time, by taking the current time
 	   and subtracting the delay time: */
 	tme_get_time(&bpf->tme_eth_delay_release);
-	if (TME_TIME_GET_FRAC(bpf->tme_eth_delay_release) < bpf->tme_eth_delay_time) {
+	if (TME_TIME_GET_FRAC(bpf->tme_eth_delay_release) < delay_time) {
 	  TME_TIME_ADDV(bpf->tme_eth_delay_release, -1, 1000000UL);
 	}
-	TME_TIME_INC_FRAC(bpf->tme_eth_delay_release, -bpf->tme_eth_delay_time);
+	TME_TIME_INC_FRAC(bpf->tme_eth_delay_release, -delay_time);
       }
 
       /* if the current release time is still before this packet's
@@ -493,102 +485,21 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
 	break;
       }
     }
-#endif
+
     /* form the single frame chunk: */
     frame_chunk_buffer.tme_ethernet_frame_chunk_next = NULL;
     frame_chunk_buffer.tme_ethernet_frame_chunk_bytes
       = bpf->tme_eth_buffer + bpf->tme_eth_buffer_offset;
     frame_chunk_buffer.tme_ethernet_frame_chunk_bytes_count
-#ifdef HAVE_AF_PACKET
-      = buffer_offset_next;
-#else
       = the_bpf_header.bh_datalen;
-#endif
-
-    /* some network interfaces haven't removed the CRC yet when they
-       pass a packet to BPF.  packets in a tme ethernet connection
-       never have CRCs, so here we attempt to detect them and strip
-       them off.
-
-       unfortunately there's no general way to do this.  there's a
-       chance that the last four bytes of an actual packet just
-       happen to be the Ethernet CRC of all of the previous bytes in
-       the packet, so we can't just strip off what looks like a
-       valid CRC, plus the CRC calculation itself isn't cheap.
-
-       the only way to do this well seems to be to look at the
-       protocol.  if we can determine what the correct minimum size
-       of the packet should be based on the protocol, and the size
-       we got is four bytes more than that, assume that the last four
-       bytes are a CRC and strip it off: */
-
-    /* assume that we won't be able to figure out the correct minimum
-       size of the packet: */
-    count = 0;
-
-    /* get the Ethernet header and packet type: */
-    ethernet_header = (struct tme_ethernet_header *) (bpf->tme_eth_buffer + bpf->tme_eth_buffer_offset);
-    ethertype = ethernet_header->tme_ethernet_header_type[0];
-    ethertype = (ethertype << 8) + ethernet_header->tme_ethernet_header_type[1];
-
-    /* dispatch on the packet type: */
-    switch (ethertype) {
-
-      /* an ARP or RARP packet: */
-    case TME_ETHERNET_TYPE_ARP:
-    case TME_ETHERNET_TYPE_RARP:
-      arp_header = (struct tme_net_arp_header *) (ethernet_header + 1);
-      switch ((((tme_uint16_t) arp_header->tme_net_arp_header_opcode[0]) << 8)
-	      + arp_header->tme_net_arp_header_opcode[1]) {
-      case TME_NET_ARP_OPCODE_REQUEST:
-      case TME_NET_ARP_OPCODE_REPLY:
-      case TME_NET_ARP_OPCODE_REV_REQUEST:
-      case TME_NET_ARP_OPCODE_REV_REPLY:
-	count = (TME_ETHERNET_HEADER_SIZE
-		 + sizeof(struct tme_net_arp_header)
-		 + (2 * arp_header->tme_net_arp_header_hardware_length)
-		 + (2 * arp_header->tme_net_arp_header_protocol_length));
-      default:
-	break;
-      }
-      break;
-
-      /* an IPv4 packet: */
-    case TME_ETHERNET_TYPE_IPV4:
-      ipv4_header = (struct tme_net_ipv4_header *) (ethernet_header + 1);
-      count = ipv4_header->tme_net_ipv4_header_length[0];
-      count = (count << 8) + ipv4_header->tme_net_ipv4_header_length[1];
-      count += TME_ETHERNET_HEADER_SIZE;
-      break;
-
-    default:
-      break;
-    }
-
-    /* if we were able to figure out the correct minimum size of the
-       packet, and the packet from BPF is exactly that minimum size
-       plus the CRC size, set the length of the packet to be the
-       correct minimum size.  NB that we can't let the packet become
-       smaller than (TME_ETHERNET_FRAME_MIN - TME_ETHERNET_CRC_SIZE): */
-    if (count != 0) {
-      count = TME_MAX(count,
-		      (TME_ETHERNET_FRAME_MIN
-		       - TME_ETHERNET_CRC_SIZE));
-      if (frame_chunk_buffer.tme_ethernet_frame_chunk_bytes_count
-	  == (count + TME_ETHERNET_CRC_SIZE)) {
-	frame_chunk_buffer.tme_ethernet_frame_chunk_bytes_count = count;
-      }
-    }
 
     /* copy out the frame: */
-    count = tme_ethernet_chunks_copy(frame_chunks, &frame_chunk_buffer);
+    count = tme_eth_filter(bpf, frame_chunks, &frame_chunk_buffer);
 
     /* if this is a peek: */
     if (flags & TME_ETHERNET_READ_PEEK) {
-#ifndef HAVE_AF_PACKET
       /* rewind the buffer pointer: */
       bpf->tme_eth_buffer_offset -= the_bpf_header.bh_hdrlen;
-#endif
     }
 
     /* otherwise, this isn't a peek: */
@@ -617,6 +528,7 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
   /* done: */
   return (rc);
 }
+#endif
 
 /* this makes a new connection side for a ETH: */
 static int
@@ -630,8 +542,67 @@ _tme_bsd_bpf_connections_new(struct tme_element *element,
   tme_eth_connections_new(element, args, _conns, _output);
   conn_eth = (struct tme_ethernet_connection *) (*_conns);
   conn_eth->tme_ethernet_connection_config = _tme_bsd_bpf_config;
+#ifndef HAVE_AF_PACKET
   conn_eth->tme_ethernet_connection_read = _tme_bsd_bpf_read;
+#endif  
+  return (TME_OK);
+}
+
+/* retrieve ethernet arguments */
+int _tme_bsd_bpf_args(const char * const args[], 
+		      struct ifreq *ifr,
+		      unsigned long *delay,
+		      char **_output)
+{
+  int arg_i;
+  int usage;
   
+  /* check our arguments: */
+  usage = 0;
+  ifr->ifr_name[0] = '\0';
+  *delay = 0;
+
+  arg_i = 1;
+
+  for (;;) {
+    /* the interface we're supposed to use: */
+    if (TME_ARG_IS(args[arg_i + 0], "interface")
+	&& args[arg_i + 1] != NULL) {
+      strncpy(ifr->ifr_name, args[arg_i + 1], sizeof(ifr->ifr_name));
+      arg_i += 2;
+    }
+
+    /* a delay time in microseconds: */
+    else if (TME_ARG_IS(args[arg_i + 0], "delay")
+	     && (*delay = tme_misc_unumber_parse(args[arg_i + 1], 0)) > 0) {
+      arg_i += 2;
+    }
+    
+    /* if we ran out of arguments: */
+    else if (args[arg_i + 0] == NULL) {
+      break;
+    }
+
+    /* otherwise this is a bad argument: */
+    else {
+      tme_output_append_error(_output,
+			      "%s %s", 
+			      args[arg_i],
+			      _("unexpected"));
+      usage = TRUE;
+      break;
+    }
+  }
+
+  if (usage) {
+    tme_output_append_error(_output,
+			    "%s %s [ interface %s ] [ delay %s ]",
+			    _("usage:"),
+			    args[0],
+			    _("INTERFACE"),
+			    _("MICROSECONDS"));
+    return (EINVAL);
+  }
   return (TME_OK);
 }
 
@@ -653,11 +624,13 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
   struct ifreq ifr;
   struct ifaddrs *ifa;
   u_int packet_buffer_size;
-  unsigned long delay_time;
+  unsigned long *delay_time;
   int rc;
 
+  delay_time = tme_new0(unsigned long, 1);
+
   /* get the arguments: */
-  rc = tme_eth_args(args, &ifr, &delay_time, 0, _output);
+  rc = _tme_bsd_bpf_args(args, &ifr, delay_time, _output);
 
   /* find the interface we will use: */
   rc = tme_eth_ifaddrs_find(ifr.ifr_name, &ifa, NULL, NULL);

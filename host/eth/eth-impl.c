@@ -40,7 +40,7 @@ _TME_RCSID("$Id: eth-if.c,v 1.3 2003/10/16 02:48:23 fredette Exp $");
 #include <tme/generic/ethernet.h>
 #include <tme/threads.h>
 #include <tme/misc.h>
-#include "eth-impl.h"
+#include "eth-if.h"
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -73,12 +73,19 @@ _TME_RCSID("$Id: eth-if.c,v 1.3 2003/10/16 02:48:23 fredette Exp $");
 #endif /* HAVE_NET_IF_DL_H */
 #include <arpa/inet.h>
 
+/* macros: */
 /* the callout flags: */
 #define TME_ETH_CALLOUT_CHECK	(0)
 #define TME_ETH_CALLOUT_RUNNING	TME_BIT(0)
 #define TME_ETH_CALLOUTS_MASK	(-2)
 #define TME_ETH_CALLOUT_CTRL	TME_BIT(1)
 #define TME_ETH_CALLOUT_READ	TME_BIT(2)
+
+/* ARP and RARP opcodes: */
+#define TME_NET_ARP_OPCODE_REQUEST	(0x0001)
+#define TME_NET_ARP_OPCODE_REPLY	(0x0002)
+#define TME_NET_ARP_OPCODE_REV_REQUEST	(0x0003)
+#define TME_NET_ARP_OPCODE_REV_REPLY	(0x0004)
 
 /* this macro helps us size a struct ifreq: */
 #ifdef HAVE_SOCKADDR_SA_LEN
@@ -88,238 +95,21 @@ _TME_RCSID("$Id: eth-if.c,v 1.3 2003/10/16 02:48:23 fredette Exp $");
 #define SIZEOF_IFREQ(ifr) (sizeof(struct ifreq))
 #endif /* !HAVE_SOCKADDR_SA_LEN */
 
-/* this finds a network interface via traditional ioctls: */
-int
-tme_eth_if_find(const char *ifr_name_user, struct ifreq **_ifreq, tme_uint8_t **_if_addr, unsigned int *_if_addr_size)
-{
-  int saved_errno;
-  int dummy_fd;
-  char ifreq_buffer[16384];	/* FIXME - magic constant. */
-  struct ifconf ifc;
-  struct ifreq *ifr;
-  struct ifreq *ifr_user;
-  size_t ifr_offset;
-  struct sockaddr_in saved_ip_address;
-  short saved_flags;
-#ifdef HAVE_AF_LINK
-  struct ifreq *link_ifreqs[20];	/* FIXME - magic constant. */
-  size_t link_ifreqs_count;
-  size_t link_ifreqs_i;
-  struct sockaddr_dl *sadl;
-#endif				/* HAVE_AF_LINK */
+/* a crude ARP header: */
+struct tme_net_arp_header {
+  tme_uint8_t tme_net_arp_header_hardware[2];
+  tme_uint8_t tme_net_arp_header_protocol[2];
+  tme_uint8_t tme_net_arp_header_hardware_length;
+  tme_uint8_t tme_net_arp_header_protocol_length;
+  tme_uint8_t tme_net_arp_header_opcode[2];
+};
 
-  /* make a dummy socket so we can read the interface list: */
-  if ((dummy_fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-    return (-1);
-  }
-
-  /* read the interface list: */
-  ifc.ifc_len = sizeof(ifreq_buffer);
-  ifc.ifc_buf = ifreq_buffer;
-  if (ioctl(dummy_fd, SIOCGIFCONF, &ifc) < 0) {
-    saved_errno = errno;
-    close(dummy_fd);
-    errno = saved_errno;
-    return (-1);
-  }
-
-#ifdef HAVE_AF_LINK
-  /* start our list of link address ifreqs: */
-  link_ifreqs_count = 0;
-#endif /* HAVE_AF_LINK */
-
-  /* walk the interface list: */
-  ifr_user = NULL;
-  for (ifr_offset = 0;; ifr_offset += SIZEOF_IFREQ(ifr)) {
-
-    /* stop walking if we have run out of space in the buffer.  note
-       that before we can use SIZEOF_IFREQ, we have to make sure that
-       there is a minimum number of bytes in the buffer to use it
-       (namely, that there's a whole struct sockaddr available): */
-    ifr = (struct ifreq *) (ifreq_buffer + ifr_offset);
-    if (((ifr_offset
-	 + sizeof(ifr->ifr_name)
-	 + sizeof(struct sockaddr))
-	 > (size_t) ifc.ifc_len)
-	|| ((ifr_offset
-	     + SIZEOF_IFREQ(ifr))
-	    > (size_t) ifc.ifc_len)) {
-      errno = ENOENT;
-      break;
-    }
-
-#ifdef HAVE_AF_LINK
-    /* if this is a hardware address, save it: */
-    if (ifr->ifr_addr.sa_family == AF_LINK) {
-      if (link_ifreqs_count < TME_ARRAY_ELS(link_ifreqs)) {
-	link_ifreqs[link_ifreqs_count++] = ifr;
-      }
-      continue;
-    }
-#endif /* HAVE_AF_LINK */
-
-    /* ignore this interface if it doesn't do IP: */
-    /* XXX is this actually important? */
-    if (ifr->ifr_addr.sa_family != AF_INET) {
-      continue;
-    }
-
-    /* get the interface flags, preserving the IP address in the
-       struct ifreq across the call: */
-    saved_ip_address = *((struct sockaddr_in *) & ifr->ifr_addr);
-    if (ioctl(dummy_fd, SIOCGIFFLAGS, ifr) < 0) {
-      ifr = NULL;
-      break;
-    }
-    saved_flags = ifr->ifr_flags;
-
-    /*
-    if (ioctl(dummy_fd, SIOCGIFINDEX, ifr) < 0) {
-      ifr = NULL;
-      break;
-    }
-    */
-
-    *((struct sockaddr_in *) & ifr->ifr_addr) = saved_ip_address;
-
-    /* ignore this interface if it isn't up and running: */
-    if ((saved_flags & (IFF_UP | IFF_RUNNING))
-	!= (IFF_UP | IFF_RUNNING)) {
-      continue;
-    }
-
-    /* if we don't have an interface yet, take this one depending on
-       whether the user asked for an interface by name or not.  if he
-       did, and this is it, take this one.  if he didn't, and this
-       isn't a loopback interface, take this one: */
-    if (ifr_user == NULL
-	&& (ifr_name_user != NULL
-	    ? !strncmp(ifr->ifr_name, ifr_name_user, sizeof(ifr->ifr_name))
-	    : !(saved_flags & IFF_LOOPBACK))) {
-      ifr_user = ifr;
-      break;
-    }
-  }
-
-  /* close the dummy socket: */
-  saved_errno = errno;
-  close(dummy_fd);
-  errno = saved_errno;
-
-  /* if we don't have an interface to return: */
-  if (ifr_user == NULL) {
-    return (errno);
-  }
-
-  /* return this interface: */
-  *_ifreq = (struct ifreq *) tme_memdup(ifr_user, SIZEOF_IFREQ(ifr_user));
-
-  /* assume that we can't find this interface's hardware address: */
-  if (_if_addr != NULL) {
-    *_if_addr = NULL;
-  }
-  if (_if_addr_size != NULL) {
-    *_if_addr_size = 0;
-  }
-
-#ifdef HAVE_AF_LINK
-
-  /* try to find an AF_LINK ifreq that gives us the interface's
-     hardware address: */
-  ifr = NULL;
-  for (link_ifreqs_i = 0;
-       link_ifreqs_i < link_ifreqs_count;
-       link_ifreqs_i++) {
-    if (!strncmp(link_ifreqs[link_ifreqs_i]->ifr_name,
-		 ifr_user->ifr_name,
-		 sizeof(ifr_user->ifr_name))) {
-      ifr = link_ifreqs[link_ifreqs_i];
-      break;
-    }
-  }
-
-  /* if we found one, return the hardware address: */
-  if (ifr != NULL) {
-    sadl = (struct sockaddr_dl *) &ifr->ifr_addr;
-    if (_if_addr_size != NULL) {
-      *_if_addr_size = sadl->sdl_alen;
-    }
-    if (_if_addr != NULL) {
-      *_if_addr = tme_new(tme_uint8_t, sadl->sdl_alen);
-      memcpy(*_if_addr, LLADDR(sadl), sadl->sdl_alen);
-    }
-  }
-
-#endif /* HAVE_AF_LINK */
-
-  /* done: */
-  return (TME_OK);
-}
-
-/* this finds a network interface via the ifaddrs api: */
-int
-tme_eth_ifaddrs_find(const char *ifa_name_user, struct ifaddrs **_ifaddr, tme_uint8_t **_if_addr, unsigned int *_if_addr_size)
-{
-  struct ifaddrs *ifaddr, *ifa;
-  struct ifaddrs *ifa_user = NULL;
-
-  if (getifaddrs(&ifaddr) == -1) {
-    return (-1);
-  }
-
-  /* Walk through linked list, maintaining head pointer so we
-     can free list later */
-
-  for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
-    if (ifa->ifa_addr == NULL)
-      continue;
-
-    /* ignore this interface if it doesn't do IP: */
-    /* XXX is this actually important? */
-    if (ifa->ifa_addr->sa_family != AF_INET) {
-      continue;
-    }
-
-    /* ignore this interface if it isn't up and running: */
-    if ((ifa->ifa_flags & (IFF_UP | IFF_RUNNING))
-	!= (IFF_UP | IFF_RUNNING)) {
-      continue;
-    }
-
-    /* if we don't have an interface yet, take this one depending on
-       whether the user asked for an interface by name or not.  if he
-       did, and this is it, take this one.  if he didn't, and this
-       isn't a loopback interface, take this one: */
-    if (ifa_user == NULL
-	&& ((ifa_name_user != NULL && strlen(ifa_name_user))
-	    ? !strncmp(ifa->ifa_name, ifa_name_user, strlen(ifa->ifa_name))
-	    : !(ifa->ifa_flags & IFF_LOOPBACK))) {
-      ifa_user = ifa;
-      break;
-    }
-
-  }
-
-  /* if we don't have an interface to return: */
-  if (ifa_user == NULL) {
-    return ENOENT;
-  }
-
-  /* return this interface: */
-  *_ifaddr = (struct ifaddrs *) tme_memdup(ifa_user, sizeof(*ifa_user));
-
-  /* assume that we can't find this interface's hardware address: */
-  if (_if_addr != NULL) {
-    *_if_addr = NULL;
-  }
-  if (_if_addr_size != NULL) {
-    *_if_addr_size = 0;
-  }
-
-  freeifaddrs(ifaddr);
-  /* done: */
-  return (TME_OK);
-}
+/* a crude partial IPv4 header: */
+struct tme_net_ipv4_header {
+  tme_uint8_t tme_net_ipv4_header_v_hl;
+  tme_uint8_t tme_net_ipv4_header_tos;
+  tme_uint8_t tme_net_ipv4_header_length[2];
+};
 
 /* the ethernet callout function.  it must be called with the mutex locked: */
 static void
@@ -614,11 +404,407 @@ _tme_eth_ctrl(struct tme_ethernet_connection *conn_eth,
 /* this is called to read a frame: */
 static int
 _tme_eth_read(struct tme_ethernet_connection *conn_eth, 
-		  tme_ethernet_fid_t *_frame_id,
-		  struct tme_ethernet_frame_chunk *frame_chunks,
-		  unsigned int flags)
+	      tme_ethernet_fid_t *_frame_id,
+	      struct tme_ethernet_frame_chunk *frame_chunks,
+	      unsigned int flags)
 {
-  abort();
+  struct tme_ethernet *eth;
+  struct tme_ethernet_frame_chunk frame_chunk_buffer;
+  size_t buffer_offset_next;
+  const struct tme_ethernet_header *ethernet_header;
+  const struct tme_net_arp_header *arp_header;
+  const struct tme_net_ipv4_header *ipv4_header;
+  tme_uint16_t ethertype;
+  unsigned int count;
+  int rc;
+
+  /* recover our data structure: */
+  eth = conn_eth->tme_ethernet_connection.tme_connection_element->tme_element_private;
+
+  /* lock our mutex: */
+  tme_mutex_lock(&eth->tme_eth_mutex);
+
+  /* assume that we won't be able to return a packet: */
+  rc = -ENOENT;
+
+  /* loop until we have a good captured packet or until we 
+     exhaust the buffer: */
+  for (;;) {
+    buffer_offset_next = eth->tme_eth_buffer_end;
+    /* if there's not enough for a ETH header, flush the buffer: */
+    if (eth->tme_eth_buffer_offset >= eth->tme_eth_buffer_end)
+    {
+      if (eth->tme_eth_buffer_offset
+	  != eth->tme_eth_buffer_end) {
+	tme_log(&eth->tme_eth_element->tme_element_log_handle, 1, TME_OK,
+		(&eth->tme_eth_element->tme_element_log_handle,
+		 _("flushed garbage ETH header bytes")));
+	eth->tme_eth_buffer_offset = eth->tme_eth_buffer_end;
+      }
+      break;
+    }
+
+    /* form the single frame chunk: */
+    frame_chunk_buffer.tme_ethernet_frame_chunk_next = NULL;
+    frame_chunk_buffer.tme_ethernet_frame_chunk_bytes
+      = eth->tme_eth_buffer + eth->tme_eth_buffer_offset;
+    frame_chunk_buffer.tme_ethernet_frame_chunk_bytes_count
+      = buffer_offset_next;
+
+    /* filter out the frame: */
+    count = tme_eth_filter(eth, frame_chunks, &frame_chunk_buffer);
+
+    /* if this is a peek: */
+    if (flags & TME_ETHERNET_READ_PEEK) {
+    }
+
+    /* otherwise, this isn't a peek: */
+    else {
+
+      /* update the buffer pointer: */
+      eth->tme_eth_buffer_offset = buffer_offset_next;
+    }
+
+    /* success: */
+    rc = count;
+    break;
+  }
+
+  /* if the buffer is empty, or if we failed to read a packet,
+     wake up the reader: */
+  if ((eth->tme_eth_buffer_offset
+       >= eth->tme_eth_buffer_end)
+      || rc <= 0) {
+    tme_cond_notify(&eth->tme_eth_cond_reader, TRUE);
+  }
+
+  /* unlock our mutex: */
+  tme_mutex_unlock(&eth->tme_eth_mutex);
+
+  /* done: */
+  return (rc);
+}
+
+/* this finds a network interface via traditional ioctls: */
+int
+tme_eth_if_find(const char *ifr_name_user, struct ifreq **_ifreq, tme_uint8_t **_if_addr, unsigned int *_if_addr_size)
+{
+  int saved_errno;
+  int dummy_fd;
+  char ifreq_buffer[16384];	/* FIXME - magic constant. */
+  struct ifconf ifc;
+  struct ifreq *ifr;
+  struct ifreq *ifr_user;
+  size_t ifr_offset;
+  struct sockaddr_in saved_ip_address;
+  short saved_flags;
+#ifdef HAVE_AF_LINK
+  struct ifreq *link_ifreqs[20];	/* FIXME - magic constant. */
+  size_t link_ifreqs_count;
+  size_t link_ifreqs_i;
+  struct sockaddr_dl *sadl;
+#endif				/* HAVE_AF_LINK */
+
+  /* make a dummy socket so we can read the interface list: */
+  if ((dummy_fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+    return (-1);
+  }
+
+  /* read the interface list: */
+  ifc.ifc_len = sizeof(ifreq_buffer);
+  ifc.ifc_buf = ifreq_buffer;
+  if (ioctl(dummy_fd, SIOCGIFCONF, &ifc) < 0) {
+    saved_errno = errno;
+    close(dummy_fd);
+    errno = saved_errno;
+    return (-1);
+  }
+
+#ifdef HAVE_AF_LINK
+  /* start our list of link address ifreqs: */
+  link_ifreqs_count = 0;
+#endif /* HAVE_AF_LINK */
+
+  /* walk the interface list: */
+  ifr_user = NULL;
+  for (ifr_offset = 0;; ifr_offset += SIZEOF_IFREQ(ifr)) {
+
+    /* stop walking if we have run out of space in the buffer.  note
+       that before we can use SIZEOF_IFREQ, we have to make sure that
+       there is a minimum number of bytes in the buffer to use it
+       (namely, that there's a whole struct sockaddr available): */
+    ifr = (struct ifreq *) (ifreq_buffer + ifr_offset);
+    if (((ifr_offset
+	 + sizeof(ifr->ifr_name)
+	 + sizeof(struct sockaddr))
+	 > (size_t) ifc.ifc_len)
+	|| ((ifr_offset
+	     + SIZEOF_IFREQ(ifr))
+	    > (size_t) ifc.ifc_len)) {
+      errno = ENOENT;
+      break;
+    }
+
+#ifdef HAVE_AF_LINK
+    /* if this is a hardware address, save it: */
+    if (ifr->ifr_addr.sa_family == AF_LINK) {
+      if (link_ifreqs_count < TME_ARRAY_ELS(link_ifreqs)) {
+	link_ifreqs[link_ifreqs_count++] = ifr;
+      }
+      continue;
+    }
+#endif /* HAVE_AF_LINK */
+
+    /* ignore this interface if it doesn't do IP: */
+    /* XXX is this actually important? */
+    if (ifr->ifr_addr.sa_family != AF_INET) {
+      continue;
+    }
+
+    /* get the interface flags, preserving the IP address in the
+       struct ifreq across the call: */
+    saved_ip_address = *((struct sockaddr_in *) & ifr->ifr_addr);
+    if (ioctl(dummy_fd, SIOCGIFFLAGS, ifr) < 0) {
+      ifr = NULL;
+      break;
+    }
+    saved_flags = ifr->ifr_flags;
+
+    /*
+    if (ioctl(dummy_fd, SIOCGIFINDEX, ifr) < 0) {
+      ifr = NULL;
+      break;
+    }
+    */
+
+    *((struct sockaddr_in *) & ifr->ifr_addr) = saved_ip_address;
+
+    /* ignore this interface if it isn't up and running: */
+    if ((saved_flags & (IFF_UP | IFF_RUNNING))
+	!= (IFF_UP | IFF_RUNNING)) {
+      continue;
+    }
+
+    /* if we don't have an interface yet, take this one depending on
+       whether the user asked for an interface by name or not.  if he
+       did, and this is it, take this one.  if he didn't, and this
+       isn't a loopback interface, take this one: */
+    if (ifr_user == NULL
+	&& (ifr_name_user != NULL
+	    ? !strncmp(ifr->ifr_name, ifr_name_user, sizeof(ifr->ifr_name))
+	    : !(saved_flags & IFF_LOOPBACK))) {
+      ifr_user = ifr;
+      break;
+    }
+  }
+
+  /* close the dummy socket: */
+  saved_errno = errno;
+  close(dummy_fd);
+  errno = saved_errno;
+
+  /* if we don't have an interface to return: */
+  if (ifr_user == NULL) {
+    return (errno);
+  }
+
+  /* return this interface: */
+  *_ifreq = (struct ifreq *) tme_memdup(ifr_user, SIZEOF_IFREQ(ifr_user));
+
+  /* assume that we can't find this interface's hardware address: */
+  if (_if_addr != NULL) {
+    *_if_addr = NULL;
+  }
+  if (_if_addr_size != NULL) {
+    *_if_addr_size = 0;
+  }
+
+#ifdef HAVE_AF_LINK
+
+  /* try to find an AF_LINK ifreq that gives us the interface's
+     hardware address: */
+  ifr = NULL;
+  for (link_ifreqs_i = 0;
+       link_ifreqs_i < link_ifreqs_count;
+       link_ifreqs_i++) {
+    if (!strncmp(link_ifreqs[link_ifreqs_i]->ifr_name,
+		 ifr_user->ifr_name,
+		 sizeof(ifr_user->ifr_name))) {
+      ifr = link_ifreqs[link_ifreqs_i];
+      break;
+    }
+  }
+
+  /* if we found one, return the hardware address: */
+  if (ifr != NULL) {
+    sadl = (struct sockaddr_dl *) &ifr->ifr_addr;
+    if (_if_addr_size != NULL) {
+      *_if_addr_size = sadl->sdl_alen;
+    }
+    if (_if_addr != NULL) {
+      *_if_addr = tme_new(tme_uint8_t, sadl->sdl_alen);
+      memcpy(*_if_addr, LLADDR(sadl), sadl->sdl_alen);
+    }
+  }
+
+#endif /* HAVE_AF_LINK */
+
+  /* done: */
+  return (TME_OK);
+}
+
+/* this finds a network interface via the ifaddrs api: */
+int
+tme_eth_ifaddrs_find(const char *ifa_name_user, struct ifaddrs **_ifaddr, tme_uint8_t **_if_addr, unsigned int *_if_addr_size)
+{
+  struct ifaddrs *ifaddr, *ifa;
+  struct ifaddrs *ifa_user = NULL;
+
+  if (getifaddrs(&ifaddr) == -1) {
+    return (-1);
+  }
+
+  /* Walk through linked list, maintaining head pointer so we
+     can free list later */
+
+  for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+    if (ifa->ifa_addr == NULL)
+      continue;
+
+    /* ignore this interface if it doesn't do IP: */
+    /* XXX is this actually important? */
+    if (ifa->ifa_addr->sa_family != AF_INET) {
+      continue;
+    }
+
+    /* ignore this interface if it isn't up and running: */
+    if ((ifa->ifa_flags & (IFF_UP | IFF_RUNNING))
+	!= (IFF_UP | IFF_RUNNING)) {
+      continue;
+    }
+
+    /* if we don't have an interface yet, take this one depending on
+       whether the user asked for an interface by name or not.  if he
+       did, and this is it, take this one.  if he didn't, and this
+       isn't a loopback interface, take this one: */
+    if (ifa_user == NULL
+	&& ((ifa_name_user != NULL && strlen(ifa_name_user))
+	    ? !strncmp(ifa->ifa_name, ifa_name_user, strlen(ifa->ifa_name))
+	    : !(ifa->ifa_flags & IFF_LOOPBACK))) {
+      ifa_user = ifa;
+      break;
+    }
+
+  }
+
+  /* if we don't have an interface to return: */
+  if (ifa_user == NULL) {
+    return ENOENT;
+  }
+
+  /* return this interface: */
+  *_ifaddr = (struct ifaddrs *) tme_memdup(ifa_user, sizeof(*ifa_user));
+
+  /* assume that we can't find this interface's hardware address: */
+  if (_if_addr != NULL) {
+    *_if_addr = NULL;
+  }
+  if (_if_addr_size != NULL) {
+    *_if_addr_size = 0;
+  }
+
+  freeifaddrs(ifaddr);
+  /* done: */
+  return (TME_OK);
+}
+
+int tme_eth_filter(struct tme_ethernet *eth,
+		   struct tme_ethernet_frame_chunk *frame_chunks,
+		   struct tme_ethernet_frame_chunk *frame_chunk_buffer)
+{
+  const struct tme_ethernet_header *ethernet_header;
+  const struct tme_net_arp_header *arp_header;
+  const struct tme_net_ipv4_header *ipv4_header;
+  tme_uint16_t ethertype;
+  unsigned int count;
+
+  /* some network interfaces haven't removed the CRC yet when they
+     pass a packet to ETH.  packets in a tme ethernet connection
+     never have CRCs, so here we attempt to detect them and strip
+     them off.
+
+     unfortunately there's no general way to do this.  there's a
+     chance that the last four bytes of an actual packet just
+     happen to be the Ethernet CRC of all of the previous bytes in
+     the packet, so we can't just strip off what looks like a
+     valid CRC, plus the CRC calculation itself isn't cheap.
+
+     the only way to do this well seems to be to look at the
+     protocol.  if we can determine what the correct minimum size
+     of the packet should be based on the protocol, and the size
+     we got is four bytes more than that, assume that the last four
+     bytes are a CRC and strip it off: */
+
+  /* assume that we won't be able to figure out the correct minimum
+     size of the packet: */
+  count = 0;
+
+  /* get the Ethernet header and packet type: */
+  ethernet_header = (struct tme_ethernet_header *) (eth->tme_eth_buffer + eth->tme_eth_buffer_offset);
+  ethertype = ethernet_header->tme_ethernet_header_type[0];
+  ethertype = (ethertype << 8) + ethernet_header->tme_ethernet_header_type[1];
+
+  /* dispatch on the packet type: */
+  switch (ethertype) {
+
+    /* an ARP or RARP packet: */
+  case TME_ETHERNET_TYPE_ARP:
+  case TME_ETHERNET_TYPE_RARP:
+    arp_header = (struct tme_net_arp_header *) (ethernet_header + 1);
+    switch ((((tme_uint16_t) arp_header->tme_net_arp_header_opcode[0]) << 8)
+	    + arp_header->tme_net_arp_header_opcode[1]) {
+    case TME_NET_ARP_OPCODE_REQUEST:
+    case TME_NET_ARP_OPCODE_REPLY:
+    case TME_NET_ARP_OPCODE_REV_REQUEST:
+    case TME_NET_ARP_OPCODE_REV_REPLY:
+      count = (TME_ETHERNET_HEADER_SIZE
+	       + sizeof(struct tme_net_arp_header)
+	       + (2 * arp_header->tme_net_arp_header_hardware_length)
+	       + (2 * arp_header->tme_net_arp_header_protocol_length));
+    default:
+      break;
+    }
+    break;
+
+    /* an IPv4 packet: */
+  case TME_ETHERNET_TYPE_IPV4:
+    ipv4_header = (struct tme_net_ipv4_header *) (ethernet_header + 1);
+    count = ipv4_header->tme_net_ipv4_header_length[0];
+    count = (count << 8) + ipv4_header->tme_net_ipv4_header_length[1];
+    count += TME_ETHERNET_HEADER_SIZE;
+    break;
+
+  default:
+    break;
+  }
+
+  /* if we were able to figure out the correct minimum size of the
+     packet, and the packet from ETH is exactly that minimum size
+     plus the CRC size, set the length of the packet to be the
+     correct minimum size.  NB that we can't let the packet become
+     smaller than (TME_ETHERNET_FRAME_MIN - TME_ETHERNET_CRC_SIZE): */
+  if (count != 0) {
+    count = TME_MAX(count,
+		    (TME_ETHERNET_FRAME_MIN
+		     - TME_ETHERNET_CRC_SIZE));
+    if (frame_chunk_buffer->tme_ethernet_frame_chunk_bytes_count
+	== (count + TME_ETHERNET_CRC_SIZE)) {
+      frame_chunk_buffer->tme_ethernet_frame_chunk_bytes_count = count;
+    }
+  }
+
+  /* copy out the frame: */
+  return tme_ethernet_chunks_copy(frame_chunks, frame_chunk_buffer);
 }
 
 /* Allocate an ethernet device */
@@ -707,96 +893,10 @@ tme_eth_connections_new(struct tme_element *element,
   return (TME_OK);
 }
 
-/* retrieve ethernet arguments */
-int tme_eth_args(const char * const args[], 
-		 struct ifreq *ifr,
-		 unsigned long *delay,
-		 struct in_addr *ip_addrs,
-		 char **_output)
-{
-  int ipaddr;
-  int arg_i;
-  int usage;
-  
-  /* check our arguments: */
-  usage = 0;
-  ifr->ifr_name[0] = '\0';
-  *delay = 0;
-  if(ip_addrs) memset(ip_addrs, 0, TME_IP_ADDRS_TOTAL * sizeof(struct in_addr));
-
-  arg_i = 1;
-  ipaddr = TME_IP_ADDRS_TOTAL;
-
-  for (;;) {
-    /* the interface we're supposed to use: */
-    if (TME_ARG_IS(args[arg_i + 0], "interface")
-	&& args[arg_i + 1] != NULL) {
-      strncpy(ifr->ifr_name, args[arg_i + 1], sizeof(ifr->ifr_name));
-      arg_i += 2;
-    }
-
-    /* a delay time in microseconds: */
-    else if (TME_ARG_IS(args[arg_i + 0], "delay")
-	     && (*delay = tme_misc_unumber_parse(args[arg_i + 1], 0)) > 0) {
-      arg_i += 2;
-    }
-    
-    else if(TME_ARG_IS(args[arg_i + 0], "inet") 
-	 && args[arg_i + 1] != NULL) {
-      ipaddr = TME_IP_ADDRS_INET;
-    }
-
-    else if (TME_ARG_IS(args[arg_i + 0], "netmask")
-	&& args[arg_i + 1] != NULL) {
-      ipaddr = TME_IP_ADDRS_NETMASK;
-    }
-
-    else if (TME_ARG_IS(args[arg_i + 0], "bcast")
-	&& args[arg_i + 1] != NULL) {
-      ipaddr = TME_IP_ADDRS_BCAST;
-    }
-
-    /* if we ran out of arguments: */
-    else if (args[arg_i + 0] == NULL) {
-      break;
-    }
-
-    /* otherwise this is a bad argument: */
-    else {
-      tme_output_append_error(_output,
-			      "%s %s", 
-			      args[arg_i],
-			      _("unexpected"));
-      usage = TRUE;
-      break;
-    }
-
-    if(ipaddr != TME_IP_ADDRS_TOTAL) {
-      if(ip_addrs) inet_aton(args[arg_i + 1], ip_addrs + ipaddr);
-      arg_i += 2;
-      ipaddr = TME_IP_ADDRS_TOTAL;
-    }
-  }
-
-  if (usage) {
-    tme_output_append_error(_output,
-			    "%s %s [ interface %s ] [ delay %s ] [ inet %s ] [ netmask %s ] [ bcast %s ]",
-			    _("usage:"),
-			    args[0],
-			    _("INTERFACE"),
-			    _("MICROSECONDS"),
-			    _("IPADDRESS"),
-			    _("IPADDRESS"),
-			    _("IPADDRESS"));
-    return (EINVAL);
-  }
-  return (TME_OK);
-}
-
 int tme_eth_init(struct tme_element *element, 
 		 int fd, 
 		 u_int sz, 
-		 unsigned long delay, 
+		 void *data,
 		 typeof(tme_eth_connections_new) eth_connections_new)
 {
   struct tme_ethernet *eth;
@@ -807,7 +907,7 @@ int tme_eth_init(struct tme_element *element,
   eth->tme_eth_fd = fd;
   eth->tme_eth_buffer_size = sz;
   eth->tme_eth_buffer = tme_new(tme_uint8_t, sz);
-  eth->tme_eth_delay_time = delay;
+  eth->tme_eth_data = data;
 
   /* start the threads: */
   tme_mutex_init(&eth->tme_eth_mutex);
