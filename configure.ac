@@ -764,31 +764,31 @@ fi
 AC_SUBST(TME_PREOPEN)
 case "${host_os}" in
 netbsd*) 
-   CPPFLAGS="${CPPFLAGS-} -D_NETBSD_SOURCE -D_XOPEN_SOURCE=600"
+   CPPFLAGS="${CPPFLAGS-}"
    DEV_TAP_FILENAME='"\"/dev/tap\""'
    SETCAP="chmod u+s"
    ;;
 openbsd*) 
-   CPPFLAGS="${CPPFLAGS-} -D_BSD_SOURCE -D_XOPEN_SOURCE=600"
+   CPPFLAGS="${CPPFLAGS-}"
    DEV_TAP_FILENAME='"\"/dev/tun\""'
    SETCAP="chmod u+s"
    ;;
 freebsd*) 
-   CPPFLAGS="${CPPFLAGS-} -D_BSD_SOURCE -D_XOPEN_SOURCE=600"
+   CPPFLAGS="${CPPFLAGS-}"
    DEV_TAP_FILENAME='"\"/dev/tap\""'
    SETCAP="chmod u+s"
    ;;
 dragonfly*) 
-   CPPFLAGS="${CPPFLAGS-} -D_BSD_SOURCE -D_XOPEN_SOURCE=600"
+   CPPFLAGS="${CPPFLAGS-}"
    DEV_TAP_FILENAME='"\"/dev/tap\""'
    SETCAP="chmod u+s"
    ;;
 linux*) 
-   CPPFLAGS="${CPPFLAGS-} -D_BSD_SOURCE -D_XOPEN_SOURCE=600"
+   CPPFLAGS="${CPPFLAGS-}"
    DEV_TAP_FILENAME='"\"/dev/net/tun\""'
    SETCAP="setcap cap_net_admin+ep"
    ;;
-*) CPPFLAGS="${CPPFLAGS-} -D_BSD_SOURCE -D_XOPEN_SOURCE=600"
+*) CPPFLAGS="${CPPFLAGS-}"
    SETCAP="chmod u+s"
    ;;
 esac
