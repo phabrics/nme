@@ -40,6 +40,9 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #include <tme/generic/ethernet.h>
 #include <tme/threads.h>
 #include <tme/misc.h>
+#ifdef HAVE_TIME_H
+#include <time.h>
+#endif
 #include "eth-if.h"
 #include <stdio.h>
 #include <string.h>
@@ -105,6 +108,18 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #define TME_TUN_TAP_PROG struct tun_filter
 #define TME_TUN_TAP_INSNS(x) (x)->addr
 #define TME_TUN_TAP_LEN(x) (x)->count
+#endif
+#ifdef HAVE_LINUX_NETFILTER_H
+#include <linux/netfilter.h>
+#endif
+#ifdef HAVE_LINUX_NETFILTER_NF_TABLES_H
+#include <linux/netfilter/nf_tables.h>
+#endif
+#ifdef HAVE_LIBMNL_LIBMNL_H
+#include <libmnl/libmnl.h>
+#endif
+#ifdef HAVE_LIBNFTNL_TABLE_H
+#include <libnftnl/table.h>
 #endif
 
 /* macros: */
@@ -289,6 +304,89 @@ int _tme_tun_tap_args(const char * const args[],
 #undef NATIF
 }
 
+static int _tme_tun_tap_nat(struct nft_table *t, struct tme_element *element) 
+{
+  struct mnl_socket *nl;
+  char buf[MNL_SOCKET_BUFFER_SIZE];
+  struct nlmsghdr *nlh;
+  uint32_t portid, seq, table_seq, family;
+  struct mnl_nlmsg_batch *batch;
+  int ret, batching;
+
+  batching = nft_batch_is_supported();
+  if (batching < 0) {
+    tme_log(&element->tme_element_log_handle, 0, errno,
+	    (&element->tme_element_log_handle,
+	     _("cannot talk to nfnetlink")));
+    return -1;
+  }
+
+  seq = time(NULL);
+  batch = mnl_nlmsg_batch_start(buf, sizeof(buf));
+
+  if (batching) {
+    nft_batch_begin(mnl_nlmsg_batch_current(batch), seq++);
+    mnl_nlmsg_batch_next(batch);
+  }
+
+  table_seq = seq;
+  family = nft_table_attr_get_u32(t, NFT_TABLE_ATTR_FAMILY);
+  nlh = nft_table_nlmsg_build_hdr(mnl_nlmsg_batch_current(batch),
+				  NFT_MSG_NEWTABLE, family,
+				  NLM_F_ACK, seq++);
+  nft_table_nlmsg_build_payload(nlh, t);
+  nft_table_free(t);
+  mnl_nlmsg_batch_next(batch);
+
+  if (batching) {
+    nft_batch_end(mnl_nlmsg_batch_current(batch), seq++);
+    mnl_nlmsg_batch_next(batch);
+  }
+
+  nl = mnl_socket_open(NETLINK_NETFILTER);
+  if (nl == NULL) {
+    tme_log(&element->tme_element_log_handle, 0, errno,
+	    (&element->tme_element_log_handle,
+	     _("mnl_socket_open")));
+    return -1;
+  }
+
+  if (mnl_socket_bind(nl, 0, MNL_SOCKET_AUTOPID) < 0) {
+    tme_log(&element->tme_element_log_handle, 0, errno,
+	    (&element->tme_element_log_handle,
+	     _("mnl_socket_bind")));
+    return -1;
+  }
+  portid = mnl_socket_get_portid(nl);
+
+  if (mnl_socket_sendto(nl, mnl_nlmsg_batch_head(batch),
+			mnl_nlmsg_batch_size(batch)) < 0) {
+    tme_log(&element->tme_element_log_handle, 0, errno,
+	    (&element->tme_element_log_handle,
+	     _("mnl_socket_send")));
+    return -1;
+  }
+
+  mnl_nlmsg_batch_stop(batch);
+
+  ret = mnl_socket_recvfrom(nl, buf, sizeof(buf));
+  while (ret > 0) {
+    ret = mnl_cb_run(buf, ret, table_seq, portid, NULL, NULL);
+    if (ret <= 0)
+      break;
+    ret = mnl_socket_recvfrom(nl, buf, sizeof(buf));
+  }
+  if (ret == -1) {
+    tme_log(&element->tme_element_log_handle, 0, errno,
+	    (&element->tme_element_log_handle,
+	     _("error")));
+    return -1;
+  }
+  mnl_socket_close(nl);
+  
+  return (TME_OK);
+}
+
 /* the new TAP function: */
 TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   struct tme_tun_tap *tap;
@@ -311,6 +409,9 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 #ifdef HAVE_NETINET_IF_ETHER_H
   struct ether_addr addr;
 #endif
+#endif
+#ifdef HAVE_LIBNFTNL_TABLE_H
+  struct nft_table *t;
 #endif
   int i, usage, rc;
 
@@ -526,7 +627,28 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 
     close(dummy_fd);
   }
+
+  // Perform network address translation, if available
+#ifdef HAVE_LIBNFTNL_TABLE_H
+  t = nft_table_alloc();
+  if (t == NULL) {
+    tme_log(&element->tme_element_log_handle, 1, errno,
+	    (&element->tme_element_log_handle,
+	     _("failed to add tme nat table")));
+    return -1;
+  }
+  
+  nft_table_attr_set_u32(t, NFT_TABLE_ATTR_FAMILY, NFPROTO_IPV4);
+  nft_table_attr_set_str(t, NFT_TABLE_ATTR_NAME, "tme");
+  
+  if (_tme_tun_tap_nat(t, element) < 0) {
+    tme_log(&element->tme_element_log_handle, 1, errno,
+	    (&element->tme_element_log_handle,
+	     _("failed to set nat on tap interface; access to external network will be restricted")));
+  }
+
   return tme_eth_init(element, tap_fd, 4096, NULL, _tme_tun_tap_connections_new);
+#endif
 
 #undef TAPIF
 #undef NATIF

@@ -55,21 +55,36 @@ AC_PROG_MAKE_SET
 
 # Checks for libraries.
 # FIXME: Replace `main' with a function in `-lm':
-AC_CHECK_LIB([m], [main])
+#AC_CHECK_LIB([m], [main])
+# Libraries required for network address translation
+NATLIBS=
+OLDLIBS=$LIBS
+AC_SEARCH_LIBS([mnl_socket_open], [mnl])
+if test "x$ac_cv_search_mnl_socket_open" != "xnone required" && test "$ac_cv_search_mnl_socket_open" != xno; then
+   NATLIBS="$ac_cv_search_mnl_socket_open ${NATLIBS}"
+fi
+
+AC_SEARCH_LIBS([nft_rule_alloc], [nftnl])
+if test "x$ac_cv_search_nft_rule_alloc" != "xnone required" && test "x$ac_cv_search_nft_rule_alloc" != xno; then
+   NATLIBS="$ac_cv_search_nft_rule_alloc ${NATLIBS}"
+fi
+LIBS=$OLDLIBS
+AC_SUBST(NATLIBS)
 
 dnl Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([unistd.h stdio.h memory.h stdarg.h limits.h float.h])
 AC_CHECK_HEADERS([sys/ioctl.h sys/sockio.h sys/socketio.h net/if_dl.h ioctls.h netpacket/packet.h ifaddrs.h])
 AC_CHECK_HEADERS([byteswap.h sys/endian.h])
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h sys/socket.h sys/time.h termios.h])
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h sys/socket.h sys/time.h time.h termios.h])
+AC_CHECK_HEADERS([linux/netfilter/nf_tables.h libmnl/libmnl.h libnftnl/table.h])
 AC_CHECK_HEADERS([sys/param.h sys/linker.h], [], [],
 [#ifdef HAVE_SYS_PARAM_H
  # include <sys/param.h>
  #endif
 ])
 
-AC_CHECK_HEADERS([net/if.h net/if_var.h net/if_types.h net/if_arp.h netinet/in.h netinet/in_var.h netinet/if_ether.h], [], [],
+AC_CHECK_HEADERS([net/if.h net/if_var.h net/if_types.h net/if_arp.h netinet/in.h netinet/in_var.h netinet/if_ether.h linux/netfilter.h], [], [],
 [#include <stdio.h>
  #ifdef STDC_HEADERS
  # include <stdlib.h>
