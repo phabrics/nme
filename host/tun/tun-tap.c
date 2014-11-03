@@ -166,6 +166,7 @@ nat_msg_builder nat_msg_builders[] = {
   (nat_msg_builder)nft_table_nlmsg_build_payload,
   (nat_msg_builder)nft_chain_nlmsg_build_payload
 };
+
 #endif
 
 /* this is called when the ethernet configuration changes: */
@@ -353,16 +354,17 @@ static int _tme_tun_tap_nat(struct tme_nat *nat, int num, uint32_t family, struc
   nat_msg_builder nat_build_msg;
   int i;
 
-  for(i=0;i<num;i++) {
-    batching = nft_batch_is_supported();
-    if (batching < 0) {
-      tme_log(&element->tme_element_log_handle, 0, errno,
-	      (&element->tme_element_log_handle,
-	       _("cannot talk to nfnetlink")));
-      return -1;
-    }
+  batching = nft_batch_is_supported();
+  if (batching < 0) {
+    tme_log(&element->tme_element_log_handle, 0, errno,
+	    (&element->tme_element_log_handle,
+	     _("cannot talk to nfnetlink")));
+    return -1;
+  }
     
-    seq = time(NULL);
+  seq = time(NULL);
+  
+  for(i=0;i<num;i++) {
     batch = mnl_nlmsg_batch_start(buf, sizeof(buf));
     
     if (batching) {
@@ -378,7 +380,7 @@ static int _tme_tun_tap_nat(struct tme_nat *nat, int num, uint32_t family, struc
 
     nlh = (*nat_build_hdr)(mnl_nlmsg_batch_current(batch),
 			   nat_cmd, family,
-			   NLM_F_ACK, seq++);
+			   NLM_F_CREATE | NLM_F_ACK, seq++);
     (*nat_build_msg)(nlh, (*(nat + i)).msg);
     mnl_nlmsg_batch_next(batch);
     
@@ -415,7 +417,7 @@ static int _tme_tun_tap_nat(struct tme_nat *nat, int num, uint32_t family, struc
     
     ret = mnl_socket_recvfrom(nl, buf, sizeof(buf));
     while (ret > 0) {
-      ret = mnl_cb_run(buf, ret, nat_seq++, portid, NULL, NULL);
+      ret = mnl_cb_run(buf, ret, nat_seq, portid, NULL, NULL);
       if (ret <= 0)
 	break;
       ret = mnl_socket_recvfrom(nl, buf, sizeof(buf));
@@ -423,11 +425,10 @@ static int _tme_tun_tap_nat(struct tme_nat *nat, int num, uint32_t family, struc
     if (ret == -1) {
       tme_log(&element->tme_element_log_handle, 0, errno,
 	      (&element->tme_element_log_handle,
-	       _("error")));
+	       _("callback error")));
       return -1;
     }
     mnl_socket_close(nl);
-    
   }
   return (TME_OK);
 }
@@ -678,59 +679,62 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 
   // Perform network address translation, if available
 #ifdef HAVE_LIBNFTNL_TABLE_H
+  i=0;
+
   table = nft_table_alloc();
   if (table == NULL) {
-    tme_log(&element->tme_element_log_handle, 1, errno,
+    tme_log(&element->tme_element_log_handle, 0, errno,
 	    (&element->tme_element_log_handle,
 	     _("failed to allocate tme nat table")));
     goto exit_nat;
   }
-  
+
   nft_table_attr_set_u32(table, NFT_TABLE_ATTR_FAMILY, NFPROTO_IPV4);
-  nft_table_attr_set_str(table, NFT_TABLE_ATTR_NAME, "tme");
-  nat[0].type = TME_NAT_TABLE;
-  nat[0].msg = table;
+  nft_table_attr_set(table, NFT_TABLE_ATTR_NAME, "tme");
+  nat[i].type = TME_NAT_TABLE;
+  nat[i++].msg = table;
 
   prechain = nft_chain_alloc();
   if (prechain == NULL) {
-    tme_log(&element->tme_element_log_handle, 1, errno,
+    tme_log(&element->tme_element_log_handle, 0, errno,
 	    (&element->tme_element_log_handle,
 	     _("failed to allocate chain for tme nat table")));
     goto exit_nat;
   }
 
   nft_chain_attr_set(prechain, NFT_CHAIN_ATTR_TABLE, "tme");
-  nft_chain_attr_set(prechain, NFT_CHAIN_ATTR_NAME, "prerouting");
+  nft_chain_attr_set(prechain, NFT_CHAIN_ATTR_NAME, TAPIF.ifr_name);
   nft_chain_attr_set_u32(prechain, NFT_CHAIN_ATTR_HOOKNUM, NF_INET_PRE_ROUTING);
   nft_chain_attr_set_u32(prechain, NFT_CHAIN_ATTR_PRIO, 0);
-  nft_chain_attr_set_str(prechain, NFT_CHAIN_ATTR_TYPE, "nat");
-  nat[1].type = TME_NAT_CHAIN;
-  nat[1].msg = prechain;
+  nft_chain_attr_set(prechain, NFT_CHAIN_ATTR_TYPE, "nat");
+  nat[i].type = TME_NAT_CHAIN;
+  nat[i++].msg = prechain;
 
   postchain = nft_chain_alloc();
   if (postchain == NULL) {
-    tme_log(&element->tme_element_log_handle, 1, errno,
+    tme_log(&element->tme_element_log_handle, 0, errno,
 	    (&element->tme_element_log_handle,
 	     _("failed to allocate chain for tme nat table")));
     goto exit_nat;
   }
 
+  nft_chain_attr_set_u32(postchain, NFT_CHAIN_ATTR_FAMILY, NFPROTO_IPV4);
   nft_chain_attr_set(postchain, NFT_CHAIN_ATTR_TABLE, "tme");
-  nft_chain_attr_set(postchain, NFT_CHAIN_ATTR_NAME, "postrouting");
+  nft_chain_attr_set(postchain, NFT_CHAIN_ATTR_NAME, NATIF.ifr_name);
   nft_chain_attr_set_u32(postchain, NFT_CHAIN_ATTR_HOOKNUM, NF_INET_POST_ROUTING);
   nft_chain_attr_set_u32(postchain, NFT_CHAIN_ATTR_PRIO, 0);
-  nft_chain_attr_set_str(postchain, NFT_CHAIN_ATTR_TYPE, "nat");
-  nat[2].type = TME_NAT_CHAIN;
-  nat[2].msg = postchain;
+  nft_chain_attr_set(postchain, NFT_CHAIN_ATTR_TYPE, "nat");
+  nat[i].type = TME_NAT_CHAIN;
+  nat[i++].msg = postchain;
 
-  if (_tme_tun_tap_nat(nat, 3, NFPROTO_IPV4, element) < 0) {
-    tme_log(&element->tme_element_log_handle, 1, errno,
+  if (_tme_tun_tap_nat(nat, i, NFPROTO_IPV4, element) < 0) {
+    tme_log(&element->tme_element_log_handle, 0, errno,
 	    (&element->tme_element_log_handle,
 	     _("failed to set nat on tap interface; access to external network will be restricted")));
   }
 
-  nft_table_free(table);
-  nft_chain_free(prechain);
+  //nft_table_free(table);
+  //nft_chain_free(prechain);
   nft_chain_free(postchain);
 
  exit_nat:
