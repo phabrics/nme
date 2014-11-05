@@ -585,6 +585,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   struct in_addr nataddr;
   in_addr_t zero = 0;
 #ifdef HAVE_LIBNFTNL_TABLE_H
+  FILE *f;
+  int nating, forward;
   struct nft_table *table;
   struct nft_chain *prechain, *postchain;
   struct nft_rule *rule;
@@ -597,39 +599,41 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 #define TAPIF ifr[TME_IF_TYPE_TAP]
 #define NATIF ifr[TME_IF_TYPE_NAT]
 
+#ifdef HAVE_LIBNFTNL_TABLE_H
   /* find the interface we will use: */
   rc = tme_eth_ifaddrs_find(NATIF.ifr_name, &ifa, NULL, NULL);
 
   if (rc != TME_OK) {
+    nating = false;
     tme_output_append_error(_output, _("couldn't find an interface %s"), NATIF.ifr_name);
-    return (ENOENT);
+  } else {
+    strncpy(NATIF.ifr_name, ifa->ifa_name, sizeof(NATIF.ifr_name));
+    rc = getnameinfo(ifa->ifa_addr,
+		     sizeof(struct sockaddr_in),
+		     host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
+    if (rc != 0) {
+      tme_log(&element->tme_element_log_handle, 0, errno,
+	      (&element->tme_element_log_handle,
+	       _("getnameinfo() failed: %s\n"), gai_strerror(rc)));
+    }
+    
+    rc = getnameinfo(ifa->ifa_netmask,
+		     sizeof(struct sockaddr_in),
+		     mask, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
+    if (rc != 0) {
+      tme_log(&element->tme_element_log_handle, 0, errno,
+	      (&element->tme_element_log_handle,
+	       _("getnameinfo() failed: %s\n"), gai_strerror(rc)));
+    }
+
+    nating = true;
+    tme_log(&element->tme_element_log_handle, 0, TME_OK, 
+	    (&element->tme_element_log_handle, 
+	     "using nat interface %s with address %s, netmask %s",
+	     NATIF.ifr_name,
+	     host, mask));
   }
-
-  strncpy(NATIF.ifr_name, ifa->ifa_name, sizeof(NATIF.ifr_name));
-
-  rc = getnameinfo(ifa->ifa_addr,
-		   sizeof(struct sockaddr_in),
-		   host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
-  if (rc != 0) {
-    tme_log(&element->tme_element_log_handle, 0, errno,
-	    (&element->tme_element_log_handle,
-	     _("getnameinfo() failed: %s\n"), gai_strerror(rc)));
-  }
-
-  rc = getnameinfo(ifa->ifa_netmask,
-		   sizeof(struct sockaddr_in),
-		   mask, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
-  if (rc != 0) {
-    tme_log(&element->tme_element_log_handle, 0, errno,
-	    (&element->tme_element_log_handle,
-	     _("getnameinfo() failed: %s\n"), gai_strerror(rc)));
-  }
-
-  tme_log(&element->tme_element_log_handle, 0, TME_OK, 
-	  (&element->tme_element_log_handle, 
-	   "using nat interface %s with address %s, netmask %s",
-	   NATIF.ifr_name,
-	   host, mask));
+#endif
 
 #ifdef HAVE_KLDFIND
   // A helper step to automate loading of the necessary kernel module on FreeBSD-derived platforms
@@ -821,6 +825,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 
   // Perform network address translation, if available
 #ifdef HAVE_LIBNFTNL_TABLE_H
+  if(!nating) goto exit_nat;
+
   i=0;
 
   table = nft_table_alloc();
@@ -884,8 +890,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   nat[i].type = TME_NAT_RULE;
   nat[i++].msg = rule;
   
-  _tme_nat_rule_add_meta(rule, NFT_REG_1, NFT_META_IIFNAME);
-  _tme_nat_rule_add_cmp(rule, NFT_REG_1, NFT_CMP_EQ, TAPIF.ifr_name, IFNAMSIZ);
+  //_tme_nat_rule_add_meta(rule, NFT_REG_1, NFT_META_IIFNAME);
+  //_tme_nat_rule_add_cmp(rule, NFT_REG_1, NFT_CMP_EQ, TAPIF.ifr_name, IFNAMSIZ);
   _tme_nat_rule_add_payload(rule, NFT_PAYLOAD_NETWORK_HEADER, NFT_REG_1,
 			    offsetof(struct iphdr, saddr), sizeof(uint32_t));
   _tme_nat_rule_add_bitwise(rule, NFT_REG_1, &IPANETMASK.s_addr, &zero, sizeof(in_addr_t));
@@ -901,6 +907,22 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     tme_log(&element->tme_element_log_handle, 0, errno,
 	    (&element->tme_element_log_handle,
 	     _("failed to set nat on tap interface; access to external network will be restricted")));
+  } else {
+    // Enable IP forwarding if we successfully added the tme nat table
+    f = fopen("/proc/sys/net/ipv4/ip_forward", "r");
+    forward = fgetc(f);
+    if(forward) {
+      f = fopen("/proc/sys/net/ipv4/ip_forward", "w");
+      fputc('1', f);
+    }
+    fclose(f);
+
+    tme_log(&element->tme_element_log_handle, 0, TME_OK,
+	    (&element->tme_element_log_handle,
+	     _("Enabled ipv4 forwarding & added tme table with ip nat rules for tap interface network,"
+	       "to nftables.  Run 'nft list table tme' to view the table.  If you still have problems"
+	       "with forwarding from the tap interface, you may need to manually adjust the filter tables,"
+	       "e.g., iptables -F FORWARD.  nftables is the successor to iptables, so it may not be available on older systems.")));
   }
 
   nft_table_free(table);
