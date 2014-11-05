@@ -540,6 +540,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 #endif
 #endif
   int i, usage, rc;
+  char host[NI_MAXHOST];
+  struct in_addr nataddr;
 #ifdef HAVE_LIBNFTNL_TABLE_H
   struct nft_table *table;
   struct nft_chain *prechain, *postchain;
@@ -563,10 +565,20 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 
   strncpy(NATIF.ifr_name, ifa->ifa_name, sizeof(NATIF.ifr_name));
 
+  rc = getnameinfo(ifa->ifa_addr,
+		   sizeof(struct sockaddr_in),
+		   host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
+  if (rc != 0) {
+    tme_log(&element->tme_element_log_handle, 0, errno,
+	    (&element->tme_element_log_handle,
+	     _("getnameinfo() failed: %s\n"), gai_strerror(rc)));
+  }
+
   tme_log(&element->tme_element_log_handle, 0, TME_OK, 
 	  (&element->tme_element_log_handle, 
-	   "nating to interface %s",
-	   NATIF.ifr_name));
+	   "using nat interface %s with address %s",
+	   NATIF.ifr_name,
+	   host));
 
 #ifdef HAVE_KLDFIND
   // A helper step to automate loading of the necessary kernel module on FreeBSD-derived platforms
@@ -829,7 +841,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   _tme_nat_rule_add_cmp(rule, NFT_REG_1, NFT_CMP_EQ, TAPIF.ifr_name, IFNAMSIZ);
   _tme_nat_rule_add_meta(rule, NFT_REG_1, NFT_META_OIFNAME);
   _tme_nat_rule_add_cmp(rule, NFT_REG_1, NFT_CMP_EQ, NATIF.ifr_name, IFNAMSIZ);
-  _tme_nat_rule_add_immediate(rule, NFT_REG_1, &((struct sockaddr_in *)&ifa->ifa_addr)->sin_addr.s_addr, sizeof(in_addr_t));
+  inet_aton(host, &nataddr);
+  _tme_nat_rule_add_immediate(rule, NFT_REG_1, &nataddr.s_addr, sizeof(in_addr_t));
   _tme_nat_rule_add_nat(rule, NFT_NAT_SNAT, 0, NFT_REG_1);
 
   if (_tme_nat_run(nat, i) < 0) {
