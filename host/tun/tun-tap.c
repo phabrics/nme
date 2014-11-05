@@ -46,6 +46,7 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #include "eth-if.h"
 #include <stdio.h>
 #include <string.h>
+#include <stddef.h>	/* for offsetof */
 #include <errno.h>
 #include <fcntl.h>
 #include <netdb.h>
@@ -358,6 +359,25 @@ int _tme_tun_tap_args(const char * const args[],
 }
 
 #ifdef HAVE_LIBNFTNL_TABLE_H
+static int _tme_nat_rule_add_payload(struct nft_rule *r, uint32_t base, uint32_t dreg,
+				     uint32_t offset, uint32_t len)
+{
+  struct nft_rule_expr *e;
+
+  e = nft_rule_expr_alloc("payload");
+  if (e == NULL) {
+    return -1;
+  }
+
+  nft_rule_expr_set_u32(e, NFT_EXPR_PAYLOAD_BASE, base);
+  nft_rule_expr_set_u32(e, NFT_EXPR_PAYLOAD_DREG, dreg);
+  nft_rule_expr_set_u32(e, NFT_EXPR_PAYLOAD_OFFSET, offset);
+  nft_rule_expr_set_u32(e, NFT_EXPR_PAYLOAD_LEN, len);
+
+  nft_rule_add_expr(r, e);
+  return (TME_OK);
+}
+
 static int _tme_nat_rule_add_meta(struct nft_rule *r, uint32_t dreg, enum nft_meta_keys key)
 {
   struct nft_rule_expr *e;
@@ -369,6 +389,26 @@ static int _tme_nat_rule_add_meta(struct nft_rule *r, uint32_t dreg, enum nft_me
 
   nft_rule_expr_set_u32(e, NFT_EXPR_META_DREG, dreg);
   nft_rule_expr_set_u32(e, NFT_EXPR_META_KEY, key);
+  nft_rule_add_expr(r, e);
+  return (TME_OK);
+}
+
+static int _tme_nat_rule_add_bitwise(struct nft_rule *r, uint32_t dreg,
+				     const void *mask, const void *xor, uint32_t len)
+{
+  struct nft_rule_expr *e;
+
+  e = nft_rule_expr_alloc("bitwise");
+  if (e == NULL) {
+    return -1;
+  }
+
+  nft_rule_expr_set_u32(e, NFT_EXPR_BITWISE_SREG, dreg);
+  nft_rule_expr_set_u32(e, NFT_EXPR_BITWISE_DREG, dreg);
+  nft_rule_expr_set_u32(e, NFT_EXPR_BITWISE_LEN, len);
+  nft_rule_expr_set(e, NFT_EXPR_BITWISE_MASK, mask, len);
+  nft_rule_expr_set(e, NFT_EXPR_BITWISE_XOR, xor, len);
+
   nft_rule_add_expr(r, e);
   return (TME_OK);
 }
@@ -541,7 +581,9 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 #endif
   int i, usage, rc;
   char host[NI_MAXHOST];
+  char mask[NI_MAXHOST];
   struct in_addr nataddr;
+  in_addr_t zero = 0;
 #ifdef HAVE_LIBNFTNL_TABLE_H
   struct nft_table *table;
   struct nft_chain *prechain, *postchain;
@@ -574,11 +616,20 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 	     _("getnameinfo() failed: %s\n"), gai_strerror(rc)));
   }
 
+  rc = getnameinfo(ifa->ifa_netmask,
+		   sizeof(struct sockaddr_in),
+		   mask, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
+  if (rc != 0) {
+    tme_log(&element->tme_element_log_handle, 0, errno,
+	    (&element->tme_element_log_handle,
+	     _("getnameinfo() failed: %s\n"), gai_strerror(rc)));
+  }
+
   tme_log(&element->tme_element_log_handle, 0, TME_OK, 
 	  (&element->tme_element_log_handle, 
-	   "using nat interface %s with address %s",
+	   "using nat interface %s with address %s, netmask %s",
 	   NATIF.ifr_name,
-	   host));
+	   host, mask));
 
 #ifdef HAVE_KLDFIND
   // A helper step to automate loading of the necessary kernel module on FreeBSD-derived platforms
@@ -765,10 +816,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 
     }
 #endif
-#undef IPAINET
-#undef IPANETMASK
-#undef IPABCAST
-
     close(dummy_fd);
   }
 
@@ -839,6 +886,11 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   
   _tme_nat_rule_add_meta(rule, NFT_REG_1, NFT_META_IIFNAME);
   _tme_nat_rule_add_cmp(rule, NFT_REG_1, NFT_CMP_EQ, TAPIF.ifr_name, IFNAMSIZ);
+  _tme_nat_rule_add_payload(rule, NFT_PAYLOAD_NETWORK_HEADER, NFT_REG_1,
+			    offsetof(struct iphdr, saddr), sizeof(uint32_t));
+  _tme_nat_rule_add_bitwise(rule, NFT_REG_1, &IPANETMASK.s_addr, &zero, sizeof(in_addr_t));
+  IPAINET.s_addr &= IPANETMASK.s_addr;
+  _tme_nat_rule_add_cmp(rule, NFT_REG_1, NFT_CMP_EQ, &IPAINET.s_addr, sizeof(in_addr_t));
   _tme_nat_rule_add_meta(rule, NFT_REG_1, NFT_META_OIFNAME);
   _tme_nat_rule_add_cmp(rule, NFT_REG_1, NFT_CMP_EQ, NATIF.ifr_name, IFNAMSIZ);
   inet_aton(host, &nataddr);
@@ -860,6 +912,9 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 #endif
   return tme_eth_init(element, tap_fd, 4096, NULL, _tme_tun_tap_connections_new);
 
+#undef IPAINET
+#undef IPANETMASK
+#undef IPABCAST
 #undef TAPIF
 #undef NATIF
 #undef _TME_TAP_RAW_OPEN_ERROR
