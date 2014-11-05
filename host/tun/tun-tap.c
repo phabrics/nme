@@ -145,6 +145,8 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #define TME_NAT_RULE (2)
 #define TME_NAT_TOTAL (3)
 
+#define IPFWDFILE "/proc/sys/net/ipv4/ip_forward"
+
 struct tme_nat {
   uint8_t type;
   void *msg;
@@ -586,7 +588,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   in_addr_t zero = 0;
 #ifdef HAVE_LIBNFTNL_TABLE_H
   FILE *f;
-  int nating, forward;
+  int nating, forward = EOF;
   struct nft_table *table;
   struct nft_chain *prechain, *postchain;
   struct nft_rule *rule;
@@ -908,21 +910,38 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 	    (&element->tme_element_log_handle,
 	     _("failed to set nat on tap interface; access to external network will be restricted")));
   } else {
-    // Enable IP forwarding if we successfully added the tme nat table
-    f = fopen("/proc/sys/net/ipv4/ip_forward", "r");
-    forward = fgetc(f);
-    if(forward) {
-      f = fopen("/proc/sys/net/ipv4/ip_forward", "w");
-      fputc('1', f);
-    }
-    fclose(f);
-
     tme_log(&element->tme_element_log_handle, 0, TME_OK,
 	    (&element->tme_element_log_handle,
-	     _("Enabled ipv4 forwarding & added tme table with ip nat rules for tap interface network,"
+	     _("Added tme table with ip nat rules for tap interface network,"
 	       "to nftables.  Run 'nft list table tme' to view the table.  If you still have problems"
 	       "with forwarding from the tap interface, you may need to manually adjust the filter tables,"
 	       "e.g., iptables -F FORWARD.  nftables is the successor to iptables, so it may not be available on older systems.")));
+
+    // Enable IP forwarding if we successfully added the tme nat table
+    f = fopen(IPFWDFILE, "r");
+    if(f != NULL) {
+      forward = fgetc(f);
+      fclose(f);
+      if(forward == '0') {
+	f = fopen(IPFWDFILE, "w");
+	if(f != NULL) {
+	  forward = fputc('1', f);
+	  fclose(f);
+	}
+      }
+    } else {
+      tme_output_append_error(_output, _("couldn't open file %s; ip forwarding may not work."), IPFWDFILE);
+    }
+
+    if(forward != '1') {
+      tme_log(&element->tme_element_log_handle, 0, errno,
+	      (&element->tme_element_log_handle,
+	       _("problem reading or writing to %s; ip forwarding may not work."), IPFWDFILE));
+    } else {
+      tme_log(&element->tme_element_log_handle, 0, TME_OK,
+	      (&element->tme_element_log_handle,
+	       _("Enabled ipv4 forwarding!")));
+    }
   }
 
   nft_table_free(table);
