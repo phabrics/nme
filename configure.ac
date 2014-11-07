@@ -33,7 +33,7 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.68])
-AC_INIT([tme], [0.9])
+AC_INIT([tme], [1.0beta])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
@@ -835,7 +835,7 @@ AC_ARG_ENABLE(warnings,
 [  --disable-warnings      don't compile with warnings turned on (default=do)],
 [ ], [enable_warnings=yes])
 if test "x${enable_warnings}" = "xyes" -a "x${GCC}" = "xyes"; then
-  CFLAGS="${CFLAGS-} -Wno-unused -Wno-sign-compare -Wno-type-limits -Wundef -Wall -Wextra"
+  CFLAGS="${CFLAGS-} -Wno-unused -Wno-sign-compare -Wundef -Wall -Wextra"
   CXXFLAGS="${CXXFLAGS-} -W"
 fi
 

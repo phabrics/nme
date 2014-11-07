@@ -912,9 +912,9 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   } else {
     tme_log(&element->tme_element_log_handle, 0, TME_OK,
 	    (&element->tme_element_log_handle,
-	     _("Added tme table with ip nat rules for tap interface network,"
-	       "to nftables.  Run 'nft list table tme' to view the table.  If you still have problems"
-	       "with forwarding from the tap interface, you may need to manually adjust the filter tables,"
+	     _("Added tme table with ip nat rules for tap interface network, "
+	       "to nftables.  Run 'nft list table tme' to view the table.  If you still have problems "
+	       "with forwarding from the tap interface, you may need to manually adjust the filter tables, "
 	       "e.g., iptables -F FORWARD.  nftables is the successor to iptables, so it may not be available on older systems.")));
 
     // Enable IP forwarding if we successfully added the tme nat table
