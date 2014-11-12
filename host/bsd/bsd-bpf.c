@@ -539,7 +539,7 @@ _tme_bsd_bpf_connections_new(struct tme_element *element,
 {
   struct tme_ethernet_connection *conn_eth;
 
-  tme_eth_connections_new(element, args, _conns, _output);
+  tme_eth_connections_new(element, args, _conns);
   conn_eth = (struct tme_ethernet_connection *) (*_conns);
   conn_eth->tme_ethernet_connection_config = _tme_bsd_bpf_config;
 #ifndef HAVE_AF_PACKET
@@ -678,7 +678,17 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
   packet_buffer_size = 16384;
 #else
   sprintf(dev_bpf_filename, DEV_BPF_FORMAT);
-  bpf_fd = tme_eth_alloc(element, dev_bpf_filename, dev_bpf_filename + sizeof(DEV_BPF_FORMAT));
+  
+  bpf_fd = tme_eth_alloc(dev_bpf_filename, _output);
+
+  if(bpf_fd < 0) {
+    saved_errno = errno;
+    tme_log(&element->tme_element_log_handle, 1, saved_errno,
+	    (&element->tme_element_log_handle,
+	     _("failed to open BPF device %s"),
+	     dev_bpf_filename));
+    return (saved_errno);
+  }
 
   /* this macro helps in closing the BPF socket on error: */
 #define _TME_BPF_RAW_OPEN_ERROR(x) saved_errno = errno; x; errno = saved_errno

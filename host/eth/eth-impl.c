@@ -808,46 +808,36 @@ int tme_eth_filter(struct tme_ethernet *eth,
 }
 
 /* Allocate an ethernet device */
-int tme_eth_alloc(struct tme_element *element, char *dev_filename, char *dev_minor) 
+int tme_eth_alloc(char *dev_filename, char **_output)
 {
-  int fd, minor, saved_errno;
+  int fd, minor;
+  char dev_minor[4];
+  char *dev_fn;
+
+  /* loop trying to open a minor device: */
+  minor = 0;
+  dev_fn = tme_strdup(dev_filename);
+
+  tme_output_append_error(_output, "trying %s\n", dev_filename);
 
   /* open the clone device */
-  if( ((fd = open(dev_filename, O_RDWR)) < 0 ) && dev_minor) {
-    /* loop trying to open a minor device: */
-    for (minor = 0;; minor++) {
-      /* form the name of the next device to try, then try opening
-	 it. if we succeed, we're done: */
-      sprintf(dev_minor, "%d", minor);
-      tme_log(&element->tme_element_log_handle, 1, TME_OK,
-	      (&element->tme_element_log_handle,
-	       "trying %s",
-	       dev_filename));
-      if ((fd = open(dev_filename, O_RDWR)) >= 0) {
-	tme_log(&element->tme_element_log_handle, 1, TME_OK,
-		(&element->tme_element_log_handle,
-		 "opened %s",
-		 dev_filename));
-	break;
-      }
-      
-      /* we failed to open this device.  if this device was simply
-	 busy, loop: */
-      saved_errno = errno;
-      tme_log(&element->tme_element_log_handle, 1, saved_errno,
-	      (&element->tme_element_log_handle, 
-	       "%s", dev_filename));
-      if (saved_errno == EBUSY
-	  || saved_errno == EACCES
-	  || saved_errno == EPERM) {
-	continue;
-      }
-      errno = saved_errno;
-      /* otherwise, we have failed: */
-      return (-1);
-    }
+  while( ((fd = open(dev_filename, O_RDWR)) < 0 )) {
+    /* we failed to open this device.  if this device was simply
+       busy, loop: */
+    tme_output_append_error(_output, "failed opening %s: %d - %s\n", dev_filename, errno, strerror(errno));
+    if(errno != EBUSY &&
+       errno != EACCES &&
+       errno != EPERM &&
+       minor)
+      break;
+
+    /* form the name of the next device to try, then try opening
+       it. if we succeed, we're done: */
+    sprintf(dev_filename, "%s%d", dev_fn, minor++);
+    tme_output_append_error(_output, "trying %s\n", dev_filename);
   }
 
+  tme_free(dev_fn);
   return fd;
 }
 
@@ -855,8 +845,7 @@ int tme_eth_alloc(struct tme_element *element, char *dev_filename, char *dev_min
 int
 tme_eth_connections_new(struct tme_element *element, 
 			const char * const *args, 
-			struct tme_connection **_conns,
-			char **_output)
+			struct tme_connection **_conns)
 {
   struct tme_ethernet *eth;
   struct tme_ethernet_connection *conn_eth;

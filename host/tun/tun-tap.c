@@ -268,7 +268,7 @@ _tme_tun_tap_connections_new(struct tme_element *element,
 {
   struct tme_ethernet_connection *conn_eth;
 
-  tme_eth_connections_new(element, args, _conns, _output);
+  tme_eth_connections_new(element, args, _conns);
   conn_eth = (struct tme_ethernet_connection *) (*_conns);
 
   /* fill in the Ethernet connection: */
@@ -562,8 +562,7 @@ static int _tme_nat_run(struct tme_nat *nat, int num)
 TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   struct tme_tun_tap *tap;
   int tap_fd, dummy_fd;
-  char dev_tap_filename[sizeof(DEV_TAP_FILENAME) + 5];
-  char *dev_minor;
+  char dev_tap_filename[sizeof(DEV_TAP_FILENAME) + 9];
   int saved_errno;
   u_int tap_opt;
   struct ifreq ifr[TME_IF_TYPE_TOTAL];
@@ -651,14 +650,12 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 
   sprintf(dev_tap_filename, DEV_TAP_FILENAME);
 
-  dev_minor = dev_tap_filename + sizeof(DEV_TAP_FILENAME);
 #ifndef HAVE_LINUX_IF_TUN_H
   if(TAPIF.ifr_name[0] != '\0') {
     strncpy(dev_tap_filename + 5, TAPIF.ifr_name, sizeof(DEV_TAP_FILENAME) - 1);
-    dev_minor = 0;
   }
 #endif
-  tap_fd = tme_eth_alloc(element, dev_tap_filename, dev_minor);
+  tap_fd = tme_eth_alloc(dev_tap_filename, _output);
 
   if (tap_fd < 0) {
     saved_errno = errno;
