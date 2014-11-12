@@ -837,6 +837,8 @@ int tme_eth_alloc(char *dev_filename, char **_output)
     tme_output_append_error(_output, "trying %s\n", dev_filename);
   }
 
+  if(fd>=0) tme_output_append_error(_output, "successfully opened %s\n", dev_filename);
+
   tme_free(dev_fn);
   return fd;
 }

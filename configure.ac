@@ -801,7 +801,7 @@ dragonfly*)
 linux*) 
    CPPFLAGS="${CPPFLAGS-}"
    DEV_TAP_FILENAME='"\"/dev/net/tun\""'
-   SETCAP="setcap cap_net_admin+ep"
+   SETCAP="setcap cap_net_admin,cap_net_raw+ep"
    ;;
 *) CPPFLAGS="${CPPFLAGS-}"
    SETCAP="chmod u+s"

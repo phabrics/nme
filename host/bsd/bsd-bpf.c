@@ -780,6 +780,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
     _TME_BPF_RAW_OPEN_ERROR(close(bpf_fd));
     return (errno);
   }
+  
+  setuid(getuid());
 #endif
   
   return tme_eth_init(element, bpf_fd, packet_buffer_size, delay_time, _tme_bsd_bpf_connections_new);
