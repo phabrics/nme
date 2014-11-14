@@ -68,6 +68,11 @@ AC_SEARCH_LIBS([nft_rule_alloc], [nftnl])
 if test "x$ac_cv_search_nft_rule_alloc" != "xnone required" && test "x$ac_cv_search_nft_rule_alloc" != xno; then
    NATLIBS="$ac_cv_search_nft_rule_alloc ${NATLIBS}"
 fi
+
+AC_SEARCH_LIBS([npf_nat_create], [npf])
+if test "x$ac_cv_search_npf_nat_create" != "xnone required" && test "x$ac_cv_search_npf_nat_create" != xno; then
+   NATLIBS="$ac_cv_search_npf_nat_create ${NATLIBS}"
+fi
 LIBS=$OLDLIBS
 AC_SUBST(NATLIBS)
 
@@ -77,6 +82,7 @@ AC_CHECK_HEADERS([unistd.h stdio.h memory.h stdarg.h limits.h float.h])
 AC_CHECK_HEADERS([sys/ioctl.h sys/sockio.h sys/socketio.h net/if_dl.h ioctls.h netpacket/packet.h ifaddrs.h])
 AC_CHECK_HEADERS([byteswap.h sys/endian.h])
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h sys/socket.h sys/time.h time.h termios.h])
+AC_CHECK_HEADERS([npf.h])
 AC_CHECK_HEADERS([linux/netfilter/nf_tables.h libmnl/libmnl.h libnftnl/table.h])
 AC_CHECK_HEADERS([sys/param.h sys/linker.h], [], [],
 [#ifdef HAVE_SYS_PARAM_H

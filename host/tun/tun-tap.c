@@ -125,6 +125,9 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #include <libnftnl/rule.h>
 #include <libnftnl/expr.h>
 #endif
+#ifdef HAVE_NPF_H
+#include <npf.h>
+#endif
 
 /* macros: */
 /* interface types: */
@@ -584,6 +587,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   char host[NI_MAXHOST];
   char mask[NI_MAXHOST];
   struct in_addr nataddr;
+  u_int natidx;
   in_addr_t zero = 0;
 #ifdef HAVE_LIBNFTNL_TABLE_H
   FILE *f;
@@ -593,6 +597,11 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   struct nft_rule *rule;
   struct tme_nat nat[4];
 #endif
+#ifdef HAVE_NPF_H
+  int nating;
+  nl_config_t *ncf;
+  nl_nat_t *nt;
+#endif
 
   /* get the arguments: */
   rc = _tme_tun_tap_args(args, ifr, ip_addrs, _output);
@@ -600,7 +609,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 #define TAPIF ifr[TME_IF_TYPE_TAP]
 #define NATIF ifr[TME_IF_TYPE_NAT]
 
-#ifdef HAVE_LIBNFTNL_TABLE_H
+#if defined(HAVE_LIBNFTNL_TABLE_H) || defined(HAVE_NPF_H)
   /* find the interface we will use: */
   rc = tme_eth_ifaddrs_find(NATIF.ifr_name, &ifa, NULL, NULL);
 
@@ -628,10 +637,13 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     }
 
     nating = true;
+
+    natidx = if_nametoindex(NATIF.ifr_name);
+
     tme_log(&element->tme_element_log_handle, 0, TME_OK, 
 	    (&element->tme_element_log_handle, 
-	     "using nat interface %s with address %s, netmask %s",
-	     NATIF.ifr_name,
+	     "using nat interface %s(%d) with address %s, netmask %s",
+	     NATIF.ifr_name, natidx,
 	     host, mask));
   }
 #endif
@@ -769,7 +781,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 		  inet_ntoa(ifra.ifra_mask.sin_addr)));
       }
     }
-    setuid(getuid());
 #else
     TAPIF.ifr_addr.sa_family = AF_INET;
     if(IPAINET.s_addr) {
@@ -822,7 +833,25 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     close(dummy_fd);
   }
 
+  inet_aton(host, &nataddr);
   // Perform network address translation, if available
+#ifdef HAVE_NPF_H
+  dummy_fd = open("/dev/npf", O_RDWR);
+  if (dummy_fd == -1) {
+    tme_output_append_error(_output, _("couldn't open file /dev/npf; ip forwarding may not work."));
+    goto exit_nat;    
+  }
+  
+  ncf = npf_config_create();
+  nt = npf_nat_create(NPF_NATOUT, 0, natidx, &nataddr, AF_INET, 0);
+  npf_nat_insert(ncf, nt, NPF_PRI_LAST);
+  npf_config_submit(ncf, dummy_fd);
+  close(dummy_fd);
+  npf_config_destroy(ncf);
+
+ exit_nat:
+  setuid(getuid());
+#endif
 #ifdef HAVE_LIBNFTNL_TABLE_H
   if(!nating) goto exit_nat;
 
@@ -898,7 +927,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   _tme_nat_rule_add_cmp(rule, NFT_REG_1, NFT_CMP_EQ, &IPAINET.s_addr, sizeof(in_addr_t));
   _tme_nat_rule_add_meta(rule, NFT_REG_1, NFT_META_OIFNAME);
   _tme_nat_rule_add_cmp(rule, NFT_REG_1, NFT_CMP_EQ, NATIF.ifr_name, IFNAMSIZ);
-  inet_aton(host, &nataddr);
   _tme_nat_rule_add_immediate(rule, NFT_REG_1, &nataddr.s_addr, sizeof(in_addr_t));
   _tme_nat_rule_add_nat(rule, NFT_NAT_SNAT, 0, NFT_REG_1);
 
