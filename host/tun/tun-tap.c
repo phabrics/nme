@@ -998,14 +998,16 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   rc = sysctlbyname(SYSCTLNAME, &forward, &len, NULL, 0);
   if(!(rc || forward)) {
     forward = 1;
-    rc = sysctlbyname(SYSCTLNAME, NULL, 0, &forward, &len);
+    rc = sysctlbyname(SYSCTLNAME, NULL, 0, &forward, len);
+    if(rc == -1) rc--;
   }
 
-  if(rc == -1) {
+  if(rc < 0) {
     tme_log(&element->tme_element_log_handle, 0, errno,
 	    (&element->tme_element_log_handle,
-	     _("failed to set %s; ip forwarding may not work properly"),
-	     SYSCTLNAME));
+	     _("failed to set %s %s (%d); ip forwarding may not work properly"),
+	     ((rc == -1) ? ("get") : ("set")),
+	     SYSCTLNAME, forward));
   }
 #endif
 
