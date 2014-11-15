@@ -343,24 +343,47 @@ AC_MSG_RESULT($tme_raw_type)
 
 AC_MSG_CHECKING([for network address translation method])
 
-# if --with-nats is given, enable only those given solutions
-AC_ARG_WITH(nats,
-[  --with-nats=NATS  utilize only the given nat solutions (in order of use by platform availability: 'nft','npf','pf').  Defaults to 'any' available.  Turn off nat with 'none'.])
+# specify whether built-in NAT support should be enabled & with what NAT methods
+AC_ARG_ENABLE(nat,
+[  --enable-nat=NATs  Enable built-in NAT support utilizing the given NAT methods (compiled-in order of usage by platform availability: 'nft','npf','pf').  Defaults to 'yes', any available.  Turn off NAT with 'no' or --disable-nat.], [tme_nat_types=${enableval}], [enable_nat=yes])
 
-if test "x${with_nats}" == x; then
-   with_nats="nft npf pf"
+if test "x${enable_nat}" == xyes; then
+   tme_nat_types="nft npf pf"
 fi
 
-for tme_nat_type in ${with_nats}; do
+if test "x${enable_nat}" == xno; then
+   tme_nat_types=
+fi
+
+AC_MSG_RESULT($tme_nat_types)
+
+tme_nat_headers=
+
+for tme_nat_type in ${tme_nat_types}; do
 case "x${tme_nat_type}" in
 xnft)  tme_nat_headers="${tme_nat_headers} libnftnl/table.h" ;;
 xnpf)  tme_nat_headers="${tme_nat_headers} npf.h" ;;
 xpf)   tme_nat_headers="${tme_nat_headers} net/pfvar.h" ;;
-xnone) tme_nat_headers=""
-       break ;;
 esac
+done
 
-AC_CHECK_HEADERS($tme_nat_headers)
+AC_CHECK_HEADERS($tme_nat_headers,[],[],
+[#include <stdio.h>
+ #ifdef STDC_HEADERS
+ # include <stdlib.h>
+ # include <stddef.h>
+ #else
+ # ifdef HAVE_STDLIB_H
+ #  include <stdlib.h>
+ # endif
+ #endif
+ #ifdef HAVE_SYS_SOCKET_H
+ # include <sys/socket.h>
+ #endif
+ #ifdef HAVE_NET_IF_H
+ # include <net/if.h>
+ #endif
+])
 
 dnl Checks for X11.
 AC_PATH_XTRA
