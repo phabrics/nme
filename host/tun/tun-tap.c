@@ -130,10 +130,9 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #endif
 #ifdef HAVE_NPF_H
 #include <npf.h>
-#define DEV_PF_FILENAME "/dev/npf"
-#elsif defined(HAVE_NET_PFVAR_H)
+#endif
+#ifdef HAVE_NET_PFVAR_H
 #include <net/pfvar.h>
-#define DEV_PF_FILENAME "/dev/pf"
 #endif
 
 /* macros: */
@@ -148,13 +147,25 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #define TME_IP_ADDRS_BCAST (2)
 #define TME_IP_ADDRS_TOTAL (3)
 
+#define TME_DO_NFT defined(HAVE_LIBNFTNL_H) && defined(TME_NAT_NFT)
+#define TME_DO_NPF defined(HAVE_NPF_H) && defined(TME_NAT_NPF)
+#define TME_DO_OPF defined(HAVE_NET_PFVAR_H) && defined(TME_NAT_OPF)
+#define TME_DO_PF TME_DO_NPF || TME_DO_OPF
+#define TME_DO_NAT TME_DO_NFT || TME_DO_PF
+
 /* IP forwarding variables */
 // procfs (Linux)
 #define IPFWDFILE "/proc/sys/net/ipv4/ip_forward"
 // sysctl (*BSD)
 #define SYSCTLNAME "net.inet.ip.forwarding"
 
-#ifdef HAVE_LIBNFTNL_TABLE_H
+#if TME_DO_NPF
+#define DEV_PF_FILENAME "/dev/npf"
+#else // TME_DO_OPF
+#define DEV_PF_FILENAME "/dev/pf"
+#endif
+
+#if TME_DO_NFT
 /* nat types: */
 #define TME_NAT_TABLE (0)
 #define TME_NAT_CHAIN (1)
@@ -202,7 +213,7 @@ nat_msg_builder nat_msg_builders[] = {
   (nat_msg_builder)nft_rule_nlmsg_build_payload
 };
 
-#endif
+#endif // TME_DO_NFT
 
 /* this is called when the ethernet configuration changes: */
 static int
@@ -374,7 +385,7 @@ int _tme_tun_tap_args(const char * const args[],
 #undef NATIF
 }
 
-#ifdef HAVE_LIBNFTNL_TABLE_H
+#if TME_DO_NFT
 static int _tme_nat_rule_add_payload(struct nft_rule *r, uint32_t base, uint32_t dreg,
 				     uint32_t offset, uint32_t len)
 {
@@ -600,22 +611,21 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   struct in_addr nataddr;
   u_int natidx;
   in_addr_t zero = 0;
-#ifdef HAVE_LIBNFTNL_TABLE_H
-  FILE *f;
+#if TME_DO_NAT
   int nating, forward = EOF;
+#endif
+#if TME_DO_NFT
+  FILE *f;
   struct nft_table *table;
   struct nft_chain *prechain, *postchain;
   struct nft_rule *rule;
   struct tme_nat nat[4];
-#endif
-#ifdef HAVE_SYS_SYSCTL_H
-  int forwarding;
+#elsif TME_DO_PF
   size_t len;  
-#endif
-#ifdef HAVE_NPF_H
-  int nating;
+#if TME_DO_NPF
   nl_config_t *ncf;
   nl_nat_t *nt;
+#endif
 #endif
 
   /* get the arguments: */
@@ -624,7 +634,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 #define TAPIF ifr[TME_IF_TYPE_TAP]
 #define NATIF ifr[TME_IF_TYPE_NAT]
 
-#if defined(HAVE_LIBNFTNL_TABLE_H) || defined(HAVE_NPF_H)
+#if TME_DO_NAT
   /* find the interface we will use: */
   rc = tme_eth_ifaddrs_find(NATIF.ifr_name, &ifa, NULL, NULL);
 
@@ -848,13 +858,15 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     close(dummy_fd);
   }
 
+  // Perform network address translation, if available
+
+#if TME_DO_NAT
   if(!nating) goto exit_nat;
 
   inet_aton(host, &nataddr);
+#endif
 
-  // Perform network address translation, if available
-
-#ifdef HAVE_LIBNFTNL_TABLE_H
+#if TME_DO_NFT
   /* NAT on Linux using NFTABLES */
   i=0;
 
@@ -976,17 +988,17 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   nft_rule_free(rule);
 
  exit_nat:
-#else // HAVE_LIBNFTNL_TABLE_H
+#elsif TME_DO_PF // TME_DO_NPF
   /* NAT on *BSD */
 
 #ifdef HAVE_SYS_SYSCTL_H
   // Turn on forwarding if not already on
-  forwarding = -1;
-  len = sizeof(forwarding);
-  rc = sysctlbyname(SYSCTLNAME, &forwarding, &len, NULL, 0);
-  if(!(rc || forwarding)) {
-    forwarding = 1;
-    rc = sysctlbyname(SYSCTLNAME, NULL, 0, &forwarding, &len);
+  forward = -1;
+  len = sizeof(forward);
+  rc = sysctlbyname(SYSCTLNAME, &forward, &len, NULL, 0);
+  if(!(rc || forward)) {
+    forward = 1;
+    rc = sysctlbyname(SYSCTLNAME, NULL, 0, &forward, &len);
   }
 
   if(rc == -1) {
@@ -1006,8 +1018,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 	     DEV_PF_FILENAME));
     goto exit_nat;
   }
-  
-#ifdef HAVE_NPF_H
+
+#if TME_DO_NPF
   // using NPF for NAT
   ncf = npf_config_create();
   nt = npf_nat_create(NPF_NATOUT, 0, natidx, &nataddr, AF_INET, 0);
@@ -1015,13 +1027,13 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   npf_config_submit(ncf, dummy_fd);
   close(dummy_fd);
   npf_config_destroy(ncf);
-#elsif defined(HAVE_NET_PFVAR_H)
+#else // TME_DO_OPF
   // using PF for NAT
 #endif
 
  exit_nat:
   setuid(getuid());
-#endif // !HAVE_LIBNFTNL_TABLE_H
+#endif // TME_DO_PF
 
   return tme_eth_init(element, tap_fd, 4096, NULL, _tme_tun_tap_connections_new);
 

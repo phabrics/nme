@@ -82,14 +82,14 @@ AC_CHECK_HEADERS([unistd.h stdio.h memory.h stdarg.h limits.h float.h])
 AC_CHECK_HEADERS([sys/ioctl.h sys/sockio.h sys/socketio.h net/if_dl.h ioctls.h netpacket/packet.h ifaddrs.h])
 AC_CHECK_HEADERS([byteswap.h sys/endian.h])
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h sys/socket.h sys/time.h time.h termios.h])
-AC_CHECK_HEADERS([linux/netfilter/nf_tables.h libmnl/libmnl.h])
-AC_CHECK_HEADERS([sys/param.h sys/linker.h sys/sysctl.h], [], [],
+AC_CHECK_HEADERS([linux/netfilter/nf_tables.h libmnl/libmnl.h libnftnl/table.h])
+AC_CHECK_HEADERS([sys/param.h sys/linker.h sys/sysctl.h npf.h], [], [],
 [#ifdef HAVE_SYS_PARAM_H
  # include <sys/param.h>
  #endif
 ])
 
-AC_CHECK_HEADERS([net/if.h net/if_var.h net/if_types.h net/if_arp.h netinet/in.h netinet/in_var.h netinet/if_ether.h linux/netfilter.h], [], [],
+AC_CHECK_HEADERS([net/if.h net/if_var.h net/if_types.h net/if_arp.h netinet/in.h netinet/in_var.h netinet/if_ether.h linux/netfilter.h net/pfvar.h], [], [],
 [#include <stdio.h>
  #ifdef STDC_HEADERS
  # include <stdlib.h>
@@ -357,33 +357,17 @@ fi
 
 AC_MSG_RESULT($tme_nat_types)
 
-tme_nat_headers=
+NATINC=
 
 for tme_nat_type in ${tme_nat_types}; do
 case "x${tme_nat_type}" in
-xnft)  tme_nat_headers="${tme_nat_headers} libnftnl/table.h" ;;
-xnpf)  tme_nat_headers="${tme_nat_headers} npf.h" ;;
-xpf)   tme_nat_headers="${tme_nat_headers} net/pfvar.h" ;;
+xnft)  NATINC="${NATINC} -DTME_NAT_NFT" ;;
+xnpf)  NATINC="${NATINC} -DTME_NAT_NPF" ;;
+xpf)   NATINC="${NATINC} -DTME_NAT_OPF" ;;
 esac
 done
 
-AC_CHECK_HEADERS($tme_nat_headers,[],[],
-[#include <stdio.h>
- #ifdef STDC_HEADERS
- # include <stdlib.h>
- # include <stddef.h>
- #else
- # ifdef HAVE_STDLIB_H
- #  include <stdlib.h>
- # endif
- #endif
- #ifdef HAVE_SYS_SOCKET_H
- # include <sys/socket.h>
- #endif
- #ifdef HAVE_NET_IF_H
- # include <net/if.h>
- #endif
-])
+AC_SUBST(NATINC)
 
 dnl Checks for X11.
 AC_PATH_XTRA
