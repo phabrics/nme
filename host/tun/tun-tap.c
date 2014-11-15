@@ -147,7 +147,7 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #define TME_IP_ADDRS_BCAST (2)
 #define TME_IP_ADDRS_TOTAL (3)
 
-#define TME_DO_NFT defined(HAVE_LIBNFTNL_H) && defined(TME_NAT_NFT)
+#define TME_DO_NFT defined(HAVE_LIBNFTNL_TABLE_H) && defined(TME_NAT_NFT)
 #define TME_DO_NPF defined(HAVE_NPF_H) && defined(TME_NAT_NPF)
 #define TME_DO_OPF defined(HAVE_NET_PFVAR_H) && defined(TME_NAT_OPF)
 #define TME_DO_PF TME_DO_NPF || TME_DO_OPF
@@ -620,7 +620,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   struct nft_chain *prechain, *postchain;
   struct nft_rule *rule;
   struct tme_nat nat[4];
-#elsif TME_DO_PF
+#elif TME_DO_PF
   size_t len;  
 #if TME_DO_NPF
   nl_config_t *ncf;
@@ -952,7 +952,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 	    (&element->tme_element_log_handle,
 	     _("Added tme table with ip nat rules for tap interface network, "
 	       "to nftables.  Run 'nft list table tme' to view the table.  If you still have problems "
-	       "with forwarding from the tap interface, you may need to manually adjust the filter tables, "
+	       "with forwarding from the tap interface, you may need to manually adjust the filter tables, or remove conflicting nat "
 	       "e.g., iptables -F FORWARD.  nftables is the successor to iptables, so it may not be available on older systems.")));
 
     // Enable IP forwarding if we successfully added the tme nat table
@@ -988,7 +988,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   nft_rule_free(rule);
 
  exit_nat:
-#elsif TME_DO_PF // TME_DO_NPF
+#elif TME_DO_PF // TME_DO_NPF
   /* NAT on *BSD */
 
 #ifdef HAVE_SYS_SYSCTL_H
