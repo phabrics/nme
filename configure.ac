@@ -82,9 +82,8 @@ AC_CHECK_HEADERS([unistd.h stdio.h memory.h stdarg.h limits.h float.h])
 AC_CHECK_HEADERS([sys/ioctl.h sys/sockio.h sys/socketio.h net/if_dl.h ioctls.h netpacket/packet.h ifaddrs.h])
 AC_CHECK_HEADERS([byteswap.h sys/endian.h])
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h sys/socket.h sys/time.h time.h termios.h])
-AC_CHECK_HEADERS([npf.h])
-AC_CHECK_HEADERS([linux/netfilter/nf_tables.h libmnl/libmnl.h libnftnl/table.h])
-AC_CHECK_HEADERS([sys/param.h sys/linker.h], [], [],
+AC_CHECK_HEADERS([linux/netfilter/nf_tables.h libmnl/libmnl.h])
+AC_CHECK_HEADERS([sys/param.h sys/linker.h sys/sysctl.h], [], [],
 [#ifdef HAVE_SYS_PARAM_H
  # include <sys/param.h>
  #endif
@@ -341,6 +340,27 @@ x) tme_raw_type=none ;;
 esac
 
 AC_MSG_RESULT($tme_raw_type)
+
+AC_MSG_CHECKING([for network address translation method])
+
+# if --with-nats is given, enable only those given solutions
+AC_ARG_WITH(nats,
+[  --with-nats=NATS  utilize only the given nat solutions (in order of use by platform availability: 'nft','npf','pf').  Defaults to 'any' available.  Turn off nat with 'none'.])
+
+if test "x${with_nats}" == x; then
+   with_nats="nft npf pf"
+fi
+
+for tme_nat_type in ${with_nats}; do
+case "x${tme_nat_type}" in
+xnft)  tme_nat_headers="${tme_nat_headers} libnftnl/table.h" ;;
+xnpf)  tme_nat_headers="${tme_nat_headers} npf.h" ;;
+xpf)   tme_nat_headers="${tme_nat_headers} net/pfvar.h" ;;
+xnone) tme_nat_headers=""
+       break ;;
+esac
+
+AC_CHECK_HEADERS($tme_nat_headers)
 
 dnl Checks for X11.
 AC_PATH_XTRA

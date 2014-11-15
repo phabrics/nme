@@ -125,8 +125,15 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #include <libnftnl/rule.h>
 #include <libnftnl/expr.h>
 #endif
+#ifdef HAVE_SYS_SYSCTL_H
+#include <sys/sysctl.h>
+#endif
 #ifdef HAVE_NPF_H
 #include <npf.h>
+#define DEV_PF_FILENAME "/dev/npf"
+#elsif defined(HAVE_NET_PFVAR_H)
+#include <net/pfvar.h>
+#define DEV_PF_FILENAME "/dev/pf"
 #endif
 
 /* macros: */
@@ -141,14 +148,18 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #define TME_IP_ADDRS_BCAST (2)
 #define TME_IP_ADDRS_TOTAL (3)
 
+/* IP forwarding variables */
+// procfs (Linux)
+#define IPFWDFILE "/proc/sys/net/ipv4/ip_forward"
+// sysctl (*BSD)
+#define SYSCTLNAME "net.inet.ip.forwarding"
+
 #ifdef HAVE_LIBNFTNL_TABLE_H
 /* nat types: */
 #define TME_NAT_TABLE (0)
 #define TME_NAT_CHAIN (1)
 #define TME_NAT_RULE (2)
 #define TME_NAT_TOTAL (3)
-
-#define IPFWDFILE "/proc/sys/net/ipv4/ip_forward"
 
 struct tme_nat {
   uint8_t type;
@@ -597,6 +608,10 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   struct nft_rule *rule;
   struct tme_nat nat[4];
 #endif
+#ifdef HAVE_SYS_SYSCTL_H
+  int forwarding;
+  size_t len;  
+#endif
 #ifdef HAVE_NPF_H
   int nating;
   nl_config_t *ncf;
@@ -833,28 +848,14 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     close(dummy_fd);
   }
 
-  inet_aton(host, &nataddr);
-  // Perform network address translation, if available
-#ifdef HAVE_NPF_H
-  dummy_fd = open("/dev/npf", O_RDWR);
-  if (dummy_fd == -1) {
-    tme_output_append_error(_output, _("couldn't open file /dev/npf; ip forwarding may not work."));
-    goto exit_nat;    
-  }
-  
-  ncf = npf_config_create();
-  nt = npf_nat_create(NPF_NATOUT, 0, natidx, &nataddr, AF_INET, 0);
-  npf_nat_insert(ncf, nt, NPF_PRI_LAST);
-  npf_config_submit(ncf, dummy_fd);
-  close(dummy_fd);
-  npf_config_destroy(ncf);
-
- exit_nat:
-  setuid(getuid());
-#endif
-#ifdef HAVE_LIBNFTNL_TABLE_H
   if(!nating) goto exit_nat;
 
+  inet_aton(host, &nataddr);
+
+  // Perform network address translation, if available
+
+#ifdef HAVE_LIBNFTNL_TABLE_H
+  /* NAT on Linux using NFTABLES */
   i=0;
 
   table = nft_table_alloc();
@@ -975,7 +976,53 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   nft_rule_free(rule);
 
  exit_nat:
+#else // HAVE_LIBNFTNL_TABLE_H
+  /* NAT on *BSD */
+
+#ifdef HAVE_SYS_SYSCTL_H
+  // Turn on forwarding if not already on
+  forwarding = -1;
+  len = sizeof(forwarding);
+  rc = sysctlbyname(SYSCTLNAME, &forwarding, &len, NULL, 0);
+  if(!(rc || forwarding)) {
+    forwarding = 1;
+    rc = sysctlbyname(SYSCTLNAME, NULL, 0, &forwarding, &len);
+  }
+
+  if(rc == -1) {
+    tme_log(&element->tme_element_log_handle, 0, errno,
+	    (&element->tme_element_log_handle,
+	     _("failed to set %s; ip forwarding may not work properly"),
+	     SYSCTLNAME));
+  }
 #endif
+
+  // Generate a NAT configuration & submit to kernel
+  dummy_fd = open(DEV_PF_FILENAME, O_RDWR);
+  if (dummy_fd == -1) {
+    tme_log(&element->tme_element_log_handle, 0, errno,
+	    (&element->tme_element_log_handle,
+	     _("couldn't open pf device %s; access to external network will be restricted."), 
+	     DEV_PF_FILENAME));
+    goto exit_nat;
+  }
+  
+#ifdef HAVE_NPF_H
+  // using NPF for NAT
+  ncf = npf_config_create();
+  nt = npf_nat_create(NPF_NATOUT, 0, natidx, &nataddr, AF_INET, 0);
+  npf_nat_insert(ncf, nt, NPF_PRI_LAST);
+  npf_config_submit(ncf, dummy_fd);
+  close(dummy_fd);
+  npf_config_destroy(ncf);
+#elsif defined(HAVE_NET_PFVAR_H)
+  // using PF for NAT
+#endif
+
+ exit_nat:
+  setuid(getuid());
+#endif // !HAVE_LIBNFTNL_TABLE_H
+
   return tme_eth_init(element, tap_fd, 4096, NULL, _tme_tun_tap_connections_new);
 
 #undef IPAINET
