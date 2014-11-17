@@ -223,8 +223,8 @@ _tme_tun_tap_config(struct tme_ethernet_connection *conn_eth,
   struct tme_ethernet *tap;
 #ifdef HAVE_LINUX_IF_TUN_H
   TME_TUN_TAP_INSN *tap_filter;
-#endif
   int tap_filter_size;
+#endif
   int rc;
 
   /* recover our data structures: */
@@ -288,8 +288,7 @@ _tme_tun_tap_config(struct tme_ethernet_connection *conn_eth,
 static int
 _tme_tun_tap_connections_new(struct tme_element *element, 
 			     const char * const *args, 
-			     struct tme_connection **_conns,
-			     char **_output)
+			     struct tme_connection **_conns)
 {
   struct tme_ethernet_connection *conn_eth;
 
@@ -585,18 +584,16 @@ static int _tme_nat_run(struct tme_nat *nat, int num)
 
 /* the new TAP function: */
 TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
-  struct tme_tun_tap *tap;
   int tap_fd, dummy_fd;
   char dev_tap_filename[sizeof(DEV_TAP_FILENAME) + 9];
   int saved_errno;
-  u_int tap_opt;
   struct ifreq ifr[TME_IF_TYPE_TOTAL];
   struct in_addr ip_addrs[TME_IP_ADDRS_TOTAL];
   struct ifaddrs *ifa;
 #ifdef SIOCAIFADDR
   struct in_aliasreq ifra;
 #endif
-#ifdef HAVE_STRUCT_STAT_ST_RDEV
+#if defined(HAVE_DEVNAME) && defined(HAVE_STRUCT_STAT_ST_RDEV)
   struct stat tap_buf;
 #endif
 #if defined(TUNGIFINFO) && !defined(TAPGIFINFO)
@@ -605,16 +602,17 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   struct ether_addr addr;
 #endif
 #endif
-  int i, usage, rc;
+  int rc;
   char host[NI_MAXHOST];
   char mask[NI_MAXHOST];
   struct in_addr nataddr;
   u_int natidx;
-  in_addr_t zero = 0;
 #if TME_DO_NAT
   int nating, forward = EOF;
 #endif
 #if TME_DO_NFT
+  in_addr_t zero = 0;
+  int i;
   FILE *f;
   struct nft_table *table;
   struct nft_chain *prechain, *postchain;
@@ -639,7 +637,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   rc = tme_eth_ifaddrs_find(NATIF.ifr_name, &ifa, NULL, NULL);
 
   if (rc != TME_OK) {
-    nating = false;
+    nating = FALSE;
     tme_output_append_error(_output, _("couldn't find an interface %s"), NATIF.ifr_name);
   } else {
     strncpy(NATIF.ifr_name, ifa->ifa_name, sizeof(NATIF.ifr_name));
@@ -661,7 +659,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 	       _("getnameinfo() failed: %s\n"), gai_strerror(rc)));
     }
 
-    nating = true;
+    nating = TRUE;
 
     natidx = if_nametoindex(NATIF.ifr_name);
 
@@ -1011,6 +1009,18 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   }
 #endif
 
+#if defined(TME_DO_PF) && defined(HAVE_KLDFIND)
+  // A helper step to automate loading of the necessary kernel module on FreeBSD-derived platforms
+#define KLD_FILENAME "pf.ko"
+  if((kldfind(KLD_FILENAME)<0) &&
+     (kldload(KLD_FILENAME)<0))
+    tme_log(&element->tme_element_log_handle, 0, errno,
+	    (&element->tme_element_log_handle,
+	     _("failed to load the TAP kernel module...\ntry \"kldload %s\" in a root console"),
+	     KLD_FILENAME));
+#undef KLD_FILENAME
+#endif
+
   // Generate a NAT configuration & submit to kernel
   dummy_fd = open(DEV_PF_FILENAME, O_RDWR);
   if (dummy_fd == -1) {
@@ -1027,11 +1037,11 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   nt = npf_nat_create(NPF_NATOUT, 0, natidx, &nataddr, AF_INET, 0);
   npf_nat_insert(ncf, nt, NPF_PRI_LAST);
   npf_config_submit(ncf, dummy_fd);
-  close(dummy_fd);
   npf_config_destroy(ncf);
 #else // TME_DO_OPF
   // using PF for NAT
 #endif
+  close(dummy_fd);
 
  exit_nat:
   setuid(getuid());

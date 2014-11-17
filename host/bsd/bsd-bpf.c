@@ -534,8 +534,7 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
 static int
 _tme_bsd_bpf_connections_new(struct tme_element *element, 
 			     const char * const *args, 
-			     struct tme_connection **_conns,
-			     char **_output)
+			     struct tme_connection **_conns)
 {
   struct tme_ethernet_connection *conn_eth;
 
