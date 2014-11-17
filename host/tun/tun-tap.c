@@ -134,6 +134,9 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #ifdef HAVE_NET_PFVAR_H
 #include <net/pfvar.h>
 #endif
+#ifdef HAVE_NET_PF_PFVAR_H
+#include <net/pf/pfvar.h>
+#endif
 
 /* macros: */
 /* interface types: */
@@ -149,7 +152,7 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 
 #define TME_DO_NFT defined(HAVE_LIBNFTNL_TABLE_H) && defined(TME_NAT_NFT)
 #define TME_DO_NPF defined(HAVE_NPF_H) && defined(TME_NAT_NPF)
-#define TME_DO_OPF defined(HAVE_NET_PFVAR_H) && defined(TME_NAT_OPF)
+#define TME_DO_OPF (defined(HAVE_NET_PFVAR_H) || defined(HAVE_NET_PF_PFVAR_H)) && defined(TME_NAT_OPF)
 #define TME_DO_PF TME_DO_NPF || TME_DO_OPF
 #define TME_DO_NAT TME_DO_NFT || TME_DO_PF
 
@@ -220,20 +223,20 @@ static int
 _tme_tun_tap_config(struct tme_ethernet_connection *conn_eth, 
 		    struct tme_ethernet_config *config)
 {
-  struct tme_ethernet *tap;
 #ifdef HAVE_LINUX_IF_TUN_H
+  struct tme_ethernet *tap;
   TME_TUN_TAP_INSN *tap_filter;
   int tap_filter_size;
 #endif
   int rc;
 
-  /* recover our data structures: */
-  tap = conn_eth->tme_ethernet_connection.tme_connection_element->tme_element_private;
-
   /* assume we will succeed: */
   rc = TME_OK;
 
 #ifdef HAVE_LINUX_IF_TUN_H
+  /* recover our data structures: */
+  tap = conn_eth->tme_ethernet_connection.tme_connection_element->tme_element_private;
+
   /* lock the mutex: */
   tme_mutex_lock(&tap->tme_eth_mutex);
 
@@ -589,11 +592,10 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   int saved_errno;
   struct ifreq ifr[TME_IF_TYPE_TOTAL];
   struct in_addr ip_addrs[TME_IP_ADDRS_TOTAL];
-  struct ifaddrs *ifa;
 #ifdef SIOCAIFADDR
   struct in_aliasreq ifra;
 #endif
-#if defined(HAVE_DEVNAME) && defined(HAVE_STRUCT_STAT_ST_RDEV)
+#if !defined(HAVE_FDEVNAME) && defined(HAVE_STRUCT_STAT_ST_RDEV)
   struct stat tap_buf;
 #endif
 #if defined(TUNGIFINFO) && !defined(TAPGIFINFO)
@@ -602,12 +604,13 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   struct ether_addr addr;
 #endif
 #endif
+#if TME_DO_NAT
   int rc;
+  struct ifaddrs *ifa;
   char host[NI_MAXHOST];
   char mask[NI_MAXHOST];
   struct in_addr nataddr;
   u_int natidx;
-#if TME_DO_NAT
   int nating, forward = EOF;
 #endif
 #if TME_DO_NFT
@@ -627,7 +630,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 #endif
 
   /* get the arguments: */
-  rc = _tme_tun_tap_args(args, ifr, ip_addrs, _output);
+  _tme_tun_tap_args(args, ifr, ip_addrs, _output);
 
 #define TAPIF ifr[TME_IF_TYPE_TAP]
 #define NATIF ifr[TME_IF_TYPE_NAT]

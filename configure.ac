@@ -89,7 +89,7 @@ AC_CHECK_HEADERS([sys/param.h sys/linker.h sys/sysctl.h npf.h], [], [],
  #endif
 ])
 
-AC_CHECK_HEADERS([net/if.h net/if_var.h net/if_types.h net/if_arp.h netinet/in.h netinet/in_var.h netinet/if_ether.h linux/netfilter.h net/pfvar.h], [], [],
+AC_CHECK_HEADERS([net/if.h net/if_var.h net/if_types.h net/if_arp.h netinet/in.h netinet/in_var.h netinet/if_ether.h linux/netfilter.h net/pfvar.h net/pf/pfvar.h], [], [],
 [#include <stdio.h>
  #ifdef STDC_HEADERS
  # include <stdlib.h>
