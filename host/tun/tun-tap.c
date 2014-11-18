@@ -626,6 +626,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 #if TME_DO_NPF
   nl_config_t *ncf;
   nl_nat_t *nt;
+  nl_rule_t *ext, *def;
+  nl_rule_t *rl, *rl2;
 #endif
 #endif
 
@@ -1038,8 +1040,23 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   // using NPF for NAT
   ncf = npf_config_create();
   nt = npf_nat_create(NPF_NATOUT, 0, natidx, &nataddr, AF_INET, 0);
-  npf_nat_insert(ncf, nt, NPF_PRI_LAST);
+  npf_nat_insert(ncf, nt, 0);
+  ext = npf_rule_create("external", NPF_RULE_GROUP, natidx);
+  //npf_rule_setprio(rl, 1);
+  npf_rule_insert(ncf, NULL, ext);
+  def = npf_rule_create(NULL, NPF_RULE_GROUP, 0);  
+  //npf_rule_setprio(rl, 2);
+  npf_rule_insert(ncf, NULL, def);
+  rl = npf_rule_create(NULL, NPF_RULE_PASS | NPF_RULE_STATEFUL | NPF_RULE_OUT | NPF_RULE_FINAL, 0);
+  npf_rule_insert(ncf, ext, rl);
+  rl2 = npf_rule_create(NULL, NPF_RULE_PASS | NPF_RULE_FINAL, 0);
+  npf_rule_insert(ncf, def, rl2);
   npf_config_submit(ncf, dummy_fd);
+  //npf_rule_destroy(rl2);
+  //npf_rule_destroy(rl);
+  //npf_rule_destroy(def);
+  //npf_rule_destroy(ext);
+  //npf_rule_destroy(nt);
   npf_config_destroy(ncf);
 #else // TME_DO_OPF
   // using PF for NAT
