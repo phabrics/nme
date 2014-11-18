@@ -130,6 +130,7 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #endif
 #ifdef HAVE_NPF_H
 #include <npf.h>
+#include <net/npf_ncode.h>
 #endif
 #ifdef HAVE_NET_PFVAR_H
 #include <net/pfvar.h>
@@ -628,6 +629,16 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   nl_nat_t *nt;
   nl_rule_t *ext, *def;
   nl_rule_t *rl, *rl2;
+  tme_uint32_t ncode[] =
+    { NPF_OPCODE_IP4MASK,
+      1,
+      0,
+      24,
+      NPF_OPCODE_RET,
+      0,
+      NPF_OPCODE_RET,
+      0xff
+    };
 #endif
 #endif
 
@@ -1040,11 +1051,13 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   // using NPF for NAT
   ncf = npf_config_create();
   nt = npf_nat_create(NPF_NATOUT, 0, natidx, &nataddr, AF_INET, 0);
+  ncode[2] = IPAINET.s_addr;
+  npf_rule_setcode(nt, NPF_CODE_NC, ncode, sizeof(ncode));
   npf_nat_insert(ncf, nt, 0);
   ext = npf_rule_create("external", NPF_RULE_GROUP, natidx);
   //npf_rule_setprio(rl, 1);
   npf_rule_insert(ncf, NULL, ext);
-  def = npf_rule_create(NULL, NPF_RULE_GROUP, 0);  
+  def = npf_rule_create(NULL, NPF_RULE_GROUP, 0); 
   //npf_rule_setprio(rl, 2);
   npf_rule_insert(ncf, NULL, def);
   rl = npf_rule_create(NULL, NPF_RULE_PASS | NPF_RULE_STATEFUL | NPF_RULE_OUT | NPF_RULE_FINAL, 0);
