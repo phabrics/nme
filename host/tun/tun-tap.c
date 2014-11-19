@@ -129,6 +129,9 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #include <sys/sysctl.h>
 #endif
 #ifdef HAVE_NPF_H
+#ifdef TME_NAT_NPF
+#define _NPF_PRIVATE
+#endif
 #include <npf.h>
 #include <net/npf_ncode.h>
 #endif
@@ -586,6 +589,33 @@ static int _tme_nat_run(struct tme_nat *nat, int num)
 }
 #endif
 
+#if TME_DO_NPF
+void
+_tme_npf_print_error(const nl_error_t *ne, char **_output)
+{
+  static const char *ncode_errors[] = {
+    [-NPF_ERR_OPCODE]	= "invalid instruction",
+    [-NPF_ERR_JUMP]		= "invalid jump",
+    [-NPF_ERR_REG]		= "invalid register",
+    [-NPF_ERR_INVAL]	= "invalid argument value",
+    [-NPF_ERR_RANGE]	= "processing out of range"
+  };
+  const int nc_err = ne->ne_ncode_error;
+  const char *srcfile = ne->ne_source_file;
+
+  if (srcfile) {
+    tme_output_append_error(_output, "source %s line %d", srcfile, ne->ne_source_line);
+  }
+  if (nc_err) {
+    tme_output_append_error(_output, "n-code error (%d): %s at offset 0x%x",
+			    nc_err, ncode_errors[-nc_err], ne->ne_ncode_errat);
+  }
+  if (ne->ne_id) {
+    tme_output_append_error(_output, "object: %d", ne->ne_id);
+  }
+}
+#endif
+
 /* the new TAP function: */
 TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   int tap_fd, dummy_fd;
@@ -1038,7 +1068,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 #endif
 
   // Generate a NAT configuration & submit to kernel
-  dummy_fd = open(DEV_PF_FILENAME, O_RDWR);
+  dummy_fd = open(DEV_PF_FILENAME, O_RDONLY);
   if (dummy_fd == -1) {
     tme_log(&element->tme_element_log_handle, 0, errno,
 	    (&element->tme_element_log_handle,
@@ -1051,25 +1081,27 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   // using NPF for NAT
   ncf = npf_config_create();
   nt = npf_nat_create(NPF_NATOUT, 0, natidx, &nataddr, AF_INET, 0);
-  ncode[2] = IPAINET.s_addr;
+  ncode[2] = IPAINET.s_addr & IPANETMASK.s_addr;
   npf_rule_setcode(nt, NPF_CODE_NC, ncode, sizeof(ncode));
-  npf_nat_insert(ncf, nt, 0);
+  npf_nat_insert(ncf, nt, NPF_PRI_LAST);
   ext = npf_rule_create("external", NPF_RULE_GROUP, natidx);
-  //npf_rule_setprio(rl, 1);
+  npf_rule_setprio(ext, NPF_PRI_LAST);
   npf_rule_insert(ncf, NULL, ext);
-  def = npf_rule_create(NULL, NPF_RULE_GROUP, 0); 
-  //npf_rule_setprio(rl, 2);
-  npf_rule_insert(ncf, NULL, def);
   rl = npf_rule_create(NULL, NPF_RULE_PASS | NPF_RULE_STATEFUL | NPF_RULE_OUT | NPF_RULE_FINAL, 0);
+  npf_rule_setprio(rl, NPF_PRI_LAST);
   npf_rule_insert(ncf, ext, rl);
-  rl2 = npf_rule_create(NULL, NPF_RULE_PASS | NPF_RULE_FINAL, 0);
+  def = npf_rule_create(0, NPF_RULE_IN | NPF_RULE_OUT | NPF_RULE_GROUP, 0); 
+  npf_rule_setprio(def, NPF_PRI_LAST);
+  rl2 = npf_rule_create(NULL, NPF_RULE_PASS | NPF_RULE_IN | NPF_RULE_OUT | NPF_RULE_FINAL, 0);
+  npf_rule_setprio(rl2, NPF_PRI_LAST);
   npf_rule_insert(ncf, def, rl2);
-  npf_config_submit(ncf, dummy_fd);
-  //npf_rule_destroy(rl2);
-  //npf_rule_destroy(rl);
-  //npf_rule_destroy(def);
-  //npf_rule_destroy(ext);
-  //npf_rule_destroy(nt);
+  npf_rule_insert(ncf, NULL, def);
+  rc = npf_config_submit(ncf, dummy_fd);
+  if (rc) {
+    nl_error_t ne;
+    _npf_config_error(ncf, &ne);
+    _tme_npf_print_error(&ne, _output);
+  }
   npf_config_destroy(ncf);
 #else // TME_DO_OPF
   // using PF for NAT
