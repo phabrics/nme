@@ -629,12 +629,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 #if !defined(HAVE_FDEVNAME) && defined(HAVE_STRUCT_STAT_ST_RDEV)
   struct stat tap_buf;
 #endif
-#if defined(TUNGIFINFO) && !defined(TAPGIFINFO)
-  struct tuninfo info;
-#ifdef HAVE_NETINET_IF_ETHER_H
-  struct ether_addr addr;
-#endif
-#endif
 #if TME_DO_NAT
   int rc;
   struct ifaddrs *ifa;
@@ -653,6 +647,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   struct nft_rule *rule;
   struct tme_nat nat[4];
 #elif TME_DO_PF
+  int mib[4];
   size_t len;  
 #if TME_DO_NPF
   int ver;
@@ -1123,10 +1118,14 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   // Turn on forwarding if not already on
   forward = -1;
   len = sizeof(forward);
-  rc = sysctlbyname(SYSCTLNAME, &forward, &len, NULL, 0);
+  mib[0] = CTL_NET;
+  mib[1] = PF_INET;
+  mib[2] = IPPROTO_IP;
+  mib[3] = IPCTL_FORWARDING;
+  rc = sysctl(mib, 4, &forward, &len, NULL, 0);
   if(!(rc || forward)) {
     forward = 1;
-    rc = sysctlbyname(SYSCTLNAME, NULL, 0, &forward, len);
+    rc = sysctl(mib, 4, NULL, 0, &forward, len);
     if(rc == -1) rc--;
   }
 
@@ -1136,6 +1135,10 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 	     _("failed to set %s %s (%d); ip forwarding may not work properly"),
 	     ((rc == -1) ? ("get") : ("set")),
 	     SYSCTLNAME, forward));
+  } else {
+    tme_log(&element->tme_element_log_handle, 0, TME_OK,
+	    (&element->tme_element_log_handle,
+	     _("Enabled ipv4 forwarding!")));
   }
 #endif
 
