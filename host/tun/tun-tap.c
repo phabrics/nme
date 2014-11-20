@@ -655,6 +655,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 #elif TME_DO_PF
   size_t len;  
 #if TME_DO_NPF
+  int ver;
   nl_config_t *ncf;
   nl_nat_t *nt;
   nl_rule_t *ext, *def;
@@ -663,7 +664,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     { NPF_OPCODE_IP4MASK,
       1,
       0,
-      24,
+      0,
       NPF_OPCODE_RET,
       0,
       NPF_OPCODE_RET,
@@ -1035,27 +1036,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 #elif TME_DO_PF // TME_DO_NPF
   /* NAT on *BSD */
 
-#ifdef HAVE_SYS_SYSCTL_H
-  // Turn on forwarding if not already on
-  forward = -1;
-  len = sizeof(forward);
-  rc = sysctlbyname(SYSCTLNAME, &forward, &len, NULL, 0);
-  if(!(rc || forward)) {
-    forward = 1;
-    rc = sysctlbyname(SYSCTLNAME, NULL, 0, &forward, len);
-    if(rc == -1) rc--;
-  }
-
-  if(rc < 0) {
-    tme_log(&element->tme_element_log_handle, 0, errno,
-	    (&element->tme_element_log_handle,
-	     _("failed to set %s %s (%d); ip forwarding may not work properly"),
-	     ((rc == -1) ? ("get") : ("set")),
-	     SYSCTLNAME, forward));
-  }
-#endif
-
-#if defined(TME_DO_PF) && defined(HAVE_KLDFIND)
+#ifdef HAVE_KLDFIND
   // A helper step to automate loading of the necessary kernel module on FreeBSD-derived platforms
 #define KLD_FILENAME "pf.ko"
   if((kldfind(KLD_FILENAME)<0) &&
@@ -1079,9 +1060,24 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 
 #if TME_DO_NPF
   // using NPF for NAT
+  if (ioctl(dummy_fd, IOC_NPF_VERSION, &ver) == -1) {
+    tme_log(&element->tme_element_log_handle, 0, -1,
+	    (&element->tme_element_log_handle,
+	     _("ioctl(IOC_NPF_VERSION)")));
+    goto exit_nat;
+  }
+  if (ver != NPF_VERSION) {
+    tme_log(&element->tme_element_log_handle, 0, -1,
+	    (&element->tme_element_log_handle, 
+	     _("incompatible NPF interface version (%d, kernel %d)\n"
+	       "Hint: update userland?"), NPF_VERSION, ver));
+    goto exit_nat;    
+  }
   ncf = npf_config_create();
   nt = npf_nat_create(NPF_NATOUT, 0, natidx, &nataddr, AF_INET, 0);
   ncode[2] = IPAINET.s_addr & IPANETMASK.s_addr;
+  for(;IPANETMASK.s_addr;IPANETMASK.s_addr>>=1)
+    if (IPANETMASK.s_addr & 1) ncode[3]++;
   npf_rule_setcode(nt, NPF_CODE_NC, ncode, sizeof(ncode));
   npf_nat_insert(ncf, nt, NPF_PRI_LAST);
   ext = npf_rule_create("external", NPF_RULE_GROUP, natidx);
@@ -1101,14 +1097,50 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     nl_error_t ne;
     _npf_config_error(ncf, &ne);
     _tme_npf_print_error(&ne, _output);
+    goto exit_nat;
   }
   npf_config_destroy(ncf);
+  rc = ioctl(dummy_fd, IOC_NPF_SWITCH, &nating);
+  if (rc) {
+    tme_log(&element->tme_element_log_handle, 0, -1,
+	    (&element->tme_element_log_handle,
+	     "Could not turn on NPF.  Try 'npfctl start'."));
+    goto exit_nat;
+  }
+
+  tme_log(&element->tme_element_log_handle, 0, TME_OK,
+	  (&element->tme_element_log_handle,
+	   _("Added ip nat rules for tap interface network, "
+	     "to npf.  Run 'npfctl show' to view the rules.  If you still have problems "
+	     "with forwarding from the tap interface, you may need to manually adjust the filter rules, or remove conflicting nat "
+	     "e.g., iptables -F FORWARD.  If you want ping, try 'modload npf_alg_icmp'. npf is the successor to pf (on NetBSD), so it may not be available on older systems.")));
+  
 #else // TME_DO_OPF
   // using PF for NAT
 #endif
-  close(dummy_fd);
+
+#ifdef HAVE_SYS_SYSCTL_H
+  // Turn on forwarding if not already on
+  forward = -1;
+  len = sizeof(forward);
+  rc = sysctlbyname(SYSCTLNAME, &forward, &len, NULL, 0);
+  if(!(rc || forward)) {
+    forward = 1;
+    rc = sysctlbyname(SYSCTLNAME, NULL, 0, &forward, len);
+    if(rc == -1) rc--;
+  }
+
+  if(rc < 0) {
+    tme_log(&element->tme_element_log_handle, 0, errno,
+	    (&element->tme_element_log_handle,
+	     _("failed to set %s %s (%d); ip forwarding may not work properly"),
+	     ((rc == -1) ? ("get") : ("set")),
+	     SYSCTLNAME, forward));
+  }
+#endif
 
  exit_nat:
+  close(dummy_fd);
   setuid(getuid());
 #endif // TME_DO_PF
 
