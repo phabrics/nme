@@ -141,6 +141,12 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #ifdef HAVE_NET_PF_PFVAR_H
 #include <net/pf/pfvar.h>
 #endif
+#ifdef HAVE_NETINET_IP_NAT_H
+#include <netinet/ip_compat.h>
+#include <netinet/ip_fil.h>
+#include <netinet/ip_nat.h>
+#include <netinet/ip_proxy.h>
+#endif
 
 /* macros: */
 /* interface types: */
@@ -156,9 +162,10 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 
 #define TME_DO_NFT defined(HAVE_LIBNFTNL_TABLE_H) && defined(TME_NAT_NFT)
 #define TME_DO_NPF defined(HAVE_NPF_H) && defined(TME_NAT_NPF)
-#define TME_DO_OPF (defined(HAVE_NET_PFVAR_H) || defined(HAVE_NET_PF_PFVAR_H)) && defined(TME_NAT_OPF)
-#define TME_DO_PF TME_DO_NPF || TME_DO_OPF
-#define TME_DO_NAT TME_DO_NFT || TME_DO_PF
+#define TME_DO_PFV (defined(HAVE_NET_PFVAR_H) || defined(HAVE_NET_PF_PFVAR_H)) && defined(TME_NAT_PFV)
+#define TME_DO_IPF defined(HAVE_NETINET_IP_NAT_H) && defined(TME_NAT_IPF)
+#define TME_DO_APF TME_DO_NPF || TME_DO_PFV || TME_DO_IPF
+#define TME_DO_NAT TME_DO_NFT || TME_DO_APF
 
 /* IP forwarding variables */
 // procfs (Linux)
@@ -167,9 +174,11 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #define SYSCTLNAME "net.inet.ip.forwarding"
 
 #if TME_DO_NPF
-#define DEV_PF_FILENAME "/dev/npf"
-#else // TME_DO_OPF
-#define DEV_PF_FILENAME "/dev/pf"
+#define DEV_IPF_FILENAME "/dev/npf"
+#elif TME_DO_PFV
+#define DEV_IPF_FILENAME "/dev/pf"
+#else // TME_DO_IPF
+#define DEV_IPF_FILENAME "/dev/ipnat"
 #endif
 
 #if TME_DO_NFT
@@ -635,7 +644,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   char host[NI_MAXHOST];
   char mask[NI_MAXHOST];
   struct in_addr nataddr;
-  u_int natidx;
+  u_int natidx, netnum;
   int nating, forward = EOF;
 #endif
 #if TME_DO_NFT
@@ -646,9 +655,10 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   struct nft_chain *prechain, *postchain;
   struct nft_rule *rule;
   struct tme_nat nat[4];
-#elif TME_DO_PF
+#elif TME_DO_APF
   int mib[4];
   size_t len;  
+  u_int netbits;
 #if TME_DO_NPF
   int ver;
   nl_config_t *ncf;
@@ -665,6 +675,10 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
       NPF_OPCODE_RET,
       0xff
     };
+#elif TME_DO_PFV
+  // using PF for NAT
+#else // TME_DO_IPF
+  ipnat_t nat;
 #endif
 #endif
 
@@ -677,7 +691,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 #if TME_DO_NAT
   /* find the interface we will use: */
   rc = tme_eth_ifaddrs_find(NATIF.ifr_name, &ifa, NULL, NULL);
-
+  
   if (rc != TME_OK) {
     nating = FALSE;
     tme_output_append_error(_output, _("couldn't find an interface %s"), NATIF.ifr_name);
@@ -904,6 +918,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   if(!nating) goto exit_nat;
 
   inet_aton(host, &nataddr);
+  netnum = IPAINET.s_addr & IPANETMASK.s_addr;
 #endif
 
 #if TME_DO_NFT
@@ -976,8 +991,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   _tme_nat_rule_add_payload(rule, NFT_PAYLOAD_NETWORK_HEADER, NFT_REG_1,
 			    offsetof(struct iphdr, saddr), sizeof(uint32_t));
   _tme_nat_rule_add_bitwise(rule, NFT_REG_1, &IPANETMASK.s_addr, &zero, sizeof(in_addr_t));
-  IPAINET.s_addr &= IPANETMASK.s_addr;
-  _tme_nat_rule_add_cmp(rule, NFT_REG_1, NFT_CMP_EQ, &IPAINET.s_addr, sizeof(in_addr_t));
+  _tme_nat_rule_add_cmp(rule, NFT_REG_1, NFT_CMP_EQ, &netnum, sizeof(in_addr_t));
   _tme_nat_rule_add_meta(rule, NFT_REG_1, NFT_META_OIFNAME);
   _tme_nat_rule_add_cmp(rule, NFT_REG_1, NFT_CMP_EQ, NATIF.ifr_name, IFNAMSIZ);
   _tme_nat_rule_add_immediate(rule, NFT_REG_1, &nataddr.s_addr, sizeof(in_addr_t));
@@ -1028,10 +1042,10 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   nft_rule_free(rule);
 
  exit_nat:
-#elif TME_DO_PF // TME_DO_NPF
+#elif TME_DO_APF // !TME_DO_NFT
   /* NAT on *BSD */
 
-#ifdef HAVE_KLDFIND
+#if defined(TME_DO_PFV) && defined(HAVE_KLDFIND)
   // A helper step to automate loading of the necessary kernel module on FreeBSD-derived platforms
 #define KLD_FILENAME "pf.ko"
   if((kldfind(KLD_FILENAME)<0) &&
@@ -1044,14 +1058,18 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 #endif
 
   // Generate a NAT configuration & submit to kernel
-  dummy_fd = open(DEV_PF_FILENAME, O_RDONLY);
+  dummy_fd = open(DEV_IPF_FILENAME, O_RDONLY);
   if (dummy_fd == -1) {
     tme_log(&element->tme_element_log_handle, 0, errno,
 	    (&element->tme_element_log_handle,
 	     _("couldn't open pf device %s; access to external network will be restricted."), 
-	     DEV_PF_FILENAME));
+	     DEV_IPF_FILENAME));
     goto exit_nat;
   }
+
+  netbits = 0;
+  for(;IPANETMASK.s_addr;IPANETMASK.s_addr>>=1)
+    if (IPANETMASK.s_addr & 1) netbits++;
 
 #if TME_DO_NPF
   // using NPF for NAT
@@ -1070,9 +1088,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   }
   ncf = npf_config_create();
   nt = npf_nat_create(NPF_NATOUT, 0, natidx, &nataddr, AF_INET, 0);
-  ncode[2] = IPAINET.s_addr & IPANETMASK.s_addr;
-  for(;IPANETMASK.s_addr;IPANETMASK.s_addr>>=1)
-    if (IPANETMASK.s_addr & 1) ncode[3]++;
+  ncode[2] = netnum;
+  ncode[3] = netbits;
   npf_rule_setcode(nt, NPF_CODE_NC, ncode, sizeof(ncode));
   npf_nat_insert(ncf, nt, NPF_PRI_LAST);
   ext = npf_rule_create("external", NPF_RULE_GROUP, natidx);
@@ -1110,8 +1127,32 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 	     "with forwarding from the tap interface, you may need to manually adjust the filter rules, or remove conflicting nat "
 	     "e.g., iptables -F FORWARD.  If you want ping, try 'modload npf_alg_icmp'. npf is the successor to pf (on NetBSD), so it may not be available on older systems.")));
   
-#else // TME_DO_OPF
+#elif TME_DO_PFV
   // using PF for NAT
+#else // TME_DO_IPF
+
+  memset(&nat, 0, sizeof(ipnat_t));
+  nat.in_inip = netnum;
+  nat.in_inmsk = IPANETMASK.s_addr;
+  nat.in_outip = nataddr.s_addr;
+  nat.in_outmsk = 0xffffffff;
+  nat.in_redir = NAT_MAP;
+  strncpy(nat.in_ifname, NATIF.ifr_name, IFNAMSIZ);
+  rc = ioctl(dummy_fd, SIOCADNAT, &nat);
+  if (rc) {
+    tme_log(&element->tme_element_log_handle, 0, -1,
+	    (&element->tme_element_log_handle,
+	     _("Could not add nat rule to ipnat.  Try manually adding via 'ipnat %s %s/%d -> 0/32'."),
+	     nat.in_ifname, inet_ntoa(IPAINET), netnum));
+    goto exit_nat;
+  }
+
+  tme_log(&element->tme_element_log_handle, 0, TME_OK,
+	  (&element->tme_element_log_handle,
+	   _("Added ip nat rules for tap interface network, to ipnat. "
+	     "Should be equivalent to 'ipnat %s %s/%d -> 0/32'."),
+	   nat.in_ifname, inet_ntoa(IPAINET), netnum));
+
 #endif
 
 #ifdef HAVE_SYS_SYSCTL_H
@@ -1144,8 +1185,12 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 
  exit_nat:
   close(dummy_fd);
+#endif // TME_DO_APF
+
+#ifdef SIOCAIFADDR
+  // For BSD, we run setuid until here
   setuid(getuid());
-#endif // TME_DO_PF
+#endif
 
   return tme_eth_init(element, tap_fd, 4096, NULL, _tme_tun_tap_connections_new);
 

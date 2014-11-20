@@ -89,7 +89,7 @@ AC_CHECK_HEADERS([sys/param.h sys/linker.h sys/sysctl.h npf.h], [], [],
  #endif
 ])
 
-AC_CHECK_HEADERS([net/if.h net/if_var.h net/if_types.h net/if_arp.h netinet/in.h netinet/in_var.h netinet/if_ether.h linux/netfilter.h net/pfvar.h net/pf/pfvar.h], [], [],
+AC_CHECK_HEADERS([net/if.h net/if_var.h net/if_types.h net/if_arp.h netinet/in.h netinet/in_var.h netinet/if_ether.h linux/netfilter.h net/pfvar.h net/pf/pfvar.h netinet/ip_compat.h netinet/ip_fil.h netinet/ip_nat.h netinet/ip_proxy.h], [], [],
 [#include <stdio.h>
  #ifdef STDC_HEADERS
  # include <stdlib.h>
@@ -119,6 +119,15 @@ AC_CHECK_HEADERS([net/if.h net/if_var.h net/if_types.h net/if_arp.h netinet/in.h
  #endif
  #ifdef HAVE_NETINET_IN_VAR_H
  # include <netinet/in_var.h>
+ #endif
+ #ifdef HAVE_NETINET_IP_COMPAT_H
+ # include <netinet/ip_compat.h>
+ #endif
+ #ifdef HAVE_NETINET_IP_FIL_H
+ # include <netinet/ip_fil.h>
+ #endif
+ #ifdef HAVE_NETINET_IP_NAT_H
+ # include <netinet/ip_nat.h>
  #endif
 ])
 
@@ -341,31 +350,32 @@ esac
 
 AC_MSG_RESULT($tme_raw_type)
 
-AC_MSG_CHECKING([for network address translation method])
+AC_MSG_CHECKING([for available network address translation methods])
 
 # specify whether built-in NAT support should be enabled & with what NAT methods
 AC_ARG_ENABLE(nat,
-[  --enable-nat=NATs  Enable built-in NAT support utilizing the given NAT methods (compiled-in order of usage by platform availability: 'nft','npf','pf').  Defaults to 'yes', any available.  Turn off NAT with 'no' or --disable-nat.], [tme_nat_types=${enableval}], [enable_nat=yes])
+[  --enable-nat=NATs  Enable built-in NAT support utilizing the given NAT methods (compiled-in order of usage by platform availability: 'nft','npf','pf','ipf').  Defaults to 'yes', any available.  Turn off NAT with 'no' or --disable-nat.], [tme_nat_types=${enableval}], [enable_nat=yes])
 
 if test "x${enable_nat}" == xyes; then
-   tme_nat_types="nft npf pf"
+   tme_nat_types="nft npf"
 fi
 
 if test "x${enable_nat}" == xno; then
    tme_nat_types=
 fi
 
-AC_MSG_RESULT($tme_nat_types)
-
 NATINC=
 
 for tme_nat_type in ${tme_nat_types}; do
 case "x${tme_nat_type}" in
-xnft)  NATINC="${NATINC} -DTME_NAT_NFT" ;;
-xnpf)  NATINC="${NATINC} -DTME_NAT_NPF" ;;
-xpf)   NATINC="${NATINC} -DTME_NAT_OPF" ;;
+xnft)   NATINC="${NATINC} -DTME_NAT_NFT" ;;
+xnpf)   NATINC="${NATINC} -DTME_NAT_NPF" ;;
+xpf)    NATINC="${NATINC} -DTME_NAT_PFV" ;;
+xipf)   NATINC="${NATINC} -DTME_NAT_IPF" ;;
 esac
 done
+
+AC_MSG_RESULT($tme_nat_types)
 
 AC_SUBST(NATINC)
 
