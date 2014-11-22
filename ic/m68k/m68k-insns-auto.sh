@@ -900,6 +900,10 @@ for size in 8 16 32; do
    	echo -n "    ic->tme_m68k_ireg_memx${size} = "
 	if test ${size} != 8; then echo -n "tme_betoh_u${size}"; fi
 	echo "(value_mem);"
+	echo ""
+	echo "    /* step the transfer count once for the read, and once for the write: */"
+	echo "    TME_M68K_SEQUENCE_TRANSFER_STEP;"
+	echo "    TME_M68K_SEQUENCE_TRANSFER_STEP;"
 	echo "  }"
 	echo ""
 	echo "  /* compare the compare operand to the effective address operand: */"

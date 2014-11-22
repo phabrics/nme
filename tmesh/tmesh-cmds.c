@@ -238,7 +238,7 @@ _tmesh_ls_output_argv(char **_output, struct tmesh_parser_argv *argv, unsigned i
   args += skip;
   for (; argc-- > 0; ) {
     tme_output_append(_output, " ");
-    tme_output_append(_output, *(args++));
+    tme_output_append(_output, "%s", *(args++));
   }
 }
 
@@ -524,7 +524,7 @@ _tmesh_command_connect(struct tmesh *tmesh, struct tmesh_parser_value *value, ch
 
     /* this must be an element: */
     if (entry->tmesh_fs_dirent_type != TMESH_FS_DIRENT_ELEMENT) {
-      tme_output_append(_output, element1_args[0]);
+      tme_output_append(_output, "%s", element1_args[0]);
       return (ENOTSOCK);
     }
     element1 = entry->tmesh_fs_dirent_value;
@@ -546,7 +546,7 @@ _tmesh_command_connect(struct tmesh *tmesh, struct tmesh_parser_value *value, ch
 
     /* it must be an element: */
     if (entry->tmesh_fs_dirent_type != TMESH_FS_DIRENT_ELEMENT) {
-      tme_output_append(_output, value->tmesh_parser_value_pathname0);
+      tme_output_append(_output, "%s", value->tmesh_parser_value_pathname0);
       return (ENOTSOCK);
     }
     element0 = entry->tmesh_fs_dirent_value;

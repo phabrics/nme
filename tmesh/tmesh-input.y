@@ -301,7 +301,7 @@ _tmesh_parser_argv_arg(struct tmesh_parser_argv *argv, char *arg, int new)
 static void
 yyerror(char *msg)
 {
-  tme_output_append(_tmesh_output, msg);
+  tme_output_append(_tmesh_output, "%s", msg);
   _tmesh_input->tmesh_scanner.tmesh_scanner_in_args = FALSE;
 }
 
@@ -467,6 +467,9 @@ yylex(void)
       /* quoted strings and comments (and commands, for that matter) cannot cross EOF boundaries: */
       scanner->tmesh_scanner_in_quotes = FALSE;
       scanner->tmesh_scanner_in_comment = FALSE;
+
+      if (stack->tmesh_io_stack_next == NULL)
+        _exit(0);
 
       /* close the now-finished source: */
       (*source->tmesh_io_close)(source, 
