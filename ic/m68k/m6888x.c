@@ -1765,9 +1765,10 @@ TME_M68K_INSN(tme_m68k_fmovemctl)
   }
 
   /* if this isn't a data register direct EA or an address register
-     direct EA, this instruction can fault: */
+     direct EA or an immediate EA, this instruction can fault: */
   if (ea_mode != 0
-      && ea_mode != 1) {
+      && ea_mode != 1
+      && (ea_mode != 7 || ea_reg != 4)) {
     TME_M68K_INSN_CANFAULT;
   }
 
@@ -1820,6 +1821,14 @@ TME_M68K_INSN(tme_m68k_fmovemctl)
       else {
 	*value = ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0 + ea_reg);
       }
+    }
+
+    /* if this is an immediate EA: */
+    else if (ea_mode == 7 && ea_reg == 4) {
+      if (__tme_predict_false(register_to_memory)) {
+	TME_M68K_INSN_EXCEPTION(TME_M68K_EXCEPTION_ILL);
+      }
+      *value = ic->tme_m68k_ireg_imm32;
     }
 
     /* otherwise, this is a memory EA: */
