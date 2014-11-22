@@ -89,7 +89,8 @@ _TME_RCSID("$Id: eth-if.c,v 1.3 2003/10/16 02:48:23 fredette Exp $");
 
 /* this macro helps us size a struct ifreq: */
 #ifdef HAVE_SOCKADDR_SA_LEN
-#define SIZEOF_IFREQ(ifr) (sizeof(ifr->ifr_name) + ifr->ifr_addr.sa_len)
+#define SIZEOF_IFREQ(ifr) \
+  ( sizeof(ifr->ifr_name) + (ifr->ifr_addr.sa_len > sizeof(ifr->ifr_ifru) ? ifr->ifr_addr.sa_len : sizeof(ifr->ifr_ifru)) )
 #else  /* !HAVE_SOCKADDR_SA_LEN */
 //#define SIZEOF_IFREQ(ifr) (sizeof(ifr->ifr_name) + sizeof(struct sockaddr))
 #define SIZEOF_IFREQ(ifr) (sizeof(struct ifreq))
