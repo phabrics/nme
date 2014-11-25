@@ -47,5 +47,7 @@ memory-auto.lo: memory-auto.h
 # module.c needs to know the LTDL_SHLIBPATH_VAR that libltdl
 # is using:
 module.lo: shlibvar.h
-shlibvar.h: $(top_builddir)/config.h
+shlibvar.h: $(top_builddir)/config.h Makefile
 	grep LT_MODULE_PATH_VAR $(top_builddir)/config.h > $@
+	grep LT_DLSEARCH_PATH $(top_builddir)/config.h >> $@
+	echo "#define TME_PACKAGE_PATH \"$(libdir)\"" >> $@
