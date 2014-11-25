@@ -128,6 +128,9 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #ifdef HAVE_SYS_SYSCTL_H
 #include <sys/sysctl.h>
 #endif
+#ifdef HAVE_SYS_MODULE_H
+#include <sys/module.h>
+#endif
 #ifdef HAVE_NPF_H
 #ifdef TME_NAT_NPF
 #define _NPF_PRIVATE
@@ -660,6 +663,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   size_t len;  
   u_int netbits;
 #if TME_DO_NPF
+  modctl_load_t mod;
   int ver;
   nl_config_t *ncf;
   nl_nat_t *nt;
@@ -1072,6 +1076,12 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     if (IPANETMASK.s_addr & 1) netbits++;
 
 #if TME_DO_NPF
+  // Load kernel modules if needed
+  memset(&mod, 0, sizeof(modctl_load_t));
+  mod.ml_filename="npf";
+  modctl(MODCTL_LOAD, &mod);
+  mod.ml_filename="npf_alg_icmp";
+  modctl(MODCTL_LOAD, &mod);
   // using NPF for NAT
   if (ioctl(dummy_fd, IOC_NPF_VERSION, &ver) == -1) {
     tme_log(&element->tme_element_log_handle, 0, -1,

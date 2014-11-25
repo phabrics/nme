@@ -83,7 +83,7 @@ AC_CHECK_HEADERS([sys/ioctl.h sys/sockio.h sys/socketio.h net/if_dl.h ioctls.h n
 AC_CHECK_HEADERS([byteswap.h sys/endian.h])
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h sys/socket.h sys/time.h time.h termios.h])
 AC_CHECK_HEADERS([linux/netfilter/nf_tables.h libmnl/libmnl.h libnftnl/table.h])
-AC_CHECK_HEADERS([sys/param.h sys/linker.h sys/sysctl.h npf.h], [], [],
+AC_CHECK_HEADERS([sys/param.h sys/linker.h sys/sysctl.h sys/module.h npf.h], [], [],
 [#ifdef HAVE_SYS_PARAM_H
  # include <sys/param.h>
  #endif
