@@ -739,6 +739,7 @@ _tme_gtk_screen_connection_make(struct tme_connection *conn,
   struct tme_gtk_screen *screen;
   struct tme_fb_connection *conn_fb;
   struct tme_fb_connection *conn_fb_other;
+  char title[sizeof(PACKAGE_STRING) + 16];
 
   /* recover our data structures: */
   display = (struct tme_gtk_display *) conn->tme_connection_element->tme_element_private;
@@ -764,8 +765,8 @@ _tme_gtk_screen_connection_make(struct tme_connection *conn,
       screen = _tme_gtk_screen_new(display);
     }
 
-    gtk_window_set_title(GTK_WINDOW(screen->tme_gtk_screen_window),
-			 conn->tme_connection_other->tme_connection_element->tme_element_args[0]);
+    snprintf(title, sizeof(title), "%s (%s)", PACKAGE_STRING, conn->tme_connection_other->tme_connection_element->tme_element_args[0]);
+    gtk_window_set_title(GTK_WINDOW(screen->tme_gtk_screen_window), title);
 
     /* save our connection: */
     screen->tme_gtk_screen_fb = conn_fb;
