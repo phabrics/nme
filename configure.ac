@@ -33,7 +33,7 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.68])
-AC_INIT([tme], [1.0beta-2])
+AC_INIT([tme], [1.0beta_4])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
@@ -356,11 +356,11 @@ AC_MSG_CHECKING([for available network address translation methods])
 AC_ARG_ENABLE(nat,
 [  --enable-nat=NATs  Enable built-in NAT support utilizing the given NAT methods (compiled-in order of usage by platform availability: 'nft','npf','pf','ipf').  Defaults to 'yes', any available.  Turn off NAT with 'no' or --disable-nat.], [tme_nat_types=${enableval}], [enable_nat=yes])
 
-if test "x${enable_nat}" == xyes; then
+if test "x${enable_nat}" = xyes; then
    tme_nat_types="nft npf"
 fi
 
-if test "x${enable_nat}" == xno; then
+if test "x${enable_nat}" = xno; then
    tme_nat_types=
 fi
 
