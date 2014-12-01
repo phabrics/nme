@@ -1,4 +1,4 @@
-#! /bin/sh
+AS_INIT
 
 # $Id: sparc-misc-auto.sh,v 1.4 2010/02/14 00:29:48 fredette Exp $
 
@@ -53,15 +53,15 @@ EOF
 # emit the register mapping macros:
 if $header; then
 
-    echo ""
-    echo "/* the register mapping: */"
-    echo "#define TME_SPARC_IREG_UNDEF		(-1)"
+    $as_echo ""
+    $as_echo "/* the register mapping: */"
+    $as_echo "#define TME_SPARC_IREG_UNDEF		(-1)"
     ireg_next=0
 
     # all integer registers start from register number zero:
     #
     for regnum in 0 1 2 3 4 5 6 7; do
-	echo "#define TME_SPARC_IREG_G${regnum}		(${ireg_next})"
+	$as_echo "#define TME_SPARC_IREG_G${regnum}		(${ireg_next})"
 	ireg_next=`expr ${ireg_next} + 1`
     done
 
@@ -72,33 +72,33 @@ if $header; then
 
     # the sparc64 alternate, MMU, and interrupt globals:
     #
-    echo "#define TME_SPARC64_IREG_AG_G0	(${ireg_base} + ${ireg_next} + (8 * 0))"
-    echo "#define TME_SPARC64_IREG_MG_G0	(${ireg_base} + ${ireg_next} + (8 * 1))"
-    echo "#define TME_SPARC64_IREG_IG_G0	(${ireg_base} + ${ireg_next} + (8 * 2))"
+    $as_echo "#define TME_SPARC64_IREG_AG_G0	(${ireg_base} + ${ireg_next} + (8 * 0))"
+    $as_echo "#define TME_SPARC64_IREG_MG_G0	(${ireg_base} + ${ireg_next} + (8 * 1))"
+    $as_echo "#define TME_SPARC64_IREG_IG_G0	(${ireg_base} + ${ireg_next} + (8 * 2))"
     ireg_next=`expr ${ireg_next} + 24`
 
     # the current, next, and next-next program counter:
     #
-    echo "#define TME_SPARC_IREG_PC		(${ireg_base} + ${ireg_next})"
+    $as_echo "#define TME_SPARC_IREG_PC		(${ireg_base} + ${ireg_next})"
     ireg_next=`expr ${ireg_next} + 1`
-    echo "#define TME_SPARC_IREG_PC_NEXT		(${ireg_base} + ${ireg_next})"
+    $as_echo "#define TME_SPARC_IREG_PC_NEXT		(${ireg_base} + ${ireg_next})"
     ireg_next=`expr ${ireg_next} + 1`
-    echo "#define TME_SPARC_IREG_PC_NEXT_NEXT		(${ireg_base} + ${ireg_next})"
+    $as_echo "#define TME_SPARC_IREG_PC_NEXT_NEXT		(${ireg_base} + ${ireg_next})"
     ireg_next=`expr ${ireg_next} + 1`
 
     # the instruction register:
     #
-    echo "#define TME_SPARC_IREG_INSN		(${ireg_base} + ${ireg_next})"
+    $as_echo "#define TME_SPARC_IREG_INSN		(${ireg_base} + ${ireg_next})"
     ireg_next=`expr ${ireg_next} + 1`
 
     # some temporary registers:
     #
-    echo "#define TME_SPARC_IREG_TMP(x)		(${ireg_base} + ${ireg_next} + (x))"
+    $as_echo "#define TME_SPARC_IREG_TMP(x)		(${ireg_base} + ${ireg_next} + (x))"
     ireg_next=`expr ${ireg_next} + 3`
 
     # the Y multiply/divide register:
     #
-    echo "#define TME_SPARC_IREG_Y		(${ireg_base} + ${ireg_next})"
+    $as_echo "#define TME_SPARC_IREG_Y		(${ireg_base} + ${ireg_next})"
     ireg_next=`expr ${ireg_next} + 1`
 
     # the floating-point transfer registers.  since these are often
@@ -107,87 +107,87 @@ if $header; then
     # assume that ${ireg_base} is aligned to at least four:
     #
     while test `expr ${ireg_next} % 4` != 0; do ireg_next=`expr ${ireg_next} + 1`; done
-    echo "#define TME_SPARC_IREG_FPX		(${ireg_base} + ${ireg_next})"
+    $as_echo "#define TME_SPARC_IREG_FPX		(${ireg_base} + ${ireg_next})"
     ireg_next=`expr ${ireg_next} + 4`
     
     # the sparc32 PSR, and the sparc64 PSTATE:
     #
-    echo "#define TME_SPARC32_IREG_PSR		(${ireg_base} + ${ireg_next})"
-    echo "#define tme_sparc32_ireg_psr		tme_sparc_ireg_uint32(TME_SPARC32_IREG_PSR)"
-    echo "#define tme_sparc64_ireg_pstate	tme_sparc_ireg_uint32((${ireg_base} + ${ireg_next}) << 1)"
+    $as_echo "#define TME_SPARC32_IREG_PSR		(${ireg_base} + ${ireg_next})"
+    $as_echo "#define tme_sparc32_ireg_psr		tme_sparc_ireg_uint32(TME_SPARC32_IREG_PSR)"
+    $as_echo "#define tme_sparc64_ireg_pstate	tme_sparc_ireg_uint32((${ireg_base} + ${ireg_next}) << 1)"
     ireg_next=`expr ${ireg_next} + 1`
 
     # the sparc32 WIM, and the common sparc64 register-window state registers:
     #
-    echo "#define tme_sparc32_ireg_wim		tme_sparc_ireg_uint32(${ireg_base} + ${ireg_next})"
-    echo "#define tme_sparc64_ireg_winstates	tme_sparc_ireg_uint32(((${ireg_base} + ${ireg_next}) << 1) + 0)"
-    echo "#define TME_SPARC64_WINSTATES_CWP(x)		(((x) & 0x3f) << (8 * 0))"
-    echo "#define tme_sparc64_ireg_cwp		tme_sparc_ireg_uint8(((${ireg_base} + ${ireg_next}) << 3) + 0)"
-    echo "#define TME_SPARC64_WINSTATES_CANRESTORE(x)	(((x) & 0x3f) << (8 * 1))"
-    echo "#define tme_sparc64_ireg_canrestore	tme_sparc_ireg_uint8(((${ireg_base} + ${ireg_next}) << 3) + 1)"
-    echo "#define TME_SPARC64_WINSTATES_CANSAVE(x)	(((x) & 0x3f) << (8 * 2))"
-    echo "#define tme_sparc64_ireg_cansave	tme_sparc_ireg_uint8(((${ireg_base} + ${ireg_next}) << 3) + 2)"
-    echo "#define TME_SPARC64_WINSTATES_OTHERWIN(x)	(((x) & 0x3f) << (8 * 3))"
-    echo "#define tme_sparc64_ireg_otherwin	tme_sparc_ireg_uint8(((${ireg_base} + ${ireg_next}) << 3) + 3)"
-    echo "#define tme_sparc64_ireg_winstates_mask tme_sparc_ireg_uint32(((${ireg_base} + ${ireg_next}) << 1) + 1)"
+    $as_echo "#define tme_sparc32_ireg_wim		tme_sparc_ireg_uint32(${ireg_base} + ${ireg_next})"
+    $as_echo "#define tme_sparc64_ireg_winstates	tme_sparc_ireg_uint32(((${ireg_base} + ${ireg_next}) << 1) + 0)"
+    $as_echo "#define TME_SPARC64_WINSTATES_CWP(x)		(((x) & 0x3f) << (8 * 0))"
+    $as_echo "#define tme_sparc64_ireg_cwp		tme_sparc_ireg_uint8(((${ireg_base} + ${ireg_next}) << 3) + 0)"
+    $as_echo "#define TME_SPARC64_WINSTATES_CANRESTORE(x)	(((x) & 0x3f) << (8 * 1))"
+    $as_echo "#define tme_sparc64_ireg_canrestore	tme_sparc_ireg_uint8(((${ireg_base} + ${ireg_next}) << 3) + 1)"
+    $as_echo "#define TME_SPARC64_WINSTATES_CANSAVE(x)	(((x) & 0x3f) << (8 * 2))"
+    $as_echo "#define tme_sparc64_ireg_cansave	tme_sparc_ireg_uint8(((${ireg_base} + ${ireg_next}) << 3) + 2)"
+    $as_echo "#define TME_SPARC64_WINSTATES_OTHERWIN(x)	(((x) & 0x3f) << (8 * 3))"
+    $as_echo "#define tme_sparc64_ireg_otherwin	tme_sparc_ireg_uint8(((${ireg_base} + ${ireg_next}) << 3) + 3)"
+    $as_echo "#define tme_sparc64_ireg_winstates_mask tme_sparc_ireg_uint32(((${ireg_base} + ${ireg_next}) << 1) + 1)"
     ireg_next=`expr ${ireg_next} + 1`
 
     # the sparc32 TBR register, and the sparc64 TBA register:
     #
-    echo "#define tme_sparc32_ireg_tbr		tme_sparc_ireg_uint32(${ireg_base} + ${ireg_next})"
-    echo "#define tme_sparc64_ireg_tba		tme_sparc_ireg_uint64(${ireg_base} + ${ireg_next})"
+    $as_echo "#define tme_sparc32_ireg_tbr		tme_sparc_ireg_uint32(${ireg_base} + ${ireg_next})"
+    $as_echo "#define tme_sparc64_ireg_tba		tme_sparc_ireg_uint64(${ireg_base} + ${ireg_next})"
     ireg_next=`expr ${ireg_next} + 1`
 
     # the sparc64 trap PC, NPC, state, and type registers:
     #
-    echo "#define tme_sparc64_ireg_tpc(tl)	tme_sparc_ireg_uint64(${ireg_base} + (TME_SPARC_TL_MAX * 0) + ${ireg_next} + ((tl) - 1))"
-    echo "#define tme_sparc64_ireg_tnpc(tl)	tme_sparc_ireg_uint64(${ireg_base} + (TME_SPARC_TL_MAX * 1) + ${ireg_next} + ((tl) - 1))"
-    echo "#define TME_SPARC64_IREG_TSTATE(tl)	(${ireg_base} + (TME_SPARC_TL_MAX * 2) + ${ireg_next} + ((tl) - 1))"
-    echo "#define tme_sparc64_ireg_tstate(tl)	tme_sparc_ireg_uint64(TME_SPARC64_IREG_TSTATE(tl))"
-    echo "#define tme_sparc64_ireg_tstate_ccr(tl) tme_sparc_ireg_uint8((TME_SPARC64_IREG_TSTATE(tl) << 3) + sizeof(tme_uint32_t))"
-    echo "#if TME_SPARC_TL_MAX > 8"
-    echo "#error \"TME_SPARC_TL_MAX changed\""
-    echo "#endif"
-    echo "#define tme_sparc64_ireg_tt(tl)	tme_sparc_ireg_uint8(((${ireg_base} + (TME_SPARC_TL_MAX * 3) + ${ireg_next}) << 3) + ((tl) - 1))"
+    $as_echo "#define tme_sparc64_ireg_tpc(tl)	tme_sparc_ireg_uint64(${ireg_base} + (TME_SPARC_TL_MAX * 0) + ${ireg_next} + ((tl) - 1))"
+    $as_echo "#define tme_sparc64_ireg_tnpc(tl)	tme_sparc_ireg_uint64(${ireg_base} + (TME_SPARC_TL_MAX * 1) + ${ireg_next} + ((tl) - 1))"
+    $as_echo "#define TME_SPARC64_IREG_TSTATE(tl)	(${ireg_base} + (TME_SPARC_TL_MAX * 2) + ${ireg_next} + ((tl) - 1))"
+    $as_echo "#define tme_sparc64_ireg_tstate(tl)	tme_sparc_ireg_uint64(TME_SPARC64_IREG_TSTATE(tl))"
+    $as_echo "#define tme_sparc64_ireg_tstate_ccr(tl) tme_sparc_ireg_uint8((TME_SPARC64_IREG_TSTATE(tl) << 3) + sizeof(tme_uint32_t))"
+    $as_echo "#if TME_SPARC_TL_MAX > 8"
+    $as_echo "#error \"TME_SPARC_TL_MAX changed\""
+    $as_echo "#endif"
+    $as_echo "#define tme_sparc64_ireg_tt(tl)	tme_sparc_ireg_uint8(((${ireg_base} + (TME_SPARC_TL_MAX * 3) + ${ireg_next}) << 3) + ((tl) - 1))"
     ireg_base="(${ireg_base} + (TME_SPARC_TL_MAX * 3) + 1)"
 
     # the sparc64 TL, PIL, ASI, FPRS, remaining register-window state registers, and TICK.NPT:
     #
-    echo "#define tme_sparc64_ireg_tl		tme_sparc_ireg_uint8(((${ireg_base} + ${ireg_next}) << 3) + 0)"
-    echo "#define tme_sparc64_ireg_pil		tme_sparc_ireg_uint8(((${ireg_base} + ${ireg_next}) << 3) + 1)"
-    echo "#define tme_sparc64_ireg_asi		tme_sparc_ireg_uint8(((${ireg_base} + ${ireg_next}) << 3) + 2)"
-    echo "#define tme_sparc64_ireg_fprs		tme_sparc_ireg_uint8(((${ireg_base} + ${ireg_next}) << 3) + 3)"
-    echo "#define tme_sparc64_ireg_wstate	tme_sparc_ireg_uint8(((${ireg_base} + ${ireg_next}) << 3) + 4)"
-    echo "#define tme_sparc64_ireg_cleanwin	tme_sparc_ireg_uint8(((${ireg_base} + ${ireg_next}) << 3) + 5)"
-    echo "#define tme_sparc64_ireg_tick_npt	tme_sparc_ireg_uint8(((${ireg_base} + ${ireg_next}) << 3) + 6)"
+    $as_echo "#define tme_sparc64_ireg_tl		tme_sparc_ireg_uint8(((${ireg_base} + ${ireg_next}) << 3) + 0)"
+    $as_echo "#define tme_sparc64_ireg_pil		tme_sparc_ireg_uint8(((${ireg_base} + ${ireg_next}) << 3) + 1)"
+    $as_echo "#define tme_sparc64_ireg_asi		tme_sparc_ireg_uint8(((${ireg_base} + ${ireg_next}) << 3) + 2)"
+    $as_echo "#define tme_sparc64_ireg_fprs		tme_sparc_ireg_uint8(((${ireg_base} + ${ireg_next}) << 3) + 3)"
+    $as_echo "#define tme_sparc64_ireg_wstate	tme_sparc_ireg_uint8(((${ireg_base} + ${ireg_next}) << 3) + 4)"
+    $as_echo "#define tme_sparc64_ireg_cleanwin	tme_sparc_ireg_uint8(((${ireg_base} + ${ireg_next}) << 3) + 5)"
+    $as_echo "#define tme_sparc64_ireg_tick_npt	tme_sparc_ireg_uint8(((${ireg_base} + ${ireg_next}) << 3) + 6)"
     ireg_next=`expr ${ireg_next} + 1`
 
     # the sparc64 TICK (offset) register:
     #
-    echo "#define tme_sparc64_ireg_tick_offset	tme_sparc_ireg_uint64(${ireg_base} + ${ireg_next})"
+    $as_echo "#define tme_sparc64_ireg_tick_offset	tme_sparc_ireg_uint64(${ireg_base} + ${ireg_next})"
     ireg_next=`expr ${ireg_next} + 1`
 
     # the sparc64 version register:
     #
-    echo "#define tme_sparc64_ireg_ver		tme_sparc_ireg_uint64(${ireg_base} + ${ireg_next})"
+    $as_echo "#define tme_sparc64_ireg_ver		tme_sparc_ireg_uint64(${ireg_base} + ${ireg_next})"
     ireg_next=`expr ${ireg_next} + 1`
 
     # the sparc64 CCR:
     # NB: this is a separate register for recode; can it maybe be combined
     # with the block of 8-bit registers above, as the first byte?
     #
-    echo "#define TME_SPARC64_IREG_CCR		(${ireg_base} + ${ireg_next})"
-    echo "#define tme_sparc64_ireg_ccr		tme_sparc_ireg_uint8(TME_SPARC64_IREG_CCR << 3)"
+    $as_echo "#define TME_SPARC64_IREG_CCR		(${ireg_base} + ${ireg_next})"
+    $as_echo "#define tme_sparc64_ireg_ccr		tme_sparc_ireg_uint8(TME_SPARC64_IREG_CCR << 3)"
     ireg_next=`expr ${ireg_next} + 1`
 
     # our internal sparc64 RCC register:
     #
-    echo "#define TME_SPARC64_IREG_RCC		(${ireg_base} + ${ireg_next})"
+    $as_echo "#define TME_SPARC64_IREG_RCC		(${ireg_base} + ${ireg_next})"
     ireg_next=`expr ${ireg_next} + 1`
 
     # our internal virtual address hole start:
     #
-    echo "#define tme_sparc64_ireg_va_hole_start tme_sparc_ireg_uint64(${ireg_base} + ${ireg_next})"
+    $as_echo "#define tme_sparc64_ireg_va_hole_start tme_sparc_ireg_uint64(${ireg_base} + ${ireg_next})"
     ireg_next=`expr ${ireg_next} + 1`
 fi
 
@@ -196,9 +196,9 @@ fi
 # indexable with the condition codes value:
 #
 if $header; then :; else
-    echo ""
-    echo "/* the icc->conditions mapping: */"
-    echo "const tme_uint8_t _tme_sparc_conds_icc[16] = {"
+    $as_echo ""
+    $as_echo "/* the icc->conditions mapping: */"
+    $as_echo "const tme_uint8_t _tme_sparc_conds_icc[[16]] = {"
     for nflag in 0 1; do
 	for zflag in 0 1; do
 	    for vflag in 0 1; do
@@ -206,56 +206,56 @@ if $header; then :; else
 
 		    # the Never condition:
 		    #
-		    echo -n "  0"
+		    $as_echo_n "  0"
 		    
 		    # the Equal condition:
 		    #
 		    if test $zflag = 1; then
-			echo -n "  | TME_BIT(1)"
+			$as_echo_n "  | TME_BIT(1)"
 		    fi
 			
 		    # the Less or Equal condition:
 		    #
 		    if test $zflag = 1 || test $nflag != $vflag; then
-			echo -n "  | TME_BIT(2)"
+			$as_echo_n "  | TME_BIT(2)"
 		    fi
 
 		    # the Less condition:
 		    #
 		    if test $nflag != $vflag; then
-			echo -n "  | TME_BIT(3)"
+			$as_echo_n "  | TME_BIT(3)"
 		    fi
 
 		    # the Less or Equal Unsigned condition:
 		    #
 		    if test $cflag = 1 || test $zflag = 1; then
-			echo -n "  | TME_BIT(4)"
+			$as_echo_n "  | TME_BIT(4)"
 		    fi
 
 		    # the Carry Set condition:
 		    #
 		    if test $cflag = 1; then
-			echo -n "  | TME_BIT(5)"
+			$as_echo_n "  | TME_BIT(5)"
 		    fi
 
 		    # the Negative condition:
 		    #
 		    if test $nflag = 1; then
-			echo -n "  | TME_BIT(6)"
+			$as_echo_n "  | TME_BIT(6)"
 		    fi
 
 		    # the Overflow Set condition:
 		    #
 		    if test $vflag = 1; then
-			echo -n "  | TME_BIT(7)"
+			$as_echo_n "  | TME_BIT(7)"
 		    fi
 
-		    echo ","
+		    $as_echo ","
 		done
 	    done
 	done
     done
-    echo "};"
+    $as_echo "};"
 fi
 
 # done:

@@ -1,4 +1,4 @@
-#! /bin/sh
+AS_INIT
 
 # $Id: sparc-vis-auto.sh,v 1.4 2010/02/20 22:01:40 fredette Exp $
 
@@ -51,45 +51,45 @@ cat <<EOF
 _TME_RCSID("\$Id: sparc-vis-auto.sh,v 1.4 2010/02/20 22:01:40 fredette Exp $");
 EOF
 
-echo ""
-echo "/* this handles VIS instructions: */"
-echo "void"
-echo "tme_sparc_vis(struct tme_sparc *ic)"
-echo "{"
-echo "  unsigned int opf;"
-echo "  unsigned int fpreg_rd_number_encoded;"
-echo "  const struct tme_float *fpreg_rs1;"
-echo "  const struct tme_float *fpreg_rs2;"
-echo "  unsigned int fpreg_rd_format;"
-echo "  unsigned int fpreg_rd_number;"
-echo "  struct tme_float fpreg_rd;"
-echo "  tme_uint64_t value_fpreg_rs1;"
-echo "  tme_uint64_t value_fpreg_rs2;"
-echo "  unsigned int compare_result;"
-echo "  unsigned int reg_rd;"
-echo "  unsigned int alignaddr_off;"
-echo ""
-echo "  TME_SPARC_INSN_FPU;"
-echo ""
-echo "  /* extract the opf field: */"
-echo "  opf = TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, (0x1ff << 5));"
-echo ""
-echo "  /* extract the encoded rd: */"
-echo "  fpreg_rd_number_encoded = TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, TME_SPARC_FORMAT3_MASK_RD);"
+$as_echo ""
+$as_echo "/* this handles VIS instructions: */"
+$as_echo "void"
+$as_echo "tme_sparc_vis(struct tme_sparc *ic)"
+$as_echo "{"
+$as_echo "  unsigned int opf;"
+$as_echo "  unsigned int fpreg_rd_number_encoded;"
+$as_echo "  const struct tme_float *fpreg_rs1;"
+$as_echo "  const struct tme_float *fpreg_rs2;"
+$as_echo "  unsigned int fpreg_rd_format;"
+$as_echo "  unsigned int fpreg_rd_number;"
+$as_echo "  struct tme_float fpreg_rd;"
+$as_echo "  tme_uint64_t value_fpreg_rs1;"
+$as_echo "  tme_uint64_t value_fpreg_rs2;"
+$as_echo "  unsigned int compare_result;"
+$as_echo "  unsigned int reg_rd;"
+$as_echo "  unsigned int alignaddr_off;"
+$as_echo ""
+$as_echo "  TME_SPARC_INSN_FPU;"
+$as_echo ""
+$as_echo "  /* extract the opf field: */"
+$as_echo "  opf = TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, (0x1ff << 5));"
+$as_echo ""
+$as_echo "  /* extract the encoded rd: */"
+$as_echo "  fpreg_rd_number_encoded = TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, TME_SPARC_FORMAT3_MASK_RD);"
 
-echo ""
-echo "#ifdef _TME_SPARC_RECODE_VERIFY"
-echo "  /* clear the rd buffer: */"
-echo "  memset(&fpreg_rd, 0, sizeof(fpreg_rd));"
-echo "#endif /* _TME_SPARC_RECODE_VERIFY */"
+$as_echo ""
+$as_echo "#ifdef _TME_SPARC_RECODE_VERIFY"
+$as_echo "  /* clear the rd buffer: */"
+$as_echo "  memset(&fpreg_rd, 0, sizeof(fpreg_rd));"
+$as_echo "#endif /* _TME_SPARC_RECODE_VERIFY */"
 
-echo ""
-echo "  /* dispatch on the opf field: */"
-echo "  switch (opf) {"
-echo "#define _TME_SPARC_FPU_FORMAT_RS1(format) fpreg_rs1 = tme_sparc_fpu_fpreg_read(ic, TME_SPARC_FORMAT3_MASK_RS1, (format))"
-echo "#define _TME_SPARC_FPU_FORMAT_RS2(format) fpreg_rs2 = tme_sparc_fpu_fpreg_read(ic, TME_SPARC_FORMAT3_MASK_RS2, (format))"
-echo "#define _TME_SPARC_FPU_FORMAT_RD(format) do { fpreg_rd_format = (format) | TME_IEEE754_FPREG_FORMAT_BUILTIN; fpreg_rd_number = tme_sparc_fpu_fpreg_decode(ic, fpreg_rd_number_encoded, fpreg_rd_format); } while (/* CONSTCOND */ 0)"
-echo ""
+$as_echo ""
+$as_echo "  /* dispatch on the opf field: */"
+$as_echo "  switch (opf) {"
+$as_echo "#define _TME_SPARC_FPU_FORMAT_RS1(format) fpreg_rs1 = tme_sparc_fpu_fpreg_read(ic, TME_SPARC_FORMAT3_MASK_RS1, (format))"
+$as_echo "#define _TME_SPARC_FPU_FORMAT_RS2(format) fpreg_rs2 = tme_sparc_fpu_fpreg_read(ic, TME_SPARC_FORMAT3_MASK_RS2, (format))"
+$as_echo "#define _TME_SPARC_FPU_FORMAT_RD(format) do { fpreg_rd_format = (format) | TME_IEEE754_FPREG_FORMAT_BUILTIN; fpreg_rd_number = tme_sparc_fpu_fpreg_decode(ic, fpreg_rd_number_encoded, fpreg_rd_format); } while (/* CONSTCOND */ 0)"
+$as_echo ""
 
 # permute over the opf field:
 #
@@ -120,7 +120,7 @@ while test ${opf_decimal} != 511; do
     case "${opf}" in
 
     00010???0)
-	compareopf=`echo ${opf} | sed -e 's/^00010\(.*\)0$/\1/'`
+	compareopf=`$as_echo ${opf} | sed -e 's/^00010\(.*\)0$/\1/'`
 	case "${compareopf}" in
 	?1?) compareopsize=32 ;;
 	?0?) compareopsize=16 ;;
@@ -131,48 +131,48 @@ while test ${opf_decimal} != 511; do
 	0?1) compareopname="NE" ; compareop="!=" ;;
 	1?1) compareopname="EQ" ; compareop="==" ;;
 	esac
-	echo "  case ${opf_decimal}:  /* ${opf} FCMP${compareopname}${compareopsize}: */"
-	echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-	echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-	echo "    value_fpreg_rs1 = fpreg_rs1->tme_float_value_ieee754_double.tme_value64_uint;"
-	echo "    value_fpreg_rs2 = fpreg_rs2->tme_float_value_ieee754_double.tme_value64_uint;"
-	echo "    compare_result = 0;"
+	$as_echo "  case ${opf_decimal}:  /* ${opf} FCMP${compareopname}${compareopsize}: */"
+	$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
+	$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
+	$as_echo "    value_fpreg_rs1 = fpreg_rs1->tme_float_value_ieee754_double.tme_value64_uint;"
+	$as_echo "    value_fpreg_rs2 = fpreg_rs2->tme_float_value_ieee754_double.tme_value64_uint;"
+	$as_echo "    compare_result = 0;"
 	compare_off=0
 	while test ${compare_off} != 64; do
-	    echo "    if (((tme_uint${compareopsize}_t) value_fpreg_rs1)"
-	    echo "        ${compareop} (tme_uint${compareopsize}_t) value_fpreg_rs2) {"
-	    echo "      compare_result += (1 << (${compare_off} / ${compareopsize}));"
-	    echo "    }"
-	    echo "    value_fpreg_rs1 >>= ${compareopsize};"
-	    echo "    value_fpreg_rs2 >>= ${compareopsize};"
+	    $as_echo "    if (((tme_uint${compareopsize}_t) value_fpreg_rs1)"
+	    $as_echo "        ${compareop} (tme_uint${compareopsize}_t) value_fpreg_rs2) {"
+	    $as_echo "      compare_result += (1 << (${compare_off} / ${compareopsize}));"
+	    $as_echo "    }"
+	    $as_echo "    value_fpreg_rs1 >>= ${compareopsize};"
+	    $as_echo "    value_fpreg_rs2 >>= ${compareopsize};"
 	    compare_off=`expr ${compare_off} + ${compareopsize}`
 	done
-	echo "    reg_rd = TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, TME_SPARC_FORMAT3_MASK_RD);"
-	echo "    TME_SPARC_REG_INDEX(ic, reg_rd);"
-	echo "    ic->tme_sparc_ireg_uint64(reg_rd) = compare_result;"
-	echo "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
-	echo "    fpreg_rd_number = 0;"
+	$as_echo "    reg_rd = TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, TME_SPARC_FORMAT3_MASK_RD);"
+	$as_echo "    TME_SPARC_REG_INDEX(ic, reg_rd);"
+	$as_echo "    ic->tme_sparc_ireg_uint64(reg_rd) = compare_result;"
+	$as_echo "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
+	$as_echo "    fpreg_rd_number = 0;"
 	;;
 
     001001000)
-	echo "  case ${opf_decimal}:  /* ${opf} FALIGNDATA: */"
-	echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-	echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-	echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-	echo "    fpreg_rd.tme_float_format = TME_FLOAT_FORMAT_IEEE754_DOUBLE;"
-	echo "    fpreg_rd.tme_float_value_ieee754_double = fpreg_rs1->tme_float_value_ieee754_double;"
-	echo "    alignaddr_off = TME_FIELD_MASK_EXTRACTU(ic->tme_sparc_vis_gsr, TME_SPARC_VIS_GSR_ALIGNADDR_OFF);"
-	echo "    if (alignaddr_off) {"
-	echo "      fpreg_rd.tme_float_value_ieee754_double.tme_value64_uint"
-	echo "        = ((fpreg_rd.tme_float_value_ieee754_double.tme_value64_uint"
-	echo "            << (8 * alignaddr_off))"
-	echo "           + (fpreg_rs2->tme_float_value_ieee754_double.tme_value64_uint"
-	echo "              >> (64 - (8 * alignaddr_off))));"
-	echo "    }"
+	$as_echo "  case ${opf_decimal}:  /* ${opf} FALIGNDATA: */"
+	$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
+	$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
+	$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
+	$as_echo "    fpreg_rd.tme_float_format = TME_FLOAT_FORMAT_IEEE754_DOUBLE;"
+	$as_echo "    fpreg_rd.tme_float_value_ieee754_double = fpreg_rs1->tme_float_value_ieee754_double;"
+	$as_echo "    alignaddr_off = TME_FIELD_MASK_EXTRACTU(ic->tme_sparc_vis_gsr, TME_SPARC_VIS_GSR_ALIGNADDR_OFF);"
+	$as_echo "    if (alignaddr_off) {"
+	$as_echo "      fpreg_rd.tme_float_value_ieee754_double.tme_value64_uint"
+	$as_echo "        = ((fpreg_rd.tme_float_value_ieee754_double.tme_value64_uint"
+	$as_echo "            << (8 * alignaddr_off))"
+	$as_echo "           + (fpreg_rs2->tme_float_value_ieee754_double.tme_value64_uint"
+	$as_echo "              >> (64 - (8 * alignaddr_off))));"
+	$as_echo "    }"
 	;;
 
     0011?????)
-        logicalopf=`echo ${opf} | sed -e 's/^0011\(.*\)[01]$/\1/'`
+        logicalopf=`$as_echo ${opf} | sed -e 's/^0011\(.*\)[[01]]$/\1/'`
 	logicalopname=
 	logicalop=
         case "${logicalopf}" in
@@ -240,7 +240,7 @@ while test ${opf_decimal} != 511; do
 	    logicalopname="ANDNOT2"
 	    logicalop="(src1 & ~src2)"
 	    ;;
-	*) echo "$0 internal error: unknown VIS logical op ${logicalopf}" 1>&2 ; exit 1 ;;
+	*) $as_echo "$0 internal error: unknown VIS logical op ${logicalopf}" 1>&2 ; exit 1 ;;
 	esac
 
 	case "${opf}" in
@@ -248,53 +248,53 @@ while test ${opf_decimal} != 511; do
 	*0) capprecision="DOUBLE"; size="64" ; value="double.tme_value64_uint" ;;
 	esac
 
-	echo "  case ${opf_decimal}:  /* ${opf} (${logicalopf}) F${logicalopname}: */"
+	$as_echo "  case ${opf_decimal}:  /* ${opf} (${logicalopf}) F${logicalopname}: */"
 
-	logicalop=`echo "${logicalop}" | sed -e "s/type/tme_uint${size}_t/g"`
+	logicalop=`$as_echo "${logicalop}" | sed -e "s/type/tme_uint${size}_t/g"`
 
-	logicalop_next=`echo "${logicalop}" | sed -e "s/src1/fpreg_rs1->tme_float_value_ieee754_${value}/"`
+	logicalop_next=`$as_echo "${logicalop}" | sed -e "s/src1/fpreg_rs1->tme_float_value_ieee754_${value}/"`
 	if test "${logicalop_next}" != "${logicalop}"; then
-		echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_${capprecision});"
+		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_${capprecision});"
 		logicalop="${logicalop_next}"
 	fi
 
-	logicalop_next=`echo "${logicalop}" | sed -e "s/src2/fpreg_rs2->tme_float_value_ieee754_${value}/"`
+	logicalop_next=`$as_echo "${logicalop}" | sed -e "s/src2/fpreg_rs2->tme_float_value_ieee754_${value}/"`
 	if test "${logicalop_next}" != "${logicalop}"; then
-		echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_${capprecision});"
+		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_${capprecision});"
 		logicalop="${logicalop_next}"
 	fi
 
-	echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_${capprecision});"
-	echo "    _TME_SPARC_FPU_BEGIN;"
-	echo "    fpreg_rd.tme_float_format = TME_FLOAT_FORMAT_IEEE754_${capprecision};"
-	echo "    fpreg_rd.tme_float_value_ieee754_${value} = ${logicalop};"
+	$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_${capprecision});"
+	$as_echo "    _TME_SPARC_FPU_BEGIN;"
+	$as_echo "    fpreg_rd.tme_float_format = TME_FLOAT_FORMAT_IEEE754_${capprecision};"
+	$as_echo "    fpreg_rd.tme_float_value_ieee754_${value} = ${logicalop};"
 	;;
       
     *) default=true ;;
     esac
-    if $default; then :; else echo "    break;"; echo ""; fi
+    if $default; then :; else $as_echo "    break;"; $as_echo ""; fi
 done
-echo "  default:"
-echo "    _TME_SPARC_FPU_UNIMPL;"
-echo "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
-echo "    fpreg_rd_number = 0;"
-echo "    break;"
-echo ""
-echo "#undef _TME_SPARC_FPU_FORMAT_RS1"
-echo "#undef _TME_SPARC_FPU_FORMAT_RS2"
-echo "#undef _TME_SPARC_FPU_FORMAT_RD"
-echo "  }"
+$as_echo "  default:"
+$as_echo "    _TME_SPARC_FPU_UNIMPL;"
+$as_echo "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
+$as_echo "    fpreg_rd_number = 0;"
+$as_echo "    break;"
+$as_echo ""
+$as_echo "#undef _TME_SPARC_FPU_FORMAT_RS1"
+$as_echo "#undef _TME_SPARC_FPU_FORMAT_RS2"
+$as_echo "#undef _TME_SPARC_FPU_FORMAT_RD"
+$as_echo "  }"
 
-echo ""
-echo "  /* store any destination: */"
-echo "  if (fpreg_rd_format != TME_IEEE754_FPREG_FORMAT_NULL) {"
-echo "    tme_sparc_fpu_fpreg_format(ic, fpreg_rd_number, fpreg_rd_format);"
-echo "    ic->tme_sparc_fpu_fpregs[fpreg_rd_number] = fpreg_rd;"
-echo "    TME_SPARC_FPU_DIRTY(ic, fpreg_rd_number);"
-echo "  }"
+$as_echo ""
+$as_echo "  /* store any destination: */"
+$as_echo "  if (fpreg_rd_format != TME_IEEE754_FPREG_FORMAT_NULL) {"
+$as_echo "    tme_sparc_fpu_fpreg_format(ic, fpreg_rd_number, fpreg_rd_format);"
+$as_echo "    ic->tme_sparc_fpu_fpregs[[fpreg_rd_number]] = fpreg_rd;"
+$as_echo "    TME_SPARC_FPU_DIRTY(ic, fpreg_rd_number);"
+$as_echo "  }"
 
-echo ""
-echo "}"
+$as_echo ""
+$as_echo "}"
 
 # permute over architecture:
 #
@@ -306,7 +306,7 @@ for arch in 64; do
 
 	case "${arch}:${size}" in 
 	*:64) insn="d" ; format="DOUBLE" ; value="double.tme_value64_uint" ;;
-	*) echo "$0 internal error: unknown architecture PST word size ${arch}:${size}" 1>&2 ; exit 1 ;;
+	*) $as_echo "$0 internal error: unknown architecture PST word size ${arch}:${size}" 1>&2 ; exit 1 ;;
 	esac
 
 	cat <<EOF
@@ -572,7 +572,7 @@ _tme_sparc${arch}_vis_ls_cycle_fld(struct tme_sparc *ic, struct tme_sparc_ls *ls
     value = tme_htobe_u64(value);
     buffer_offset = sizeof(value) - ls->tme_sparc_ls_size;
   }
-  ic->tme_sparc_memory_buffer.tme_sparc_memory_buffer64s[0] = value;
+  ic->tme_sparc_memory_buffer.tme_sparc_memory_buffer64s[[0]] = value;
   ls->tme_sparc_ls_buffer_offset = buffer_offset;
 
   /* do the (first) actual cycle: */

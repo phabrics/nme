@@ -1,4 +1,4 @@
-#! /bin/sh
+AS_INIT
 
 # $Id: ieee754-misc-auto.sh,v 1.6 2007/08/24 01:05:43 fredette Exp $
 
@@ -74,7 +74,7 @@ for precision in single double extended80 quad; do
 
     # get information about this precision:
     #
-    _precision=`echo $0 | sed -e "s/$PROG/ieee754-precision.sh/"`
+    _precision=`$as_echo $0 | sed -e "s/$PROG/ieee754-precision.sh/"`
     eval `sh ${_precision} ${precision}`
 
     # if we're generating a header:
@@ -192,22 +192,22 @@ EOF
 	x_value="(x)->tme_float_value_ieee754_${precision}"
 	case "${precision}" in
 	single)
-	    echo "    ${x_value} = *(y); \\"
+	    $as_echo "    ${x_value} = *(y); \\"
 	    ;;
 	double)
-	    echo "    ${x_value}.tme_value64_uint32_hi = (y)->tme_ieee754_double_constant_hi; \\"
-	    echo "    ${x_value}.tme_value64_uint32_lo = (y)->tme_ieee754_double_constant_lo; \\"
+	    $as_echo "    ${x_value}.tme_value64_uint32_hi = (y)->tme_ieee754_double_constant_hi; \\"
+	    $as_echo "    ${x_value}.tme_value64_uint32_lo = (y)->tme_ieee754_double_constant_lo; \\"
 	    ;;
 	extended80)
-	    echo "    ${x_value}.tme_float_ieee754_extended80_sexp = (y)->tme_ieee754_extended80_constant_sexp; \\"
-	    echo "    ${x_value}.tme_float_ieee754_extended80_significand.tme_value64_uint32_hi = (y)->tme_ieee754_extended80_constant_significand_hi; \\"
-	    echo "    ${x_value}.tme_float_ieee754_extended80_significand.tme_value64_uint32_lo = (y)->tme_ieee754_extended80_constant_significand_lo; \\"
+	    $as_echo "    ${x_value}.tme_float_ieee754_extended80_sexp = (y)->tme_ieee754_extended80_constant_sexp; \\"
+	    $as_echo "    ${x_value}.tme_float_ieee754_extended80_significand.tme_value64_uint32_hi = (y)->tme_ieee754_extended80_constant_significand_hi; \\"
+	    $as_echo "    ${x_value}.tme_float_ieee754_extended80_significand.tme_value64_uint32_lo = (y)->tme_ieee754_extended80_constant_significand_lo; \\"
 	    ;;
 	quad)
-	    echo "    ${x_value}.tme_float_ieee754_quad_hi.tme_value64_uint32_hi = (y)->tme_ieee754_quad_constant_hi_hi; \\"
-	    echo "    ${x_value}.tme_float_ieee754_quad_hi.tme_value64_uint32_lo = (y)->tme_ieee754_quad_constant_hi_lo; \\"
-	    echo "    ${x_value}.tme_float_ieee754_quad_lo.tme_value64_uint32_hi = (y)->tme_ieee754_quad_constant_lo_hi; \\"
-	    echo "    ${x_value}.tme_float_ieee754_quad_lo.tme_value64_uint32_lo = (y)->tme_ieee754_quad_constant_lo_lo; \\"
+	    $as_echo "    ${x_value}.tme_float_ieee754_quad_hi.tme_value64_uint32_hi = (y)->tme_ieee754_quad_constant_hi_hi; \\"
+	    $as_echo "    ${x_value}.tme_float_ieee754_quad_hi.tme_value64_uint32_lo = (y)->tme_ieee754_quad_constant_hi_lo; \\"
+	    $as_echo "    ${x_value}.tme_float_ieee754_quad_lo.tme_value64_uint32_hi = (y)->tme_ieee754_quad_constant_lo_hi; \\"
+	    $as_echo "    ${x_value}.tme_float_ieee754_quad_lo.tme_value64_uint32_lo = (y)->tme_ieee754_quad_constant_lo_lo; \\"
 	    ;;
 	esac
 	cat <<EOF
@@ -252,16 +252,16 @@ EOF
 	case "${precision}" in
 	single) ;;
 	double)
-	    echo "	(x)->tme_float_value_ieee754_double.tme_value64_uint32_lo = 0; \\"
+	    $as_echo "	(x)->tme_float_value_ieee754_double.tme_value64_uint32_lo = 0; \\"
 	    ;;
 	extended80)
-	    echo "	(x)->tme_float_value_ieee754_extended80.tme_float_ieee754_extended80_significand.tme_value64_uint32_hi = 0; \\"
-	    echo "	(x)->tme_float_value_ieee754_extended80.tme_float_ieee754_extended80_significand.tme_value64_uint32_lo = 0; \\"
+	    $as_echo "	(x)->tme_float_value_ieee754_extended80.tme_float_ieee754_extended80_significand.tme_value64_uint32_hi = 0; \\"
+	    $as_echo "	(x)->tme_float_value_ieee754_extended80.tme_float_ieee754_extended80_significand.tme_value64_uint32_lo = 0; \\"
 	    ;;
 	quad)
-	    echo "	(x)->tme_float_value_ieee754_quad.tme_float_ieee754_quad_hi.tme_value64_uint32_lo = 0; \\"
-	    echo "	(x)->tme_float_value_ieee754_quad.tme_float_ieee754_quad_lo.tme_value64_uint32_hi = 0; \\"
-	    echo "	(x)->tme_float_value_ieee754_quad.tme_float_ieee754_quad_lo.tme_value64_uint32_lo = 0; \\"
+	    $as_echo "	(x)->tme_float_value_ieee754_quad.tme_float_ieee754_quad_hi.tme_value64_uint32_lo = 0; \\"
+	    $as_echo "	(x)->tme_float_value_ieee754_quad.tme_float_ieee754_quad_lo.tme_value64_uint32_hi = 0; \\"
+	    $as_echo "	(x)->tme_float_value_ieee754_quad.tme_float_ieee754_quad_lo.tme_value64_uint32_lo = 0; \\"
 	    ;;
 	esac
 	cat <<EOF
@@ -316,17 +316,17 @@ EOF
 	    esac
 
 	    if test "${cond}" != 1; then
-		echo ""
-		echo "#if ${cond}"
+		$as_echo ""
+		$as_echo "#if ${cond}"
 	    fi
 
-	    echo ""
-	    echo "/* this converts a ${convert_builtin} to a ${precision}: */"
-	    echo "void tme_ieee754_${precision}_from_${convert} _TME_P((${convert_builtin}, struct tme_float *));"
+	    $as_echo ""
+	    $as_echo "/* this converts a ${convert_builtin} to a ${precision}: */"
+	    $as_echo "void tme_ieee754_${precision}_from_${convert} _TME_P((${convert_builtin}, struct tme_float *));"
 
 	    if test "${cond}" != 1; then
-		echo ""
-		echo "#endif /* ${cond} */"
+		$as_echo ""
+		$as_echo "#endif /* ${cond} */"
 	    fi
 	done
 
@@ -338,7 +338,7 @@ EOF
 
 /* this converts an in-range IEEE 754 ${precision} precision value into its
    radix ${radix} mantissa and exponent.  the mantissa is either zero, or 
-   in the range [1,${radix}): */
+   in the range incl 1 to ${radix} excl: */
 void tme_ieee754_${precision}_radix${radix}_mantissa_exponent _TME_P((struct tme_ieee754_ctl *, const struct tme_float *, struct tme_float *, struct tme_float *));
 
 /* this scales an IEEE 754 ${precision} precision value by adding n to its 
@@ -377,20 +377,20 @@ EOF
 	    if test "x${chunk_member}" = xx; then
 		break
 	    fi
-	    echo "  chunk = TME_FIELD_MASK_EXTRACTU((*x_ieee754)${chunk_member}, ${chunk_mask});"
+	    $as_echo "  chunk = TME_FIELD_MASK_EXTRACTU((*x_ieee754)${chunk_member}, ${chunk_mask});"
 	    if test ${chunk_i} = 0; then
-		echo "  fracor = chunk;"
+		$as_echo "  fracor = chunk;"
 		if ${implicit}; then
-		    echo "  /* if the exponent is nonzero, add the implicit integer bit: */"
-		    echo "  if (exponent != 0) chunk |= ((${chunk_mask} / _TME_FIELD_MASK_FACTOR(${chunk_mask})) + 1);"
+		    $as_echo "  /* if the exponent is nonzero, add the implicit integer bit: */"
+		    $as_echo "  if (exponent != 0) chunk |= ((${chunk_mask} / _TME_FIELD_MASK_FACTOR(${chunk_mask})) + 1);"
 		else
-		    echo "  /* if the exponent is the biased maximum, clear the explicit integer bit: */"
-		    echo "  if (exponent == ${exp_biased_max}) fracor &= ~_TME_FIELD_MASK_MSBIT(${chunk_mask} / _TME_FIELD_MASK_FACTOR(${chunk_mask}));"
+		    $as_echo "  /* if the exponent is the biased maximum, clear the explicit integer bit: */"
+		    $as_echo "  if (exponent == ${exp_biased_max}) fracor &= ~_TME_FIELD_MASK_MSBIT(${chunk_mask} / _TME_FIELD_MASK_FACTOR(${chunk_mask}));"
 		fi
-		echo "  x_builtin = chunk;"
+		$as_echo "  x_builtin = chunk;"
 	    else
-		echo "  fracor |= chunk;"
-		echo "  x_builtin = (x_builtin * 65536) + chunk;"
+		$as_echo "  fracor |= chunk;"
+		$as_echo "  x_builtin = (x_builtin * 65536) + chunk;"
 	    fi
 	    chunk_i=`expr ${chunk_i} + 1`
 	done
@@ -567,19 +567,19 @@ EOF
 	    factor="((${chunk_mask} / _TME_FIELD_MASK_FACTOR(${chunk_mask})) + 1)"
 	    if test ${chunk_i} = 0; then
 		if ${implicit}; then
-		    echo "    /* remove any implicit integer bit: */"
-		    echo "    if (x_builtin >= 1) {"
-		    echo "      x_builtin -= 1;"
-		    echo "    }"
+		    $as_echo "    /* remove any implicit integer bit: */"
+		    $as_echo "    if (x_builtin >= 1) {"
+		    $as_echo "      x_builtin -= 1;"
+		    $as_echo "    }"
 		else
 		    factor="(${factor} / 2)"
 		fi
 	    fi
-	    echo "    x_builtin = x_builtin * ${factor};"
-	    echo "    chunk = x_builtin;"
-	    echo "    chunk -= (chunk > x_builtin);"
-	    echo "    x_builtin -= chunk;"
-	    echo "    TME_FIELD_MASK_DEPOSITU((*x_ieee754)${chunk_member}, ${chunk_mask}, chunk);"
+	    $as_echo "    x_builtin = x_builtin * ${factor};"
+	    $as_echo "    chunk = x_builtin;"
+	    $as_echo "    chunk -= (chunk > x_builtin);"
+	    $as_echo "    x_builtin -= chunk;"
+	    $as_echo "    TME_FIELD_MASK_DEPOSITU((*x_ieee754)${chunk_member}, ${chunk_mask}, chunk);"
 	    chunk_i=`expr ${chunk_i} + 1`
 	done
 	cat <<EOF
@@ -598,50 +598,50 @@ EOF
 	for monadic in true false; do
 	    if ${monadic}; then type=monadic; else type=dyadic; fi
 
-	    echo ""
-	    echo "/* this does a NaN check for an IEEE 754 ${precision} precision ${type} function: */"
-	    echo "int"
-	    echo -n "tme_ieee754_${precision}_check_nan_${type}(struct tme_ieee754_ctl *ieee754_ctl, const struct tme_float *src0"
+	    $as_echo ""
+	    $as_echo "/* this does a NaN check for an IEEE 754 ${precision} precision ${type} function: */"
+	    $as_echo "int"
+	    $as_echo_n "tme_ieee754_${precision}_check_nan_${type}(struct tme_ieee754_ctl *ieee754_ctl, const struct tme_float *src0"
 	    if ${monadic}; then :; else
-		echo -n ", const struct tme_float *src1"
+		$as_echo_n ", const struct tme_float *src1"
 	    fi
-	    echo ", struct tme_float *dst)"
-	    echo "{"
-	    echo "  const ${integral} *nan0;"
+	    $as_echo ", struct tme_float *dst)"
+	    $as_echo "{"
+	    $as_echo "  const ${integral} *nan0;"
 	    if $monadic; then :; else
-		echo "  const ${integral} *nan1;"
+		$as_echo "  const ${integral} *nan1;"
 	    fi
-	    echo ""
-	    echo "  /* check for a NaN operand: */"
-	    echo "  nan0 = NULL;"
-	    echo "  if (tme_ieee754_${precision}_is_nan(src0)) {"
-	    echo "    assert (src0->tme_float_format == TME_FLOAT_FORMAT_IEEE754_${capprecision});"
-	    echo "    nan0 = &src0->tme_float_value_ieee754_${precision};"
-	    echo "  }"
+	    $as_echo ""
+	    $as_echo "  /* check for a NaN operand: */"
+	    $as_echo "  nan0 = NULL;"
+	    $as_echo "  if (tme_ieee754_${precision}_is_nan(src0)) {"
+	    $as_echo "    assert (src0->tme_float_format == TME_FLOAT_FORMAT_IEEE754_${capprecision});"
+	    $as_echo "    nan0 = &src0->tme_float_value_ieee754_${precision};"
+	    $as_echo "  }"
 	    if $monadic; then nan1=nan0; else
 		nan1=nan1
-		echo "  nan1 = nan0;"
-		echo "  if (tme_ieee754_${precision}_is_nan(src1)) {"
-		echo "    assert (src1->tme_float_format == TME_FLOAT_FORMAT_IEEE754_${capprecision});"
-		echo "    nan1 = &src1->tme_float_value_ieee754_${precision};"
-		echo "    if (nan0 == NULL) {"
-		echo "      nan0 = nan1;"
-		echo "    }"
-		echo "  }"
+		$as_echo "  nan1 = nan0;"
+		$as_echo "  if (tme_ieee754_${precision}_is_nan(src1)) {"
+		$as_echo "    assert (src1->tme_float_format == TME_FLOAT_FORMAT_IEEE754_${capprecision});"
+		$as_echo "    nan1 = &src1->tme_float_value_ieee754_${precision};"
+		$as_echo "    if (nan0 == NULL) {"
+		$as_echo "      nan0 = nan1;"
+		$as_echo "    }"
+		$as_echo "  }"
 	    fi
-	    echo ""
-	    echo "  /* if we have a NaN operand: */"
-	    echo "  if (__tme_predict_false(nan0 != NULL)) {"
-	    echo ""
-	    echo "    /* propagate a NaN: */"
-	    echo "    dst->tme_float_format = TME_FLOAT_FORMAT_IEEE754_${capprecision};"
-	    echo "    (*ieee754_ctl->tme_ieee754_ctl_nan_from_nans_${precision})"
-	    echo "      (ieee754_ctl, nan0, ${nan1}, &dst->tme_float_value_ieee754_${precision});"
-	    echo "    return (TRUE);"
-	    echo "  }"
-	    echo ""
-	    echo "  return (FALSE);"
-	    echo "}"
+	    $as_echo ""
+	    $as_echo "  /* if we have a NaN operand: */"
+	    $as_echo "  if (__tme_predict_false(nan0 != NULL)) {"
+	    $as_echo ""
+	    $as_echo "    /* propagate a NaN: */"
+	    $as_echo "    dst->tme_float_format = TME_FLOAT_FORMAT_IEEE754_${capprecision};"
+	    $as_echo "    (*ieee754_ctl->tme_ieee754_ctl_nan_from_nans_${precision})"
+	    $as_echo "      (ieee754_ctl, nan0, ${nan1}, &dst->tme_float_value_ieee754_${precision});"
+	    $as_echo "    return (TRUE);"
+	    $as_echo "  }"
+	    $as_echo ""
+	    $as_echo "  return (FALSE);"
+	    $as_echo "}"
 	done
 
 	# emit the from-integer conversion functions:
@@ -655,21 +655,21 @@ EOF
 	    esac
 
 	    if test "${cond}" != 1; then
-		echo ""
-		echo "#if ${cond}"
+		$as_echo ""
+		$as_echo "#if ${cond}"
 	    fi
 
-	    echo ""
-	    echo "/* this converts a ${convert_builtin} to a ${precision}: */"
-	    echo "void"
-	    echo "tme_ieee754_${precision}_from_${convert}(${convert_builtin} src, struct tme_float *dst)"
-	    echo "{"
-	    echo "  _tme_ieee754_${precision}_value_set(dst, ${precision_sf}, ${convert}_to_${precision_sf}(src));"
-	    echo "}"
+	    $as_echo ""
+	    $as_echo "/* this converts a ${convert_builtin} to a ${precision}: */"
+	    $as_echo "void"
+	    $as_echo "tme_ieee754_${precision}_from_${convert}(${convert_builtin} src, struct tme_float *dst)"
+	    $as_echo "{"
+	    $as_echo "  _tme_ieee754_${precision}_value_set(dst, ${precision_sf}, ${convert}_to_${precision_sf}(src));"
+	    $as_echo "}"
 
 	    if test "${cond}" != 1; then
-		echo ""
-		echo "#endif /* ${cond} */"
+		$as_echo ""
+		$as_echo "#endif /* ${cond} */"
 	    fi
 	done
 
@@ -686,7 +686,7 @@ EOF
 
 /* this converts an in-range IEEE 754 ${precision} precision value into its
    radix ${radix} mantissa and exponent.  the mantissa is either zero, or 
-   in the range [1,${radix}): */
+   in the range incl 1 to ${radix} excl: */
 void
 tme_ieee754_${precision}_radix${radix}_mantissa_exponent(struct tme_ieee754_ctl *ieee754_ctl, const struct tme_float *src, struct tme_float *_mantissa, struct tme_float *_exponent)
 {
@@ -734,14 +734,14 @@ EOF
   }
 EOF
 	    if test ${radix} = 2; then
-		echo ""
-		echo "  /* extract the unbiased exponent: */"
-		echo "  exponent = TME_FIELD_MASK_EXTRACTU(src->tme_float_value_ieee754_${precision}${sexp}, ${mask_exp});"
-		echo "  exponent -= ${exp_bias};"
-		echo ""
-		echo "  /* the mantissa is the source with a biased zero for the exponent: */"
-		echo "  *_mantissa = *src;"
-		echo "  TME_FIELD_MASK_DEPOSITU(_mantissa->tme_float_value_ieee754_${precision}${sexp}, ${mask_exp}, ${exp_bias});"
+		$as_echo ""
+		$as_echo "  /* extract the unbiased exponent: */"
+		$as_echo "  exponent = TME_FIELD_MASK_EXTRACTU(src->tme_float_value_ieee754_${precision}${sexp}, ${mask_exp});"
+		$as_echo "  exponent -= ${exp_bias};"
+		$as_echo ""
+		$as_echo "  /* the mantissa is the source with a biased zero for the exponent: */"
+		$as_echo "  *_mantissa = *src;"
+		$as_echo "  TME_FIELD_MASK_DEPOSITU(_mantissa->tme_float_value_ieee754_${precision}${sexp}, ${mask_exp}, ${exp_bias});"
 	    else
 		cat <<EOF
 
@@ -768,7 +768,7 @@ EOF
   tme_ieee754_${precision}_value_set(&value_buffer, *tme_ieee754_${precision}_value_get(src, &value_ieee754_buffer));
   tme_ieee754_${precision}_value_set_constant(&zero_buffer, &tme_ieee754_${precision}_constant_zero);
   tme_ieee754_${precision}_value_set_constant(&one_buffer, &tme_ieee754_${precision}_constant_one);
-  tme_ieee754_${precision}_value_set_constant(&radix_buffer, &tme_ieee754_${precision}_constant_${radix}e2ex[0]);
+  tme_ieee754_${precision}_value_set_constant(&radix_buffer, &tme_ieee754_${precision}_constant_${radix}e2ex[[0]]);
 
   /* take the magnitude of the value, but remember if it was negative: */
   negate = ${precision_sf}_lt(*value, *zero);
@@ -784,7 +784,7 @@ EOF
 
     /* while the value is less than one: */
     exponent_bit = TME_ARRAY_ELS(tme_ieee754_${precision}_constant_${radix}e_minus_2ex) - 1;
-    tme_ieee754_${precision}_value_set_constant(&constant_buffer, &tme_ieee754_${precision}_constant_${radix}e_minus_2ex[exponent_bit]);
+    tme_ieee754_${precision}_value_set_constant(&constant_buffer, &tme_ieee754_${precision}_constant_${radix}e_minus_2ex[[exponent_bit]]);
     for (; ${precision_sf}_lt(*value, *one); ) {
 
       /* if value is less than or equal to ${radix}^-(2^exponent_bit),
@@ -799,13 +799,13 @@ EOF
       /* otherwise, move to the next exponent bit: */
       else {
         exponent_bit--;
-        tme_ieee754_${precision}_value_set_constant(&constant_buffer, &tme_ieee754_${precision}_constant_${radix}e_minus_2ex[exponent_bit]);
+        tme_ieee754_${precision}_value_set_constant(&constant_buffer, &tme_ieee754_${precision}_constant_${radix}e_minus_2ex[[exponent_bit]]);
       }
     }
 
     /* while the value is greater than ${radix}: */
     exponent_bit = TME_ARRAY_ELS(tme_ieee754_${precision}_constant_${radix}e2ex) - 1;
-    tme_ieee754_${precision}_value_set_constant(&constant_buffer, &tme_ieee754_${precision}_constant_${radix}e2ex[exponent_bit]);
+    tme_ieee754_${precision}_value_set_constant(&constant_buffer, &tme_ieee754_${precision}_constant_${radix}e2ex[[exponent_bit]]);
     for (; !(${precision_sf}_le(*value, *radix)) ; ) {
 
       /* if value is greater than or equal to ${radix}^(2^exponent_bit),
@@ -820,7 +820,7 @@ EOF
       /* otherwise, move to the next exponent bit: */
       else {
         exponent_bit--;
-        tme_ieee754_${precision}_value_set_constant(&constant_buffer, &tme_ieee754_${precision}_constant_${radix}e2ex[exponent_bit]);
+        tme_ieee754_${precision}_value_set_constant(&constant_buffer, &tme_ieee754_${precision}_constant_${radix}e2ex[[exponent_bit]]);
       }
     }
 
@@ -913,7 +913,7 @@ tme_ieee754_${precision}_radix${radix}_scale(struct tme_ieee754_ctl *ieee754_ctl
   /* start with the most significant exponent bit: */
   exponent_bit = TME_ARRAY_ELS(tme_ieee754_${precision}_constant_${radix}e2ex) - 1;
   exponent = (1 << exponent_bit);
-  tme_ieee754_${precision}_value_set_constant(&constant_buffer, &tme_ieee754_${precision}_constant_${radix}e2ex[exponent_bit]);
+  tme_ieee754_${precision}_value_set_constant(&constant_buffer, &tme_ieee754_${precision}_constant_${radix}e2ex[[exponent_bit]]);
 
   /* if n is negative: */
   if (_n < 0) {
@@ -926,7 +926,7 @@ tme_ieee754_${precision}_radix${radix}_scale(struct tme_ieee754_ctl *ieee754_ctl
       else {
         exponent >>= 1;
         exponent_bit--;
-	tme_ieee754_${precision}_value_set_constant(&constant_buffer, &tme_ieee754_${precision}_constant_${radix}e2ex[exponent_bit]);
+	tme_ieee754_${precision}_value_set_constant(&constant_buffer, &tme_ieee754_${precision}_constant_${radix}e2ex[[exponent_bit]]);
       }
     }
   }
@@ -941,7 +941,7 @@ tme_ieee754_${precision}_radix${radix}_scale(struct tme_ieee754_ctl *ieee754_ctl
       else {
         exponent >>= 1;
         exponent_bit--;
-	tme_ieee754_${precision}_value_set_constant(&constant_buffer, &tme_ieee754_${precision}_constant_${radix}e2ex[exponent_bit]);
+	tme_ieee754_${precision}_value_set_constant(&constant_buffer, &tme_ieee754_${precision}_constant_${radix}e2ex[[exponent_bit]]);
       }
     }
   }

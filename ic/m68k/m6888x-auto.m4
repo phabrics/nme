@@ -1,4 +1,4 @@
-#! /bin/sh
+AS_INIT
 
 # $Id: m6888x-auto.sh,v 1.2 2007/08/25 20:41:10 fredette Exp $
 
@@ -74,21 +74,21 @@ fpu=m6888x
 	    cat <<EOF
 
 /* the ${fpu} FPgen opmode bitmap: */
-const tme_uint8_t _tme_${fpu}_fpgen_opmode_bitmap[128 / 8] = {
+const tme_uint8_t _tme_${fpu}_fpgen_opmode_bitmap[[128 / 8]] = {
 EOF
 
 	# reset the bitmap:
 	#
 	opmode_bitmap=0
 	opmode_bit=1
-	echo -n "  "
+	$as_echo_n "  "
 	;;
 
 	table)
 	    cat <<EOF
 
 /* the ${fpu} FPgen opmode table: */
-static const struct tme_m6888x_fpgen _tme_${fpu}_fpgen_opmode_table[128] = {
+static const struct tme_m6888x_fpgen _tme_${fpu}_fpgen_opmode_table[[128]] = {
 EOF
 	    ;;
 	esac
@@ -104,7 +104,7 @@ EOF
 	    # this byte:
 	    #
 	    if test ${what} = bitmap && test ${opmode_bit} = 256; then
-		echo -n "${opmode_bitmap}, "
+		$as_echo_n "${opmode_bitmap}, "
 		opmode_bitmap=0
 		opmode_bit=1
 	    fi
@@ -225,42 +225,42 @@ EOF
 
 	    table)
 	    
-		echo ""
-		echo "  /* opmode ${opmode}: */"
-		echo -n "  { "
+		$as_echo ""
+		$as_echo "  /* opmode ${opmode}: */"
+		$as_echo_n "  { "
 
 		# the function:
 		#
 		if test "x${name}" = x; then
-		    echo -n "NULL"
-		    echo -n ", 0"
+		    $as_echo_n "NULL"
+		    $as_echo_n ", 0"
 		    fpu_types=TME_M68K_FPU_NONE
 		elif test "x${name_ieee754}" != x; then
-		    echo -n "NULL"
-		    echo -n ", TME_M6888X_IEEE754_OP(tme_ieee754_ops_extended80_${name_ieee754})"
+		    $as_echo_n "NULL"
+		    $as_echo_n ", TME_M6888X_IEEE754_OP(tme_ieee754_ops_extended80_${name_ieee754})"
 		else
-		    echo -n "_tme_m6888x_f${name}"
-		    echo -n ", 0"
+		    $as_echo_n "_tme_m6888x_f${name}"
+		    $as_echo_n ", 0"
 		fi
 
 		# the m6888x types:
 		#
-		echo -n ", ${fpu_types}"
+		$as_echo_n ", ${fpu_types}"
 
 		# the operation type:
 		#
 		if test ${optype} != MONADIC; then optype="DYADIC_${optype}"; fi
-		echo -n ", TME_M6888X_OPTYPE_${optype}"
+		$as_echo_n ", TME_M6888X_OPTYPE_${optype}"
 
 		# the rounding mode:
 		#
-		echo -n ", TME_FLOAT_ROUND_${rounding_mode}"
+		$as_echo_n ", TME_FLOAT_ROUND_${rounding_mode}"
 	
 		# the rounding precision:
 		#
-		echo -n ", TME_M6888X_ROUNDING_PRECISION_${rounding_precision}"
+		$as_echo_n ", TME_M6888X_ROUNDING_PRECISION_${rounding_precision}"
 
-		echo " },"
+		$as_echo " },"
 		;;
 	    esac
 	done
@@ -270,12 +270,12 @@ EOF
 	case ${what} in
 
 	bitmap)
-	    echo "${opmode_bitmap}"
-	    echo "};"
+	    $as_echo "${opmode_bitmap}"
+	    $as_echo "};"
 	    ;;
 
 	table)
-	    echo "};"
+	    $as_echo "};"
 	    ;;
 	esac
 

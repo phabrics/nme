@@ -1,4 +1,4 @@
-#! /bin/sh
+AS_INIT
 
 # $Id: float-auto.sh,v 1.2 2007/08/24 00:55:33 fredette Exp $
 
@@ -66,14 +66,14 @@ for _builtin_type in float double long_double; do
 
     # make the builtin type without underscores, and in all caps:
     #
-    builtin_type=`echo ${_builtin_type} | sed -e 's/_/ /g'`
-    _BUILTIN_TYPE=`echo ${_builtin_type} | tr 'a-z' 'A-Z'`
+    builtin_type=`$as_echo ${_builtin_type} | sed -e 's/_/ /g'`
+    _BUILTIN_TYPE=`$as_echo ${_builtin_type} | tr 'a-z' 'A-Z'`
 
     # dispatch on the builtin type to open any protection:
     #
     case ${_builtin_type} in
     long_double) 
-	echo ; echo "#ifdef _TME_HAVE_${_BUILTIN_TYPE}" ;;
+	$as_echo ; $as_echo "#ifdef _TME_HAVE_${_BUILTIN_TYPE}" ;;
     *) ;;
     esac
 
@@ -102,7 +102,7 @@ ${builtin_type}
 tme_float_infinity_${_builtin_type}(int negative)
 {
   static int inf_set_${_builtin_type};
-  static ${builtin_type} inf_${_builtin_type}[2];
+  static ${builtin_type} inf_${_builtin_type}[[2]];
   ${builtin_type} inf_test;
   int negative_i;
 
@@ -111,7 +111,7 @@ tme_float_infinity_${_builtin_type}(int negative)
 
   /* if the ${builtin_type} infinities have already been set: */
   if (__tme_predict_true(inf_set_${_builtin_type})) {
-    return (inf_${_builtin_type}[negative]);
+    return (inf_${_builtin_type}[[negative]]);
   }
 
   /* the ${builtin_type} infinities will be set now: */
@@ -129,26 +129,26 @@ tme_float_infinity_${_builtin_type}(int negative)
       inf_test = -inf_test;
     }
     do {
-      memcpy((char *) &inf_${_builtin_type}[negative_i], (char *) &inf_test, sizeof(inf_test));
+      memcpy((char *) &inf_${_builtin_type}[[negative_i]], (char *) &inf_test, sizeof(inf_test));
       inf_test *= 2;
-    } while (memcmp((char *) &inf_${_builtin_type}[negative_i], (char *) &inf_test, sizeof(inf_test)) != 0
+    } while (memcmp((char *) &inf_${_builtin_type}[[negative_i]], (char *) &inf_test, sizeof(inf_test)) != 0
              && (negative_i
-                 ? inf_test < inf_${_builtin_type}[negative_i]
-                 : inf_test > inf_${_builtin_type}[negative_i]));
+                 ? inf_test < inf_${_builtin_type}[[negative_i]]
+                 : inf_test > inf_${_builtin_type}[[negative_i]]));
 
     /* try to generate the actual infinity by dividing one or negative
        one by zero.  if this value is closer to the desired infinity,
        use it: */
     inf_test = (negative_i ? -1.0 : 1.0) / 0.0;
     if (negative_i
-        ? inf_test < inf_${_builtin_type}[negative_i]
-        : inf_test > inf_${_builtin_type}[negative_i]) {
-      inf_${_builtin_type}[negative_i] = inf_test;
+        ? inf_test < inf_${_builtin_type}[[negative_i]]
+        : inf_test > inf_${_builtin_type}[[negative_i]]) {
+      inf_${_builtin_type}[[negative_i]] = inf_test;
     }
   }
 
   /* return the desired infinity: */
-  return (inf_${_builtin_type}[negative]);
+  return (inf_${_builtin_type}[[negative]]);
 }
 
 /* if possible, this returns a negative zero ${builtin_type}.
@@ -214,7 +214,7 @@ EOF
 	    cat <<EOF
 
 /* this returns the radix ${radix} mantissa and exponent of an in-range ${builtin_type}.
-   the mantissa is either zero, or in the range [1,${radix}): */
+   the mantissa is either zero, or in the range incl 1 to ${radix} excl: */
 ${builtin_type} tme_float_radix${radix}_mantissa_exponent_${_builtin_type} _TME_P((${builtin_type}, tme_int32_t *));
 
 /* this scales a value by adding n to its radix ${radix} exponent: */
@@ -231,9 +231,9 @@ EOF
 	    #
 	    if test ${_sign} = pos; then sign= ; combine='*' ; else sign=- ; combine='/' ; fi
 
-	    echo ""
-	    echo "/* a series of ${builtin_type} values of the form ${radix}^${sign}x, where x is a power of two: */"
-	    echo "static const ${builtin_type} _tme_float_radix${radix}_exponent_bits_${_builtin_type}_${_sign}[] = {"
+	    $as_echo ""
+	    $as_echo "/* a series of ${builtin_type} values of the form ${radix}^${sign}x, where x is a power of two: */"
+	    $as_echo "static const ${builtin_type} _tme_float_radix${radix}_exponent_bits_${_builtin_type}_${_sign}[[]] = {"
 	    exponent=1
 	    formats_last=
 
@@ -247,7 +247,7 @@ EOF
 		2)  exponent_radix2=${exponent} ; x=16777216 ; exponent_x=24 ;;
 		10) exponent_radix2=`expr ${exponent} \* 4` ; x=10000 ; exponent_x=4 ;;
 		*) 
-		    echo "$PROG internal error: can't handle radix ${radix}" 1>&2 
+		    $as_echo "$PROG internal error: can't handle radix ${radix}" 1>&2 
 		    exit 1
 		    ;;
 		esac
@@ -282,7 +282,7 @@ EOF
 
 		    # clean up the formats:
 		    #
-		    formats="((TME_FLOAT_FORMAT_${_BUILTIN_TYPE} & ("`echo "${formats}" | sed -e 's%^ | %%'`")) != 0)"
+		    formats="((TME_FLOAT_FORMAT_${_BUILTIN_TYPE} & ("`$as_echo "${formats}" | sed -e 's%^ | %%'`")) != 0)"
 		fi
 
 		# if the formats have changed: 
@@ -292,21 +292,21 @@ EOF
 		    # close any old #if first:
 		    #
 		    if test "x${formats_last}" != x; then
-			echo ""
-			echo "#endif /* ${formats_last} */"
+			$as_echo ""
+			$as_echo "#endif /* ${formats_last} */"
 		    fi
 
 		    # open the new #if:
 		    #
-		    echo ""
-		    echo "#if ${formats}"
+		    $as_echo ""
+		    $as_echo "#if ${formats}"
 		    formats_last=${formats}
 		fi
 
 		# compute this value:
 		#
-		echo ""
-		echo "  /* ${radix}^${sign}${exponent}: */"
+		$as_echo ""
+		$as_echo "  /* ${radix}^${sign}${exponent}: */"
 		exponent_remaining=${exponent}
 		value=1
 		while test ${exponent_remaining} != 0; do
@@ -318,7 +318,7 @@ EOF
 			exponent_x=`expr ${exponent_x} - 1`
 		    fi
 		done
-		echo "  ${value},"
+		$as_echo "  ${value},"
 
 		# double the exponent:
 		#
@@ -328,17 +328,17 @@ EOF
 	    # close any #if:
 	    #
 	    if test "x${formats_last}" != x; then
-		echo ""
-		echo "#endif /* ${formats_last} */"
+		$as_echo ""
+		$as_echo "#endif /* ${formats_last} */"
 	    fi
 
-	    echo "};"
+	    $as_echo "};"
 	done
 
 cat <<EOF
 
 /* this returns the radix ${radix} mantissa and exponent of an in-range ${builtin_type}.
-   the mantissa is either zero, or in the range [1,${radix}): */
+   the mantissa is either zero, or in the range incl 1 to ${radix} excl: */
 ${builtin_type}
 tme_float_radix${radix}_mantissa_exponent_${_builtin_type}(${builtin_type} value, tme_int32_t *_exponent)
 {
@@ -369,9 +369,9 @@ tme_float_radix${radix}_mantissa_exponent_${_builtin_type}(${builtin_type} value
     /* if value is less than or equal to ${radix}^-(2^exponent_bit),
        divide value by ${radix}^-(2^exponent_bit), and subtract 2^exponent_bit
        from exponent: */
-    if (value <= _tme_float_radix${radix}_exponent_bits_${_builtin_type}_neg[exponent_bit]
+    if (value <= _tme_float_radix${radix}_exponent_bits_${_builtin_type}_neg[[exponent_bit]]
         || exponent_bit == 0) {
-      value /= _tme_float_radix${radix}_exponent_bits_${_builtin_type}_neg[exponent_bit];
+      value /= _tme_float_radix${radix}_exponent_bits_${_builtin_type}_neg[[exponent_bit]];
       exponent -= (1 << exponent_bit);
     }
 
@@ -388,9 +388,9 @@ tme_float_radix${radix}_mantissa_exponent_${_builtin_type}(${builtin_type} value
     /* if value is greater than or equal to ${radix}^(2^exponent_bit),
        divide value by ${radix}^(2^exponent_bit), and add 2^exponent_bit
        to exponent: */
-    if (value >= _tme_float_radix${radix}_exponent_bits_${_builtin_type}_pos[exponent_bit]
+    if (value >= _tme_float_radix${radix}_exponent_bits_${_builtin_type}_pos[[exponent_bit]]
         || exponent_bit == 0) {
-      value /= _tme_float_radix${radix}_exponent_bits_${_builtin_type}_pos[exponent_bit];
+      value /= _tme_float_radix${radix}_exponent_bits_${_builtin_type}_pos[[exponent_bit]];
       exponent += (1 << exponent_bit);
     }
 
@@ -421,7 +421,7 @@ tme_float_radix${radix}_scale_${_builtin_type}(${builtin_type} value, tme_int32_
 
     for (n = 0 - _n; n > 0;) {
       if (n >= exponent || exponent == 1) {
-        value /= _tme_float_radix${radix}_exponent_bits_${_builtin_type}_pos[exponent_bit];
+        value /= _tme_float_radix${radix}_exponent_bits_${_builtin_type}_pos[[exponent_bit]];
         n -= exponent;
       }
       else {
@@ -435,7 +435,7 @@ tme_float_radix${radix}_scale_${_builtin_type}(${builtin_type} value, tme_int32_
   else {
     for (n = _n; n > 0;) {
       if (n >= exponent || exponent == 1) {
-        value *= _tme_float_radix${radix}_exponent_bits_${_builtin_type}_pos[exponent_bit];
+        value *= _tme_float_radix${radix}_exponent_bits_${_builtin_type}_pos[[exponent_bit]];
         n -= exponent;
       }
       else {
@@ -454,7 +454,7 @@ EOF
     #
     case ${_builtin_type} in
     long_double) 
-	echo ; echo "#endif /* _TME_HAVE_${_BUILTIN_TYPE} */" ;;
+	$as_echo ; $as_echo "#endif /* _TME_HAVE_${_BUILTIN_TYPE} */" ;;
     *) ;;
     esac
 

@@ -3,6 +3,8 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
+AUTOM4TE = $(SHELL) $(top_srcdir)/missing --run autom4te
+
 AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I. -D_TME_IMPL 
 
 pkglib_LTLIBRARIES = tme_ic_sparc.la
@@ -26,6 +28,11 @@ EXTRA_DIST = sparc-impl.h \
 	sparc-fpu-auto.sh \
 	sparc-vis-auto.sh \
 	sparc-bus-auto.sh \
+	sparc-misc-auto.m4 \
+	sparc-insns-auto.m4 \
+	sparc-fpu-auto.m4 \
+	sparc-vis-auto.m4 \
+	sparc-bus-auto.m4 \
 	sparc-execute.c \
 	sparc-rc-cc.c \
 	sparc-rc-chain.c \
@@ -35,25 +42,40 @@ EXTRA_DIST = sparc-impl.h \
 
 # target to make sparc-auto.h:
 sparc-auto.h: sparc-misc-auto.sh sparc-insns-auto.sh
-	$(SHELL) $(srcdir)/sparc-misc-auto.sh --header > $@
-	$(SHELL) $(srcdir)/sparc-insns-auto.sh --header >> $@
+	$(SHELL) sparc-misc-auto.sh --header > $@
+	$(SHELL) sparc-insns-auto.sh --header >> $@
 
 # target to make sparc-insns-auto.c:
 sparc-insns-auto.c: sparc-insns-auto.sh sparc-misc-auto.sh
-	$(SHELL) $(srcdir)/sparc-insns-auto.sh > $@
-	$(SHELL) $(srcdir)/sparc-misc-auto.sh >> $@
+	$(SHELL) sparc-insns-auto.sh > $@
+	$(SHELL) sparc-misc-auto.sh >> $@
+
+sparc-insns-auto.sh: sparc-insns-auto.m4
+	$(AUTOM4TE) -l m4sh $(srcdir)/sparc-insns-auto.m4 > $@
+
+sparc-misc-auto.sh: sparc-misc-auto.m4
+	$(AUTOM4TE) -l m4sh $(srcdir)/sparc-misc-auto.m4 > $@
 
 # target to make sparc-bus-auto.c:
 sparc-bus-auto.c: sparc-bus-auto.sh
-	$(SHELL) $(srcdir)/sparc-bus-auto.sh > $@
+	$(SHELL) sparc-bus-auto.sh > $@
+
+sparc-bus-auto.sh: sparc-bus-auto.m4
+	$(AUTOM4TE) -l m4sh $(srcdir)/sparc-bus-auto.m4 > $@
 
 # target to make sparc-fpu-auto.c:
 sparc-fpu-auto.c: sparc-fpu-auto.sh
-	$(SHELL) $(srcdir)/sparc-fpu-auto.sh > $@
+	$(SHELL) sparc-fpu-auto.sh > $@
+
+sparc-fpu-auto.sh: sparc-fpu-auto.m4
+	$(AUTOM4TE) -l m4sh $(srcdir)/sparc-fpu-auto.m4 > $@
 
 # target to make sparc-vis-auto.c:
 sparc-vis-auto.c: sparc-vis-auto.sh
-	$(SHELL) $(srcdir)/sparc-vis-auto.sh > $@
+	$(SHELL) sparc-vis-auto.sh > $@
+
+sparc-vis-auto.sh: sparc-vis-auto.m4
+	$(AUTOM4TE) -l m4sh $(srcdir)/sparc-vis-auto.m4 > $@
 
 # dependencies on automatically-generated IEEE 754 sources:
 $(tme_ic_sparc_la_OBJECTS): ../ieee754/ieee754-auto.h ../ieee754/ieee754-ops-auto.h

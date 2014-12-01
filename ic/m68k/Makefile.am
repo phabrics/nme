@@ -3,6 +3,8 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
+AUTOM4TE = $(SHELL) $(top_srcdir)/missing --run autom4te
+
 AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I. -D_TME_IMPL 
 
 pkglib_LTLIBRARIES = tme_ic_m68k.la
@@ -22,6 +24,10 @@ EXTRA_DIST = m68k-impl.h \
 	m68k-insns-auto.sh \
 	m68k-bus-auto.sh \
 	m6888x-auto.sh \
+	m68k-misc-auto.m4 \
+	m68k-insns-auto.m4 \
+	m68k-bus-auto.m4 \
+	m6888x-auto.m4 \
 	m68k-execute.c \
 	m68k-iset-expand.pl \
 	m68k-iset.txt \
@@ -30,8 +36,8 @@ EXTRA_DIST = m68k-impl.h \
 
 # target to make m68k-auto.h:
 m68k-auto.h: m68k-misc-auto.sh m68k-insns-auto.sh
-	$(SHELL) $(srcdir)/m68k-misc-auto.sh --header > $@
-	$(SHELL) $(srcdir)/m68k-insns-auto.sh --header >> $@
+	$(SHELL) m68k-misc-auto.sh --header > $@
+	$(SHELL) m68k-insns-auto.sh --header >> $@
 
 # target to make m68k-opmap.c:
 m68k-opmap.c: m68k-iset.txt m68k-iset-expand.pl m68k-opmap-make.pl
@@ -42,16 +48,28 @@ m68k-opmap.c: m68k-iset.txt m68k-iset-expand.pl m68k-opmap-make.pl
 
 # target to make m68k-insns-auto.c:
 m68k-insns-auto.c: m68k-insns-auto.sh m68k-misc-auto.sh
-	$(SHELL) $(srcdir)/m68k-insns-auto.sh > $@
-	$(SHELL) $(srcdir)/m68k-misc-auto.sh >> $@
+	$(SHELL) m68k-insns-auto.sh > $@
+	$(SHELL) m68k-misc-auto.sh >> $@
+
+m68k-insns-auto.sh: m68k-insns-auto.m4
+	$(AUTOM4TE) -l m4sh $(srcdir)/m68k-insns-auto.m4 > $@
+
+m68k-misc-auto.sh: m68k-misc-auto.m4
+	$(AUTOM4TE) -l m4sh $(srcdir)/m68k-misc-auto.m4 > $@
 
 # target to make m68k-bus-auto.c:
 m68k-bus-auto.c: m68k-bus-auto.sh
-	$(SHELL) $(srcdir)/m68k-bus-auto.sh > $@
+	$(SHELL) m68k-bus-auto.sh > $@
+
+m68k-bus-auto.sh: m68k-bus-auto.m4
+	$(AUTOM4TE) -l m4sh $(srcdir)/m68k-bus-auto.m4 > $@
 
 # target to make m6888x-auto.c:
 m6888x-auto.c: m6888x-auto.sh
-	$(SHELL) $(srcdir)/m6888x-auto.sh > $@
+	$(SHELL) m6888x-auto.sh > $@
+
+m6888x-auto.sh: m6888x-auto.m4
+	$(AUTOM4TE) -l m4sh $(srcdir)/m6888x-auto.m4 > $@
 
 # dependencies on automatically-generated IEEE 754 sources:
 $(tme_ic_m68k_la_OBJECTS): ../ieee754/ieee754-auto.h ../ieee754/ieee754-ops-auto.h

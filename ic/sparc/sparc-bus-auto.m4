@@ -1,4 +1,4 @@
-#! /bin/sh
+AS_INIT
 
 # $Id: sparc-bus-auto.sh,v 1.1 2006/09/30 12:55:59 fredette Exp $
 
@@ -83,9 +83,9 @@ EOF
 
 # emit the 32-bit bus router:
 if $header; then :; else
-    echo ""
-    echo "/* the 32-bit bus router used on the early SPARCs: */"
-    echo "static const tme_bus_lane_t tme_sparc32_router[TME_SPARC_BUS_ROUTER_SIZE(TME_BUS32_LOG2)] = {"
+    $as_echo ""
+    $as_echo "/* the 32-bit bus router used on the early SPARCs: */"
+    $as_echo "static const tme_bus_lane_t tme_sparc32_router[[TME_SPARC_BUS_ROUTER_SIZE(TME_BUS32_LOG2)]] = {"
 
     # permute over maximum cycle size:
     for transfer in 1 2 3 4; do
@@ -140,12 +140,12 @@ if $header; then :; else
 		    opn_lane=`expr 3 - \( ${address} % ${port_size} \)`
 		    op3_lane=`expr \( ${opn_lane} \) - \( 3 - ${opn} \)`
 
-		    echo ""
-		    echo "  /* [sparc] initiator maximum cycle size: "`expr ${transfer} \* 8`" bits"
-		    echo "     [sparc] initiator A1,A0: ${address_bits}"
-		    echo "     [gen]   responder port size: "`expr ${port_size} \* 8`" bits"
-		    echo "     [gen]   responder port least lane: ${port_pos} (lanes${port_lanes})"
-		    echo "     (code ${transfer}.${address}.${port_size}.${port_pos}, OP3 lane ${op3_lane}): */"
+		    $as_echo ""
+		    $as_echo "  /* [[sparc]] initiator maximum cycle size: "`expr ${transfer} \* 8`" bits"
+		    $as_echo "     [[sparc]] initiator A1,A0: ${address_bits}"
+		    $as_echo "     [[gen]]   responder port size: "`expr ${port_size} \* 8`" bits"
+		    $as_echo "     [[gen]]   responder port least lane: ${port_pos} (lanes${port_lanes})"
+		    $as_echo "     (code ${transfer}.${address}.${port_size}.${port_pos}, OP3 lane ${op3_lane}): */"
 
 		    # emit the bus router information for each lane:
 		    for lane in 0 1 2 3; do
@@ -246,33 +246,33 @@ if $header; then :; else
 			esac
 
 			# emit the comment for this lane:
-			echo -n "  /* D"`expr \( \( ${lane} + 1 \) \* 8 \) - 1`"-D"`expr ${lane} \* 8`" */	"
+			$as_echo_n "  /* D"`expr \( \( ${lane} + 1 \) \* 8 \) - 1`"-D"`expr ${lane} \* 8`" */	"
 
 			# if this port size/position combination is
 			# invalid, override everything and abort if
 			# this router entry is ever touched:
 			if test `expr ${port_pos_end} \> 4` = 1; then
-			    echo "TME_BUS_LANE_ABORT,"
+			    $as_echo "TME_BUS_LANE_ABORT,"
 			else
 			    if test $lane_read != "IGNORE"; then
 				if test $lane_read != $lane_write; then
-				    echo "$PROG internal error: code ${transfer}.${address}.${port_size}.${port_pos}, reading $lane_read but writing $lane_write" 1>&2
+				    $as_echo "$PROG internal error: code ${transfer}.${address}.${port_size}.${port_pos}, reading $lane_read but writing $lane_write" 1>&2
 				    exit 1
 				fi
-				echo -n "TME_BUS_LANE_ROUTE(SIZ"`expr ${transfer} \* 8`"_$lane_read)"
+				$as_echo_n "TME_BUS_LANE_ROUTE(SIZ"`expr ${transfer} \* 8`"_$lane_read)"
 			    elif test $lane_write = "UNDEF"; then
-				echo -n "TME_BUS_LANE_UNDEF"
+				$as_echo_n "TME_BUS_LANE_UNDEF"
 			    else
-				echo -n "TME_BUS_LANE_ROUTE(SIZ"`expr ${transfer} \* 8`"_$lane_write) | TME_BUS_LANE_ROUTE_WRITE_IGNORE"
+				$as_echo_n "TME_BUS_LANE_ROUTE(SIZ"`expr ${transfer} \* 8`"_$lane_write) | TME_BUS_LANE_ROUTE_WRITE_IGNORE"
 			    fi
-			    echo "${lane_warn},"
+			    $as_echo "${lane_warn},"
 			fi
 		    done
 		done
 	    done
 	done
    done
-   echo "};"
+   $as_echo "};"
 fi
 
 cat <<EOF

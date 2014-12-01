@@ -3,6 +3,8 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
+AUTOM4TE = $(SHELL) $(top_srcdir)/missing --run autom4te
+
 SUBDIRS = host
 
 AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I. $(LTDLINCL) $(GTK_CFLAGS) -D_TME_IMPL
@@ -33,15 +35,20 @@ libtme_la_LIBADD = $(LIBLTDL)
 BUILT_SOURCES = memory-auto.h memory-auto.c
 EXTRA_DIST = log-prf.c \
 	misc.c \
-	memory-auto.sh
+	memory-auto.sh \
+	memory-auto.m4
 
 # target to make memory-auto.h:
 memory-auto.h: memory-auto.sh
-	$(SHELL) $(srcdir)/memory-auto.sh --header > $@
+	$(SHELL) memory-auto.sh --header > $@
 
 # target to make memory-auto.c:
 memory-auto.c: memory-auto.sh
-	$(SHELL) $(srcdir)/memory-auto.sh > $@
+	$(SHELL) memory-auto.sh > $@
+
+memory-auto.sh: memory-auto.m4
+	$(AUTOM4TE) -l m4sh $(srcdir)/memory-auto.m4 > $@
+
 memory-auto.lo: memory-auto.h
 
 # module.c needs to know the LTDL_SHLIBPATH_VAR that libltdl

@@ -1,4 +1,4 @@
-#! /bin/sh
+AS_INIT
 
 # $Id: m68k-bus-auto.sh,v 1.3 2007/02/12 23:47:11 fredette Exp $
 
@@ -75,9 +75,9 @@ EOF
 
 # emit the 16-bit bus router:
 if $header; then :; else
-    echo ""
-    echo "/* the 16-bit bus router used on the 68000 and 68010: */"
-    echo "const tme_bus_lane_t tme_m68k_router_16[TME_M68K_BUS_ROUTER_SIZE(TME_BUS16_LOG2)] = {"
+    $as_echo ""
+    $as_echo "/* the 16-bit bus router used on the 68000 and 68010: */"
+    $as_echo "const tme_bus_lane_t tme_m68k_router_16[[TME_M68K_BUS_ROUTER_SIZE(TME_BUS16_LOG2)]] = {"
 
     # permute over maximum cycle size:
     for transfer in 1 2; do
@@ -109,12 +109,12 @@ if $header; then :; else
 		        port_lanes="${port_lanes} - incorrect for 16-bit m68k"
 		    fi
 
-		    echo ""
-		    echo "  /* [m68k] initiator maximum cycle size: "`expr ${transfer} \* 8`" bits"
-		    echo "     [m68k] initiator A0: ${address_bits}"
-		    echo "     [gen]  responding port size: "`expr ${port_size} \* 8`" bits"
-		    echo "     [gen]  responding port least lane: ${port_pos} (lanes${port_lanes})"
-		    echo "     (code ${transfer}.${address}.${port_size}.${port_pos}): */"
+		    $as_echo ""
+		    $as_echo "  /* [[m68k]] initiator maximum cycle size: "`expr ${transfer} \* 8`" bits"
+		    $as_echo "     [[m68k]] initiator A0: ${address_bits}"
+		    $as_echo "     [[gen]]  responding port size: "`expr ${port_size} \* 8`" bits"
+		    $as_echo "     [[gen]]  responding port least lane: ${port_pos} (lanes${port_lanes})"
+		    $as_echo "     (code ${transfer}.${address}.${port_size}.${port_pos}): */"
 
 		    # emit the bus router information for each lane:
 		    for lane in 0 1; do
@@ -130,7 +130,7 @@ if $header; then :; else
 			    lane_read="OP(3)"
 			    lane_write="OP(3)"
 			    ;;
-			2:1:[01])
+			2:1:[[01]])
 			    lane_read="ABORT"
 			    lane_write="ABORT"
 			    ;;
@@ -147,46 +147,46 @@ if $header; then :; else
 			    fi
 			    ;;
 			*)
-			    echo "$PROG internal error: unhandled 16-bit bus case ${transfer}:${address}:${lane}" 1>&2
+			    $as_echo "$PROG internal error: unhandled 16-bit bus case ${transfer}:${address}:${lane}" 1>&2
 			    exit 1
 			    ;;
 			esac
 
 			# emit the comment for this lane:
-			echo -n "  /* D"`expr \( \( ${lane} + 1 \) \* 8 \) - 1`"-D"`expr ${lane} \* 8`" */	"
+			$as_echo_n "  /* D"`expr \( \( ${lane} + 1 \) \* 8 \) - 1`"-D"`expr ${lane} \* 8`" */	"
 
 			# if this port size/position combination is
 			# invalid, override everything and abort if
 			# this router entry is ever touched:
 			if test `expr ${port_pos_end} \> 2` = 1; then
-			    echo "TME_BUS_LANE_ABORT,"
+			    $as_echo "TME_BUS_LANE_ABORT,"
 			else
 			    if test $lane_read = "ABORT"; then
-				echo -n "TME_BUS_LANE_ABORT"
+				$as_echo_n "TME_BUS_LANE_ABORT"
 			    elif test $lane_read != "IGNORE"; then
 				if test $lane_read != $lane_write; then
-				    echo "$PROG internal error: code ${transfer}:${address}:${lane}, reading $lane_read but writing $lane_write" 1>&2
+				    $as_echo "$PROG internal error: code ${transfer}:${address}:${lane}, reading $lane_read but writing $lane_write" 1>&2
 				    exit 1
 				fi
-				echo -n "TME_BUS_LANE_ROUTE(SIZ"`expr ${transfer} \* 8`"_$lane_read)"
+				$as_echo_n "TME_BUS_LANE_ROUTE(SIZ"`expr ${transfer} \* 8`"_$lane_read)"
 			    else
-				echo -n "TME_BUS_LANE_ROUTE(SIZ"`expr ${transfer} \* 8`"_$lane_write) | TME_BUS_LANE_ROUTE_WRITE_IGNORE"
+				$as_echo_n "TME_BUS_LANE_ROUTE(SIZ"`expr ${transfer} \* 8`"_$lane_write) | TME_BUS_LANE_ROUTE_WRITE_IGNORE"
 			    fi
-			    echo "${lane_warn},"
+			    $as_echo "${lane_warn},"
 			fi
 		    done
 		done
 	    done
 	done
    done
-   echo "};"
+   $as_echo "};"
 fi
 
 # emit the 32-bit bus router:
 if $header; then :; else
-    echo ""
-    echo "/* the 32-bit bus router used on the 68020 and 68030: */"
-    echo "const tme_bus_lane_t tme_m68k_router_32[TME_M68K_BUS_ROUTER_SIZE(TME_BUS32_LOG2)] = {"
+    $as_echo ""
+    $as_echo "/* the 32-bit bus router used on the 68020 and 68030: */"
+    $as_echo "const tme_bus_lane_t tme_m68k_router_32[[TME_M68K_BUS_ROUTER_SIZE(TME_BUS32_LOG2)]] = {"
 
     # permute over maximum cycle size:
     for transfer in 1 2 3 4; do
@@ -241,12 +241,12 @@ if $header; then :; else
 		    opn_lane=`expr 3 - \( ${address} % ${port_size} \)`
 		    op3_lane=`expr \( ${opn_lane} \) - \( 3 - ${opn} \)`
 
-		    echo ""
-		    echo "  /* [m68k] initiator maximum cycle size: "`expr ${transfer} \* 8`" bits"
-		    echo "     [m68k] initiator A1,A0: ${address_bits}"
-		    echo "     [gen]  responder port size: "`expr ${port_size} \* 8`" bits"
-		    echo "     [gen]  responder port least lane: ${port_pos} (lanes${port_lanes})"
-		    echo "     (code ${transfer}.${address}.${port_size}.${port_pos}, OP3 lane ${op3_lane}): */"
+		    $as_echo ""
+		    $as_echo "  /* [[m68k]] initiator maximum cycle size: "`expr ${transfer} \* 8`" bits"
+		    $as_echo "     [[m68k]] initiator A1,A0: ${address_bits}"
+		    $as_echo "     [[gen]]  responder port size: "`expr ${port_size} \* 8`" bits"
+		    $as_echo "     [[gen]]  responder port least lane: ${port_pos} (lanes${port_lanes})"
+		    $as_echo "     (code ${transfer}.${address}.${port_size}.${port_pos}, OP3 lane ${op3_lane}): */"
 
 		    # emit the bus router information for each lane:
 		    for lane in 0 1 2 3; do
@@ -347,33 +347,33 @@ if $header; then :; else
 			esac
 
 			# emit the comment for this lane:
-			echo -n "  /* D"`expr \( \( ${lane} + 1 \) \* 8 \) - 1`"-D"`expr ${lane} \* 8`" */	"
+			$as_echo_n "  /* D"`expr \( \( ${lane} + 1 \) \* 8 \) - 1`"-D"`expr ${lane} \* 8`" */	"
 
 			# if this port size/position combination is
 			# invalid, override everything and abort if
 			# this router entry is ever touched:
 			if test `expr ${port_pos_end} \> 4` = 1; then
-			    echo "TME_BUS_LANE_ABORT,"
+			    $as_echo "TME_BUS_LANE_ABORT,"
 			else
 			    if test $lane_read != "IGNORE"; then
 				if test $lane_read != $lane_write; then
-				    echo "$PROG internal error: code ${transfer}.${address}.${port_size}.${port_pos}, reading $lane_read but writing $lane_write" 1>&2
+				    $as_echo "$PROG internal error: code ${transfer}.${address}.${port_size}.${port_pos}, reading $lane_read but writing $lane_write" 1>&2
 				    exit 1
 				fi
-				echo -n "TME_BUS_LANE_ROUTE(SIZ"`expr ${transfer} \* 8`"_$lane_read)"
+				$as_echo_n "TME_BUS_LANE_ROUTE(SIZ"`expr ${transfer} \* 8`"_$lane_read)"
 			    elif test $lane_write = "UNDEF"; then
-				echo -n "TME_BUS_LANE_UNDEF"
+				$as_echo_n "TME_BUS_LANE_UNDEF"
 			    else
-				echo -n "TME_BUS_LANE_ROUTE(SIZ"`expr ${transfer} \* 8`"_$lane_write) | TME_BUS_LANE_ROUTE_WRITE_IGNORE"
+				$as_echo_n "TME_BUS_LANE_ROUTE(SIZ"`expr ${transfer} \* 8`"_$lane_write) | TME_BUS_LANE_ROUTE_WRITE_IGNORE"
 			    fi
-			    echo "${lane_warn},"
+			    $as_echo "${lane_warn},"
 			fi
 		    done
 		done
 	    done
 	done
    done
-   echo "};"
+   $as_echo "};"
 fi
 
 cat <<EOF
