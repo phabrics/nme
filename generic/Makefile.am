@@ -3,6 +3,8 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
+AUTOM4TE = $(SHELL) $(top_srcdir)/missing --run autom4te
+
 AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I. -D_TME_IMPL
 
 lib_LTLIBRARIES = libtme-generic.la
@@ -35,7 +37,10 @@ float.lo: float-auto.c
 
 # target to make bus-device-auto.c:
 bus-device-auto.c: bus-device-auto.sh
-	$(SHELL) $(srcdir)/bus-device-auto.sh > $@
+	$(SHELL) bus-device-auto.sh > $@
+
+bus-device-auto.sh: bus-device-auto.m4
+	$(AUTOM4TE) -l m4sh $(srcdir)/bus-device-auto.m4 > $@
 
 # bus-device.lo depends on bus-device-auto.c:
 bus-device.lo: bus-device-auto.c
@@ -49,6 +54,7 @@ EXTRA_DIST = fb-xlat-auto.sh \
 	float-auto.sh \
 	float-auto.c \
 	bus-device-auto.sh \
+	bus-device-auto.m4 \
 	bus-device-auto.c
 
 include $(top_srcdir)/modules
