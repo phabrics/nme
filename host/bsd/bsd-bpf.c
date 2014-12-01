@@ -75,13 +75,14 @@ _TME_RCSID("$Id: bsd-bpf.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #include <net/if_dl.h>
 #endif /* HAVE_NET_IF_DL_H */
 #include <arpa/inet.h>
-#ifdef HAVE_AF_PACKET
+#if defined(HAVE_AF_PACKET) && defined(HAVE_LINUX_FILTER_H)
 #include <linux/filter.h>
 #include <linux/if_ether.h>
 #define TME_BSD_BPF_INSN struct sock_filter 
 #define TME_BSD_BPF_PROG struct sock_fprog
 #define TME_BSD_BPF_INSNS(x) x.filter
 #define TME_BSD_BPF_LEN(x) x.len
+#define HAVE_LSF 1
 #else
 #include <net/bpf.h>
 #define TME_BSD_BPF_INSN struct bpf_insn
@@ -310,7 +311,7 @@ _tme_bsd_bpf_config(struct tme_ethernet_connection *conn_eth,
   /* set the filter on the BPF device: */
   TME_BSD_BPF_LEN(program) = bpf_filter_size - first_pc;
   TME_BSD_BPF_INSNS(program) = bpf_filter + first_pc;
-#ifdef HAVE_AF_PACKET
+#ifdef HAVE_LSF
   if (setsockopt(bpf->tme_eth_fd, SOL_SOCKET, SO_ATTACH_FILTER, &program, sizeof(program)) == -1) {
 #else
   if (ioctl(bpf->tme_eth_fd, BIOCSETF, &program) < 0) {
@@ -335,7 +336,7 @@ _tme_bsd_bpf_config(struct tme_ethernet_connection *conn_eth,
   return (rc);
 }
 
-#ifndef HAVE_AF_PACKET
+#ifndef HAVE_LSF
 /* this is called to read a frame: */
 static int
 _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth, 
@@ -541,7 +542,7 @@ _tme_bsd_bpf_connections_new(struct tme_element *element,
   tme_eth_connections_new(element, args, _conns);
   conn_eth = (struct tme_ethernet_connection *) (*_conns);
   conn_eth->tme_ethernet_connection_config = _tme_bsd_bpf_config;
-#ifndef HAVE_AF_PACKET
+#ifndef HAVE_LSF
   conn_eth->tme_ethernet_connection_read = _tme_bsd_bpf_read;
 #endif  
   return (TME_OK);
@@ -608,7 +609,7 @@ int _tme_bsd_bpf_args(const char * const args[],
 /* the new BPF function: */
 TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
   int bpf_fd;
-#ifdef HAVE_AF_PACKET
+#ifdef HAVE_LSF
   struct sockaddr_ll sll;
   struct packet_mreq mr;
 #else
@@ -617,7 +618,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
 #endif
   int saved_errno;
   u_int bpf_opt;
-#ifndef HAVE_AF_PACKET
+#ifndef HAVE_LSF
   struct bpf_version version;
 #endif
   struct ifreq ifr;
@@ -646,7 +647,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
 	   "using interface %s",
 	   ifr.ifr_name));
 
-#ifdef HAVE_AF_PACKET
+#ifdef HAVE_LSF
   if ((bpf_fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) >= 0) {
       tme_log(&element->tme_element_log_handle, 0, TME_OK,
 	      (&element->tme_element_log_handle,
