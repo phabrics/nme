@@ -290,9 +290,6 @@ dnl Checks for perl.
 AC_PATH_PROGS(PERL, perl4.036 perl4 perl perl5, no)
 AC_SUBST(PERL)
 
-dnl Start the list of host support.
-TME_HOSTS="posix"
-
 dnl Checks for AF_LINK.
 AC_MSG_CHECKING([for AF_LINK support])
 AC_EGREP_CPP(_tme_has_af_link,
@@ -323,20 +320,37 @@ AC_DEFINE(HAVE_AF_PACKET, [], [Define if you have AF_PACKET.])
 AC_MSG_RESULT(no)
 ])
 
-dnl Checks for Ethernet.
-AC_MSG_CHECKING([for raw Ethernet access method])
+dnl Start the list of host support.
+TME_HOSTS=
 
-tme_raw_type=
+dnl Checks for Ethernet.
 AC_CHECK_HEADERS([linux/if_tun.h net/if_tap.h net/tap/if_tap.h net/if_tun.h],
 		 [TME_HOSTS="${TME_HOSTS} tun"])
 
-AC_CHECK_HEADERS([linux/filter.h net/bpf.h], [TME_HOSTS="${TME_HOSTS} bsd"])
+AC_CHECK_HEADERS([linux/filter.h net/bpf.h])
+
+AC_MSG_CHECKING([for raw Ethernet access method])
+
+AC_EGREP_CPP(found_BPFVERSION,
+[
+#ifdef HAVE_LINUX_FILTER_H
+#include <linux/filter.h>
+#elif HAVE_NET_BPF_H
+#include <net/bpf.h>
+#endif
+#if BPF_MAJOR_VERSION == 1 && BPF_MINOR_VERSION >= 1
+found_BPFVERSION
+#endif
+],
+[TME_HOSTS="${TME_HOSTS} bsd"])
 
 if test "x${TME_HOSTS}" != x; then
 TME_HOSTS="${TME_HOSTS} eth"
 fi
 
 AC_MSG_RESULT($TME_HOSTS)
+
+TME_HOSTS="${TME_HOSTS} posix"
 
 AC_MSG_CHECKING([for available network address translation methods])
 
