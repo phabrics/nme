@@ -324,31 +324,19 @@ AC_MSG_RESULT(no)
 ])
 
 dnl Checks for Ethernet.
+AC_MSG_CHECKING([for raw Ethernet access method])
+
 tme_raw_type=
-AC_CHECK_HEADERS([linux/if_tun.h net/if_tap.h net/tap/if_tap.h net/if_tun.h], [tme_raw_type=tap])
+AC_CHECK_HEADERS([linux/if_tun.h net/if_tap.h net/tap/if_tap.h net/if_tun.h],
+		 [TME_HOSTS="${TME_HOSTS} tun"])
 
-AC_CHECK_HEADER(linux/filter.h, [tme_raw_type=${tme_raw_type}bpf],
-[AC_CHECK_HEADER(net/bpf.h, 
-[AC_EGREP_CPP(found_BIOCSHDRCMPLT, 
-[#include <net/bpf.h>
-#ifdef BIOCSHDRCMPLT
-found_BIOCSHDRCMPLT
-#endif
-], [tme_raw_type=${tme_raw_type}bpf])])])
+AC_CHECK_HEADERS([linux/filter.h net/bpf.h], [TME_HOSTS="${TME_HOSTS} bsd"])
 
-if test "x${tme_raw_type}" != x; then
+if test "x${TME_HOSTS}" != x; then
 TME_HOSTS="${TME_HOSTS} eth"
 fi
 
-AC_MSG_CHECKING([for raw Ethernet access method])
-case "x${tme_raw_type}" in
-xtap) TME_HOSTS="${TME_HOSTS} tun" ;;
-xbpf) TME_HOSTS="${TME_HOSTS} bsd" ;;
-xtapbpf) TME_HOSTS="${TME_HOSTS} tun bsd" ;;
-x) tme_raw_type=none ;;
-esac
-
-AC_MSG_RESULT($tme_raw_type)
+AC_MSG_RESULT($TME_HOSTS)
 
 AC_MSG_CHECKING([for available network address translation methods])
 
