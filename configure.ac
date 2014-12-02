@@ -321,7 +321,7 @@ AC_MSG_RESULT(no)
 ])
 
 dnl Start the list of host support.
-TME_HOSTS=
+TME_HOSTS=eth
 
 dnl Checks for Ethernet.
 AC_CHECK_HEADERS([linux/if_tun.h net/if_tap.h net/tap/if_tap.h net/if_tun.h],
@@ -343,10 +343,6 @@ found_BPFVERSION
 #endif
 ],
 [TME_HOSTS="${TME_HOSTS} bsd"])
-
-if test "x${TME_HOSTS}" != x; then
-TME_HOSTS="${TME_HOSTS} eth"
-fi
 
 AC_MSG_RESULT($TME_HOSTS)
 
