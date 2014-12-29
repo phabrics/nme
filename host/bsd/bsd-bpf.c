@@ -495,7 +495,7 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
       = the_bpf_header.bh_datalen;
 
     /* copy out the frame: */
-    count = tme_eth_filter(bpf, frame_chunks, &frame_chunk_buffer);
+    count = tme_ethernet_chunks_copy(frame_chunks, &frame_chunk_buffer);
 
     /* if this is a peek: */
     if (flags & TME_ETHERNET_READ_PEEK) {
@@ -737,7 +737,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
 
 #ifdef BIOCSTSTAMP
   /* prefer timespec to timeval: */
-  if (ioctl(bpf_fd, BIOCSTSTAMP, BPF_T_NANOTIME) < 0) {
+  bpf_opt = BPF_T_NANOTIME;
+  if (ioctl(bpf_fd, BIOCSTSTAMP, &bpf_opt) < 0) {
     tme_log(&element->tme_element_log_handle, 1, errno,
 	    (&element->tme_element_log_handle,
 	     _("failed to put %s into nanotime (timespec) mode"),

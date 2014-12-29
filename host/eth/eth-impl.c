@@ -292,11 +292,22 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
     tme_log(&eth->tme_eth_element->tme_element_log_handle, 1, TME_OK,
 	    (&eth->tme_eth_element->tme_element_log_handle,
 	     _("calling read")));
+#if 0
+    rc = tme_thread_select_yield(eth->tme_eth_fd + 1,
+				 &fdset_read_in,
+				 NULL,
+				 NULL,
+				 NULL);
+    if (rc == 1) {
+
+    }
+    
+#else
     buffer_end = 
       tme_thread_read_yield(eth->tme_eth_fd,
 			    eth->tme_eth_buffer,
 			    eth->tme_eth_buffer_size);
-
+#endif
     /* lock the mutex: */
     tme_mutex_lock(&eth->tme_eth_mutex);
 
