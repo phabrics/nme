@@ -104,10 +104,6 @@ int tme_eth_ifaddrs_find _TME_P((_tme_const char *,
 				 tme_uint8_t **, 
 				 unsigned int *));
 
-int tme_eth_filter _TME_P((struct tme_ethernet *eth,
-			   struct tme_ethernet_frame_chunk *frame_chunks,
-			   struct tme_ethernet_frame_chunk *frame_chunk_buffer));
-
 int tme_eth_alloc _TME_P((char *dev_filename,
 			  char **_output));
 

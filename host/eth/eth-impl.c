@@ -453,7 +453,7 @@ _tme_eth_read(struct tme_ethernet_connection *conn_eth,
       = buffer_offset_next;
 
     /* filter out the frame: */
-    count = tme_eth_filter(eth, frame_chunks, &frame_chunk_buffer);
+    count = tme_ethernet_chunks_copy(frame_chunks, &frame_chunk_buffer);
 
     /* if this is a peek: */
     if (flags & TME_ETHERNET_READ_PEEK) {
@@ -717,95 +717,6 @@ tme_eth_ifaddrs_find(const char *ifa_name_user, struct ifaddrs **_ifaddr, tme_ui
   freeifaddrs(ifaddr);
   /* done: */
   return (TME_OK);
-}
-
-int tme_eth_filter(struct tme_ethernet *eth,
-		   struct tme_ethernet_frame_chunk *frame_chunks,
-		   struct tme_ethernet_frame_chunk *frame_chunk_buffer)
-{
-  const struct tme_ethernet_header *ethernet_header;
-  const struct tme_net_arp_header *arp_header;
-  const struct tme_net_ipv4_header *ipv4_header;
-  tme_uint16_t ethertype;
-  unsigned int count;
-
-  /* some network interfaces haven't removed the CRC yet when they
-     pass a packet to ETH.  packets in a tme ethernet connection
-     never have CRCs, so here we attempt to detect them and strip
-     them off.
-
-     unfortunately there's no general way to do this.  there's a
-     chance that the last four bytes of an actual packet just
-     happen to be the Ethernet CRC of all of the previous bytes in
-     the packet, so we can't just strip off what looks like a
-     valid CRC, plus the CRC calculation itself isn't cheap.
-
-     the only way to do this well seems to be to look at the
-     protocol.  if we can determine what the correct minimum size
-     of the packet should be based on the protocol, and the size
-     we got is four bytes more than that, assume that the last four
-     bytes are a CRC and strip it off: */
-
-  /* assume that we won't be able to figure out the correct minimum
-     size of the packet: */
-  count = 0;
-
-  /* get the Ethernet header and packet type: */
-  ethernet_header = (struct tme_ethernet_header *) (eth->tme_eth_buffer + eth->tme_eth_buffer_offset);
-  ethertype = ethernet_header->tme_ethernet_header_type[0];
-  ethertype = (ethertype << 8) + ethernet_header->tme_ethernet_header_type[1];
-
-  /* dispatch on the packet type: */
-  switch (ethertype) {
-
-    /* an ARP or RARP packet: */
-  case TME_ETHERNET_TYPE_ARP:
-  case TME_ETHERNET_TYPE_RARP:
-    arp_header = (struct tme_net_arp_header *) (ethernet_header + 1);
-    switch ((((tme_uint16_t) arp_header->tme_net_arp_header_opcode[0]) << 8)
-	    + arp_header->tme_net_arp_header_opcode[1]) {
-    case TME_NET_ARP_OPCODE_REQUEST:
-    case TME_NET_ARP_OPCODE_REPLY:
-    case TME_NET_ARP_OPCODE_REV_REQUEST:
-    case TME_NET_ARP_OPCODE_REV_REPLY:
-      count = (TME_ETHERNET_HEADER_SIZE
-	       + sizeof(struct tme_net_arp_header)
-	       + (2 * arp_header->tme_net_arp_header_hardware_length)
-	       + (2 * arp_header->tme_net_arp_header_protocol_length));
-    default:
-      break;
-    }
-    break;
-
-    /* an IPv4 packet: */
-  case TME_ETHERNET_TYPE_IPV4:
-    ipv4_header = (struct tme_net_ipv4_header *) (ethernet_header + 1);
-    count = ipv4_header->tme_net_ipv4_header_length[0];
-    count = (count << 8) + ipv4_header->tme_net_ipv4_header_length[1];
-    count += TME_ETHERNET_HEADER_SIZE;
-    break;
-
-  default:
-    break;
-  }
-
-  /* if we were able to figure out the correct minimum size of the
-     packet, and the packet from ETH is exactly that minimum size
-     plus the CRC size, set the length of the packet to be the
-     correct minimum size.  NB that we can't let the packet become
-     smaller than (TME_ETHERNET_FRAME_MIN - TME_ETHERNET_CRC_SIZE): */
-  if (count != 0) {
-    count = TME_MAX(count,
-		    (TME_ETHERNET_FRAME_MIN
-		     - TME_ETHERNET_CRC_SIZE));
-    if (frame_chunk_buffer->tme_ethernet_frame_chunk_bytes_count
-	== (count + TME_ETHERNET_CRC_SIZE)) {
-      frame_chunk_buffer->tme_ethernet_frame_chunk_bytes_count = count;
-    }
-  }
-
-  /* copy out the frame: */
-  return tme_ethernet_chunks_copy(frame_chunks, frame_chunk_buffer);
 }
 
 /* Allocate an ethernet device */
