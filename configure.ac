@@ -200,7 +200,7 @@ AC_FUNC_MEMCMP
 AC_FUNC_MALLOC
 AC_FUNC_MMAP
 AC_FUNC_REALLOC
-AC_CHECK_FUNCS([gettimeofday memmove memset munmap pow ptsname select socket sqrt strchr strerror strrchr strstr strtoul devname fdevname kldfind])
+AC_CHECK_FUNCS([clock_gettime gettimeofday memmove memset munmap pow ptsname select socket sqrt strchr strerror strrchr strstr strtoul devname fdevname kldfind])
 AC_CHECK_FUNC_LONG(bswap16, [
   unsigned int x;
 
@@ -355,7 +355,7 @@ AC_ARG_ENABLE(nat,
 [  --enable-nat=NATs  Enable built-in NAT support utilizing the given NAT methods (compiled-in order of usage by platform availability: 'nft','npf','pf','ipf').  Defaults to 'yes', any available.  Turn off NAT with 'no' or --disable-nat.], [tme_nat_types=${enableval}], [enable_nat=yes])
 
 if test "x${enable_nat}" = xyes; then
-   tme_nat_types="nft npf"
+   tme_nat_types="nft npf pf"
 fi
 
 if test "x${enable_nat}" = xno; then

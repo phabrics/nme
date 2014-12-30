@@ -681,6 +681,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     };
 #elif TME_DO_PFV
   // using PF for NAT
+  FILE *fp;
 #else // TME_DO_IPF
   ipnat_t nat;
 #endif
@@ -1127,7 +1128,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     tme_log(&element->tme_element_log_handle, 0, -1,
 	    (&element->tme_element_log_handle,
 	     "Could not turn on NPF.  Try 'npfctl start'."));
-    goto exit_nat;
   }
 
   tme_log(&element->tme_element_log_handle, 0, TME_OK,
@@ -1135,10 +1135,39 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 	   _("Added ip nat rules for tap interface network, "
 	     "to npf.  Run 'npfctl show' to view the rules.  If you still have problems "
 	     "with forwarding from the tap interface, you may need to manually adjust the filter rules, or remove conflicting nat "
-	     "e.g., iptables -F FORWARD.  If you want ping, try 'modload npf_alg_icmp'. npf is the successor to pf (on NetBSD), so it may not be available on older systems.")));
+	     "e.g., npfctl flush.  If you want ping, try 'modload npf_alg_icmp'. npf is the successor to pf (on NetBSD), so it may not be available on older systems.")));
   
 #elif TME_DO_PFV
   // using PF for NAT
+  fp = popen("pfctl -f -", "w");
+
+  if(fp != NULL) {
+#if defined(TUNGIFINFO) && !defined(TAPGIFINFO)
+    // OpenBSD PF NAT syntax is different for PF >= 4.7
+    fprintf(fp, "pass out on %s from %s:network to any nat-to %s\n", NATIF.ifr_name, TAPIF.ifr_name, NATIF.ifr_name);
+#else
+    fprintf(fp, 
+	    "pass from %s:network to any keep state\n \
+	    nat on %s from %s:network to any -> (%s)\n", 
+	    TAPIF.ifr_name, NATIF.ifr_name, TAPIF.ifr_name, NATIF.ifr_name);
+    rc = ioctl(dummy_fd, DIOCSTART);
+    if (rc) {
+      tme_log(&element->tme_element_log_handle, 0, -1,
+	      (&element->tme_element_log_handle,
+	       "Could not turn on PF.  Try 'pfctl -e'."));
+    }
+#endif
+    pclose(fp);
+    tme_log(&element->tme_element_log_handle, 0, TME_OK,
+	    (&element->tme_element_log_handle,
+	     _("Added ip nat rules for tap interface network, "
+	       "to pf.  Run 'pfctl -s rules' to view the rules.  If you still have problems "
+	       "with forwarding from the tap interface, you may need to manually adjust the filter rules, or remove conflicting nat "
+	       "e.g., pfctl -F rules.")));
+  } else {
+    tme_output_append_error(_output, _("couldn't open file pfctl; ip forwarding may not work."));
+  }
+
 #else // TME_DO_IPF
 
   memset(&nat, 0, sizeof(ipnat_t));
