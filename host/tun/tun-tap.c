@@ -1147,9 +1147,9 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     fprintf(fp, "pass out on %s from %s:network to any nat-to %s\n", NATIF.ifr_name, TAPIF.ifr_name, NATIF.ifr_name);
 #else
     fprintf(fp, 
-	    "pass from %s:network to any keep state\n \
-	    nat on %s from %s:network to any -> (%s)\n", 
-	    TAPIF.ifr_name, NATIF.ifr_name, TAPIF.ifr_name, NATIF.ifr_name);
+	    "nat on %s from %s:network to any -> (%s)\n \
+	    pass from %s:network to any keep state\n",
+	    NATIF.ifr_name, TAPIF.ifr_name, NATIF.ifr_name, TAPIF.ifr_name);
     rc = ioctl(dummy_fd, DIOCSTART);
     if (rc) {
       tme_log(&element->tme_element_log_handle, 0, -1,
