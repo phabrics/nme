@@ -1063,7 +1063,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 #endif
 
   // Generate a NAT configuration & submit to kernel
-  dummy_fd = open(DEV_IPF_FILENAME, O_RDONLY);
+  dummy_fd = open(DEV_IPF_FILENAME, O_RDWR);
   if (dummy_fd == -1) {
     tme_log(&element->tme_element_log_handle, 0, errno,
 	    (&element->tme_element_log_handle,
