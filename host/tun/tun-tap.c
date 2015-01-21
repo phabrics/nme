@@ -143,7 +143,10 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #include <net/bpf.h>
 #define NPF_BPF_SUCCESS ((u_int)-1)
 #define NPF_BPF_FAILURE 0
-#endif
+#endif // HAVE_NET_NPF_CODE_H
+#endif // TME_NAT_NPF
+#ifdef HAVE_PCAP_PCAP_H
+#include <pcap/pcap.h>
 #endif
 #ifdef HAVE_NET_PFVAR_H
 #include <net/pfvar.h>
@@ -691,6 +694,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 #if TME_DO_NPF
   modctl_load_t mod;
   int ver;
+  npf_netmask_t netbits;
   nl_config_t *ncf;
   nl_nat_t *nt;
   nl_rule_t *ext, *def;
@@ -1132,17 +1136,22 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   uint32_t wordmask = 0xffffffff << (32 - netbits);
   
   struct bpf_insn incode[] = {  
-    BPF_STMT(BPF_LD+BPF_W+BPF_MEM, IPVERSION),
-    BPF_JUMP(BPF_JMP+BPF_JEQ+BPF_K, BPF_MW_IPVER, 2, 6),
+    BPF_STMT(BPF_LD+BPF_W+BPF_MEM, BPF_MW_IPVER),
+    BPF_JUMP(BPF_JMP+BPF_JEQ+BPF_K, IPVERSION, 0, 4),
     BPF_STMT(BPF_LD+BPF_W+BPF_ABS, offsetof(struct ip, ip_src)),
     BPF_STMT(BPF_ALU+BPF_AND+BPF_K, wordmask),
-    BPF_JUMP(BPF_JMP+BPF_JEQ+BPF_K, netnum, 5, 6),
+    BPF_JUMP(BPF_JMP+BPF_JEQ+BPF_K, ntohl(netnum), 0, 1),
     BPF_STMT(BPF_RET+BPF_K, NPF_BPF_SUCCESS),
     BPF_STMT(BPF_RET+BPF_K, NPF_BPF_FAILURE)
  };
-  uint32_t mwords[] = { BM_SRC_CIDR, 6, AF_INET, netbits, 
-    
+
   npf_rule_setcode(nt, NPF_CODE_BPF, incode, sizeof(incode));  
+#ifdef HAVE_PCAP_PCAP_H
+  struct bpf_program bf;
+  bf.bf_insns = &incode;
+  bf.bf_len = sizeof(incode)/sizeof(struct bpf_insn);
+  bpf_dump(&bf, 0);
+#endif
 #endif
   
   npf_nat_insert(ncf, nt, NPF_PRI_LAST);
