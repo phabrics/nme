@@ -131,12 +131,19 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #ifdef HAVE_SYS_MODULE_H
 #include <sys/module.h>
 #endif
-#ifdef HAVE_NPF_H
 #ifdef TME_NAT_NPF
+#ifdef HAVE_NPF_H
 #define _NPF_PRIVATE
-#endif
+#define NPF_BPFCOP
 #include <npf.h>
+#endif
+#ifdef HAVE_NET_NPF_CODE_H
 #include <net/npf_ncode.h>
+#else
+#include <net/bpf.h>
+#define NPF_BPF_SUCCESS ((u_int)-1)
+#define NPF_BPF_FAILURE 0
+#endif
 #endif
 #ifdef HAVE_NET_PFVAR_H
 #include <net/pfvar.h>
@@ -602,9 +609,21 @@ static int _tme_nat_run(struct tme_nat *nat, int num)
 #endif
 
 #if TME_DO_NPF
+npf_netmask_t get_netbits(struct in_addr netmask)
+{
+  // Given a netmask address, return the CIDR bitmask representation (ie, number of bits in netmask)
+  npf_netmask_t netbits = 0;
+  for(;netmask.s_addr;netmask.s_addr>>=1)
+    if (netmask.s_addr & 1) netbits++;
+
+  return netbits;
+}
+
+#ifdef _NPF_PRIVATE
 void
 _tme_npf_print_error(const nl_error_t *ne, char **_output)
 {
+#ifdef HAVE_NET_NPF_CODE_H
   static const char *ncode_errors[] = {
     [-NPF_ERR_OPCODE]	= "invalid instruction",
     [-NPF_ERR_JUMP]		= "invalid jump",
@@ -612,6 +631,8 @@ _tme_npf_print_error(const nl_error_t *ne, char **_output)
     [-NPF_ERR_INVAL]	= "invalid argument value",
     [-NPF_ERR_RANGE]	= "processing out of range"
   };
+#endif
+  
   const int nc_err = ne->ne_ncode_error;
   const char *srcfile = ne->ne_source_file;
 
@@ -619,14 +640,20 @@ _tme_npf_print_error(const nl_error_t *ne, char **_output)
     tme_output_append_error(_output, "source %s line %d", srcfile, ne->ne_source_line);
   }
   if (nc_err) {
-    tme_output_append_error(_output, "n-code error (%d): %s at offset 0x%x",
-			    nc_err, ncode_errors[-nc_err], ne->ne_ncode_errat);
+    tme_output_append_error(_output, "n-code error (%d): %s at offset 0x%x", nc_err, 
+#ifdef HAVE_NET_NPF_CODE_H
+			    ncode_errors[-nc_err],
+#else
+			    "",
+#endif
+			    ne->ne_ncode_errat);
   }
   if (ne->ne_id) {
     tme_output_append_error(_output, "object: %d", ne->ne_id);
   }
 }
-#endif
+#endif // _NPF_PRIVATE
+#endif // _TME_DO_NPF
 
 /* the new TAP function: */
 TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
@@ -646,7 +673,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   struct ifaddrs *ifa;
   char host[NI_MAXHOST];
   char mask[NI_MAXHOST];
-  struct in_addr nataddr;
+  struct in_addr nataddr, natmask;
   u_int natidx, netnum;
   int nating, forward = EOF;
 #endif
@@ -661,7 +688,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 #elif TME_DO_APF
   int mib[4];
   size_t len;  
-  u_int netbits;
 #if TME_DO_NPF
   modctl_load_t mod;
   int ver;
@@ -669,16 +695,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   nl_nat_t *nt;
   nl_rule_t *ext, *def;
   nl_rule_t *rl, *rl2;
-  tme_uint32_t ncode[] =
-    { NPF_OPCODE_IP4MASK,
-      1,
-      0,
-      0,
-      NPF_OPCODE_RET,
-      0,
-      NPF_OPCODE_RET,
-      0xff
-    };
 #elif TME_DO_PFV
   // using PF for NAT
   FILE *fp;
@@ -923,6 +939,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   if(!nating) goto exit_nat;
 
   inet_aton(host, &nataddr);
+  inet_aton(mask, &natmask);
   netnum = IPAINET.s_addr & IPANETMASK.s_addr;
 #endif
 
@@ -1072,10 +1089,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     goto exit_nat;
   }
 
-  netbits = 0;
-  for(;IPANETMASK.s_addr;IPANETMASK.s_addr>>=1)
-    if (IPANETMASK.s_addr & 1) netbits++;
-
 #if TME_DO_NPF
   // Load kernel modules if needed
   memset(&mod, 0, sizeof(modctl_load_t));
@@ -1098,12 +1111,43 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     goto exit_nat;    
   }
   ncf = npf_config_create();
+
+  netbits = get_netbits(IPANETMASK);
+  
+#ifdef HAVE_NET_NPF_CODE_H
   nt = npf_nat_create(NPF_NATOUT, 0, natidx, &nataddr, AF_INET, 0);
-  ncode[2] = netnum;
-  ncode[3] = netbits;
+  tme_uint32_t ncode[] = {
+ NPF_OPCODE_IP4MASK,
+ 1,
+ netnum,
+ netbits,
+ NPF_OPCODE_RET,
+ 0,
+ NPF_OPCODE_RET,
+ 0xff
+  };
   npf_rule_setcode(nt, NPF_CODE_NC, ncode, sizeof(ncode));
+#else
+  nt = npf_nat_create(NPF_NATOUT, 0, NATIF.ifr_name, AF_INET, &nataddr, get_netbits(natmask), 0);
+  uint32_t wordmask = 0xffffffff << (32 - netbits);
+  
+  struct bpf_insn incode[] = {  
+    BPF_STMT(BPF_LD+BPF_W+BPF_MEM, IPVERSION),
+    BPF_JUMP(BPF_JMP+BPF_JEQ+BPF_K, BPF_MW_IPVER, 2, 6),
+    BPF_STMT(BPF_LD+BPF_W+BPF_ABS, offsetof(struct ip, ip_src)),
+    BPF_STMT(BPF_ALU+BPF_AND+BPF_K, wordmask),
+    BPF_JUMP(BPF_JMP+BPF_JEQ+BPF_K, netnum, 5, 6),
+    BPF_STMT(BPF_RET+BPF_K, NPF_BPF_SUCCESS),
+    BPF_STMT(BPF_RET+BPF_K, NPF_BPF_FAILURE)
+ };
+  uint32_t mwords[] = { BM_SRC_CIDR, 6, AF_INET, netbits, 
+    
+  npf_rule_setcode(nt, NPF_CODE_BPF, incode, sizeof(incode));  
+#endif
+  
   npf_nat_insert(ncf, nt, NPF_PRI_LAST);
-  ext = npf_rule_create("external", NPF_RULE_GROUP, natidx);
+
+  ext = npf_rule_create("external", NPF_RULE_GROUP, NATIF.ifr_name);
   npf_rule_setprio(ext, NPF_PRI_LAST);
   npf_rule_insert(ncf, NULL, ext);
   rl = npf_rule_create(NULL, NPF_RULE_PASS | NPF_RULE_STATEFUL | NPF_RULE_OUT | NPF_RULE_FINAL, 0);
@@ -1117,9 +1161,15 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   npf_rule_insert(ncf, NULL, def);
   rc = npf_config_submit(ncf, dummy_fd);
   if (rc) {
+#ifdef _NPF_PRIVATE
     nl_error_t ne;
     _npf_config_error(ncf, &ne);
     _tme_npf_print_error(&ne, _output);
+#else
+    tme_log(&element->tme_element_log_handle, 0, -1,
+	    (&element->tme_element_log_handle,
+	     _("Could not add nat rule to npf (%d).  Try manually adding via npfctl."), rc));
+#endif
     goto exit_nat;
   }
   npf_config_destroy(ncf);
