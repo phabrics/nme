@@ -33,7 +33,7 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.68])
-AC_INIT([tme], [1.0beta_4])
+AC_INIT([tme], [1.0beta_5])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
@@ -755,6 +755,8 @@ else
     dnl Make brackets safe to use.
     changequote(<<, >>)dnl
 
+    recode_hosts="mmap x86"
+    
     # get the host maximum guest size:
     case "${target_cpu}" in
     i[3456789]86)
@@ -763,15 +765,9 @@ else
     x86_64)
 	recode_size_guest_max_host=128
 	;;
-    *) recode_size_guest_max_host= ;;
-    esac
-
-    # get the host recode parts:
-    case "${target}" in
-    i[3456789]86-*bsd* | x86_64-*bsd* | i[3456789]86-*linux* | x86_64-*linux*)
-	recode_hosts="mmap x86"
-	;;
-    *) recode_hosts= ;;
+    *) 
+       	 recode_hosts=
+         recode_size_guest_max_host= ;;
     esac
 
     dnl Make brackets the quote characters again.
