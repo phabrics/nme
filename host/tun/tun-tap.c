@@ -1132,7 +1132,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   };
   npf_rule_setcode(nt, NPF_CODE_NC, ncode, sizeof(ncode));
 #else
-  nt = npf_nat_create(NPF_NATOUT, 0, NATIF.ifr_name, AF_INET, &nataddr, 32 /*get_netbits(natmask)*/, 0);
+  nt = npf_nat_create(NPF_NATOUT, 0, NATIF.ifr_name, AF_INET, &nataddr, NPF_NO_NETMASK /*get_netbits(natmask)*/, 0);
   uint32_t wordmask = 0xffffffff << (32 - netbits);
   
   struct bpf_insn incode[] = {  
@@ -1145,7 +1145,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     BPF_STMT(BPF_RET+BPF_K, NPF_BPF_FAILURE)
   };
   
-  uint32_t mwords[] = { 2, 6, AF_INET, netbits, netnum, 0, 0, 0 };
+  uint32_t mwords[] = { 0, 1, AF_INET, 2, 6, AF_INET, netbits, netnum, 0, 0, 0 };
   if (npf_rule_setinfo(nt, &mwords, sizeof(mwords)) == -1) {
     tme_log(&element->tme_element_log_handle, 0, -1,
 	    (&element->tme_element_log_handle,
