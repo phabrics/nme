@@ -136,18 +136,18 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #define _NPF_PRIVATE
 #define NPF_BPFCOP
 #include <npf.h>
-#endif
 #ifdef HAVE_NET_NPF_NCODE_H
 #include <net/npf_ncode.h>
 #else
 #include <net/bpf.h>
 #define NPF_BPF_SUCCESS ((u_int)-1)
 #define NPF_BPF_FAILURE 0
-#endif // HAVE_NET_NPF_NCODE_H
-#endif // TME_NAT_NPF
 #ifdef HAVE_PCAP_PCAP_H
 #include <pcap/pcap.h>
 #endif
+#endif // HAVE_NET_NPF_NCODE_H
+#endif // HAVE_NPF_H
+#endif // TME_NAT_NPF
 #ifdef HAVE_NET_PFVAR_H
 #include <net/pfvar.h>
 #endif
