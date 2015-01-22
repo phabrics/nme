@@ -137,13 +137,13 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #define NPF_BPFCOP
 #include <npf.h>
 #endif
-#ifdef HAVE_NET_NPF_CODE_H
+#ifdef HAVE_NET_NPF_NCODE_H
 #include <net/npf_ncode.h>
 #else
 #include <net/bpf.h>
 #define NPF_BPF_SUCCESS ((u_int)-1)
 #define NPF_BPF_FAILURE 0
-#endif // HAVE_NET_NPF_CODE_H
+#endif // HAVE_NET_NPF_NCODE_H
 #endif // TME_NAT_NPF
 #ifdef HAVE_PCAP_PCAP_H
 #include <pcap/pcap.h>
@@ -626,7 +626,7 @@ npf_netmask_t get_netbits(struct in_addr netmask)
 void
 _tme_npf_print_error(const nl_error_t *ne, char **_output)
 {
-#ifdef HAVE_NET_NPF_CODE_H
+#ifdef HAVE_NET_NPF_NCODE_H
   static const char *ncode_errors[] = {
     [-NPF_ERR_OPCODE]	= "invalid instruction",
     [-NPF_ERR_JUMP]		= "invalid jump",
@@ -644,7 +644,7 @@ _tme_npf_print_error(const nl_error_t *ne, char **_output)
   }
   if (nc_err) {
     tme_output_append_error(_output, "n-code error (%d): %s at offset 0x%x", nc_err, 
-#ifdef HAVE_NET_NPF_CODE_H
+#ifdef HAVE_NET_NPF_NCODE_H
 			    ncode_errors[-nc_err],
 #else
 			    "",
@@ -1118,7 +1118,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 
   netbits = get_netbits(IPANETMASK);
   
-#ifdef HAVE_NET_NPF_CODE_H
+#ifdef HAVE_NET_NPF_NCODE_H
   nt = npf_nat_create(NPF_NATOUT, 0, natidx, &nataddr, AF_INET, 0);
   tme_uint32_t ncode[] = {
  NPF_OPCODE_IP4MASK,
