@@ -667,6 +667,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   struct in_addr ip_addrs[TME_IP_ADDRS_TOTAL];
 #ifdef SIOCAIFADDR
   struct in_aliasreq ifra;
+#else
+  unsigned char *tap_hwaddr;
 #endif
 #if !defined(HAVE_FDEVNAME) && defined(HAVE_STRUCT_STAT_ST_RDEV)
   struct stat tap_buf;
@@ -814,6 +816,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 	   "using tap interface %s",
 	   TAPIF.ifr_name));
 
+  tap_hwaddr = 0;
+
   /* make a dummy socket so we can configure the interface: */
   if ((dummy_fd = socket(AF_INET, SOCK_DGRAM, 0)) >= 0) {
 #if defined(TUNGIFINFO) && !defined(TAPGIFINFO)
@@ -889,50 +893,65 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     TAPIF.ifr_addr.sa_family = AF_INET;
     if(IPAINET.s_addr) {
       ((struct sockaddr_in *)&TAPIF.ifr_addr)->sin_addr = IPAINET;
-      if(ioctl(dummy_fd, SIOCSIFADDR, (void *) ifr) < 0 ) {
+      if(ioctl(dummy_fd, SIOCSIFADDR, (void *) &TAPIF) < 0 )
 	tme_log(&element->tme_element_log_handle, 1, errno,
 		(&element->tme_element_log_handle,
 	       _("failed to set the address on iface %s"),
 		 TAPIF.ifr_name));
-      } else
-         tme_log(&element->tme_element_log_handle, 0, TME_OK, 
-		 (&element->tme_element_log_handle, 
-		  "set address on tap interface %s to %s",
-		  TAPIF.ifr_name, 
-		  inet_ntoa(((struct sockaddr_in *)&TAPIF.ifr_addr)->sin_addr)));
     }
 
     if(IPANETMASK.s_addr) {
       ((struct sockaddr_in *)&TAPIF.ifr_addr)->sin_addr = IPANETMASK;
-      if(ioctl(dummy_fd, SIOCSIFNETMASK, (void *) ifr) < 0 ) {
+      if(ioctl(dummy_fd, SIOCSIFNETMASK, (void *) &TAPIF) < 0 )
 	tme_log(&element->tme_element_log_handle, 1, errno,
 		(&element->tme_element_log_handle,
 	       _("failed to set the netmask on iface %s"),
 		 TAPIF.ifr_name));
-      } else
-         tme_log(&element->tme_element_log_handle, 0, TME_OK, 
-		 (&element->tme_element_log_handle, 
-		  "set netmask on tap interface %s to %s",
-		  TAPIF.ifr_name, 
-		  inet_ntoa(((struct sockaddr_in *)&TAPIF.ifr_addr)->sin_addr)));
-
     }
 
     if(IPABCAST.s_addr) {
       ((struct sockaddr_in *)&TAPIF.ifr_addr)->sin_addr = IPABCAST;
-      if(ioctl(dummy_fd, SIOCSIFBRDADDR, (void *) ifr) < 0 ) {
+      if(ioctl(dummy_fd, SIOCSIFBRDADDR, (void *) &TAPIF) < 0 )
 	tme_log(&element->tme_element_log_handle, 1, errno,
 		(&element->tme_element_log_handle,
 	       _("failed to set the broadcast address on iface %s"),
 		 TAPIF.ifr_name));
-      } else
-         tme_log(&element->tme_element_log_handle, 0, TME_OK, 
-		 (&element->tme_element_log_handle, 
-		  "set broadcast address on tap interface %s to %s",
-		  TAPIF.ifr_name, 
-		  inet_ntoa(((struct sockaddr_in *)&TAPIF.ifr_addr)->sin_addr)));
-
     }
+
+    ioctl(dummy_fd, SIOCGIFADDR, (void *) &TAPIF);
+    tme_log(&element->tme_element_log_handle, 0, TME_OK, 
+	    (&element->tme_element_log_handle, 
+	     "ip4 address on tap interface %s set to %s",
+	     TAPIF.ifr_name, 
+	     inet_ntoa(((struct sockaddr_in *)&TAPIF.ifr_addr)->sin_addr)));
+
+    ioctl(dummy_fd, SIOCGIFNETMASK, (void *) &TAPIF);
+    tme_log(&element->tme_element_log_handle, 0, TME_OK, 
+	    (&element->tme_element_log_handle, 
+	     "ip4 netmask on tap interface %s set to %s",
+	     TAPIF.ifr_name, 
+	     inet_ntoa(((struct sockaddr_in *)&TAPIF.ifr_addr)->sin_addr)));
+
+    ioctl(dummy_fd, SIOCGIFBRDADDR, (void *) &TAPIF);
+    tme_log(&element->tme_element_log_handle, 0, TME_OK, 
+	    (&element->tme_element_log_handle, 
+	     "ip4 broadcast address on tap interface %s set to %s",
+	     TAPIF.ifr_name, 
+	     inet_ntoa(((struct sockaddr_in *)&TAPIF.ifr_addr)->sin_addr)));
+
+    ioctl(dummy_fd, SIOCGIFHWADDR, (void *) &TAPIF);
+    tap_hwaddr = tme_new0(unsigned char, TME_ETHERNET_ADDR_SIZE);
+    memcpy(tap_hwaddr, TAPIF.ifr_hwaddr.sa_data, TME_ETHERNET_ADDR_SIZE);
+    tme_log(&element->tme_element_log_handle, 0, TME_OK, 
+	    (&element->tme_element_log_handle, 
+	     "hardware address on tap interface %s set to %02x:%02x:%02x:%02x:%02x:%02x",
+	     TAPIF.ifr_name, 
+	     tap_hwaddr[0],
+	     tap_hwaddr[1],
+	     tap_hwaddr[2],
+	     tap_hwaddr[3],
+	     tap_hwaddr[4],
+	     tap_hwaddr[5]));
 #endif
     close(dummy_fd);
   }
@@ -1301,7 +1320,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   setuid(getuid());
 #endif
 
-  return tme_eth_init(element, tap_fd, 4096, NULL, _tme_tun_tap_connections_new);
+  return tme_eth_init(element, tap_fd, 4096, NULL, tap_hwaddr, _tme_tun_tap_connections_new);
 
 #undef IPAINET
 #undef IPANETMASK

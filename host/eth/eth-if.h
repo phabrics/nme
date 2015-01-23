@@ -83,6 +83,9 @@ struct tme_ethernet {
   /* ethernet interface type-specific data */
   void *tme_eth_data;
 
+  /* ethernet interface hardware address */
+  unsigned char *tme_eth_addr;
+  
   /* all packets received on or before this time can be released: */
   tme_time_t tme_eth_delay_release;
 
@@ -115,6 +118,7 @@ int tme_eth_init _TME_P((struct tme_element *element,
 			 int fd, 
 			 u_int sz, 
 			 void *data,
+			 unsigned char *addr,
 			 typeof(tme_eth_connections_new) eth_connections_new));
 
 #endif /* !_HOST_ETH_IMPL_H */

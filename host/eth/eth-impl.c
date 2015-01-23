@@ -237,6 +237,7 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
 {
   ssize_t buffer_end;
   unsigned long sleep_usec;
+  const struct tme_ethernet_header *ethernet_header;
   
   /* lock the mutex: */
   tme_mutex_lock(&eth->tme_eth_mutex);
@@ -319,15 +320,30 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
       continue;
     }
 
-    /* the read succeeded: */
-    tme_log(&eth->tme_eth_element->tme_element_log_handle, 1, TME_OK,
-	    (&eth->tme_eth_element->tme_element_log_handle,
-	     _("read %ld bytes of packets"), (long) buffer_end));
-    eth->tme_eth_buffer_offset = 0;
-    eth->tme_eth_buffer_end = buffer_end;
 
-    /* call out that we can be read again: */
-    _tme_eth_callout(eth, TME_ETH_CALLOUT_CTRL);
+    /* Filter out multicast packets we sent or unicast packets not destined for us. 
+       This should remove all duplicate packets on, i.e., tap interfaces...
+     */
+    ethernet_header = (struct tme_ethernet_header *) (eth->tme_eth_buffer);
+    
+    if(!eth->tme_eth_addr ||
+       (((ethernet_header->tme_ethernet_header_dst[0] & 0x1)
+	 && memcmp(eth->tme_eth_addr,
+		   ethernet_header->tme_ethernet_header_src,
+		   TME_ETHERNET_ADDR_SIZE))
+	||!memcmp(eth->tme_eth_addr,
+		  ethernet_header->tme_ethernet_header_dst,
+		  TME_ETHERNET_ADDR_SIZE))) {
+      /* the read succeeded: */
+      tme_log(&eth->tme_eth_element->tme_element_log_handle, 1, TME_OK,
+	      (&eth->tme_eth_element->tme_element_log_handle,
+	       _("read %ld bytes of packets"), (long) buffer_end));
+      eth->tme_eth_buffer_offset = 0;
+      eth->tme_eth_buffer_end = buffer_end;
+
+      /* call out that we can be read again: */
+      _tme_eth_callout(eth, TME_ETH_CALLOUT_CTRL);
+    }
   }
   /* NOTREACHED */
 }
@@ -423,10 +439,6 @@ _tme_eth_read(struct tme_ethernet_connection *conn_eth,
   struct tme_ethernet *eth;
   struct tme_ethernet_frame_chunk frame_chunk_buffer;
   size_t buffer_offset_next;
-  const struct tme_ethernet_header *ethernet_header;
-  const struct tme_net_arp_header *arp_header;
-  const struct tme_net_ipv4_header *ipv4_header;
-  tme_uint16_t ethertype;
   unsigned int count;
   int rc;
 
@@ -811,6 +823,7 @@ int tme_eth_init(struct tme_element *element,
 		 int fd, 
 		 u_int sz, 
 		 void *data,
+		 unsigned char *addr,
 		 typeof(tme_eth_connections_new) eth_connections_new)
 {
   struct tme_ethernet *eth;
@@ -822,7 +835,8 @@ int tme_eth_init(struct tme_element *element,
   eth->tme_eth_buffer_size = sz;
   eth->tme_eth_buffer = tme_new(tme_uint8_t, sz);
   eth->tme_eth_data = data;
-
+  eth->tme_eth_addr = addr;
+  
   /* start the threads: */
   tme_mutex_init(&eth->tme_eth_mutex);
   tme_cond_init(&eth->tme_eth_cond_reader);
