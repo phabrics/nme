@@ -551,6 +551,7 @@ _tme_bsd_bpf_connections_new(struct tme_element *element,
 /* retrieve ethernet arguments */
 int _tme_bsd_bpf_args(const char * const args[], 
 		      struct ifreq *ifr,
+		      u_int *rbufsz,
 		      unsigned long *delay,
 		      char **_output)
 {
@@ -569,6 +570,12 @@ int _tme_bsd_bpf_args(const char * const args[],
     if (TME_ARG_IS(args[arg_i + 0], "interface")
 	&& args[arg_i + 1] != NULL) {
       strncpy(ifr->ifr_name, args[arg_i + 1], sizeof(ifr->ifr_name));
+      arg_i += 2;
+    }
+
+    /* the buffer size to use for reads: */
+    else if (TME_ARG_IS(args[arg_i + 0], "rbufsz")
+	     && (*rbufsz = tme_misc_unumber_parse(args[arg_i + 1], 0)) > 0) {
       arg_i += 2;
     }
 
@@ -627,10 +634,11 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
   unsigned long *delay_time;
   int rc;
 
+  packet_buffer_size = 16384;
   delay_time = tme_new0(unsigned long, 1);
 
   /* get the arguments: */
-  rc = _tme_bsd_bpf_args(args, &ifr, delay_time, _output);
+  rc = _tme_bsd_bpf_args(args, &ifr, &packet_buffer_size, delay_time, _output);
 
   /* find the interface we will use: */
   rc = tme_eth_ifaddrs_find(ifr.ifr_name, &ifa, NULL, NULL);
@@ -675,7 +683,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
     errno = saved_errno;
     return (errno);
   }
-  packet_buffer_size = 16384;
 #else
   sprintf(dev_bpf_filename, DEV_BPF_FORMAT);
   
@@ -748,6 +755,20 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
   }
 #endif
 
+  /* get the BPF read buffer size: */
+  if (ioctl(bpf_fd, BIOCSBLEN, &packet_buffer_size) < 0) {
+    tme_log(&element->tme_element_log_handle, 1, errno,
+	    (&element->tme_element_log_handle,
+	     _("failed to read the buffer size for %s"),
+	     dev_bpf_filename));
+    _TME_BPF_RAW_OPEN_ERROR(close(bpf_fd));
+    return (errno);
+  }
+  tme_log(&element->tme_element_log_handle, 0, errno,
+	  (&element->tme_element_log_handle,
+	   _("buffer size for %s is %u"),
+	   dev_bpf_filename, packet_buffer_size));
+
   /* point the BPF device at the interface we're using: */
   if (ioctl(bpf_fd, BIOCSETIF, &ifr) < 0) {
     tme_log(&element->tme_element_log_handle, 1, errno,
@@ -757,20 +778,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
     _TME_BPF_RAW_OPEN_ERROR(close(bpf_fd));
     return (errno);
   }
-
-  /* get the BPF read buffer size: */
-  if (ioctl(bpf_fd, BIOCGBLEN, &packet_buffer_size) < 0) {
-    tme_log(&element->tme_element_log_handle, 1, errno,
-	    (&element->tme_element_log_handle,
-	     _("failed to read the buffer size for %s"),
-	     dev_bpf_filename));
-    _TME_BPF_RAW_OPEN_ERROR(close(bpf_fd));
-    return (errno);
-  }
-  tme_log(&element->tme_element_log_handle, 1, errno,
-	  (&element->tme_element_log_handle,
-	   _("buffer size for %s is %u"),
-	   dev_bpf_filename, packet_buffer_size));
 
   /* set the interface into promiscuous mode: */
   if (ioctl(bpf_fd, BIOCPROMISC) < 0) {
