@@ -728,12 +728,10 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     nating = FALSE;
     tme_output_append_error(_output, _("couldn't find an interface %s"), NATIF);
   } else {
-    strncpy(NATIF, ifa->ifa_name, sizeof(NATIF));
-    
     for(i=0;i<TME_IP_ADDRS_TOTAL;i++) {
-      if(getnameinfo((char *)ifa + ifa_offs[i],
-		     sizeof(struct sockaddr_in),
-		     nat_hosts[i], NI_MAXHOST, NULL, 0, NI_NUMERICHOST))
+      if((rc = getnameinfo(*(struct sockaddr **)((char *)ifa + ifa_offs[i]),
+			   sizeof(struct sockaddr_in),
+			   nat_hosts[i], NI_MAXHOST, NULL, 0, NI_NUMERICHOST)))
 	tme_log(&element->tme_element_log_handle, 0, errno,
 		(&element->tme_element_log_handle,
 		 _("getnameinfo() failed: %s\n"), gai_strerror(rc)));
@@ -811,7 +809,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 	     dev_tap_filename));
     _TME_TAP_RAW_OPEN_ERROR(close(tap_fd));
     return (errno);
-  }
+  } else strncpy(TAPIF, ifr.ifr_name, sizeof(ifr.ifr_name));
 #endif
 
   tme_log(&element->tme_element_log_handle, 0, TME_OK, 
@@ -929,9 +927,9 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   rc = tme_eth_ifaddrs_find(TAPIF, &ifa, NULL, NULL);
 
   for(i=0;i<TME_IP_ADDRS_TOTAL;i++) {
-    if(getnameinfo((char *)ifa + ifa_offs[i],
-		   sizeof(struct sockaddr_in),
-		   tap_hosts[i], NI_MAXHOST, NULL, 0, NI_NUMERICHOST))
+    if((rc = getnameinfo(*(struct sockaddr **)((char *)ifa + ifa_offs[i]),
+			 sizeof(struct sockaddr_in),
+			 tap_hosts[i], NI_MAXHOST, NULL, 0, NI_NUMERICHOST)))
       tme_log(&element->tme_element_log_handle, 0, errno,
 	      (&element->tme_element_log_handle,
 	       _("getnameinfo() failed: %s\n"), gai_strerror(rc)));
