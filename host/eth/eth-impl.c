@@ -727,7 +727,7 @@ tme_eth_ifaddrs_find(const char *ifa_name_user, struct ifaddrs **_ifaddr, tme_ui
   }
 
   /* return this interface: */
-  *_ifaddr = (struct ifaddrs *) tme_memdup(ifa_user, sizeof(*ifa_user));
+  *_ifaddr = ifa_user;
 
   /* assume that we can't find this interface's hardware address: */
   if (_if_addr != NULL) {
@@ -737,7 +737,6 @@ tme_eth_ifaddrs_find(const char *ifa_name_user, struct ifaddrs **_ifaddr, tme_ui
     *_if_addr_size = 0;
   }
 
-  freeifaddrs(ifaddr);
   /* done: */
   return (TME_OK);
 }
