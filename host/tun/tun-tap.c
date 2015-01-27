@@ -348,8 +348,8 @@ int _tme_tun_tap_args(const char * const args[],
 
   arg_i = 1;
 
-#define TAPIF (*(if_names + TME_IF_TYPE_TAP))
-#define NATIF (*(if_names + TME_IF_TYPE_NAT))
+#define TAPIF (if_names + TME_IF_TYPE_TAP * IFNAMSIZ)
+#define NATIF (if_names + TME_IF_TYPE_NAT * IFNAMSIZ)
 
   for (;;) {
     /* the interface we're supposed to use: */
