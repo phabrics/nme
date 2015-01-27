@@ -665,19 +665,20 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   int saved_errno, i;
   struct ifreq ifr;
   char if_names[TME_IF_TYPE_TOTAL][IFNAMSIZ];
-  int ifa_offs[TME_IP_ADDRS_TOTAL];
   char tap_hosts[TME_IP_ADDRS_TOTAL][NI_MAXHOST];
   struct in_addr tap_addrs[TME_IP_ADDRS_TOTAL];
 #ifdef SIOCAIFADDR
   struct in_aliasreq ifra;
 #endif
-  unsigned char *tap_hwaddr;
+  unsigned char *hwaddr;
+  unsigned int hwaddr_len;
 #if !defined(HAVE_FDEVNAME) && defined(HAVE_STRUCT_STAT_ST_RDEV)
   struct stat tap_buf;
 #endif
 #if TME_DO_NAT
   int rc;
   struct ifaddrs *ifa;
+  int ifa_offs[TME_IP_ADDRS_TOTAL];
   char nat_hosts[TME_IP_ADDRS_TOTAL][NI_MAXHOST];
   struct in_addr nat_addrs[TME_IP_ADDRS_TOTAL];
   u_int netnum;
@@ -685,7 +686,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 #endif
 #if TME_DO_NFT
   in_addr_t zero = 0;
-  int i;
   FILE *f;
   struct nft_table *table;
   struct nft_chain *prechain, *postchain;
@@ -716,14 +716,15 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 #define TAPIF if_names[TME_IF_TYPE_TAP]
 #define NATIF if_names[TME_IF_TYPE_NAT]
 
+#if TME_DO_NAT
   ifa_offs[TME_IP_ADDRS_INET] = offsetof(struct ifaddrs, ifa_addr);
   ifa_offs[TME_IP_ADDRS_NETMASK] = offsetof(struct ifaddrs, ifa_netmask);
   ifa_offs[TME_IP_ADDRS_BCAST] = offsetof(struct ifaddrs, ifa_broadaddr);
 
-#if TME_DO_NAT
   /* find the interface we will use: */
   rc = tme_eth_ifaddrs_find(NATIF, &ifa, NULL, NULL);
-  
+  strncpy(NATIF, ifa->ifa_name, IFNAMSIZ);
+
   if (rc != TME_OK) {
     nating = FALSE;
     tme_output_append_error(_output, _("couldn't find an interface %s"), NATIF);
@@ -748,7 +749,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 	     nat_hosts[TME_IP_ADDRS_INET],
 	     nat_hosts[TME_IP_ADDRS_NETMASK],
 	     nat_hosts[TME_IP_ADDRS_BCAST]));
-    freeifaddrs(ifa);
   }
 #endif
 
@@ -878,7 +878,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     }
   }
 
-  tap_hwaddr = tme_new0(unsigned char, TME_ETHERNET_ADDR_SIZE);
+  //tap_hwaddr = tme_new0(unsigned char, TME_ETHERNET_ADDR_SIZE);
   //memcpy(tap_hwaddr, LLADDR(satosdl(&ifla.addr)), TME_ETHERNET_ADDR_SIZE);
   
 #else
@@ -910,6 +910,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 	       TAPIF));
   }
 
+  /*
   if(ioctl(dummy_fd, SIOCGIFHWADDR, (void *) &ifr) < 0) {
     tme_log(&element->tme_element_log_handle, 1, errno,
 	    (&element->tme_element_log_handle,
@@ -919,13 +920,13 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     tap_hwaddr = tme_new0(unsigned char, TME_ETHERNET_ADDR_SIZE);
     memcpy(tap_hwaddr, ifr.ifr_hwaddr.sa_data, TME_ETHERNET_ADDR_SIZE);
   }
-
+  */
 #endif
   close(dummy_fd);
 
   /* find the interface we will use: */
-  rc = tme_eth_ifaddrs_find(TAPIF, &ifa, NULL, NULL);
-
+  rc = tme_eth_ifaddrs_find(TAPIF, &ifa, &hwaddr, &hwaddr_len);
+  
   for(i=0;i<TME_IP_ADDRS_TOTAL;i++) {
     if((rc = getnameinfo(*(struct sockaddr **)((char *)ifa + ifa_offs[i]),
 			 sizeof(struct sockaddr_in),
@@ -944,19 +945,18 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 	   tap_hosts[TME_IP_ADDRS_INET],
 	   tap_hosts[TME_IP_ADDRS_NETMASK],
 	   tap_hosts[TME_IP_ADDRS_BCAST]));
-  freeifaddrs(ifa);
 
-  if(tap_hwaddr) {
+  if(hwaddr_len == TME_ETHERNET_ADDR_SIZE) {
     tme_log(&element->tme_element_log_handle, 0, TME_OK, 
 	    (&element->tme_element_log_handle, 
 	     "hardware address on tap interface %s set to %02x:%02x:%02x:%02x:%02x:%02x",
 	     TAPIF, 
-	     tap_hwaddr[0],
-	     tap_hwaddr[1],
-	     tap_hwaddr[2],
-	     tap_hwaddr[3],
-	     tap_hwaddr[4],
-	     tap_hwaddr[5]));
+	     hwaddr[0],
+	     hwaddr[1],
+	     hwaddr[2],
+	     hwaddr[3],
+	     hwaddr[4],
+	     hwaddr[5]));
   }
 
   // Perform network address translation, if available
@@ -1321,7 +1321,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   setuid(getuid());
 #endif
 
-  return tme_eth_init(element, tap_fd, 4096, NULL, tap_hwaddr, _tme_tun_tap_connections_new);
+  return tme_eth_init(element, tap_fd, 4096, NULL, hwaddr, _tme_tun_tap_connections_new);
 
 #undef TAPINET
 #undef TAPNETMASK

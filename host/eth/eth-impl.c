@@ -64,6 +64,9 @@ _TME_RCSID("$Id: eth-if.c,v 1.3 2003/10/16 02:48:23 fredette Exp $");
 #ifdef HAVE_NET_IF_ETHER_H
 #include <net/if_ether.h>
 #endif /* HAVE_NET_IF_ETHER_H */
+#ifdef HAVE_NETPACKET_PACKET_H
+#include <netpacket/packet.h>
+#endif /* HAVE_NETPACKET_PACKET_H */
 #ifdef HAVE_NET_ETHERNET_H
 #include <net/ethernet.h>
 #endif /* HAVE_NET_ETHERNET_H */
@@ -683,10 +686,28 @@ tme_eth_ifaddrs_find(const char *ifa_name_user, struct ifaddrs **_ifaddr, tme_ui
 {
   struct ifaddrs *ifaddr, *ifa;
   struct ifaddrs *ifa_user = NULL;
+#if defined(HAVE_AF_LINK) || defined(HAVE_AF_PACKET)
+  struct ifaddrs *link_ifaddrs[20];	/* FIXME - magic constant. */
+  size_t link_ifaddrs_count;
+  size_t link_ifaddrs_i;
+#ifdef HAVE_AF_LINK
+  #define AF_HWADDR AF_LINK
+  struct sockaddr_dl *sadl;
+#endif				/* HAVE_AF_LINK */
+#ifdef HAVE_AF_PACKET
+  #define AF_HWADDR AF_PACKET
+  struct sockaddr_ll *sadl;
+#endif				/* HAVE_AF_PACKET */
+#endif 
 
   if (getifaddrs(&ifaddr) == -1) {
     return (-1);
   }
+
+#ifdef AF_HWADDR
+  /* start our list of link address ifaddrs: */
+  link_ifaddrs_count = 0;
+#endif 
 
   /* Walk through linked list, maintaining head pointer so we
      can free list later */
@@ -694,6 +715,16 @@ tme_eth_ifaddrs_find(const char *ifa_name_user, struct ifaddrs **_ifaddr, tme_ui
   for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
     if (ifa->ifa_addr == NULL)
       continue;
+
+#ifdef AF_HWADDR
+    /* if this is a hardware address, save it: */
+    if (ifa->ifa_addr->sa_family == AF_HWADDR) {
+      if (link_ifaddrs_count < TME_ARRAY_ELS(link_ifaddrs)) {
+	link_ifaddrs[link_ifaddrs_count++] = ifa;
+      }
+      continue;
+    }
+#endif 
 
     /* ignore this interface if it doesn't do IP: */
     /* XXX is this actually important? */
@@ -727,15 +758,57 @@ tme_eth_ifaddrs_find(const char *ifa_name_user, struct ifaddrs **_ifaddr, tme_ui
   }
 
   /* return this interface: */
-  *_ifaddr = ifa_user;
+  *_ifaddr = (struct ifaddrs *) tme_memdup(ifa_user, sizeof(struct ifaddrs));
 
   /* assume that we can't find this interface's hardware address: */
   if (_if_addr != NULL) {
     *_if_addr = NULL;
   }
-  if (_if_addr_size != NULL) {
+  if (_if_addr_size != NULL) {    
     *_if_addr_size = 0;
   }
+
+#ifdef AF_HWADDR
+
+  /* try to find an AF_LINK ifreq that gives us the interface's
+     hardware address: */
+  ifa = NULL;
+  for (link_ifaddrs_i = 0;
+       link_ifaddrs_i < link_ifaddrs_count;
+       link_ifaddrs_i++) {
+    if (!strncmp(link_ifaddrs[link_ifaddrs_i]->ifa_name,
+		 ifa_user->ifa_name,
+		 IFNAMSIZ)) {
+      ifa = link_ifaddrs[link_ifaddrs_i];
+      break;
+    }
+  }
+
+  /* if we found one, return the hardware address: */
+  if (ifa != NULL) {
+#ifdef HAVE_AF_LINK
+    sadl = (struct sockaddr_dl *) ifa->ifa_addr;
+    if (_if_addr_size != NULL) {
+      *_if_addr_size = sadl->sdl_alen;
+    }
+    if (_if_addr != NULL) {
+      *_if_addr = tme_new(tme_uint8_t, sadl->sdl_alen);
+      memcpy(*_if_addr, LLADDR(sadl), sadl->sdl_alen);
+    }
+#else
+    sadl = (struct sockaddr_ll *) ifa->ifa_addr;
+    if (_if_addr_size != NULL)
+      *_if_addr_size = sadl->sll_halen;
+    if (_if_addr != NULL) {
+      *_if_addr = tme_new(tme_uint8_t, sadl->sll_halen);
+      memcpy(*_if_addr, sadl->sll_addr, sadl->sll_halen);
+    }
+#endif
+  }
+
+#endif /* AF_HWADDR */
+
+  freeifaddrs(ifaddr);
 
   /* done: */
   return (TME_OK);
