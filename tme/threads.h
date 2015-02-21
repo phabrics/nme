@@ -176,4 +176,127 @@ extern int tme_sjlj_thread_short;
 
 #endif /* TME_THREADS_SJLJ */
 
+#ifdef TME_THREADS_PTHREADS
+
+/* setjmp/longjmp threads are cooperative: */
+#define TME_THREADS_COOPERATIVE		(FALSE)
+
+/* our errno convention: */
+#define TME_EDEADLK		EBUSY
+#define TME_EBUSY		EBUSY
+#define TME_THREADS_ERRNO(rc)	(rc)
+
+/* initializing and starting: */
+#define tme_threads_init(x) do { } while (/* CONSTCOND */ 0)
+#ifdef _TME_HAVE_GTK
+void tme_pthread_threads_gtk_init _TME_P((void));
+#define tme_threads_gtk_init tme_pthread_threads_gtk_init
+void tme_pthread_threads_gtk_yield _TME_P((void));
+#define tme_threads_gtk_yield tme_pthread_threads_gtk_yield
+#endif /* _TME_HAVE_GTK */
+#define tme_threads_run do { } while (/* CONSTCOND */ 0)
+
+/* thread suspension: */
+#define tme_thread_suspend_others()	do { } while (/* CONSTCOND */ 0)
+#define tme_thread_resume_others()	do { } while (/* CONSTCOND */ 0)
+
+/* if we want speed over lock debugging, we can compile very simple
+   rwlock operations: */
+#ifdef TME_NO_DEBUG_LOCKS
+typedef int tme_rwlock_t;
+#define tme_rwlock_init(l) (*(l) = FALSE, TME_OK)
+#define tme_rwlock_rdlock(l) (*(l) = TRUE, TME_OK)
+#define tme_rwlock_tryrdlock(l) (*(l) ? TME_EBUSY : tme_rwlock_rdlock(l))
+#define tme_rwlock_unlock(l) (*(l) = FALSE, TME_OK)
+#else  /* !TME_NO_DEBUG_LOCKS */   
+
+/* debugging rwlocks: */
+typedef struct tme_pthread_rwlock {
+
+  /* nonzero iff the lock is locked: */
+  int _tme_pthread_rwlock_locked;
+
+  /* the file and line number of the last locker or unlocker: */
+  _tme_const char *_tme_pthread_rwlock_file;
+  unsigned long _tme_pthread_rwlock_line;
+} tme_rwlock_t;
+
+/* lock operations: */
+int tme_pthread_rwlock_init _TME_P((struct tme_pthread_rwlock *));
+int tme_pthread_rwlock_lock _TME_P((struct tme_pthread_rwlock *, _tme_const char *, unsigned long, int));
+int tme_pthread_rwlock_unlock _TME_P((struct tme_pthread_rwlock *, _tme_const char *, unsigned long));
+#define tme_rwlock_init tme_pthread_rwlock_init
+#if defined(__FILE__) && defined(__LINE__)
+#define tme_rwlock_rdlock(l) tme_pthread_rwlock_lock(l, __FILE__, __LINE__, FALSE)
+#define tme_rwlock_tryrdlock(l) tme_pthread_rwlock_lock(l, __FILE__, __LINE__, TRUE)
+#define tme_rwlock_unlock(l) tme_pthread_rwlock_unlock(l, __FILE__, __LINE__)
+#else  /* !defined(__FILE__) || !defined(__LINE__) */
+#define tme_rwlock_rdlock(l) tme_pthread_rwlock_lock(l, NULL, 0, FALSE)
+#define tme_rwlock_tryrdlock(l) tme_pthread_rwlock_lock(l, NULL, 0, TRUE)
+#define tme_rwlock_unlock(l) tme_pthread_rwlock_unlock(l, NULL, 0)
+#endif /* !defined(__FILE__) || !defined(__LINE__) */
+
+#endif /* TME_NO_DEBUG_LOCKS */
+
+/* since our thread model doesn't allow recursive locking, write locking
+   is always the same as read locking: */
+#define tme_rwlock_wrlock tme_rwlock_rdlock
+#define tme_rwlock_trywrlock tme_rwlock_tryrdlock
+
+/* with cooperative threads, it doesn't make any sense to wait for locks: */
+#define tme_rwlock_timedrdlock(l, usec) tme_rwlock_tryrdlock(l)
+#define tme_rwlock_timedwrlock(l, usec) tme_rwlock_trywrlock(l)
+
+/* mutexes.  we use a read/write lock to represent a mutex, and always
+   lock it for writing.  we do *not* allow recursive locking: */
+#define tme_mutex_t tme_rwlock_t
+#define tme_mutex_lock tme_rwlock_wrlock
+#define tme_mutex_trylock tme_rwlock_trywrlock
+#define tme_mutex_timedlock(t, usec) tme_mutex_trylock(t)
+#define tme_mutex_unlock tme_rwlock_unlock
+#define tme_mutex_init tme_rwlock_init
+
+/* conditions: */
+typedef pthread_cond_t tme_cond_t;
+#define tme_cond_init(x) pthread_cond_init(x,NULL)
+#define tme_cond_wait_yield pthread_cond_wait
+#define tme_cond_sleep_yield pthread_cond_timedwait
+#define tme_cond_notify(cond,bc) ((bc) ? (pthread_cond_broadcast(cond)) : (pthread_cond_signal(cond)))
+
+/* deadlock sleeping: */
+#define TME_THREAD_TIMEDLOCK		(0)
+#define TME_THREAD_DEADLOCK_SLEEP	abort
+
+/* threads: */
+typedef void (*tme_thread_t) _TME_P((void *));
+#define tme_thread_create(t,f,a) pthread_create(t,NULL,f,a)
+void tme_pthread_yield _TME_P((void));
+#define tme_thread_yield do { } while (/* CONSTCOND */ 0)
+#define tme_thread_exit do { } while (/* CONSTCOND */ 0)
+
+/* sleeping: */
+void tme_pthread_sleep _TME_P((unsigned long, unsigned long));
+#define tme_thread_sleep tme_pthread_sleep
+void tme_pthread_sleep_yield _TME_P((unsigned long, unsigned long));
+#define tme_thread_sleep_yield tme_pthread_sleep_yield
+
+/* I/O: */
+#define tme_thread_read read
+#define tme_thread_write write
+#define tme_thread_select select
+int tme_pthread_select_yield _TME_P((int, fd_set *, fd_set *, fd_set *, tme_time_t *));
+ssize_t tme_pthread_read_yield _TME_P((int, void *, size_t));
+ssize_t tme_pthread_write_yield _TME_P((int, void *, size_t));
+#define tme_thread_select_yield tme_pthread_select_yield
+#define tme_thread_read_yield tme_pthread_read_yield
+#define tme_thread_write_yield tme_pthread_write_yield
+
+/* time: */
+void tme_pthread_gettimeofday _TME_P((tme_time_t *));
+#define tme_gettimeofday tme_pthread_gettimeofday
+extern int tme_pthread_thread_short;
+#define tme_thread_long() do { tme_pthread_thread_short = FALSE; } while (/* CONSTCOND */ 0)
+
+#endif /* TME_THREADS_PTHREADS */
+
 #endif /* !_TME_THREADS_H */

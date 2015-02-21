@@ -33,7 +33,7 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.68])
-AC_INIT([tme], [1.0beta_5])
+AC_INIT([tme], [1.0beta_6])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
@@ -205,7 +205,7 @@ AC_FUNC_MEMCMP
 AC_FUNC_MALLOC
 AC_FUNC_MMAP
 AC_FUNC_REALLOC
-AC_CHECK_FUNCS([clock_gettime gettimeofday memmove memset munmap pow ptsname select socket sqrt strchr strerror strrchr strstr strtoul devname fdevname kldfind])
+AC_CHECK_FUNCS([gettimeofday memmove memset munmap pow ptsname select socket sqrt strchr strerror strrchr strstr strtoul devname fdevname kldfind])
 AC_CHECK_FUNC_LONG(bswap16, [
   unsigned int x;
 
