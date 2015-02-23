@@ -100,6 +100,52 @@ static tme_uint32_t _tmesh_log_handle_next;
 /* a format hash: */
 static tme_hash_t _tmesh_log_hash_format;
 
+#ifdef TME_THREADS_POSIX
+#ifdef _TME_HAVE_GTK
+/* nonzero iff we're using the gtk main loop: */
+extern int tme_using_gtk;
+
+static inline void tme_threads_gtk_init _TME_P((void)) 
+{
+  char **argv;
+  char *argv_buffer[3];
+  int argc;
+
+  /* if we've already initialized GTK: */
+  if (tme_using_gtk) {
+    return;
+  }
+
+  /* conjure up an argv.  this is pretty bad: */
+  argv = argv_buffer;
+  argc = 0;
+  argv[argc++] = "tmesh";
+#if 1
+  argv[argc++] = "--gtk-debug=signals";
+#endif
+  argv[argc] = NULL;
+  gtk_init(&argc, &argv);
+
+  /* we are now using GTK: */
+  tme_using_gtk = TRUE;
+}
+#endif /* _TME_HAVE_GTK */
+
+pthread_t tme_tid;
+
+void tme_threads_run(void) {
+#ifdef HAVE_GTK
+  /* if we're using the GTK main loop, yield to GTK and
+     call gtk_main(): */
+  if (tme_sjlj_using_gtk) {
+    gtk_main();
+  }
+#endif /* HAVE_GTK */
+  pthread_join(tme_tid,NULL);
+}
+
+#endif /* TME_THREADS_POSIX */
+
 /* this removes all consumed characters from a buffer, and shifts
    everything else down: */
 static void

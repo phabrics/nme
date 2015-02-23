@@ -830,12 +830,13 @@ tme_sjlj_threads_run(void)
 
 /* this creates a new thread: */
 void
-tme_sjlj_thread_create(tme_thread_t func, void *func_private)
+tme_sjlj_thread_create(tme_threadid_t *thr, tme_thread_t func, void *func_private)
 {
   struct tme_sjlj_thread *thread;
 
   /* allocate a new thread and put it on the all-threads list: */
   thread = tme_new(struct tme_sjlj_thread, 1);
+  *thr = thread;
   thread->prev = &tme_sjlj_threads_all;
   thread->next = *thread->prev;
   *thread->prev = thread;

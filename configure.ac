@@ -205,7 +205,7 @@ AC_FUNC_MEMCMP
 AC_FUNC_MALLOC
 AC_FUNC_MMAP
 AC_FUNC_REALLOC
-AC_CHECK_FUNCS([gettimeofday memmove memset munmap pow ptsname select socket sqrt strchr strerror strrchr strstr strtoul devname fdevname kldfind])
+AC_CHECK_FUNCS([clock_gettime gettimeofday memmove memset munmap pow ptsname select socket sqrt strchr strerror strrchr strstr strtoul devname fdevname kldfind])
 AC_CHECK_FUNC_LONG(bswap16, [
   unsigned int x;
 
@@ -881,6 +881,16 @@ if test "x${enable_warnings}" = "xyes" -a "x${GCC}" = "xyes"; then
   CXXFLAGS="${CXXFLAGS-} -W"
 fi
 
+AC_ARG_ENABLE(pthreads,
+[  --enable-pthreads      use POSIX threads instead of setjmp/longjmp threads (default=don't)],
+[ ], [enable_pthreads=no])
+if test "x${enable_pthreads}" = "xyes"; then
+  CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_POSIX"
+  CFLAGS="${CFLAGS-} -pthread"
+else
+  CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_SJLJ"
+fi
+
 dnl Some code isn't alias-clean.
 CFLAGS_NO_STRICT_ALIASING=
 if test "x${GCC}" = "xyes"; then
@@ -992,7 +1002,6 @@ TMEEOF
   cat <<TMEEOF >> ${outfile}-tmp
 
 /* features that aren't currently controlled by a configure option: */
-#define TME_THREADS_SJLJ
 
 #endif /* !_TMECONFIG_H */
 TMEEOF

@@ -176,26 +176,23 @@ extern int tme_sjlj_thread_short;
 
 #endif /* TME_THREADS_SJLJ */
 
-#ifdef TME_THREADS_PTHREADS
+#ifdef TME_THREADS_POSIX
+#include <pthread.h>
 
 /* setjmp/longjmp threads are cooperative: */
 #define TME_THREADS_COOPERATIVE		(FALSE)
 
 /* our errno convention: */
-#define TME_EDEADLK		EBUSY
+#define TME_EDEADLK		EDEADLK
 #define TME_EBUSY		EBUSY
 #define TME_THREADS_ERRNO(rc)	(rc)
 
 /* initializing and starting: */
 #define tme_threads_init(x) do { } while (/* CONSTCOND */ 0)
 #ifdef _TME_HAVE_GTK
-void tme_sjlj_threads_gtk_init _TME_P((void));
-#define tme_threads_gtk_init tme_sjlj_threads_gtk_init
-void tme_sjlj_threads_gtk_yield _TME_P((void));
-#define tme_threads_gtk_yield tme_sjlj_threads_gtk_yield
-#endif /* _TME_HAVE_GTK */
-void tme_sjlj_threads_run _TME_P((void));
-#define tme_threads_run tme_sjlj_threads_run
+void tme_threads_gtk_init _TME_P((void));
+#endif
+void tme_threads_run _TME_P((void));
 
 /* thread suspension: */
 #define tme_thread_suspend_others()	do { } while (/* CONSTCOND */ 0)
@@ -217,19 +214,21 @@ typedef pthread_rwlock_t tme_rwlock_t;
 
 static inline int tme_rwlock_timedrdlock _TME_P((tme_rwlock_t *l, unsigned long usec)) { 
   static tme_time_t tme_timeout;
+  unsigned long sec;
 
   for (; usec >= 1000000; sec++, usec -= 1000000);
 
-  TME_TIME_SETV(tme_timeout, 0, usec);
+  TME_TIME_SETV(tme_timeout, sec, usec);
   return pthread_rwlock_timedrdlock(l, &tme_timeout); 
 }
 
 static inline int tme_rwlock_timedwrlock _TME_P((tme_rwlock_t *l, unsigned long usec)) { 
   static tme_time_t tme_timeout;
+  unsigned long sec;
 
   for (; usec >= 1000000; sec++, usec -= 1000000);
 
-  TME_TIME_SETV(tme_timeout, 0, usec);
+  TME_TIME_SETV(tme_timeout, sec, usec);
   return pthread_rwlock_timedwrlock(l, &tme_timeout); 
 }
 
@@ -254,7 +253,8 @@ typedef pthread_cond_t tme_cond_t;
 
 /* threads: */
 typedef void (*tme_thread_t) _TME_P((void *));
-#define tme_thread_create(t,f,a) pthread_create(t,NULL,f,a)
+extern pthread_t tme_tid;
+#define tme_thread_create pthread_create(&tme_tid,NULL,f,a)
 void tme_pthread_yield _TME_P((void));
 #define tme_thread_yield do { } while (/* CONSTCOND */ 0)
 #define tme_thread_exit pthread_exit(NULL)
@@ -273,6 +273,6 @@ static inline int tme_thread_sleep_yield _TME_P((unsigned long sec, unsigned lon
 #define tme_thread_read_yield read
 #define tme_thread_write_yield write
 
-#endif /* TME_THREADS_PTHREADS */
+#endif /* TME_THREADS_POSIX */
 
 #endif /* !_TME_THREADS_H */
