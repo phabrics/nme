@@ -3762,7 +3762,7 @@ _tme_stp103x_tick_compare_th(void *_ic)
   for (;;) {
 
     /* get the current time: */
-    tme_gettimeofday(&now);
+    tme_get_time(&now);
 
     /* if the current time is greater than or equal to the tick compare time: */
     now_tv_sec = TME_TIME_SEC(now);
