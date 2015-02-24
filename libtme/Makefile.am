@@ -12,7 +12,6 @@ AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I. $(LTDLINCL) $(GTK_CFLAGS) -D_TME_I
 lib_LTLIBRARIES = libtme.la
 pkginclude_HEADERS = memory-auto.h
 libtme_la_SOURCES = misc-host.c \
-	threads-sjlj.c	\
 	memory-auto.c \
 	recode-flags.c \
 	recode-conds.c \
@@ -30,6 +29,9 @@ libtme_la_SOURCES = misc-host.c \
 	token.c \
 	runlength.c \
 	alloc.c
+if THREADS_SJLJ
+libtme_la_SOURCES += threads-sjlj.c
+endif
 libtme_la_LDFLAGS = -version-info 0:0:0
 libtme_la_LIBADD = $(LIBLTDL)
 BUILT_SOURCES = memory-auto.h memory-auto.c

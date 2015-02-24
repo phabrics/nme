@@ -891,6 +891,8 @@ else
   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_SJLJ"
 fi
 
+AM_CONDITIONAL([THREADS_SJLJ], [test "x${enable_pthreads}" = "xno"])
+
 dnl Some code isn't alias-clean.
 CFLAGS_NO_STRICT_ALIASING=
 if test "x${GCC}" = "xyes"; then
