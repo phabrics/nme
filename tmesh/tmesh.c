@@ -42,7 +42,9 @@ _TME_RCSID("$Id: tmesh.c,v 1.4 2009/08/30 17:06:38 fredette Exp $");
 #include <tme/hash.h>
 #include <stdio.h>
 #include <string.h>
-
+#ifdef _TME_HAVE_GTK
+#include <gtk/gtk.h>
+#endif
 /* macros: */
 
 /* the binary log message buffer size: */
@@ -104,7 +106,7 @@ static tme_hash_t _tmesh_log_hash_format;
 /* nonzero iff we're using the gtk main loop: */
 extern int tme_using_gtk;
 
-static inline void tme_threads_gtk_init _TME_P((void)) 
+inline void tme_threads_gtk_init _TME_P((void)) 
 {
   char **argv;
   char *argv_buffer[3];
@@ -141,7 +143,7 @@ void tme_threads_run(void) {
     gtk_main();
   }
 #endif /* _TME_HAVE_GTK */
-  pthread_join(tme_tid,NULL);
+  tme_thread_join(tme_tid);
 }
 
 #endif /* TME_THREADS_POSIX */

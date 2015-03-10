@@ -85,8 +85,8 @@ typedef GCond tme_cond_t;
 #define tme_cond_destroy g_cond_clear
 #define tme_cond_wait_yield g_cond_wait
 #define tme_cond_sleep_yield g_cond_wait_until
-#define tme_cond_notify1 g_cond_broadcast
-#define tme_cond_notify0 g_cond_signal
+#define tme_cond_notifyTRUE g_cond_broadcast
+#define tme_cond_notifyFALSE g_cond_signal
 #define tme_cond_notify(cond,bc) tme_cond_notify##bc(cond)
 
 /* deadlock sleeping: */
@@ -94,13 +94,14 @@ typedef GCond tme_cond_t;
 #define TME_THREAD_DEADLOCK_SLEEP	abort
 
 /* threads: */
-typedef void (*tme_thread_t) _TME_P((void *));
-typedef GThread tme_threadid_t;
-extern tme_threadid_t *tme_tid;
+typedef GThreadFunc tme_thread_t;
+typedef GThread *tme_threadid_t;
+extern tme_threadid_t tme_tid;
 static inline void tme_thread_create _TME_P((tme_thread_t f, void *a)) {
-  tme_tid = g_thread_new(NULL,f,a,NULL);
+  tme_tid = g_thread_new(NULL,f,a);
 }
 #define tme_thread_yield do { } while (/* CONSTCOND */ 0)
+#define tme_thread_join g_thread_join
 #define tme_thread_exit g_thread_exit(NULL)
 
 /* sleeping: */
@@ -111,5 +112,7 @@ static inline void tme_thread_sleep_yield _TME_P((unsigned long sec, unsigned lo
 }
 
 /* I/O: */
+#define tme_thread_read read
+#define tme_thread_write write
 #define tme_thread_read_yield read
 #define tme_thread_write_yield write

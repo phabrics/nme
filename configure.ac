@@ -881,17 +881,36 @@ if test "x${enable_warnings}" = "xyes" -a "x${GCC}" = "xyes"; then
   CXXFLAGS="${CXXFLAGS-} -W"
 fi
 
-AC_ARG_ENABLE(pthreads,
-[  --enable-pthreads      use POSIX threads instead of setjmp/longjmp threads (default=don't)],
-[ ], [enable_pthreads=no])
-if test "x${enable_pthreads}" = "xyes"; then
-  CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_POSIX"
-  CFLAGS="${CFLAGS-} -pthread"
-else
-  CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_SJLJ"
+AC_MSG_CHECKING([for available threading models])
+
+# specify whether built-in threading support should be enabled & with what thread models
+AC_ARG_ENABLE(threads,
+[  --enable-threads=THRs  Enable built-in thread support utilizing the given threading models (compiled-in order of usage by platform availability: 'pthreads','glib','npth','pth').  Defaults to 'yes', any available.  Turn off threads with 'no' or --disable-threads; this will use setjmp/longjmp.], [tme_thread_types=${enableval}], [enable_threads=yes])
+
+if test "x${enable_threads}" = xyes; then
+   tme_thread_types=glib
 fi
 
-AM_CONDITIONAL([THREADS_SJLJ], [test "x${enable_pthreads}" = "xno"])
+if test "x${enable_threads}" = xno; then
+   tme_thread_types=sjlj
+fi
+
+THRINC=
+
+for tme_thread_type in ${tme_thread_types}; do
+case "x${tme_thread_type}" in
+xpthreads)   CPPFLAGS="${CPPFLAGS} -DTME_THREADS_POSIX" 
+	     CFLAGS="${CFLAGS} -pthread" ;;
+xglib)   CPPFLAGS="${CPPFLAGS} -DTME_THREADS_GLIB ${GTK_CFLAGS}" ;;
+xnpth)    CPPFLAGS="${CPPFLAGS} -DTME_THREADS_NPTH" ;;
+xpth)   CPPFLAGS="${CPPFLAGS} -DTME_THREADS_PTH" ;;
+xsjlj)   CPPFLAGS="${CPPFLAGS} -DTME_THREADS_SJLJ" ;;
+esac
+done
+
+AC_MSG_RESULT($tme_thread_types)
+
+AM_CONDITIONAL([THREADS_SJLJ], [test "x${enable_threads}" = "xno"])
 
 dnl Some code isn't alias-clean.
 CFLAGS_NO_STRICT_ALIASING=

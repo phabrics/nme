@@ -102,8 +102,8 @@ typedef pthread_cond_t tme_cond_t;
 #define tme_cond_destroy pthread_cond_destroy
 #define tme_cond_wait_yield pthread_cond_wait
 #define tme_cond_sleep_yield pthread_cond_timedwait
-#define tme_cond_notify1 pthread_cond_broadcast
-#define tme_cond_notify0 pthread_cond_signal
+#define tme_cond_notifyTRUE pthread_cond_broadcast
+#define tme_cond_notifyFALSE pthread_cond_signal
 #define tme_cond_notify(cond,bc) tme_cond_notify##bc(cond)
 
 /* deadlock sleeping: */
@@ -117,6 +117,7 @@ extern tme_threadid_t tme_tid;
 #define tme_thread_create pthread_create(&tme_tid,NULL,f,a)
 void tme_pthread_yield _TME_P((void));
 #define tme_thread_yield do { } while (/* CONSTCOND */ 0)
+#define tme_thread_join(id) pthread_join(id,NULL)
 #define tme_thread_exit pthread_exit(NULL)
 
 /* sleeping: */
@@ -130,6 +131,8 @@ static inline int tme_thread_sleep_yield _TME_P((unsigned long sec, unsigned lon
 }
 
 /* I/O: */
+#define tme_thread_read read
+#define tme_thread_write write
 #define tme_thread_read_yield read
 #define tme_thread_write_yield write
 
