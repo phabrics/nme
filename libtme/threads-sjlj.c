@@ -213,35 +213,6 @@ tme_sjlj_threads_init(void)
   TME_TIME_SETV(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep, 0, 0);
 }
 
-#ifdef HAVE_GTK
-/* this initializes the threads system to use the GTK event loop: */
-void
-tme_sjlj_threads_gtk_init(void)
-{
-  char **argv;
-  char *argv_buffer[3];
-  int argc;
-
-  /* if we've already initialized GTK: */
-  if (tme_sjlj_using_gtk) {
-    return;
-  }
-
-  /* conjure up an argv.  this is pretty bad: */
-  argv = argv_buffer;
-  argc = 0;
-  argv[argc++] = "tmesh";
-#if 1
-  argv[argc++] = "--gtk-debug=signals";
-#endif
-  argv[argc] = NULL;
-  gtk_init(&argc, &argv);
-  
-  /* we are now using GTK: */
-  tme_sjlj_using_gtk = TRUE;
-}
-#endif /* HAVE_GTK */
-
 /* this returns a reasonably current time: */
 void
 tme_sjlj_gettimeofday(tme_time_t *now)

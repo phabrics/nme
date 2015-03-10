@@ -100,7 +100,6 @@ static tme_uint32_t _tmesh_log_handle_next;
 /* a format hash: */
 static tme_hash_t _tmesh_log_hash_format;
 
-#ifdef TME_THREADS_POSIX
 #ifdef _TME_HAVE_GTK
 /* nonzero iff we're using the gtk main loop: */
 extern int tme_using_gtk;
@@ -131,16 +130,17 @@ static inline void tme_threads_gtk_init _TME_P((void))
 }
 #endif /* _TME_HAVE_GTK */
 
-pthread_t tme_tid;
+#ifndef TME_THREADS_SJLJ
+tme_threadid_t tme_tid;
 
 void tme_threads_run(void) {
-#ifdef HAVE_GTK
+#ifdef _TME_HAVE_GTK
   /* if we're using the GTK main loop, yield to GTK and
      call gtk_main(): */
-  if (tme_sjlj_using_gtk) {
+  if (tme_using_gtk) {
     gtk_main();
   }
-#endif /* HAVE_GTK */
+#endif /* _TME_HAVE_GTK */
   pthread_join(tme_tid,NULL);
 }
 
