@@ -47,8 +47,6 @@
 void tme_sjlj_threads_init _TME_P((void));
 #define tme_threads_init tme_sjlj_threads_init
 #ifdef _TME_HAVE_GTK
-void tme_sjlj_threads_gtk_init _TME_P((void));
-#define tme_threads_gtk_init tme_sjlj_threads_gtk_init
 void tme_sjlj_threads_gtk_yield _TME_P((void));
 #define tme_threads_gtk_yield tme_sjlj_threads_gtk_yield
 #endif /* _TME_HAVE_GTK */
@@ -130,8 +128,10 @@ void tme_sjlj_cond_notify _TME_P((tme_cond_t *, int));
 #define TME_THREAD_DEADLOCK_SLEEP	abort
 
 /* threads: */
+struct tme_sjlj_thread;
+typedef struct tme_sjlj_thread *tme_threadid_t;
 typedef void (*tme_thread_t) _TME_P((void *));
-void tme_sjlj_thread_create _TME_P((tme_thread_t, void *));
+void tme_sjlj_thread_create _TME_P((tme_threadid_t *, tme_thread_t, void *));
 #define tme_thread_create tme_sjlj_thread_create
 void tme_sjlj_yield _TME_P((void));
 #define tme_thread_yield tme_sjlj_yield

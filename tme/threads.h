@@ -52,4 +52,8 @@ _TME_RCSID("$Id: threads.h,v 1.10 2010/06/05 19:36:35 fredette Exp $");
 #include "threads-sjlj.h"
 #endif
 
+#ifdef _TME_HAVE_GTK
+void tme_threads_gtk_init _TME_P((void));
+#endif
+
 #endif /* !_TME_THREADS_H */

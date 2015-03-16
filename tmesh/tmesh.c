@@ -42,7 +42,7 @@ _TME_RCSID("$Id: tmesh.c,v 1.4 2009/08/30 17:06:38 fredette Exp $");
 #include <tme/hash.h>
 #include <stdio.h>
 #include <string.h>
-#ifdef _TME_HAVE_GTK
+#ifdef HAVE_GTK
 #include <gtk/gtk.h>
 #endif
 /* macros: */
@@ -102,7 +102,7 @@ static tme_uint32_t _tmesh_log_handle_next;
 /* a format hash: */
 static tme_hash_t _tmesh_log_hash_format;
 
-#ifdef _TME_HAVE_GTK
+#ifdef HAVE_GTK
 /* nonzero iff we're using the gtk main loop: */
 extern int tme_using_gtk;
 
@@ -130,19 +130,19 @@ inline void tme_threads_gtk_init _TME_P((void))
   /* we are now using GTK: */
   tme_using_gtk = TRUE;
 }
-#endif /* _TME_HAVE_GTK */
+#endif /* HAVE_GTK */
+
+static tme_threadid_t tme_tid;
 
 #ifndef TME_THREADS_SJLJ
-tme_threadid_t tme_tid;
-
-void tme_threads_run(void) {
-#ifdef _TME_HAVE_GTK
+static void tme_threads_run(void) {
+#ifdef HAVE_GTK
   /* if we're using the GTK main loop, yield to GTK and
      call gtk_main(): */
   if (tme_using_gtk) {
     gtk_main();
   }
-#endif /* _TME_HAVE_GTK */
+#endif /* HAVE_GTK */
   tme_thread_join(tme_tid);
 }
 
@@ -706,7 +706,7 @@ where OPTIONS are:\n\
     }
 
     /* create our thread: */
-    tme_thread_create((tme_thread_t) _tmesh_thread, NULL);
+    tme_thread_create(&tme_tid, (tme_thread_t) _tmesh_thread, NULL);
   }
 
   /* run the threads: */

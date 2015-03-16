@@ -44,10 +44,6 @@
 
 /* initializing and starting: */
 #define tme_threads_init(x) do { } while (/* CONSTCOND */ 0)
-#ifdef _TME_HAVE_GTK
-void tme_threads_gtk_init _TME_P((void));
-#endif
-void tme_threads_run _TME_P((void));
 
 /* thread suspension: */
 #define tme_thread_suspend_others()	do { } while (/* CONSTCOND */ 0)
@@ -96,9 +92,8 @@ typedef GCond tme_cond_t;
 /* threads: */
 typedef GThreadFunc tme_thread_t;
 typedef GThread *tme_threadid_t;
-extern tme_threadid_t tme_tid;
-static inline void tme_thread_create _TME_P((tme_thread_t f, void *a)) {
-  tme_tid = g_thread_new(NULL,f,a);
+static inline void tme_thread_create _TME_P((tme_threadid_t *t, tme_thread_t f, void *a)) {
+  *t = g_thread_new(NULL,f,a);
 }
 #define tme_thread_yield do { } while (/* CONSTCOND */ 0)
 #define tme_thread_join g_thread_join
