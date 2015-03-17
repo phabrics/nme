@@ -50,8 +50,7 @@ void tme_sjlj_threads_init _TME_P((void));
 void tme_sjlj_threads_gtk_yield _TME_P((void));
 #define tme_threads_gtk_yield tme_sjlj_threads_gtk_yield
 #endif /* _TME_HAVE_GTK */
-void tme_sjlj_threads_run _TME_P((void));
-#define tme_threads_run tme_sjlj_threads_run
+void tme_sjlj_threads_run _TME_P((int));
 
 /* thread suspension: */
 #define tme_thread_suspend_others()	do { } while (/* CONSTCOND */ 0)
@@ -135,6 +134,7 @@ void tme_sjlj_thread_create _TME_P((tme_threadid_t *, tme_thread_t, void *));
 #define tme_thread_create tme_sjlj_thread_create
 void tme_sjlj_yield _TME_P((void));
 #define tme_thread_yield tme_sjlj_yield
+#define tme_thread_join(id) do { } while (/* CONSTCOND */ 0)
 void tme_sjlj_exit _TME_P((void));
 #define tme_thread_exit tme_sjlj_exit
 

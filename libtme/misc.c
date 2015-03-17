@@ -42,10 +42,54 @@ _TME_RCSID("$Id: misc.c,v 1.8 2010/06/05 19:02:38 fredette Exp $");
 #include <tme/misc.h>
 #include <ctype.h>
 #include <time.h>
+#ifdef HAVE_GTK
+#include <gtk/gtk.h>
+
+/* nonzero iff we're using the gtk main loop: */
+static int tme_using_gtk;
+
+void tme_threads_gtk_init(void)
+{
+  char **argv;
+  char *argv_buffer[3];
+  int argc;
+
+  /* if we've already initialized GTK: */
+  if (tme_using_gtk) {
+    return;
+  }
+
+  /* conjure up an argv.  this is pretty bad: */
+  argv = argv_buffer;
+  argc = 0;
+  argv[argc++] = "tmesh";
+#if 1
+  argv[argc++] = "--gtk-debug=signals";
+#endif
+  argv[argc] = NULL;
+  gtk_init(&argc, &argv);
+
+  /* we are now using GTK: */
+  tme_using_gtk = TRUE;
+}
+#endif /* HAVE_GTK */
+
+void tme_threads_run() {
+#ifdef TME_THREADS_SJLJ
+  tme_sjlj_threads_run(tme_using_gtk);
+#endif /* TME_THREADS_SJLJ */
+#ifdef HAVE_GTK
+  /* if we're using the GTK main loop, yield to GTK and
+     call gtk_main(): */
+  if (tme_using_gtk) {
+    gtk_main();
+  }
+#endif /* HAVE_GTK */
+}
 
 /* this initializes libtme: */
 int
-tme_init(void)
+tme_init()
 {
   int rc;
   

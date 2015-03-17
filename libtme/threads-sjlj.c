@@ -177,7 +177,7 @@ static tme_time_t _tme_sjlj_gtk_timeout;
 
 /* this initializes the threads system: */
 void
-tme_sjlj_threads_init(void)
+tme_sjlj_threads_init()
 {
   int fd;
 
@@ -685,7 +685,7 @@ tme_sjlj_threads_gtk_yield(void)
       
 /* this starts the threads dispatching: */
 void
-tme_sjlj_threads_run(void)
+tme_sjlj_threads_run(int using_gtk)
 {
   int fd;
   fd_set fdset_read_out;
@@ -696,6 +696,8 @@ tme_sjlj_threads_run(void)
   tme_time_t *timeout;
   int rc;
   
+  tme_sjlj_using_gtk = using_gtk;
+
 #ifdef HAVE_GTK
   /* if we're using the GTK main loop, yield to GTK and
      call gtk_main(): */

@@ -42,9 +42,6 @@ _TME_RCSID("$Id: tmesh.c,v 1.4 2009/08/30 17:06:38 fredette Exp $");
 #include <tme/hash.h>
 #include <stdio.h>
 #include <string.h>
-#ifdef HAVE_GTK
-#include <gtk/gtk.h>
-#endif
 /* macros: */
 
 /* the binary log message buffer size: */
@@ -101,52 +98,6 @@ static tme_uint32_t _tmesh_log_handle_next;
 
 /* a format hash: */
 static tme_hash_t _tmesh_log_hash_format;
-
-#ifdef HAVE_GTK
-/* nonzero iff we're using the gtk main loop: */
-static int tme_using_gtk;
-
-void tme_threads_gtk_init(void)
-{
-  char **argv;
-  char *argv_buffer[3];
-  int argc;
-
-  /* if we've already initialized GTK: */
-  if (tme_using_gtk) {
-    return;
-  }
-
-  /* conjure up an argv.  this is pretty bad: */
-  argv = argv_buffer;
-  argc = 0;
-  argv[argc++] = "tmesh";
-#if 1
-  argv[argc++] = "--gtk-debug=signals";
-#endif
-  argv[argc] = NULL;
-  gtk_init(&argc, &argv);
-
-  /* we are now using GTK: */
-  tme_using_gtk = TRUE;
-}
-#endif /* HAVE_GTK */
-
-static tme_threadid_t tmesh_thread;
-
-#ifndef TME_THREADS_SJLJ
-static void tme_threads_run(void) {
-#ifdef HAVE_GTK
-  /* if we're using the GTK main loop, yield to GTK and
-     call gtk_main(): */
-  if (tme_using_gtk) {
-    gtk_main();
-  }
-#endif /* HAVE_GTK */
-  tme_thread_join(tmesh_thread);
-}
-
-#endif /* TME_THREADS_POSIX */
 
 /* this removes all consumed characters from a buffer, and shifts
    everything else down: */
@@ -549,15 +500,21 @@ main(int argc, char **argv)
   int arg_i;
   const char *pre_threads_filename;
   const char *log_filename;
-  int interactive;
+  int interactive, using_gtk;
   struct tmesh_io io;
   struct tmesh_support support;
   struct _tmesh_input *input_stdin;
   char *output;
   int yield, rc;
+  tme_threadid_t tmesh_thread;
 
   /* check our command line: */
   usage = FALSE;
+#ifdef HAVE_GTK
+  using_gtk = TRUE;
+#else
+  using_gtk = FALSE;
+#endif
   pre_threads_filename = NULL;
   log_filename = "/dev/null";
   interactive = TRUE;
@@ -588,6 +545,20 @@ main(int argc, char **argv)
 	_tmesh_log_hash_format = tme_hash_new(tme_direct_hash, tme_direct_compare, TME_HASH_DATA_NULL);
       }
     }
+#ifdef HAVE_GTK
+    else if (!strcmp(opt, "--gui-mode")) {
+      ++arg_i;
+      if (arg_i < argc) {
+	if(!strcmp(argv[arg_i], "gtk")) {
+	  using_gtk = TRUE;
+	  break;
+	}
+      } else {
+	usage = TRUE;
+	break;
+      }
+    }
+#endif
     else if (!strcmp(opt, "-c")
 	     || !strcmp(opt, "--noninteractive")) {
       interactive = FALSE;
@@ -711,6 +682,8 @@ where OPTIONS are:\n\
 
   /* run the threads: */
   tme_threads_run();
+
+  tme_thread_join(tmesh_thread);
 
   /* done: */
   exit(0);

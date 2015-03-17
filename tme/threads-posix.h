@@ -44,7 +44,7 @@
 #define TME_THREADS_ERRNO(rc)	(rc)
 
 /* initializing and starting: */
-#define tme_threads_init(x) do { } while (/* CONSTCOND */ 0)
+#define tme_threads_init() do { } while (/* CONSTCOND */ 0)
 
 /* thread suspension: */
 #define tme_thread_suspend_others()	do { } while (/* CONSTCOND */ 0)
