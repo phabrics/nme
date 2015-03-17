@@ -1651,7 +1651,7 @@ tme_sunfb_new(struct tme_sunfb *sunfb,
   tme_cond_init(&sunfb->tme_sunfb_callout_cond);
 
   /* start the callout thread: */
-  tme_thread_create((tme_thread_t) _tme_sunfb_callout_thread, sunfb);
+  tme_thread_create(&sunfb->tme_sunfb_callout_thread, (tme_thread_t) _tme_sunfb_callout_thread, sunfb);
 
   return (TME_OK);
 }

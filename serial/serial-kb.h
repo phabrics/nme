@@ -138,6 +138,9 @@ struct tme_serial_kb {
 
   /* our rate-limiting thread condition: */
   tme_cond_t tme_serial_kb_rate_cond;
+
+  /* our rate-limiting thread: */
+  tme_threadid_t tme_serial_kb_rate_thread;
 };
 
 /* prototypes: */

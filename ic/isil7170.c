@@ -118,6 +118,9 @@ struct tme_isil7170 {
   /* our timer condition: */
   tme_cond_t tme_isil7170_cond_timer;
 
+  /* our thread: */
+  tme_threadid_t tme_isil7170_thread;
+
   /* this is nonzero iff callouts are running: */
   int tme_isil7170_callouts_running;
 
@@ -756,7 +759,7 @@ TME_ELEMENT_NEW_DECL(tme_ic_isil7170) {
   /* start the timer thread: */
   tme_mutex_init(&isil7170->tme_isil7170_mutex);
   tme_cond_init(&isil7170->tme_isil7170_cond_reader);
-  tme_thread_create((tme_thread_t) _tme_isil7170_th_timer, isil7170);
+  tme_thread_create(&isil7170->tme_isil7170_thread, (tme_thread_t) _tme_isil7170_th_timer, isil7170);
 
   /* fill the element: */
   element->tme_element_private = isil7170;

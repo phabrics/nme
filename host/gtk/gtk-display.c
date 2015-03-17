@@ -302,7 +302,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
 
   /* start the threads: */
   tme_mutex_init(&display->tme_gtk_display_mutex);
-  tme_thread_create((tme_thread_t) _tme_gtk_screen_th_update, display);
+  tme_thread_create(&display->tme_gtk_display_thread, (tme_thread_t) _tme_gtk_screen_th_update, display);
 
   /* fill the element: */
   element->tme_element_private = display;

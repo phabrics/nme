@@ -1076,6 +1076,6 @@ tme_stp222x_mdu_init(struct tme_stp222x *stp222x)
   tme_stp22xx_cond_init(&stp222x->tme_stp222x_mdu_retry_cond);
 
   /* start the retry thread: */
-  tme_thread_create(_tme_stp222x_mdu_retry_th, stp222x);
+  tme_thread_create(&stp222x->tme_stp222x_mdu_retry_thread, _tme_stp222x_mdu_retry_th, stp222x);
 }
 

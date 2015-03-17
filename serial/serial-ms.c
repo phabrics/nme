@@ -772,7 +772,7 @@ TME_ELEMENT_X_NEW_DECL(tme_serial_,kb,mouse) {
   /* start any rate-limiting thread: */
   if (serial_ms->tme_serial_ms_rate_usec > 0) {
     tme_cond_init(&serial_ms->tme_serial_ms_rate_cond);
-    tme_thread_create(_tme_serial_ms_th_rate, serial_ms);
+    tme_thread_create(&serial_ms->tme_serial_ms_rate_thread, _tme_serial_ms_th_rate, serial_ms);
   }
 
   /* fill the element: */

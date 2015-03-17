@@ -153,6 +153,9 @@ struct tme_gtk_display {
   /* our mutex: */
   tme_mutex_t tme_gtk_display_mutex;
 
+  /* our thread: */
+  tme_threadid_t tme_gtk_display_thread;
+
   /* our keyboard connection: */
   struct tme_keyboard_connection *tme_gtk_display_keyboard_connection;
 

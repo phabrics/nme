@@ -150,6 +150,9 @@ struct tme_suncg2 {
   /* the rwlock protecting the card: */
   tme_rwlock_t tme_suncg2_rwlock;
 
+  /* the card thread: */
+  tme_threadid_t tme_suncg2_thread;
+
   /* the framebuffer connection: */
   struct tme_fb_connection *tme_suncg2_fb_connection;
 
@@ -842,7 +845,7 @@ _tme_suncg2_update(struct tme_fb_connection *conn_fb)
      start it: */
   if ((suncg2->tme_suncg2_callout_flags & TME_SUNCG2_CALLOUTS_MASK) != 0
       && !(suncg2->tme_suncg2_flags & TME_SUNCG2_FLAG_CALLOUT_THREAD_RUNNING)) {
-    tme_thread_create(_tme_suncg2_callout_thread, suncg2);
+    tme_thread_create(&suncg2->tme_suncg2_thread, _tme_suncg2_callout_thread, suncg2);
     suncg2->tme_suncg2_flags |= TME_SUNCG2_FLAG_CALLOUT_THREAD_RUNNING;
   }
       

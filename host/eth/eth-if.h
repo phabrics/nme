@@ -60,6 +60,9 @@ struct tme_ethernet {
   /* our reader condition: */
   tme_cond_t tme_eth_cond_reader;
 
+  /* our thread: */
+  tme_threadid_t tme_eth_thread;
+
   /* the callout flags: */
   unsigned int tme_eth_callout_flags;
 

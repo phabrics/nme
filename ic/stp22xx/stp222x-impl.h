@@ -242,6 +242,9 @@ struct tme_stp222x_timer {
   /* a condition for waking up the thread for this timer: */
   struct tme_stp22xx_cond tme_stp222x_timer_cond;
 
+  /* thread for this timer: */
+  tme_threadid_t tme_stp222x_timer_thread;
+
   /* these are used to track the interrupt rate for this timer: */
   tme_uint32_t tme_stp222x_timer_track_ints;
   tme_time_t tme_stp222x_timer_track_sample;
@@ -377,10 +380,11 @@ struct tme_stp222x {
   /* the next interrupt dispatch buffer: */
   unsigned int tme_stp222x_mdu_dispatch_buffer;
 
-  /* the interrupt retry period and condition: */
+  /* the interrupt retry period, condition & thread: */
   tme_uint32_t tme_stp222x_mdu_retry;
   tme_time_t tme_stp222x_mdu_retry_sleep;
   struct tme_stp22xx_cond tme_stp222x_mdu_retry_cond;
+  tme_threadid_t tme_stp222x_mdu_retry_thread;
 
   /* the UPA bus reset level: */
   unsigned int tme_stp222x_reset_level;

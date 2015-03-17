@@ -254,6 +254,9 @@ struct tme_sun4_timer {
   /* a condition for waking up the thread for this timer: */
   tme_cond_t tme_sun4_timer_cond;
 
+  /* the thread for this timer: */
+  tme_threadid_t tme_sun4_timer_thread;
+
   /* this is nonzero if the interrupt for this timer is asserted: */
   unsigned int tme_sun4_timer_int_asserted;
 

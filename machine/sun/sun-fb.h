@@ -143,6 +143,9 @@ struct tme_sunfb {
   /* the callout thread condition: */
   tme_cond_t tme_sunfb_callout_cond;
 
+  /* the callout thread: */
+  tme_threadid_t tme_sunfb_callout_thread;
+
   /* the (relative) bus address of the last byte of displayed
      framebuffer memory: */
   tme_bus_addr32_t tme_sunfb_memory_address_last_displayed;

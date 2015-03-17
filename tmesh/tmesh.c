@@ -104,9 +104,9 @@ static tme_hash_t _tmesh_log_hash_format;
 
 #ifdef HAVE_GTK
 /* nonzero iff we're using the gtk main loop: */
-extern int tme_using_gtk;
+static int tme_using_gtk;
 
-inline void tme_threads_gtk_init _TME_P((void)) 
+void tme_threads_gtk_init(void)
 {
   char **argv;
   char *argv_buffer[3];
@@ -132,7 +132,7 @@ inline void tme_threads_gtk_init _TME_P((void))
 }
 #endif /* HAVE_GTK */
 
-static tme_threadid_t tme_tid;
+static tme_threadid_t tmesh_thread;
 
 #ifndef TME_THREADS_SJLJ
 static void tme_threads_run(void) {
@@ -143,7 +143,7 @@ static void tme_threads_run(void) {
     gtk_main();
   }
 #endif /* HAVE_GTK */
-  tme_thread_join(tme_tid);
+  tme_thread_join(tmesh_thread);
 }
 
 #endif /* TME_THREADS_POSIX */
@@ -706,7 +706,7 @@ where OPTIONS are:\n\
     }
 
     /* create our thread: */
-    tme_thread_create(&tme_tid, (tme_thread_t) _tmesh_thread, NULL);
+    tme_thread_create(&tmesh_thread, (tme_thread_t) _tmesh_thread, NULL);
   }
 
   /* run the threads: */

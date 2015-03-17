@@ -99,6 +99,9 @@ struct tme_am9513 {
   /* our mutex: */
   tme_mutex_t tme_am9513_mutex;
 
+  /* our thread: */
+  tme_threadid_t tme_am9513_thread;
+
   /* this is nonzero iff callouts are running: */
   int tme_am9513_callouts_running;
 
@@ -1032,7 +1035,7 @@ TME_ELEMENT_NEW_DECL(tme_ic_am9513) {
 
   /* start the timer thread: */
   tme_mutex_init(&am9513->tme_am9513_mutex);
-  tme_thread_create((tme_thread_t) _tme_am9513_th_timer, am9513);
+  tme_thread_create(&am9513->tme_am9513_thread, (tme_thread_t) _tme_am9513_th_timer, am9513);
 
   /* fill the element: */
   element->tme_element_private = am9513;

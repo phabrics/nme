@@ -336,7 +336,7 @@ tme_stp222x_timer_init(struct tme_stp222x *stp222x,
   _tme_stp222x_timer_reset(timer, 0);
 
   /* start the thread for this timer: */
-  tme_thread_create(_tme_stp222x_timer_th, timer);
+  tme_thread_create(&timer->tme_stp222x_timer_thread, _tme_stp222x_timer_th, timer);
 
   /* set the IDI for this timer: */
   timer->tme_stp222x_timer_idi

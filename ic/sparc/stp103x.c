@@ -4036,7 +4036,7 @@ _tme_stp103x_new(struct tme_element *element,
   tme_memory_atomic_init_flag(&TME_STP103X(ic)->tme_stp103x_intr_receive_busy, FALSE);
 
   /* start the tick compare thread: */
-  tme_thread_create((tme_thread_t) _tme_stp103x_tick_compare_th, ic);
+  tme_thread_create(&ic->tme_sparc_thread, (tme_thread_t) _tme_stp103x_tick_compare_th, ic);
 
   /* fill in the stp103x-specific parts of the structure: */
   psr = 0;

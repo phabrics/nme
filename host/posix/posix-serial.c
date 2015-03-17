@@ -66,6 +66,15 @@ struct tme_posix_serial {
   /* our writer thread condition: */
   tme_cond_t tme_posix_serial_cond_writer;
 
+  /* our writer thread: */
+  tme_threadid_t tme_posix_serial_thread_writer;
+
+  /* our reader thread: */
+  tme_threadid_t tme_posix_serial_thread_reader;
+
+  /* our control thread: */
+  tme_threadid_t tme_posix_serial_thread_ctrl;
+
   /* this is nonzero iff callouts are running: */
   int tme_posix_serial_callouts_running;
 
@@ -1000,9 +1009,9 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
   /* start the threads: */
   tme_mutex_init(&serial->tme_posix_serial_mutex);
   tme_cond_init(&serial->tme_posix_serial_cond_writer);
-  tme_thread_create((tme_thread_t) _tme_posix_serial_th_writer, serial);
-  tme_thread_create((tme_thread_t) _tme_posix_serial_th_reader, serial);
-  tme_thread_create((tme_thread_t) _tme_posix_serial_th_ctrl, serial);
+  tme_thread_create(&serial->tme_posix_serial_thread_writer, (tme_thread_t) _tme_posix_serial_th_writer, serial);
+  tme_thread_create(&serial->tme_posix_serial_thread_reader, (tme_thread_t) _tme_posix_serial_th_reader, serial);
+  tme_thread_create(&serial->tme_posix_serial_thread_ctrl, (tme_thread_t) _tme_posix_serial_th_ctrl, serial);
 
   /* fill the element: */
   element->tme_element_private = serial;

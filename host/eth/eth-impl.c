@@ -912,7 +912,7 @@ int tme_eth_init(struct tme_element *element,
   /* start the threads: */
   tme_mutex_init(&eth->tme_eth_mutex);
   tme_cond_init(&eth->tme_eth_cond_reader);
-  tme_thread_create((tme_thread_t) _tme_eth_th_reader, eth);
+  tme_thread_create(&eth->tme_eth_thread, (tme_thread_t) _tme_eth_th_reader, eth);
 
   /* fill the element: */
   element->tme_element_private = eth;

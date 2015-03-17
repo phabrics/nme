@@ -855,7 +855,7 @@ tme_sparc_new(struct tme_sparc *ic, const char * const *args, const void *extra,
   tme_sparc_recode_init(ic);
 
   /* start the sparc thread: */
-  tme_thread_create((tme_thread_t) tme_sparc_thread, ic);
+  tme_thread_create(&ic->tme_sparc_thread, (tme_thread_t) tme_sparc_thread, ic);
 
   return (TME_OK);
 }  

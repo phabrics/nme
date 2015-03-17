@@ -154,6 +154,9 @@ struct tme_am7990 {
   /* the mutex protecting the chip: */
   tme_mutex_t tme_am7990_mutex;
 
+  /* the chip thread: */
+  tme_threadid_t tme_am7990_thread;
+
   /* the callout flags: */
   int tme_am7990_callout_flags;
 
@@ -1919,7 +1922,7 @@ TME_ELEMENT_X_NEW_DECL(tme_ic_,am7990,am7990) {
   element->tme_element_connections_new = _tme_am7990_connections_new;
 
   /* start the descriptor polling thread: */
-  tme_thread_create((tme_thread_t) _tme_am7990_poll_th, am7990);
+  tme_thread_create(&am7990->tme_am7990_thread, (tme_thread_t) _tme_am7990_poll_th, am7990);
 
   /* reset the am7990: */
   _tme_am7990_reset(am7990);

@@ -336,6 +336,9 @@ struct tme_ncr53c9x {
 
   /* the timeout thread condition: */
   tme_cond_t tme_ncr53c9x_timeout_cond;
+
+  /* the timeout thread: */
+  tme_threadid_t tme_ncr53c9x_timeout_thread;
 };
 
 /* this locks the mutex: */
@@ -3589,7 +3592,7 @@ TME_ELEMENT_NEW_DECL(tme_ic_ncr53c9x) {
   tme_cond_init(&ncr53c9x->tme_ncr53c9x_timeout_cond);
 
   /* start the timeout thread: */
-  tme_thread_create((tme_thread_t) _tme_ncr53c9x_timeout_th, ncr53c9x);
+  tme_thread_create(&ncr53c9x->tme_ncr53c9x_timeout_thread, (tme_thread_t) _tme_ncr53c9x_timeout_th, ncr53c9x);
 
   return (TME_OK);
 }

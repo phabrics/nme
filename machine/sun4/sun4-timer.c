@@ -465,7 +465,7 @@ _tme_sun4_timer_new(struct tme_sun4 *sun4)
     _tme_sun4_timer_reset(timer);
 
     /* start the thread for this timer: */
-    tme_thread_create((tme_thread_t) _tme_sun4_timer_th, timer);
+    tme_thread_create(&timer->tme_sun4_timer_thread, (tme_thread_t) _tme_sun4_timer_th, timer);
 
   } while (++timer != (&sun4->tme_sun4_timers[0] + TME_ARRAY_ELS(sun4->tme_sun4_timers)));
 }

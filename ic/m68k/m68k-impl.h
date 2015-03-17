@@ -520,6 +520,9 @@ struct tme_m68k {
   tme_uint32_t tme_m68k_fpu_fpiar;
   int tme_m68k_fpu_incomplete_abort;
 
+  /* our thread */
+  tme_threadid_t tme_m68k_thread;
+
 #ifdef _TME_M68K_STATS
   /* statistics: */
   struct {

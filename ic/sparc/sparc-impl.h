@@ -894,6 +894,9 @@ struct tme_sparc {
   tme_uint32_t tme_sparc_memory_context_primary;
   tme_uint32_t tme_sparc_memory_context_secondary;
 
+  /* ic thread: */
+  tme_threadid_t tme_sparc_thread;
+
   /* the external interface: */
   tme_mutex_t tme_sparc_external_mutex;
   tme_cond_t tme_sparc_external_cond;
@@ -1126,6 +1129,7 @@ struct tme_sparc {
 #endif /* TME_HAVE_RECODE */
 
   } tme_sparc_stats;
+
 #define TME_SPARC_STAT_N(ic, x, n) do { (ic)->tme_sparc_stats.x += (n); } while (/* CONSTCOND */ 0)
 #else  /* !_TME_SPARC_STATS */
 #define TME_SPARC_STAT_N(ic, x, n) do { } while (/* CONSTCOND */ 0 && (ic) && (n))

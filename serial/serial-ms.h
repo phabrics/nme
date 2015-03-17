@@ -129,6 +129,9 @@ struct tme_serial_ms {
 
   /* our rate-limiting thread condition: */
   tme_cond_t tme_serial_ms_rate_cond;
+
+  /* our rate-limiting thread: */
+  tme_threadid_t tme_serial_ms_rate_thread;
 };
 
 /* prototypes: */

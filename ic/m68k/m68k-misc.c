@@ -618,7 +618,7 @@ tme_m68k_new(struct tme_m68k *ic, const char * const *args, const void *extra, c
   TME_M68K_SEQUENCE_START;
 
   /* start the m68k thread: */
-  tme_thread_create((tme_thread_t) tme_m68k_thread, ic);
+  tme_thread_create(&ic->tme_m68k_thread, (tme_thread_t) tme_m68k_thread, ic);
 
   return (TME_OK);
 }  

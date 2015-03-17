@@ -1154,7 +1154,7 @@ TME_ELEMENT_X_NEW_DECL(tme_serial_,kb,keyboard) {
   if (rate > 0) {
     serial_kb->tme_serial_kb_rate_sleep = (1000000UL / rate);
     tme_cond_init(&serial_kb->tme_serial_kb_rate_cond);
-    tme_thread_create((tme_thread_t) _tme_serial_kb_th_rate, serial_kb);
+    tme_thread_create(&serial_kb->tme_serial_kb_rate_thread, (tme_thread_t) _tme_serial_kb_th_rate, serial_kb);
   }
   serial_kb->tme_serial_kb_serial_ctrl
     = (TME_SERIAL_CTRL_DTR
