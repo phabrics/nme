@@ -63,7 +63,7 @@ typedef int tme_rwlock_t;
 #define tme_rwlock_init(l) (*(l) = FALSE, TME_OK)
 #define tme_rwlock_rdlock(l) (*(l) = TRUE, TME_OK)
 #define tme_rwlock_tryrdlock(l) (*(l) ? TME_EBUSY : tme_rwlock_rdlock(l))
-#define tme_rwlock_unlock(l) (*(l) = FALSE, TME_OK)
+#define tme_rwlock_rdunlock(l) (*(l) = FALSE, TME_OK)
 #else  /* !TME_NO_DEBUG_LOCKS */   
 
 /* debugging rwlocks: */
@@ -85,11 +85,11 @@ int tme_sjlj_rwlock_unlock _TME_P((struct tme_sjlj_rwlock *, _tme_const char *, 
 #if defined(__FILE__) && defined(__LINE__)
 #define tme_rwlock_rdlock(l) tme_sjlj_rwlock_lock(l, __FILE__, __LINE__, FALSE)
 #define tme_rwlock_tryrdlock(l) tme_sjlj_rwlock_lock(l, __FILE__, __LINE__, TRUE)
-#define tme_rwlock_unlock(l) tme_sjlj_rwlock_unlock(l, __FILE__, __LINE__)
+#define tme_rwlock_rdunlock(l) tme_sjlj_rwlock_unlock(l, __FILE__, __LINE__)
 #else  /* !defined(__FILE__) || !defined(__LINE__) */
 #define tme_rwlock_rdlock(l) tme_sjlj_rwlock_lock(l, NULL, 0, FALSE)
 #define tme_rwlock_tryrdlock(l) tme_sjlj_rwlock_lock(l, NULL, 0, TRUE)
-#define tme_rwlock_unlock(l) tme_sjlj_rwlock_unlock(l, NULL, 0)
+#define tme_rwlock_rdunlock(l) tme_sjlj_rwlock_unlock(l, NULL, 0)
 #endif /* !defined(__FILE__) || !defined(__LINE__) */
 
 #endif /* TME_NO_DEBUG_LOCKS */
@@ -97,6 +97,7 @@ int tme_sjlj_rwlock_unlock _TME_P((struct tme_sjlj_rwlock *, _tme_const char *, 
 /* since our thread model doesn't allow recursive locking, write locking
    is always the same as read locking: */
 #define tme_rwlock_wrlock tme_rwlock_rdlock
+#define tme_rwlock_wrunlock tme_rwlock_rdunlock
 #define tme_rwlock_trywrlock tme_rwlock_tryrdlock
 
 /* with cooperative threads, it doesn't make any sense to wait for locks: */
@@ -109,7 +110,7 @@ int tme_sjlj_rwlock_unlock _TME_P((struct tme_sjlj_rwlock *, _tme_const char *, 
 #define tme_mutex_lock tme_rwlock_wrlock
 #define tme_mutex_trylock tme_rwlock_trywrlock
 #define tme_mutex_timedlock(t, usec) tme_mutex_trylock(t)
-#define tme_mutex_unlock tme_rwlock_unlock
+#define tme_mutex_unlock tme_rwlock_rdunlock
 #define tme_mutex_init tme_rwlock_init
 
 /* conditions: */

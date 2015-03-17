@@ -62,8 +62,8 @@ typedef GRWLock tme_rwlock_t;
 #define tme_rwlock_trywrlock g_rw_lock_writer_trylock
 #define tme_rwlock_wrunlock g_rw_lock_writer_unlock
 /* for now, define as trylock (same as timedlock with 0 wait) */
-#define tme_rwlock_timedrdlock g_rw_lock_reader_trylock
-#define tme_rwlock_timedwrlock g_rw_lock_writer_trylock
+#define tme_rwlock_timedrdlock(l,t) g_rw_lock_reader_trylock(l)
+#define tme_rwlock_timedwrlock(l,t) g_rw_lock_writer_trylock(l)
 
 /* mutexes. */
 typedef GMutex tme_mutex_t;
@@ -95,7 +95,7 @@ typedef GThread *tme_threadid_t;
 static inline void tme_thread_create _TME_P((tme_threadid_t *t, tme_thread_t f, void *a)) {
   *t = g_thread_new(NULL,f,a);
 }
-#define tme_thread_yield do { } while (/* CONSTCOND */ 0)
+#define tme_thread_yield() do { } while (/* CONSTCOND */ 0)
 #define tme_thread_join g_thread_join
 #define tme_thread_exit g_thread_exit(NULL)
 

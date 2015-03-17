@@ -111,7 +111,7 @@ typedef void (*tme_thread_t) _TME_P((void *));
 typedef pthread_t tme_threadid_t;
 #define tme_thread_create(t,f,a) pthread_create(t,NULL,f,a)
 void tme_pthread_yield _TME_P((void));
-#define tme_thread_yield do { } while (/* CONSTCOND */ 0)
+#define tme_thread_yield() do { } while (/* CONSTCOND */ 0)
 #define tme_thread_join(id) pthread_join(id,NULL)
 #define tme_thread_exit pthread_exit(NULL)
 

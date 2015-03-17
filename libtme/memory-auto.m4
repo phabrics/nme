@@ -565,7 +565,7 @@ for op in read write; do
     $as_echo "  if (TME_MEMORY_ALIGNMENT_ATOMIC(TME_MEMORY_TYPE_COMMON) == 0) {"
     $as_echo "    tme_rwlock_${op_rwlock}lock(rwlock);"
     $as_echo "    memcpy(${op_memcpy}, (count));"
-    $as_echo "    tme_rwlock_unlock(rwlock);"
+    $as_echo "    tme_rwlock_${op_rwlock}unlock(rwlock);"
     $as_echo "  }"
     $as_echo ""
     $as_echo "  /* otherwise, if the emulated bus boundary is greater than the"
@@ -1262,7 +1262,11 @@ for size in ${sizes}; do
 	    $as_echo "    }"
 	fi
 	$as_echo "    if (!TME_THREADS_COOPERATIVE) {"
-	$as_echo "      tme_rwlock_unlock(rwlock);"
+	if test ${op} = read; then
+	    $as_echo "      tme_rwlock_rdunlock(rwlock);"
+	else
+	    $as_echo "      tme_rwlock_wrunlock(rwlock);"
+	fi
 	$as_echo "    }"
 	$as_echo "  }"
 	$as_echo ""

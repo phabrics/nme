@@ -137,7 +137,7 @@ tme_bus_tlb_fill(struct tme_bus *bus,
       (struct tme_bus_connection *) conn_int->tme_bus_connection_int.tme_bus_connection.tme_connection_other;
 
     /* unlock the bus: */
-    tme_rwlock_unlock(&bus->tme_bus_rwlock);
+    tme_rwlock_rdunlock(&bus->tme_bus_rwlock);
 
     /* call the controller's TLB fill function: */
     rc = (*conn_bus_other->tme_bus_tlb_fill)(conn_bus_other, tlb,

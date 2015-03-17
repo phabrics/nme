@@ -184,7 +184,7 @@ _tme_audit_pointer_const(_tme_const void *pointer)
    specially because the size of a pointer may not be a power of
    two.): */
 
-#include <tme-memory.h>
+#include <tmememory.h>
 
 #else  /* TME_THREADS_COOPERATIVE */
 

@@ -173,7 +173,7 @@ _tme_bus_signals_add(struct tme_bus_connection *conn_bus_caller,
   }
     
   /* unlock the bus and return: */
-  tme_rwlock_unlock(&bus->tme_bus_rwlock);
+  tme_rwlock_wrunlock(&bus->tme_bus_rwlock);
   return (rc);
 }
 
@@ -218,7 +218,7 @@ _tme_bus_signal(struct tme_bus_connection *conn_bus_edger, unsigned int signal)
 	/* XXX diagnostic */
 	abort();
       }
-      tme_rwlock_unlock(&bus->tme_bus_rwlock);
+      tme_rwlock_wrunlock(&bus->tme_bus_rwlock);
       return (TME_OK);
     }
   }
@@ -348,7 +348,7 @@ _tme_bus_signal(struct tme_bus_connection *conn_bus_edger, unsigned int signal)
   }
 
   /* unlock the bus: */
-  tme_rwlock_unlock(&bus->tme_bus_rwlock);
+  tme_rwlock_wrunlock(&bus->tme_bus_rwlock);
 
   /* done: */
   return (rc);
@@ -406,7 +406,7 @@ _tme_bus_intack(struct tme_bus_connection *conn_bus_acker, unsigned int signal, 
 	& signal_mask) {
 
       /* unlock the bus: */
-      tme_rwlock_unlock(&bus->tme_bus_rwlock);
+      tme_rwlock_wrunlock(&bus->tme_bus_rwlock);
 
       /* if this device doesn't acknowledge interrupts, return any
 	 user-specified vector or TME_BUS_INTERRUPT_VECTOR_UNDEF: */
@@ -426,7 +426,7 @@ _tme_bus_intack(struct tme_bus_connection *conn_bus_acker, unsigned int signal, 
   }
 
   /* unlock the bus: */
-  tme_rwlock_unlock(&bus->tme_bus_rwlock);
+  tme_rwlock_wrunlock(&bus->tme_bus_rwlock);
 
   /* done: */
   return (rc);
@@ -469,7 +469,7 @@ _tme_bus_tlb_fill(struct tme_bus_connection *conn_bus_asker,
 			tlb, address, cycles);
 
   /* unlock the bus: */
-  tme_rwlock_unlock(&bus->tme_bus_rwlock);
+  tme_rwlock_rdunlock(&bus->tme_bus_rwlock);
 
   /* done: */
   return (rc);
@@ -500,7 +500,7 @@ _tme_bus_tlb_set_add(struct tme_bus_connection *conn_bus_asker,
 			   tlb_set_info);
 
   /* unlock the bus: */
-  tme_rwlock_unlock(&bus->tme_bus_rwlock);
+  tme_rwlock_rdunlock(&bus->tme_bus_rwlock);
 
   /* done: */
   return (rc);
@@ -533,7 +533,7 @@ _tme_bus_connection_score(struct tme_connection *conn, unsigned int *_score)
 			     conn_int);
 
   /* unlock the bus: */
-  tme_rwlock_unlock(&bus->tme_bus_rwlock);
+  tme_rwlock_rdunlock(&bus->tme_bus_rwlock);
 
   /* return the score: */
   *_score = (ok ? 1 : 0);
@@ -579,7 +579,7 @@ _tme_bus_connection_make(struct tme_connection *conn, unsigned int state)
   }
 
   /* unlock the bus: */
-  tme_rwlock_unlock(&bus->tme_bus_rwlock);
+  tme_rwlock_wrunlock(&bus->tme_bus_rwlock);
 
   return (rc);
 }

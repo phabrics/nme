@@ -758,7 +758,7 @@ TME_ELEMENT_NEW_DECL(tme_ic_isil7170) {
 
   /* start the timer thread: */
   tme_mutex_init(&isil7170->tme_isil7170_mutex);
-  tme_cond_init(&isil7170->tme_isil7170_cond_reader);
+  tme_cond_init(&isil7170->tme_isil7170_cond_timer);
   tme_thread_create(&isil7170->tme_isil7170_thread, (tme_thread_t) _tme_isil7170_th_timer, isil7170);
 
   /* fill the element: */

@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 
-dnl $Id: configure.in,v 1.20 2010/06/05 19:56:37 fredette Exp $
+dnl $Id: configure.ac,v 1.20 2010/06/05 19:56:37 fredette Exp $
 
 dnl Copyright (c) 2001, 2003 Matt Fredette
 dnl All rights reserved.
@@ -920,7 +920,7 @@ fi
 AC_SUBST(CFLAGS_NO_STRICT_ALIASING)
 
 dnl Generate tmeconfig.h.  The whether-to-generate logic is cribbed 
-dnl from glib-1.2.1's configure.in.
+dnl from glib-1.2.1's configure.ac.
 dnl See that file for an explanation.
 AC_CONFIG_COMMANDS([default-1],[[
           
@@ -953,7 +953,7 @@ if test "x${gen_tmeconfig_h}" = xyes; then
   cat <<TMEEOF > ${outfile}-tmp
 /* tmeconfig.h
  * 
- * This is an automatically generated file - please modify 'configure.in'.
+ * This is an automatically generated file - please modify 'configure.ac'.
  */
 
 #ifndef _TMECONFIG_H
@@ -1038,7 +1038,7 @@ TMEEOF
   cat <<TMEEOF > ${outfile}-tmp
 /* recode-host.h
  * 
- * This is an automatically generated file - please modify 'configure.in'.
+ * This is an automatically generated file - please modify 'configure.ac'.
  */
 
 TMEEOF
@@ -1064,7 +1064,7 @@ TMEEOF
   cat <<TMEEOF > ${outfile}-tmp
 /* recode-host.c
  * 
- * This is an automatically generated file - please modify 'configure.in'.
+ * This is an automatically generated file - please modify 'configure.ac'.
  */
 
 TMEEOF
@@ -1087,7 +1087,7 @@ TMEEOF
   cat <<TMEEOF > ${outfile}-tmp
 /* misc-host.c
  * 
- * This is an automatically generated file - please modify 'configure.in'.
+ * This is an automatically generated file - please modify 'configure.ac'.
  */
 
 TMEEOF
@@ -1106,6 +1106,26 @@ TMEEOF
     mv ${outfile}-tmp ${outfile}
   fi
 
+  outfile=tmememory.h
+  echo "$as_me: creating $outfile"
+  cat <<TMEEOF > ${outfile}-tmp
+/* tmememory.h
+ * 
+ * This is an automatically generated file - please modify 'configure.ac'.
+ */
+#ifndef _TMEMEMORY_H
+#define _TMEMEMORY_H
+#define TME_MEMORY_BUS_BOUNDARY sizeof(tme_uint64_t)
+#define TME_MEMORY_ALIGNMENT_ATOMIC(type) ((sizeof(type) <= TME_MEMORY_BUS_BOUNDARY) ? (sizeof(type)) : (0))
+#endif /* !_TMEMEMORY_H */
+
+TMEEOF
+  if cmp -s ${outfile}-tmp $outfile; then
+    echo "$as_me: $outfile is unchanged"
+    rm -f ${outfile}-tmp
+  else
+    mv ${outfile}-tmp ${outfile}
+  fi
 fi
 ]],[[
 recode_hosts="$recode_hosts"
