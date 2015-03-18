@@ -67,7 +67,7 @@ static inline int tme_rwlock_timedrdlock _TME_P((tme_rwlock_t *l, unsigned long 
   static tme_time_t tme_timeout;
   unsigned long sec;
 
-  for (; usec >= 1000000; sec++, usec -= 1000000);
+  for (sec = 0; usec >= 1000000; sec++, usec -= 1000000);
 
   TME_TIME_SETV(tme_timeout, sec, usec);
   return pthread_rwlock_timedrdlock(l, &tme_timeout); 
@@ -77,7 +77,7 @@ static inline int tme_rwlock_timedwrlock _TME_P((tme_rwlock_t *l, unsigned long 
   static tme_time_t tme_timeout;
   unsigned long sec;
 
-  for (; usec >= 1000000; sec++, usec -= 1000000);
+  for (sec = 0; usec >= 1000000; sec++, usec -= 1000000);
 
   TME_TIME_SETV(tme_timeout, sec, usec);
   return pthread_rwlock_timedwrlock(l, &tme_timeout); 
@@ -85,7 +85,7 @@ static inline int tme_rwlock_timedwrlock _TME_P((tme_rwlock_t *l, unsigned long 
 
 /* mutexes. */
 typedef pthread_mutex_t tme_mutex_t;
-#define tme_mutex_init pthread_mutex_init
+#define tme_mutex_init(m) pthread_mutex_init(m,NULL)
 #define tme_mutex_destroy pthread_mutex_destroy
 #define tme_mutex_lock pthread_mutex_lock
 #define tme_mutex_trylock pthread_mutex_trylock
@@ -94,7 +94,7 @@ typedef pthread_mutex_t tme_mutex_t;
 
 /* conditions: */
 typedef pthread_cond_t tme_cond_t;
-#define tme_cond_init(x) pthread_cond_init(x,NULL)
+#define tme_cond_init(c) pthread_cond_init(c,NULL)
 #define tme_cond_destroy pthread_cond_destroy
 #define tme_cond_wait_yield pthread_cond_wait
 #define tme_cond_sleep_yield pthread_cond_timedwait
@@ -109,7 +109,7 @@ typedef pthread_cond_t tme_cond_t;
 /* threads: */
 typedef void (*tme_thread_t) _TME_P((void *));
 typedef pthread_t tme_threadid_t;
-#define tme_thread_create(t,f,a) pthread_create(t,NULL,f,a)
+#define tme_thread_create(t,f,a) pthread_create(t,NULL,&f,a)
 void tme_pthread_yield _TME_P((void));
 #define tme_thread_yield() do { } while (/* CONSTCOND */ 0)
 #define tme_thread_join(id) pthread_join(id,NULL)

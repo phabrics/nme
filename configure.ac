@@ -1115,8 +1115,16 @@ TMEEOF
  */
 #ifndef _TMEMEMORY_H
 #define _TMEMEMORY_H
+#define TME_MEMORY_TYPE_COMMON tme_uint32_t
 #define TME_MEMORY_BUS_BOUNDARY sizeof(tme_uint64_t)
 #define TME_MEMORY_ALIGNMENT_ATOMIC(type) ((sizeof(type) <= TME_MEMORY_BUS_BOUNDARY) ? (sizeof(type)) : (0))
+
+#define TME_MEMORY_BARRIER_READ_BEFORE_READ	(0)
+#define TME_MEMORY_BARRIER_WRITE_BEFORE_WRITE	(0)
+#define TME_MEMORY_BARRIER_READ_BEFORE_WRITE	(0)
+#define TME_MEMORY_BARRIER_WRITE_BEFORE_READ	(0)
+#define tme_memory_barrier(address, size, barrier) __sync_synchronize()
+
 #endif /* !_TMEMEMORY_H */
 
 TMEEOF
