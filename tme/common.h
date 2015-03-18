@@ -338,6 +338,7 @@ tme_bswap_u64(tme_uint64_t x)
 #define TME_PRIx16 _TME_PRI16 "x"
 #define TME_PRIx32 _TME_PRI32 "x"
 #define TME_PRIx64 _TME_PRI64 "x"
+#define TME_PRIx128 _TME_PRI128 "x"
 
 /* miscellaneous: */
 #define TME_ARRAY_ELS(x)	(sizeof(x) / sizeof(x[0]))

@@ -179,6 +179,7 @@ else
   AC_CHECK_SHIFTSIGNED(64)
   have_int64=yes
 fi
+AC_CHECK_TYPE([__int128])
 AC_CHECK_ALIGNOF(32)
 AC_CHECK_ALIGNOF(16)
 AC_CHECK_SHIFTMAX(8)
@@ -986,6 +987,17 @@ TMEEOF
   echo '#define TME_RELEASE_MINOR (' \
     `echo $VERSION | sed -e 's,^[0-9][0-9]*\.\([0-9][0-9]*\)$,\1,'` ')' >> ${outfile}-tmp
   echo '#define TME_BUILD_TARGET "'$target'"' >> ${outfile}-tmp
+  if test $ac_cv_type___int128; then
+    echo '#define TME_HAVE_INT128_T' >> ${outfile}-tmp
+    echo '#define _TME_PRI128 "ll"' >> ${outfile}-tmp
+    echo 'typedef __int128 tme_int128_t;' >> ${outfile}-tmp
+    echo 'typedef unsigned __int128 tme_uint128_t;' >> ${outfile}-tmp
+  elif test $ac_cv_sizeof_long_long_int = 16; then
+    echo '#define TME_HAVE_INT128_T' >> ${outfile}-tmp
+    echo '#define _TME_PRI128 "ll"' >> ${outfile}-tmp
+    echo 'typedef long long tme_int128_t;' >> ${outfile}-tmp
+    echo 'typedef unsigned long long tme_uint128_t;' >> ${outfile}-tmp
+  fi	 
   if test $ac_cv_sizeof_long = 8; then
     echo '#define TME_HAVE_INT64_T' >> ${outfile}-tmp
     echo '#define _TME_PRI64 "l"' >> ${outfile}-tmp
@@ -1115,8 +1127,12 @@ TMEEOF
  */
 #ifndef _TMEMEMORY_H
 #define _TMEMEMORY_H
-#define TME_MEMORY_TYPE_COMMON tme_uint32_t
+#define TME_MEMORY_TYPE_COMMON long
+#ifdef TME_HAVE_INT128_T
+#define TME_MEMORY_BUS_BOUNDARY sizeof(tme_uint128_t)
+#else
 #define TME_MEMORY_BUS_BOUNDARY sizeof(tme_uint64_t)
+#endif
 #define TME_MEMORY_ALIGNMENT_ATOMIC(type) ((sizeof(type) <= TME_MEMORY_BUS_BOUNDARY) ? (sizeof(type)) : (0))
 
 #define TME_MEMORY_BARRIER_READ_BEFORE_READ	(0)

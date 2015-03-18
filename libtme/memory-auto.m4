@@ -137,7 +137,7 @@ fi
 # the different sizes we handle, and the smallest size that we have to
 # wrap in an ifdef:
 #
-sizes='8 16 32 64'
+sizes='8 16 32 64 128'
 size_ifdef=64
 
 # the largest possible host boundary that we will consider:

@@ -677,7 +677,7 @@ where OPTIONS are:\n\
     }
 
     /* create our thread: */
-    tme_thread_create(&tmesh_thread, (tme_thread_t) _tmesh_thread, NULL);
+    tme_thread_create(tmesh_thread, (tme_thread_t) _tmesh_thread, NULL);
   }
 
   /* run the threads: */
