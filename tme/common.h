@@ -183,6 +183,9 @@ _TME_RCSID("$Id: common.h,v 1.16 2010/02/18 01:23:20 fredette Exp $");
 #define tme_bswap_u16(x) ((tme_uint16_t) htons((tme_uint16_t) (x)))
 #define tme_bswap_u32(x) ((tme_uint32_t) htonl((tme_uint32_t) (x)))
 #else  /* _TME_WORDS_BIGENDIAN */
+#ifdef _TME_HAVE___BUILTIN_BSWAP16
+#define tme_bswap_u16(x) ((tme_uint16_t) __builtin_bswap16((tme_uint16_t) (x)))
+#else  /* !_TME_HAVE___BUILTIN_BSWAP16 */
 #ifdef _TME_HAVE_BSWAP16
 #define tme_bswap_u16(x) ((tme_uint16_t) bswap16((tme_uint16_t) (x)))
 #else  /* !_TME_HAVE_BSWAP16 */
@@ -201,6 +204,11 @@ tme_bswap_u16(tme_uint16_t x)
 #endif /* !_TME_HAVE_SWAP16 */
 #endif /* !_TME_HAVE_BSWAP_16 */
 #endif /* !_TME_HAVE_BSWAP16 */
+#endif /* !_TME_HAVE___BUILTIN_BSWAP16 */
+
+#ifdef _TME_HAVE___BUILTIN_BSWAP32
+#define tme_bswap_u32(x) ((tme_uint32_t) __builtin_bswap32((tme_uint32_t) (x)))
+#else  /* !_TME_HAVE___BUILTIN_BSWAP32 */
 #ifdef _TME_HAVE_BSWAP32
 #define tme_bswap_u32(x) ((tme_uint32_t) bswap32((tme_uint32_t) (x)))
 #else  /* !_TME_HAVE_BSWAP32 */
@@ -221,6 +229,7 @@ tme_bswap_u32(tme_uint32_t x)
 #endif /* !_TME_HAVE_SWAP32 */
 #endif /* !_TME_HAVE_BSWAP_32 */
 #endif /* !_TME_HAVE_BSWAP32 */
+#endif /* !_TME_HAVE___BUILTIN_BSWAP32 */
 #endif /* _TME_WORDS_BIGENDIAN */
 
 /* endian conversion: */
@@ -301,6 +310,9 @@ union tme_value64 *_tme_value64_set _TME_P((union tme_value64 *, _tme_const tme_
 
 /* 64-bit byte swapping: */
 #ifdef TME_HAVE_INT64_T
+#ifdef _TME_HAVE___BUILTIN_BSWAP64
+#define tme_bswap_u64(x) ((tme_uint64_t) __builtin_bswap64((tme_uint64_t) (x)))
+#else  /* !_TME_HAVE___BUILTIN_BSWAP64 */
 #ifdef _TME_HAVE_BSWAP64
 #define tme_bswap_u64(x) ((tme_uint64_t) bswap64((tme_uint64_t) (x)))
 #else  /* !_TME_HAVE_BSWAP64 */
@@ -319,6 +331,7 @@ tme_bswap_u64(tme_uint64_t x)
 #endif /* !_TME_HAVE_SWAP64 */
 #endif /* !_TME_HAVE_BSWAP_64 */
 #endif /* !_TME_HAVE_BSWAP64 */
+#endif /* !_TME_HAVE___BUILTIN_BSWAP64 */
 #endif /* TME_HAVE_INT64_T */
 
 /* versions: */

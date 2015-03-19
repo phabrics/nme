@@ -179,7 +179,11 @@ else
   AC_CHECK_SHIFTSIGNED(64)
   have_int64=yes
 fi
-AC_CHECK_TYPE([__int128])
+AC_CHECK_TYPES([__int128], [
+  AC_CHECK_ALIGNOF(__int128)
+  have_int128=yes
+], [ have_int128=no ])
+  
 AC_CHECK_ALIGNOF(32)
 AC_CHECK_ALIGNOF(16)
 AC_CHECK_SHIFTMAX(8)
@@ -207,6 +211,25 @@ AC_FUNC_MALLOC
 AC_FUNC_MMAP
 AC_FUNC_REALLOC
 AC_CHECK_FUNCS([clock_gettime gettimeofday memmove memset munmap pow ptsname select socket sqrt strchr strerror strrchr strstr strtoul devname fdevname kldfind])
+
+AC_CHECK_FUNC_LONG(__builtin_bswap16, [
+  unsigned int x;
+
+  x = __builtin_bswap16(0x1122);
+])
+AC_CHECK_FUNC_LONG(__builtin_bswap32, [
+  unsigned int x;
+
+  x = __builtin_bswap32(0x11223344);
+])
+if test $have_int64 = yes; then
+  AC_CHECK_FUNC_LONG(__builtin_bswap64, [
+  unsigned long long int x;
+
+  x = __builtin_bswap64(0x1122334455667788);
+])
+fi
+
 AC_CHECK_FUNC_LONG(bswap16, [
   unsigned int x;
 
@@ -239,6 +262,7 @@ if test $have_int64 = yes; then
 #endif
   ])
 fi
+
 AC_CHECK_FUNC_LONG(bswap_16, [
   unsigned int x;
 
@@ -268,6 +292,7 @@ if test $have_int64 = yes; then
 #endif
   ])
 fi
+
 AC_CHECK_FUNC_LONG(swap16, [
   unsigned int x;
 
@@ -987,17 +1012,12 @@ TMEEOF
   echo '#define TME_RELEASE_MINOR (' \
     `echo $VERSION | sed -e 's,^[0-9][0-9]*\.\([0-9][0-9]*\)$,\1,'` ')' >> ${outfile}-tmp
   echo '#define TME_BUILD_TARGET "'$target'"' >> ${outfile}-tmp
-  if test $ac_cv_type___int128; then
-    echo '#define TME_HAVE_INT128_T' >> ${outfile}-tmp
-    echo '#define _TME_PRI128 "ll"' >> ${outfile}-tmp
-    echo 'typedef __int128 tme_int128_t;' >> ${outfile}-tmp
-    echo 'typedef unsigned __int128 tme_uint128_t;' >> ${outfile}-tmp
-  elif test $ac_cv_sizeof_long_long_int = 16; then
-    echo '#define TME_HAVE_INT128_T' >> ${outfile}-tmp
-    echo '#define _TME_PRI128 "ll"' >> ${outfile}-tmp
-    echo 'typedef long long tme_int128_t;' >> ${outfile}-tmp
-    echo 'typedef unsigned long long tme_uint128_t;' >> ${outfile}-tmp
-  fi	 
+  echo '#ifdef _TME_HAVE___INT128' >> ${outfile}-tmp
+  echo '#define TME_HAVE_INT128_T' >> ${outfile}-tmp
+  echo '#define _TME_ALIGNOF_INT128_T _TME_ALIGNOF_INT__INT128_T' >> ${outfile}-tmp
+  echo 'typedef __int128 tme_int128_t;' >> ${outfile}-tmp
+  echo 'typedef unsigned __int128 tme_uint128_t;' >> ${outfile}-tmp
+  echo '#endif' >> ${outfile}-tmp
   if test $ac_cv_sizeof_long = 8; then
     echo '#define TME_HAVE_INT64_T' >> ${outfile}-tmp
     echo '#define _TME_PRI64 "l"' >> ${outfile}-tmp
