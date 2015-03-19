@@ -64,17 +64,17 @@ _tme_sun4_timer_callout(struct tme_sun4 *sun4)
   int again;
   int rc;
 
+  /* get our bus connection: */
+  conn_bus = sun4->tme_sun4_buses[TME_SUN4_32_CONN_REG_TIMER];
+
   /* if this function is already running in another thread, return
      now.  the other thread will do our work: */
-  if (sun4->tme_sun4_timer_callouts_running) {
+  if (sun4->tme_sun4_timer_callouts_running || !conn_bus) {
     return;
   }
 
   /* callouts are now running: */
   sun4->tme_sun4_timer_callouts_running = TRUE;
-
-  /* get our bus connection: */
-  conn_bus = sun4->tme_sun4_buses[TME_SUN4_32_CONN_REG_TIMER];
 
   /* loop forever: */
   for (again = TRUE; again;) {

@@ -75,9 +75,7 @@ void tme_threads_gtk_init(void)
 #endif /* HAVE_GTK */
 
 void tme_threads_run() {
-#ifdef TME_THREADS_SJLJ
   tme_sjlj_threads_run(tme_using_gtk);
-#endif /* TME_THREADS_SJLJ */
 #ifdef HAVE_GTK
   /* if we're using the GTK main loop, yield to GTK and
      call gtk_main(): */

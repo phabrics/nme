@@ -180,7 +180,6 @@ else
   have_int64=yes
 fi
 AC_CHECK_TYPES([__int128], [
-  AC_CHECK_ALIGNOF(__int128)
   have_int128=yes
 ], [ have_int128=no ])
   
@@ -592,11 +591,39 @@ if test "x${DISPLAY}" != x && xdpyinfo >/dev/null 2>&1; then
 fi
 AC_SUBST(TME_FB_XLAT_DST)
 
+AC_MSG_CHECKING([for available threading models])
+
+# specify whether preemptive thread support should be enabled & with what thread models
+AC_ARG_ENABLE(threads,
+[  --enable-threads=THRs  Enable preemptive thread support utilizing the given threading models (compiled-in order of usage by platform availability: 'pthreads (or posix)','glib').  Defaults to 'yes', any available.  Turn off threads with 'no' or --disable-threads; this will use setjmp/longjmp.], [tme_thread_types=${enableval}], [enable_threads=yes])
+
+if test "x${enable_threads}" = xyes; then
+   tme_thread_types=pthreads
+fi
+
+# 128-bit integral type required to enable preemptive thread support
+if test "x${enable_threads}" = xno || test "x${have_int128}" = xno; then
+   tme_thread_types=sjlj
+fi
+
+for tme_thread_type in ${tme_thread_types}; do
+case "x${tme_thread_type}" in
+xpthreads | xposix)   CPPFLAGS="${CPPFLAGS} -DTME_THREADS_POSIX" 
+	  	     CFLAGS="${CFLAGS} -pthread" ;;
+xglib)   CPPFLAGS="${CPPFLAGS} -DTME_THREADS_GLIB ${GTK_CFLAGS}" ;;
+xsjlj)   CPPFLAGS="${CPPFLAGS} -DTME_THREADS_SJLJ" ;;
+esac
+done
+
+AC_MSG_RESULT($tme_thread_types)
+
+AM_CONDITIONAL([THREADS_SJLJ], [test "x${tme_thread_types}" = xsjlj])
+
 dnl Configures for the system(s) to emulate.
 systems=all
 if echo " ${systems} " | grep ' all ' > /dev/null 2>&1; then
   systems="sun2 sun3 sun4"
-  if test $have_int64 = yes; then
+  if test $have_int64 = yes && test "x${tme_thread_types}" = xsjlj; then
     systems="${systems} sunultra1"
   fi
 fi
@@ -907,37 +934,6 @@ if test "x${enable_warnings}" = "xyes" -a "x${GCC}" = "xyes"; then
   CXXFLAGS="${CXXFLAGS-} -W"
 fi
 
-AC_MSG_CHECKING([for available threading models])
-
-# specify whether built-in threading support should be enabled & with what thread models
-AC_ARG_ENABLE(threads,
-[  --enable-threads=THRs  Enable built-in thread support utilizing the given threading models (compiled-in order of usage by platform availability: 'pthreads','glib','npth','pth').  Defaults to 'yes', any available.  Turn off threads with 'no' or --disable-threads; this will use setjmp/longjmp.], [tme_thread_types=${enableval}], [enable_threads=yes])
-
-if test "x${enable_threads}" = xyes; then
-   tme_thread_types=glib
-fi
-
-if test "x${enable_threads}" = xno; then
-   tme_thread_types=sjlj
-fi
-
-THRINC=
-
-for tme_thread_type in ${tme_thread_types}; do
-case "x${tme_thread_type}" in
-xpthreads)   CPPFLAGS="${CPPFLAGS} -DTME_THREADS_POSIX" 
-	     CFLAGS="${CFLAGS} -pthread" ;;
-xglib)   CPPFLAGS="${CPPFLAGS} -DTME_THREADS_GLIB ${GTK_CFLAGS}" ;;
-xnpth)    CPPFLAGS="${CPPFLAGS} -DTME_THREADS_NPTH" ;;
-xpth)   CPPFLAGS="${CPPFLAGS} -DTME_THREADS_PTH" ;;
-xsjlj)   CPPFLAGS="${CPPFLAGS} -DTME_THREADS_SJLJ" ;;
-esac
-done
-
-AC_MSG_RESULT($tme_thread_types)
-
-AM_CONDITIONAL([THREADS_SJLJ], [test "x${enable_threads}" = "xno"])
-
 dnl Some code isn't alias-clean.
 CFLAGS_NO_STRICT_ALIASING=
 if test "x${GCC}" = "xyes"; then
@@ -1014,7 +1010,7 @@ TMEEOF
   echo '#define TME_BUILD_TARGET "'$target'"' >> ${outfile}-tmp
   echo '#ifdef _TME_HAVE___INT128' >> ${outfile}-tmp
   echo '#define TME_HAVE_INT128_T' >> ${outfile}-tmp
-  echo '#define _TME_ALIGNOF_INT128_T _TME_ALIGNOF_INT__INT128_T' >> ${outfile}-tmp
+  echo '#define _TME_ALIGNOF_INT128_T 16' >> ${outfile}-tmp
   echo 'typedef __int128 tme_int128_t;' >> ${outfile}-tmp
   echo 'typedef unsigned __int128 tme_uint128_t;' >> ${outfile}-tmp
   echo '#endif' >> ${outfile}-tmp

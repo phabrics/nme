@@ -46,8 +46,10 @@ _TME_RCSID("$Id: threads.h,v 1.10 2010/06/05 19:36:35 fredette Exp $");
 /* setjmp/longjmp threading: */
 #ifdef TME_THREADS_POSIX
 #include "threads-posix.h"
+#define tme_sjlj_threads_run(g) do { } while (/* CONSTCOND */ 0)
 #elif defined(TME_THREADS_GLIB)
 #include "threads-glib.h"
+#define tme_sjlj_threads_run(g) do { } while (/* CONSTCOND */ 0)
 #elif defined(TME_THREADS_SJLJ)
 #include "threads-sjlj.h"
 #endif
