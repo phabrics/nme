@@ -63,25 +63,24 @@ typedef pthread_rwlock_t tme_rwlock_t;
 #define tme_rwlock_trywrlock pthread_rwlock_trywrlock
 #define tme_rwlock_wrunlock pthread_rwlock_unlock
 
-static inline int tme_rwlock_timedrdlock _TME_P((tme_rwlock_t *l, unsigned long usec)) { 
-  static tme_time_t tme_timeout;
-  unsigned long sec;
+static inline int tme_rwlock_timedlock _TME_P((tme_rwlock_t *l, unsigned long usec, int write)) { 
+  static tme_time_t now, timeout;
 
-  for (sec = 0; usec >= 1000000; sec++, usec -= 1000000);
+  TME_TIME_SETV(timeout, 0, usec);
+  tme_get_time(&now);
+  TME_TIME_INC(timeout, now);
+  if (TME_TIME_GET_FRAC(timeout) >= 1000000) {
+    TME_TIME_ADDV(timeout, 1, -1000000);
+  }
 
-  TME_TIME_SETV(tme_timeout, sec, usec);
-  return pthread_rwlock_timedrdlock(l, &tme_timeout); 
+  if (write)
+    return pthread_rwlock_timedwrlock(l, &timeout);
+  else
+    return pthread_rwlock_timedrdlock(l, &timeout);
 }
 
-static inline int tme_rwlock_timedwrlock _TME_P((tme_rwlock_t *l, unsigned long usec)) { 
-  static tme_time_t tme_timeout;
-  unsigned long sec;
-
-  for (sec = 0; usec >= 1000000; sec++, usec -= 1000000);
-
-  TME_TIME_SETV(tme_timeout, sec, usec);
-  return pthread_rwlock_timedwrlock(l, &tme_timeout); 
-}
+#define tme_rwlock_timedrdlock(l,usec) tme_rwlock_timedlock(l,usec,0)
+#define tme_rwlock_timedwrlock(l,usec) tme_rwlock_timedlock(l,usec,1)
 
 /* mutexes. */
 typedef pthread_mutex_t tme_mutex_t;
@@ -97,13 +96,27 @@ typedef pthread_cond_t tme_cond_t;
 #define tme_cond_init(c) pthread_cond_init(c,NULL)
 #define tme_cond_destroy pthread_cond_destroy
 #define tme_cond_wait_yield pthread_cond_wait
-#define tme_cond_sleep_yield pthread_cond_timedwait
+
+static inline int
+tme_cond_sleep_yield _TME_P((tme_cond_t *cond, tme_mutex_t *mutex,
+			     const tme_time_t *timeout)) {
+  tme_time_t abstime;
+
+  tme_get_time(&abstime);
+  TME_TIME_INC(abstime, *timeout);
+  if (TME_TIME_GET_FRAC(abstime) >= 1000000) {
+    TME_TIME_ADDV(abstime, 1, -1000000);
+  }
+
+  return pthread_cond_timedwait(cond, mutex, &abstime);
+}
+
 #define tme_cond_notifyTRUE pthread_cond_broadcast
 #define tme_cond_notifyFALSE pthread_cond_signal
 #define tme_cond_notify(cond,bc) tme_cond_notify##bc(cond)
 
 /* deadlock sleeping: */
-#define TME_THREAD_TIMEDLOCK		(0)
+#define TME_THREAD_TIMEDLOCK		(10)
 #define TME_THREAD_DEADLOCK_SLEEP	abort
 
 /* threads: */
@@ -117,12 +130,12 @@ void tme_pthread_yield _TME_P((void));
 
 /* sleeping: */
 static inline int tme_thread_sleep_yield _TME_P((unsigned long sec, unsigned long usec)) { 
-  static tme_time_t tme_timeout;
+  static tme_time_t timeout;
 
   for (; usec >= 1000000; sec++, usec -= 1000000);
 
-  TME_TIME_SETV(tme_timeout, sec, usec);
-  return nanosleep(&tme_timeout, NULL); 
+  TME_TIME_SETV(timeout, sec, usec);
+  return nanosleep(&timeout, NULL); 
 }
 
 /* I/O: */

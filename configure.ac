@@ -602,7 +602,7 @@ if test "x${enable_threads}" = xyes; then
 fi
 
 # 128-bit integral type required to enable preemptive thread support
-if test "x${enable_threads}" = xno || test "x${have_int128}" = xno; then
+if test "x${enable_threads}" = xno; then
    tme_thread_types=sjlj
 fi
 
@@ -622,7 +622,10 @@ AM_CONDITIONAL([THREADS_SJLJ], [test "x${tme_thread_types}" = xsjlj])
 dnl Configures for the system(s) to emulate.
 systems=all
 if echo " ${systems} " | grep ' all ' > /dev/null 2>&1; then
-  systems="sun2 sun3 sun4"
+  systems="sun2 sun3"
+  if test $have_int128 = yes || test "x${tme_thread_types}" = xsjlj; then
+    systems="${systems} sun4"
+  fi
   if test $have_int64 = yes && test "x${tme_thread_types}" = xsjlj; then
     systems="${systems} sunultra1"
   fi
@@ -634,8 +637,13 @@ TME_SERIAL_SUBDIRS=
 TME_SERIALS=
 TME_BUS_SUBDIRS=
 TME_FB_XLAT_SRC=
-bus_size_max=32
-recode_size_guest_max=0
+if test $have_int64 = yes; then
+   bus_size_max=64
+   recode_size_guest_max=64
+else
+   bus_size_max=32
+   recode_size_guest_max=0
+fi
 for system in $systems; do
 
     # dispatch on the machine type to get more machines, ICs, and
