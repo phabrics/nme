@@ -209,7 +209,7 @@ AC_FUNC_MEMCMP
 AC_FUNC_MALLOC
 AC_FUNC_MMAP
 AC_FUNC_REALLOC
-AC_CHECK_FUNCS([clock_gettime gettimeofday memmove memset munmap pow ptsname select socket sqrt strchr strerror strrchr strstr strtoul devname fdevname kldfind])
+AC_CHECK_FUNCS([clock_gettime gettimeofday memmove memset munmap pow ptsname ptsname_r select socket sqrt strchr strerror strrchr strstr strtoul devname fdevname kldfind])
 
 AC_CHECK_FUNC_LONG(__builtin_bswap16, [
   unsigned int x;
@@ -623,11 +623,17 @@ dnl Configures for the system(s) to emulate.
 systems=all
 if echo " ${systems} " | grep ' all ' > /dev/null 2>&1; then
   systems="sun2 sun3"
+  recode_size_guest_max=0
+  bus_size_max=32
   if test $have_int128 = yes || test "x${tme_thread_types}" = xsjlj; then
     systems="${systems} sun4"
+    bus_size_max=64
+    recode_size_guest_max=32
   fi
   if test $have_int64 = yes && test "x${tme_thread_types}" = xsjlj; then
     systems="${systems} sunultra1"
+    bus_size_max=64
+    recode_size_guest_max=64
   fi
 fi
 TME_MACHINE_SUBDIRS=
@@ -637,13 +643,6 @@ TME_SERIAL_SUBDIRS=
 TME_SERIALS=
 TME_BUS_SUBDIRS=
 TME_FB_XLAT_SRC=
-if test $have_int64 = yes; then
-   bus_size_max=64
-   recode_size_guest_max=64
-else
-   bus_size_max=32
-   recode_size_guest_max=0
-fi
 for system in $systems; do
 
     # dispatch on the machine type to get more machines, ICs, and
@@ -656,8 +655,6 @@ for system in $systems; do
 	ics="m68k am9513 mm58167 z8530 i825x6"
 	buses="multibus"
 	fb_xlats="1152x900d1b1s0p32om"
-	bus_size=32
-	recode_size_guest=0
 	;;
 
     # the sun3:
@@ -666,8 +663,6 @@ for system in $systems; do
 	ics="m68k isil7170 z8530 i825x6 ieee754 ncr5380"
 	buses="multibus"
 	fb_xlats="1152x900d1b1s0p32om 1152x900d8b8s0p32ommi8 1152x900d1b1s0p32omccmi8"
-	bus_size=32
-	recode_size_guest=0
 	;;
 
     # the sun4:
@@ -676,8 +671,6 @@ for system in $systems; do
 	ics="sparc isil7170 z8530 am7930 am7990 ieee754 ncr53c9x mk48txx lsi64854 nec765"
 	buses="sbus"
 	fb_xlats="1152x900d1b1s0p32om 1152x900d8b8s0p32ommi8 1152x900d1b1s0p32omccmi8"
-	bus_size=32
-	recode_size_guest=32
 	;;
 
     # the sun Ultra-1:
@@ -686,24 +679,12 @@ for system in $systems; do
 	ics="sparc stp22xx z8530 am7990 ieee754 ncr53c9x ncr89c105 mk48txx lsi64854 nec765 stp2024 ad184x"
 	buses="sbus"
 	fb_xlats="1152x900d1b1s0p32om 1152x900d8b8s0p32ommi8 1152x900d1b1s0p32omccmi8"
-	bus_size=64
-	recode_size_guest=64
 	;;
 
     *)
 	AC_MSG_ERROR([don't know how to emulate ${machine}])
 	;;
     esac
-
-    # update the maximum bus size:
-    if test `expr ${bus_size_max} \< ${bus_size}` = 1; then
-       bus_size_max=$bus_size
-    fi
-
-    # update the maximum recode guest size:
-    if test `expr ${recode_size_guest_max} \< ${recode_size_guest}` = 1; then
-       recode_size_guest_max=$recode_size_guest
-    fi
 
     # add in the new machines, ICs, serials, and buses to compile:
     for machine in $machines; do
@@ -849,6 +830,23 @@ else
 	AC_MSG_RESULT([up to ${recode_size_guest_max}-bit guests using ${recode_hosts}])
     fi
 fi
+
+# get the host maximum guest size:
+case "${target_cpu}" in
+i[3456789]86)
+  bus_size_max_host=32
+  ;;
+x86_64)
+  bus_size_max_host=64
+  ;;
+*) 
+  bus_size_max_host= ;;
+esac
+
+if test `expr ${bus_size_max_host} \> ${bus_size_max}` = 1; then
+    bus_size_max=$bus_size_max_host
+fi
+AC_MSG_RESULT([using ${bus_size_max}-bit bus for guests using ${target_cpu}])
 
 dnl Configure miscellaneous target support.
 AC_MSG_CHECKING([for target miscellaneous support])

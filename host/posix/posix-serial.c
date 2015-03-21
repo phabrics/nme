@@ -851,6 +851,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
   struct tme_posix_serial *serial;
   const char *filename_in;
   const char *filename_out;
+#define PTSLEN 32
+  char *filename;
   int fd_in, fd_out;
   int usage;
   int arg_i;
@@ -949,11 +951,17 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
 #ifdef HAVE_PTSNAME
     if (strstr(filename_in, PTMDEV) != NULL) {
       fd_in = posix_openpt( O_RDWR );
+#ifdef HAVE_PTSNAME_R
+      filename = tme_malloc(PTSLEN);
+      ptsname_r(fd_in, filename, PTSLEN);
+#else
+      filename = tme_strdup(ptsname(fd_in));
+#endif
       if (strcmp(filename_in, filename_out) == 0) {
 	fd_out = fd_in;
-	filename_out = filename_in = ptsname(fd_in);
+	filename_out = filename_in = filename;
       } else
-	filename_in=ptsname(fd_in);
+	filename_in = filename;
       if(filename_in == NULL) {
 	tme_output_append_error(_output, "could not open serial device %s", filename_in);
 	return (errno);
@@ -976,7 +984,12 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
 #ifdef HAVE_PTSNAME
     if (strstr(filename_out, PTMDEV) != NULL) {
       fd_out = posix_openpt( O_RDWR );
-      filename_out=ptsname(fd_out);
+#ifdef HAVE_PTSNAME_R
+      filename_out = tme_malloc(PTSLEN);
+      ptsname_r(fd_out, filename_out, PTSLEN);
+#else
+      filename_out = tme_strdup(ptsname(fd_out));
+#endif
       if(filename_out == NULL) {
 	tme_output_append_error(_output, "could not open serial device %s", filename_out);
 	return (errno);
@@ -1028,6 +1041,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
     /*    tme_log(&element->tme_element_log_handle, 0, TME_OK,
 	    (&element->tme_element_log_handle,
 	    "using interface %s", filename_in));*/
+    tme_free(filename_in);
   }
   if(unix98_pts_out) {
     if((grantpt(fd_out) < 0) ||
@@ -1039,6 +1053,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
     /*    tme_log(&element->tme_element_log_handle, 0, TME_OK,
 	    (&element->tme_element_log_handle,
 	    "using interface %s", filename_out));*/
+    tme_free(filename_out);
   }
 #endif
   return (TME_OK);
