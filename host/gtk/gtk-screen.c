@@ -41,8 +41,8 @@ _TME_RCSID("$Id: gtk-screen.c,v 1.11 2009/08/30 21:39:03 fredette Exp $");
 #include <stdlib.h>
 
 /* the GTK screens update thread: */
-void
-_tme_gtk_screen_th_update(struct tme_gtk_display *display)
+guint
+_tme_gtk_screen_update(struct tme_gtk_display *display)
 {
   struct tme_gtk_screen *screen;
   struct tme_fb_connection *conn_fb;
@@ -54,69 +54,77 @@ _tme_gtk_screen_th_update(struct tme_gtk_display *display)
   tme_uint32_t last_i, j;
 #endif
 
-  /* loop forever: */
-  for (;;) {
+  /* lock the mutex: */
+  tme_mutex_lock(&display->tme_gtk_display_mutex);
 
-    /* lock the mutex: */
-    tme_mutex_lock(&display->tme_gtk_display_mutex);
+  /* loop over all screens: */
+  for (screen = display->tme_gtk_display_screens;
+       screen != NULL;
+       screen = screen->tme_gtk_screen_next) {
 
-    /* loop over all screens: */
-    for (screen = display->tme_gtk_display_screens;
-	 screen != NULL;
-	 screen = screen->tme_gtk_screen_next) {
-
-      /* skip this screen if it's unconnected: */
-      if ((conn_fb = screen->tme_gtk_screen_fb) == NULL) {
-	continue;
-      }
-
-      /* get the other side of this connection: */
-      conn_fb_other = (struct tme_fb_connection *)conn_fb->tme_fb_connection.tme_connection_other;
-
-      /* if the framebuffer has an update function, call it: */
-      if (conn_fb_other->tme_fb_connection_update != NULL) {
-	rc = (*conn_fb_other->tme_fb_connection_update)(conn_fb_other);
-	assert (rc == TME_OK);
-      }
-
-      /* if this framebuffer needs a full redraw: */
-      if (screen->tme_gtk_screen_full_redraw) {
-
-	/* force the next translation to retranslate the entire buffer: */
-	tme_fb_xlat_redraw(conn_fb_other);
-	conn_fb_other->tme_fb_connection_offset_updated_first = 0;
-	conn_fb_other->tme_fb_connection_offset_updated_last = 0 - (tme_uint32_t) 1;
-
-	/* clear the full redraw flag: */
-	screen->tme_gtk_screen_full_redraw = FALSE;
-      }
-
-      changed = FALSE;
-      if (screen->tme_gtk_screen_fb_xlat) {
-	cairo_surface_flush(screen->tme_gtk_screen_surface);
-
-	/* translate this framebuffer's contents: */
-	changed = (*screen->tme_gtk_screen_fb_xlat)(conn_fb_other, conn_fb);
-     } 
-
-      /* if those contents changed, redraw the widget: */
-      if (changed) {
-#ifdef DEBUG_CAIRO
-	i = (tme_uint32_t *)conn_fb->tme_fb_connection_buffer;
-	last_i = *i;
-	printf("%8x: %8x\n", i, last_i);
-	for(j=0;j<conn_fb->tme_fb_connection_buffsz;j+=sizeof(tme_uint32_t)) {
-	  if(last_i != *i) { last_i = *i; printf("%8x: %8x\n", i, last_i); }
-	  i++;
-	}
-#endif
-	cairo_surface_mark_dirty(screen->tme_gtk_screen_surface);
-	gtk_widget_queue_draw(screen->tme_gtk_screen_gtkframe);
-      }
+    /* skip this screen if it's unconnected: */
+    if ((conn_fb = screen->tme_gtk_screen_fb) == NULL) {
+      continue;
     }
 
-    /* unlock the mutex: */
-    tme_mutex_unlock(&display->tme_gtk_display_mutex);
+    /* get the other side of this connection: */
+    conn_fb_other = (struct tme_fb_connection *)conn_fb->tme_fb_connection.tme_connection_other;
+
+    /* if the framebuffer has an update function, call it: */
+    if (conn_fb_other->tme_fb_connection_update != NULL) {
+      rc = (*conn_fb_other->tme_fb_connection_update)(conn_fb_other);
+      assert (rc == TME_OK);
+    }
+
+    /* if this framebuffer needs a full redraw: */
+    if (screen->tme_gtk_screen_full_redraw) {
+
+      /* force the next translation to retranslate the entire buffer: */
+      tme_fb_xlat_redraw(conn_fb_other);
+      conn_fb_other->tme_fb_connection_offset_updated_first = 0;
+      conn_fb_other->tme_fb_connection_offset_updated_last = 0 - (tme_uint32_t) 1;
+
+      /* clear the full redraw flag: */
+      screen->tme_gtk_screen_full_redraw = FALSE;
+    }
+
+    changed = FALSE;
+    if (screen->tme_gtk_screen_fb_xlat) {
+      cairo_surface_flush(screen->tme_gtk_screen_surface);
+
+      /* translate this framebuffer's contents: */
+      changed = (*screen->tme_gtk_screen_fb_xlat)(conn_fb_other, conn_fb);
+    } 
+
+    /* if those contents changed, redraw the widget: */
+    if (changed) {
+#ifdef DEBUG_CAIRO
+      i = (tme_uint32_t *)conn_fb->tme_fb_connection_buffer;
+      last_i = *i;
+      printf("%8x: %8x\n", i, last_i);
+      for(j=0;j<conn_fb->tme_fb_connection_buffsz;j+=sizeof(tme_uint32_t)) {
+	if(last_i != *i) { last_i = *i; printf("%8x: %8x\n", i, last_i); }
+	i++;
+      }
+#endif
+      cairo_surface_mark_dirty(screen->tme_gtk_screen_surface);
+      gtk_widget_queue_draw(screen->tme_gtk_screen_gtkframe);
+    }
+  }
+
+  /* unlock the mutex: */
+  tme_mutex_unlock(&display->tme_gtk_display_mutex);
+
+  return TRUE;
+}
+
+/* the (default) GTK screens update thread: */
+void
+_tme_gtk_screen_th_update(struct tme_gtk_display *display)
+{
+  /* loop forever: */
+  for (;;) {
+    _tme_gtk_screen_update(display);
 
     /* update again in .5 seconds: */
     tme_thread_sleep_yield(0, 500000);

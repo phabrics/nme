@@ -302,8 +302,13 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
 
   /* start the threads: */
   tme_mutex_init(&display->tme_gtk_display_mutex);
-  tme_thread_create(&display->tme_gtk_display_thread, (tme_thread_t) _tme_gtk_screen_th_update, display);
 
+#ifdef THREADS_SJLJ
+  tme_thread_create(&display->tme_gtk_display_thread, (tme_thread_t) _tme_gtk_screen_th_update, display);
+#else
+  gdk_threads_add_timeout(500, _tme_gtk_screen_update, display);
+#endif
+  
   /* fill the element: */
   element->tme_element_private = display;
   element->tme_element_connections_new = _tme_gtk_display_connections_new;

@@ -984,6 +984,9 @@ _tme_sunfb_tlb_fill(void *_sunfb,
   address = address_wider;
   assert (address == address_wider);
 
+  /* lock the mutex: */
+  tme_mutex_lock(&sunfb->tme_sunfb_mutex);
+
   /* if this address falls in the bus subregion for memory: */
   if ((sunfb->tme_sunfb_bus_subregion_memory.tme_bus_subregion_address_first
        <= address)
@@ -1115,6 +1118,9 @@ _tme_sunfb_tlb_fill(void *_sunfb,
 
   /* our bus cycle handler private data: */
   tlb->tme_bus_tlb_cycle_private = _sunfb;
+
+  /* unlock the mutex: */
+  tme_mutex_unlock(&sunfb->tme_sunfb_mutex);
 
   return (TME_OK);
 }

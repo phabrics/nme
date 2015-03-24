@@ -63,10 +63,10 @@ typedef pthread_rwlock_t tme_rwlock_t;
 #define tme_rwlock_trywrlock pthread_rwlock_trywrlock
 #define tme_rwlock_wrunlock pthread_rwlock_unlock
 
-static inline int tme_rwlock_timedlock _TME_P((tme_rwlock_t *l, unsigned long usec, int write)) { 
+static inline int tme_rwlock_timedlock _TME_P((tme_rwlock_t *l, unsigned long sec, int write)) { 
   static tme_time_t now, timeout;
 
-  TME_TIME_SETV(timeout, 0, usec);
+  TME_TIME_SETV(timeout, sec, 0);
   tme_get_time(&now);
   TME_TIME_INC(timeout, now);
   if (TME_TIME_GET_FRAC(timeout) >= 1000000) {
@@ -79,8 +79,8 @@ static inline int tme_rwlock_timedlock _TME_P((tme_rwlock_t *l, unsigned long us
     return pthread_rwlock_timedrdlock(l, &timeout);
 }
 
-#define tme_rwlock_timedrdlock(l,usec) tme_rwlock_timedlock(l,usec,0)
-#define tme_rwlock_timedwrlock(l,usec) tme_rwlock_timedlock(l,usec,1)
+#define tme_rwlock_timedrdlock(l,sec) tme_rwlock_timedlock(l,sec,0)
+#define tme_rwlock_timedwrlock(l,sec) tme_rwlock_timedlock(l,sec,1)
 
 /* mutexes. */
 typedef pthread_mutex_t tme_mutex_t;
@@ -116,7 +116,7 @@ tme_cond_sleep_yield _TME_P((tme_cond_t *cond, tme_mutex_t *mutex,
 #define tme_cond_notify(cond,bc) tme_cond_notify##bc(cond)
 
 /* deadlock sleeping: */
-#define TME_THREAD_TIMEDLOCK		(10)
+#define TME_THREAD_TIMEDLOCK		(1000)
 #define TME_THREAD_DEADLOCK_SLEEP	abort
 
 /* threads: */

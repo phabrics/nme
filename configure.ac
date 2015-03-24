@@ -33,7 +33,7 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.68])
-AC_INIT([tme], [1.0beta_6])
+AC_INIT([tme], [1.0beta_7])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
@@ -824,7 +824,7 @@ else
 	if test "x${recode_size_guest_max_host}" = x; then
 	    AC_MSG_ERROR([internal error - no maximum recode guest size for ${target_cpu}])
 	fi
-	if test `expr ${recode_size_guest_max} \> ${recode_size_guest_max_host}` = 1; then
+	if test `expr ${recode_size_guest_max_host} \> ${recode_size_guest_max}` = 1; then
 	    recode_size_guest_max=$recode_size_guest_max_host
 	fi
 	AC_MSG_RESULT([up to ${recode_size_guest_max}-bit guests using ${recode_hosts}])
@@ -916,7 +916,7 @@ AC_ARG_ENABLE(debug,
 [  --enable-debug          compile debuggable libraries and programs (default=don't)],
 [ ], [enable_debug=no])
 if test "x${enable_debug}" = "xyes"; then
-  CPPFLAGS="${CPPFLAGS-} -DTME_NO_DEBUG_LOCKS -DTME_RECODE_DEBUG -D_TME_SPARC_STATS -DGTK_DISABLE_SINGLE_INCLUDES"
+  CPPFLAGS="${CPPFLAGS-} -DTME_NO_DEBUG_LOCKS -DTME_RECODE_DEBUG -D_TME_SPARC_STATS -DGTK_DISABLE_SINGLE_INCLUDES -DNDEBUG"
   AC_MSG_CHECKING([for gcc -Og support])
   AC_EGREP_CPP(_gcc_has_Og,
   [
