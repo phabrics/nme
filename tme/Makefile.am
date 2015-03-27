@@ -10,6 +10,9 @@ pkginclude_HEADERS = memory.h \
 	connection.h \
 	element.h \
 	threads.h \
+	threads-posix.h \
+	threads-glib.h \
+	threads-sjlj.h \
 	module.h \
 	log.h \
 	tme.h \
