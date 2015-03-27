@@ -563,6 +563,10 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
 
   if(screen->tme_gtk_screen_surface == NULL) {
     _tme_gtk_screen_init(widget, screen);
+
+    /* unlock our mutex: */
+    tme_mutex_unlock(&display->tme_gtk_display_mutex);
+    
     return TRUE;
   }
   
@@ -765,7 +769,7 @@ _tme_gtk_screen_connection_make(struct tme_connection *conn,
   if (state == TME_CONNECTION_FULL) {
 
     /* lock our mutex: */
-    tme_mutex_lock(&display->tme_gtk_display_mutex);
+    //tme_mutex_lock(&display->tme_gtk_display_mutex);
 
     /* if our initial screen is already connected, make a new screen: */
     screen = display->tme_gtk_display_screens;
@@ -780,7 +784,7 @@ _tme_gtk_screen_connection_make(struct tme_connection *conn,
     screen->tme_gtk_screen_fb = conn_fb;
 
     /* unlock our mutex: */
-    tme_mutex_unlock(&display->tme_gtk_display_mutex);
+    //tme_mutex_unlock(&display->tme_gtk_display_mutex);
 
     /* call our mode change function: */
     _tme_gtk_screen_mode_change(conn_fb);
