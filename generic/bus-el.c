@@ -458,7 +458,7 @@ _tme_bus_tlb_fill(struct tme_bus_connection *conn_bus_asker,
   tlb->tme_bus_tlb_cycle = _tme_bus_fault;
 
   /* lock the bus for reading: */
-  rc = tme_rwlock_timedrdlock(&bus->tme_bus_rwlock, TME_THREAD_TIMEDLOCK);
+  rc = tme_rwlock_timedwrlock(&bus->tme_bus_rwlock, TME_THREAD_TIMEDLOCK);
   if (TME_THREADS_ERRNO(rc) != TME_OK) {
     return (TME_THREADS_ERRNO(rc));
   }
@@ -469,7 +469,7 @@ _tme_bus_tlb_fill(struct tme_bus_connection *conn_bus_asker,
 			tlb, address, cycles);
 
   /* unlock the bus: */
-  tme_rwlock_rdunlock(&bus->tme_bus_rwlock);
+  tme_rwlock_wrunlock(&bus->tme_bus_rwlock);
 
   /* done: */
   return (rc);
