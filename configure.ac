@@ -33,7 +33,7 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.68])
-AC_INIT([tme], [1.0beta_7])
+AC_INIT([tme], [1.0beta_8])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
