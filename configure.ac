@@ -33,7 +33,7 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.68])
-AC_INIT([tme], [1.0beta_8])
+AC_INIT([tme], [1.0beta_9])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
@@ -1220,6 +1220,7 @@ done
 
 echo '#else // __GNUC__' >> ${outfile}-tmp
 echo '#define tme_memory_barrier(address, size, barrier) __sync_synchronize()' >> ${outfile}-tmp
+echo '#define TME_MEMORY_ALIGNMENT_ATOMIC(type) ((sizeof(type) <= TME_MEMORY_BUS_BOUNDARY) ? (sizeof(type)) : (0))' >> ${outfile}-tmp
 echo '#endif // !__GNUC__' >> ${outfile}-tmp
 echo '#endif /* !_TMEMEMORY_H */' >> ${outfile}-tmp
 
