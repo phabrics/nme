@@ -100,7 +100,8 @@ tme_cond_sleep_yield _TME_P((tme_cond_t *cond, tme_mutex_t *mutex,
   struct timespec abstime;
   struct timespec t;
 
-#ifndef _TME_HAVE_CLOCK_GETTIME
+#if defined(USE_GLIB_TIME) && defined(_TME_HAVE_GLIB)
+#elif defined(USE_GETTIMEOFDAY) || !defined(_TME_HAVE_CLOCK_GETTIME)
   t.tv_sec=timeout->tv_sec;
   t.tv_nsec=timeout->tv_usec * 1000;
 #else

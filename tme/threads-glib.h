@@ -62,8 +62,8 @@ typedef GRWLock tme_rwlock_t;
 #define tme_rwlock_trywrlock g_rw_lock_writer_trylock
 #define tme_rwlock_wrunlock g_rw_lock_writer_unlock
 /* for now, define as trylock (same as timedlock with 0 wait) */
-#define tme_rwlock_timedrdlock(l,t) g_rw_lock_reader_trylock(l)
-#define tme_rwlock_timedwrlock(l,t) g_rw_lock_writer_trylock(l)
+#define tme_rwlock_timedrdlock(l,t) (g_rw_lock_reader_lock(l), TME_OK)
+#define tme_rwlock_timedwrlock(l,t) (g_rw_lock_writer_lock(l), TME_OK)
 
 /* mutexes. */
 typedef GMutex tme_mutex_t;

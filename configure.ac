@@ -410,6 +410,12 @@ AC_SUBST(NATINC)
 dnl Checks for X11.
 AC_PATH_XTRA
 
+dnl Checks for GLIB.
+AM_PATH_GLIB_2_0([], have_glib=true, have_glib=false)
+if $have_glib; then
+  AC_DEFINE(HAVE_GLIB, [], [Define if you are compiling with GLIB.])
+fi
+
 dnl Checks for GTK.
 AM_PATH_GTK_3_0([], have_gtk=true, have_gtk=false)
 if $have_gtk; then
@@ -1049,10 +1055,12 @@ TMEEOF
   fi
   echo 'typedef signed char tme_int8_t;' >> ${outfile}-tmp
   echo 'typedef unsigned char tme_uint8_t;' >> ${outfile}-tmp
-  echo '#ifdef _TME_HAVE_CLOCK_GETTIME' >> ${outfile}-tmp
-  echo 'typedef struct timespec tme_time_t;' >> ${outfile}-tmp
-  echo '#else' >> ${outfile}-tmp
+  echo '#if defined(USE_GLIB_TIME) && defined(_TME_HAVE_GLIB)' >> ${outfile}-tmp
+  echo 'typedef gint64 tme_time_t;' >> ${outfile}-tmp
+  echo '#elif defined(USE_GETTIMEOFDAY) || !defined(_TME_HAVE_CLOCK_GETTIME)' >> ${outfile}-tmp
   echo 'typedef struct timeval tme_time_t;' >> ${outfile}-tmp
+  echo '#else' >> ${outfile}-tmp
+  echo 'typedef struct timespec tme_time_t;' >> ${outfile}-tmp
   echo '#endif' >> ${outfile}-tmp
   cat <<TMEEOF >> ${outfile}-tmp
 
@@ -1155,17 +1163,66 @@ TMEEOF
 #else
 #define TME_MEMORY_BUS_BOUNDARY sizeof(tme_uint64_t)
 #endif
-#define TME_MEMORY_ALIGNMENT_ATOMIC(type) ((sizeof(type) <= TME_MEMORY_BUS_BOUNDARY) ? (sizeof(type)) : (0))
 
 #define TME_MEMORY_BARRIER_READ_BEFORE_READ	(0)
 #define TME_MEMORY_BARRIER_WRITE_BEFORE_WRITE	(0)
 #define TME_MEMORY_BARRIER_READ_BEFORE_WRITE	(0)
 #define TME_MEMORY_BARRIER_WRITE_BEFORE_READ	(0)
-#define tme_memory_barrier(address, size, barrier) __sync_synchronize()
 
-#endif /* !_TMEMEMORY_H */
+#define check_align_min(mem,type,align_min) \
+	(__tme_predict_true(TME_MEMORY_ALIGNMENT_ATOMIC(TME_MEMORY_TYPE_COMMON) != 0 \
+	      && TME_MEMORY_ALIGNMENT_ATOMIC(type) != 0 \
+              && _tme_memory_address_test(mem, TME_MEMORY_ALIGNMENT_ATOMIC(type) - 1, align_min) == 0))
+
+#if __GNUC__ > 3 && __GNUC_MINOR__ > 7
+#define tme_memory_barrier(address, size, barrier) __atomic_thread_fence(__ATOMIC_SEQ_CST)
+
+#define TME_MEMORY_ALIGNMENT_ATOMIC(type) ((__atomic_always_lock_free(sizeof(type), 0)) ? (sizeof(type)) : (0))
 
 TMEEOF
+
+for sz in 8 16 32 64 128; do
+
+if test $sz = 128; then
+echo '#ifdef TME_HAVE_INT128_T' >> ${outfile}-tmp
+fi
+
+for op in add sub and or xor; do
+
+echo '#define tme_memory_atomic_'${op}${sz}'(mem,val,lock,align_min) (check_align_min(mem,tme_uint'${sz}'_t,align_min) ? (__atomic_fetch_'${op}'(mem,val,__ATOMIC_SEQ_CST)) : (tme_memory_atomic_'${op}${sz}'(mem,val,lock,align_min)))' >> ${outfile}-tmp
+done
+
+echo '#define tme_memory_atomic_not'${sz}'(mem,lock,align_min) (check_align_min(mem,tme_uint'${sz}'_t,align_min) ? (__atomic_fetch_nand(mem,(uint'${sz}'_t)-1,__ATOMIC_SEQ_CST)) : (tme_memory_atomic_not'${sz}'(mem,lock,align_min)))' >> ${outfile}-tmp
+
+echo '#define tme_memory_atomic_xchg'${sz}'(mem,val,lock,align_min) (check_align_min(mem,tme_uint'${sz}'_t,align_min) ? (__atomic_exchange_n(mem,val,__ATOMIC_SEQ_CST)) : (tme_memory_atomic_xchg'${sz}'(mem,val,lock,align_min)))' >> ${outfile}-tmp
+
+cat <<TMEEOF >> ${outfile}-tmp
+
+static inline
+tme_uint${sz}_t _tme_memory_atomic_cx${sz}(tme_shared tme_uint${sz}_t *mem, tme_uint${sz}_t value_read, tme_uint${sz}_t value_written) {
+  tme_uint${sz}_t tmp;
+
+  tmp=value_read;
+  __atomic_compare_exchange_n(mem, &tmp, value_written, FALSE, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
+
+  return tmp;
+}
+
+#define tme_memory_atomic_cx${sz}(mem,valr,valw,lock,align_min) (check_align_min(mem,tme_uint${sz}_t,align_min) ? (_tme_memory_atomic_cx${sz}(mem,valr,valw)) : (tme_memory_atomic_cx${sz}(mem,valr,valw,lock,align_min)))
+
+TMEEOF
+
+if test $sz = 128; then
+echo '#endif // TME_HAVE_INT128_T' >> ${outfile}-tmp
+fi
+
+done
+
+echo '#else // __GNUC__' >> ${outfile}-tmp
+echo '#define tme_memory_barrier(address, size, barrier) __sync_synchronize()' >> ${outfile}-tmp
+echo '#endif // !__GNUC__' >> ${outfile}-tmp
+echo '#endif /* !_TMEMEMORY_H */' >> ${outfile}-tmp
+
   if cmp -s ${outfile}-tmp $outfile; then
     echo "$as_me: $outfile is unchanged"
     rm -f ${outfile}-tmp

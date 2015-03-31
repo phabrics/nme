@@ -1476,7 +1476,7 @@ _tme_am7990_poll_th(struct tme_am7990 *am7990)
     tme_thread_sleep_yield(0, 16000);
 
     /* lock our mutex: */
-    tme_mutex_unlock(&am7990->tme_am7990_mutex);
+    tme_mutex_lock(&am7990->tme_am7990_mutex);
   }
   /* NOTREACHED */
 }
