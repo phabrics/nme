@@ -614,7 +614,7 @@ fi
 
 for tme_thread_type in ${tme_thread_types}; do
 case "x${tme_thread_type}" in
-xpthreads | xposix)   CPPFLAGS="${CPPFLAGS} -DTME_THREADS_POSIX" 
+xpthreads | xposix)   CPPFLAGS="${CPPFLAGS} -DTME_THREADS_POSIX -D_GNU_SOURCE" 
 	  	     CFLAGS="${CFLAGS} -pthread" ;;
 xglib)   CPPFLAGS="${CPPFLAGS} -DTME_THREADS_GLIB ${GTK_CFLAGS}" ;;
 xsjlj)   CPPFLAGS="${CPPFLAGS} -DTME_THREADS_SJLJ" ;;
@@ -633,10 +633,9 @@ if echo " ${systems} " | grep ' all ' > /dev/null 2>&1; then
   bus_size_max=32
   if test $have_int128 = yes || test "x${tme_thread_types}" = xsjlj; then
     systems="${systems} sun4"
-    bus_size_max=64
     recode_size_guest_max=32
   fi
-  if test $have_int64 = yes && test "x${tme_thread_types}" = xsjlj; then
+  if test $have_int128 = yes && test "x${tme_thread_types}" = xsjlj; then
     systems="${systems} sunultra1"
     bus_size_max=64
     recode_size_guest_max=64
@@ -830,7 +829,7 @@ else
 	if test "x${recode_size_guest_max_host}" = x; then
 	    AC_MSG_ERROR([internal error - no maximum recode guest size for ${target_cpu}])
 	fi
-	if test `expr ${recode_size_guest_max_host} \> ${recode_size_guest_max}` = 1; then
+	if test `expr ${recode_size_guest_max_host} \< ${recode_size_guest_max}` = 1; then
 	    recode_size_guest_max=$recode_size_guest_max_host
 	fi
 	AC_MSG_RESULT([up to ${recode_size_guest_max}-bit guests using ${recode_hosts}])
@@ -849,7 +848,7 @@ x86_64)
   bus_size_max_host= ;;
 esac
 
-if test `expr ${bus_size_max_host} \> ${bus_size_max}` = 1; then
+if test `expr ${bus_size_max} \< ${bus_size_max_host}` = 1; then
     bus_size_max=$bus_size_max_host
 fi
 AC_MSG_RESULT([using ${bus_size_max}-bit bus for guests using ${target_cpu}])

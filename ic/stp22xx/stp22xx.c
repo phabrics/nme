@@ -162,7 +162,7 @@ tme_stp22xx_enter_master(struct tme_bus_connection *master_conn_bus)
 
   /* if the bus master was making a callout through the bus: */
 #if !TME_THREADS_COOPERATIVE
-#error "preemptive threads not supported yet"
+#warning "preemptive threads not supported yet"
 #endif /* !TME_THREADS_COOPERATIVE */
   stp22xx = master_conn_bus->tme_bus_connection.tme_connection_element->tme_element_private;
   if (stp22xx->tme_stp22xx_master_completion != NULL) {

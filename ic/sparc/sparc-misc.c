@@ -174,7 +174,43 @@ _tme_sparc_idle_reset(struct tme_sparc *ic)
 static void
 tme_sparc_thread(struct tme_sparc *ic)
 {
+  int s, j;
+#ifdef THREADS_POSIX
+  cpu_set_t cpuset;
+  pthread_t thread;
 
+  thread = pthread_self();
+  
+  /* Set affinity mask to include CPUs 0 to 7 */
+  
+  CPU_ZERO(&cpuset);
+  for (j = 0; j < 1; j++)
+    CPU_SET(j, &cpuset);
+  
+  s = pthread_setaffinity_np(thread, sizeof(cpu_set_t), &cpuset);
+  if (s != 0)
+    tme_log(TME_SPARC_LOG_HANDLE(ic), 0, s,
+	    (TME_SPARC_LOG_HANDLE(ic),
+	     _("pthread_setaffinity_np")));
+  
+  /* Check the actual affinity mask assigned to the thread */
+  
+  s = pthread_getaffinity_np(thread, sizeof(cpu_set_t), &cpuset);
+  if (s != 0)
+    tme_log(TME_SPARC_LOG_HANDLE(ic), 0, s,
+	    (TME_SPARC_LOG_HANDLE(ic),
+	     _("pthread_getaffinity_np")));
+
+  tme_log(TME_SPARC_LOG_HANDLE(ic), 0, TME_OK,
+	  (TME_SPARC_LOG_HANDLE(ic),
+	   _("Set returned by pthread_getaffinity_np() contained:\n")));
+  
+  for (j = 0; j < CPU_SETSIZE; j++)
+    if (CPU_ISSET(j, &cpuset))
+      tme_log(TME_SPARC_LOG_HANDLE(ic), 0, TME_OK,
+	      (TME_SPARC_LOG_HANDLE(ic),
+	       _("    CPU %d\n"), j));
+#endif  
   /* we use siglongjmp to redispatch: */
   do { } while (sigsetjmp(ic->_tme_sparc_dispatcher, 0));
 

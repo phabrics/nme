@@ -1647,9 +1647,10 @@ tme_recode_host_flags_thunk_add(struct tme_recode_ic *ic,
 	 and guest register one on the right, with the result going
 	 back into guest register zero: */
       insn.tme_recode_insn_opcode = opcode;
-      insn.tme_recode_insn_size
+      insn.tme_recode_insn_size = TME_RECODE_SIZE_GUEST_MAX;
+	/*
 	= (TME_RECODE_SIZE_HOST
-	   + (TME_RECODE_SIZE_IS_DOUBLE_HOST(flags_group->tme_recode_flags_group_insn_size) != 0));
+	+ (TME_RECODE_SIZE_IS_DOUBLE_HOST(flags_group->tme_recode_flags_group_insn_size) != 0));*/
       insn.tme_recode_insn_operand_src[0] = TME_RECODE_REG_GUEST(0);
       insn.tme_recode_insn_operand_src[1] = TME_RECODE_REG_GUEST(1);
       insn.tme_recode_insn_operand_dst = TME_RECODE_REG_GUEST(0);
