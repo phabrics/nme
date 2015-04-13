@@ -393,7 +393,7 @@ _tme_isil7170_th_timer(struct tme_isil7170 *isil7170)
     tme_thread_sleep_yield(0, sleep_usec);
 
     /* lock our mutex: */
-    tme_mutex_unlock(&isil7170->tme_isil7170_mutex);
+    tme_mutex_lock(&isil7170->tme_isil7170_mutex);
   }
   /* NOTREACHED */
 }

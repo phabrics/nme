@@ -53,32 +53,32 @@
    rwlock operations: */
 
 typedef GRWLock tme_rwlock_t;
-#define tme_rwlock_init g_rw_lock_init
-#define tme_rwlock_destroy g_rw_lock_clear
-#define tme_rwlock_rdlock g_rw_lock_reader_lock
-#define tme_rwlock_tryrdlock g_rw_lock_reader_trylock
-#define tme_rwlock_rdunlock g_rw_lock_reader_unlock
-#define tme_rwlock_wrlock g_rw_lock_writer_lock
-#define tme_rwlock_trywrlock g_rw_lock_writer_trylock
-#define tme_rwlock_wrunlock g_rw_lock_writer_unlock
-#define tme_rwlock_timedrdlock(l,t) (g_rw_lock_reader_trylock(l) ? (TME_OK) : (ETIMEDOUT))
-#define tme_rwlock_timedwrlock(l,t) (g_rw_lock_writer_trylock(l) ? (TME_OK) : (ETIMEDOUT))
+#define tme_rwlock_init(l) (g_rw_lock_init(l), TME_OK)
+#define tme_rwlock_destroy(l) (g_rw_lock_clear(l), TME_OK)
+#define tme_rwlock_rdlock(l) (g_rw_lock_reader_lock(l), TME_OK)
+#define tme_rwlock_tryrdlock(l) (g_rw_lock_reader_trylock(l) ? (TME_OK) : (TME_EBUSY))
+#define tme_rwlock_rdunlock(l) (g_rw_lock_reader_unlock(l), TME_OK)
+#define tme_rwlock_wrlock(l) (g_rw_lock_writer_lock(l), TME_OK)
+#define tme_rwlock_trywrlock(l) (g_rw_lock_writer_trylock(l) ? (TME_OK) : (TME_EBUSY))
+#define tme_rwlock_wrunlock(l) (g_rw_lock_writer_unlock(l), TME_OK)
+#define tme_rwlock_timedrdlock(l,t) tme_rwlock_tryrdlock(l)
+#define tme_rwlock_timedwrlock(l,t) tme_rwlock_wrlock(l)
 
 /* mutexes. */
 typedef GMutex tme_mutex_t;
-#define tme_mutex_init g_mutex_init
-#define tme_mutex_destroy g_mutex_clear
-#define tme_mutex_lock g_mutex_lock
-#define tme_mutex_trylock g_mutex_trylock
+#define tme_mutex_init(m) (g_mutex_init(m), TME_OK)
+#define tme_mutex_destroy(m) (g_mutex_clear(m), TME_OK)
+#define tme_mutex_lock(m) (g_mutex_lock(m), TME_OK)
+#define tme_mutex_trylock(m) (g_mutex_trylock(m) ? (TME_OK) : (TME_EBUSY))
 /* for now, define as trylock (same as timedlock with 0 wait) */
-#define tme_mutex_timedlock g_mutex_trylock
-#define tme_mutex_unlock g_mutex_unlock
+#define tme_mutex_timedlock(m,t) g_mutex_trylock(m)
+#define tme_mutex_unlock(m) (g_mutex_unlock(m), TME_OK)
 
 /* conditions: */
 typedef GCond tme_cond_t;
-#define tme_cond_init g_cond_init
-#define tme_cond_destroy g_cond_clear
-#define tme_cond_wait_yield g_cond_wait
+#define tme_cond_init(c) (g_cond_init(c), TME_OK)
+#define tme_cond_destroy(c) (g_cond_clear(c), TME_OK)
+#define tme_cond_wait_yield(c,m) (g_cond_wait(c,m), TME_OK)
 static _tme_inline int
 tme_cond_sleep_yield _TME_P((tme_cond_t *cond, tme_mutex_t *mutex,
 			     const tme_time_t *timeout)) {

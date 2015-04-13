@@ -57,7 +57,7 @@ typedef pthread_rwlock_t tme_rwlock_t;
 #define tme_rwlock_init(l) pthread_rwlock_init(l, NULL)
 #define tme_rwlock_destroy pthread_rwlock_destroy
 #define tme_rwlock_rdlock pthread_rwlock_rdlock
-#define tme_rwlock_tryrdlock pthread_rwlock_trylock
+#define tme_rwlock_tryrdlock pthread_rwlock_tryrdlock
 #define tme_rwlock_rdunlock pthread_rwlock_unlock
 #define tme_rwlock_wrlock pthread_rwlock_wrlock
 #define tme_rwlock_trywrlock pthread_rwlock_trywrlock
