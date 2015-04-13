@@ -401,6 +401,10 @@ _TME_SPARC_EXECUTE_NAME(struct tme_sparc *ic)
 
     /* update the PCs and get the PC of the instruction to execute: */
     pc = ic->tme_sparc_ireg(TME_SPARC_IREG_PC_NEXT);
+#ifndef NDEBUG
+    if(pc == 0xffe87840 || pc == 0xffe83424)
+      ic->tme_sparc_stats.tme_sparc_stats_insns_total++;
+#endif
     ic->tme_sparc_ireg(TME_SPARC_IREG_PC) = pc;
     pc_next_next = ic->tme_sparc_ireg(TME_SPARC_IREG_PC_NEXT_NEXT);
     ic->tme_sparc_ireg(TME_SPARC_IREG_PC_NEXT) = pc_next_next;

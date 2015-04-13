@@ -48,7 +48,7 @@ _TME_RCSID("$Id: sparc-timing.c,v 1.3 2010/02/14 15:57:09 fredette Exp $");
    runnable again.  this makes timing loops more accurate, at the
    expense of consuming the host CPU.  if this is nonzero, when we
    yield we will instead do a sleep or wait on an external event: */
-#define TME_SPARC_TIMING_YIELD_BLOCK		(FALSE)
+#define TME_SPARC_TIMING_YIELD_BLOCK		(TRUE)
 
 /* this does a timing loop update: */
 static void

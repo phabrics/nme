@@ -383,6 +383,12 @@ tme_bswap_u64(tme_uint64_t x)
 #define _TME_TIME_SEC(a,sec) (a).sec
 
 #if defined(USE_GLIB_TIME) && defined(_TME_HAVE_GLIB)
+#define tme_get_time(x) (*(x) = g_get_real_time(), TME_OK)
+#define tme_select(a,b,c,d,e) g_select(a,b,c,d,e)
+#define tme_poll(a,b,c,d,e) g_poll(a,b,c)
+#define TME_TIME_SEC(a) ((a) / G_USEC_PER_SEC);
+#define TME_TIME_GET_FRAC(a) ((a) % G_USEC_PER_SEC)
+#define TME_TIME_SETV(a,s,u) (a) = (u) + (s) * G_USEC_PER_SEC;
 #elif defined(USE_GETTIMEOFDAY) || !defined(_TME_HAVE_CLOCK_GETTIME)
 #define tme_get_time(x) gettimeofday(x, NULL)
 #define tme_select(a,b,c,d,e) select(a,b,c,d,e)

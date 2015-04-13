@@ -61,9 +61,8 @@ typedef GRWLock tme_rwlock_t;
 #define tme_rwlock_wrlock g_rw_lock_writer_lock
 #define tme_rwlock_trywrlock g_rw_lock_writer_trylock
 #define tme_rwlock_wrunlock g_rw_lock_writer_unlock
-/* for now, define as trylock (same as timedlock with 0 wait) */
-#define tme_rwlock_timedrdlock(l,t) (g_rw_lock_reader_lock(l), TME_OK)
-#define tme_rwlock_timedwrlock(l,t) (g_rw_lock_writer_lock(l), TME_OK)
+#define tme_rwlock_timedrdlock(l,t) (g_rw_lock_reader_trylock(l) ? (TME_OK) : (ETIMEDOUT))
+#define tme_rwlock_timedwrlock(l,t) (g_rw_lock_writer_trylock(l) ? (TME_OK) : (ETIMEDOUT))
 
 /* mutexes. */
 typedef GMutex tme_mutex_t;
@@ -80,7 +79,17 @@ typedef GCond tme_cond_t;
 #define tme_cond_init g_cond_init
 #define tme_cond_destroy g_cond_clear
 #define tme_cond_wait_yield g_cond_wait
-#define tme_cond_sleep_yield g_cond_wait_until
+static _tme_inline int
+tme_cond_sleep_yield _TME_P((tme_cond_t *cond, tme_mutex_t *mutex,
+			     const tme_time_t *timeout)) {
+  gint64 end_time;
+
+  end_time =  TME_TIME_GET_FRAC(*timeout)
+    + TME_TIME_SEC(*timeout) * G_USEC_PER_SEC
+    + g_get_monotonic_time();
+  
+  return g_cond_wait_until(cond, mutex, end_time);
+}
 #define tme_cond_notifyTRUE g_cond_broadcast
 #define tme_cond_notifyFALSE g_cond_signal
 #define tme_cond_notify(cond,bc) tme_cond_notify##bc(cond)
@@ -92,7 +101,7 @@ typedef GCond tme_cond_t;
 /* threads: */
 typedef GThreadFunc tme_thread_t;
 typedef GThread *tme_threadid_t;
-static inline void tme_thread_create _TME_P((tme_threadid_t *t, tme_thread_t f, void *a)) {
+static _tme_inline void tme_thread_create _TME_P((tme_threadid_t *t, tme_thread_t f, void *a)) {
   *t = g_thread_new(NULL,f,a);
 }
 #define tme_thread_yield() do { } while (/* CONSTCOND */ 0)
@@ -100,11 +109,7 @@ static inline void tme_thread_create _TME_P((tme_threadid_t *t, tme_thread_t f, 
 #define tme_thread_exit g_thread_exit(NULL)
 
 /* sleeping: */
-static inline void tme_thread_sleep_yield _TME_P((unsigned long sec, unsigned long usec)) { 
-  for (; sec; sec--, usec += 1000000);
-
-  g_usleep(usec);
-}
+#define tme_thread_sleep_yield(s,u) g_usleep(u + s * G_USEC_PER_SEC)
 
 /* I/O: */
 #define tme_thread_read read

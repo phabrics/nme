@@ -63,7 +63,7 @@ typedef pthread_rwlock_t tme_rwlock_t;
 #define tme_rwlock_trywrlock pthread_rwlock_trywrlock
 #define tme_rwlock_wrunlock pthread_rwlock_unlock
 
-static inline int tme_rwlock_timedlock _TME_P((tme_rwlock_t *l, unsigned long sec, int write)) { 
+static _tme_inline int tme_rwlock_timedlock _TME_P((tme_rwlock_t *l, unsigned long sec, int write)) { 
   struct timespec now, timeout;
   
   _TME_TIME_SETV(timeout, sec, 0, tv_sec, tv_nsec);
@@ -94,20 +94,13 @@ typedef pthread_cond_t tme_cond_t;
 #define tme_cond_destroy pthread_cond_destroy
 #define tme_cond_wait_yield pthread_cond_wait
 
-static inline int
+static _tme_inline int
 tme_cond_sleep_yield _TME_P((tme_cond_t *cond, tme_mutex_t *mutex,
 			     const tme_time_t *timeout)) {
   struct timespec abstime;
   struct timespec t;
 
-#if defined(USE_GLIB_TIME) && defined(_TME_HAVE_GLIB)
-#elif defined(USE_GETTIMEOFDAY) || !defined(_TME_HAVE_CLOCK_GETTIME)
-  t.tv_sec=timeout->tv_sec;
-  t.tv_nsec=timeout->tv_usec * 1000;
-#else
-  t = *timeout;
-#endif
-  
+  _TME_TIME_SETV(t, TME_TIME_SEC(*timeout), TME_TIME_GET_FRAC(*timeout) * 1000, tv_sec, tv_nsec);
   clock_gettime(CLOCK_REALTIME, &abstime);
   _TME_TIME_INC(abstime, t, tv_sec, tv_nsec);
   if ((_TME_TIME_GET_FRAC(abstime,tv_nsec)/1000) >= 1000000) {
@@ -135,7 +128,7 @@ void tme_pthread_yield _TME_P((void));
 #define tme_thread_exit pthread_exit(NULL)
 
 /* sleeping: */
-static inline int tme_thread_sleep_yield _TME_P((unsigned long sec, unsigned long usec)) { 
+static _tme_inline int tme_thread_sleep_yield _TME_P((unsigned long sec, unsigned long usec)) { 
   struct timespec timeout;
   
   for (; usec >= 1000000; sec++, usec -= 1000000);
