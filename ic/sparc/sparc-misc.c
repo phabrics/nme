@@ -175,7 +175,7 @@ static void
 tme_sparc_thread(struct tme_sparc *ic)
 {
   int s, j;
-#ifdef THREADS_POSIX
+#if defined(THREADS_POSIX) && !defined(NDEBUG)
   cpu_set_t cpuset;
   pthread_t thread;
 

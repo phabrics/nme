@@ -52,16 +52,46 @@
 /* if we want speed over lock debugging, we can compile very simple
    rwlock operations: */
 
-typedef GRWLock tme_rwlock_t;
-#define tme_rwlock_init(l) (g_rw_lock_init(l), TME_OK)
-#define tme_rwlock_destroy(l) (g_rw_lock_clear(l), TME_OK)
-#define tme_rwlock_rdlock(l) (g_rw_lock_reader_lock(l), TME_OK)
-#define tme_rwlock_tryrdlock(l) (g_rw_lock_reader_trylock(l) ? (TME_OK) : (TME_EBUSY))
-#define tme_rwlock_rdunlock(l) (g_rw_lock_reader_unlock(l), TME_OK)
-#define tme_rwlock_wrlock(l) (g_rw_lock_writer_lock(l), TME_OK)
-#define tme_rwlock_trywrlock(l) (g_rw_lock_writer_trylock(l) ? (TME_OK) : (TME_EBUSY))
-#define tme_rwlock_wrunlock(l) (g_rw_lock_writer_unlock(l), TME_OK)
-#define tme_rwlock_timedrdlock(l,t) tme_rwlock_tryrdlock(l)
+typedef struct tme_rwlock {
+  GRWLock lock;
+  GThread *writer;
+} tme_rwlock_t;
+
+#define tme_rwlock_init(l) (g_rw_lock_init(&(l)->lock), TME_OK)
+#define tme_rwlock_destroy(l) (g_rw_lock_clear(&(l)->lock), TME_OK)
+#define tme_rwlock_tryrdlock(l) (g_rw_lock_reader_trylock(&(l)->lock) ? (TME_OK) : (TME_EBUSY))
+#define tme_rwlock_rdunlock(l) (g_rw_lock_reader_unlock(&(l)->lock), TME_OK)
+static _tme_inline int tme_rwlock_rdlock _TME_P((tme_rwlock_t *l)) {
+  if((l)->writer == g_thread_self())
+    // simulates deadlock return when current thread has the write lock
+    return TME_EDEADLK;
+
+  g_rw_lock_reader_lock(&(l)->lock);
+  
+  /* TODO: insert some kind of timer to interrupt at the end of the timeout */
+  return TME_OK;  
+}
+#define tme_rwlock_timedrdlock(l,t) tme_rwlock_rdlock(l)
+
+static _tme_inline int tme_rwlock_wrlock _TME_P((tme_rwlock_t *l)) {
+  if((l)->writer == g_thread_self())
+    // simulates deadlock return when current thread has the write lock
+    return TME_EDEADLK;
+
+  g_rw_lock_writer_lock(&(l)->lock);
+  (l)->writer = g_thread_self();
+  return TME_OK;
+}
+static _tme_inline int tme_rwlock_trywrlock _TME_P((tme_rwlock_t *l)) {
+  if(!g_rw_lock_writer_trylock(&(l)->lock)) return TME_EBUSY;
+  (l)->writer = g_thread_self();
+  return TME_OK;
+}
+static _tme_inline int tme_rwlock_wrunlock _TME_P((tme_rwlock_t *l)) {
+  (l)->writer = 0;
+  g_rw_lock_writer_unlock(&(l)->lock);
+  return TME_OK;
+}
 #define tme_rwlock_timedwrlock(l,t) tme_rwlock_wrlock(l)
 
 /* mutexes. */
