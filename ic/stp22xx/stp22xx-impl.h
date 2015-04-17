@@ -165,7 +165,7 @@ struct tme_stp22xx {
   /* NB: this must be the last member of this structure; the
      part-specific structure allocates enough space for its real
      size: */
-  union tme_stp22xx_conn tme_stp22xx_conns[1];
+  union tme_stp22xx_conn tme_stp22xx_conns[0];
 };
 
 /* prototypes: */

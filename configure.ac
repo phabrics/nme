@@ -636,7 +636,7 @@ if echo " ${systems} " | grep ' all ' > /dev/null 2>&1; then
     bus_size_max=64
     recode_size_guest_max=32
   fi
-  if test $have_int128 = yes && test "x${tme_thread_types}" = xsjlj; then
+  if test $have_int128 = yes || test "x${tme_thread_types}" = xsjlj; then
     systems="${systems} sunultra1"
     bus_size_max=64
     recode_size_guest_max=64
