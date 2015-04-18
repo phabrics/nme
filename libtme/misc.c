@@ -81,8 +81,11 @@ void tme_threads_run() {
      call gtk_main(): */
   if (tme_using_gtk) {
     gtk_main();
-  }
+  } else
 #endif /* HAVE_GTK */
+  while(1) {
+    usleep(1000000);
+  }
 }
 
 /* this initializes libtme: */

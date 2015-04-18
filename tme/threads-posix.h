@@ -36,7 +36,7 @@
 #include <pthread.h>
 
 /* setjmp/longjmp threads are cooperative: */
-#define TME_THREADS_COOPERATIVE		(FALSE)
+#define TME_THREADS_COOPERATIVE		(TRUE)
 
 /* our errno convention: */
 #define TME_EDEADLK		EDEADLK
@@ -121,9 +121,9 @@ tme_cond_sleep_yield _TME_P((tme_cond_t *cond, tme_mutex_t *mutex,
 /* threads: */
 typedef void *(*tme_thread_t) _TME_P((void *));
 typedef pthread_t tme_threadid_t;
+pthread_attr_t *tme_thread_defattr _TME_P((void));
 #define tme_thread_create(t,f,a) pthread_create(t,NULL,f,a)
-void tme_pthread_yield _TME_P((void));
-#define tme_thread_yield() do { } while (/* CONSTCOND */ 0)
+#define tme_thread_yield pthread_yield
 #define tme_thread_join(id) pthread_join(id,NULL)
 #define tme_thread_exit pthread_exit(NULL)
 

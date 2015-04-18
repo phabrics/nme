@@ -76,6 +76,13 @@ struct _tmesh_log_message_binary {
 
 /* globals: */
 const char *argv0;
+#ifdef TME_THREADS_POSIX
+static pthread_attr_t *attrp;
+
+pthread_attr_t *tme_thread_defattr() {
+  return attrp;
+}
+#endif
 
 /* our shell instance: */
 static void *_tmesh;
@@ -492,6 +499,77 @@ _tmesh_thread(void *junk)
   }
 }
 
+static void
+do_usage(const char *prog_name, char *msg)
+{
+  if (msg != NULL)
+    fputs(msg, stderr);
+  fprintf(stderr, "\
+usage: %s [OPTIONS] INITIAL-CONFIG\n		\
+where OPTIONS are:\n				\
+  --log LOGFILE          log to LOGFILE\n			\
+  -c, --noninteractive   read no commands from standard input\n	\
+",
+	  prog_name);
+#ifdef TME_THREADS_POSIX
+#define fpe(msg) fprintf(stderr, "\t%s", msg);          /* Shorter */
+  fpe("--cpus            cpusetmask\n");
+  fpe("-a <policy><prio> Set scheduling policy and priority in\n");
+  fpe("                  thread attributes object\n");
+  fpe("                  <policy> can be\n");
+  fpe("                     f  SCHED_FIFO\n");
+  fpe("                     r  SCHED_RR\n");
+  fpe("                     o  SCHED_OTHER\n");
+  fpe("-A                Use default thread attributes object\n");
+  fpe("-i {e|i}          Set inherit scheduler attribute to\n");
+  fpe("                  'explicit' or 'inherit'\n");
+  fpe("-m <policy><prio> Set scheduling policy and priority on\n");
+  fpe("                  main thread before pthread_create() call\n");
+#endif
+  exit(1);
+}
+
+#ifdef TME_THREADS_POSIX
+#define handle_error_en(en, msg)					\
+  do { errno = en; perror(msg); /* exit(EXIT_FAILURE) ;*/ } while (0)
+
+static int
+get_policy(char p, int *policy)
+{
+  switch (p) {
+  case 'f': *policy = SCHED_FIFO;     return 1;
+  case 'r': *policy = SCHED_RR;       return 1;
+  case 'o': *policy = SCHED_OTHER;    return 1;
+  default:  return 0;
+  }
+}
+
+static void
+display_sched_attr(int policy, struct sched_param *param)
+{
+  printf("    policy=%s, priority=%d\n",
+	 (policy == SCHED_FIFO)  ? "SCHED_FIFO" :
+	 (policy == SCHED_RR)    ? "SCHED_RR" :
+	 (policy == SCHED_OTHER) ? "SCHED_OTHER" :
+	 "???",
+	 param->sched_priority);
+}
+
+static void
+display_thread_sched_attr(char *msg)
+{
+  int policy, s;
+  struct sched_param param;
+
+  s = pthread_getschedparam(pthread_self(), &policy, &param);
+  if (s != 0)
+    handle_error_en(s, "pthread_getschedparam");
+
+  printf("%s\n", msg);
+  display_sched_attr(policy, &param);
+}
+#endif // TME_THREADS_POSIX
+
 int
 main(int argc, char **argv)
 {
@@ -507,7 +585,21 @@ main(int argc, char **argv)
   char *output;
   int yield, rc;
   tme_threadid_t tmesh_thread;
+#ifdef TME_THREADS_POSIX
+  int j, inheritsched, use_null_attrib, policy, cpus;
+  cpu_set_t cpuset;
+  pthread_t thread;
+  pthread_attr_t attr;
+  char *attr_sched_str, *main_sched_str, *inheritsched_str;
+  struct sched_param param;
 
+  cpus = -1;  
+  use_null_attrib = 0;
+  attr_sched_str = NULL;
+  main_sched_str = NULL;
+  inheritsched_str = NULL;
+#endif
+  
   /* check our command line: */
   usage = FALSE;
 #ifdef HAVE_GTK
@@ -545,13 +637,48 @@ main(int argc, char **argv)
 	_tmesh_log_hash_format = tme_hash_new(tme_direct_hash, tme_direct_compare, TME_HASH_DATA_NULL);
       }
     }
+#ifdef TME_THREADS_POSIX
+    else if (!strcmp(opt, "--cpus")) {
+      if (++arg_i < argc) {
+	cpus=strtol(argv[arg_i], NULL, 0);
+      } else {
+	usage = TRUE;
+	break;
+      }
+    }
+    else if (!strcmp(opt, "-m")) {
+      if (++arg_i < argc) {
+	main_sched_str=argv[arg_i];
+      } else {
+	usage = TRUE;
+	break;
+      }
+    }
+    else if (!strcmp(opt, "-a")) {
+      if (++arg_i < argc) {
+	attr_sched_str=argv[arg_i];
+      } else {
+	usage = TRUE;
+	break;
+      }
+    }
+    else if (!strcmp(opt, "-A")) {
+      use_null_attrib = 1;
+    }
+    else if (!strcmp(opt, "-i")) {
+      if (++arg_i < argc) {
+	inheritsched_str=argv[arg_i];
+      } else {
+	usage = TRUE;
+	break;
+      }
+    }
+#endif    
 #ifdef HAVE_GTK
     else if (!strcmp(opt, "--gui-mode")) {
-      ++arg_i;
-      if (arg_i < argc) {
+      if (++arg_i < argc) {
 	if(!strcmp(argv[arg_i], "gtk")) {
 	  using_gtk = TRUE;
-	  break;
 	}
       } else {
 	usage = TRUE;
@@ -580,16 +707,7 @@ main(int argc, char **argv)
   else {
     usage = TRUE;
   }
-  if (usage) {
-    fprintf(stderr, "\
-usage: %s [OPTIONS] INITIAL-CONFIG\n\
-where OPTIONS are:\n\
-  --log LOGFILE          log to LOGFILE\n\
-  -c, --noninteractive   read no commands from standard input\n\
-",
-	    argv0);
-    exit(1);
-  }
+  if (usage) do_usage(argv0, NULL);
 
   if (!strcmp(log_filename, "-")) {
     _tmesh_log = stdout;
@@ -605,6 +723,112 @@ where OPTIONS are:\n\
   /* initialize libtme: */
   (void) tme_init();
 
+#ifdef TME_THREADS_POSIX
+  thread = pthread_self();
+  
+  /* Set affinity mask to include CPUs */
+
+  CPU_ZERO(&cpuset);
+  for (j = 0; j < sizeof(cpus); j++)
+    if(cpus & (1<<j))
+       CPU_SET(j, &cpuset);
+  
+  rc = pthread_setaffinity_np(thread, sizeof(cpu_set_t), &cpuset);
+  if (rc != 0)
+    handle_error_en(rc, "pthread_setaffinity_np");
+  
+  /* Check the actual affinity mask assigned to the thread */
+  
+  rc = pthread_getaffinity_np(thread, sizeof(cpu_set_t), &cpuset);
+  if (rc != 0)
+    handle_error_en(rc, "pthread_getaffinity_np");
+
+  printf("Set returned by pthread_getaffinity_np() contained:\n");
+  
+  for (j = 0; j < CPU_SETSIZE; j++)
+    if (CPU_ISSET(j, &cpuset))
+      printf("    CPU %d\n", j);
+  
+  if (use_null_attrib &&
+      (inheritsched_str != NULL || attr_sched_str != NULL)) {
+    do_usage(argv0, "Can't specify -A with -i or -a\n");
+  }
+
+  if (main_sched_str != NULL) {
+    if (!get_policy(main_sched_str[0], &policy))
+      do_usage(argv0, "Bad policy for main thread (-m)\n");
+    param.sched_priority = strtol(&main_sched_str[1], NULL, 0);
+    
+    rc = pthread_setschedparam(pthread_self(), policy, &param);
+    if (rc != 0)
+      handle_error_en(rc, "pthread_setschedparam");
+  }
+  
+  display_thread_sched_attr("Scheduler settings of main thread");
+  printf("\n");
+
+  /* Initialize thread attributes object according to options */
+
+  attrp = NULL;
+
+  if (!use_null_attrib) {
+    rc = pthread_attr_init(&attr);
+    if (rc != 0)
+      handle_error_en(rc, "pthread_attr_init");
+    attrp = &attr;
+  }
+
+  if (inheritsched_str != NULL) {
+    if (inheritsched_str[0] == 'e')
+      inheritsched = PTHREAD_EXPLICIT_SCHED;
+    else if (inheritsched_str[0] == 'i')
+      inheritsched = PTHREAD_INHERIT_SCHED;
+    else
+      do_usage(argv0, "Value for -i must be 'e' or 'i'\n");
+
+    rc = pthread_attr_setinheritsched(&attr, inheritsched);
+    if (rc != 0)
+      handle_error_en(rc, "pthread_attr_setinheritsched");
+  }
+
+  if (attr_sched_str != NULL) {
+    if (!get_policy(attr_sched_str[0], &policy))
+      do_usage(argv0,
+	    "Bad policy for 'attr' (-a)\n");
+    param.sched_priority = strtol(&attr_sched_str[1], NULL, 0);
+
+    rc = pthread_attr_setschedpolicy(&attr, policy);
+    if (rc != 0)
+      handle_error_en(rc, "pthread_attr_setschedpolicy");
+    rc = pthread_attr_setschedparam(&attr, &param);
+    if (rc != 0)
+      handle_error_en(rc, "pthread_attr_setschedparam");
+  }
+
+  /* If we initialized a thread attributes object, display
+     the scheduling attributes that were set in the object */
+
+  if (attrp != NULL) {
+    rc = pthread_attr_getschedparam(&attr, &param);
+    if (rc != 0)
+      handle_error_en(rc, "pthread_attr_getschedparam");
+    rc = pthread_attr_getschedpolicy(&attr, &policy);
+    if (rc != 0)
+      handle_error_en(rc, "pthread_attr_getschedpolicy");
+
+    printf("Scheduler settings in 'attr'\n");
+    display_sched_attr(policy, &param);
+
+    rc = pthread_attr_getinheritsched(&attr, &inheritsched);
+    printf("    inheritsched is %s\n",
+	   (inheritsched == PTHREAD_INHERIT_SCHED)  ? "INHERIT" :
+	   (inheritsched == PTHREAD_EXPLICIT_SCHED) ? "EXPLICIT" :
+	   "???");
+    printf("\n");
+  }
+  
+#endif
+  
   /* initialize libtmesh: */
   (void) tmesh_init();
 
@@ -683,6 +907,16 @@ where OPTIONS are:\n\
   /* run the threads: */
   tme_threads_run();
 
+#ifdef TME_THREADS_POSIX
+  /* Destroy unneeded thread attributes object */
+
+  if (!use_null_attrib) {
+    rc = pthread_attr_destroy(&attr);
+    if (rc != 0)
+      handle_error_en(rc, "pthread_attr_destroy");
+  }
+#endif
+  
   tme_thread_join(tmesh_thread);
 
   /* done: */

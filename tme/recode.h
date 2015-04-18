@@ -745,7 +745,7 @@ struct tme_recode_ic {
 
   /* the guest register information.  the exact size of this array is
      determined by the guest: */
-  union tme_recode_reginfo tme_recode_ic_reginfo[1];
+  union tme_recode_reginfo tme_recode_ic_reginfo[0];
 };
 
 /* prototypes: */
