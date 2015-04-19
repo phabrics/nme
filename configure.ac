@@ -209,7 +209,7 @@ AC_FUNC_MEMCMP
 AC_FUNC_MALLOC
 AC_FUNC_MMAP
 AC_FUNC_REALLOC
-AC_CHECK_FUNCS([pthread_setschedparam clock_gettime gettimeofday memmove memset munmap pow ptsname ptsname_r select socket sqrt strchr strerror strrchr strstr strtoul devname fdevname kldfind])
+AC_CHECK_FUNCS([clock_gettime gettimeofday memmove memset munmap pow ptsname ptsname_r select socket sqrt strchr strerror strrchr strstr strtoul devname fdevname kldfind])
 
 AC_CHECK_FUNC_LONG(__builtin_bswap16, [
   unsigned int x;
@@ -317,20 +317,13 @@ if test $have_int64 = yes; then
 fi
 
 dnl Checks for setaffinity
-AC_MSG_CHECKING([for CPU_SET support])
-AC_EGREP_CPP(_tme_has_cpu_set,
-[
-#define _GNU_SOURCE
-#include <pthread.h>
+AC_SEARCH_LIBS([pthread_setaffinity_np], [pthread], [
+AC_DEFINE(HAVE_PTHREAD_SETAFFINITY_NP, [], [Define if you have pthread_setaffinity_np.])
+])
 
-#ifdef CPU_SET
-_tme_has_cpu_set
-#endif
-], [ 
-AC_MSG_RESULT(yes)
-AC_DEFINE(HAVE_PTHREAD_SETAFFINITY_NP, [], [Define if you have CPU_SET.])
-], [
-AC_MSG_RESULT(no)
+dnl Checks for setschedparam
+AC_SEARCH_LIBS([pthread_setschedparam], [pthread], [
+AC_DEFINE(HAVE_PTHREAD_SETSCHEDPARAM, [], [Define if you have pthread_setschedparam.])
 ])
 
 dnl Checks for perl.
