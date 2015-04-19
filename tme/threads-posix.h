@@ -121,8 +121,9 @@ tme_cond_sleep_yield _TME_P((tme_cond_t *cond, tme_mutex_t *mutex,
 /* threads: */
 typedef void *(*tme_thread_t) _TME_P((void *));
 typedef pthread_t tme_threadid_t;
+void tme_thread_set_defattr _TME_P((pthread_attr_t *attr));
 pthread_attr_t *tme_thread_defattr _TME_P((void));
-#define tme_thread_create(t,f,a) pthread_create(t,NULL,f,a)
+#define tme_thread_create(t,f,a) pthread_create(t,tme_thread_defattr(),f,a)
 #define tme_thread_yield pthread_yield
 #define tme_thread_join(id) pthread_join(id,NULL)
 #define tme_thread_exit pthread_exit(NULL)

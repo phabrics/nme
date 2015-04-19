@@ -33,7 +33,7 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.68])
-AC_INIT([tme], [1.0beta_9])
+AC_INIT([tme], [0.10beta])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
@@ -209,7 +209,7 @@ AC_FUNC_MEMCMP
 AC_FUNC_MALLOC
 AC_FUNC_MMAP
 AC_FUNC_REALLOC
-AC_CHECK_FUNCS([clock_gettime gettimeofday memmove memset munmap pow ptsname ptsname_r select socket sqrt strchr strerror strrchr strstr strtoul devname fdevname kldfind])
+AC_CHECK_FUNCS([pthread_setschedparam clock_gettime gettimeofday memmove memset munmap pow ptsname ptsname_r select socket sqrt strchr strerror strrchr strstr strtoul devname fdevname kldfind])
 
 AC_CHECK_FUNC_LONG(__builtin_bswap16, [
   unsigned int x;
@@ -315,6 +315,23 @@ if test $have_int64 = yes; then
 #include <sys/types.h>
   ])
 fi
+
+dnl Checks for setaffinity
+AC_MSG_CHECKING([for CPU_SET support])
+AC_EGREP_CPP(_tme_has_cpu_set,
+[
+#define _GNU_SOURCE
+#include <pthread.h>
+
+#ifdef CPU_SET
+_tme_has_cpu_set
+#endif
+], [ 
+AC_MSG_RESULT(yes)
+AC_DEFINE(HAVE_PTHREAD_SETAFFINITY_NP, [], [Define if you have CPU_SET.])
+], [
+AC_MSG_RESULT(no)
+])
 
 dnl Checks for perl.
 AC_PATH_PROGS(PERL, perl4.036 perl4 perl perl5, no)

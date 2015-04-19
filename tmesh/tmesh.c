@@ -76,13 +76,6 @@ struct _tmesh_log_message_binary {
 
 /* globals: */
 const char *argv0;
-#ifdef TME_THREADS_POSIX
-static pthread_attr_t *attrp;
-
-pthread_attr_t *tme_thread_defattr() {
-  return attrp;
-}
-#endif
 
 /* our shell instance: */
 static void *_tmesh;
@@ -513,7 +506,10 @@ where OPTIONS are:\n				\
 	  prog_name);
 #ifdef TME_THREADS_POSIX
 #define fpe(msg) fprintf(stderr, "\t%s", msg);          /* Shorter */
+#ifdef HAVE_PTHREAD_SETAFFINITY_NP
   fpe("--cpus            cpusetmask\n");
+#endif // HAVE_PTHREAD_SETAFFINITY_NP
+#ifdef HAVE_PTHREAD_SETSCHEDPARAM  
   fpe("-a <policy><prio> Set scheduling policy and priority in\n");
   fpe("                  thread attributes object\n");
   fpe("                  <policy> can be\n");
@@ -525,7 +521,8 @@ where OPTIONS are:\n				\
   fpe("                  'explicit' or 'inherit'\n");
   fpe("-m <policy><prio> Set scheduling policy and priority on\n");
   fpe("                  main thread before pthread_create() call\n");
-#endif
+#endif // HAVE_PTHREAD_SETSCHEDPARAM  
+#endif // TME_THREADS_POSIX
   exit(1);
 }
 
@@ -533,6 +530,7 @@ where OPTIONS are:\n				\
 #define handle_error_en(en, msg)					\
   do { errno = en; perror(msg); /* exit(EXIT_FAILURE) ;*/ } while (0)
 
+#ifdef HAVE_PTHREAD_SETSCHEDPARAM  
 static int
 get_policy(char p, int *policy)
 {
@@ -568,6 +566,7 @@ display_thread_sched_attr(char *msg)
   printf("%s\n", msg);
   display_sched_attr(policy, &param);
 }
+#endif // HAVE_PTHREAD_SETSCHEDPARAM  
 #endif // TME_THREADS_POSIX
 
 int
@@ -586,19 +585,23 @@ main(int argc, char **argv)
   int yield, rc;
   tme_threadid_t tmesh_thread;
 #ifdef TME_THREADS_POSIX
-  int j, inheritsched, use_null_attrib, policy, cpus;
-  cpu_set_t cpuset;
   pthread_t thread;
-  pthread_attr_t attr;
+#ifdef HAVE_PTHREAD_SETAFFINITY_NP
+  int j, cpus=-1;
+  cpu_set_t cpuset;
+#endif // HAVE_PTHREAD_SETAFFINITY_NP
+#ifdef HAVE_PTHREAD_SETSCHEDPARAM
+  int inheritsched, use_null_attrib, policy;
+  pthread_attr_t attr, *attrp;
   char *attr_sched_str, *main_sched_str, *inheritsched_str;
   struct sched_param param;
 
-  cpus = -1;  
   use_null_attrib = 0;
   attr_sched_str = NULL;
   main_sched_str = NULL;
   inheritsched_str = NULL;
-#endif
+#endif // HAVE_PTHREAD_SETSCHEDPARAM
+#endif // TME_THREADS_POSIX
   
   /* check our command line: */
   usage = FALSE;
@@ -638,6 +641,7 @@ main(int argc, char **argv)
       }
     }
 #ifdef TME_THREADS_POSIX
+#ifdef HAVE_PTHREAD_SETAFFINITY_NP
     else if (!strcmp(opt, "--cpus")) {
       if (++arg_i < argc) {
 	cpus=strtol(argv[arg_i], NULL, 0);
@@ -646,6 +650,8 @@ main(int argc, char **argv)
 	break;
       }
     }
+#endif // HAVE_PTHREAD_SETAFFINITY_NP
+#ifdef HAVE_PTHREAD_SETSCHEDPARAM  
     else if (!strcmp(opt, "-m")) {
       if (++arg_i < argc) {
 	main_sched_str=argv[arg_i];
@@ -673,7 +679,8 @@ main(int argc, char **argv)
 	break;
       }
     }
-#endif    
+#endif // HAVE_PTHREAD_SETSCHEDPARAM  
+#endif // TME_THREADS_POSIX
 #ifdef HAVE_GTK
     else if (!strcmp(opt, "--gui-mode")) {
       if (++arg_i < argc) {
@@ -725,7 +732,8 @@ main(int argc, char **argv)
 
 #ifdef TME_THREADS_POSIX
   thread = pthread_self();
-  
+
+#ifdef HAVE_PTHREAD_SETAFFINITY_NP
   /* Set affinity mask to include CPUs */
 
   CPU_ZERO(&cpuset);
@@ -748,7 +756,9 @@ main(int argc, char **argv)
   for (j = 0; j < CPU_SETSIZE; j++)
     if (CPU_ISSET(j, &cpuset))
       printf("    CPU %d\n", j);
-  
+#endif // HAVE_PTHREAD_SETAFFINITY_NP
+
+#ifdef HAVE_PTHREAD_SETSCHEDPARAM  
   if (use_null_attrib &&
       (inheritsched_str != NULL || attr_sched_str != NULL)) {
     do_usage(argv0, "Can't specify -A with -i or -a\n");
@@ -805,6 +815,8 @@ main(int argc, char **argv)
       handle_error_en(rc, "pthread_attr_setschedparam");
   }
 
+  tme_thread_set_defattr(attrp);
+  
   /* If we initialized a thread attributes object, display
      the scheduling attributes that were set in the object */
 
@@ -826,7 +838,7 @@ main(int argc, char **argv)
 	   "???");
     printf("\n");
   }
-  
+#endif // HAVE_PTHREAD_SETSCHEDPARAM  
 #endif
   
   /* initialize libtmesh: */
@@ -907,7 +919,7 @@ main(int argc, char **argv)
   /* run the threads: */
   tme_threads_run();
 
-#ifdef TME_THREADS_POSIX
+#if defined(TME_THREADS_POSIX) && defined(HAVE_PTHREAD_SETSCHEDPARAM)
   /* Destroy unneeded thread attributes object */
 
   if (!use_null_attrib) {
