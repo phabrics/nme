@@ -2323,7 +2323,7 @@ _tme_stp103x_ls_cycle_quad(struct tme_sparc *ic, struct tme_sparc_ls *ls)
   quad_64hi = quad >> 64;
 #endif
 #else  /* !tme_memory_atomic_read128 */
-#error "non-cooperative threads requires an atomic 128-bit read"
+#warning "non-cooperative threads requires an atomic 128-bit read"
 #endif /* !tme_memory_atomic_read128 */
 #endif /* !TME_THREADS_COOPERATIVE */
 

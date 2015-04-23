@@ -36,7 +36,7 @@
 #include <pthread.h>
 
 /* setjmp/longjmp threads are cooperative: */
-#define TME_THREADS_COOPERATIVE		(TRUE)
+#define TME_THREADS_COOPERATIVE		(FALSE)
 
 /* our errno convention: */
 #define TME_EDEADLK		EDEADLK

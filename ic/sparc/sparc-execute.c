@@ -440,6 +440,10 @@ _TME_SPARC_EXECUTE_NAME(struct tme_sparc *ic)
 				   sizeof(tme_uint32_t),
 				   sizeof(tme_sparc_ireg_t));
       insn = tme_betoh_u32(insn);
+#ifndef NDEBUG
+      if(insn == 0xc0a00040)
+	ic->tme_sparc_stats.tme_sparc_stats_insns_total++;
+#endif
     }
 
     /* otherwise, our current TLB entry doesn't cover this address: */

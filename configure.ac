@@ -638,19 +638,9 @@ AM_CONDITIONAL([THREADS_SJLJ], [test "x${tme_thread_types}" = xsjlj])
 dnl Configures for the system(s) to emulate.
 systems=all
 if echo " ${systems} " | grep ' all ' > /dev/null 2>&1; then
-  systems="sun2 sun3"
-  recode_size_guest_max=0
-  bus_size_max=32
-  if test $have_int128 = yes || test "x${tme_thread_types}" = xsjlj; then
-    systems="${systems} sun4"
-    bus_size_max=64
-    recode_size_guest_max=32
-  fi
-  if test $have_int128 = yes || test "x${tme_thread_types}" = xsjlj; then
-    systems="${systems} sunultra1"
-    bus_size_max=64
-    recode_size_guest_max=64
-  fi
+  systems="sun2 sun3 sun4 sunultra1"
+  bus_size_max=64
+  recode_size_guest_max=64
 fi
 TME_MACHINE_SUBDIRS=
 TME_IC_SUBDIRS=ieee754
@@ -932,7 +922,7 @@ AC_ARG_ENABLE(debug,
 [  --enable-debug          compile debuggable libraries and programs (default=don't)],
 [ ], [enable_debug=no])
 if test "x${enable_debug}" = "xyes"; then
-  CPPFLAGS="${CPPFLAGS-} -DTME_NO_DEBUG_LOCKS -DTME_RECODE_DEBUG -D_TME_SPARC_STATS -DGTK_DISABLE_SINGLE_INCLUDES -DNDEBUG"
+  CPPFLAGS="${CPPFLAGS-} -DTME_NO_DEBUG_LOCKS -DTME_RECODE_DEBUG -D_TME_SPARC_STATS -DGTK_DISABLE_SINGLE_INCLUDES"
   AC_MSG_CHECKING([for gcc -Og support])
   AC_EGREP_CPP(_gcc_has_Og,
   [
