@@ -390,14 +390,16 @@ _tmesh_log_close(struct tmesh_support *support,
 }
 
 /* our thread: */
-static void
-_tmesh_thread(void *junk)
+static _tme_thret
+_tmesh_th(void *junk)
 {
   int yield, rc;
   struct tmesh_io *io;
   struct _tmesh_input *input;
   char *output;
   unsigned int consumed;
+
+  tme_thread_enter();
 
   /* loop while we have a current input buffer: */
   for (; (io = _tmesh_io) != NULL;) {
@@ -490,6 +492,7 @@ _tmesh_thread(void *junk)
       }
     }
   }
+  tme_thread_exit();
 }
 
 static void
@@ -730,6 +733,8 @@ main(int argc, char **argv)
   /* initialize libtme: */
   (void) tme_init();
 
+  tme_thread_enter();
+  
 #ifdef TME_THREADS_POSIX
   thread = pthread_self();
 
@@ -913,7 +918,7 @@ main(int argc, char **argv)
     }
 
     /* create our thread: */
-    tme_thread_create(&tmesh_thread, (tme_thread_t) _tmesh_thread, NULL);
+    tme_thread_create(&tmesh_thread, (tme_thread_t) _tmesh_th, NULL);
   }
 
   /* run the threads: */
@@ -929,6 +934,7 @@ main(int argc, char **argv)
   }
 #endif
   
+  tme_thread_exit();
   tme_thread_join(tmesh_thread);
 
   /* done: */

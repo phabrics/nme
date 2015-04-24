@@ -235,13 +235,15 @@ _tme_eth_callout(struct tme_ethernet *eth, int new_callouts)
 }
 
 /* the ETH reader thread: */
-static void
+static _tme_thret
 _tme_eth_th_reader(struct tme_ethernet *eth)
 {
   ssize_t buffer_end;
   unsigned long sleep_usec;
   const struct tme_ethernet_header *ethernet_header;
   
+  tme_thread_enter();
+
   /* lock the mutex: */
   tme_mutex_lock(&eth->tme_eth_mutex);
 
@@ -349,6 +351,7 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
     }
   }
   /* NOTREACHED */
+  tme_thread_exit();
 }
 
 /* this makes a new Ethernet connection: */

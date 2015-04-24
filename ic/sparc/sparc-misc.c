@@ -171,9 +171,11 @@ _tme_sparc_idle_reset(struct tme_sparc *ic)
 }
 
 /* the sparc thread: */
-static void
-tme_sparc_thread(struct tme_sparc *ic)
+static _tme_thret
+_tme_sparc_th(struct tme_sparc *ic)
 {
+  tme_thread_enter();
+  
   /* we use siglongjmp to redispatch: */
   do { } while (sigsetjmp(ic->_tme_sparc_dispatcher, 0));
 
@@ -210,6 +212,7 @@ tme_sparc_thread(struct tme_sparc *ic)
     abort();
   }
   /* NOTREACHED */
+  tme_thread_exit();
 }
 
 /* the TLB filler for when we are on a generic bus: */
@@ -854,7 +857,7 @@ tme_sparc_new(struct tme_sparc *ic, const char * const *args, const void *extra,
   tme_sparc_recode_init(ic);
 
   /* start the sparc thread: */
-  tme_thread_create(&ic->tme_sparc_thread, (tme_thread_t) tme_sparc_thread, ic);
+  tme_thread_create(&ic->tme_sparc_thread, (tme_thread_t) _tme_sparc_th, ic);
 
   return (TME_OK);
 }  

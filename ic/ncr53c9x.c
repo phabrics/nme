@@ -2896,9 +2896,11 @@ _tme_ncr53c9x_scsi_cycle(struct tme_scsi_connection *conn_scsi,
 }
 
 /* the ncr53c9x timeout thread: */
-static void
+static _tme_thret
 _tme_ncr53c9x_timeout_th(struct tme_ncr53c9x *ncr53c9x)
 {
+
+  tme_thread_enter();
 
   /* lock our mutex: */
   tme_mutex_lock(&ncr53c9x->tme_ncr53c9x_mutex);
@@ -2931,6 +2933,7 @@ _tme_ncr53c9x_timeout_th(struct tme_ncr53c9x *ncr53c9x)
     }
   }
   /* NOTREACHED */
+  tme_thread_exit();
 }
 
 /* the ncr53c9x bus signal handler: */

@@ -54,6 +54,8 @@ _tme_gtk_screen_update(struct tme_gtk_display *display)
   tme_uint32_t last_i, j;
 #endif
 
+  //_tme_thread_resumed();
+
   /* lock the mutex: */
   tme_mutex_lock(&display->tme_gtk_display_mutex);
 
@@ -115,13 +117,16 @@ _tme_gtk_screen_update(struct tme_gtk_display *display)
   /* unlock the mutex: */
   tme_mutex_unlock(&display->tme_gtk_display_mutex);
 
+  //_tme_thread_suspended();
   return TRUE;
 }
 
 /* the (default) GTK screens update thread: */
-void
+_tme_thret
 _tme_gtk_screen_th_update(struct tme_gtk_display *display)
 {
+  tme_thread_enter();
+
   /* loop forever: */
   for (;;) {
     _tme_gtk_screen_update(display);
@@ -130,6 +135,7 @@ _tme_gtk_screen_th_update(struct tme_gtk_display *display)
     tme_thread_sleep_yield(0, 500000);
   }
   /* NOTREACHED */
+  tme_thread_exit();
 }
 
 /* this recovers the scanline-pad value for an image buffer: */

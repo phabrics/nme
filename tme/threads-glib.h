@@ -48,6 +48,10 @@
 /* thread suspension: */
 #define tme_thread_suspend_others()	do { } while (/* CONSTCOND */ 0)
 #define tme_thread_resume_others()	do { } while (/* CONSTCOND */ 0)
+#define _tme_thread_suspended()	do { } while (/* CONSTCOND */ 0)
+#define _tme_thread_resumed()	do { } while (/* CONSTCOND */ 0)
+#define tme_thread_enter()	do { } while (/* CONSTCOND */ 0)
+#define tme_thread_exit()	do { } while (/* CONSTCOND */ 0)
 
 /* if we want speed over lock debugging, we can compile very simple
    rwlock operations: */
@@ -129,6 +133,7 @@ tme_cond_sleep_yield _TME_P((tme_cond_t *cond, tme_mutex_t *mutex,
 #define TME_THREAD_DEADLOCK_SLEEP	abort
 
 /* threads: */
+typedef void *_tme_thret;
 typedef GThreadFunc tme_thread_t;
 typedef GThread *tme_threadid_t;
 static _tme_inline void tme_thread_create _TME_P((tme_threadid_t *t, tme_thread_t f, void *a)) {

@@ -343,7 +343,7 @@ _tme_am9513_callout(struct tme_am9513 *am9513)
 }
 
 /* the am9513 timer thread: */
-static void
+static _tme_thret
 _tme_am9513_th_timer(struct tme_am9513 *am9513)
 {
   tme_time_t then, elapsed;
@@ -354,6 +354,8 @@ _tme_am9513_th_timer(struct tme_am9513 *am9513)
   unsigned int counter_i;
   struct tme_am9513_counter *counter;
   tme_uint32_t counter_elapsed;
+
+  tme_thread_enter();
 
   /* loop forever: */
   for (;;) {
@@ -512,6 +514,7 @@ _tme_am9513_th_timer(struct tme_am9513 *am9513)
     tme_thread_sleep_yield(0, (basic_sleep * 1000) / am9513->tme_am9513_basic_clock_msec);
   }
   /* NOTREACHED */
+  tme_thread_exit();
 }
 
 /* the am9513 bus cycle handler: */

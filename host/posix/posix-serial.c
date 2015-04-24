@@ -208,11 +208,13 @@ _tme_posix_serial_callout(struct tme_posix_serial *serial)
 }
 
 /* the serial control thread: */
-static void
+static _tme_thret
 _tme_posix_serial_th_ctrl(struct tme_posix_serial *serial)
 {
   int modem_state, modem_state_out;
   unsigned int ctrl;
+
+  tme_thread_enter();
 
   /* loop forever: */
   for (;;) {
@@ -269,15 +271,18 @@ _tme_posix_serial_th_ctrl(struct tme_posix_serial *serial)
     tme_thread_sleep_yield(0, 500000);
   }
   /* NOTREACHED */
+  tme_thread_exit();
 }
 
 /* the serial writer thread: */
-static void
+static _tme_thret
 _tme_posix_serial_th_writer(struct tme_posix_serial *serial)
 {
   tme_uint8_t buffer_output[1024];
   unsigned int buffer_output_size;
   int rc;
+
+  tme_thread_enter();
 
   /* lock the mutex: */
   tme_mutex_lock(&serial->tme_posix_serial_mutex);
@@ -327,10 +332,11 @@ _tme_posix_serial_th_writer(struct tme_posix_serial *serial)
     }
   }
   /* NOTREACHED */
+  tme_thread_exit();
 }
     
 /* the serial reader thread: */
-static void
+static _tme_thret
 _tme_posix_serial_th_reader(struct tme_posix_serial *serial)
 {
   tme_uint8_t buffer_input[1024];
@@ -339,6 +345,8 @@ _tme_posix_serial_th_reader(struct tme_posix_serial *serial)
   int scanner_state;
   int buffer_was_empty;
   int rc;
+
+  tme_thread_enter();
 
   /* loop forever: */
   for (;;) {
@@ -553,6 +561,7 @@ _tme_posix_serial_th_reader(struct tme_posix_serial *serial)
     tme_mutex_unlock(&serial->tme_posix_serial_mutex);
   }
   /* NOTREACHED */
+  tme_thread_exit();
 }
 
 /* the serial configuration callin function: */

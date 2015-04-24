@@ -805,11 +805,13 @@ _tme_suncg2_callout(struct tme_suncg2 *suncg2, int new_callouts)
 }
 
 /* the callout thread: */
-static void
-_tme_suncg2_callout_thread(void *_suncg2)
+static _tme_thret
+_tme_suncg2_callout_th(void *_suncg2)
 {
   struct tme_suncg2 *suncg2;
 
+  tme_thread_enter();
+  
   /* recover our data structure: */
   suncg2 = _suncg2;
 
@@ -824,6 +826,8 @@ _tme_suncg2_callout_thread(void *_suncg2)
 
   /* unlock the mutex: */
   tme_mutex_unlock(&suncg2->tme_suncg2_mutex);
+
+  tme_thread_exit();
 }
 
 /* this is called before the framebuffer's display is updated: */
@@ -845,7 +849,7 @@ _tme_suncg2_update(struct tme_fb_connection *conn_fb)
      start it: */
   if ((suncg2->tme_suncg2_callout_flags & TME_SUNCG2_CALLOUTS_MASK) != 0
       && !(suncg2->tme_suncg2_flags & TME_SUNCG2_FLAG_CALLOUT_THREAD_RUNNING)) {
-    tme_thread_create(&suncg2->tme_suncg2_thread, _tme_suncg2_callout_thread, suncg2);
+    tme_thread_create(&suncg2->tme_suncg2_thread, _tme_suncg2_callout_th, suncg2);
     suncg2->tme_suncg2_flags |= TME_SUNCG2_FLAG_CALLOUT_THREAD_RUNNING;
   }
       

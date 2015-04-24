@@ -3741,7 +3741,7 @@ static const _tme_sparc_ls_asi_handler _tme_stp103x_ls_asi_handlers[] = {
 };
 
 /* the tick compare register thread: */
-static void
+static _tme_thret
 _tme_stp103x_tick_compare_th(void *_ic)
 {
   struct tme_sparc *ic;
@@ -3751,6 +3751,8 @@ _tme_stp103x_tick_compare_th(void *_ic)
   unsigned long tick_compare_time_tv_sec;
   unsigned long tick_compare_time_tv_usec;
   tme_time_t sleep;
+
+  tme_thread_enter();
 
   /* recover our data structure: */
   ic = (struct tme_sparc *) _ic;
@@ -3806,6 +3808,7 @@ _tme_stp103x_tick_compare_th(void *_ic)
     }
   }
   /* NOTREACHED */
+  tme_thread_exit();
 }
 
 /* this checks for external signals: */

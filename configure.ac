@@ -830,7 +830,7 @@ else
 	if test "x${recode_size_guest_max_host}" = x; then
 	    AC_MSG_ERROR([internal error - no maximum recode guest size for ${target_cpu}])
 	fi
-	if test `expr ${recode_size_guest_max_host} \< ${recode_size_guest_max}` = 1; then
+	if test `expr ${recode_size_guest_max} \< ${recode_size_guest_max_host}` = 1; then
 	    recode_size_guest_max=$recode_size_guest_max_host
 	fi
 	AC_MSG_RESULT([up to ${recode_size_guest_max}-bit guests using ${recode_hosts}])

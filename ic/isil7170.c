@@ -300,7 +300,7 @@ _tme_isil7170_reset(struct tme_isil7170 *isil7170)
 }
 
 /* the isil7170 timer thread: */
-static void
+static _tme_thret
 _tme_isil7170_th_timer(struct tme_isil7170 *isil7170)
 {
   tme_uint8_t int_mask;
@@ -308,6 +308,8 @@ _tme_isil7170_th_timer(struct tme_isil7170 *isil7170)
 #ifdef TME_ISIL7170_TRACK_INT_RATE
   tme_time_t now;
 #endif /* TME_ISIL7170_TRACK_INT_RATE */
+
+  tme_thread_enter();
 
   /* lock the mutex: */
   tme_mutex_lock(&isil7170->tme_isil7170_mutex);
@@ -396,6 +398,7 @@ _tme_isil7170_th_timer(struct tme_isil7170 *isil7170)
     tme_mutex_lock(&isil7170->tme_isil7170_mutex);
   }
   /* NOTREACHED */
+  tme_thread_exit();
 }
 
 /* the isil7170 bus cycle handler: */

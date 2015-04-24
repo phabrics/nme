@@ -46,6 +46,8 @@ _TME_RCSID("$Id: misc.c,v 1.8 2010/06/05 19:02:38 fredette Exp $");
 #include <gtk/gtk.h>
 
 #ifdef TME_THREADS_POSIX
+pthread_rwlock_t tme_rwlock_suspere;
+
 #ifdef HAVE_PTHREAD_SETSCHEDPARAM
 static pthread_attr_t *attrp;
 
@@ -89,6 +91,8 @@ void tme_threads_gtk_init(void)
 
 void tme_threads_run() {
   tme_sjlj_threads_run(tme_using_gtk);
+
+  //_tme_thread_suspended();
 #ifdef HAVE_GTK
   /* if we're using the GTK main loop, yield to GTK and
      call gtk_main(): */

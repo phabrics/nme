@@ -1452,9 +1452,11 @@ _tme_am7990_transmit(struct tme_ethernet_connection *conn_eth,
 }
 
 /* the am7990 descriptor polling thread: */
-static void
+static _tme_thret
 _tme_am7990_poll_th(struct tme_am7990 *am7990)
 {
+
+  tme_thread_enter();
 
   /* lock our mutex: */
   tme_mutex_lock(&am7990->tme_am7990_mutex);
@@ -1479,6 +1481,7 @@ _tme_am7990_poll_th(struct tme_am7990 *am7990)
     tme_mutex_lock(&am7990->tme_am7990_mutex);
   }
   /* NOTREACHED */
+  tme_thread_exit();
 }
 
 /* the am7990 bus cycle handler: */

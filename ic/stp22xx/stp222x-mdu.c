@@ -130,13 +130,15 @@ _tme_stp222x_reggroup_index_to_obio_idi(struct tme_stp222x *stp222x,
 }
 
 /* the stp222x interrupt retry thread: */
-static void
+static _tme_thret
 _tme_stp222x_mdu_retry_th(void *_stp222x)
 {
   struct tme_stp222x *stp222x;
   tme_time_t *sleep;
   signed long buffer_i;
   unsigned int dispatch_state;
+
+  tme_thread_enter();
 
   /* recover our data structures: */
   stp222x = (struct tme_stp222x *) _stp222x;
@@ -203,6 +205,7 @@ _tme_stp222x_mdu_retry_th(void *_stp222x)
 				 sleep);
   }
   /* NOTREACHED */
+  tme_thread_exit();
 }
 
 /* this decodes and arbitrates interrupts: */

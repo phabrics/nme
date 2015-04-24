@@ -55,6 +55,10 @@ void tme_sjlj_threads_run _TME_P((int));
 /* thread suspension: */
 #define tme_thread_suspend_others()	do { } while (/* CONSTCOND */ 0)
 #define tme_thread_resume_others()	do { } while (/* CONSTCOND */ 0)
+#define _tme_thread_suspended()	do { } while (/* CONSTCOND */ 0)
+#define _tme_thread_resumed()	do { } while (/* CONSTCOND */ 0)
+#define tme_thread_enter()	do { } while (/* CONSTCOND */ 0)
+#define tme_thread_exit()	do { } while (/* CONSTCOND */ 0)
 
 /* if we want speed over lock debugging, we can compile very simple
    rwlock operations: */
@@ -129,8 +133,9 @@ void tme_sjlj_cond_notify _TME_P((tme_cond_t *, int));
 
 /* threads: */
 struct tme_sjlj_thread;
+typedef void _tme_thret;
+typedef _tme_thret (*tme_thread_t) _TME_P((void *));
 typedef struct tme_sjlj_thread *tme_threadid_t;
-typedef void (*tme_thread_t) _TME_P((void *));
 void tme_sjlj_thread_create _TME_P((tme_threadid_t *, tme_thread_t, void *));
 #define tme_thread_create tme_sjlj_thread_create
 void tme_sjlj_yield _TME_P((void));

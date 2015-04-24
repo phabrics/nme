@@ -43,12 +43,17 @@
 #define TME_EBUSY		EBUSY
 #define TME_THREADS_ERRNO(rc)	(rc)
 
+extern pthread_rwlock_t tme_rwlock_suspere;
+
 /* initializing and starting: */
-#define tme_threads_init() do { } while (/* CONSTCOND */ 0)
+#define tme_threads_init() pthread_rwlock_init(&tme_rwlock_suspere, NULL)
 
 /* thread suspension: */
-#define tme_thread_suspend_others()	do { } while (/* CONSTCOND */ 0)
-#define tme_thread_resume_others()	do { } while (/* CONSTCOND */ 0)
+#define tme_thread_suspend_others()	pthread_rwlock_wrlock(&tme_rwlock_suspere)
+#define tme_thread_resume_others()	pthread_rwlock_unlock(&tme_rwlock_suspere)
+#define _tme_thread_suspended()	        pthread_rwlock_unlock(&tme_rwlock_suspere)
+#define _tme_thread_resumed()	        pthread_rwlock_rdlock(&tme_rwlock_suspere)
+#define tme_thread_enter()	        _tme_thread_resumed()
 
 /* if we want speed over lock debugging, we can compile very simple
    rwlock operations: */
@@ -56,24 +61,47 @@
 typedef pthread_rwlock_t tme_rwlock_t;
 #define tme_rwlock_init(l) pthread_rwlock_init(l, NULL)
 #define tme_rwlock_destroy pthread_rwlock_destroy
-#define tme_rwlock_rdlock pthread_rwlock_rdlock
+
+static _tme_inline int tme_rwlock_lock _TME_P((tme_rwlock_t *l, int write)) { 
+  int rc;
+
+  _tme_thread_suspended();
+  
+  if (write)
+    rc = pthread_rwlock_wrlock(l);
+  else
+    rc = pthread_rwlock_rdlock(l);
+
+  _tme_thread_resumed();
+
+  return rc;
+}
+
+#define tme_rwlock_rdlock(l) tme_rwlock_lock(l,0)
 #define tme_rwlock_tryrdlock pthread_rwlock_tryrdlock
 #define tme_rwlock_rdunlock pthread_rwlock_unlock
-#define tme_rwlock_wrlock pthread_rwlock_wrlock
+#define tme_rwlock_wrlock(l) tme_rwlock_lock(l,1)
 #define tme_rwlock_trywrlock pthread_rwlock_trywrlock
 #define tme_rwlock_wrunlock pthread_rwlock_unlock
 
 static _tme_inline int tme_rwlock_timedlock _TME_P((tme_rwlock_t *l, unsigned long sec, int write)) { 
   struct timespec now, timeout;
+  int rc;
   
   _TME_TIME_SETV(timeout, sec, 0, tv_sec, tv_nsec);
   clock_gettime(CLOCK_REALTIME, &now);
   _TME_TIME_INC(timeout, now, tv_sec, tv_nsec);
 
+  _tme_thread_suspended();
+  
   if (write)
-    return pthread_rwlock_timedwrlock(l, &timeout);
+    rc = pthread_rwlock_timedwrlock(l, &timeout);
   else
-    return pthread_rwlock_timedrdlock(l, &timeout);
+    rc = pthread_rwlock_timedrdlock(l, &timeout);
+
+  _tme_thread_resumed();
+
+  return rc;
 }
 
 #define tme_rwlock_timedrdlock(l,sec) tme_rwlock_timedlock(l,sec,0)
@@ -83,23 +111,64 @@ static _tme_inline int tme_rwlock_timedlock _TME_P((tme_rwlock_t *l, unsigned lo
 typedef pthread_mutex_t tme_mutex_t;
 #define tme_mutex_init(m) pthread_mutex_init(m,NULL)
 #define tme_mutex_destroy pthread_mutex_destroy
-#define tme_mutex_lock pthread_mutex_lock
+
+static _tme_inline int tme_mutex_lock _TME_P((tme_mutex_t *m)) { 
+  int rc;
+
+  _tme_thread_suspended();
+  
+  rc = pthread_mutex_lock(m);
+
+  _tme_thread_resumed();
+
+  return rc;
+}
+
 #define tme_mutex_trylock pthread_mutex_trylock
-#define tme_mutex_timedlock pthread_mutex_timedlock
 #define tme_mutex_unlock pthread_mutex_unlock
+
+static _tme_inline int tme_mutex_timedlock _TME_P((tme_mutex_t *m, unsigned long sec)) { 
+  struct timespec now, timeout;
+  int rc;
+  
+  _TME_TIME_SETV(timeout, sec, 0, tv_sec, tv_nsec);
+  clock_gettime(CLOCK_REALTIME, &now);
+  _TME_TIME_INC(timeout, now, tv_sec, tv_nsec);
+
+  _tme_thread_suspended();
+  
+  rc = pthread_mutex_timedlock(m, &timeout);
+
+  _tme_thread_resumed();
+
+  return rc;
+}
 
 /* conditions: */
 typedef pthread_cond_t tme_cond_t;
 #define tme_cond_init(c) pthread_cond_init(c,NULL)
 #define tme_cond_destroy pthread_cond_destroy
-#define tme_cond_wait_yield pthread_cond_wait
+
+static _tme_inline int
+tme_cond_wait_yield _TME_P((tme_cond_t *cond, tme_mutex_t *mutex)) {
+  int rc;
+  
+  _tme_thread_suspended();
+
+  rc = pthread_cond_wait(cond, mutex);
+
+  _tme_thread_resumed();
+
+  return rc;
+}
 
 static _tme_inline int
 tme_cond_sleep_yield _TME_P((tme_cond_t *cond, tme_mutex_t *mutex,
 			     const tme_time_t *timeout)) {
   struct timespec abstime;
   struct timespec t;
-
+  int rc;
+  
   _TME_TIME_SETV(t, TME_TIME_SEC(*timeout), TME_TIME_GET_FRAC(*timeout) * 1000, tv_sec, tv_nsec);
   clock_gettime(CLOCK_REALTIME, &abstime);
   _TME_TIME_INC(abstime, t, tv_sec, tv_nsec);
@@ -107,7 +176,13 @@ tme_cond_sleep_yield _TME_P((tme_cond_t *cond, tme_mutex_t *mutex,
     _TME_TIME_ADDV(abstime, 1, -1000000 * 1000, tv_sec, tv_nsec);
   }
 
-  return pthread_cond_timedwait(cond, mutex, &abstime);
+  _tme_thread_suspended();
+
+  rc = pthread_cond_timedwait(cond, mutex, &abstime);
+
+  _tme_thread_resumed();
+
+  return rc;
 }
 
 #define tme_cond_notifyTRUE pthread_cond_broadcast
@@ -119,28 +194,69 @@ tme_cond_sleep_yield _TME_P((tme_cond_t *cond, tme_mutex_t *mutex,
 #define TME_THREAD_DEADLOCK_SLEEP	abort
 
 /* threads: */
-typedef void *(*tme_thread_t) _TME_P((void *));
+typedef void *_tme_thret;
+typedef _tme_thret (*tme_thread_t) _TME_P((void *));
 typedef pthread_t tme_threadid_t;
 void tme_thread_set_defattr _TME_P((pthread_attr_t *attr));
 pthread_attr_t *tme_thread_defattr _TME_P((void));
 #define tme_thread_create(t,f,a) pthread_create(t,tme_thread_defattr(),f,a)
-#define tme_thread_yield pthread_yield
+static _tme_inline int tme_thread_yield _TME_P((void)) {
+  int rc;
+  
+  _tme_thread_suspended();
+
+  rc = pthread_yield();
+
+  _tme_thread_resumed();
+
+  return rc;
+}
+
 #define tme_thread_join(id) pthread_join(id,NULL)
-#define tme_thread_exit pthread_exit(NULL)
+#define tme_thread_exit() _tme_thread_suspended();pthread_exit(NULL)
 
 /* sleeping: */
 static _tme_inline int tme_thread_sleep_yield _TME_P((unsigned long sec, unsigned long usec)) { 
   struct timespec timeout;
+  int rc;
   
   for (; usec >= 1000000; sec++, usec -= 1000000);
 
   _TME_TIME_SETV(timeout,sec, usec * 1000,tv_sec,tv_nsec);
-  return nanosleep(&timeout, NULL); 
+
+  _tme_thread_suspended();
+
+  rc = nanosleep(&timeout, NULL);
+
+  _tme_thread_resumed();
+
+  return rc;
 }
 
 /* I/O: */
-#define tme_thread_read read
-#define tme_thread_write write
-#define tme_thread_read_yield read
-#define tme_thread_write_yield write
+static _tme_inline ssize_t tme_thread_read _TME_P((int fd, void *buf, size_t count)) {
+  int rc;
+  
+  _tme_thread_suspended();
 
+  rc = read(fd, buf, count);
+
+  _tme_thread_resumed();
+
+  return rc;
+}
+
+static _tme_inline ssize_t tme_thread_write _TME_P((int fd, const void *buf, size_t count)) {
+  int rc;
+  
+  _tme_thread_suspended();
+
+  rc = write(fd, buf, count);
+
+  _tme_thread_resumed();
+
+  return rc;
+}
+
+#define tme_thread_read_yield tme_thread_read
+#define tme_thread_write_yield tme_thread_write

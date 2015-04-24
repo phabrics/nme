@@ -221,7 +221,7 @@ void _tme_gtk_mouse_attach _TME_P((struct tme_gtk_screen *));
 int _tme_gtk_mouse_connections_new _TME_P((struct tme_gtk_display *,
 					   struct tme_connection **));
 guint _tme_gtk_screen_update _TME_P((struct tme_gtk_display *display));
-void _tme_gtk_screen_th_update _TME_P((struct tme_gtk_display *));
+_tme_thret _tme_gtk_screen_th_update _TME_P((struct tme_gtk_display *));
 void _tme_gtk_display_callout _TME_P((struct tme_gtk_display *,
 				      int));
 gint _tme_gtk_display_enter_focus _TME_P((GtkWidget *, GdkEvent *, gpointer));

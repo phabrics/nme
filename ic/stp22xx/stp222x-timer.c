@@ -135,13 +135,15 @@ _tme_stp222x_timer_update(struct tme_stp222x_timer *timer,
 }
 
 /* the stp222x timer thread: */
-static void
+static _tme_thret
 _tme_stp222x_timer_th(void *_timer)
 {
   struct tme_stp222x_timer *timer;
   struct tme_stp222x *stp222x;
   tme_time_t now;
   tme_time_t sleep;
+
+  tme_thread_enter();
 
   /* recover our data structures: */
   timer = (struct tme_stp222x_timer *) _timer;
@@ -162,6 +164,7 @@ _tme_stp222x_timer_th(void *_timer)
 				 &sleep);
   }
   /* NOTREACHED */
+  tme_thread_exit();
 }
 
 /* this resets a timer: */

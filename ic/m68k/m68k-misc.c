@@ -270,9 +270,10 @@ tme_m68k_idle(struct tme_m68k *ic)
 }
 
 /* the m68k thread: */
-static void
-tme_m68k_thread(struct tme_m68k *ic)
+static _tme_thret
+_tme_m68k_th(struct tme_m68k *ic)
 {
+  tme_thread_enter();
 
   /* we use siglongjmp to redispatch: */
   do { } while (sigsetjmp(ic->_tme_m68k_dispatcher, 0));
@@ -307,6 +308,7 @@ tme_m68k_thread(struct tme_m68k *ic)
     abort();
   }
   /* NOTREACHED */
+  tme_thread_exit();
 }
 
 /* the TLB filler for when we are on a generic bus: */
@@ -618,7 +620,7 @@ tme_m68k_new(struct tme_m68k *ic, const char * const *args, const void *extra, c
   TME_M68K_SEQUENCE_START;
 
   /* start the m68k thread: */
-  tme_thread_create(&ic->tme_m68k_thread, (tme_thread_t) tme_m68k_thread, ic);
+  tme_thread_create(&ic->tme_m68k_thread, (tme_thread_t) _tme_m68k_th, ic);
 
   return (TME_OK);
 }  

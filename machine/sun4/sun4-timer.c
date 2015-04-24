@@ -258,13 +258,15 @@ _tme_sun4_timer_reset(struct tme_sun4_timer *timer)
 }
 
 /* the sun4 timer thread: */
-static void
+static _tme_thret
 _tme_sun4_timer_th(struct tme_sun4_timer *timer)
 {
   struct tme_sun4 *sun4;
   tme_time_t now;
   tme_time_t sleep;
 
+  tme_thread_enter();
+  
   /* recover our sun4: */
   sun4 = timer->tme_sun4_timer_sun4;
 
@@ -286,6 +288,7 @@ _tme_sun4_timer_th(struct tme_sun4_timer *timer)
 			 &sleep);
   }
   /* NOTREACHED */
+  tme_thread_exit();
 }
 
 /* the sun4 timer control bus cycle handler: */

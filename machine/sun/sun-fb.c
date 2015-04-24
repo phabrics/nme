@@ -392,11 +392,13 @@ _tme_sunfb_callout(struct tme_sunfb *sunfb)
 }
 
 /* the callout thread: */
-static void
-_tme_sunfb_callout_thread(void *_sunfb)
+static _tme_thret
+_tme_sunfb_callout_th(void *_sunfb)
 {
   struct tme_sunfb *sunfb;
 
+  tme_thread_enter();
+  
   /* recover our data structure: */
   sunfb = _sunfb;
 
@@ -414,6 +416,7 @@ _tme_sunfb_callout_thread(void *_sunfb)
 			&sunfb->tme_sunfb_mutex);
   }
   /* NOTREACHED */
+  tme_thread_exit();
 }
 
 /* this is called before the framebuffer's display is updated: */
@@ -1657,7 +1660,7 @@ tme_sunfb_new(struct tme_sunfb *sunfb,
   tme_cond_init(&sunfb->tme_sunfb_callout_cond);
 
   /* start the callout thread: */
-  tme_thread_create(&sunfb->tme_sunfb_callout_thread, (tme_thread_t) _tme_sunfb_callout_thread, sunfb);
+  tme_thread_create(&sunfb->tme_sunfb_callout_thread, (tme_thread_t) _tme_sunfb_callout_th, sunfb);
 
   return (TME_OK);
 }

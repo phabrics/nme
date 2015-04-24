@@ -309,9 +309,11 @@ _tme_serial_kb_callout(struct tme_serial_kb *serial_kb, int new_callouts)
 }
 
 /* the serial keyboard rate-limiting thread: */
-static void
+static _tme_thret
 _tme_serial_kb_th_rate(struct tme_serial_kb *serial_kb)
 {
+
+  tme_thread_enter();
 
   /* lock our mutex: */
   tme_mutex_lock(&serial_kb->tme_serial_kb_mutex);
@@ -365,6 +367,7 @@ _tme_serial_kb_th_rate(struct tme_serial_kb *serial_kb)
     }
   }
   /* NOTREACHED */
+  tme_thread_exit();
 }
 
 /* the keyboard control function: */

@@ -338,10 +338,12 @@ _tme_serial_ms_callout(struct tme_serial_ms *serial_ms, int new_callouts)
 }
 
 /* the serial mouse rate-limiting thread: */
-static void
+static _tme_thret
 _tme_serial_ms_th_rate(void *_serial_ms)
 {
   struct tme_serial_ms *serial_ms;
+
+  tme_thread_enter();
 
   /* recover our data structure: */
   serial_ms = _serial_ms;
@@ -387,6 +389,7 @@ _tme_serial_ms_th_rate(void *_serial_ms)
     }
   }
   /* NOTREACHED */
+  tme_thread_exit();
 }
 
 /* the mouse control function: */
