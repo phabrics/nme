@@ -934,7 +934,6 @@ main(int argc, char **argv)
   }
 #endif
   
-  tme_thread_exit();
   tme_thread_join(tmesh_thread);
 
   /* done: */

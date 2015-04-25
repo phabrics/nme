@@ -49,10 +49,10 @@ extern pthread_rwlock_t tme_rwlock_suspere;
 #define tme_threads_init() pthread_rwlock_init(&tme_rwlock_suspere, NULL)
 
 /* thread suspension: */
-#define tme_thread_suspend_others()	pthread_rwlock_wrlock(&tme_rwlock_suspere)
-#define tme_thread_resume_others()	pthread_rwlock_unlock(&tme_rwlock_suspere)
 #define _tme_thread_suspended()	        pthread_rwlock_unlock(&tme_rwlock_suspere)
 #define _tme_thread_resumed()	        pthread_rwlock_rdlock(&tme_rwlock_suspere)
+#define tme_thread_suspend_others()	_tme_thread_suspended();pthread_rwlock_wrlock(&tme_rwlock_suspere)
+#define tme_thread_resume_others()	pthread_rwlock_unlock(&tme_rwlock_suspere);_tme_thread_resumed()
 #define tme_thread_enter()	        _tme_thread_resumed()
 
 /* if we want speed over lock debugging, we can compile very simple

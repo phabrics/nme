@@ -317,6 +317,8 @@ _tme_gtk_keyboard_key_event(GtkWidget *widget,
   tme_event.tme_keyboard_event_time
     = gdk_event->time;
 
+  _tme_thread_resumed();
+  
   /* assume that we won't need any new callouts: */
   new_callouts = 0;
   
@@ -337,6 +339,7 @@ _tme_gtk_keyboard_key_event(GtkWidget *widget,
     /* unlock the mutex: */
     tme_mutex_unlock(&display->tme_gtk_display_mutex);
     
+    _tme_thread_suspended();
     return (TRUE);
   }
 
@@ -366,6 +369,8 @@ _tme_gtk_keyboard_key_event(GtkWidget *widget,
 
   /* unlock the mutex: */
   tme_mutex_unlock(&display->tme_gtk_display_mutex);
+
+  _tme_thread_suspended();
 
   /* don't process this event any further: */
   return (TRUE);

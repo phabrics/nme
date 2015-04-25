@@ -92,7 +92,7 @@ void tme_threads_gtk_init(void)
 void tme_threads_run() {
   tme_sjlj_threads_run(tme_using_gtk);
 
-  //_tme_thread_suspended();
+  _tme_thread_suspended();
 #ifdef HAVE_GTK
   /* if we're using the GTK main loop, yield to GTK and
      call gtk_main(): */

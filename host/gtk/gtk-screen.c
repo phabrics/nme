@@ -54,7 +54,7 @@ _tme_gtk_screen_update(struct tme_gtk_display *display)
   tme_uint32_t last_i, j;
 #endif
 
-  //_tme_thread_resumed();
+  _tme_thread_resumed();
 
   /* lock the mutex: */
   tme_mutex_lock(&display->tme_gtk_display_mutex);
@@ -117,7 +117,7 @@ _tme_gtk_screen_update(struct tme_gtk_display *display)
   /* unlock the mutex: */
   tme_mutex_unlock(&display->tme_gtk_display_mutex);
 
-  //_tme_thread_suspended();
+  _tme_thread_suspended();
   return TRUE;
 }
 
@@ -125,15 +125,16 @@ _tme_gtk_screen_update(struct tme_gtk_display *display)
 _tme_thret
 _tme_gtk_screen_th_update(struct tme_gtk_display *display)
 {
-  tme_thread_enter();
-
   /* loop forever: */
   for (;;) {
     _tme_gtk_screen_update(display);
 
+    _tme_thread_resumed();
     /* update again in .5 seconds: */
     tme_thread_sleep_yield(0, 500000);
+    _tme_thread_suspended();
   }
+  _tme_thread_resumed();
   /* NOTREACHED */
   tme_thread_exit();
 }
@@ -397,6 +398,8 @@ _tme_gtk_screen_scale_set(GtkWidget *widget,
     return;
   }
 
+  _tme_thread_resumed();
+
   /* get the display: */
   display = screen->tme_gtk_screen_display;
 
@@ -419,6 +422,7 @@ _tme_gtk_screen_scale_set(GtkWidget *widget,
     rc = _tme_gtk_screen_mode_change(screen->tme_gtk_screen_fb);
     assert (rc == TME_OK);
   }
+  _tme_thread_suspended();
 }
 
 /* this sets the screen scaling to default: */
@@ -559,6 +563,8 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
   struct tme_gtk_display *display;
   struct tme_fb_connection *conn_fb;
 
+  _tme_thread_resumed();
+
   screen = (struct tme_gtk_screen *) _screen;
 
   /* get the display: */
@@ -573,6 +579,7 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
     /* unlock our mutex: */
     tme_mutex_unlock(&display->tme_gtk_display_mutex);
     
+    _tme_thread_suspended();
     return TRUE;
   }
   
@@ -603,6 +610,8 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
 
   /* unlock our mutex: */
   tme_mutex_unlock(&display->tme_gtk_display_mutex);
+
+  _tme_thread_suspended();
 
   /* We've handled the configure event, no need for further processing. */
   return TRUE;
