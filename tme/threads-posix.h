@@ -200,16 +200,12 @@ typedef pthread_t tme_threadid_t;
 void tme_thread_set_defattr _TME_P((pthread_attr_t *attr));
 pthread_attr_t *tme_thread_defattr _TME_P((void));
 #define tme_thread_create(t,f,a) pthread_create(t,tme_thread_defattr(),f,a)
-static _tme_inline int tme_thread_yield _TME_P((void)) {
-  int rc;
-  
+static _tme_inline void tme_thread_yield _TME_P((void)) {
   _tme_thread_suspended();
 
-  rc = pthread_yield();
+  pthread_yield();
 
   _tme_thread_resumed();
-
-  return rc;
 }
 
 #define tme_thread_join(id) pthread_join(id,NULL)
