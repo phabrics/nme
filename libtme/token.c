@@ -92,7 +92,9 @@ tme_token_invalidate(struct tme_token *token)
 #else  /* !TME_THREADS_COOPERATIVE */
 
   /* spin while the token is busy: */
+  _tme_thread_suspended();
   do { } while(tme_memory_atomic_read_flag(&token->tme_token_busy));
+  _tme_thread_resumed();
 
 #endif /* !TME_THREADS_COOPERATIVE */
 
