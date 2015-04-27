@@ -508,7 +508,7 @@ for op in read write; do
 	#
 	$as_echo "#define tme_memory_bus_${op}_buffer(mem, buffer, count, rwlock, align_min, bus_boundary) \\"
 	$as_echo "  do { \\"
-	$as_echo "    if (TME_THREADS_COOPERATIVE) { \\"
+	$as_echo "    if (tme_thread_cooperative()) { \\"
 	$as_echo "      memcpy(${op_memcpy}, (count)); \\"
 	$as_echo "    } \\"
 	$as_echo "    else { \\"
@@ -1054,7 +1054,7 @@ for size in ${sizes}; do
 
 	    atomic)
 		$as_echo "${op_indent0}/* if threads are cooperative, do a plain ${op}: */ \\"
-		$as_echo "${op_indent0}(TME_THREADS_COOPERATIVE) \\"
+		$as_echo "${op_indent0}(tme_thread_cooperative()) \\"
 		$as_echo "${op_then}"
 		$as_echo_n "${op_indent2}tme_memory_${op}${size}("
 		# this strips off the tme_shared qualifier:
@@ -1086,7 +1086,7 @@ for size in ${sizes}; do
 
 	    bus)
 		$as_echo "${op_indent0}/* if threads are cooperative, do a plain ${op}: */ \\"
-		$as_echo "${op_indent0}(TME_THREADS_COOPERATIVE) \\"
+		$as_echo "${op_indent0}(tme_thread_cooperative()) \\"
 		$as_echo "${op_then}"
 		$as_echo_n "${op_indent2}tme_memory_${op}${size}("
 		# this strips off the tme_shared qualifier:
@@ -1239,7 +1239,7 @@ for size in ${sizes}; do
 	$as_echo "     accesses must be done under lock.  (when threads are"
 	$as_echo "     cooperative the actual locking isn't needed): */"
 	$as_echo "  if (TME_MEMORY_ALIGNMENT_ATOMIC(TME_MEMORY_TYPE_COMMON) == 0) {"
-	$as_echo "    if (!TME_THREADS_COOPERATIVE) {"
+	$as_echo "    if (!tme_thread_cooperative()) {"
 	if test ${op} = read; then
 	    $as_echo "      tme_rwlock_rdlock(rwlock);"
 	else
@@ -1261,7 +1261,7 @@ for size in ${sizes}; do
 	if test "x${op_indent}" != x; then
 	    $as_echo "    }"
 	fi
-	$as_echo "    if (!TME_THREADS_COOPERATIVE) {"
+	$as_echo "    if (!tme_thread_cooperative()) {"
 	if test ${op} = read; then
 	    $as_echo "      tme_rwlock_rdunlock(rwlock);"
 	else

@@ -161,9 +161,9 @@ tme_stp22xx_enter_master(struct tme_bus_connection *master_conn_bus)
   struct tme_completion *completion;
 
   /* if the bus master was making a callout through the bus: */
-#if !TME_THREADS_COOPERATIVE
+#ifdef TME_THREADS_PREEMPTIVE
 #warning "preemptive threads not supported yet"
-#endif /* !TME_THREADS_COOPERATIVE */
+#endif
   stp22xx = master_conn_bus->tme_bus_connection.tme_connection_element->tme_element_private;
   if (stp22xx->tme_stp22xx_master_completion != NULL) {
 
@@ -296,7 +296,7 @@ tme_stp22xx_cond_sleep_yield(struct tme_stp22xx *stp22xx,
      cooperative, in which case the condition will be idle again the
      next time this thread runs: */
   cond->tme_stp22xx_cond_state
-    = (TME_THREADS_COOPERATIVE
+    = (tme_thread_cooperative()
        ? TME_STP22XX_COND_STATE_IDLE
        : TME_STP22XX_COND_STATE_WAITING);
 
@@ -757,7 +757,7 @@ tme_stp22xx_cond_notify(struct tme_stp22xx_cond *cond)
 {
 
   /* if threading is cooperative, and this condition is idle: */
-  if (TME_THREADS_COOPERATIVE
+  if (tme_thread_cooperative()
       && cond->tme_stp22xx_cond_state == TME_STP22XX_COND_STATE_IDLE) {
 
     /* we have to assume that a thread has yielded waiting on this

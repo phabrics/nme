@@ -2225,11 +2225,9 @@ _tme_stp103x_ls_cycle_quad(struct tme_sparc *ic, struct tme_sparc_ls *ls)
   struct tme_sparc_tlb *tlb;
   tme_uint32_t asi_mask;
   _tme_const tme_shared tme_uint8_t *memory;
-#if !TME_THREADS_COOPERATIVE
 #ifdef tme_memory_atomic_read128
   tme_uint128_t quad;
 #endif /* tme_memory_atomic_read128 */
-#endif /* !TME_THREADS_COOPERATIVE */
   tme_uint64_t quad_64lo;
   tme_uint64_t quad_64hi;
   tme_uint64_t *_rd;
@@ -2287,24 +2285,6 @@ _tme_stp103x_ls_cycle_quad(struct tme_sparc *ic, struct tme_sparc_ls *ls)
   /* finish the memory address: */
   memory += ls->tme_sparc_ls_address64;
 
-  /* if threads are cooperative: */
-#if TME_THREADS_COOPERATIVE
-
-  /* do two 64-bit loads: */
-  quad_64lo
-    = tme_memory_bus_read64(((_tme_const tme_shared tme_uint64_t *) memory) + 0,
-			    tlb->tme_sparc_tlb_bus_rwlock,
-			    (sizeof(tme_uint64_t) * 2),
-			    sizeof(tme_uint64_t));
-  quad_64hi
-    = tme_memory_bus_read64(((_tme_const tme_shared tme_uint64_t *) memory) + 1,
-			    tlb->tme_sparc_tlb_bus_rwlock,
-			    (sizeof(tme_uint64_t) * 1),
-			    sizeof(tme_uint64_t));
-
-  /* otherwise, threads are not cooperative: */
-#else  /* !TME_THREADS_COOPERATIVE */
-
   /* if host supports an atomic 128-bit read: */
 #ifdef tme_memory_atomic_read128
 
@@ -2323,9 +2303,21 @@ _tme_stp103x_ls_cycle_quad(struct tme_sparc *ic, struct tme_sparc_ls *ls)
   quad_64hi = quad >> 64;
 #endif
 #else  /* !tme_memory_atomic_read128 */
+#ifdef TME_THREADS_PREEMPTIVE
 #warning "non-cooperative threads requires an atomic 128-bit read"
+#endif
+  /* do two 64-bit loads: */
+  quad_64lo
+    = tme_memory_bus_read64(((_tme_const tme_shared tme_uint64_t *) memory) + 0,
+			    tlb->tme_sparc_tlb_bus_rwlock,
+			    (sizeof(tme_uint64_t) * 2),
+			    sizeof(tme_uint64_t));
+  quad_64hi
+    = tme_memory_bus_read64(((_tme_const tme_shared tme_uint64_t *) memory) + 1,
+			    tlb->tme_sparc_tlb_bus_rwlock,
+			    (sizeof(tme_uint64_t) * 1),
+			    sizeof(tme_uint64_t));
 #endif /* !tme_memory_atomic_read128 */
-#endif /* !TME_THREADS_COOPERATIVE */
 
   /* swap the two 64-bit values as needed: */
   if (ls->tme_sparc_ls_lsinfo & TME_SPARC_LSINFO_ENDIAN_LITTLE) {

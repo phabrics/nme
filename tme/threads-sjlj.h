@@ -36,12 +36,14 @@
 /* note that our locking model never allows recursive locking. */
 
 /* setjmp/longjmp threads are cooperative: */
-#define TME_THREADS_COOPERATIVE		(TRUE)
+//#define TME_THREADS_PREEMPTIVE		(FALSE)
 
 /* our errno convention: */
 #define TME_EDEADLK		EBUSY
 #define TME_EBUSY		EBUSY
 #define TME_THREADS_ERRNO(rc)	(rc)
+
+#define tme_thread_cooperative() TRUE
 
 /* initializing and starting: */
 void tme_sjlj_threads_init _TME_P((void));
@@ -58,7 +60,6 @@ void tme_sjlj_threads_run _TME_P((int));
 #define _tme_thread_suspended()	do { } while (/* CONSTCOND */ 0)
 #define _tme_thread_resumed()	do { } while (/* CONSTCOND */ 0)
 #define tme_thread_enter()	do { } while (/* CONSTCOND */ 0)
-#define tme_thread_exit()	do { } while (/* CONSTCOND */ 0)
 
 /* if we want speed over lock debugging, we can compile very simple
    rwlock operations: */

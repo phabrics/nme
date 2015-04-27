@@ -34,13 +34,14 @@
  */
 #include <glib.h>
 
-/* setjmp/longjmp threads are cooperative: */
-#define TME_THREADS_COOPERATIVE		(FALSE)
+#define TME_THREADS_PREEMPTIVE		(TRUE)
 
 /* our errno convention: */
 #define TME_EDEADLK		EDEADLK
 #define TME_EBUSY		EBUSY
 #define TME_THREADS_ERRNO(rc)	(rc)
+
+#define tme_thread_cooperative() FALSE
 
 /* initializing and starting: */
 #define tme_threads_init() do { } while (/* CONSTCOND */ 0)
@@ -51,7 +52,6 @@
 #define _tme_thread_suspended()	do { } while (/* CONSTCOND */ 0)
 #define _tme_thread_resumed()	do { } while (/* CONSTCOND */ 0)
 #define tme_thread_enter()	do { } while (/* CONSTCOND */ 0)
-#define tme_thread_exit()	do { } while (/* CONSTCOND */ 0)
 
 /* if we want speed over lock debugging, we can compile very simple
    rwlock operations: */
@@ -133,7 +133,7 @@ tme_cond_sleep_yield _TME_P((tme_cond_t *cond, tme_mutex_t *mutex,
 #define TME_THREAD_DEADLOCK_SLEEP	abort
 
 /* threads: */
-typedef void *_tme_thret;
+typedef gpointer _tme_thret;
 typedef GThreadFunc tme_thread_t;
 typedef GThread *tme_threadid_t;
 static _tme_inline void tme_thread_create _TME_P((tme_threadid_t *t, tme_thread_t f, void *a)) {
@@ -141,7 +141,7 @@ static _tme_inline void tme_thread_create _TME_P((tme_threadid_t *t, tme_thread_
 }
 #define tme_thread_yield() do { } while (/* CONSTCOND */ 0)
 #define tme_thread_join g_thread_join
-#define tme_thread_exit g_thread_exit(NULL)
+#define tme_thread_exit() g_thread_exit(NULL)
 
 /* sleeping: */
 #define tme_thread_sleep_yield(s,u) g_usleep(u + s * G_USEC_PER_SEC)

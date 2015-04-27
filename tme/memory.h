@@ -51,12 +51,12 @@ _TME_RCSID("$Id: memory.h,v 1.5 2010/06/05 19:35:38 fredette Exp $");
    if threads are cooperative and TME_NO_AUDIT_ATOMICS is defined,
    tme_shared is defined to be empty: */
 #define tme_shared _tme_volatile
-#if TME_THREADS_COOPERATIVE
+#ifndef TME_THREADS_PREEMPTIVE
 #ifdef TME_NO_AUDIT_ATOMICS
 #undef tme_shared
 #define tme_shared /**/
 #endif /* TME_NO_AUDIT_ATOMICS */
-#endif /* TME_THREADS_COOPERATIVE */
+#endif /* TME_THREADS_PREEMPTIVE */
 
 /* many of the memory macros do pointer casts, and pointer casts can
    silently discard qualifiers in the original type.  to detect this
@@ -126,7 +126,7 @@ _tme_audit_pointer_const(_tme_const void *pointer)
 #include <tme/memory-auto.h>
 #endif
 
-#if !TME_THREADS_COOPERATIVE
+#ifdef TME_THREADS_PREEMPTIVE
 
 /* include the host CPU-specific memory header file.
 
@@ -186,7 +186,7 @@ _tme_audit_pointer_const(_tme_const void *pointer)
 
 #include <tmememory.h>
 
-#else  /* TME_THREADS_COOPERATIVE */
+#else  /* !TME_THREADS_PREEMPTIVE */
 
 /* we don't know if this CPU can do atomic reads and writes at all.
    it doesn't matter, since threads are cooperative: */
@@ -200,7 +200,7 @@ _tme_audit_pointer_const(_tme_const void *pointer)
 #define TME_MEMORY_BARRIER_WRITE_BEFORE_READ	(0)
 #define tme_memory_barrier(address, size, barrier) do { } while (/* CONSTCOND */ 0 && ((address) + 1) && (size) && (barrier))
 
-#endif /* TME_THREADS_COOPERATIVE */
+#endif /* !TME_THREADS_PREEMPTIVE */
 
 /* if an acceptable-alignment macro is not provided, we assume that it
    is cheaper to always access an object that may be only

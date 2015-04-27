@@ -206,7 +206,7 @@ tme_recode_host_rw_thunk_new(struct tme_recode_ic *ic,
   /* if threads are cooperative, or if common atomic operations aren't
      being done under software lock and we can't cross more boundaries
      than the guest would: */
-  if (TME_THREADS_COOPERATIVE
+  if (tme_thread_cooperative()
       || (TME_MEMORY_ALIGNMENT_ATOMIC(TME_MEMORY_TYPE_COMMON) != 0
 	  && max_boundaries_host <= max_boundaries_guest)) {
 
@@ -291,7 +291,7 @@ tme_recode_host_rw_thunk_new(struct tme_recode_ic *ic,
 
     /* if threads aren't cooperative, and this is a double-host-size
        access: */
-    if (!TME_THREADS_COOPERATIVE
+    if (!tme_thread_cooperative()
 	&& TME_RECODE_SIZE_IS_DOUBLE_HOST(rw->tme_recode_rw_memory_size)) {
 
       /* NB: in this case, we assume that the host is capable of SSE2

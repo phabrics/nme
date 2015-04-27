@@ -1831,7 +1831,7 @@ tme_m68k_rmw_start(struct tme_m68k *ic,
        most host CPUs can't do this, so when threads are not
        cooperative, we're forced to suspend all other threads when
        running a cas2 instruction: */
-    if (!TME_THREADS_COOPERATIVE) {
+    if (!tme_thread_cooperative()) {
       tme_thread_suspend_others();
     }
 
@@ -2015,7 +2015,7 @@ tme_m68k_rmw_finish(struct tme_m68k *ic,
      most host CPUs can't do this, so when threads are not
      cooperative, we're forced to suspend all other threads when
      running a cas2 instruction: */
-  if (!TME_THREADS_COOPERATIVE
+  if (!tme_thread_cooperative()
       && rmw->tme_m68k_rmw_address_count > 1) {
     tme_thread_resume_others();
   }

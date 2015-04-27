@@ -63,13 +63,16 @@ _TME_RCSID("$Id: token.h,v 1.3 2010/06/05 19:37:27 fredette Exp $");
     (token)->_tme_token_busy_file = __FILE__;				\
     (token)->_tme_token_busy_line = __LINE__;				\
   } while (/* CONSTCOND */ 0)
-#elif !TME_THREADS_COOPERATIVE
+#elif defined(TME_THREADS_PREEMPTIVE)
 #define _tme_token_busy_change(token, x)				\
-  tme_memory_atomic_write_flag(&(token)->tme_token_busy, x)
-#else  /* TME_THREADS_COOPERATIVE && defined(TME_NO_DEBUG_LOCKS) */
+  if(tme_thread_cooperative())						\
+    do { } while (0 && tme_memory_atomic_read_flag(&(token)->tme_token_invalid) && (x)); \
+  else								\
+    tme_memory_atomic_write_flag(&(token)->tme_token_busy, x)
+#else  /* !TME_THREADS_PREEMPTIVE && defined(TME_NO_DEBUG_LOCKS) */
 #define _tme_token_busy_change(token, x)				\
   do { } while (0 && tme_memory_atomic_read_flag(&(token)->tme_token_invalid) && (x))
-#endif /* TME_THREADS_COOPERATIVE && defined(TME_NO_DEBUG_LOCKS) */
+#endif /* !TME_THREADS_PREEMPTIVE && defined(TME_NO_DEBUG_LOCKS) */
 
 /* this busies a token: */
 /* NB: a token must be busied before its validity can be checked.
@@ -103,8 +106,6 @@ struct tme_token {
   /* if this is nonzero, the token has been invalidated: */
   tme_memory_atomic_flag_t tme_token_invalid;
 
-#if !TME_THREADS_COOPERATIVE || !defined(TME_NO_DEBUG_LOCKS)
-
   /* if this is nonzero, the token is busy: */
   tme_memory_atomic_flag_t tme_token_busy;
 
@@ -119,8 +120,7 @@ struct tme_token {
   unsigned long _tme_token_busy_line;
 
 #endif /* !TME_NO_DEBUG_LOCKS */
-
-#endif /* !TME_THREADS_COOPERATIVE || !defined(TME_NO_DEBUG_LOCKS) */
+  
 };
 
 /* prototypes: */

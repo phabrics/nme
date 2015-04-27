@@ -47,24 +47,22 @@ tme_token_init(struct tme_token *token)
   /* a constructed token is invalid: */
   tme_memory_atomic_init_flag(&token->tme_token_invalid, TRUE);
 
-#if !TME_THREADS_COOPERATIVE || !defined(TME_NO_DEBUG_LOCKS)
+  if(!tme_thread_cooperative()) {
+   /* a constructed token is not busy: */
+   tme_memory_atomic_init_flag(&token->tme_token_busy, FALSE);
 
-  /* a constructed token is not busy: */
-  tme_memory_atomic_init_flag(&token->tme_token_busy, FALSE);
-
-  /* initialize the token's invalid mutex: */
-  tme_mutex_init(&token->tme_token_invalid_mutex);
+   /* initialize the token's invalid mutex: */
+   tme_mutex_init(&token->tme_token_invalid_mutex);
 
 #ifndef TME_NO_DEBUG_LOCKS
 
   /* initialize the file and line number of the last busier or
-     unbusier: */
-  token->_tme_token_busy_file = NULL;
-  token->_tme_token_busy_line = 0;
+      unbusier: */
+   token->_tme_token_busy_file = NULL;
+   token->_tme_token_busy_line = 0;
 
-#endif /* !TME_NO_DEBUG_LOCKS */
-
-#endif /* !TME_THREADS_COOPERATIVE || !defined(TME_NO_DEBUG_LOCKS) */
+#endif
+  }
 }
 
 /* this invalidates a token: */
@@ -72,38 +70,29 @@ void
 tme_token_invalidate(struct tme_token *token)
 {
 
-#if !TME_THREADS_COOPERATIVE || !defined(TME_NO_DEBUG_LOCKS)
-
-  /* lock the token's invalid mutex: */
-  tme_mutex_lock(&token->tme_token_invalid_mutex);
-
-#endif /* !TME_THREADS_COOPERATIVE || !defined(TME_NO_DEBUG_LOCKS) */
+  if(!tme_thread_cooperative()) {
+    /* lock the token's invalid mutex: */
+    tme_mutex_lock(&token->tme_token_invalid_mutex);
+  }
 
   /* invalidate the token: */
   tme_memory_atomic_write_flag(&token->tme_token_invalid, TRUE);
-
-#if TME_THREADS_COOPERATIVE
+  
+  if(tme_thread_cooperative()) {
 #ifndef TME_NO_DEBUG_LOCKS
 
   /* this token must not be busy: */
   assert (!tme_memory_atomic_read_flag(&token->tme_token_busy));
 
 #endif /* !TME_NO_DEBUG_LOCKS */
-#else  /* !TME_THREADS_COOPERATIVE */
-
-  /* spin while the token is busy: */
-  _tme_thread_suspended();
-  do { } while(tme_memory_atomic_read_flag(&token->tme_token_busy));
-  _tme_thread_resumed();
-
-#endif /* !TME_THREADS_COOPERATIVE */
-
-#if !TME_THREADS_COOPERATIVE || !defined(TME_NO_DEBUG_LOCKS)
-
-  /* unlock the token's invalid mutex: */
-  tme_mutex_unlock(&token->tme_token_invalid_mutex);
-
-#endif /* !TME_THREADS_COOPERATIVE || !defined(TME_NO_DEBUG_LOCKS) */
+  } else {
+    /* spin while the token is busy: */
+    _tme_thread_suspended();
+    do { } while(tme_memory_atomic_read_flag(&token->tme_token_busy));
+    _tme_thread_resumed();
+    /* unlock the token's invalid mutex: */
+    tme_mutex_unlock(&token->tme_token_invalid_mutex);
+  }
 }
 
 /* this clears an invalid token: */
@@ -112,32 +101,23 @@ void
 tme_token_invalid_clear(struct tme_token *token)
 {
 
-#if !TME_THREADS_COOPERATIVE || !defined(TME_NO_DEBUG_LOCKS)
-
-  /* the token must not be busy: */
-  assert (!tme_memory_atomic_read_flag(&token->tme_token_busy));
-
-#endif /* !TME_THREADS_COOPERATIVE || !defined(TME_NO_DEBUG_LOCKS) */
+  if(!tme_thread_cooperative())
+    /* the token must not be busy: */
+    assert (!tme_memory_atomic_read_flag(&token->tme_token_busy));
 
   /* if the token is valid, return now: */
   if (__tme_predict_false(!tme_memory_atomic_read_flag(&(token)->tme_token_invalid))) {
     return;
   }
 
-#if !TME_THREADS_COOPERATIVE || !defined(TME_NO_DEBUG_LOCKS)
-
-  /* lock the token's invalid mutex: */
-  tme_mutex_lock(&token->tme_token_invalid_mutex);
-
-#endif /* !TME_THREADS_COOPERATIVE || !defined(TME_NO_DEBUG_LOCKS) */
+  if(!tme_thread_cooperative())
+    /* lock the token's invalid mutex: */
+    tme_mutex_lock(&token->tme_token_invalid_mutex);
 
   /* mark the token as valid again: */
   tme_memory_atomic_write_flag(&token->tme_token_invalid, FALSE);
 
-#if !TME_THREADS_COOPERATIVE || !defined(TME_NO_DEBUG_LOCKS)
-
-  /* unlock the token's invalid mutex: */
-  tme_mutex_unlock(&token->tme_token_invalid_mutex);
-
-#endif /* !TME_THREADS_COOPERATIVE || !defined(TME_NO_DEBUG_LOCKS) */
+  if(!tme_thread_cooperative())
+    /* unlock the token's invalid mutex: */
+    tme_mutex_unlock(&token->tme_token_invalid_mutex);
 }

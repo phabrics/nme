@@ -261,7 +261,7 @@ _tme_sparc_recode_ls_assist_ld(struct tme_ic *_ic,
        && _tme_sparc_recode_insn_opmap[sparc_opcode] == TME_SPARC_RECODE_INSN_LD);
 
   /* if this is a cooperative threading system: */
-  if (TME_THREADS_COOPERATIVE) {
+  if (tme_thread_cooperative()) {
 
     /* this instruction must be the original load instruction from
        when the instructions thunk was recoded.  we have no way to
@@ -376,7 +376,7 @@ _tme_sparc_recode_ls_assist_st(struct tme_ic *_ic,
        && _tme_sparc_recode_insn_opmap[sparc_opcode] == TME_SPARC_RECODE_INSN_ST);
 
   /* if this is a cooperative threading system: */
-  if (TME_THREADS_COOPERATIVE) {
+  if (tme_thread_cooperative()) {
 
     /* this instruction must be the original store instruction from
        when the instructions thunk was recoded.  we have no way to

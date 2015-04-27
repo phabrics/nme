@@ -397,7 +397,7 @@ tme_sparc_recode_insn_current(const struct tme_sparc *ic)
      valid.  in a noncooperative threading system, some master may be
      in the process of invalidating the current ITLB entry: */
   itlb_current_token = ic->_tme_sparc_itlb_current_token;
-  assert (!TME_THREADS_COOPERATIVE || tme_token_is_valid(itlb_current_token));
+  assert (!tme_thread_cooperative() || tme_token_is_valid(itlb_current_token));
 
   /* get the current recode ITLB entry: */
   recode_itlb_current

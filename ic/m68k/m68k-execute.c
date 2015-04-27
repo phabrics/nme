@@ -107,9 +107,7 @@ do { \
       = ic->_tme_m68k_instruction_burst;
 
     /* if this is a cooperative threading system, yield: */
-#if TME_THREADS_COOPERATIVE
     tme_thread_yield();
-#endif /* TME_THREADS_COOPERATIVE */
   }
 
 #ifdef _TME_M68K_EXECUTE_FAST
@@ -161,7 +159,7 @@ do { \
 	    && (tlb->tme_m68k_tlb_function_codes_mask & TME_BIT(function_code_program)) != 0
 	    && (fetch_fast_next > ic->_tme_m68k_insn_fetch_fast_last
 		|| ((tme_m68k_tlb_is_valid(tlb)
-		     || !TME_THREADS_COOPERATIVE)
+		     || !tme_thread_cooperative())
 		    && tlb->tme_m68k_tlb_bus_context == ic->_tme_m68k_bus_context
 		    && ic->tme_m68k_ireg_pc >= (tme_bus_addr32_t) tlb->tme_m68k_tlb_linear_first
 		    && (ic->tme_m68k_ireg_pc + sizeof(tme_uint16_t) - 1) <= (tme_bus_addr32_t) tlb->tme_m68k_tlb_linear_last)));
@@ -882,16 +880,15 @@ do { \
       = ic->_tme_m68k_instruction_burst;
 
     /* if this is a cooperative threading system, yield: */
-#if TME_THREADS_COOPERATIVE
+    if(tme_thread_cooperative()) {
 #ifdef _TME_M68K_EXECUTE_FAST
-    /* unbusy and forget the fast instruction TLB entry: */
-    assert (ic->_tme_m68k_insn_fetch_fast_itlb == tlb);
-    tme_m68k_tlb_unbusy(tlb);
-    ic->_tme_m68k_insn_fetch_fast_itlb = NULL;
+      /* unbusy and forget the fast instruction TLB entry: */
+      assert (ic->_tme_m68k_insn_fetch_fast_itlb == tlb);
+      tme_m68k_tlb_unbusy(tlb);
+      ic->_tme_m68k_insn_fetch_fast_itlb = NULL;
 #endif /* _TME_M68K_EXECUTE_FAST */
-    tme_thread_yield();
-#endif /* TME_THREADS_COOPERATIVE */
-
+      tme_thread_yield();
+    }
 #ifdef _TME_M68K_EXECUTE_FAST
     /* if this instruction TLB entry has been invalidated, redispatch.
        this can only happen in a multiprocessing (preemptive or true

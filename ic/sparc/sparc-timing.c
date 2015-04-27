@@ -718,7 +718,7 @@ _tme_sparc_timing_loop_start(struct tme_sparc *ic,
   tme_token_unbusy(ic->_tme_sparc_itlb_current_token);
 
   /* if threads are cooperative: */
-  if (TME_THREADS_COOPERATIVE) {
+  if (tme_thread_cooperative()) {
 
     /* forget the instruction TLB entry: */
     ic->_tme_sparc_itlb_current_token = NULL;
@@ -1034,7 +1034,7 @@ tme_sparc_timing_loop_finish(struct tme_sparc *ic)
   ic->_tme_sparc_instruction_burst_other = TRUE;
 
   /* if threads are cooperative: */
-  if (TME_THREADS_COOPERATIVE) {
+  if (tme_thread_cooperative()) {
 
     /* we will chain into execution mode: */
     ic->_tme_sparc_mode = TME_SPARC_MODE_EXECUTION;

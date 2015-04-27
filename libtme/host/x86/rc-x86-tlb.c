@@ -134,22 +134,20 @@ _tme_recode_x86_tlb_unbusy(struct tme_recode_ic *ic,
   /* start more instructions: */
   tme_recode_x86_insns_start(ic, thunk_bytes);
 
-#if !TME_THREADS_COOPERATIVE || !defined(TME_NO_DEBUG_LOCKS)
-
-  /* unbusy the TLB entry: */
-  thunk_bytes
-    = _tme_recode_x86_tlb_ref(thunk_bytes,
-			      TME_RECODE_SIZE_8,
-			      TME_RECODE_X86_OPCODE_MOV_Ib_Eb,
-			      reg_x86_tlb,
-			      (tlb_offset_token
-			       + ((unsigned long)
-				  &((struct tme_token *) 0)->tme_token_busy)),
-			      0 /* undefined */);
-  *(thunk_bytes++) = 0;
-
-#endif /* !TME_THREADS_COOPERATIVE || !defined(TME_NO_DEBUG_LOCKS) */
-
+  if(!tme_thread_cooperative()) {
+    /* unbusy the TLB entry: */
+    thunk_bytes
+      = _tme_recode_x86_tlb_ref(thunk_bytes,
+				TME_RECODE_SIZE_8,
+				TME_RECODE_X86_OPCODE_MOV_Ib_Eb,
+				reg_x86_tlb,
+				(tlb_offset_token
+				 + ((unsigned long)
+				    &((struct tme_token *) 0)->tme_token_busy)),
+				0 /* undefined */);
+    *(thunk_bytes++) = 0;
+  }
+  
   /* finish these instructions: */
   tme_recode_x86_insns_finish(ic, thunk_bytes);
 }
@@ -273,23 +271,21 @@ _tme_recode_x86_tlb_busy(struct tme_recode_ic *ic,
   *((tme_int32_t *) &thunk_bytes[3]) = address_type->tme_recode_address_type_tlb0_ic_offset;
   thunk_bytes += 3 + sizeof(tme_int32_t);
 
-#if !TME_THREADS_COOPERATIVE || !defined(TME_NO_DEBUG_LOCKS)
-
-  /* busy the TLB entry: */
-  thunk_bytes
-    = _tme_recode_x86_tlb_ref(thunk_bytes,
-			      TME_RECODE_SIZE_8,
-			      TME_RECODE_X86_OPCODE_MOV_Ib_Eb,
-			      reg_x86_tlb,
-			      (x86_tlb_type->tme_recode_tlb_type.tme_recode_tlb_type_offset_token
-			       + ((unsigned long)
-				  &((struct tme_token *) 0)->tme_token_busy)),
-			      0 /* undefined */);
-  *(thunk_bytes++) = 1;
-
-#endif /* !TME_THREADS_COOPERATIVE || !defined(TME_NO_DEBUG_LOCKS) */
-
-  /* if this is a double-host-size guest: */
+  if(!tme_thread_cooperative()) {
+    /* busy the TLB entry: */
+    thunk_bytes
+      = _tme_recode_x86_tlb_ref(thunk_bytes,
+				TME_RECODE_SIZE_8,
+				TME_RECODE_X86_OPCODE_MOV_Ib_Eb,
+				reg_x86_tlb,
+				(x86_tlb_type->tme_recode_tlb_type.tme_recode_tlb_type_offset_token
+				 + ((unsigned long)
+				    &((struct tme_token *) 0)->tme_token_busy)),
+				0 /* undefined */);
+    *(thunk_bytes++) = 1;
+  }
+    
+    /* if this is a double-host-size guest: */
   if (TME_RECODE_SIZE_IS_DOUBLE_HOST(ic->tme_recode_ic_reg_size)) {
 
     /* compare the most-significant half of the guest address to the
@@ -493,7 +489,7 @@ _tme_recode_x86_tlb_busy(struct tme_recode_ic *ic,
 
   /* make sure the token busy write completes before the token invalid
      read: */
-  if (!TME_THREADS_COOPERATIVE) {
+  if (!tme_thread_cooperative()) {
     thunk_bytes[0] = TME_RECODE_X86_OPCODE_ESC_0F;
     thunk_bytes[1] = TME_RECODE_X86_OPCODE0F_GRP15;
     thunk_bytes[2] = TME_RECODE_X86_OPCODE0F_GRP15_MFENCE;

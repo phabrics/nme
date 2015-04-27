@@ -35,20 +35,31 @@
 
 #include <pthread.h>
 
-/* setjmp/longjmp threads are cooperative: */
-#define TME_THREADS_COOPERATIVE		(FALSE)
+/* pthreads can support cooperative threads by setting the appropriate parameters */
+#define TME_THREADS_PREEMPTIVE		(TRUE)
 
 /* our errno convention: */
 #define TME_EDEADLK		EDEADLK
 #define TME_EBUSY		EBUSY
 #define TME_THREADS_ERRNO(rc)	(rc)
 
-extern pthread_rwlock_t tme_rwlock_suspere;
+#ifdef HAVE_PTHREAD_SETSCHEDPARAM
+static int tme_thread_cooperative() {
+  int policy;
+  struct sched_param param;
+  if(!pthread_getschedparam(pthread_self(), &policy, &param))
+    return ((policy == SCHED_FIFO) || (policy == SCHED_RR));
+  return FALSE;
+}
+#else
+#define tme_thread_cooperative() FALSE
+#endif
 
 /* initializing and starting: */
 #define tme_threads_init() pthread_rwlock_init(&tme_rwlock_suspere, NULL)
 
 /* thread suspension: */
+extern pthread_rwlock_t tme_rwlock_suspere;
 #define _tme_thread_suspended()	        pthread_rwlock_unlock(&tme_rwlock_suspere)
 #define _tme_thread_resumed()	        pthread_rwlock_rdlock(&tme_rwlock_suspere)
 #define tme_thread_suspend_others()	_tme_thread_suspended();pthread_rwlock_wrlock(&tme_rwlock_suspere)
@@ -200,13 +211,19 @@ typedef pthread_t tme_threadid_t;
 void tme_thread_set_defattr _TME_P((pthread_attr_t *attr));
 pthread_attr_t *tme_thread_defattr _TME_P((void));
 #define tme_thread_create(t,f,a) pthread_create(t,tme_thread_defattr(),f,a)
+#ifdef HAVE_PTHREAD_SETSCHEDPARAM
 static _tme_inline void tme_thread_yield _TME_P((void)) {
+  if(!tme_thread_cooperative()) return;
+  
   _tme_thread_suspended();
 
   pthread_yield();
 
   _tme_thread_resumed();
 }
+#else
+#define tme_thread_yield() do { } while (/* CONSTCOND */ 0)
+#endif
 
 #define tme_thread_join(id) pthread_join(id,NULL)
 #define tme_thread_exit() _tme_thread_suspended();pthread_exit(NULL)
