@@ -41,9 +41,10 @@ _TME_RCSID("$Id: gtk-screen.c,v 1.11 2009/08/30 21:39:03 fredette Exp $");
 #include <stdlib.h>
 
 /* the GTK screens update thread: */
-guint
-_tme_gtk_screen_update(struct tme_gtk_display *display)
+gboolean
+_tme_gtk_screen_update(gpointer disp)
 {
+  struct tme_gtk_display *display;
   struct tme_gtk_screen *screen;
   struct tme_fb_connection *conn_fb;
   struct tme_fb_connection *conn_fb_other;
@@ -54,6 +55,8 @@ _tme_gtk_screen_update(struct tme_gtk_display *display)
   tme_uint32_t last_i, j;
 #endif
 
+  display = (struct tme_gtk_display *)disp;
+  
   _tme_thread_resumed();
 
   /* lock the mutex: */

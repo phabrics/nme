@@ -220,7 +220,7 @@ void _tme_gtk_mouse_mode_off _TME_P((struct tme_gtk_screen *, guint32));
 void _tme_gtk_mouse_attach _TME_P((struct tme_gtk_screen *));
 int _tme_gtk_mouse_connections_new _TME_P((struct tme_gtk_display *,
 					   struct tme_connection **));
-guint _tme_gtk_screen_update _TME_P((struct tme_gtk_display *display));
+gboolean _tme_gtk_screen_update _TME_P((gpointer disp));
 _tme_thret _tme_gtk_screen_th_update _TME_P((struct tme_gtk_display *));
 void _tme_gtk_display_callout _TME_P((struct tme_gtk_display *,
 				      int));

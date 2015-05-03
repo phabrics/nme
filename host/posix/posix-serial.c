@@ -364,7 +364,7 @@ _tme_posix_serial_th_reader(struct tme_posix_serial *serial)
 
     /* if we hit EOF: */
     if (rc == 0) {
-      return;
+      break;
     }
 
     /* lock the mutex: */
