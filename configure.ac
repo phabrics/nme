@@ -202,7 +202,15 @@ if test $ac_cv_c_long_double = yes; then
 fi
 
 AC_CHECK_MEMBERS([struct stat.st_rdev, struct stat.st_blksize])
-AC_CHECK_TYPES([cpuset_t, cpu_set_t],[],[],[#include <pthread_np.h>])
+AC_CHECK_TYPES([cpuset_t, cpu_set_t],[],[],[
+#include <pthread.h>
+#ifdef HAVE_PTHREAD_NP_H
+#include <pthread_np.h>
+#endif
+#ifdef HAVE_SCHED_H
+#include <sched.h>
+#endif
+])
 
 AC_SYS_SOCKADDR_SA_LEN
 
