@@ -34,7 +34,12 @@
  */
 
 #include <pthread.h>
-
+#ifdef HAVE_PTHREAD_NP_H
+#include <pthread_np.h>
+#endif
+#ifdef HAVE_SCHED_H
+#include <sched.h>
+#endif
 /* pthreads can support cooperative threads by setting the appropriate parameters */
 #define TME_THREADS_PREEMPTIVE		(TRUE)
 
@@ -273,3 +278,8 @@ static _tme_inline ssize_t tme_thread_write _TME_P((int fd, const void *buf, siz
 
 #define tme_thread_read_yield tme_thread_read
 #define tme_thread_write_yield tme_thread_write
+#ifdef HAVE_CPUSET_T
+typedef cpuset_t tme_cpuset_t;
+#elif HAVE_CPU_SET_T
+typedef cpu_set_t tme_cpuset_t;
+#endif

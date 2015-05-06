@@ -88,6 +88,7 @@ AC_CHECK_HEADERS([sys/ioctl.h sys/sockio.h sys/socketio.h net/if_dl.h ioctls.h n
 AC_CHECK_HEADERS([byteswap.h sys/endian.h])
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h sys/socket.h sys/time.h time.h termios.h])
 AC_CHECK_HEADERS([linux/netfilter/nf_tables.h libmnl/libmnl.h libnftnl/table.h])
+AC_CHECK_HEADERS([pthread_np.h sched.h])
 AC_CHECK_HEADERS([sys/param.h sys/linker.h sys/sysctl.h sys/module.h npf.h net/npf_ncode.h pcap/pcap.h], [], [],
 [#ifdef HAVE_SYS_PARAM_H
  # include <sys/param.h>
@@ -201,6 +202,7 @@ if test $ac_cv_c_long_double = yes; then
 fi
 
 AC_CHECK_MEMBERS([struct stat.st_rdev, struct stat.st_blksize])
+AC_CHECK_TYPES([cpuset_t, cpu_set_t],[],[],[#include <pthread_np.h>])
 
 AC_SYS_SOCKADDR_SA_LEN
 

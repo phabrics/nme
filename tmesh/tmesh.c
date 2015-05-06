@@ -591,7 +591,7 @@ main(int argc, char **argv)
   pthread_t thread;
 #ifdef HAVE_PTHREAD_SETAFFINITY_NP
   int j, cpus=-1;
-  cpu_set_t cpuset;
+  tme_cpuset_t cpuset;
 #endif // HAVE_PTHREAD_SETAFFINITY_NP
 #ifdef HAVE_PTHREAD_SETSCHEDPARAM
   int inheritsched, use_null_attrib, policy;
@@ -746,13 +746,13 @@ main(int argc, char **argv)
     if(cpus & (1<<j))
        CPU_SET(j, &cpuset);
   
-  rc = pthread_setaffinity_np(thread, sizeof(cpu_set_t), &cpuset);
+  rc = pthread_setaffinity_np(thread, sizeof(tme_cpuset_t), &cpuset);
   if (rc != 0)
     handle_error_en(rc, "pthread_setaffinity_np");
   
   /* Check the actual affinity mask assigned to the thread */
   
-  rc = pthread_getaffinity_np(thread, sizeof(cpu_set_t), &cpuset);
+  rc = pthread_getaffinity_np(thread, sizeof(tme_cpuset_t), &cpuset);
   if (rc != 0)
     handle_error_en(rc, "pthread_getaffinity_np");
 
