@@ -202,7 +202,23 @@ if test $ac_cv_c_long_double = yes; then
 fi
 
 AC_CHECK_MEMBERS([struct stat.st_rdev, struct stat.st_blksize])
+
 AC_CHECK_TYPES([cpuset_t, cpu_set_t],[],[],[
+#define _NETBSD_SOURCE
+#include <pthread.h>
+#ifdef HAVE_PTHREAD_NP_H
+#include <pthread_np.h>
+#endif
+#ifdef HAVE_SCHED_H
+#include <sched.h>
+#endif
+])
+
+AC_CHECK_FUNC_LONG(cpuset_create, [
+  cpuset_t *c;
+
+  c = cpuset_create();
+], [ 
 #define _NETBSD_SOURCE
 #include <pthread.h>
 #ifdef HAVE_PTHREAD_NP_H
@@ -326,6 +342,11 @@ if test $have_int64 = yes; then
 #include <sys/types.h>
   ])
 fi
+
+dnl Checks for setaffinity
+AC_SEARCH_LIBS([pthread_mutex_timedlock], [pthread], [
+AC_DEFINE(HAVE_PTHREAD_MUTEX_TIMEDLOCK, [], [Define if you have pthread_mutex_timedlock.])
+])
 
 dnl Checks for setaffinity
 AC_SEARCH_LIBS([pthread_setaffinity_np], [pthread], [

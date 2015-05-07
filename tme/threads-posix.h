@@ -143,6 +143,7 @@ static _tme_inline int tme_mutex_lock _TME_P((tme_mutex_t *m)) {
 #define tme_mutex_trylock pthread_mutex_trylock
 #define tme_mutex_unlock pthread_mutex_unlock
 
+#ifdef HAVE_PTHREAD_MUTEX_TIMEDLOCK
 static _tme_inline int tme_mutex_timedlock _TME_P((tme_mutex_t *m, unsigned long sec)) { 
   struct timespec now, timeout;
   int rc;
@@ -159,6 +160,9 @@ static _tme_inline int tme_mutex_timedlock _TME_P((tme_mutex_t *m, unsigned long
 
   return rc;
 }
+#else
+#define tme_mutex_timedlock(m,t) pthread_mutex_trylock(m)
+#endif
 
 /* conditions: */
 typedef pthread_cond_t tme_cond_t;
@@ -222,7 +226,7 @@ static _tme_inline void tme_thread_yield _TME_P((void)) {
   
   _tme_thread_suspended();
 
-  pthread_yield();
+  sched_yield();
 
   _tme_thread_resumed();
 }
@@ -279,7 +283,7 @@ static _tme_inline ssize_t tme_thread_write _TME_P((int fd, const void *buf, siz
 #define tme_thread_read_yield tme_thread_read
 #define tme_thread_write_yield tme_thread_write
 
-#if defined(HAVE_CPUSET_T) && defined(HAVE_CPUSET_CREATE)
+#ifdef HAVE_CPUSET_CREATE
 typedef cpuset_t *tme_cpuset_t;
 typedef cpuid_t tme_cpuid_t;
 #define tme_cpuset_init(c) c = cpuset_create()
