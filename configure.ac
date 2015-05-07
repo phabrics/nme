@@ -33,7 +33,7 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.68])
-AC_INIT([tme], [0.10beta_3])
+AC_INIT([tme], [0.10beta_4])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
@@ -203,6 +203,7 @@ fi
 
 AC_CHECK_MEMBERS([struct stat.st_rdev, struct stat.st_blksize])
 AC_CHECK_TYPES([cpuset_t, cpu_set_t],[],[],[
+#define _NETBSD_SOURCE
 #include <pthread.h>
 #ifdef HAVE_PTHREAD_NP_H
 #include <pthread_np.h>
@@ -896,7 +897,7 @@ fi
 AC_SUBST(TME_PREOPEN)
 case "${host_os}" in
 netbsd*) 
-   CPPFLAGS="${CPPFLAGS-}"
+   CPPFLAGS="${CPPFLAGS-} -D_NETBSD_SOURCE"
    DEV_TAP_FILENAME='"\"/dev/tap\""'
    SETCAP="chmod u+s"
    ;;

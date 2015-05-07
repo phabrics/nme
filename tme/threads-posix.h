@@ -278,8 +278,31 @@ static _tme_inline ssize_t tme_thread_write _TME_P((int fd, const void *buf, siz
 
 #define tme_thread_read_yield tme_thread_read
 #define tme_thread_write_yield tme_thread_write
+
+#if defined(HAVE_CPUSET_T) && defined(HAVE_CPUSET_CREATE)
+typedef cpuset_t *tme_cpuset_t;
+typedef cpuid_t tme_cpuid_t;
+#define tme_cpuset_init(c) c = cpuset_create()
+#define tme_cpuset_destroy cpuset_destroy
+#define tme_cpuset_zero cpuset_zero
+#define tme_cpuset_set cpuset_set
+#define tme_cpuset_clr cpuset_clr
+#define tme_cpuset_isset cpuset_isset
+#define tme_cpuset_size cpuset_size
+#define tme_cpuset_ref(c) c
+#elif defined(HAVE_CPUSET_T) || defined(HAVE_CPU_SET_T)
 #ifdef HAVE_CPUSET_T
 typedef cpuset_t tme_cpuset_t;
-#elif HAVE_CPU_SET_T
+#else
 typedef cpu_set_t tme_cpuset_t;
+#endif
+typedef int tme_cpuid_t;
+#define tme_cpuset_init(c) CPU_ZERO(&c)
+#define tme_cpuset_destroy(c) do { } while (/* CONSTCOND */ 0)
+#define tme_cpuset_zero(c) CPU_ZERO(&c)
+#define tme_cpuset_set(n,c) CPU_SET(n,&c)
+#define tme_cpuset_clr(n,c) CPU_CLR(n,&c)
+#define tme_cpuset_isset(n,c) CPU_ISSET(n,&c)
+#define tme_cpuset_size(c) sizeof(tme_cpuset_t)
+#define tme_cpuset_ref(c) &c
 #endif

@@ -741,25 +741,25 @@ main(int argc, char **argv)
 #ifdef HAVE_PTHREAD_SETAFFINITY_NP
   /* Set affinity mask to include CPUs */
 
-  CPU_ZERO(&cpuset);
+  tme_cpuset_init(cpuset);
   for (j = 0; j < sizeof(cpus); j++)
     if(cpus & (1<<j))
-       CPU_SET(j, &cpuset);
+       tme_cpuset_set(j, cpuset);
   
-  rc = pthread_setaffinity_np(thread, sizeof(tme_cpuset_t), &cpuset);
+  rc = pthread_setaffinity_np(thread, tme_cpuset_size(cpuset), tme_cpuset_ref(cpuset));
   if (rc != 0)
     handle_error_en(rc, "pthread_setaffinity_np");
   
   /* Check the actual affinity mask assigned to the thread */
   
-  rc = pthread_getaffinity_np(thread, sizeof(tme_cpuset_t), &cpuset);
+  rc = pthread_getaffinity_np(thread, tme_cpuset_size(cpuset), tme_cpuset_ref(cpuset));
   if (rc != 0)
     handle_error_en(rc, "pthread_getaffinity_np");
 
   printf("Set returned by pthread_getaffinity_np() contained:\n");
   
-  for (j = 0; j < CPU_SETSIZE; j++)
-    if (CPU_ISSET(j, &cpuset))
+  for (j = 0; j < sizeof(cpus); j++)
+    if (tme_cpuset_isset(j, cpuset))
       printf("    CPU %d\n", j);
 #endif // HAVE_PTHREAD_SETAFFINITY_NP
 
