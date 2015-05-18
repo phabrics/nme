@@ -45,21 +45,6 @@ _TME_RCSID("$Id: misc.c,v 1.8 2010/06/05 19:02:38 fredette Exp $");
 #ifdef HAVE_GTK
 #include <gtk/gtk.h>
 
-#ifdef TME_THREADS_POSIX
-pthread_rwlock_t tme_rwlock_suspere;
-
-#ifdef HAVE_PTHREAD_SETSCHEDPARAM
-static pthread_attr_t *attrp;
-
-void tme_thread_set_defattr(pthread_attr_t *attr) {
-  attrp=attr;
-}
-pthread_attr_t *tme_thread_defattr() {
-  return attrp;
-}
-#endif // HAVE_PTHREAD_SETSCHEDPARAM
-#endif
-
 /* nonzero iff we're using the gtk main loop: */
 static int tme_using_gtk;
 
@@ -87,7 +72,24 @@ void tme_threads_gtk_init(void)
   /* we are now using GTK: */
   tme_using_gtk = TRUE;
 }
-#endif /* HAVE_GTK */
+#else 
+#define tme_using_gtk FALSE
+#endif /* !HAVE_GTK */
+
+#ifdef TME_THREADS_POSIX
+pthread_rwlock_t tme_rwlock_suspere;
+
+#ifdef HAVE_PTHREAD_SETSCHEDPARAM
+static pthread_attr_t *attrp;
+
+void tme_thread_set_defattr(pthread_attr_t *attr) {
+  attrp=attr;
+}
+pthread_attr_t *tme_thread_defattr() {
+  return attrp;
+}
+#endif // HAVE_PTHREAD_SETSCHEDPARAM
+#endif
 
 void tme_threads_run() {
   tme_sjlj_threads_run(tme_using_gtk);

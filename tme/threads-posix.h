@@ -53,7 +53,7 @@ static int tme_thread_cooperative() {
   int policy;
   struct sched_param param;
   if(!pthread_getschedparam(pthread_self(), &policy, &param))
-    return ((policy == SCHED_FIFO) || (policy == SCHED_RR));
+    return (policy == SCHED_FIFO);
   return FALSE;
 }
 #else
