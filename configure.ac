@@ -33,7 +33,7 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.68])
-AC_INIT([tme], [0.10beta_6])
+AC_INIT([tme], [0.10])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
@@ -451,6 +451,8 @@ AC_SUBST(NATINC)
 
 dnl Checks for X11.
 AC_PATH_XTRA
+
+AM_CONDITIONAL([USING_X], [test "x${no_x}" = x])
 
 dnl Checks for GLIB.
 AM_PATH_GLIB_2_0([], have_glib=true, have_glib=false)
@@ -950,31 +952,58 @@ esac
 AC_SUBST(DEV_TAP_FILENAME)
 AC_SUBST(SETCAP)
 dnl Configure debugging and/or warnings.
+AC_MSG_CHECKING([for gcc --version >= 4.8])
+AC_EGREP_CPP(_gcc_has_Og,
+[
+#if (__GNUC__ > 3 && __GNUC_MINOR__ > 7) || __GNUC__ > 4
+_gcc_has_Og
+#endif
+], [
+AC_MSG_RESULT(yes)
+have_Og=yes
+], [ AC_MSG_RESULT(no) ])
+
+AC_MSG_CHECKING([for clang])
+AC_EGREP_CPP(_gcc_is_clang,
+[
+#if __clang__
+_gcc_is_clang
+#endif
+], [
+AC_MSG_RESULT(yes)
+have_clang=yes
+], [ AC_MSG_RESULT(no) ])
+
 AC_ARG_ENABLE(debug,
 [  --enable-debug          compile debuggable libraries and programs (default=don't)],
 [ ], [enable_debug=no])
 if test "x${enable_debug}" = "xyes"; then
   CPPFLAGS="${CPPFLAGS-} -DTME_NO_DEBUG_LOCKS -DTME_RECODE_DEBUG -D_TME_SPARC_STATS -DGTK_DISABLE_SINGLE_INCLUDES -DNDEBUG"
-  AC_MSG_CHECKING([for gcc -Og support])
-  AC_EGREP_CPP(_gcc_has_Og,
-  [
-  #if __GNUC__ > 3 && __GNUC_MINOR__ > 7
-  _gcc_has_Og
-  #endif
-  ], [
-  AC_MSG_RESULT(yes)
-  CFLAGS="${CFLAGS-} -Og"
-  CXXFLAGS="${CXXFLAGS-} -g3 -Og"
-  ], [ AC_MSG_RESULT(no) ])
+  if $have_Og; then
+     CFLAGS="${CFLAGS-} -Og"
+     CXXFLAGS="${CXXFLAGS-} -g3 -Og"
+  fi			   
 else
   CPPFLAGS="${CPPFLAGS-} -DTME_NO_LOG -DTME_NO_DEBUG_LOCKS -DTME_NO_AUDIT_ATOMICS -DNDEBUG"
   CFLAGS="${CFLAGS-}"
 fi
+
 AC_ARG_ENABLE(warnings,
-[  --disable-warnings      don't compile with warnings turned on (default=do)],
-[ ], [enable_warnings=yes])
+[  --disable-warnings      don't compile with warnings turned on (default=don't)],
+[ ], [enable_warnings=no])
 if test "x${enable_warnings}" = "xyes" -a "x${GCC}" = "xyes"; then
   CFLAGS="${CFLAGS-} -Wno-unused -Wno-sign-compare -Wundef -Wall -Wextra"
+  CXXFLAGS="${CXXFLAGS-} -W"
+else
+  if test "x${have_clang}" = xyes; then
+    CFLAGS="${CFLAGS-} -Wno-tautological-compare -Wno-sometimes-uninitialized -Wno-unused-function -Wno-unused-parameter \
+            -Wno-unused-variable -Wno-sign-compare -Wno-incompatible-pointer-types -Wno-absolute-value \
+	    -Wno-implicit-function-declaration -Wno-\#warnings -fbracket-depth=1024"
+  fi
+  if test "x${have_Og}" = xyes; then
+     CFLAGS="${CFLAGS-} -Wno-unused-but-set-variable -Wno-array-bounds -Wno-type-limits -Wno-incompatible-pointer-types \
+     	     -Wno-discarded-qualifiers -Wno-implicit-function-declaration -Wno-cpp -fno-strict-aliasing"
+  fi	   
   CXXFLAGS="${CXXFLAGS-} -W"
 fi
 
