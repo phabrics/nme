@@ -438,8 +438,8 @@ struct tme_m68k {
   struct tme_m68k_bus_connection *_tme_m68k_bus_connection;
   struct tme_bus_connection *_tme_m68k_bus_generic;
 
-  /* a sigjmp_buf back to the dispatcher: */
-  sigjmp_buf _tme_m68k_dispatcher;
+  /* a jmp_buf back to the dispatcher: */
+  jmp_buf _tme_m68k_dispatcher;
 
   /* the current sequence: */
   struct _tme_m68k_sequence _tme_m68k_sequence;

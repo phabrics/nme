@@ -176,8 +176,8 @@ _tme_sparc_th(struct tme_sparc *ic)
 {
   tme_thread_enter();
   
-  /* we use siglongjmp to redispatch: */
-  do { } while (sigsetjmp(ic->_tme_sparc_dispatcher, 0));
+  /* we use longjmp to redispatch: */
+  do { } while (setjmp(ic->_tme_sparc_dispatcher));
 
   /* we must not have a busy instruction TLB entry: */
   assert (ic->_tme_sparc_itlb_current_token == NULL);
@@ -884,7 +884,7 @@ tme_sparc_redispatch(struct tme_sparc *ic)
 #ifdef _TME_SPARC_STATS
   ic->tme_sparc_stats.tme_sparc_stats_redispatches++;
 #endif /* _TME_SPARC_STATS */
-  siglongjmp(ic->_tme_sparc_dispatcher, 1);
+  longjmp(ic->_tme_sparc_dispatcher, 1);
 }
 
 /* our global verify hook function: */

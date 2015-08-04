@@ -86,7 +86,7 @@ AC_HEADER_STDC
 AC_CHECK_HEADERS([unistd.h stdio.h memory.h stdarg.h limits.h float.h])
 AC_CHECK_HEADERS([sys/ioctl.h sys/sockio.h sys/socketio.h net/if_dl.h ioctls.h netpacket/packet.h ifaddrs.h])
 AC_CHECK_HEADERS([byteswap.h sys/endian.h])
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h sys/socket.h sys/time.h time.h termios.h])
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h sys/socket.h sys/time.h time.h])
 AC_CHECK_HEADERS([linux/netfilter/nf_tables.h libmnl/libmnl.h libnftnl/table.h])
 AC_CHECK_HEADERS([pthread_np.h sched.h])
 AC_CHECK_HEADERS([sys/param.h sys/linker.h sys/sysctl.h sys/module.h npf.h net/npf_ncode.h pcap/pcap.h], [], [],
@@ -393,7 +393,7 @@ AC_MSG_RESULT(no)
 ])
 
 dnl Start the list of host support.
-TME_HOSTS=eth
+TME_HOSTS=
 
 dnl Checks for Ethernet.
 AC_CHECK_HEADERS([linux/if_tun.h net/if_tap.h net/tap/if_tap.h net/if_tun.h],
@@ -416,9 +416,17 @@ found_BPFVERSION
 ],
 [TME_HOSTS="${TME_HOSTS} bsd"])
 
+if test "x${TME_HOSTS}" != x; then
+   TME_HOSTS="${TME_HOSTS} eth"
+fi
+
 AC_MSG_RESULT($TME_HOSTS)
 
-TME_HOSTS="${TME_HOSTS} posix"
+AC_SYS_POSIX_TERMIOS
+
+if test "x${ac_cv_sys_posix_termios}" = xyes; then
+   TME_HOSTS="${TME_HOSTS} posix"
+fi
 
 AC_MSG_CHECKING([for available network address translation methods])
 
@@ -829,7 +837,7 @@ if test "${recode_size_guest_max}" = 0; then
     enable_recode=no
     recode_size_guest_max=1
 fi
-if test "x${enable_recode}" = xno; then
+if test "x${enable_recode}" = xno || test "x${ac_cv_func_mmap_fixed_mapped}" = xno; then
     recode_hosts=
 else
     AC_MSG_CHECKING([for target recode support])
@@ -882,6 +890,9 @@ x86_64)
 *) 
   bus_size_max_host= ;;
 esac
+
+dnl Configure miscellaneous target support.
+AC_MSG_CHECKING([for target recode bus size])
 
 if test `expr ${bus_size_max} \< ${bus_size_max_host}` = 1; then
     bus_size_max=$bus_size_max_host

@@ -50,9 +50,6 @@
 #include <sys/endian.h>
 #endif
 
-/* netinet/in.h is needed to get the hton and ntoh functions: */
-#include <netinet/in.h>
-
 #ifdef _TME_HAVE_BYTESWAP_H
 /* byteswap.h is needed for the bswap functions: */
 #include <byteswap.h>
@@ -179,10 +176,6 @@ _TME_RCSID("$Id: common.h,v 1.16 2010/02/18 01:23:20 fredette Exp $");
 #define TME_FIELD_MASK_EXTRACTS(v, m)  ((TME_FIELD_MASK_EXTRACTU(v, m) ^ _TME_FIELD_MASK_MSBIT(m)) + (0 - _TME_FIELD_MASK_MSBIT(m)))
 
 /* byteswapping: */
-#ifndef _TME_WORDS_BIGENDIAN
-#define tme_bswap_u16(x) ((tme_uint16_t) htons((tme_uint16_t) (x)))
-#define tme_bswap_u32(x) ((tme_uint32_t) htonl((tme_uint32_t) (x)))
-#else  /* _TME_WORDS_BIGENDIAN */
 #ifdef _TME_HAVE___BUILTIN_BSWAP16
 #define tme_bswap_u16(x) ((tme_uint16_t) __builtin_bswap16((tme_uint16_t) (x)))
 #else  /* !_TME_HAVE___BUILTIN_BSWAP16 */
@@ -230,7 +223,6 @@ tme_bswap_u32(tme_uint32_t x)
 #endif /* !_TME_HAVE_BSWAP_32 */
 #endif /* !_TME_HAVE_BSWAP32 */
 #endif /* !_TME_HAVE___BUILTIN_BSWAP32 */
-#endif /* _TME_WORDS_BIGENDIAN */
 
 /* endian conversion: */
 #ifndef _TME_WORDS_BIGENDIAN

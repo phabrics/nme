@@ -275,8 +275,8 @@ _tme_m68k_th(struct tme_m68k *ic)
 {
   tme_thread_enter();
 
-  /* we use siglongjmp to redispatch: */
-  do { } while (sigsetjmp(ic->_tme_m68k_dispatcher, 0));
+  /* we use longjmp to redispatch: */
+  do { } while (setjmp(ic->_tme_m68k_dispatcher));
 
   /* we must not have a busy fast instruction TLB entry: */
   assert (ic->_tme_m68k_insn_fetch_fast_itlb == NULL);
@@ -742,7 +742,7 @@ tme_m68k_redispatch(struct tme_m68k *ic)
 #ifdef _TME_M68K_STATS
   ic->tme_m68k_stats.tme_m68k_stats_redispatches++;
 #endif /* _TME_M68K_STATS */
-  siglongjmp(ic->_tme_m68k_dispatcher, 1);
+  longjmp(ic->_tme_m68k_dispatcher, 1);
 }
 
 /* this fills a TLB entry: */
