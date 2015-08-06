@@ -56,7 +56,13 @@ tme_recode_host_thunks_alloc(struct tme_recode_ic *ic,
   tme_recode_host_insn_t *memory;
 
   /* get the page size: */
+#ifdef _SC_PAGESIZE
   size_page = sysconf(_SC_PAGESIZE);
+#elif defined(_SC_PAGE_SIZE)
+  size_page = sysconf(_SC_PAGE_SIZE);
+#else
+  size_page = 4096;
+#endif
   assert ((size_page % sizeof(tme_recode_host_insn_t)) == 0);
 
   /* make sure the run memory size is at least the minimum thunk size,

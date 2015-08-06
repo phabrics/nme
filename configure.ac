@@ -86,7 +86,7 @@ AC_HEADER_STDC
 AC_CHECK_HEADERS([unistd.h stdio.h memory.h stdarg.h limits.h float.h])
 AC_CHECK_HEADERS([sys/ioctl.h sys/sockio.h sys/socketio.h net/if_dl.h ioctls.h netpacket/packet.h ifaddrs.h])
 AC_CHECK_HEADERS([byteswap.h sys/endian.h])
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h sys/socket.h sys/time.h time.h])
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h sys/socket.h sys/time.h time.h sys/mman.h sys/uio.h])
 AC_CHECK_HEADERS([linux/netfilter/nf_tables.h libmnl/libmnl.h libnftnl/table.h])
 AC_CHECK_HEADERS([pthread_np.h sched.h])
 AC_CHECK_HEADERS([sys/param.h sys/linker.h sys/sysctl.h sys/module.h npf.h net/npf_ncode.h pcap/pcap.h], [], [],
@@ -233,9 +233,15 @@ AC_SYS_SOCKADDR_SA_LEN
 
 dnl Checks for library functions and prototypes.
 AC_FUNC_MEMCMP
-AC_FUNC_MALLOC
+#AC_FUNC_MALLOC
+# If cross-compiling and the sys/mman.h header exists, assume mmap works...
+if test "x$cross_compiling" = xyes && test "x$ac_cv_header_sys_mman_h"=xyes; then
+   ac_cv_func_mmap_fixed_mapped=yes
+fi
+AC_SEARCH_LIBS([mmap], [mman])
+AM_CONDITIONAL([NEED_MMANLIB], [test "x$ac_cv_search_mmap" != "xnone required" && test "x$ac_cv_search_mmap" != xno])
 AC_FUNC_MMAP
-AC_FUNC_REALLOC
+#AC_FUNC_REALLOC
 AC_CHECK_FUNCS([clock_gettime gettimeofday memmove memset munmap pow ptsname ptsname_r select socket sqrt strchr strerror strrchr strstr strtoul devname fdevname kldfind])
 
 AC_CHECK_FUNC_LONG(__builtin_bswap16, [
@@ -422,11 +428,11 @@ fi
 
 AC_MSG_RESULT($TME_HOSTS)
 
+TME_HOSTS="${TME_HOSTS} posix"
+
 AC_SYS_POSIX_TERMIOS
 
-if test "x${ac_cv_sys_posix_termios}" = xyes; then
-   TME_HOSTS="${TME_HOSTS} posix"
-fi
+AM_CONDITIONAL([USING_TERMIOS], [test "x${ac_cv_sys_posix_termios}" = xyes])
 
 AC_MSG_CHECKING([for available network address translation methods])
 
@@ -837,7 +843,7 @@ if test "${recode_size_guest_max}" = 0; then
     enable_recode=no
     recode_size_guest_max=1
 fi
-if test "x${enable_recode}" = xno || test "x${ac_cv_func_mmap_fixed_mapped}" = xno; then
+if test "x${enable_recode}" = xno; then
     recode_hosts=
 else
     AC_MSG_CHECKING([for target recode support])

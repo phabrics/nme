@@ -12,7 +12,7 @@ libtmesh_la_SOURCES = \
 	tmesh-util.c \
 	tmesh-cmds.c
 libtmesh_la_LDFLAGS = -version-info 0:0:0
-#libtmesh_la_LIBADD = $(top_builddir)/libtme/libtme.la
+libtmesh_la_LIBADD = $(top_builddir)/libtme/libtme.la
 
 bin_PROGRAMS = tmesh
 tmesh_LDADD = $(top_builddir)/libtme/libtme.la libtmesh.la $(GTK_LIBS)

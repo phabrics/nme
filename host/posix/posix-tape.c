@@ -43,7 +43,6 @@ _TME_RCSID("$Id: posix-tape.c,v 1.7 2006/09/30 12:35:01 fredette Exp $");
 #include <stdlib.h>
 #include <strings.h>
 #include <sys/stat.h>
-#include <sys/uio.h>
 #ifdef HAVE_STDARG_H
 #include <stdarg.h>
 #else  /* HAVE_STDARG_H */

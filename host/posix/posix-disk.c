@@ -46,7 +46,9 @@ _TME_RCSID("$Id: posix-disk.c,v 1.6 2010/06/05 14:28:57 fredette Exp $");
 #include <stdlib.h>
 #include <strings.h>
 #include <sys/stat.h>
+#ifdef HAVE_SYS_UIO_H
 #include <sys/uio.h>
+#endif
 #ifdef HAVE_MMAP
 #include <sys/types.h>
 #include <sys/mman.h>
@@ -687,8 +689,17 @@ _tme_posix_disk_open(struct tme_posix_disk *posix_disk,
   }
 
 #ifdef HAVE_MMAP
+  /* get the page size: */
+#ifdef _SC_PAGESIZE
+  page_size = sysconf(_SC_PAGESIZE);
+#elif defined(_SC_PAGE_SIZE)
+  page_size = sysconf(_SC_PAGE_SIZE);
+#else
+  page_size = 4096;
+#endif
+  
   /* if we're mmapping, the block size must be at least the page size: */
-  for (page_size = getpagesize();
+  for (;
        page_size < statbuf.st_blksize;
        page_size <<= 1);
   statbuf.st_blksize = page_size;

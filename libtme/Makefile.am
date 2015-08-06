@@ -33,7 +33,10 @@ if THREADS_SJLJ
 libtme_la_SOURCES += threads-sjlj.c
 endif
 libtme_la_LDFLAGS = -version-info 0:0:0
-libtme_la_LIBADD = $(LIBLTDL)
+libtme_la_LIBADD = $(LIBLTDL) $(GTK_LIBS)
+if NEED_MMANLIB
+libtme_la_LIBADD += -lmman
+endif
 BUILT_SOURCES = memory-auto.h memory-auto.c
 EXTRA_DIST = log-prf.c \
 	misc.c \
