@@ -100,10 +100,15 @@ struct tme_posix_disk_buffer {
      solution is to declare structs with appropriately-typed members,
      and then use those members: */
   struct stat _tme_posix_disk_buffer_stat;
-  struct iovec _tme_posix_disk_buffer_iov;
 #define tme_posix_disk_buffer_pos _tme_posix_disk_buffer_stat.st_size
+#ifdef HAVE_SYS_UIO_H
+  struct iovec _tme_posix_disk_buffer_iov;
 #define tme_posix_disk_buffer_size _tme_posix_disk_buffer_iov.iov_len
 #define tme_posix_disk_buffer_data _tme_posix_disk_buffer_iov.iov_base
+#else
+  size_t tme_posix_disk_buffer_size;
+  void *tme_posix_disk_buffer_data;
+#endif
 };
 
 /* a posix disk: */
@@ -123,7 +128,11 @@ struct tme_posix_disk {
 
   /* the stat buffer: */
   struct stat tme_posix_disk_stat;
-
+#ifdef HAVE_STRUCT_STAT_ST_BLKSIZE
+#define tme_posix_disk_block_size tme_posix_disk_stat.st_blksize
+#else
+  size_t tme_posix_disk_block_size;
+#endif
   /* our connection: */
   struct tme_disk_connection *tme_posix_disk_connection;
 
@@ -145,9 +154,12 @@ _tme_posix_disk_buffer_free(struct tme_posix_disk *posix_disk,
 			    struct tme_posix_disk_buffer *buffer)
 {
   int rc;
+#ifdef HAVE_SYS_UIO_H
   struct iovec iovecs[1];
 #define ssize iovecs[0].iov_len
-
+#else
+  ssize_t ssize;
+#endif
   /* if this buffer is mmapped: */
   if (buffer->tme_posix_disk_buffer_flags 
       & TME_POSIX_DISK_BUFFER_MMAPPED) {
@@ -201,11 +213,16 @@ _tme_posix_disk_buffer_get(struct tme_posix_disk *posix_disk,
 #define pos_least statbufs[0].st_size
 #define pos_most statbufs[1].st_size
 #define pos_last statbufs[2].st_size
+#ifdef HAVE_SYS_UIO_H
   struct iovec iovecs[3];
 #define data iovecs[0].iov_base
 #define size iovecs[0].iov_len
 #define size_agg iovecs[1].iov_len
 #define ssize iovecs[2].iov_len
+#else
+  void *data;
+  size_t size, size_agg, ssize;
+#endif
   unsigned long agg_pre, agg_post;
   struct tme_posix_disk_buffer *buffer;
   struct tme_posix_disk_buffer *buffer_free_nosize;
@@ -233,13 +250,13 @@ _tme_posix_disk_buffer_get(struct tme_posix_disk *posix_disk,
 	      posix_disk->tme_posix_disk_buffer_agg_pre);
   agg_pre
     += ((pos_least - agg_pre)
-	& (posix_disk->tme_posix_disk_stat.st_blksize - 1));
+	& (posix_disk->tme_posix_disk_block_size - 1));
   agg_post
     = posix_disk->tme_posix_disk_buffer_agg_post;
   size_agg
     = (((agg_pre + size) + agg_post
-	+ (posix_disk->tme_posix_disk_stat.st_blksize - 1))
-       & ~(posix_disk->tme_posix_disk_stat.st_blksize - 1));
+	+ (posix_disk->tme_posix_disk_block_size - 1))
+       & ~(posix_disk->tme_posix_disk_block_size - 1));
   agg_post = (size_agg - (agg_pre + size));
 
   /* start with no best free buffers: */
@@ -364,8 +381,8 @@ _tme_posix_disk_buffer_get(struct tme_posix_disk *posix_disk,
     if (data == MAP_FAILED) {
       size_agg
 	= (((agg_pre + size)
-	    + (posix_disk->tme_posix_disk_stat.st_blksize - 1))
-	   & ~(posix_disk->tme_posix_disk_stat.st_blksize - 1));
+	    + (posix_disk->tme_posix_disk_block_size - 1))
+	   & ~(posix_disk->tme_posix_disk_block_size - 1));
       data = mmap(NULL,
 		  size_agg,
 		  PROT_READ
@@ -449,8 +466,8 @@ _tme_posix_disk_buffer_get(struct tme_posix_disk *posix_disk,
 	    }
 	    size_agg
 	      = (((agg_pre + size)
-		  + (posix_disk->tme_posix_disk_stat.st_blksize - 1))
-		 & ~(posix_disk->tme_posix_disk_stat.st_blksize - 1));
+		  + (posix_disk->tme_posix_disk_block_size - 1))
+		 & ~(posix_disk->tme_posix_disk_block_size - 1));
 	    assert (agg_post > (size_agg - (agg_pre + size)));
 	    agg_post = (size_agg - (agg_pre + size));
 	  }
@@ -606,6 +623,11 @@ _tme_posix_disk_open(struct tme_posix_disk *posix_disk,
 {
   int fd;
   struct stat statbuf;
+#ifdef HAVE_STRUCT_STAT_ST_BLKSIZE
+#define block_size statbuf.st_blksize
+#else
+  size_t block_size;
+#endif
   tme_uint8_t *block;
 #ifdef HAVE_MMAP
   int page_size;
@@ -646,17 +668,17 @@ _tme_posix_disk_open(struct tme_posix_disk *posix_disk,
   if (S_ISCHR(statbuf.st_mode)) {
 
     /* the block size must be at least one: */
-    statbuf.st_blksize = 1;
+    block_size = 1;
 
     /* allocate space for the block: */
-    block = tme_new(tme_uint8_t, statbuf.st_blksize);
+    block = tme_new(tme_uint8_t, block_size);
 
     /* loop trying to read a block at offset zero, doubling the block
        size until we succeed: */
-    for (; statbuf.st_blksize <= TME_POSIX_DISK_BLOCK_SIZE_MAX; ) {
+    for (; block_size <= TME_POSIX_DISK_BLOCK_SIZE_MAX; ) {
 
       /* do the read: */
-      if (read(fd, block, statbuf.st_blksize) >= 0) {
+      if (read(fd, block, block_size) >= 0) {
 	break;
       }
 
@@ -671,15 +693,15 @@ _tme_posix_disk_open(struct tme_posix_disk *posix_disk,
       }
 
       /* resize the block: */
-      statbuf.st_blksize <<= 1;
-      block = tme_renew(tme_uint8_t, block, statbuf.st_blksize);
+      block_size <<= 1;
+      block = tme_renew(tme_uint8_t, block, block_size);
     }
 
     /* free the block: */
     tme_free(block);
 
     /* if we failed: */
-    if (statbuf.st_blksize > TME_POSIX_DISK_BLOCK_SIZE_MAX) {
+    if (block_size > TME_POSIX_DISK_BLOCK_SIZE_MAX) {
       tme_output_append_error(_output,
 			      "%s",
 			      filename);
@@ -700,15 +722,18 @@ _tme_posix_disk_open(struct tme_posix_disk *posix_disk,
   
   /* if we're mmapping, the block size must be at least the page size: */
   for (;
-       page_size < statbuf.st_blksize;
+       page_size < block_size;
        page_size <<= 1);
-  statbuf.st_blksize = page_size;
+  block_size = page_size;
 #endif /* HAVE_MMAP */
 
   /* update the disk structure: */
   posix_disk->tme_posix_disk_flags = flags;
   posix_disk->tme_posix_disk_fd = fd;
   posix_disk->tme_posix_disk_stat = statbuf;
+#ifndef HAVE_STRUCT_STAT_ST_BLKSIZE
+  posix_disk->tme_posix_disk_block_size = block_size;
+#endif  
   return (TME_OK);
 }
 
