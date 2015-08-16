@@ -45,7 +45,6 @@ _TME_RCSID("$Id: module.c,v 1.10 2010/06/05 19:04:42 fredette Exp $");
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
-#include <ltdl.h>
 #include <shlibvar.h>
 
 /* the libtool 1.5 used in tme development is supposed to add code to
@@ -87,17 +86,10 @@ static tme_mutex_t _tme_module_mutex;
 extern LT_DLSYM_CONST lt_dlsymlist lt__PROGRAM__LTX_preloaded_symbols[];
 
 /* this initializes modules: */
-int
-tme_module_init(void)
+void
+_tme_module_init(void)
 {
-  int rc;
   tme_mutex_init(&_tme_module_mutex);
-  LTDL_SET_PRELOADED_SYMBOLS();
-  rc = lt_dlinit();
-  if (rc != 0) {
-    return (EINVAL);
-  }
-  return (TME_OK);
 }
 
 /* this finds a modules directory: */

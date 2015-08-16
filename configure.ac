@@ -86,7 +86,7 @@ AC_HEADER_STDC
 AC_CHECK_HEADERS([unistd.h stdio.h memory.h stdarg.h limits.h float.h])
 AC_CHECK_HEADERS([sys/ioctl.h sys/sockio.h sys/socketio.h net/if_dl.h ioctls.h netpacket/packet.h ifaddrs.h])
 AC_CHECK_HEADERS([byteswap.h sys/endian.h])
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h sys/socket.h sys/time.h time.h sys/mman.h sys/uio.h])
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h poll.h sys/socket.h sys/select.h sys/time.h time.h sys/mman.h sys/uio.h])
 AC_CHECK_HEADERS([linux/netfilter/nf_tables.h libmnl/libmnl.h libnftnl/table.h])
 AC_CHECK_HEADERS([pthread_np.h sched.h])
 AC_CHECK_HEADERS([sys/param.h sys/linker.h sys/sysctl.h sys/module.h npf.h net/npf_ncode.h pcap/pcap.h], [], [],
@@ -931,7 +931,7 @@ LT_CONFIG_LTDL_DIR([libltdl])
 LT_INIT([dlopen])
 LTDL_INIT([recursive installable])
 TME_PREOPEN=
-if test "x${enable_shared}" = "xno"; then
+if test "x${enable_static}" = "xyes"; then
   TME_PREOPEN='`sort -u $(top_builddir)/tme-preopen.txt`'
 fi
 AC_SUBST(TME_PREOPEN)
@@ -996,7 +996,7 @@ AC_ARG_ENABLE(debug,
 [ ], [enable_debug=no])
 if test "x${enable_debug}" = "xyes"; then
   CPPFLAGS="${CPPFLAGS-} -DTME_NO_DEBUG_LOCKS -DTME_RECODE_DEBUG -D_TME_SPARC_STATS -DGTK_DISABLE_SINGLE_INCLUDES -DNDEBUG"
-  if $have_Og; then
+  if test "x${have_Og}" = xyes; then
      CFLAGS="${CFLAGS-} -Og"
      CXXFLAGS="${CXXFLAGS-} -g3 -Og"
   fi			   

@@ -731,7 +731,7 @@ main(int argc, char **argv)
   }
 
   /* initialize libtme: */
-  (void) tme_init();
+  tme_init();
 
   tme_thread_enter();
   

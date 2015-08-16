@@ -41,8 +41,12 @@ _TME_RCSID("$Id: threads-sjlj.c,v 1.18 2010/06/05 19:10:28 fredette Exp $");
 #include <stdlib.h>
 #include <sys/time.h>
 #include <time.h>
+#ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#ifdef HAVE_POLL_H
 #include <poll.h>
+#endif
 #include <setjmp.h>
 
 /* if we don't have GTK, fake a few definitions to keep things

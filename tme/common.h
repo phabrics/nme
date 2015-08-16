@@ -229,23 +229,29 @@ tme_bswap_u32(tme_uint32_t x)
 #define tme_htobe_u16(x) tme_bswap_u16(x)
 #define tme_htobe_u32(x) tme_bswap_u32(x)
 #define tme_htobe_u64(x) tme_bswap_u64(x)
+#define tme_htobe_u128(x) tme_bswap_u128(x)
 #define tme_htole_u16(x) (x)
 #define tme_htole_u32(x) (x)
 #define tme_htole_u64(x) (x)
+#define tme_htole_u128(x) (x)
 #else  /* _TME_WORDS_BIGENDIAN */
 #define tme_htobe_u16(x) (x)
 #define tme_htobe_u32(x) (x)
 #define tme_htobe_u64(x) (x)
+#define tme_htobe_u128(x) (x)
 #define tme_htole_u16(x) tme_bswap_u16(x)
 #define tme_htole_u32(x) tme_bswap_u32(x)
 #define tme_htole_u64(x) tme_bswap_u64(x)
+#define tme_htole_u128(x) tme_bswap_u128(x)
 #endif /* _TME_WORDS_BIGENDIAN */
 #define tme_betoh_u16(x) tme_htobe_u16(x)
 #define tme_betoh_u32(x) tme_htobe_u32(x)
 #define tme_betoh_u64(x) tme_htobe_u64(x)
+#define tme_betoh_u128(x) tme_htobe_u128(x)
 #define tme_letoh_u16(x) tme_htole_u16(x)
 #define tme_letoh_u32(x) tme_htole_u32(x)
 #define tme_letoh_u64(x) tme_htole_u64(x)
+#define tme_letoh_u128(x) tme_htole_u128(x)
 
 /* i18n: */
 #define _(x) x
@@ -325,6 +331,16 @@ tme_bswap_u64(tme_uint64_t x)
 #endif /* !_TME_HAVE_BSWAP64 */
 #endif /* !_TME_HAVE___BUILTIN_BSWAP64 */
 #endif /* TME_HAVE_INT64_T */
+
+/* 128-bit byte swapping: */
+#ifdef TME_HAVE_INT128_T
+static _tme_inline tme_uint128_t
+tme_bswap_u128(tme_uint128_t x)
+{
+  return ((((tme_uint128_t) tme_bswap_u64((tme_uint64_t) x)) << 64)
+	  | tme_bswap_u64((tme_uint64_t) (x >> 64)));
+}
+#endif /* TME_HAVE_INT128_T */
 
 /* versions: */
 #define TME_X_VERSION(current, age)	(((current) << 10) | (age))

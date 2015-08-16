@@ -107,22 +107,6 @@ void tme_threads_run() {
   }
 }
 
-/* this initializes libtme: */
-int
-tme_init()
-{
-  int rc;
-  
-  /* initialize the threading system: */
-  tme_threads_init();
-
-  /* initialize the module system: */
-  tme_module_init();
-
-  rc = TME_OK;
-  return (rc);
-}
-
 /* this tokenizes a string by whitespace: */
 char **
 tme_misc_tokenize(const char *string,
