@@ -192,6 +192,20 @@ AC_CHECK_SHIFTMAX(32)
 AC_CHECK_SHIFTSIGNED(8)
 AC_CHECK_SHIFTSIGNED(16)
 AC_CHECK_SHIFTSIGNED(32)
+if test "x$cross_compiling" = xyes; then
+   case ${target} in
+   	i686-w64-mingw32)
+	   ac_cv_float_format_float=IEEE754_SINGLE
+	   ac_cv_float_format_double=IEEE754_DOUBLE
+	   ac_cv_float_format_long_double=IEEE754_EXTENDED80_I387
+	   ;;
+   	x86_64-w64-mingw32)
+	   ac_cv_float_format_float=IEEE754_SINGLE
+	   ac_cv_float_format_double=IEEE754_DOUBLE
+	   ac_cv_float_format_long_double=NATIVE
+	   ;;
+   esac
+fi
 AC_CHECK_FLOAT_FORMAT(float)
 AC_CHECK_FLOAT_LIMITS(float, FLT_MAX/FLT_MIN)
 AC_CHECK_FLOAT_FORMAT(double)
