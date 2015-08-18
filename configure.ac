@@ -1046,6 +1046,9 @@ if test "x${GCC}" = "xyes"; then
 fi
 AC_SUBST(CFLAGS_NO_STRICT_ALIASING)
 
+dnl For platforms, like Windows, where libraries must have all their symbols resolved
+LDFLAGS="${LDFLAGS-} -no-undefined"
+
 dnl Generate tmeconfig.h.  The whether-to-generate logic is cribbed 
 dnl from glib-1.2.1's configure.ac.
 dnl See that file for an explanation.

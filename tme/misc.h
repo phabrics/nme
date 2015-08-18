@@ -37,6 +37,7 @@
 #define _TME_MISC_H
 
 #include <tme/common.h>
+#include <tme/threads.h>
 #include <tme/module.h>
 _TME_RCSID("$Id: misc.h,v 1.4 2009/11/08 17:25:47 fredette Exp $");
 

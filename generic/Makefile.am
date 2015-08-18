@@ -19,7 +19,7 @@ libtme_generic_la_SOURCES = bus.c \
 	mouse.c \
 	float.c \
 	keyboard.c
-libtme_generic_la_LDFLAGS = -version-info 0:0:0 -no-undefined
+libtme_generic_la_LDFLAGS = -version-info 0:0:0
 libtme_generic_la_LIBADD = $(top_builddir)/libtme/libtme.la
 
 # target to make fb-xlat-auto.c:
