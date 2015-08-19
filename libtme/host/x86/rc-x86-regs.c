@@ -584,8 +584,8 @@ tme_recode_host_reg_imm(struct tme_recode_ic *ic,
 	 can move a 32-bit immediate instead of a 64-bit immediate: */
       size_part
 	= (TME_RECODE_SIZE_32
-	   + ((((unsigned long) imm)
-	       & (((((unsigned long) 1)
+	   + ((((tme_uintptr_t) imm)
+	       & (((((tme_uintptr_t) 1)
 		    << TME_BIT(TME_RECODE_SIZE_HOST - 1)) - 1)
 		  << TME_BIT(TME_RECODE_SIZE_HOST - 1)))
 	      != 0));

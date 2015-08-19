@@ -105,8 +105,8 @@ _TME_RCSID("$Id: ic.h,v 1.5 2009/08/29 21:19:57 fredette Exp $");
 #define TME_IC_IREG_BUS(portsz_lg2, endian, reg, _struct, ic_member)	\
 (									\
  /* get the raw byte offset of the register in the file: */		\
- (((unsigned long) &(((struct _struct *) 0)->reg))			\
-  - ((unsigned long) &(((struct _struct *) 0)->ic_member tme_ic_iregs)))\
+ (((tme_uintptr_t) &(((struct _struct *) 0)->reg))			\
+  - ((tme_uintptr_t) &(((struct _struct *) 0)->ic_member tme_ic_iregs)))\
  /* if the device endianness matches the endianness of the emulator	\
     host, the raw byte offset of the register is the same as the	\
     device address.  otherwise, we have to flip the non-alignment bits	\

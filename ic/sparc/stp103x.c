@@ -951,7 +951,7 @@ TME_SPARC_FORMAT3(_tme_stp103x_rdpr, tme_uint64_t)
 	/* modify the "inc %l2": */
 	/* NB: we break const here: */
 	((tme_shared tme_uint32_t *)
-	 (unsigned long) 
+	 (tme_uintptr_t) 
 	 (itlb_current->tme_sparc_tlb_emulator_off_read
 	  + ic->tme_sparc_ireg_uint64(TME_SPARC_IREG_PC)))
 	  [offset_in_insns + 1] = tme_htobe_u32(insn);

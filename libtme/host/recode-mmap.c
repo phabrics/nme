@@ -129,10 +129,10 @@ tme_recode_host_thunk_finish(struct tme_recode_ic *ic)
   /* round the next build address up to the thunk alignment: */
   ic->tme_recode_ic_thunk_build_next
     = ((tme_recode_host_insn_t *)
-       ((((unsigned long) ic->tme_recode_ic_thunk_build_next)
+       ((((tme_uintptr_t) ic->tme_recode_ic_thunk_build_next)
 	 + TME_RECODE_HOST_THUNK_ALIGN
 	 - 1)
-	& (0 - (unsigned long) TME_RECODE_HOST_THUNK_ALIGN)));
+	& (0 - (tme_uintptr_t) TME_RECODE_HOST_THUNK_ALIGN)));
 }
 
 /* this host function invalidates all thunks starting from the given

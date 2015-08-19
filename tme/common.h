@@ -46,6 +46,9 @@
 #endif /* HAVE_CONFIG_H */
 #endif /* _TME_IMPL */
 #include <sys/types.h>
+#ifdef HAVE_INTTYPES_H
+#include <inttypes.h>
+#endif
 #ifdef HAVE_SYS_ENDIAN_H
 #include <sys/endian.h>
 #endif
@@ -353,6 +356,13 @@ tme_bswap_u128(tme_uint128_t x)
 		     TME_X_VERSION_CURRENT(vimpl))
 
 /* printf formats: */
+#ifdef HAVE_INTTYPES_H
+#define TME_PRIx8 PRIx8 
+#define TME_PRIx16 PRIx16 
+#define TME_PRIx32 PRIx32 
+#define TME_PRIx64 PRIx64 
+#define TME_PRIx128 PRIx128 
+#else
 #define _TME_PRI8 ""
 #define _TME_PRI16 ""
 #define TME_PRIx8 _TME_PRI8 "x"
@@ -360,7 +370,8 @@ tme_bswap_u128(tme_uint128_t x)
 #define TME_PRIx32 _TME_PRI32 "x"
 #define TME_PRIx64 _TME_PRI64 "x"
 #define TME_PRIx128 _TME_PRI128 "x"
-
+#endif
+  
 /* miscellaneous: */
 #define TME_ARRAY_ELS(x)	(sizeof(x) / sizeof(x[0]))
 #define TME_EMULATOR_OFF_UNDEF	((void *) (-1))

@@ -142,7 +142,7 @@ _tme_recode_x86_tlb_unbusy(struct tme_recode_ic *ic,
 				TME_RECODE_X86_OPCODE_MOV_Ib_Eb,
 				reg_x86_tlb,
 				(tlb_offset_token
-				 + ((unsigned long)
+				 + ((tme_uintptr_t)
 				    &((struct tme_token *) 0)->tme_token_busy)),
 				0 /* undefined */);
     *(thunk_bytes++) = 0;
@@ -279,7 +279,7 @@ _tme_recode_x86_tlb_busy(struct tme_recode_ic *ic,
 				TME_RECODE_X86_OPCODE_MOV_Ib_Eb,
 				reg_x86_tlb,
 				(x86_tlb_type->tme_recode_tlb_type.tme_recode_tlb_type_offset_token
-				 + ((unsigned long)
+				 + ((tme_uintptr_t)
 				    &((struct tme_token *) 0)->tme_token_busy)),
 				0 /* undefined */);
     *(thunk_bytes++) = 1;
@@ -503,7 +503,7 @@ _tme_recode_x86_tlb_busy(struct tme_recode_ic *ic,
 			      TME_RECODE_X86_OPCODE_GRP1_Ib_Eb,
 			      reg_x86_tlb,
 			      (x86_tlb_type->tme_recode_tlb_type.tme_recode_tlb_type_offset_token
-			       + ((unsigned long)
+			       + ((tme_uintptr_t)
 				  &((struct tme_token *) 0)->tme_token_invalid)),
 			      TME_RECODE_X86_OPCODE_GRP1_BINOP(TME_RECODE_X86_OPCODE_BINOP_CMP));
   *(thunk_bytes++) = 1;

@@ -694,7 +694,7 @@ tme_m68k_go_slow(const struct tme_m68k *ic)
 	     benefit of the fast instruction word fetch macros, so
 	     that emulator address alignment goes with linear address
 	     alignment: */
-	  || (((unsigned long) tlb->tme_m68k_tlb_emulator_off_read)
+	  || (((tme_uintptr_t) tlb->tme_m68k_tlb_emulator_off_read)
 	      & (sizeof(tme_uint32_t) - 1))
 
 	  /* the ITLB emulator memory must not be so low that the

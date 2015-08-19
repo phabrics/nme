@@ -125,7 +125,7 @@ if $header; then
 
 /* this tests bits in a memory address: */
 #define _tme_memory_address_test(mem, bits, align_min)			\\
-  (((bits) & ~((align_min - 1))) & ((unsigned long) (mem)))
+  (((bits) & ~((align_min - 1))) & ((tme_uintptr_t) (mem)))
 
 /* this returns a mask of all-bits-one in given type: */
 #define _tme_memory_type_mask(type, shift)				\\
@@ -249,8 +249,8 @@ for size in ${sizes}; do
 
 	    $as_echo ""
 	    $as_echo "    /* prepare to ${op} the first ${host_boundary}-bit part of the memory: */"
-	    $as_echo "    parts${host_boundary} = (${op_const}tme_shared tme_uint${host_boundary}_t *) (((unsigned long) mem) & (((unsigned long) 0) - (${host_boundary} / 8)));"
-	    $as_echo "    size_skip = (((unsigned int) (unsigned long) mem) % (${host_boundary} / 8)) * 8;"
+	    $as_echo "    parts${host_boundary} = (${op_const}tme_shared tme_uint${host_boundary}_t *) (((tme_uintptr_t) mem) & (((tme_uintptr_t) 0) - (${host_boundary} / 8)));"
+	    $as_echo "    size_skip = (((unsigned int) (tme_uintptr_t) mem) % (${host_boundary} / 8)) * 8;"
 	    $as_echo "    size_done = 0;"
 
 	    $as_echo ""
@@ -610,13 +610,13 @@ for op in read write; do
 	$as_echo "    parts${host_boundary} = (${op_const_mem}tme_shared tme_uint${host_boundary}_t *) mem;"
 	$as_echo ""
 	$as_echo "    /* if this pointer is not ${host_boundary}-bit aligned: */"
-	$as_echo "    if (__tme_predict_false((((unsigned long) parts${host_boundary}) % sizeof(tme_uint${host_boundary}_t)) != 0)) {"
+	$as_echo "    if (__tme_predict_false((((tme_uintptr_t) parts${host_boundary}) % sizeof(tme_uint${host_boundary}_t)) != 0)) {"
 	$as_echo ""
 	$as_echo "      /* get the misalignment from the previous ${host_boundary}-bit boundary: */"
-	$as_echo "      count_misaligned = ((unsigned long) parts${host_boundary}) % sizeof(tme_uint${host_boundary}_t);"
+	$as_echo "      count_misaligned = ((tme_uintptr_t) parts${host_boundary}) % sizeof(tme_uint${host_boundary}_t);"
 	$as_echo ""
 	$as_echo "      /* truncate this pointer to the previous ${host_boundary}-bit boundary: */"
-	$as_echo "      parts${host_boundary} = (${op_const_mem}tme_shared tme_uint${host_boundary}_t *) (((unsigned long) parts${host_boundary}) & (((unsigned long) 0) - sizeof(tme_uint${host_boundary}_t)));"
+	$as_echo "      parts${host_boundary} = (${op_const_mem}tme_shared tme_uint${host_boundary}_t *) (((tme_uintptr_t) parts${host_boundary}) & (((tme_uintptr_t) 0) - sizeof(tme_uint${host_boundary}_t)));"
 	$as_echo ""
 	$as_echo "      /* get the number of bytes to ${op} in the first ${host_boundary}-bit memory part: */"
 	$as_echo "      count_done = sizeof(tme_uint${host_boundary}_t) - count_misaligned;"
@@ -674,7 +674,7 @@ for op in read write; do
 	$as_echo "    if (__tme_predict_true(count >= sizeof(tme_uint${host_boundary}_t))) {"
 	$as_echo ""
 	$as_echo "      /* if the buffer is ${host_boundary}-bit aligned: */"
-	$as_echo "      if (__tme_predict_true((((unsigned long) buffer) % sizeof(tme_uint${host_boundary}_t)) == 0)) {"
+	$as_echo "      if (__tme_predict_true((((tme_uintptr_t) buffer) % sizeof(tme_uint${host_boundary}_t)) == 0)) {"
 	$as_echo ""
 	$as_echo "        /* ${op} full ${host_boundary}-bit parts without shifting: */"
 	$as_echo "        do {"
@@ -692,7 +692,7 @@ for op in read write; do
 	$as_echo "      else {"
 	$as_echo ""
 	$as_echo "        /* get the misalignment to the next ${host_boundary}-bit boundary: */"
-	$as_echo "        count_misaligned = (sizeof(tme_uint${host_boundary}_t) - ((unsigned int) (unsigned long) buffer)) % sizeof(tme_uint${host_boundary}_t);"
+	$as_echo "        count_misaligned = (sizeof(tme_uint${host_boundary}_t) - ((unsigned int) (tme_uintptr_t) buffer)) % sizeof(tme_uint${host_boundary}_t);"
 	if test ${op} = write; then
 	    $as_echo ""
 	    $as_echo "        /* copy from the buffer until it is aligned: */"

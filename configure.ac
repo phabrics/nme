@@ -152,16 +152,17 @@ AC_TYPE_LONG_LONG_INT
 AC_TYPE_SIZE_T
 AC_TYPE_SSIZE_T
 AC_TYPE_UINTPTR_T
-AC_CHECK_SIZEOF(long, 4)
-AC_CHECK_SIZEOF(int, 4)
-AC_CHECK_SIZEOF(short, 2)
-AC_CHECK_SIZEOF(float, 4)
-AC_CHECK_SIZEOF(double, 8)
+AC_CHECK_SIZEOF(void *)
+AC_CHECK_SIZEOF(long)
+AC_CHECK_SIZEOF(int)
+AC_CHECK_SIZEOF(short)
+AC_CHECK_SIZEOF(float)
+AC_CHECK_SIZEOF(double)
 if test $ac_cv_c_long_double = yes; then
-  AC_CHECK_SIZEOF(long double, 12)
+  AC_CHECK_SIZEOF(long double)
 fi
 if test $ac_cv_type_long_long_int = yes; then
-  AC_CHECK_SIZEOF(long long int, 8)
+  AC_CHECK_SIZEOF(long long int)
 else
   ac_cv_sizeof_long_long_int=$ac_cv_sizeof_long  
 fi
@@ -1151,6 +1152,8 @@ TMEEOF
   fi
   echo 'typedef signed char tme_int8_t;' >> ${outfile}-tmp
   echo 'typedef unsigned char tme_uint8_t;' >> ${outfile}-tmp
+  echo 'typedef tme_int'`expr $ac_cv_sizeof_void_p \* 8`'_t tme_intptr_t;' >> ${outfile}-tmp
+  echo 'typedef tme_uint'`expr $ac_cv_sizeof_void_p \* 8`'_t tme_uintptr_t;' >> ${outfile}-tmp
   echo '#if defined(USE_GLIB_TIME) && defined(_TME_HAVE_GLIB)' >> ${outfile}-tmp
   echo 'typedef gint64 tme_time_t;' >> ${outfile}-tmp
   echo '#elif defined(USE_GETTIMEOFDAY) || !defined(_TME_HAVE_CLOCK_GETTIME)' >> ${outfile}-tmp
@@ -1335,6 +1338,7 @@ srcdir="$srcdir"
 PACKAGE="$PACKAGE"
 VERSION="$VERSION"
 target="$target"
+ac_cv_sizeof_void_p="$ac_cv_sizeof_void_p"
 ac_cv_sizeof_int="$ac_cv_sizeof_int"
 ac_cv_sizeof_long="$ac_cv_sizeof_long"
 ac_cv_sizeof_long_long_int="$ac_cv_sizeof_long_long_int"

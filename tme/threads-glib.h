@@ -61,10 +61,10 @@ typedef struct tme_rwlock {
   GThread *writer;
 } tme_rwlock_t;
 
-#define tme_rwlock_init(l) (g_rw_lock_init(&(l)->lock), TME_OK)
-#define tme_rwlock_destroy(l) (g_rw_lock_clear(&(l)->lock), TME_OK)
+#define tme_rwlock_init(l) g_rw_lock_init(&(l)->lock)
+#define tme_rwlock_destroy(l) g_rw_lock_clear(&(l)->lock)
 #define tme_rwlock_tryrdlock(l) (g_rw_lock_reader_trylock(&(l)->lock) ? (TME_OK) : (TME_EBUSY))
-#define tme_rwlock_rdunlock(l) (g_rw_lock_reader_unlock(&(l)->lock), TME_OK)
+#define tme_rwlock_rdunlock(l) g_rw_lock_reader_unlock(&(l)->lock)
 static _tme_inline int tme_rwlock_rdlock _TME_P((tme_rwlock_t *l)) {
   if((l)->writer == g_thread_self())
     // simulates deadlock return when current thread has the write lock
@@ -100,19 +100,19 @@ static _tme_inline int tme_rwlock_wrunlock _TME_P((tme_rwlock_t *l)) {
 
 /* mutexes. */
 typedef GMutex tme_mutex_t;
-#define tme_mutex_init(m) (g_mutex_init(m), TME_OK)
-#define tme_mutex_destroy(m) (g_mutex_clear(m), TME_OK)
-#define tme_mutex_lock(m) (g_mutex_lock(m), TME_OK)
+#define tme_mutex_init g_mutex_init
+#define tme_mutex_destroy g_mutex_clear
+#define tme_mutex_lock g_mutex_lock
 #define tme_mutex_trylock(m) (g_mutex_trylock(m) ? (TME_OK) : (TME_EBUSY))
 /* for now, define as trylock (same as timedlock with 0 wait) */
 #define tme_mutex_timedlock(m,t) g_mutex_trylock(m)
-#define tme_mutex_unlock(m) (g_mutex_unlock(m), TME_OK)
+#define tme_mutex_unlock g_mutex_unlock
 
 /* conditions: */
 typedef GCond tme_cond_t;
-#define tme_cond_init(c) (g_cond_init(c), TME_OK)
-#define tme_cond_destroy(c) (g_cond_clear(c), TME_OK)
-#define tme_cond_wait_yield(c,m) (g_cond_wait(c,m), TME_OK)
+#define tme_cond_init g_cond_init
+#define tme_cond_destroy g_cond_clear
+#define tme_cond_wait_yield g_cond_wait
 static _tme_inline int
 tme_cond_sleep_yield _TME_P((tme_cond_t *cond, tme_mutex_t *mutex,
 			     const tme_time_t *timeout)) {

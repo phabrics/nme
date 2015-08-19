@@ -520,7 +520,7 @@ tme_recode_host_conds_thunk_new(struct tme_recode_ic *ic,
     }
 
     /* emit the 32-bit displacement to the conditions bitmap array: */
-    *((tme_uint32_t *) thunk_bytes) = (unsigned long) conds_array;
+    *((tme_uint32_t *) thunk_bytes) = (tme_uintptr_t) conds_array;
     thunk_bytes += sizeof(tme_uint32_t);
   }
 

@@ -1233,9 +1233,9 @@ _tme_recode_x86_chain_in(struct tme_recode_ic *ic,
      bits: */
   if (TME_RECODE_SIZE_HOST == TME_RECODE_SIZE_32
       || (((tme_int32_t)
-	   (signed long)
+	   (tme_intptr_t)
 	   insns_group_src)
-	  == (signed long) insns_group_src)) {
+	  == (tme_intptr_t) insns_group_src)) {
 
     /* emit a cmpl $imm32, %reg or cmpq $imm32, %reg: */
     if (TME_RECODE_SIZE_HOST == TME_RECODE_SIZE_32) {
@@ -1245,7 +1245,7 @@ _tme_recode_x86_chain_in(struct tme_recode_ic *ic,
       *((tme_uint16_t *) thunk_bytes) = TME_RECODE_X86_INSN_CMP_Iz_REG_CHAIN_GUEST_SRC;
     }
     *((tme_int32_t *) &thunk_bytes[(TME_RECODE_SIZE_HOST > TME_RECODE_SIZE_32) + 1])
-      = (signed long) insns_group_src;
+      = (tme_intptr_t) insns_group_src;
     thunk_bytes += (TME_RECODE_SIZE_HOST > TME_RECODE_SIZE_32) + 1 + sizeof(tme_int32_t);
 
     /* assume that this is an x86-64 host, and set the size of the
@@ -1259,12 +1259,12 @@ _tme_recode_x86_chain_in(struct tme_recode_ic *ic,
   else {
 
     /* if the guest instructions source address fits in 32 bits: */
-    if (TME_RECODE_SIZE_FITS((unsigned long) insns_group_src,
+    if (TME_RECODE_SIZE_FITS((tme_uintptr_t) insns_group_src,
 			     TME_RECODE_SIZE_32)) {
 
       /* emit a movl $imm32, %reg: */
       thunk_bytes[0] = TME_RECODE_X86_INSN_MOVL_IMM32_REG_TLB_SCRATCH;
-      *((tme_uint32_t *) &thunk_bytes[1]) = (unsigned long) insns_group_src;
+      *((tme_uint32_t *) &thunk_bytes[1]) = (tme_uintptr_t) insns_group_src;
       thunk_bytes += 1 + sizeof(tme_uint32_t);
 
       /* set the size of the instructions that check the guest
@@ -1301,7 +1301,7 @@ _tme_recode_x86_chain_in(struct tme_recode_ic *ic,
 
       /* emit a movq $imm64, %reg: */
       *((tme_uint16_t *) thunk_bytes) = TME_RECODE_X86_INSN_MOVQ_IMM64_REG_TLB_SCRATCH;
-      *((unsigned long *) &thunk_bytes[2]) = (unsigned long) insns_group_src;
+      *((unsigned long *) &thunk_bytes[2]) = (tme_uintptr_t) insns_group_src;
       thunk_bytes += 1 + 1 + TME_BIT(TME_RECODE_SIZE_HOST - TME_RECODE_SIZE_8);
 
       /* set the size of the instructions that check the guest
@@ -1348,7 +1348,7 @@ _tme_recode_x86_chain_in(struct tme_recode_ic *ic,
 	 + (TME_RECODE_X86_MOD_OPREG_RM(TME_RECODE_X86_MOD_RM_EA(TME_RECODE_X86_EA_BASE_NONE),
 					TME_RECODE_X86_OPCODE_GRP3_TEST)
 	    << 8));
-    *((tme_uint32_t *) &thunk_bytes[2]) = (unsigned long) insns_group_valid_byte;
+    *((tme_uint32_t *) &thunk_bytes[2]) = (tme_uintptr_t) insns_group_valid_byte;
     thunk_bytes += 2 + sizeof(tme_uint32_t);
 
     /* silence uninitialized variable warnings: */
@@ -1366,13 +1366,13 @@ _tme_recode_x86_chain_in(struct tme_recode_ic *ic,
     /* if the guest instructions valid byte address fits in a
        sign-extended 32 bits: */
     if (((tme_int32_t)
-	 (signed long)
+	 (tme_intptr_t)
 	 insns_group_valid_byte)
-	== (signed long) insns_group_valid_byte) {
+	== (tme_intptr_t) insns_group_valid_byte) {
 
       /* emit the modR/M, SIB, and disp32 for a testb $imm8, addr32: */
       *((tme_uint16_t *) thunk_bytes) = TME_RECODE_X86_INSN_TESTB_IMM8_ADDR32 >> 8;
-      *((tme_int32_t *) &thunk_bytes[2]) = (signed long) insns_group_valid_byte;
+      *((tme_int32_t *) &thunk_bytes[2]) = (tme_intptr_t) insns_group_valid_byte;
       thunk_bytes += 2 + sizeof(tme_int32_t);
 
       /* set the size of the instructions that check that the guest
@@ -1426,7 +1426,7 @@ _tme_recode_x86_chain_in(struct tme_recode_ic *ic,
       /* emit a movq $imm64, %reg: */
       /* NB: thunk_bytes has already been advanced by one: */
       *((tme_uint16_t *) &thunk_bytes[0 - 1]) = TME_RECODE_X86_INSN_MOVQ_IMM64_REG_TLB_SCRATCH;
-      *((unsigned long *) &thunk_bytes[2 - 1]) = (unsigned long) insns_group_valid_byte;
+      *((unsigned long *) &thunk_bytes[2 - 1]) = (tme_uintptr_t) insns_group_valid_byte;
       thunk_bytes += -1 + 1 + 1 + TME_BIT(TME_RECODE_SIZE_HOST - TME_RECODE_SIZE_8);
 
       /* emit the opcode and modR/M for a testb $imm8, (%reg): */

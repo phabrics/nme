@@ -306,7 +306,7 @@ tme_hash_foreach_remove(tme_hash_t hash,
 unsigned long
 tme_direct_hash(tme_hash_data_t key)
 {
-  return ((unsigned long) key);
+  return ((tme_uintptr_t) key);
 }
 
 /* this compares two direct values: */

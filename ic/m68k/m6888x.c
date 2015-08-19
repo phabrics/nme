@@ -146,7 +146,7 @@ do {							\
 #endif /* !__STDC__ */
 
 /* this gets the offset of a function in the IEEE 754 operations structure: */
-#define TME_M6888X_IEEE754_OP(func)	((unsigned long) ((char *) &((struct tme_ieee754_ops *) 0)->func))
+#define TME_M6888X_IEEE754_OP(func)	((tme_uintptr_t) ((char *) &((struct tme_ieee754_ops *) 0)->func))
 
 /* these invoke an IEEE 754 operation: */
 #define _TME_M6888X_IEEE754_OP(func, x)			\
