@@ -440,7 +440,7 @@ found_BPFVERSION
 [TME_HOSTS="${TME_HOSTS} bsd"])
 
 if test "x${TME_HOSTS}" != x; then
-   TME_HOSTS="${TME_HOSTS} eth"
+   TME_HOSTS="eth ${TME_HOSTS}"
 fi
 
 AC_MSG_RESULT($TME_HOSTS)
@@ -982,7 +982,7 @@ linux*)
 mingw*)
    CPPFLAGS="${CPPFLAGS-}"
    SETCAP="chmod u+s"
-   TGTPFX="${target}"
+   TGTPFX="${target}-"
    ;;
 *)
    CPPFLAGS="${CPPFLAGS-}"

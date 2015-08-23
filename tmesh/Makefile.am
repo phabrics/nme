@@ -22,4 +22,4 @@ endif
 tmesh_LDFLAGS = -dlpreopen force -dlopen self @TME_PREOPEN@
 
 install-exec-hook:
-	$(SETCAP) $(DESTDIR)$(bindir)/$(TGTPFX)-tmesh$(EXEEXT)
+	$(SETCAP) $(DESTDIR)$(bindir)/$(TGTPFX)tmesh$(EXEEXT)
