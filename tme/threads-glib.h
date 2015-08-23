@@ -141,7 +141,7 @@ static _tme_inline void tme_thread_create _TME_P((tme_threadid_t *t, tme_thread_
 }
 #define tme_thread_yield() do { } while (/* CONSTCOND */ 0)
 #define tme_thread_join g_thread_join
-#define tme_thread_exit() g_thread_exit(NULL)
+#define tme_thread_exit() return NULL
 
 /* sleeping: */
 #define tme_thread_sleep_yield(s,u) g_usleep(u + s * G_USEC_PER_SEC)

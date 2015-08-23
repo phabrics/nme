@@ -19,7 +19,7 @@ tmesh_LDADD = $(top_builddir)/libtme/libtme.la libtmesh.la $(GTK_LIBS)
 if USING_X
 tmesh_LDADD += -lX11
 endif
-tmesh_LDFLAGS = -dlpreopen self @TME_PREOPEN@
+tmesh_LDFLAGS = -dlpreopen force -dlopen self @TME_PREOPEN@
 
 install-exec-hook:
-	$(SETCAP) $(DESTDIR)$(bindir)/tmesh$(EXEEXT)
+	$(SETCAP) $(DESTDIR)$(bindir)/$(TGTPFX)-tmesh$(EXEEXT)

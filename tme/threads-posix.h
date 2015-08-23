@@ -100,6 +100,8 @@ static _tme_inline int tme_rwlock_lock _TME_P((tme_rwlock_t *l, int write)) {
 #define tme_rwlock_trywrlock pthread_rwlock_trywrlock
 #define tme_rwlock_wrunlock pthread_rwlock_unlock
 
+#ifdef HAVE_PTHREAD_RWLOCK_TIMEDRDLOCK
+
 static _tme_inline int tme_rwlock_timedlock _TME_P((tme_rwlock_t *l, unsigned long sec, int write)) { 
   struct timespec now, timeout;
   int rc;
@@ -122,6 +124,10 @@ static _tme_inline int tme_rwlock_timedlock _TME_P((tme_rwlock_t *l, unsigned lo
 
 #define tme_rwlock_timedrdlock(l,sec) tme_rwlock_timedlock(l,sec,0)
 #define tme_rwlock_timedwrlock(l,sec) tme_rwlock_timedlock(l,sec,1)
+#else
+#define tme_rwlock_timedrdlock(l,sec) tme_rwlock_rdlock(l)
+#define tme_rwlock_timedwrlock(l,sec) tme_rwlock_wrlock(l)
+#endif
 
 /* mutexes. */
 typedef pthread_mutex_t tme_mutex_t;
@@ -235,7 +241,7 @@ static _tme_inline void tme_thread_yield _TME_P((void)) {
 #endif
 
 #define tme_thread_join(id) pthread_join(id,NULL)
-#define tme_thread_exit() _tme_thread_suspended();pthread_exit(NULL)
+#define tme_thread_exit() _tme_thread_suspended();return NULL
 
 /* sleeping: */
 static _tme_inline int tme_thread_sleep_yield _TME_P((unsigned long sec, unsigned long usec)) { 

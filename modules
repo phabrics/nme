@@ -70,12 +70,12 @@ all-local:
 #
 # this means at least specifying all of the modules that could
 # potentially be lt_dlopen'ed on any main program's link command line,
-# using libtool's -dlpreopen option.
+# using libtool's -dlopen option.
 #
-# so we append suitable -dlpreopen options for all modules built in
+# so we append suitable -dlopen options for all modules built in
 # this directory to a file, in this case
 # $(top_builddir)/tme-preopen.txt.  when building statically,
-# configure.in will then substitute @TME_PREOPEN@ with: 
+# configure.ac will then substitute @TME_PREOPEN@ with: 
 #
 #  `cat $(top_builddir)/tme-preopen.txt`
 #
@@ -98,7 +98,7 @@ all-local:
 	@if test "x$(pkglib_LTLIBRARIES)" != x; then		\
 	    for module in $(pkglib_LTLIBRARIES); do		\
 		echo $$module ;					\
-		echo -dlpreopen ../$(subdir)/$$module >> $(top_builddir)/tme-preopen.txt ; \
+		echo -dlopen ../$(subdir)/$$module >> $(top_builddir)/tme-preopen.txt ; \
 		cp $$module $(top_builddir)/tme ;		\
 	    done ;						\
 	fi

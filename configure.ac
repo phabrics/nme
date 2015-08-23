@@ -33,7 +33,7 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.68])
-AC_INIT([tme], [0.10])
+AC_INIT([tme], [0.12beta])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
@@ -364,17 +364,19 @@ if test $have_int64 = yes; then
   ])
 fi
 
-dnl Checks for setaffinity
+dnl Checks for various library functions
 AC_SEARCH_LIBS([pthread_mutex_timedlock], [pthread], [
 AC_DEFINE(HAVE_PTHREAD_MUTEX_TIMEDLOCK, [], [Define if you have pthread_mutex_timedlock.])
 ])
 
-dnl Checks for setaffinity
+AC_SEARCH_LIBS([pthread_rwlock_timedrdlock], [pthread], [
+AC_DEFINE(HAVE_PTHREAD_RWLOCK_TIMEDRDLOCK, [], [Define if you have pthread_rwlock_timedlock.])
+])
+
 AC_SEARCH_LIBS([pthread_setaffinity_np], [pthread], [
 AC_DEFINE(HAVE_PTHREAD_SETAFFINITY_NP, [], [Define if you have pthread_setaffinity_np.])
 ])
 
-dnl Checks for setschedparam
 AC_SEARCH_LIBS([pthread_setschedparam], [pthread], [
 AC_DEFINE(HAVE_PTHREAD_SETSCHEDPARAM, [], [Define if you have pthread_setschedparam.])
 ])
@@ -951,7 +953,7 @@ if test "x${enable_static}" = "xyes"; then
   TME_PREOPEN='`sort -u $(top_builddir)/tme-preopen.txt`'
 fi
 AC_SUBST(TME_PREOPEN)
-case "${host_os}" in
+case "${target_os}" in
 netbsd*) 
    CPPFLAGS="${CPPFLAGS-} -D_NETBSD_SOURCE"
    DEV_TAP_FILENAME='"\"/dev/tap\""'
@@ -977,13 +979,20 @@ linux*)
    DEV_TAP_FILENAME='"\"/dev/net/tun\""'
    SETCAP="setcap cap_sys_nice,cap_net_admin,cap_net_raw+ep"
    ;;
-*) CPPFLAGS="${CPPFLAGS-}"
+mingw*)
+   CPPFLAGS="${CPPFLAGS-}"
+   SETCAP="chmod u+s"
+   TGTPFX="${target}"
+   ;;
+*)
+   CPPFLAGS="${CPPFLAGS-}"
    SETCAP="chmod u+s"
    ;;
 esac
 
 AC_SUBST(DEV_TAP_FILENAME)
 AC_SUBST(SETCAP)
+AC_SUBST(TGTPFX)
 dnl Configure debugging and/or warnings.
 AC_MSG_CHECKING([for gcc --version >= 4.8])
 AC_EGREP_CPP(_gcc_has_Og,
