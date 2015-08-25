@@ -691,8 +691,9 @@ for tme_thread_type in ${tme_thread_types}; do
 case "x${tme_thread_type}" in
 xpthreads | xposix)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_POSIX -D_GNU_SOURCE" 
 	  	     CFLAGS="${CFLAGS-} -pthread" ;;
-xglib)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_GLIB ${GLIB_CFLAGS}" 
-	 LDFLAGS="${LDFLAGS-} ${GLIB_LIBS}" ;;
+xglib)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_GLIB ${GLIB_CFLAGS}"
+#	 LDFLAGS="${LDFLAGS-} ${GLIB_LIBS}"
+	 ;;
 xsjlj)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_SJLJ" ;;
 esac
 done

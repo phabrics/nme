@@ -687,8 +687,8 @@ main(int argc, char **argv)
 #ifdef HAVE_GTK
     else if (!strcmp(opt, "--gui-mode")) {
       if (++arg_i < argc) {
-	if(!strcmp(argv[arg_i], "gtk")) {
-	  using_gtk = TRUE;
+	if(strcmp(argv[arg_i], "gtk")) {
+	  using_gtk = FALSE;
 	}
       } else {
 	usage = TRUE;
@@ -921,6 +921,9 @@ main(int argc, char **argv)
     tme_thread_create(&tmesh_thread, (tme_thread_t) _tmesh_th, NULL);
   }
 
+  if(using_gtk)
+    tme_threads_gtk_init();
+  
   /* run the threads: */
   tme_threads_run();
 
