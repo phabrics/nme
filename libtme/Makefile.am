@@ -8,7 +8,7 @@ AUTOM4TE = $(SHELL) $(top_srcdir)/missing --run autom4te
 SUBDIRS = host
 
 AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I. $(LTDLINCL) $(GTK_CFLAGS) -D_TME_IMPL
-lib_LTLIBRARIES = libtme.la
+noinst_LTLIBRARIES = libtme.la
 pkginclude_HEADERS = memory-auto.h
 libtme_la_SOURCES = misc-host.c \
 	memory-auto.c \

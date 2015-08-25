@@ -17,8 +17,7 @@ tme_ic_stp22xx_la_SOURCES = \
   stp222x-stc.c \
   stp22xx.c
 tme_ic_stp22xx_la_LDFLAGS = -rpath $(pkglibdir) -module -version-info 0:0:0
-tme_ic_stp22xx_la_LIBADD = $(top_builddir)/libtme/libtme.la \
-	$(top_builddir)/generic/libtme-generic.la
+tme_ic_stp22xx_la_LIBADD = $(top_builddir)/generic/libtme-generic.la
 EXTRA_DIST = stp222x-impl.h \
 	stp22xx-impl.h
 

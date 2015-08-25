@@ -24,7 +24,6 @@ tme_scsi_la_SOURCES = \
 	scsi-device.c \
 	scsi-bus.c
 tme_scsi_la_LDFLAGS = -rpath $(pkglibdir) -module -version-info 0:0:0
-tme_scsi_la_LIBADD = $(top_builddir)/libtme/libtme.la \
-	$(top_builddir)/generic/libtme-generic.la 
+tme_scsi_la_LIBADD = $(top_builddir)/generic/libtme-generic.la 
 
 include $(top_srcdir)/modules

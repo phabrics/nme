@@ -9,7 +9,6 @@ pkglib_LTLIBRARIES = tme_bus_sbus.la
 tme_bus_sbus_la_SOURCES = \
 	sun-fbs4.c
 tme_bus_sbus_la_LDFLAGS = -module -version-info 0:0:0
-tme_bus_sbus_la_LIBADD = $(top_builddir)/libtme/libtme.la \
-	$(top_builddir)/machine/sun/libtme-machine-sun.la
+tme_bus_sbus_la_LIBADD = $(top_builddir)/machine/sun/libtme-machine-sun.la
 
 include $(top_srcdir)/modules

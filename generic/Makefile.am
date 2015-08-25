@@ -7,7 +7,7 @@ AUTOM4TE = $(SHELL) $(top_srcdir)/missing --run autom4te
 
 AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I. -D_TME_IMPL
 
-lib_LTLIBRARIES = libtme-generic.la
+noinst_LTLIBRARIES = libtme-generic.la
 libtme_generic_la_SOURCES = bus.c \
 	bus-device.c \
 	serial.c \

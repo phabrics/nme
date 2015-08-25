@@ -5,7 +5,7 @@ AUTOMAKE_OPTIONS = 1.4 gnu
 
 AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I. $(GTK_CFLAGS) -D_TME_IMPL
 
-lib_LTLIBRARIES = libtmesh.la
+noinst_LTLIBRARIES = libtmesh.la
 libtmesh_la_SOURCES = \
 	tmesh-impl.h \
 	tmesh-input.y \
@@ -15,7 +15,7 @@ libtmesh_la_LDFLAGS = -version-info 0:0:0
 libtmesh_la_LIBADD = $(top_builddir)/libtme/libtme.la
 
 bin_PROGRAMS = tmesh
-tmesh_LDADD = $(top_builddir)/libtme/libtme.la libtmesh.la $(GTK_LIBS)
+tmesh_LDADD = libtmesh.la $(GTK_LIBS)
 if USING_X
 tmesh_LDADD += -lX11
 endif

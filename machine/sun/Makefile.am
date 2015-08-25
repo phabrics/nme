@@ -5,7 +5,7 @@ AUTOMAKE_OPTIONS = 1.4 gnu
 
 AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I. -D_TME_IMPL
 
-lib_LTLIBRARIES = libtme-machine-sun.la
+noinst_LTLIBRARIES = libtme-machine-sun.la
 libtme_machine_sun_la_SOURCES = sun-mmu.c \
 	sun-bwtwo.c \
 	sun-cgtwo.c \
@@ -14,8 +14,7 @@ libtme_machine_sun_la_SOURCES = sun-mmu.c \
 	sun-si.c \
 	sun-obie.c
 libtme_machine_sun_la_LDFLAGS = -version-info 0:0:0
-libtme_machine_sun_la_LIBADD = $(top_builddir)/libtme/libtme.la \
-	$(top_builddir)/generic/libtme-generic.la
+libtme_machine_sun_la_LIBADD = $(top_builddir)/generic/libtme-generic.la
 
 bin_SCRIPTS = tme-sun-idprom tme-sun-eeprom
 

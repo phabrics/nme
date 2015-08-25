@@ -16,8 +16,7 @@ tme_machine_sun4_la_SOURCES =	\
 	sun44c-memerr.c		\
 	sun4-impl.h
 tme_machine_sun4_la_LDFLAGS = -module -version-info 0:0:0
-tme_machine_sun4_la_LIBADD = $(top_builddir)/libtme/libtme.la \
-	../sun/libtme-machine-sun.la
+tme_machine_sun4_la_LIBADD = ../sun/libtme-machine-sun.la
 
 examplesdir = $(datadir)/examples/tme
 examples_DATA = SUN4-75

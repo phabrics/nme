@@ -18,9 +18,7 @@ tme_ic_sparc_la_SOURCES = \
 	cy7c601.c \
 	mb86900.c
 tme_ic_sparc_la_LDFLAGS = -module -version-info 0:0:0
-tme_ic_sparc_la_LIBADD = $(top_builddir)/libtme/libtme.la \
-	$(top_builddir)/generic/libtme-generic.la \
-	../ieee754/libtme-ieee754.la
+tme_ic_sparc_la_LIBADD = ../ieee754/libtme-ieee754.la
 BUILT_SOURCES = sparc-auto.h sparc-insns-auto.c sparc-bus-auto.c sparc-fpu-auto.c sparc-vis-auto.c
 EXTRA_DIST = sparc-impl.h \
 	sparc-misc-auto.sh \

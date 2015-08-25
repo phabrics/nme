@@ -12,8 +12,7 @@ tme_machine_sun3_la_SOURCES =	\
 	sun3-control.c		\
 	sun3-impl.h
 tme_machine_sun3_la_LDFLAGS = -module -version-info 0:0:0
-tme_machine_sun3_la_LIBADD = $(top_builddir)/libtme/libtme.la \
-	../sun/libtme-machine-sun.la
+tme_machine_sun3_la_LIBADD = ../sun/libtme-machine-sun.la
 
 examplesdir = $(datadir)/examples/tme
 examples_DATA = SUN3-CARRERA sun3-carrera-eeprom.txt

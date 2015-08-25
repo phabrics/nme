@@ -15,9 +15,7 @@ tme_ic_m68k_la_SOURCES = m68k-opmap.c \
 	m68020.c \
 	m6888x.c
 tme_ic_m68k_la_LDFLAGS = -module -version-info 0:0:0
-tme_ic_m68k_la_LIBADD = $(top_builddir)/libtme/libtme.la \
-	$(top_builddir)/generic/libtme-generic.la \
-	../ieee754/libtme-ieee754.la
+tme_ic_m68k_la_LIBADD = ../ieee754/libtme-ieee754.la
 BUILT_SOURCES = m68k-auto.h m68k-opmap.c m68k-insns-auto.c m68k-bus-auto.c m6888x-auto.c
 EXTRA_DIST = m68k-impl.h \
 	m68k-misc-auto.sh \

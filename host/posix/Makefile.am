@@ -13,7 +13,6 @@ if USING_TERMIOS
 tme_host_posix_la_SOURCES += posix-serial.c
 endif
 tme_host_posix_la_LDFLAGS = -module -version-info 0:0:0
-tme_host_posix_la_LIBADD = $(top_builddir)/libtme/libtme.la \
-	$(top_builddir)/generic/libtme-generic.la
+tme_host_posix_la_LIBADD = $(top_builddir)/generic/libtme-generic.la
 
 include $(top_srcdir)/modules
