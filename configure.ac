@@ -33,7 +33,7 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.68])
-AC_INIT([tme], [0.12beta])
+AC_INIT([tme], [0.12beta2])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
@@ -949,6 +949,7 @@ LT_PREREQ([2.4])
 LT_CONFIG_LTDL_DIR([libltdl])
 LT_INIT([dlopen])
 LTDL_INIT([recursive installable])
+CPPFLAGS="${CPPFLAGS-} ${LTDLINCL}"
 TME_PREOPEN=
 if test "x${enable_static}" = "xyes"; then
   TME_PREOPEN='`sort -u $(top_builddir)/tme-preopen.txt`'
