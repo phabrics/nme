@@ -51,18 +51,6 @@ _TME_RCSID("$Id: module.h,v 1.1 2003/05/16 21:48:14 fredette Exp $");
 /* prototypes: */
 void _tme_module_init _TME_P((void));
 
-/* this initializes modules: */
-static _tme_inline int tme_module_init _TME_P((void)) {
-  int rc;
-  _tme_module_init();
-  LTDL_SET_PRELOADED_SYMBOLS();
-  rc = lt_dlinit();
-  if (rc != 0) {
-    return (-1);
-  }
-  return (TME_OK);
-}
-
 int tme_module_open _TME_P((_tme_const char *, void **, char **));
 void *tme_module_symbol _TME_P((void *, _tme_const char *));
 int tme_module_close _TME_P((void *));

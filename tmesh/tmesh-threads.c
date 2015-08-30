@@ -1,9 +1,7 @@
-/* $Id: threads.h,v 1.10 2010/06/05 19:36:35 fredette Exp $ */
-
-/* tme/threads.h - header file for threads: */
+/* tmesh/tmesh-threads.c - the tme thread utility functions: */
 
 /*
- * Copyright (c) 2003 Matt Fredette
+ * Copyright (c) 2015 Ruben Agin
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,32 +31,83 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _TME_THREADS_H
-#define _TME_THREADS_H
-
 #include <tme/common.h>
-_TME_RCSID("$Id: threads.h,v 1.10 2010/06/05 19:36:35 fredette Exp $");
+_TME_RCSID("$Id: threads-sjlj.c,v 1.18 2010/06/05 19:10:28 fredette Exp $");
 
 /* includes: */
-#include <errno.h>
-#include <sys/time.h>
+#include <tme/threads.h>
+#include <tme/module.h>
+#ifdef HAVE_GTK
+#ifndef G_ENABLE_DEBUG
+#define G_ENABLE_DEBUG (0)
+#endif /* !G_ENABLE_DEBUG */
+#include <gtk/gtk.h>
 
-/* setjmp/longjmp threading: */
-#ifdef TME_THREADS_POSIX
-#include "threads-posix.h"
-#define tme_sjlj_threads_run(g) do { } while (/* CONSTCOND */ 0)
-#define tme_threads_glib_yield() do { } while (/* CONSTCOND */ 0)
-#elif defined(TME_THREADS_GLIB)
-#include "threads-glib.h"
-#define tme_sjlj_threads_run(g) do { } while (/* CONSTCOND */ 0)
-#define tme_threads_glib_yield() do { } while (/* CONSTCOND */ 0)
-#elif defined(TME_THREADS_SJLJ)
-#include "threads-sjlj.h"
+/* nonzero iff we're using the gtk main loop: */
+static int tme_using_gtk;
+
+void tme_threads_gtk_init(void)
+{
+  char **argv;
+  char *argv_buffer[3];
+  int argc;
+
+  /* if we've already initialized GTK: */
+  if (tme_using_gtk) {
+    return;
+  }
+
+  /* conjure up an argv.  this is pretty bad: */
+  argv = argv_buffer;
+  argc = 0;
+  argv[argc++] = "tmesh";
+#if 1
+  argv[argc++] = "--gtk-debug=signals";
 #endif
+  argv[argc] = NULL;
+  gtk_init(&argc, &argv);
 
-void tme_threads_run _TME_P((void));
-#ifdef _TME_HAVE_GTK
-void tme_threads_gtk_init _TME_P((void));
-#endif
+  /* we are now using GTK: */
+  tme_using_gtk = TRUE;
+}
+#else 
+#define tme_using_gtk FALSE
+#endif /* !HAVE_GTK */
 
-#endif /* !_TME_THREADS_H */
+void tme_threads_run() {
+  tme_sjlj_threads_run(tme_using_gtk);
+
+  _tme_thread_suspended();
+#ifdef HAVE_GTK
+  /* if we're using the GTK main loop, yield to GTK and
+     call gtk_main(): */
+  if (tme_using_gtk) {
+    gtk_main();
+  } else
+#endif /* HAVE_GTK */
+  while(1) {
+    usleep(1000000);
+  }
+}
+
+/* this initializes modules: */
+static _tme_inline int tme_module_init _TME_P((void)) {
+  int rc;
+  _tme_module_init();
+  LTDL_SET_PRELOADED_SYMBOLS();
+  rc = lt_dlinit();
+  if (rc != 0) {
+    return (-1);
+  }
+  return (TME_OK);
+}
+
+/* this initializes libtme: */
+void tme_init _TME_P((void)) {
+  /* initialize the threading system: */
+  tme_threads_init();
+
+  /* initialize the module system: */
+  tme_module_init();
+}
+

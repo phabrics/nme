@@ -37,75 +37,10 @@
 _TME_RCSID("$Id: misc.c,v 1.8 2010/06/05 19:02:38 fredette Exp $");
 
 /* includes: */
-#include <tme/threads.h>
-#include <tme/module.h>
 #include <tme/misc.h>
 #include <ctype.h>
 #include <time.h>
-#ifdef HAVE_GTK
-#include <gtk/gtk.h>
-
-/* nonzero iff we're using the gtk main loop: */
-static int tme_using_gtk;
-
-void tme_threads_gtk_init(void)
-{
-  char **argv;
-  char *argv_buffer[3];
-  int argc;
-
-  /* if we've already initialized GTK: */
-  if (tme_using_gtk) {
-    return;
-  }
-
-  /* conjure up an argv.  this is pretty bad: */
-  argv = argv_buffer;
-  argc = 0;
-  argv[argc++] = "tmesh";
-#if 1
-  argv[argc++] = "--gtk-debug=signals";
-#endif
-  argv[argc] = NULL;
-  gtk_init(&argc, &argv);
-
-  /* we are now using GTK: */
-  tme_using_gtk = TRUE;
-}
-#else 
-#define tme_using_gtk FALSE
-#endif /* !HAVE_GTK */
-
-#ifdef TME_THREADS_POSIX
-pthread_rwlock_t tme_rwlock_suspere;
-
-#ifdef HAVE_PTHREAD_SETSCHEDPARAM
-static pthread_attr_t *attrp;
-
-void tme_thread_set_defattr(pthread_attr_t *attr) {
-  attrp=attr;
-}
-pthread_attr_t *tme_thread_defattr() {
-  return attrp;
-}
-#endif // HAVE_PTHREAD_SETSCHEDPARAM
-#endif
-
-void tme_threads_run() {
-  tme_sjlj_threads_run(tme_using_gtk);
-
-  _tme_thread_suspended();
-#ifdef HAVE_GTK
-  /* if we're using the GTK main loop, yield to GTK and
-     call gtk_main(): */
-  if (tme_using_gtk) {
-    gtk_main();
-  } else
-#endif /* HAVE_GTK */
-  while(1) {
-    usleep(1000000);
-  }
-}
+#include <errno.h>
 
 /* this tokenizes a string by whitespace: */
 char **

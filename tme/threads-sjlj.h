@@ -48,10 +48,10 @@
 /* initializing and starting: */
 void tme_sjlj_threads_init _TME_P((void));
 #define tme_threads_init tme_sjlj_threads_init
-#ifdef _TME_HAVE_GTK
-void tme_sjlj_threads_gtk_yield _TME_P((void));
-#define tme_threads_gtk_yield tme_sjlj_threads_gtk_yield
-#endif /* _TME_HAVE_GTK */
+#ifdef _TME_HAVE_GLIB
+void tme_sjlj_threads_glib_yield _TME_P((void));
+#define tme_threads_glib_yield tme_sjlj_threads_glib_yield
+#endif /* _TME_HAVE_GLIB */
 void tme_sjlj_threads_run _TME_P((int));
 
 /* thread suspension: */

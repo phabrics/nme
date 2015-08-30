@@ -846,6 +846,9 @@ main(int argc, char **argv)
 #endif // HAVE_PTHREAD_SETSCHEDPARAM  
 #endif
   
+  if(using_gtk)
+    tme_threads_gtk_init();
+  
   /* initialize libtmesh: */
   (void) tmesh_init();
 
@@ -921,9 +924,6 @@ main(int argc, char **argv)
     tme_thread_create(&tmesh_thread, (tme_thread_t) _tmesh_th, NULL);
   }
 
-  if(using_gtk)
-    tme_threads_gtk_init();
-  
   /* run the threads: */
   tme_threads_run();
 

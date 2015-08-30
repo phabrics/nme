@@ -49,21 +49,21 @@ _TME_RCSID("$Id: threads-sjlj.c,v 1.18 2010/06/05 19:10:28 fredette Exp $");
 #endif
 #include <setjmp.h>
 
-/* if we don't have GTK, fake a few definitions to keep things
+/* if we don't have GLIB, fake a few definitions to keep things
    compiling: */
-#ifdef HAVE_GTK
+#ifdef HAVE_GLIB
 #ifndef G_ENABLE_DEBUG
 #define G_ENABLE_DEBUG (0)
 #endif /* !G_ENABLE_DEBUG */
-#include <gtk/gtk.h>
-#else  /* !HAVE_GTK */
+#include <glib.h>
+#else  /* !HAVE_GLIB */
 typedef int gint;
 typedef int GdkInputCondition;
 typedef void *gpointer;
 #define G_IO_IN		TME_BIT(0)
 #define G_IO_OUT		TME_BIT(1)
 #define G_IO_ERR	TME_BIT(2)
-#endif /* !HAVE_GTK */
+#endif /* !HAVE_GLIB */
 
 /* thread states: */
 #define TME_SJLJ_THREAD_STATE_BLOCKED		(1)
@@ -160,24 +160,24 @@ static tme_time_t _tme_sjlj_now;
 /* if nonzero, the last dispatched thread ran for only a short time: */
 int tme_sjlj_thread_short;
 
-#ifdef HAVE_GTK
+#ifdef HAVE_GLIB
 
-/* nonzero iff we're using the gtk main loop: */
-static int tme_sjlj_using_gtk;
+/* nonzero iff we're using the glib main loop: */
+static int tme_sjlj_using_glib;
 
-/* for each file descriptor, the GTK tag for the fd event source: */
+/* for each file descriptor, the GLIB tag for the fd event source: */
 static gint tme_sjlj_fd_tag[FD_SETSIZE];
 
 /* this set iff the idle callback is set: */
 static int tme_sjlj_idle_set;
 
 /* any timeout source ID: */
-static guint _tme_sjlj_gtk_timeout_id;
+static guint _tme_sjlj_glib_timeout_id;
 
 /* any timeout time: */
-static tme_time_t _tme_sjlj_gtk_timeout;
+static tme_time_t _tme_sjlj_glib_timeout;
 
-#endif /* HAVE_GTK */
+#endif /* HAVE_GLIB */
 
 /* this initializes the threads system: */
 void
@@ -185,11 +185,11 @@ tme_sjlj_threads_init()
 {
   int fd;
 
-#ifdef HAVE_GTK
-  /* assume that we won't be using the GTK main loop: */
-  tme_sjlj_using_gtk = FALSE;
+#ifdef HAVE_GLIB
+  /* assume that we won't be using the GLIB main loop: */
+  tme_sjlj_using_glib = FALSE;
   tme_sjlj_idle_set = FALSE;
-#endif /* HAVE_GTK */
+#endif /* HAVE_GLIB */
 
   /* there are no threads: */
   tme_sjlj_threads_all = NULL;
@@ -500,18 +500,18 @@ tme_sjlj_dispatch(volatile int passes)
   _tme_sjlj_thread_dispatch_number++;
 }
 
-#ifdef HAVE_GTK
+#ifdef HAVE_GLIB
 
-/* this handles a GTK callback for a timeout: */
+/* this handles a GLIB callback for a timeout: */
 static gint
-_tme_sjlj_gtk_callback_timeout(gpointer callback_pointer)
+_tme_sjlj_glib_callback_timeout(gpointer callback_pointer)
 {
 
-  /* we were in GTK for an unknown amount of time: */
+  /* we were in GLIB for an unknown amount of time: */
   tme_thread_long();
 
-  /* this GTK timeout will soon be removed, so forget it: */
-  _tme_sjlj_gtk_timeout_id = 0;
+  /* this GLIB timeout will soon be removed, so forget it: */
+  _tme_sjlj_glib_timeout_id = 0;
 
   /* move all threads that have timed out to the dispatching list: */
   _tme_sjlj_threads_dispatching_timeout();
@@ -519,8 +519,8 @@ _tme_sjlj_gtk_callback_timeout(gpointer callback_pointer)
   /* dispatch: */
   tme_sjlj_dispatch(1);
 
-  /* yield to GTK: */
-  tme_threads_gtk_yield();
+  /* yield to GLIB: */
+  tme_threads_glib_yield();
 
   /* remove this timeout: */
   return (FALSE);
@@ -529,14 +529,14 @@ _tme_sjlj_gtk_callback_timeout(gpointer callback_pointer)
   callback_pointer = 0;
 }
 
-/* this handles a GTK callback for a file descriptor: */
+/* this handles a GLIB callback for a file descriptor: */
 static gboolean
-_tme_sjlj_gtk_callback_fd(GIOChannel *chan,
+_tme_sjlj_glib_callback_fd(GIOChannel *chan,
 			  GIOCondition fd_conditions,
 			  gpointer callback_pointer)
 {
 
-  /* we were in GTK for an unknown amount of time: */
+  /* we were in GLIB for an unknown amount of time: */
   tme_thread_long();
 
   /* move all threads that match the conditions on this file
@@ -546,8 +546,8 @@ _tme_sjlj_gtk_callback_fd(GIOChannel *chan,
   /* dispatch: */
   tme_sjlj_dispatch(1);
 
-  /* yield to GTK: */
-  tme_threads_gtk_yield();
+  /* yield to GLIB: */
+  tme_threads_glib_yield();
 
   /* unused: */
   callback_pointer = 0;
@@ -555,12 +555,12 @@ _tme_sjlj_gtk_callback_fd(GIOChannel *chan,
   return TRUE;
 }
 
-/* this handles a GTK callback for an idle: */
+/* this handles a GLIB callback for an idle: */
 static gint
-_tme_sjlj_gtk_callback_idle(gpointer callback_pointer)
+_tme_sjlj_glib_callback_idle(gpointer callback_pointer)
 {
 
-  /* we were in GTK for an unknown amount of time: */
+  /* we were in GLIB for an unknown amount of time: */
   tme_thread_long();
 
   /* move all runnable threads to the dispatching list: */
@@ -572,8 +572,8 @@ _tme_sjlj_gtk_callback_idle(gpointer callback_pointer)
   /* dispatch: */
   tme_sjlj_dispatch(1);
 
-  /* yield to GTK: */
-  tme_threads_gtk_yield();
+  /* yield to GLIB: */
+  tme_threads_glib_yield();
 
   /* if there are no runnable threads: */
   if (tme_sjlj_threads_runnable == NULL) {
@@ -590,9 +590,9 @@ _tme_sjlj_gtk_callback_idle(gpointer callback_pointer)
   callback_pointer = 0;
 }
 
-/* this yields to GTK: */
+/* this yields to GLIB: */
 void
-tme_sjlj_threads_gtk_yield(void)
+tme_sjlj_threads_glib_yield(void)
 {
   struct tme_sjlj_thread *thread_timeout;
   tme_time_t timeout;
@@ -605,25 +605,25 @@ tme_sjlj_threads_gtk_yield(void)
     /* if there are no threads at all: */
     if (__tme_predict_false(tme_sjlj_threads_all == NULL)) {
 
-      /* quit the GTK main loop: */
-      gtk_main_quit();
+      /* quit the GLIB main loop: */
+      //      glib_main_quit();
       return;
     }
 
-    /* if there is a GTK timeout, but the timeout list is empty or the
-       GTK timeout isn't for the earliest timeout: */
+    /* if there is a GLIB timeout, but the timeout list is empty or the
+       GLIB timeout isn't for the earliest timeout: */
     thread_timeout = tme_sjlj_threads_timeout;
-    if (_tme_sjlj_gtk_timeout_id != 0
+    if (_tme_sjlj_glib_timeout_id != 0
 	&& (thread_timeout == NULL
-	    || !TME_TIME_EQ(_tme_sjlj_gtk_timeout, thread_timeout->tme_sjlj_thread_timeout))) {
-      /* remove the GTK timeout: */
-      g_source_remove(_tme_sjlj_gtk_timeout_id);
-      _tme_sjlj_gtk_timeout_id = 0;
+	    || !TME_TIME_EQ(_tme_sjlj_glib_timeout, thread_timeout->tme_sjlj_thread_timeout))) {
+      /* remove the GLIB timeout: */
+      g_source_remove(_tme_sjlj_glib_timeout_id);
+      _tme_sjlj_glib_timeout_id = 0;
     }
 
-    /* if the timeout list is not empty, but there is no GTK timeout: */
+    /* if the timeout list is not empty, but there is no GLIB timeout: */
     if (tme_sjlj_threads_timeout != NULL
-	&& _tme_sjlj_gtk_timeout_id == 0) {
+	&& _tme_sjlj_glib_timeout_id == 0) {
 
       /* get the timeout: */
       _tme_sjlj_timeout_time(&timeout);
@@ -647,25 +647,25 @@ tme_sjlj_threads_gtk_yield(void)
 	     ? (10 * 1000)
 	     : ((secs * 1000) + msecs));
 
-	/* GTK timeouts can expire up to one millisecond early, so we
+	/* GLIB timeouts can expire up to one millisecond early, so we
 	   always add one: */
 	msecs++;
 
 	/* add the timeout: */
 	/* XXX we have to call g_timeout_add_full here, because
-	   there are no gtk_timeout_add_ functions that allow you to
-	   specify the priority, and gtk_timeout_add() uses
+	   there are no glib_timeout_add_ functions that allow you to
+	   specify the priority, and glib_timeout_add() uses
 	   G_PRIORITY_DEFAULT, which means our (usually very
-	   frequent) timeouts always win over gtk's event handling,
-	   meaning the gtk windows never update: */
-	_tme_sjlj_gtk_timeout_id
+	   frequent) timeouts always win over glib's event handling,
+	   meaning the glib windows never update: */
+	_tme_sjlj_glib_timeout_id
 	  = g_timeout_add_full(G_PRIORITY_DEFAULT_IDLE,
 			       msecs,
-			       _tme_sjlj_gtk_callback_timeout,
+			       _tme_sjlj_glib_callback_timeout,
 			       NULL,
 			       NULL);
-	assert (_tme_sjlj_gtk_timeout_id != 0);
-	_tme_sjlj_gtk_timeout = tme_sjlj_threads_timeout->tme_sjlj_thread_timeout;
+	assert (_tme_sjlj_glib_timeout_id != 0);
+	_tme_sjlj_glib_timeout = tme_sjlj_threads_timeout->tme_sjlj_thread_timeout;
       }
     }
   }
@@ -678,18 +678,18 @@ tme_sjlj_threads_gtk_yield(void)
 
       /* set the idle callback: */
       g_idle_add_full(G_PRIORITY_DEFAULT_IDLE,
-		      _tme_sjlj_gtk_callback_idle,
+		      _tme_sjlj_glib_callback_idle,
 		      NULL, NULL);
       tme_sjlj_idle_set = TRUE;
     }
   }
 }      
 
-#endif /* HAVE_GTK */
+#endif /* HAVE_GLIB */
       
 /* this starts the threads dispatching: */
 void
-tme_sjlj_threads_run(int using_gtk)
+tme_sjlj_threads_run(int using_glib)
 {
   int fd;
   fd_set fdset_read_out;
@@ -700,17 +700,17 @@ tme_sjlj_threads_run(int using_gtk)
   tme_time_t *timeout;
   int rc;
   
-  tme_sjlj_using_gtk = using_gtk;
+  tme_sjlj_using_glib = using_glib;
 
-#ifdef HAVE_GTK
-  /* if we're using the GTK main loop, yield to GTK and
-     call gtk_main(): */
-  if (tme_sjlj_using_gtk) {
-    tme_threads_gtk_yield();
-    gtk_main();
+#ifdef HAVE_GLIB
+  /* if we're using the GLIB main loop, yield to GLIB and
+     call glib_main(): */
+  if (tme_sjlj_using_glib) {
+    tme_threads_glib_yield();
+    //    glib_main();
     return;
   }
-#endif /* HAVE_GTK */
+#endif /* HAVE_GLIB */
 
   /* otherwise, we have to use our own main loop: */
   
@@ -976,17 +976,17 @@ do {							\
       /* if there is any blocking on this file descriptor, remove it: */
       if (tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_conditions != 0) {
 
-#ifdef HAVE_GTK
-	if (tme_sjlj_using_gtk) {
+#ifdef HAVE_GLIB
+	if (tme_sjlj_using_glib) {
 
 	  /* it should be safe to remove this fd, even if we're
 	     currently in a callback for it.  if we happen to get a
-	     callback for it later anyways, _tme_sjlj_gtk_callback_fd()
+	     callback for it later anyways, _tme_sjlj_glib_callback_fd()
 	     will ignore it: */
 	  g_source_remove(tme_sjlj_fd_tag[fd]);
 	}
 	else
-#endif /* HAVE_GTK */
+#endif /* HAVE_GLIB */
 	  {
 
 	    /* remove this fd from our main loop's fd sets: */
@@ -1034,18 +1034,18 @@ do {							\
       /* if there is any blocking on this file descriptor, add it: */
       if (fd_condition_new != 0) {
 
-#ifdef HAVE_GTK
-	if (tme_sjlj_using_gtk) {
+#ifdef HAVE_GLIB
+	if (tme_sjlj_using_glib) {
 	  chan = g_io_channel_unix_new(fd);
 	  tme_sjlj_fd_tag[fd] = 
 	    g_io_add_watch(chan,
 			   fd_condition_new,
-			   _tme_sjlj_gtk_callback_fd,
+			   _tme_sjlj_glib_callback_fd,
 			   NULL);
 	  g_io_channel_unref(chan);
 	}
 	else
-#endif /* HAVE_GTK */
+#endif /* HAVE_GLIB */
 	  {
 
 	    /* add this fd to main loop's relevant fd sets: */

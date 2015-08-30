@@ -7,7 +7,12 @@ AUTOM4TE = $(SHELL) $(top_srcdir)/missing --run autom4te
 
 SUBDIRS = host
 
-AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I. $(LTDLINCL) $(GTK_CFLAGS) -D_TME_IMPL
+AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I. $(LTDLINCL) -D_TME_IMPL
+if !THREADS_POSIX
+if USING_GLIB
+AM_CPPFLAGS += $(GLIB_CFLAGS)
+endif
+endif
 noinst_LTLIBRARIES = libtme.la
 pkginclude_HEADERS = memory-auto.h
 libtme_la_SOURCES = misc-host.c \
@@ -32,7 +37,12 @@ if THREADS_SJLJ
 libtme_la_SOURCES += threads-sjlj.c
 endif
 libtme_la_LDFLAGS = -version-info 0:0:0
-libtme_la_LIBADD = $(LIBLTDL) $(GTK_LIBS)
+libtme_la_LIBADD = $(LIBLTDL)
+if !THREADS_POSIX
+if USING_GLIB
+libtme_la_LIBADD += $(GLIB_LIBS)
+endif
+endif
 if NEED_MMANLIB
 libtme_la_LIBADD += -lmman
 endif

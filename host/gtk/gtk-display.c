@@ -150,7 +150,7 @@ _tme_gtk_display_callout(struct tme_gtk_display *display,
   display->tme_gtk_display_callout_flags = later_callouts;
 
   /* yield to GTK: */
-  tme_threads_gtk_yield();
+  tme_threads_glib_yield();
 }
 
 /* this is a GTK callback for an enter notify event, that has the
@@ -285,7 +285,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   }
 
   /* call gtk_init if we haven't already: */
-  tme_threads_gtk_init();
+  //  tme_threads_gtk_init();
 
   /* start our data structure: */
   display = tme_new0(struct tme_gtk_display, 1);
@@ -303,7 +303,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   /* start the threads: */
   tme_mutex_init(&display->tme_gtk_display_mutex);
 
-#ifdef THREADS_SJLJ
+#ifdef TME_THREADS_SJLJ
   tme_thread_create(&display->tme_gtk_display_thread, (tme_thread_t) _tme_gtk_screen_th_update, display);
 #else
   gdk_threads_add_timeout(500, _tme_gtk_screen_update, display);

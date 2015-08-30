@@ -486,17 +486,20 @@ AC_PATH_XTRA
 AM_CONDITIONAL([USING_X], [test "x${no_x}" = x])
 
 dnl Checks for GLIB.
-AM_PATH_GLIB_2_0([], have_glib=true, have_glib=false)
-if $have_glib; then
+AM_PATH_GLIB_2_0([], have_glib=yes, have_glib=no)
+if test "x$have_glib" = xyes; then
   AC_DEFINE(HAVE_GLIB, [], [Define if you are compiling with GLIB.])
 fi
+AM_CONDITIONAL([USING_GLIB], [test "x${have_glib}" = xyes])
 
 dnl Checks for GTK.
-AM_PATH_GTK_3_0([], have_gtk=true, have_gtk=false)
-if $have_gtk; then
+AM_PATH_GTK_3_0([], have_gtk=yes, have_gtk=no)
+if test "x$have_gtk" = xyes; then
   AC_DEFINE(HAVE_GTK, [], [Define if you are compiling with GTK.])
   TME_HOSTS="${TME_HOSTS} gtk"
 fi
+
+AM_CONDITIONAL([USING_GTK], [test "x${have_gtk}" = xyes])
 
 dnl Characterize any graphics displays and remember the areas of
 dnl the smallest and largest screens.
@@ -689,8 +692,9 @@ fi
 
 for tme_thread_type in ${tme_thread_types}; do
 case "x${tme_thread_type}" in
-xpthreads | xposix)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_POSIX -D_GNU_SOURCE" 
-	  	     CFLAGS="${CFLAGS-} -pthread" ;;
+xpthreads | xposix)  CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_POSIX -D_GNU_SOURCE" 
+#	  	     CFLAGS="${CFLAGS-} -pthread"
+		     ;;
 xglib)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_GLIB ${GLIB_CFLAGS}"
 #	 LDFLAGS="${LDFLAGS-} ${GLIB_LIBS}"
 	 ;;
@@ -698,9 +702,9 @@ xsjlj)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_SJLJ" ;;
 esac
 done
 
-AC_MSG_RESULT($tme_thread_types)
-
+AM_CONDITIONAL([THREADS_POSIX], [test "x${tme_thread_types}" = xpthreads || test "x${tme_thread_types}" = xposix])
 AM_CONDITIONAL([THREADS_SJLJ], [test "x${tme_thread_types}" = xsjlj])
+AC_MSG_RESULT($tme_thread_types)
 
 dnl Configures for the system(s) to emulate.
 systems=all

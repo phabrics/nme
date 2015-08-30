@@ -37,8 +37,6 @@
 #define _TME_MISC_H
 
 #include <tme/common.h>
-#include <tme/threads.h>
-#include <tme/module.h>
 _TME_RCSID("$Id: misc.h,v 1.4 2009/11/08 17:25:47 fredette Exp $");
 
 /* types: */
@@ -51,15 +49,6 @@ typedef double tme_misc_cycles_scaling_t;
 #endif /* !_TME_HAVE_LONG_DOUBLE */
 
 /* prototypes: */
-/* this initializes libtme: */
-static _tme_inline void tme_init _TME_P((void)) {
-  /* initialize the threading system: */
-  tme_threads_init();
-
-  /* initialize the module system: */
-  tme_module_init();
-}
-
 char ** tme_misc_tokenize _TME_P((_tme_const char *, char comment, int *));
 #ifdef TME_HAVE_INT64_T
 #define _tme_unumber_t tme_uint64_t
