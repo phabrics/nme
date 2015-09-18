@@ -58,11 +58,13 @@ struct tme_gtk_keysym {
 };
 
 /* if X11 support is present: */
-#ifndef X_DISPLAY_MISSING
-
+#ifdef X_DISPLAY_MISSING
+#include "gtk-keymap.h"
+#else
 /* includes: */
 #include <gdk/gdkx.h>
 #include <X11/Xlib.h>
+#endif /* !X_DISPLAY_MISSING */
 
 #if TME_KEYBOARD_EVENT_TIME_UNDEF != CurrentTime
 #error "TME_KEYBOARD_EVENT_TIME_UNDEF and CurrentTime disagree"
@@ -73,21 +75,20 @@ static void
 _tme_gtk_keyboard_x11_new(struct tme_gtk_display *display)
 {
   struct tme_keyboard_buffer *buffer;
-  XModifierKeymap *modifier_keymap;
-  int x_modifier, modifier;
-  int keycode_to_modifier[(1 << (sizeof(KeyCode) * 8))];
   tme_keyboard_keyval_t *modifier_keysyms[TME_KEYBOARD_MODIFIER_MAX + 1];
   int modifier_keysyms_count[TME_KEYBOARD_MODIFIER_MAX + 1];
-  int keycode_min, keycode_max, keycode, keycode_i;
-  int keymap_width, keysym_i, keysym_j;
-  KeySym *keymap, keysym, keysym_cases[2];
+  int keycode, keymap_width, keysym_i, keysym_j;
+  KeySym keysym, keysym_cases[2];
   const char *string;
   struct tme_gtk_keysym *gtk_keysym;
   int rc;
+#ifndef X_DISPLAY_MISSING
+  XModifierKeymap *modifier_keymap;
+  int x_modifier, modifier;
+  int keycode_to_modifier[(1 << (sizeof(KeyCode) * 8))];
+  int keycode_min, keycode_max, keycode_i;
+  KeySym *keymap;
   
-  /* get the keyboard buffer: */
-  buffer = display->tme_gtk_display_keyboard_buffer;
-
   /* note all keycodes that are attached to modifiers: */
   for (keycode = 0;
        keycode < (int) TME_ARRAY_ELS(keycode_to_modifier);
@@ -135,6 +136,10 @@ _tme_gtk_keyboard_x11_new(struct tme_gtk_display *display)
 			       (keycode_max - keycode_min) + 1,
 			       &keymap_width);
 
+#endif /* !X_DISPLAY_MISSING */
+  /* get the keyboard buffer: */
+  buffer = display->tme_gtk_display_keyboard_buffer;
+
   /* initialize the lists of modifiers to keysyms: */
   memset (modifier_keysyms_count, 0, sizeof(modifier_keysyms_count));
 
@@ -167,7 +172,7 @@ _tme_gtk_keyboard_x11_new(struct tme_gtk_display *display)
       /* get the upper- and lowercase versions of this keysym.  if
 	 this keysym has no case, this sets both keysym_cases[] values
 	 to keysym: */
-      XConvertCase(keysym, &keysym_cases[0], &keysym_cases[1]);
+      gdk_keyval_convert_case(keysym, &keysym_cases[0], &keysym_cases[1]);
 
       for (keysym_j = 0;
 	   keysym_j < (int) TME_ARRAY_ELS(keysym_cases);
@@ -260,9 +265,10 @@ _tme_gtk_keyboard_x11_new(struct tme_gtk_display *display)
     }
   }
 
+#ifndef X_DISPLAY_MISSING
   /* free the keyboard mapping: */
   XFree(keymap);
-
+#endif
   /* add in the modifiers information: */
   for (modifier = 0;
        modifier < TME_KEYBOARD_MODIFIER_MAX;
@@ -278,8 +284,6 @@ _tme_gtk_keyboard_x11_new(struct tme_gtk_display *display)
     }
   }
 }
-
-#endif /* !X_DISPLAY_MISSING */
 
 #if 1
 /* this is used for debugging only: */
