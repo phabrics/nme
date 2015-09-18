@@ -94,7 +94,10 @@ print "  ".$modifs[$keycode_to_modifier[$keycode]]."\n};\n";
 @keymap = $x->GetKeyboardMapping($x->min_keycode, $x->max_keycode - $x->min_keycode + 1);
 $keymap_cnt = scalar @keymap;
 
-print "\nstatic KeySym keymap[][] = {\n";
+$keymap_width = scalar @{$keymap[0]};
+print "\nstatic int keymap_width = ".$keymap_width.";\n";
+
+print "\nstatic guint keymap[] = {\n";
 
 # loop over the keycodes in the keyboard mapping:
 for ($keycode = 0;
@@ -102,17 +105,14 @@ for ($keycode = 0;
      $keycode++) {
 
     print ",\n" if ($keycode != 0);
-    print "  { ";
-    $keymap_width = scalar @{$keymap[$keycode]};
+    print "  ";
     # loop over the keysyms that this keycode can map to: 
     for ($keysym_i = 0;
 	 $keysym_i < $keymap_width;
 	 $keysym_i++) {
 	print ", " if ($keysym_i != 0);
-	print ${$keymap[$keycode]}[$keysym_i];
+	printf("0x%x", ${$keymap[$keycode]}[$keysym_i]);
     }
-    print " }";
 }
 print "\n};\n";
 
-print "\nstatic int keymap_width = ".$keymap_width.";\n";
