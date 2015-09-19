@@ -176,8 +176,11 @@ _tme_gtk_keyboard_x11_new(struct tme_gtk_display *display)
       /* get the upper- and lowercase versions of this keysym.  if
 	 this keysym has no case, this sets both keysym_cases[] values
 	 to keysym: */
+#ifdef X_DISPLAY_MISSING
       gdk_keyval_convert_case(keysym, &keysym_cases[0], &keysym_cases[1]);
-
+#else
+      XConvertCase(keysym, &keysym_cases[0], &keysym_cases[1]);
+#endif
       for (keysym_j = 0;
 	   keysym_j < (int) TME_ARRAY_ELS(keysym_cases);
 	   keysym_j++) {

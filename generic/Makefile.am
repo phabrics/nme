@@ -57,12 +57,9 @@ tme_generic_la_SOURCES = bus-el.c
 tme_generic_la_LDFLAGS = -module -version-info 0:0:0
 tme_generic_la_LIBADD = libtme-generic.la
 
-EXTRA_DIST = fb-xlat-auto.sh \
-	fb-xlat-auto.m4 \
-	float-auto.sh \
+EXTRA_DIST = fb-xlat-auto.m4 \
 	float-auto.m4 \
 	float-auto.c \
-	bus-device-auto.sh \
 	bus-device-auto.m4 \
 	bus-device-auto.c
 

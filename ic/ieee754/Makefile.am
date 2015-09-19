@@ -14,8 +14,8 @@ libtme_ieee754_la_SOURCES = ieee754-ops-auto.c ieee754-misc.c softfloat-tme.c
 libtme_ieee754_la_LDFLAGS = -lm -version-info 0:0:0
 libtme_ieee754_la_LIBADD = $(top_builddir)/generic/libtme-generic.la
 BUILT_SOURCES = ieee754-auto.h ieee754-ops-auto.h ieee754-misc-auto.c ieee754-ops-auto.c
-EXTRA_DIST = ieee754-misc-auto.sh ieee754-ops-auto.sh ieee754-precision.sh softfloat-tme.h \
-	ieee754-misc-auto.m4 ieee754-ops-auto.m4 ieee754-precision.m4
+EXTRA_DIST = ieee754-misc-auto.m4 ieee754-ops-auto.m4 ieee754-precision.m4 softfloat-tme.h
+
 AM_CFLAGS = @CFLAGS_NO_STRICT_ALIASING@
 
 # target to make ieee754-auto.h:

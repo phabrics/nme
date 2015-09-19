@@ -49,7 +49,6 @@ endif
 BUILT_SOURCES = memory-auto.h memory-auto.c
 EXTRA_DIST = log-prf.c \
 	misc.c \
-	memory-auto.sh \
 	memory-auto.m4
 
 # target to make memory-auto.h:

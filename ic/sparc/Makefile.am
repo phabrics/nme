@@ -21,11 +21,6 @@ tme_ic_sparc_la_LDFLAGS = -module -version-info 0:0:0
 tme_ic_sparc_la_LIBADD = ../ieee754/libtme-ieee754.la
 BUILT_SOURCES = sparc-auto.h sparc-insns-auto.c sparc-bus-auto.c sparc-fpu-auto.c sparc-vis-auto.c
 EXTRA_DIST = sparc-impl.h \
-	sparc-misc-auto.sh \
-	sparc-insns-auto.sh \
-	sparc-fpu-auto.sh \
-	sparc-vis-auto.sh \
-	sparc-bus-auto.sh \
 	sparc-misc-auto.m4 \
 	sparc-insns-auto.m4 \
 	sparc-fpu-auto.m4 \
