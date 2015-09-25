@@ -46,21 +46,28 @@ endif
 if NEED_MMANLIB
 libtme_la_LIBADD += -lmman
 endif
-BUILT_SOURCES = memory-auto.h memory-auto.c
+
+noinst_SCRIPTS = memory-auto.sh
+
+BUILT_SOURCES = $(noinst_SCRIPTS)
+CLEANFILES = $(noinst_SCRIPTS)
+
 EXTRA_DIST = log-prf.c \
 	misc.c \
-	memory-auto.m4
+	$(noinst_SCRIPTS) \
+	$(noinst_SCRIPTS:.sh=.m4) 
+
+# default rule for regenerating the portable shell scripts from m4 descriptions
+$(noinst_SCRIPTS): %.sh: %.m4
+	$(AUTOM4TE) -l m4sh $< > $@
 
 # target to make memory-auto.h:
 memory-auto.h: memory-auto.sh
-	$(SHELL) memory-auto.sh --header > $@
+	$(SHELL) $< --header > $@
 
 # target to make memory-auto.c:
 memory-auto.c: memory-auto.sh
-	$(SHELL) memory-auto.sh > $@
-
-memory-auto.sh: memory-auto.m4
-	$(AUTOM4TE) -l m4sh $(srcdir)/memory-auto.m4 > $@
+	$(SHELL) $< > $@
 
 memory-auto.lo: memory-auto.h
 

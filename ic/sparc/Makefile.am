@@ -19,19 +19,26 @@ tme_ic_sparc_la_SOURCES = \
 	mb86900.c
 tme_ic_sparc_la_LDFLAGS = -module -version-info 0:0:0
 tme_ic_sparc_la_LIBADD = ../ieee754/libtme-ieee754.la
-BUILT_SOURCES = sparc-auto.h sparc-insns-auto.c sparc-bus-auto.c sparc-fpu-auto.c sparc-vis-auto.c
+noinst_SCRIPTS = sparc-misc-auto.sh \
+	sparc-insns-auto.sh \
+	sparc-fpu-auto.sh \
+	sparc-vis-auto.sh \
+	sparc-bus-auto.sh
+BUILT_SOURCES = $(noinst_SCRIPTS) sparc-auto.h sparc-insns-auto.c sparc-bus-auto.c sparc-fpu-auto.c sparc-vis-auto.c
+CLEANFILES = $(BUILT_SOURCES)
+
 EXTRA_DIST = sparc-impl.h \
-	sparc-misc-auto.m4 \
-	sparc-insns-auto.m4 \
-	sparc-fpu-auto.m4 \
-	sparc-vis-auto.m4 \
-	sparc-bus-auto.m4 \
+	$(BUILT_SOURCES) \
+	$(noinst_SCRIPTS:.sh=.m4)  \
 	sparc-execute.c \
 	sparc-rc-cc.c \
 	sparc-rc-chain.c \
 	sparc-rc-insns.c \
-	sparc-rc-ls.c \
-	$(BUILT_SOURCES)
+	sparc-rc-ls.c
+
+# default rule for regenerating the portable shell scripts from m4 descriptions
+$(noinst_SCRIPTS): %.sh: %.m4
+	$(AUTOM4TE) -l m4sh $< > $@
 
 # target to make sparc-auto.h:
 sparc-auto.h: sparc-misc-auto.sh sparc-insns-auto.sh
@@ -43,32 +50,17 @@ sparc-insns-auto.c: sparc-insns-auto.sh sparc-misc-auto.sh
 	$(SHELL) sparc-insns-auto.sh > $@
 	$(SHELL) sparc-misc-auto.sh >> $@
 
-sparc-insns-auto.sh: sparc-insns-auto.m4
-	$(AUTOM4TE) -l m4sh $(srcdir)/sparc-insns-auto.m4 > $@
-
-sparc-misc-auto.sh: sparc-misc-auto.m4
-	$(AUTOM4TE) -l m4sh $(srcdir)/sparc-misc-auto.m4 > $@
-
 # target to make sparc-bus-auto.c:
 sparc-bus-auto.c: sparc-bus-auto.sh
 	$(SHELL) sparc-bus-auto.sh > $@
-
-sparc-bus-auto.sh: sparc-bus-auto.m4
-	$(AUTOM4TE) -l m4sh $(srcdir)/sparc-bus-auto.m4 > $@
 
 # target to make sparc-fpu-auto.c:
 sparc-fpu-auto.c: sparc-fpu-auto.sh
 	$(SHELL) sparc-fpu-auto.sh > $@
 
-sparc-fpu-auto.sh: sparc-fpu-auto.m4
-	$(AUTOM4TE) -l m4sh $(srcdir)/sparc-fpu-auto.m4 > $@
-
 # target to make sparc-vis-auto.c:
 sparc-vis-auto.c: sparc-vis-auto.sh
 	$(SHELL) sparc-vis-auto.sh > $@
-
-sparc-vis-auto.sh: sparc-vis-auto.m4
-	$(AUTOM4TE) -l m4sh $(srcdir)/sparc-vis-auto.m4 > $@
 
 # dependencies on automatically-generated IEEE 754 sources:
 $(tme_ic_sparc_la_OBJECTS): ../ieee754/ieee754-auto.h ../ieee754/ieee754-ops-auto.h

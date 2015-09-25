@@ -24,6 +24,8 @@ pkginclude_HEADERS = memory.h \
 	runlength.h \
 	tmesh.h
 
+info_TEXINFOS = tme.texi
+
 install-exec-local:
 	sort -u < tme-plugins.txt > tme-plugins.txt.final
 	mv tme-plugins.txt.final tme-plugins.txt

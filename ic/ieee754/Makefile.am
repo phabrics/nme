@@ -9,39 +9,39 @@ AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I. -D_TME_IMPL
 
 tmeicincludedir = $(pkgincludedir)/ic
 tmeicinclude_HEADERS = ieee754-auto.h ieee754-ops-auto.h
+
 noinst_LTLIBRARIES = libtme-ieee754.la
 libtme_ieee754_la_SOURCES = ieee754-ops-auto.c ieee754-misc.c softfloat-tme.c
 libtme_ieee754_la_LDFLAGS = -lm -version-info 0:0:0
 libtme_ieee754_la_LIBADD = $(top_builddir)/generic/libtme-generic.la
-BUILT_SOURCES = ieee754-auto.h ieee754-ops-auto.h ieee754-misc-auto.c ieee754-ops-auto.c
-EXTRA_DIST = ieee754-misc-auto.m4 ieee754-ops-auto.m4 ieee754-precision.m4 softfloat-tme.h
 
 AM_CFLAGS = @CFLAGS_NO_STRICT_ALIASING@
 
+noinst_SCRIPTS = ieee754-misc-auto.sh ieee754-ops-auto.sh ieee754-precision.sh 
+BUILT_SOURCES = $(noinst_SCRIPTS) ieee754-auto.h ieee754-ops-auto.h
+CLEANFILES = $(BUILT_SOURCES)
+
+EXTRA_DIST = $(noinst_SCRIPTS) $(noinst_SCRIPTS:.sh=.m4) softfloat-tme.h
+
+# default rule for regenerating the portable shell scripts from m4 descriptions
+$(noinst_SCRIPTS): %.sh: %.m4
+	$(AUTOM4TE) -l m4sh $< > $@
+
 # target to make ieee754-auto.h:
 ieee754-auto.h: ieee754-misc-auto.sh ieee754-precision.sh
-	$(SHELL) ieee754-misc-auto.sh --header > $@
+	$(SHELL) $< --header > $@
 
 # target to make ieee754-misc-auto.c:
 ieee754-misc-auto.c: ieee754-misc-auto.sh ieee754-precision.sh
-	$(SHELL) ieee754-misc-auto.sh > $@
-
-ieee754-misc-auto.sh: ieee754-misc-auto.m4
-	$(AUTOM4TE) -l m4sh $(srcdir)/ieee754-misc-auto.m4 > $@
+	$(SHELL) $< > $@
 
 # target to make ieee754-ops-auto.h:
 ieee754-ops-auto.h: ieee754-ops-auto.sh ieee754-precision.sh
-	$(SHELL) ieee754-ops-auto.sh --header > $@
+	$(SHELL) $< --header > $@
 
 # target to make ieee754-ops-auto.c:
 ieee754-ops-auto.c: ieee754-ops-auto.sh ieee754-precision.sh
-	$(SHELL) ieee754-ops-auto.sh > $@
-
-ieee754-ops-auto.sh: ieee754-ops-auto.m4
-	$(AUTOM4TE) -l m4sh $(srcdir)/ieee754-ops-auto.m4 > $@
-
-ieee754-precision.sh: ieee754-precision.m4
-	$(AUTOM4TE) -l m4sh $(srcdir)/ieee754-precision.m4 > $@
+	$(SHELL) $< > $@
 
 # ieee754-misc.lo depends on ieee754-misc-auto.c:
 ieee754-misc.lo: ieee754-misc-auto.c

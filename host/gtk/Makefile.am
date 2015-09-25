@@ -14,10 +14,9 @@ EXTRA_DIST = gtk-keymap-make.pl
 
 if !USING_X
 BUILT_SOURCES = gtk-keymap.h
-
-gtk-keyboard.lo: gtk-keymap.h
+CLEANFILES = gtk-keymap.h
 gtk-keymap.h: gtk-keymap-make.pl
-	  $(PERL) $(srcdir)/gtk-keymap-make.pl > $@
+	  $(PERL) $< > $@
 endif
 
 include $(top_srcdir)/modules
