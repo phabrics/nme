@@ -152,6 +152,7 @@ AC_TYPE_LONG_LONG_INT
 AC_TYPE_SIZE_T
 AC_TYPE_SSIZE_T
 AC_TYPE_UINTPTR_T
+AX_TYPE_SOCKLEN_T
 AC_CHECK_SIZEOF(void *)
 AC_CHECK_SIZEOF(long)
 AC_CHECK_SIZEOF(int)
@@ -446,6 +447,14 @@ fi
 AC_MSG_RESULT($TME_HOSTS)
 
 TME_HOSTS="${TME_HOSTS} posix"
+
+AC_ARG_ENABLE(openvpn,
+[  --enable-openvpn          use OpenVPN library of routines for cross-platform compatibility (enable for TAP-Windows driver)],
+[ ], [enable_openvpn=no])
+
+if test "x${enable_openvpn}" = xyes; then
+   TME_HOSTS="${TME_HOSTS} compat openvpn"
+fi
 
 AC_SYS_POSIX_TERMIOS
 
@@ -1386,6 +1395,8 @@ AC_CONFIG_FILES([Makefile
 	  machine/sun4/Makefile
 	  machine/sun4u/Makefile
           host/Makefile
+          host/compat/Makefile
+          host/openvpn/Makefile
           host/posix/Makefile
           host/eth/Makefile
           host/bsd/Makefile
