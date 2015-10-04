@@ -34,6 +34,10 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.68])
 AC_INIT([tme], [0.12beta5])
+dnl define the TAP-Windows version
+define([PRODUCT_TAP_WIN_COMPONENT_ID], [tap0901])
+define([PRODUCT_TAP_WIN_MIN_MAJOR], [9])
+define([PRODUCT_TAP_WIN_MIN_MINOR], [9])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
@@ -83,10 +87,13 @@ AC_SUBST(NATLIBS)
 
 dnl Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([unistd.h stdio.h memory.h stdarg.h limits.h float.h])
+AC_CHECK_HEADERS([unistd.h stdio.h memory.h stdarg.h stdbool.h limits.h float.h])
 AC_CHECK_HEADERS([sys/ioctl.h sys/sockio.h sys/socketio.h net/if_dl.h ioctls.h netpacket/packet.h ifaddrs.h])
 AC_CHECK_HEADERS([byteswap.h sys/endian.h])
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h poll.h sys/socket.h sys/select.h sys/time.h time.h sys/mman.h sys/uio.h])
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h poll.h sys/socket.h sys/select.h sys/time.h time.h errno.h sys/mman.h sys/uio.h])
+AC_CHECK_HEADERS([io.h direct.h \
+		  ctype.h sys/types.h sys/socket.h \
+		  signal.h unistd.h dlfcn.h])
 AC_CHECK_HEADERS([linux/netfilter/nf_tables.h libmnl/libmnl.h libnftnl/table.h])
 AC_CHECK_HEADERS([pthread_np.h sched.h])
 AC_CHECK_HEADERS([sys/param.h sys/linker.h sys/sysctl.h sys/module.h npf.h net/npf_ncode.h pcap/pcap.h], [], [],
@@ -137,6 +144,17 @@ AC_CHECK_HEADERS([net/if.h net/if_var.h net/if_types.h net/if_arp.h netinet/in.h
  #endif
 ])
 
+AC_CHECK_HEADERS([netinet/in_systm.h netinet/tcp.h windows.h winsock2.h ws2tcpip.h])
+
+AC_CHECK_HEADERS([ \
+	sys/stat.h \
+	sys/file.h sys/wait.h \
+	libgen.h stropts.h \
+	syslog.h pwd.h grp.h \
+	sys/sockio.h linux/sockios.h \
+	linux/types.h sys/poll.h sys/epoll.h err.h \
+])
+
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_BIGENDIAN
 AC_C_CONST
@@ -152,7 +170,10 @@ AC_TYPE_LONG_LONG_INT
 AC_TYPE_SIZE_T
 AC_TYPE_SSIZE_T
 AC_TYPE_UINTPTR_T
+AX_CPP_VARARG_MACRO_ISO
+AX_CPP_VARARG_MACRO_GCC
 AX_TYPE_SOCKLEN_T
+AX_EMPTY_ARRAY
 AC_CHECK_SIZEOF(void *)
 AC_CHECK_SIZEOF(long)
 AC_CHECK_SIZEOF(int)
@@ -259,6 +280,175 @@ AM_CONDITIONAL([NEED_MMANLIB], [test "x$ac_cv_search_mmap" != "xnone required" &
 AC_FUNC_MMAP
 #AC_FUNC_REALLOC
 AC_CHECK_FUNCS([clock_gettime gettimeofday memmove memset munmap pow ptsname ptsname_r select socket sqrt strchr strerror strrchr strstr strtoul devname fdevname kldfind])
+
+SOCKET_INCLUDES="
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#ifdef HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+#ifdef HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+#ifdef HAVE_WINDOWS_H
+#include <windows.h>
+#endif
+#ifdef HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif
+#ifdef HAVE_WS2TCPIP_H
+#include <ws2tcpip.h>
+#endif
+#ifdef HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
+#ifdef HAVE_NETINET_IP_H
+#include <netinet/ip.h>
+#endif
+"
+
+AC_CHECK_HEADERS(
+	[net/if.h netinet/ip.h resolv.h sys/un.h net/if_utun.h sys/kern_control.h],
+	,
+	,
+	[[${SOCKET_INCLUDES}]]
+)
+
+AC_CHECK_TYPES(
+	[in_addr_t],
+	,
+	[AC_DEFINE([in_addr_t], [uint32_t], [Workaround missing in_addr_t])],
+	[[${SOCKET_INCLUDES}]]
+)
+AC_CHECK_TYPE(
+	[struct iphdr],
+	[AC_DEFINE([HAVE_IPHDR], [1], [struct iphdr needed for IPv6 support])],
+	,
+	[[${SOCKET_INCLUDES}]]
+)
+AC_CHECK_TYPE(
+	[struct sock_extended_err],
+	[AC_DEFINE([HAVE_SOCK_EXTENDED_ERR], [1], [struct sock_extended_err needed for extended socket error support])],
+	,
+	[[${SOCKET_INCLUDES}]]
+)
+AC_CHECK_TYPE(
+	[struct msghdr],
+	[AC_DEFINE([HAVE_MSGHDR], [1], [struct msghdr needed for extended socket error support])],
+	,
+	[[${SOCKET_INCLUDES}]]
+)
+AC_CHECK_TYPE(
+	[struct cmsghdr],
+	[AC_DEFINE([HAVE_CMSGHDR], [1], [struct cmsghdr needed for extended socket error support])],
+	,
+	[[${SOCKET_INCLUDES}]]
+)
+AC_CHECK_TYPE(
+	[struct in_pktinfo],
+	[AC_DEFINE([HAVE_IN_PKTINFO], [1], [struct in_pktinfo needed for IP_PKTINFO support])],
+	,
+	[[${SOCKET_INCLUDES}]]
+)
+AC_CHECK_TYPE(
+	[struct sockaddr_in6],
+	,
+	[AC_MSG_ERROR([struct sockaddr_in6 not found, needed for ipv6 transport support.])],
+	[[${SOCKET_INCLUDES}]]
+)
+AC_CHECK_DECLS(
+	[SO_MARK],
+	,
+	,
+	[[${SOCKET_INCLUDES}]]
+)
+
+dnl We emulate signals in Windows
+AC_CHECK_DECLS(
+	[SIGHUP],
+	,
+	[AC_DEFINE([SIGHUP], [1], [SIGHUP replacement])],
+	[[
+		#ifdef HAVE_SIGNAL_H
+		#include <signal.h>
+		#endif
+	]]
+)
+AC_CHECK_DECLS(
+	[SIGINT],
+	,
+	[AC_DEFINE([SIGINT], [2], [SIGINT replacement])],
+	[[
+		#ifdef HAVE_SIGNAL_H
+		#include <signal.h>
+		#endif
+	]]
+)
+AC_CHECK_DECLS(
+	[SIGUSR1],
+	,
+	[AC_DEFINE([SIGUSR1], [10], [SIGUSR1 replacement])],
+	[[
+		#ifdef HAVE_SIGNAL_H
+		#include <signal.h>
+		#endif
+	]]
+)
+AC_CHECK_DECLS(
+	[SIGUSR2],
+	,
+	[AC_DEFINE([SIGUSR2], [12], [SIGUSR2 replacement])],
+	[[
+		#ifdef HAVE_SIGNAL_H
+		#include <signal.h>
+		#endif
+	]]
+)
+AC_CHECK_DECLS(
+	[SIGTERM],
+	,
+	[AC_DEFINE([SIGTERM], [15], [SIGTERM replacement])],
+	[[
+		#ifdef HAVE_SIGNAL_H
+		#include <signal.h>
+		#endif
+	]]
+)
+
+AC_FUNC_FORK
+
+AC_CHECK_FUNCS([ \
+	daemon chroot getpwnam setuid nice system getpid dup dup2 \
+	getpass syslog openlog mlockall getgrnam setgid \
+	setgroups stat flock readv writev time \
+	ctime vsnprintf strdup \
+	setsid chdir putenv getpeername unlink \
+	chsize ftruncate execve getpeereid umask basename dirname access \
+	epoll_create \
+])
+AC_CHECK_FUNCS([sendmsg recvmsg inet_ntop inet_pton])
+
+if test -n "${SP_PLATFORM_WINDOWS}"; then
+	AC_DEFINE_UNQUOTED([PATH_SEPARATOR], ['\\\\'], [Path separator]) #"
+	AC_DEFINE_UNQUOTED([PATH_SEPARATOR_STR], ["\\\\"], [Path separator]) #"
+else
+	AC_DEFINE_UNQUOTED([PATH_SEPARATOR], ['/'], [Path separator])
+	AC_DEFINE_UNQUOTED([PATH_SEPARATOR_STR], ["/"], [Path separator])
+fi
+
+TAP_WIN_COMPONENT_ID="PRODUCT_TAP_WIN_COMPONENT_ID"
+TAP_WIN_MIN_MAJOR="PRODUCT_TAP_WIN_MIN_MAJOR"
+TAP_WIN_MIN_MINOR="PRODUCT_TAP_WIN_MIN_MINOR"
+AC_DEFINE_UNQUOTED([TAP_WIN_COMPONENT_ID], ["${TAP_WIN_COMPONENT_ID}"], [The tap-windows id])
+AC_DEFINE_UNQUOTED([TAP_WIN_MIN_MAJOR], [${TAP_WIN_MIN_MAJOR}], [The tap-windows version number is required for OpenVPN])
+AC_DEFINE_UNQUOTED([TAP_WIN_MIN_MINOR], [${TAP_WIN_MIN_MINOR}], [The tap-windows version number is required for OpenVPN])
+AC_SUBST([TAP_WIN_COMPONENT_ID])
+AC_SUBST([TAP_WIN_MIN_MAJOR])
+AC_SUBST([TAP_WIN_MIN_MINOR])
 
 AC_CHECK_FUNC_LONG(__builtin_bswap16, [
   unsigned int x;
@@ -960,7 +1150,8 @@ dnl Configure for libtool.
 #AC_CONFIG_SUBDIRS(libltdl)
 LT_PREREQ([2.4])
 LT_CONFIG_LTDL_DIR([libltdl])
-LT_INIT([dlopen])
+LT_INIT([dlopen,win32-dll])
+LT_LANG([Windows Resource])
 LTDL_INIT([recursive installable])
 CPPFLAGS="${CPPFLAGS-} ${LTDLINCL}"
 TME_PREOPEN=
@@ -968,42 +1159,91 @@ if test "x${enable_static}" = "xyes"; then
   TME_PREOPEN='`sort -u $(top_builddir)/tme-preopen.txt`'
 fi
 AC_SUBST(TME_PREOPEN)
+AC_DEFINE_UNQUOTED([TARGET_ALIAS], ["${host}"], [A string representing our host])
 case "${target_os}" in
 netbsd*) 
+   AC_DEFINE([TARGET_NETBSD], [1], [Are we running NetBSD?])
+   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["N"], [Target prefix])
    CPPFLAGS="${CPPFLAGS-} -D_NETBSD_SOURCE"
    DEV_TAP_FILENAME='"\"/dev/tap\""'
    SETCAP="chmod u+s"
    ;;
 openbsd*) 
+   AC_DEFINE([TARGET_OPENBSD], [1], [Are we running on OpenBSD?])
+   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["O"], [Target prefix])
    CPPFLAGS="${CPPFLAGS-}"
    DEV_TAP_FILENAME='"\"/dev/tun\""'
    SETCAP="chmod u+s"
    ;;
 freebsd*) 
+   AC_DEFINE([TARGET_FREEBSD], [1], [Are we running on FreeBSD?])
+   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["F"], [Target prefix])
    CPPFLAGS="${CPPFLAGS-}"
    DEV_TAP_FILENAME='"\"/dev/tap\""'
    SETCAP="chmod u+s"
    ;;
 dragonfly*) 
+   AC_DEFINE([TARGET_DRAGONFLY], [1], [Are we running on DragonFlyBSD?])
+   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["D"], [Target prefix])
    CPPFLAGS="${CPPFLAGS-}"
    DEV_TAP_FILENAME='"\"/dev/tap\""'
    SETCAP="chmod u+s"
    ;;
 linux*) 
+   AC_DEFINE([TARGET_LINUX], [1], [Are we running on Linux?])
+   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["L"], [Target prefix])
    CPPFLAGS="${CPPFLAGS-}"
    DEV_TAP_FILENAME='"\"/dev/net/tun\""'
    SETCAP="setcap cap_sys_nice,cap_net_admin,cap_net_raw+ep"
    ;;
 mingw*)
-   CPPFLAGS="${CPPFLAGS-}"
+   AC_DEFINE([TARGET_WIN32], [1], [Are we running WIN32?])
+   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["W"], [Target prefix])
+   CPPFLAGS="${CPPFLAGS} -DWIN32_LEAN_AND_MEAN"
+   CPPFLAGS="${CPPFLAGS} -DNTDDI_VERSION=NTDDI_WINXP -D_WIN32_WINNT=_WIN32_WINNT_WINXP"
+   WIN32=yes
    SETCAP="chmod u+s"
    TGTPFX="${target}-"
    ;;
+solaris*)
+   AC_DEFINE([TARGET_SOLARIS], [1], [Are we running on Solaris?])
+   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["S"], [Target prefix])
+   SETCAP="chmod u+s"
+   ;;
+darwin*)
+   AC_DEFINE([TARGET_DARWIN], [1], [Are we running on Mac OS X?])
+   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["M"], [Target prefix])
+   dnl some Mac OS X tendering (we use vararg macros...)
+   CPPFLAGS="$CPPFLAGS -no-cpp-precomp"
+   SETCAP="chmod u+s"
+   ;;
 *)
+   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["X"], [Target prefix])
    CPPFLAGS="${CPPFLAGS-}"
    SETCAP="chmod u+s"
    ;;
 esac
+
+AC_ARG_VAR([IFCONFIG], [full path to ipconfig utility])
+AC_ARG_VAR([ROUTE], [full path to route utility])
+AC_ARG_VAR([IPROUTE], [full path to ip utility])
+AC_ARG_VAR([NETSTAT], [path to netstat utility]) # tests
+AC_ARG_VAR([MAN2HTML], [path to man2html utility])
+AC_ARG_VAR([GIT], [path to git utility])
+AC_ARG_VAR([SYSTEMD_ASK_PASSWORD], [path to systemd-ask-password utility])
+AC_PATH_PROGS([IFCONFIG], [ifconfig],, [$PATH:/usr/local/sbin:/usr/sbin:/sbin])
+AC_PATH_PROGS([ROUTE], [route],, [$PATH:/usr/local/sbin:/usr/sbin:/sbin])
+AC_PATH_PROGS([IPROUTE], [ip],, [$PATH:/usr/local/sbin:/usr/sbin:/sbin])
+AC_PATH_PROGS([SYSTEMD_ASK_PASSWORD], [systemd-ask-password],, [$PATH:/usr/local/bin:/usr/bin:/bin])
+AC_CHECK_PROGS([NETSTAT], [netstat], [netstat], [$PATH:/usr/local/sbin:/usr/sbin:/sbin:/etc]) # tests
+AC_CHECK_PROGS([MAN2HTML], [man2html])
+AC_CHECK_PROGS([GIT], [git]) # optional
+AC_DEFINE_UNQUOTED([IFCONFIG_PATH], ["$IFCONFIG"], [Path to ifconfig tool])
+AC_DEFINE_UNQUOTED([IPROUTE_PATH], ["$IPROUTE"], [Path to iproute tool])
+AC_DEFINE_UNQUOTED([ROUTE_PATH], ["$ROUTE"], [Path to route tool])
+AC_DEFINE_UNQUOTED([SYSTEMD_ASK_PASSWORD_PATH], ["$SYSTEMD_ASK_PASSWORD"], [Path to systemd-ask-password tool])
+
+AM_CONDITIONAL([WIN32], [test "${WIN32}" = "yes"])
 
 AC_SUBST(DEV_TAP_FILENAME)
 AC_SUBST(SETCAP)
