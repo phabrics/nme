@@ -644,7 +644,10 @@ AC_ARG_ENABLE(openvpn,
 
 if test "x${enable_openvpn}" = xyes; then
    TME_HOSTS="${TME_HOSTS} compat openvpn"
+   AC_DEFINE([ENABLE_OPENVPN], [], [Enable OpenVPN library routines to be used for TUN/TAP access.])
 fi
+
+AM_CONDITIONAL([USING_OPENVPN], [test "x${enable_openvpn}" = xyes])
 
 AC_SYS_POSIX_TERMIOS
 

@@ -160,6 +160,9 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #include <netinet/ip_nat.h>
 #include <netinet/ip_proxy.h>
 #endif
+#ifdef ENABLE_OPENVPN
+#include "tun.h"
+#endif
 
 /* macros: */
 /* interface types: */
@@ -348,8 +351,8 @@ int _tme_tun_tap_args(const char * const args[],
 
   arg_i = 1;
 
-#define TAPIF (if_names + TME_IF_TYPE_TAP * IFNAMSIZ)
-#define NATIF (if_names + TME_IF_TYPE_NAT * IFNAMSIZ)
+#define TAPIF ((char *)if_names + TME_IF_TYPE_TAP * IFNAMSIZ)
+#define NATIF ((char *)if_names + TME_IF_TYPE_NAT * IFNAMSIZ)
 
   for (;;) {
     /* the interface we're supposed to use: */
@@ -676,13 +679,10 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   struct stat tap_buf;
 #endif
 #if TME_DO_NAT
-  int rc;
-  struct ifaddrs *ifa;
-  int ifa_offs[TME_IP_ADDRS_TOTAL];
   char nat_hosts[TME_IP_ADDRS_TOTAL][NI_MAXHOST];
   struct in_addr nat_addrs[TME_IP_ADDRS_TOTAL];
   u_int netnum;
-  int nating, forward = EOF;
+  int forward = EOF;
 #endif
 #if TME_DO_NFT
   in_addr_t zero = 0;
@@ -709,49 +709,45 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   ipnat_t nat;
 #endif
 #endif
+#ifdef ENABLE_OPENVPN
+  struct tuntap *tt;
+#else
+  int rc;
+  struct ifaddrs *ifa;
+  int ifa_offs[TME_IP_ADDRS_TOTAL];
 
+  ifa_offs[TME_IP_ADDRS_INET] = offsetof(struct ifaddrs, ifa_addr);
+  ifa_offs[TME_IP_ADDRS_NETMASK] = offsetof(struct ifaddrs, ifa_netmask);
+  ifa_offs[TME_IP_ADDRS_BCAST] = offsetof(struct ifaddrs, ifa_broadaddr);
+#endif
+  
   /* get the arguments: */
   _tme_tun_tap_args(args, if_names, tap_addrs, _output);
 
 #define TAPIF if_names[TME_IF_TYPE_TAP]
-#define NATIF if_names[TME_IF_TYPE_NAT]
-
-#if TME_DO_NAT
-  ifa_offs[TME_IP_ADDRS_INET] = offsetof(struct ifaddrs, ifa_addr);
-  ifa_offs[TME_IP_ADDRS_NETMASK] = offsetof(struct ifaddrs, ifa_netmask);
-  ifa_offs[TME_IP_ADDRS_BCAST] = offsetof(struct ifaddrs, ifa_broadaddr);
-
-  /* find the interface we will use: */
-  rc = tme_eth_ifaddrs_find(NATIF, &ifa, NULL, NULL);
-  strncpy(NATIF, ifa->ifa_name, IFNAMSIZ);
-
-  if (rc != TME_OK) {
-    nating = FALSE;
-    tme_output_append_error(_output, _("couldn't find an interface %s"), NATIF);
-  } else {
-    for(i=0;i<TME_IP_ADDRS_TOTAL;i++) {
-      if((rc = getnameinfo(*(struct sockaddr **)((char *)ifa + ifa_offs[i]),
-			   sizeof(struct sockaddr_in),
-			   nat_hosts[i], NI_MAXHOST, NULL, 0, NI_NUMERICHOST)))
-	tme_log(&element->tme_element_log_handle, 0, errno,
-		(&element->tme_element_log_handle,
-		 _("getnameinfo() failed: %s\n"), gai_strerror(rc)));
-      else
-	inet_aton(nat_hosts[i], &nat_addrs[i]);
-    }
-
-    nating = TRUE;
-
-    tme_log(&element->tme_element_log_handle, 0, TME_OK, 
-	    (&element->tme_element_log_handle, 
-	     "using nat interface %s(%d) with address %s, netmask %s, broadcast %s",
-	     NATIF, if_nametoindex(NATIF),
-	     nat_hosts[TME_IP_ADDRS_INET],
-	     nat_hosts[TME_IP_ADDRS_NETMASK],
-	     nat_hosts[TME_IP_ADDRS_BCAST]));
+  // Set/get ip addresses
+#define TAPINET tap_addrs[TME_IP_ADDRS_INET]
+#define TAPNETMASK tap_addrs[TME_IP_ADDRS_NETMASK]
+#define TAPBCAST tap_addrs[TME_IP_ADDRS_BCAST]
+  
+#ifdef ENABLE_OPENVPN
+  for(i=0;i<TME_IP_ADDRS_TOTAL;i++) {
+    strncpy(tap_hosts[i], inet_ntoa(tap_addrs[i]), NI_MAXHOST);
   }
-#endif
+  tme_log(&element->tme_element_log_handle, 0, TME_OK, 
+	  (&element->tme_element_log_handle, 
+	   "trying tap interface %s(%d) with address %s, netmask %s, broadcast %s",
+	   TAPIF, if_nametoindex(TAPIF),
+	   tap_hosts[TME_IP_ADDRS_INET],
+	   tap_hosts[TME_IP_ADDRS_NETMASK],
+	   tap_hosts[TME_IP_ADDRS_BCAST]));
 
+  tt = init_tun(TAPIF, "tap", TOP_SUBNET,
+		tap_hosts[TME_IP_ADDRS_INET],
+		tap_hosts[TME_IP_ADDRS_NETMASK],		
+		NULL, 0, NULL, 0, 0, 0, NULL);
+
+#else
 #ifdef HAVE_KLDFIND
   // A helper step to automate loading of the necessary kernel module on FreeBSD-derived platforms
 #define KLD_FILENAME "if_tap.ko"
@@ -839,11 +835,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 	     _("failed to set the flags on iface %s"),
 	     TAPIF));
   }
-  
-  // Set/get ip addresses
-#define TAPINET tap_addrs[TME_IP_ADDRS_INET]
-#define TAPNETMASK tap_addrs[TME_IP_ADDRS_NETMASK]
-#define TAPBCAST tap_addrs[TME_IP_ADDRS_BCAST]
   
 #ifdef SIOCAIFADDR
   if(TAPINET.s_addr
@@ -958,11 +949,43 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 	     hwaddr[4],
 	     hwaddr[5]));
   }
-
+#endif // !ENABLE_OPENVPN
   // Perform network address translation, if available
 
+#define NATIF if_names[TME_IF_TYPE_NAT]
+
 #if TME_DO_NAT
-  if(!nating) goto exit_nat;
+  tme_log(&element->tme_element_log_handle, 0, TME_OK, 
+	  (&element->tme_element_log_handle, 
+	   "trying nat interface %s", NATIF));
+	   
+  /* find the interface we will use: */
+  rc = tme_eth_ifaddrs_find(NATIF, &ifa, NULL, NULL);
+
+  if (rc != TME_OK) {
+    tme_output_append_error(_output, _("couldn't find an interface %s"), NATIF);
+    goto exit_nat;
+  } else {
+    strncpy(NATIF, ifa->ifa_name, IFNAMSIZ);
+    for(i=0;i<TME_IP_ADDRS_TOTAL;i++) {
+      if((rc = getnameinfo(*(struct sockaddr **)((char *)ifa + ifa_offs[i]),
+			   sizeof(struct sockaddr_in),
+			   nat_hosts[i], NI_MAXHOST, NULL, 0, NI_NUMERICHOST)))
+	tme_log(&element->tme_element_log_handle, 0, errno,
+		(&element->tme_element_log_handle,
+		 _("getnameinfo() failed: %s\n"), gai_strerror(rc)));
+      else
+	inet_aton(nat_hosts[i], &nat_addrs[i]);
+    }
+
+    tme_log(&element->tme_element_log_handle, 0, TME_OK, 
+	    (&element->tme_element_log_handle, 
+	     "using nat interface %s(%d) with address %s, netmask %s, broadcast %s",
+	     NATIF, if_nametoindex(NATIF),
+	     nat_hosts[TME_IP_ADDRS_INET],
+	     nat_hosts[TME_IP_ADDRS_NETMASK],
+	     nat_hosts[TME_IP_ADDRS_BCAST]));
+  }
 
   netnum = TAPINET.s_addr & TAPNETMASK.s_addr;
 #endif
@@ -1213,7 +1236,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
     goto exit_nat;
   }
   npf_config_destroy(ncf);
-  rc = ioctl(dummy_fd, IOC_NPF_SWITCH, &nating);
+  i=1;
+  rc = ioctl(dummy_fd, IOC_NPF_SWITCH, &i);
   if (rc) {
     tme_log(&element->tme_element_log_handle, 0, -1,
 	    (&element->tme_element_log_handle,
