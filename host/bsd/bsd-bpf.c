@@ -37,44 +37,7 @@
 _TME_RCSID("$Id: bsd-bpf.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 
 /* includes: */
-#include <tme/generic/ethernet.h>
-#include <tme/threads.h>
-#include <tme/misc.h>
 #include "eth-if.h"
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <netdb.h>
-#include <sys/param.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <net/if.h>
-#include <netinet/in_systm.h>
-#include <netinet/in.h>
-#if defined(HAVE_SYS_SOCKIO_H)
-#include <sys/sockio.h>
-#elif defined(HAVE_SYS_SOCKETIO_H)
-#include <sys/socketio.h> 
-#endif /* HAVE_SYS_SOCKETIO_H */
-#include <sys/ioctl.h>
-#ifdef HAVE_IOCTLS_H
-#include <ioctls.h>
-#endif /* HAVE_IOCTLS_H */
-#ifdef HAVE_NET_IF_ETHER_H
-#include <net/if_ether.h>
-#endif /* HAVE_NET_IF_ETHER_H */
-#ifdef HAVE_NETPACKET_PACKET_H
-#include <netpacket/packet.h>
-#endif /* HAVE_NETPACKET_PACKET_H */
-#ifdef HAVE_NET_ETHERNET_H
-#include <net/ethernet.h>
-#endif /* HAVE_NET_ETHERNET_H */
-#include <netinet/ip.h>
-#ifdef HAVE_NET_IF_DL_H
-#include <net/if_dl.h>
-#endif /* HAVE_NET_IF_DL_H */
-#include <arpa/inet.h>
 #if defined(HAVE_AF_PACKET) && defined(HAVE_LINUX_FILTER_H)
 #include <linux/filter.h>
 #include <linux/if_ether.h>

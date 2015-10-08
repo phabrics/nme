@@ -8,9 +8,9 @@ AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(srcdir)/../eth -I. -D_TME_IMPL
 pkglib_LTLIBRARIES = tme_host_bsd.la
 tme_host_bsd_la_SOURCES = bsd-bpf.c
 tme_host_bsd_la_LDFLAGS = -module -version-info 0:0:0
-tme_host_bsd_la_LIBADD = ../eth/libtme-host-eth.la
+tme_host_bsd_la_LIBADD = ../eth/libeth.la
 include $(top_srcdir)/modules
-$(pkglib_LTLIBRARIES): ../eth/libtme-host-eth.la
-../eth/libtme-host-eth.la: force
+$(pkglib_LTLIBRARIES): ../eth/libeth.la
+../eth/libeth.la: force
 	cd `dirname $@` && $(MAKE) `basename $@`
 force: ;

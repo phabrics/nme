@@ -40,11 +40,88 @@
 _TME_RCSID("$Id: eth-impl.h,v 1.1 2003/05/18 00:02:23 fredette Exp $");
 
 /* includes: */
+#include <tme/generic/ethernet.h>
+#include <tme/threads.h>
+#include <tme/misc.h>
+#ifdef HAVE_TIME_H
+#include <time.h>
+#endif
+#include <stdio.h>
+#include <string.h>
+#include <stddef.h>	/* for offsetof */
+#include <errno.h>
+#include <fcntl.h>
+#ifdef HAVE_NETDB_H
+#include <netdb.h>
+#endif
+#ifdef SYS_PARAM_H
 #include <sys/param.h>
+#endif
+#ifdef HAVE_SYS_LINKER_H
+#include <sys/linker.h>
+#endif
+#ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif
+#ifdef SYS_STAT_H
 #include <sys/stat.h>
+#endif
+#ifdef HAVE_NET_IF_H
 #include <net/if.h>
+#endif
+#ifdef HAVE_NET_IF_VAR_H
+#include <net/if_var.h>
+#endif
+#ifdef HAVE_NET_IF_TYPES_H
+#include <net/if_types.h>
+#endif
+#ifdef HAVE_NET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
+#ifdef HAVE_NET_IN_H
+#include <netinet/in.h>
+#endif
+#ifdef HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
+#ifdef HAVE_NETINET_IN_VAR_H
+#include <netinet/in_var.h>
+#endif
+#ifdef HAVE_SYS_SOCKIO_H
+#include <sys/sockio.h>
+#elif defined(HAVE_SYS_SOCKETIO_H)
+#include <sys/socketio.h> 
+#endif
+#ifdef HAVE_SYS_IOCTL_H
+#include <sys/ioctl.h>
+#endif
+#ifdef HAVE_IOCTLS_H
+#include <ioctls.h>
+#endif
+#ifdef HAVE_NET_IF_ARP_H
+#include <net/if_arp.h>
+#endif
+#ifdef HAVE_NETINET_IF_ETHER_H
+#include <netinet/if_ether.h>
+#endif
+#ifdef HAVE_NETPACKET_PACKET_H
+#include <netpacket/packet.h>
+#endif
+#ifdef HAVE_NET_ETHERNET_H
+#include <net/ethernet.h>
+#endif
+#ifdef HAVE_NETINET_IP_H
+#include <netinet/ip.h>
+#endif
+#ifdef HAVE_NET_IF_DL_H
+#include <net/if_dl.h>
+#endif
+#ifdef HAVE_ARPA_INET_H
+#include <arpa/inet.h>
+#endif
+#ifdef HAVE_IFADDRS_H
 #include <ifaddrs.h>
+#endif
 
 /* structures: */
 
@@ -100,15 +177,19 @@ struct tme_ethernet {
 };
 
 /* prototypes: */
+#if 0
 int tme_eth_if_find _TME_P((_tme_const char *, 
 			    struct ifreq **, 
 			    tme_uint8_t **, 
 			    unsigned int *));
 
+#endif
+#ifdef HAVE_IFADDRS_H
 int tme_eth_ifaddrs_find _TME_P((_tme_const char *, 
 				 struct ifaddrs **, 
 				 tme_uint8_t **, 
 				 unsigned int *));
+#endif
 
 int tme_eth_alloc _TME_P((char *dev_filename,
 			  char **_output));
@@ -119,7 +200,7 @@ int tme_eth_connections_new _TME_P((struct tme_element *element,
 
 int tme_eth_init _TME_P((struct tme_element *element, 
 			 int fd, 
-			 u_int sz, 
+			 unsigned int sz, 
 			 void *data,
 			 unsigned char *addr,
 			 typeof(tme_eth_connections_new) eth_connections_new));

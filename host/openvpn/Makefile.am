@@ -5,8 +5,8 @@ AUTOMAKE_OPTIONS = 1.4 gnu
 
 AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(srcdir)/../compat -I. -D_TME_IMPL
 
-noinst_LTLIBRARIES = libtme-host-openvpn.la
-libtme_host_openvpn_la_SOURCES = \
+noinst_LTLIBRARIES = libopenvpn.la
+libopenvpn_la_SOURCES = \
 	base64.c base64.h \
 	basic.h \
 	buffer.c buffer.h \
@@ -84,7 +84,7 @@ libtme_host_openvpn_la_SOURCES = \
 	tun.c tun.h \
 	win32.h win32.c \
 	cryptoapi.h cryptoapi.c
-libtme_host_openvpn_la_LIBADD = \
+libopenvpn_la_LIBADD = \
 	../compat/libcompat.la \
 	$(SOCKETS_LIBS) \
 	$(OPTIONAL_LZO_LIBS) \
@@ -94,11 +94,11 @@ libtme_host_openvpn_la_LIBADD = \
 	$(OPTIONAL_SYSTEMD_LIBS) \
 	$(OPTIONAL_DL_LIBS)
 if WIN32
-libtme_host_openvpn_la_SOURCES += openvpn_win32_resources.rc
-libtme_host_openvpn_la_LIBADD += -lgdi32 -lws2_32 -lwininet -lcrypt32 -liphlpapi -lwinmm
+libopenvpn_la_SOURCES += openvpn_win32_resources.rc
+libopenvpn_la_LIBADD += -lgdi32 -lws2_32 -lwininet -lcrypt32 -liphlpapi -lwinmm
 endif
 
-libtme_host_openvpn_la_LDFLAGS = -version-info 0:0:0
+libopenvpn_la_LDFLAGS = -version-info 0:0:0
 
 include $(top_srcdir)/modules
 $(pkglib_LTLIBRARIES): ../compat/libcompat.la

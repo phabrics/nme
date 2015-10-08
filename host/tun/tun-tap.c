@@ -37,63 +37,11 @@
 _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 
 /* includes: */
-#include <tme/generic/ethernet.h>
-#include <tme/threads.h>
-#include <tme/misc.h>
-#ifdef HAVE_TIME_H
-#include <time.h>
-#endif
 #include "eth-if.h"
-#include <stdio.h>
-#include <string.h>
-#include <stddef.h>	/* for offsetof */
-#include <errno.h>
-#include <fcntl.h>
-#include <netdb.h>
-#include <sys/param.h>
-#ifdef HAVE_SYS_LINKER_H
-#include <sys/linker.h>
+#ifdef ENABLE_OPENVPN
+#include "syshead.h"
+#include "tun.h"
 #endif
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <net/if.h>
-#ifdef HAVE_NET_IF_VAR_H
-#include <net/if_var.h>
-#endif
-#ifdef HAVE_NET_IF_TYPES_H
-#include <net/if_types.h>
-#endif
-#include <netinet/in_systm.h>
-#include <netinet/in.h>
-#ifdef HAVE_NETINET_IN_VAR_H
-#include <netinet/in_var.h>
-#endif
-#if defined(HAVE_SYS_SOCKIO_H)
-#include <sys/sockio.h>
-#elif defined(HAVE_SYS_SOCKETIO_H)
-#include <sys/socketio.h> 
-#endif /* HAVE_SYS_SOCKETIO_H */
-#include <sys/ioctl.h>
-#ifdef HAVE_IOCTLS_H
-#include <ioctls.h>
-#endif /* HAVE_IOCTLS_H */
-#ifdef HAVE_NET_IF_ARP_H
-#include <net/if_arp.h>
-#endif
-#ifdef HAVE_NETINET_IF_ETHER_H
-#include <netinet/if_ether.h>
-#endif /* HAVE_NET_IF_ETHER_H */
-#ifdef HAVE_NETPACKET_PACKET_H
-#include <netpacket/packet.h>
-#endif /* HAVE_NETPACKET_PACKET_H */
-#ifdef HAVE_NET_ETHERNET_H
-#include <net/ethernet.h>
-#endif /* HAVE_NET_ETHERNET_H */
-#include <netinet/ip.h>
-#ifdef HAVE_NET_IF_DL_H
-#include <net/if_dl.h>
-#endif /* HAVE_NET_IF_DL_H */
-#include <arpa/inet.h>
 #ifdef HAVE_NET_IF_TAP_H
 #include <net/if_tap.h>
 #endif
@@ -110,6 +58,7 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #define TME_TUN_TAP_INSNS(x) (x)->addr
 #define TME_TUN_TAP_LEN(x) (x)->count
 #endif
+
 #ifdef HAVE_LINUX_NETFILTER_H
 #include <linux/netfilter.h>
 #endif
@@ -121,8 +70,14 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #endif
 #ifdef HAVE_LIBNFTNL_TABLE_H
 #include <libnftnl/table.h>
+#endif
+#ifdef HAVE_LIBNFTNL_CHAIN_H
 #include <libnftnl/chain.h>
+#endif
+#ifdef HAVE_LIBNFTNL_RULE_H
 #include <libnftnl/rule.h>
+#endif
+#ifdef HAVE_LIBNFTNL_EXPR_H
 #include <libnftnl/expr.h>
 #endif
 #ifdef HAVE_SYS_SYSCTL_H
@@ -154,14 +109,17 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #ifdef HAVE_NET_PF_PFVAR_H
 #include <net/pf/pfvar.h>
 #endif
-#ifdef HAVE_NETINET_IP_NAT_H
+#ifdef HAVE_NETINET_IP_COMPAT_H
 #include <netinet/ip_compat.h>
-#include <netinet/ip_fil.h>
-#include <netinet/ip_nat.h>
-#include <netinet/ip_proxy.h>
 #endif
-#ifdef ENABLE_OPENVPN
-#include "tun.h"
+#ifdef HAVE_NETINET_IP_FIL_H
+#include <netinet/ip_fil.h>
+#endif
+#ifdef HAVE_NETINET_IP_NAT_H
+#include <netinet/ip_nat.h>
+#endif
+#ifdef HAVE_NETINET_IP_PROXY_H
+#include <netinet/ip_proxy.h>
 #endif
 
 /* macros: */
@@ -346,6 +304,9 @@ int _tme_tun_tap_args(const char * const args[],
   /* check our arguments: */
   usage = 0;
 
+#ifndef IFNAMSIZ
+#define IFNAMSIZ 16
+#endif
   memset(if_names, 0, TME_IF_TYPE_TOTAL * IFNAMSIZ);
   memset(ip_addrs, 0, TME_IP_ADDRS_TOTAL * sizeof(struct in_addr));
 
@@ -369,17 +330,22 @@ int _tme_tun_tap_args(const char * const args[],
 
     else if(TME_ARG_IS(args[arg_i + 0], "inet") 
 	 && args[arg_i + 1] != NULL) {
-      inet_aton(args[arg_i + 1], ip_addrs + TME_IP_ADDRS_INET);      
+      inet_pton(AF_INET, args[arg_i + 1], ip_addrs + TME_IP_ADDRS_INET);      
     }
-
+    /*
+    else if(TME_ARG_IS(args[arg_i + 0], "inet6") 
+	 && args[arg_i + 1] != NULL) {
+      inet_pton(AF_INET6, args[arg_i + 1], ip_addrs + TME_IP_ADDRS_INET6);      
+    }
+    */
     else if (TME_ARG_IS(args[arg_i + 0], "netmask")
 	&& args[arg_i + 1] != NULL) {
-      inet_aton(args[arg_i + 1], ip_addrs + TME_IP_ADDRS_NETMASK);
+      inet_pton(AF_INET, args[arg_i + 1], ip_addrs + TME_IP_ADDRS_NETMASK);
     }
 
     else if (TME_ARG_IS(args[arg_i + 0], "bcast")
 	&& args[arg_i + 1] != NULL) {
-      inet_aton(args[arg_i + 1], ip_addrs + TME_IP_ADDRS_BCAST);
+      inet_pton(AF_INET, args[arg_i + 1], ip_addrs + TME_IP_ADDRS_BCAST);
     }
 
     /* if we ran out of arguments: */
@@ -664,9 +630,11 @@ _tme_npf_print_error(const nl_error_t *ne, char **_output)
 /* the new TAP function: */
 TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   int tap_fd, dummy_fd;
+  int saved_errno, i, rc;
+#ifndef ENABLE_OPENVPN
   char dev_tap_filename[sizeof(DEV_TAP_FILENAME) + 9];
-  int saved_errno, i;
   struct ifreq ifr;
+#endif
   char if_names[TME_IF_TYPE_TOTAL][IFNAMSIZ];
   char tap_hosts[TME_IP_ADDRS_TOTAL][NI_MAXHOST];
   struct in_addr tap_addrs[TME_IP_ADDRS_TOTAL];
@@ -711,8 +679,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 #endif
 #ifdef ENABLE_OPENVPN
   struct tuntap *tt;
-#else
-  int rc;
+#endif
+#ifdef HAVE_IFADDRS_H
   struct ifaddrs *ifa;
   int ifa_offs[TME_IP_ADDRS_TOTAL];
 
@@ -732,12 +700,12 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   
 #ifdef ENABLE_OPENVPN
   for(i=0;i<TME_IP_ADDRS_TOTAL;i++) {
-    strncpy(tap_hosts[i], inet_ntoa(tap_addrs[i]), NI_MAXHOST);
+    inet_ntop(AF_INET, &tap_addrs[i], tap_hosts[i], NI_MAXHOST);
   }
   tme_log(&element->tme_element_log_handle, 0, TME_OK, 
 	  (&element->tme_element_log_handle, 
-	   "trying tap interface %s(%d) with address %s, netmask %s, broadcast %s",
-	   TAPIF, if_nametoindex(TAPIF),
+	   "trying tap interface %s with address %s, netmask %s, broadcast %s",
+	   TAPIF,
 	   tap_hosts[TME_IP_ADDRS_INET],
 	   tap_hosts[TME_IP_ADDRS_NETMASK],
 	   tap_hosts[TME_IP_ADDRS_BCAST]));
@@ -926,7 +894,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 	      (&element->tme_element_log_handle,
 	       _("getnameinfo() failed: %s\n"), gai_strerror(rc)));
     else
-      inet_aton(tap_hosts[i], &tap_addrs[i]);
+      inet_pton(AF_INET, tap_hosts[i], &tap_addrs[i]);
   }
   
   tme_log(&element->tme_element_log_handle, 0, TME_OK, 
@@ -975,7 +943,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 		(&element->tme_element_log_handle,
 		 _("getnameinfo() failed: %s\n"), gai_strerror(rc)));
       else
-	inet_aton(nat_hosts[i], &nat_addrs[i]);
+	inet_pton(AF_INET, nat_hosts[i], &nat_addrs[i]);
     }
 
     tme_log(&element->tme_element_log_handle, 0, TME_OK, 

@@ -37,44 +37,7 @@
 _TME_RCSID("$Id: eth-if.c,v 1.3 2003/10/16 02:48:23 fredette Exp $");
 
 /* includes: */
-#include <tme/generic/ethernet.h>
-#include <tme/threads.h>
-#include <tme/misc.h>
 #include "eth-if.h"
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <netdb.h>
-#include <sys/param.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <net/if.h>
-#include <netinet/in_systm.h>
-#include <netinet/in.h>
-#if defined(HAVE_SYS_SOCKIO_H)
-#include <sys/sockio.h>
-#elif defined(HAVE_SYS_SOCKETIO_H)
-#include <sys/socketio.h> 
-#endif /* HAVE_SYS_SOCKETIO_H */
-#include <sys/ioctl.h>
-#ifdef HAVE_IOCTLS_H
-#include <ioctls.h>
-#endif /* HAVE_IOCTLS_H */
-#ifdef HAVE_NET_IF_ETHER_H
-#include <net/if_ether.h>
-#endif /* HAVE_NET_IF_ETHER_H */
-#ifdef HAVE_NETPACKET_PACKET_H
-#include <netpacket/packet.h>
-#endif /* HAVE_NETPACKET_PACKET_H */
-#ifdef HAVE_NET_ETHERNET_H
-#include <net/ethernet.h>
-#endif /* HAVE_NET_ETHERNET_H */
-#include <netinet/ip.h>
-#ifdef HAVE_NET_IF_DL_H
-#include <net/if_dl.h>
-#endif /* HAVE_NET_IF_DL_H */
-#include <arpa/inet.h>
 
 /* macros: */
 /* the callout flags: */
@@ -515,6 +478,7 @@ _tme_eth_read(struct tme_ethernet_connection *conn_eth,
   return (rc);
 }
 
+#if 0
 /* this finds a network interface via traditional ioctls: */
 int
 tme_eth_if_find(const char *ifr_name_user, struct ifreq **_ifreq, tme_uint8_t **_if_addr, unsigned int *_if_addr_size)
@@ -682,7 +646,9 @@ tme_eth_if_find(const char *ifr_name_user, struct ifreq **_ifreq, tme_uint8_t **
   /* done: */
   return (TME_OK);
 }
+#endif // 0
 
+#ifdef HAVE_IFADDRS_H
 /* this finds a network interface via the ifaddrs api: */
 int
 tme_eth_ifaddrs_find(const char *ifa_name_user, struct ifaddrs **_ifaddr, tme_uint8_t **_if_addr, unsigned int *_if_addr_size)
@@ -816,6 +782,7 @@ tme_eth_ifaddrs_find(const char *ifa_name_user, struct ifaddrs **_ifaddr, tme_ui
   /* done: */
   return (TME_OK);
 }
+#endif // HAVE_IFADDRS_H
 
 /* Allocate an ethernet device */
 int tme_eth_alloc(char *dev_filename, char **_output)
@@ -896,7 +863,7 @@ tme_eth_connections_new(struct tme_element *element,
 
 int tme_eth_init(struct tme_element *element, 
 		 int fd, 
-		 u_int sz, 
+		 unsigned int sz, 
 		 void *data,
 		 unsigned char *addr,
 		 typeof(tme_eth_connections_new) eth_connections_new)

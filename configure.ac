@@ -94,7 +94,7 @@ AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h poll.h sys/socket.h sys/select.h s
 AC_CHECK_HEADERS([io.h direct.h \
 		  ctype.h sys/types.h sys/socket.h \
 		  signal.h unistd.h dlfcn.h])
-AC_CHECK_HEADERS([linux/netfilter/nf_tables.h libmnl/libmnl.h libnftnl/table.h])
+AC_CHECK_HEADERS([linux/netfilter/nf_tables.h libmnl/libmnl.h libnftnl/table.h libnftnl/chain.h libnftnl/rule.h libnftnl/expr.h])
 AC_CHECK_HEADERS([pthread_np.h sched.h])
 AC_CHECK_HEADERS([sys/param.h sys/linker.h sys/sysctl.h sys/module.h npf.h net/npf_ncode.h pcap/pcap.h], [], [],
 [#ifdef HAVE_SYS_PARAM_H
@@ -610,12 +610,12 @@ dnl Start the list of host support.
 TME_HOSTS=
 
 dnl Checks for Ethernet.
-AC_CHECK_HEADERS([linux/if_tun.h net/if_tap.h net/tap/if_tap.h net/if_tun.h],
+AC_MSG_CHECKING([for raw Ethernet access method])
+
+AC_CHECK_HEADERS([linux/if_tun.h net/if_tap.h net/tap/if_tap.h net/if_tun.h tap-windows.h],
 		 [TME_HOSTS="${TME_HOSTS} tun"])
 
 AC_CHECK_HEADERS([linux/filter.h net/bpf.h])
-
-AC_MSG_CHECKING([for raw Ethernet access method])
 
 AC_EGREP_CPP(found_BPFVERSION,
 [
@@ -639,7 +639,7 @@ AC_MSG_RESULT($TME_HOSTS)
 TME_HOSTS="${TME_HOSTS} posix"
 
 AC_ARG_ENABLE(openvpn,
-[  --enable-openvpn          use OpenVPN library of routines for cross-platform compatibility (enable for TAP-Windows driver)],
+[  --enable-openvpn          use OpenVPN library of routines for cross-platform networking compatibility (e.g., TAP-Windows driver)],
 [ ], [enable_openvpn=no])
 
 if test "x${enable_openvpn}" = xyes; then
@@ -1295,15 +1295,16 @@ if test "x${enable_warnings}" = "xyes" -a "x${GCC}" = "xyes"; then
   CFLAGS="${CFLAGS-} -Wno-unused -Wno-sign-compare -Wundef -Wall -Wextra"
   CXXFLAGS="${CXXFLAGS-} -W"
 else
+  CFLAGS="${CFLAGS-} -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable"
   if test "x${have_clang}" = xyes; then
-    CFLAGS="${CFLAGS-} -Wno-tautological-compare -Wno-sometimes-uninitialized -Wno-unused-function -Wno-unused-parameter \
-            -Wno-unused-variable -Wno-sign-compare -Wno-incompatible-pointer-types -Wno-absolute-value \
-	    -Wno-implicit-function-declaration -Wno-\#warnings -fbracket-depth=1024"
+    CFLAGS="${CFLAGS-} -Wno-tautological-compare -Wno-sometimes-uninitialized-Wno-sign-compare
+    		       -Wno-incompatible-pointer-types -Wno-absolute-value \
+		       -Wno-implicit-function-declaration -Wno-\#warnings -fbracket-depth=1024"
   fi
   if test "x${have_Og}" = xyes; then
      CFLAGS="${CFLAGS-} -Wno-unused-but-set-variable -Wno-array-bounds -Wno-type-limits -Wno-incompatible-pointer-types \
-     	     -Wno-discarded-qualifiers -Wno-implicit-function-declaration -Wno-cpp -fno-strict-aliasing"
-  fi	   
+     			-Wno-discarded-qualifiers -Wno-implicit-function-declaration -Wno-cpp -fno-strict-aliasing"
+  fi
   CXXFLAGS="${CXXFLAGS-} -W"
 fi
 
