@@ -54,7 +54,7 @@ _TME_RCSID("$Id: eth-impl.h,v 1.1 2003/05/18 00:02:23 fredette Exp $");
 #ifdef HAVE_NETDB_H
 #include <netdb.h>
 #endif
-#ifdef SYS_PARAM_H
+#ifdef HAVE_SYS_PARAM_H
 #include <sys/param.h>
 #endif
 #ifdef HAVE_SYS_LINKER_H
@@ -63,7 +63,7 @@ _TME_RCSID("$Id: eth-impl.h,v 1.1 2003/05/18 00:02:23 fredette Exp $");
 #ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
-#ifdef SYS_STAT_H
+#ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif
 #ifdef HAVE_NET_IF_H
@@ -75,10 +75,10 @@ _TME_RCSID("$Id: eth-impl.h,v 1.1 2003/05/18 00:02:23 fredette Exp $");
 #ifdef HAVE_NET_IF_TYPES_H
 #include <net/if_types.h>
 #endif
-#ifdef HAVE_NET_IN_SYSTM_H
+#ifdef HAVE_NETINET_IN_SYSTM_H
 #include <netinet/in_systm.h>
 #endif
-#ifdef HAVE_NET_IN_H
+#ifdef HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif
 #ifdef HAVE_NETINET_IN_SYSTM_H

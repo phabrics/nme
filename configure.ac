@@ -1328,9 +1328,10 @@ if test "x${enable_warnings}" = "xyes" -a "x${GCC}" = "xyes"; then
 else
   CFLAGS="${CFLAGS-} -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable"
   if test "x${have_clang}" = xyes; then
-    CFLAGS="${CFLAGS-} -Wno-tautological-compare -Wno-sometimes-uninitialized-Wno-sign-compare \
-    		       -Wno-incompatible-pointer-types -Wno-absolute-value \
-		       -Wno-implicit-function-declaration -Wno-\#warnings -fbracket-depth=1024"
+    CFLAGS="${CFLAGS-} -Wno-tautological-compare -Wno-sometimes-uninitialized \
+    		       -Wno-sign-compare -Wno-incompatible-pointer-types \
+		       -Wno-implicit-function-declaration -Wno-\#warnings \
+		       -fbracket-depth=1024"
   fi
   if test "x${have_Og}" = xyes; then
      CFLAGS="${CFLAGS-} -Wno-unused-but-set-variable -Wno-array-bounds -Wno-type-limits -Wno-incompatible-pointer-types \
