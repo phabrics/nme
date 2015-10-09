@@ -33,11 +33,8 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.68])
+m4_include(version.m4)
 AC_INIT([tme], [0.12beta6])
-dnl define the TAP-Windows version
-define([PRODUCT_TAP_WIN_COMPONENT_ID], [tap0901])
-define([PRODUCT_TAP_WIN_MIN_MAJOR], [9])
-define([PRODUCT_TAP_WIN_MIN_MINOR], [9])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
@@ -703,6 +700,7 @@ AC_ARG_ENABLE(openvpn,
 if test "x${enable_openvpn}" = xyes; then
    TME_HOSTS="${TME_HOSTS} openvpn"
    AC_DEFINE([ENABLE_OPENVPN], [], [Enable OpenVPN library routines to be used for TUN/TAP access.])
+   AC_DEFINE([OPENVPN_VERSION_RESOURCE], [PRODUCT_VERSION_RESOURCE], [Version in windows resource format])
 fi
 
 AM_CONDITIONAL([USING_OPENVPN], [test "x${enable_openvpn}" = xyes])

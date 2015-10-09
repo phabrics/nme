@@ -11,15 +11,22 @@ endif
 pkglib_LTLIBRARIES = tme_host_tun.la
 tme_host_tun_la_SOURCES = tun-tap.c
 tme_host_tun_la_LDFLAGS = -module -version-info 0:0:0
-tme_host_tun_la_LIBADD = ../eth/libeth.la $(NATLIBS)
+tme_host_tun_la_LIBADD = $(NATLIBS)
 if USING_OPENVPN
 tme_host_tun_la_LIBADD += ../openvpn/libopenvpn.la
+else
+tme_host_tun_la_LIBADD += ../eth/libeth.la
 endif
 
 include $(top_srcdir)/modules
-$(pkglib_LTLIBRARIES): ../eth/libeth.la ../openvpn/libopenvpn.la
-../eth/libeth.la: force
-	cd `dirname $@` && $(MAKE) `basename $@`
+
+if USING_OPENVPN
+$(pkglib_LTLIBRARIES): ../openvpn/libopenvpn.la
 ../openvpn/libopenvpn.la: force
 	cd `dirname $@` && $(MAKE) `basename $@`
+else
+$(pkglib_LTLIBRARIES): ../eth/libeth.la
+../eth/libeth.la: force
+	cd `dirname $@` && $(MAKE) `basename $@`
+endif
 force: ;
