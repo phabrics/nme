@@ -42,11 +42,17 @@ _TME_RCSID("$Id: posix-memory.c,v 1.7 2009/08/30 21:50:17 fredette Exp $");
 #include <fcntl.h>
 #include <stdio.h>
 #include <strings.h>
+#ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
-#ifdef HAVE_MMAP
+#endif
+#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
+#ifdef HAVE_SYS_MMAN_H
 #include <sys/mman.h>
-#endif /* HAVE_MMAP */
+#else
+#include "mman.h"
+#endif
 
 /* macros: */
 #define TME_POSIX_MEMORY_RAM		(0)
@@ -478,7 +484,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,memory) {
       return (EINVAL);
     }
 
-#ifdef HAVE_MMAP    
     /* try to mmap the file: */
     memory->tme_posix_memory_contents = 
       mmap(NULL, 
@@ -493,7 +498,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,memory) {
     if (memory->tme_posix_memory_contents != MAP_FAILED) {
       memory->tme_posix_memory_mapped = TRUE;
     }
-#endif /* HAVE_MMAP */
   }
 
   /* if we have to, allocate memory space: */

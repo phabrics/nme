@@ -41,9 +41,13 @@ _TME_RCSID("$Id: recode-mmap.c,v 1.2 2008/07/01 02:00:53 fredette Exp $");
 /* includes: */
 #include "recode-impl.h"
 #include <fcntl.h>
-#ifdef HAVE_MMAP
+#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
+#ifdef HAVE_SYS_MMAN_H
 #include <sys/mman.h>
+#else
+#include "mman.h"
 #endif
 
 /* this host function allocates memory for building and running thunks: */

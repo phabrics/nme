@@ -3,7 +3,7 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
-AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I. -D_TME_IMPL
+AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(top_srcdir)/lib -I. -D_TME_IMPL
 
 pkglib_LTLIBRARIES = tme_host_posix.la
 tme_host_posix_la_SOURCES = posix-memory.c \
@@ -13,6 +13,7 @@ if USING_TERMIOS
 tme_host_posix_la_SOURCES += posix-serial.c
 endif
 tme_host_posix_la_LDFLAGS = -module -version-info 0:0:0
-tme_host_posix_la_LIBADD = $(top_builddir)/generic/libtme-generic.la
+tme_host_posix_la_LIBADD = $(top_builddir)/generic/libtme-generic.la \
+		           $(LTLIBOBJS)
 
 include $(top_srcdir)/modules

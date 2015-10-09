@@ -20,6 +20,7 @@ noinst_LTLIBRARIES = libcompat.la
 
 libcompat_la_SOURCES = \
 	compat.h \
-	compat-stdbool.h
+	compat-stdbool.h \
+	mman.h
 
 libcompat_la_LIBADD = $(LTLIBOBJS)

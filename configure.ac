@@ -33,7 +33,7 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.68])
-AC_INIT([tme], [0.12beta5])
+AC_INIT([tme], [0.12beta6])
 dnl define the TAP-Windows version
 define([PRODUCT_TAP_WIN_COMPONENT_ID], [tap0901])
 define([PRODUCT_TAP_WIN_MIN_MAJOR], [9])
@@ -272,13 +272,7 @@ AC_SYS_SOCKADDR_SA_LEN
 dnl Checks for library functions and prototypes.
 #AC_FUNC_MEMCMP
 #AC_FUNC_MALLOC
-# If cross-compiling and the sys/mman.h header exists, assume mmap works...
-if test "x$cross_compiling" = xyes && test "x$ac_cv_header_sys_mman_h"=xyes; then
-   ac_cv_func_mmap_fixed_mapped=yes
-fi
-AC_SEARCH_LIBS([mmap], [mman])
-AM_CONDITIONAL([NEED_MMANLIB], [test "x$ac_cv_search_mmap" != "xnone required" && test "x$ac_cv_search_mmap" != xno])
-AC_FUNC_MMAP
+#AC_FUNC_MMAP
 #AC_FUNC_REALLOC
 AC_CHECK_FUNCS([clock_gettime memmove memset munmap pow ptsname ptsname_r select socket sqrt strchr strerror strrchr strstr strtoul devname fdevname kldfind])
 
@@ -433,6 +427,7 @@ AC_CHECK_FUNCS([ \
 ])
 
 AC_REPLACE_FUNCS([basename daemon dirname gettimeofday inet_ntop inet_pton])
+AC_REPLACE_FUNCS([mmap munmap mprotect msync mlock munlock])
 
 if test -n "${SP_PLATFORM_WINDOWS}"; then
 	AC_DEFINE_UNQUOTED([PATH_SEPARATOR], ['\\\\'], [Path separator]) #"

@@ -45,14 +45,20 @@ _TME_RCSID("$Id: posix-disk.c,v 1.6 2010/06/05 14:28:57 fredette Exp $");
 #include <fcntl.h>
 #include <stdlib.h>
 #include <strings.h>
+#ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
+#endif
 #ifdef HAVE_SYS_UIO_H
 #include <sys/uio.h>
 #endif
-#ifdef HAVE_MMAP
+#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
+#ifdef HAVE_SYS_MMAN_H
 #include <sys/mman.h>
-#endif /* HAVE_MMAP */
+#else
+#include "mman.h"
+#endif
 #ifdef HAVE_STDARG_H
 #include <stdarg.h>
 #else  /* HAVE_STDARG_H */
@@ -163,7 +169,6 @@ _tme_posix_disk_buffer_free(struct tme_posix_disk *posix_disk,
   /* if this buffer is mmapped: */
   if (buffer->tme_posix_disk_buffer_flags 
       & TME_POSIX_DISK_BUFFER_MMAPPED) {
-#ifdef HAVE_MMAP
 	
     /* munmap the buffer: */
     rc = munmap(buffer->tme_posix_disk_buffer_data,
@@ -172,7 +177,7 @@ _tme_posix_disk_buffer_free(struct tme_posix_disk *posix_disk,
 	
     /* free this buffer: */
     buffer->tme_posix_disk_buffer_size = 0;
-#endif /* HAVE_MMAP */
+
   }
 
   /* otherwise, this buffer is not mmapped: */
@@ -362,7 +367,6 @@ _tme_posix_disk_buffer_get(struct tme_posix_disk *posix_disk,
     assert (buffer_free_nosize != NULL
 	    || buffer_free_sized != NULL);
 
-#ifdef HAVE_MMAP
 
     /* try to mmap this region.  if the map fails with more read-ahead
        than is needed to meet the block size, try the map one more
@@ -423,7 +427,6 @@ _tme_posix_disk_buffer_get(struct tme_posix_disk *posix_disk,
 
     /* otherwise, we were unable to map this region: */
     else
-#endif /* HAVE_MMAP */
       {
 
 	/* if we have a free sized buffer, resize it, else malloc 
@@ -629,9 +632,7 @@ _tme_posix_disk_open(struct tme_posix_disk *posix_disk,
   size_t block_size;
 #endif
   tme_uint8_t *block;
-#ifdef HAVE_MMAP
   int page_size;
-#endif /* HAVE_MMAP */
 
   /* open the file: */
   fd = open(filename,
@@ -710,7 +711,6 @@ _tme_posix_disk_open(struct tme_posix_disk *posix_disk,
     }
   }
 
-#ifdef HAVE_MMAP
   /* get the page size: */
 #ifdef _SC_PAGESIZE
   page_size = sysconf(_SC_PAGESIZE);
@@ -725,7 +725,6 @@ _tme_posix_disk_open(struct tme_posix_disk *posix_disk,
        page_size < block_size;
        page_size <<= 1);
   block_size = page_size;
-#endif /* HAVE_MMAP */
 
   /* update the disk structure: */
   posix_disk->tme_posix_disk_flags = flags;

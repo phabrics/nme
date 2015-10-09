@@ -36,8 +36,9 @@
 
 #if defined(ENABLE_MEMSTATS)
 
+#ifdef HAVE_SYS_MMAN_H
 #include <sys/mman.h>
-
+#endif
 #include "error.h"
 #include "misc.h"
 #include "mstats.h"
