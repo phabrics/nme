@@ -20,10 +20,6 @@ noinst_LTLIBRARIES = libcompat.la
 
 libcompat_la_SOURCES = \
 	compat.h \
-	compat-stdbool.h \
-	compat-dirname.c \
-	compat-basename.c \
-	compat-gettimeofday.c \
-	compat-daemon.c \
-	compat-inet_ntop.c \
-	compat-inet_pton.c
+	compat-stdbool.h
+
+libcompat_la_LIBADD = $(LTLIBOBJS)

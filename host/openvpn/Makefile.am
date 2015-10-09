@@ -3,7 +3,7 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
-AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(srcdir)/../compat -I. -D_TME_IMPL
+AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(top_srcdir)/lib -I. -D_TME_IMPL
 
 noinst_LTLIBRARIES = libopenvpn.la
 libopenvpn_la_SOURCES = \
@@ -86,7 +86,7 @@ libopenvpn_la_SOURCES = \
 	win32.h win32.c \
 	cryptoapi.h cryptoapi.c
 libopenvpn_la_LIBADD = \
-	../compat/libcompat.la \
+	$(LTLIBOBJS) \
 	$(SOCKETS_LIBS) \
 	$(OPTIONAL_LZO_LIBS) \
 	$(OPTIONAL_PKCS11_HELPER_LIBS) \
@@ -102,7 +102,3 @@ endif
 libopenvpn_la_LDFLAGS = -version-info 0:0:0
 
 include $(top_srcdir)/modules
-$(pkglib_LTLIBRARIES): ../compat/libcompat.la
-../compat/libcompat.la: force
-	cd `dirname $@` && $(MAKE) `basename $@`
-force: ;

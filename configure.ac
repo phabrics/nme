@@ -43,6 +43,7 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
 #AC_CONFIG_AUX_DIR([libltdl/config])
 #AC_CONFIG_MACRO_DIR([libltdl/m4])
+AC_CONFIG_LIBOBJ_DIR([lib])
 AM_INIT_AUTOMAKE([subdir-objects])
 AM_PROG_CC_C_O
 
@@ -269,7 +270,7 @@ AC_CHECK_FUNC_LONG(cpuset_create, [
 AC_SYS_SOCKADDR_SA_LEN
 
 dnl Checks for library functions and prototypes.
-AC_FUNC_MEMCMP
+#AC_FUNC_MEMCMP
 #AC_FUNC_MALLOC
 # If cross-compiling and the sys/mman.h header exists, assume mmap works...
 if test "x$cross_compiling" = xyes && test "x$ac_cv_header_sys_mman_h"=xyes; then
@@ -279,7 +280,7 @@ AC_SEARCH_LIBS([mmap], [mman])
 AM_CONDITIONAL([NEED_MMANLIB], [test "x$ac_cv_search_mmap" != "xnone required" && test "x$ac_cv_search_mmap" != xno])
 AC_FUNC_MMAP
 #AC_FUNC_REALLOC
-AC_CHECK_FUNCS([clock_gettime gettimeofday memmove memset munmap pow ptsname ptsname_r select socket sqrt strchr strerror strrchr strstr strtoul devname fdevname kldfind])
+AC_CHECK_FUNCS([clock_gettime memmove memset munmap pow ptsname ptsname_r select socket sqrt strchr strerror strrchr strstr strtoul devname fdevname kldfind])
 
 SOCKET_INCLUDES="
 #ifdef HAVE_STDLIB_H
@@ -422,15 +423,16 @@ AC_CHECK_DECLS(
 AC_FUNC_FORK
 
 AC_CHECK_FUNCS([ \
-	daemon chroot getpwnam setuid nice system getpid dup dup2 \
+	chroot getpwnam setuid nice system getpid dup dup2 \
 	getpass syslog openlog mlockall getgrnam setgid \
 	setgroups stat flock readv writev time \
 	ctime vsnprintf strdup \
 	setsid chdir putenv getpeername unlink \
-	chsize ftruncate execve getpeereid umask basename dirname access \
-	epoll_create \
+	chsize ftruncate execve getpeereid umask access \
+	epoll_create sendmsg recvmsg
 ])
-AC_CHECK_FUNCS([sendmsg recvmsg inet_ntop inet_pton])
+
+AC_REPLACE_FUNCS([basename daemon dirname gettimeofday inet_ntop inet_pton])
 
 if test -n "${SP_PLATFORM_WINDOWS}"; then
 	AC_DEFINE_UNQUOTED([PATH_SEPARATOR], ['\\\\'], [Path separator]) #"
@@ -704,7 +706,7 @@ AC_ARG_ENABLE(openvpn,
 [enable_openvpn=$have_tap_header], [enable_openvpn=no])
 
 if test "x${enable_openvpn}" = xyes; then
-   TME_HOSTS="${TME_HOSTS} compat openvpn"
+   TME_HOSTS="${TME_HOSTS} openvpn"
    AC_DEFINE([ENABLE_OPENVPN], [], [Enable OpenVPN library routines to be used for TUN/TAP access.])
 fi
 
@@ -1655,6 +1657,7 @@ AC_CONFIG_FILES([Makefile
 	  tme/scsi/Makefile
 	  tme/host/Makefile
 	  tme/bus/Makefile
+          lib/Makefile
 	  libltdl/Makefile
 	  libtme/Makefile
 	  libtme/host/Makefile
@@ -1671,7 +1674,6 @@ AC_CONFIG_FILES([Makefile
 	  machine/sun4/Makefile
 	  machine/sun4u/Makefile
           host/Makefile
-          host/compat/Makefile
           host/openvpn/Makefile
           host/posix/Makefile
           host/eth/Makefile

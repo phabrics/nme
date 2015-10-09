@@ -3,9 +3,9 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
-AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(srcdir)/../eth -I. -D_TME_IMPL -DDEV_TAP_FILENAME=@DEV_TAP_FILENAME@ $(NATINC)
+AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(srcdir)/../eth -I$(top_srcdir)/lib -I. -D_TME_IMPL -DDEV_TAP_FILENAME=@DEV_TAP_FILENAME@ $(NATINC)
 if USING_OPENVPN
-AM_CPPFLAGS += -I$(srcdir)/../openvpn -I$(srcdir)/../compat
+AM_CPPFLAGS += -I$(srcdir)/../openvpn
 endif
 
 pkglib_LTLIBRARIES = tme_host_tun.la
