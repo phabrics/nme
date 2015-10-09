@@ -606,16 +606,122 @@ AC_DEFINE(HAVE_AF_PACKET, [], [Define if you have AF_PACKET.])
 AC_MSG_RESULT(no)
 ])
 
+AC_DEFINE_UNQUOTED([TARGET_ALIAS], ["${host}"], [A string representing our host])
+case "${target_os}" in
+netbsd*) 
+   AC_DEFINE([TARGET_NETBSD], [1], [Are we running NetBSD?])
+   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["N"], [Target prefix])
+   CPPFLAGS="${CPPFLAGS-} -D_NETBSD_SOURCE"
+   DEV_TAP_FILENAME='"\"/dev/tap\""'
+   SETCAP="chmod u+s"
+   ;;
+openbsd*) 
+   AC_DEFINE([TARGET_OPENBSD], [1], [Are we running on OpenBSD?])
+   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["O"], [Target prefix])
+   CPPFLAGS="${CPPFLAGS-}"
+   DEV_TAP_FILENAME='"\"/dev/tun\""'
+   SETCAP="chmod u+s"
+   ;;
+freebsd*) 
+   AC_DEFINE([TARGET_FREEBSD], [1], [Are we running on FreeBSD?])
+   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["F"], [Target prefix])
+   CPPFLAGS="${CPPFLAGS-}"
+   DEV_TAP_FILENAME='"\"/dev/tap\""'
+   SETCAP="chmod u+s"
+   ;;
+dragonfly*) 
+   AC_DEFINE([TARGET_DRAGONFLY], [1], [Are we running on DragonFlyBSD?])
+   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["D"], [Target prefix])
+   CPPFLAGS="${CPPFLAGS-}"
+   DEV_TAP_FILENAME='"\"/dev/tap\""'
+   SETCAP="chmod u+s"
+   ;;
+linux*) 
+   AC_DEFINE([TARGET_LINUX], [1], [Are we running on Linux?])
+   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["L"], [Target prefix])
+   CPPFLAGS="${CPPFLAGS-}"
+   DEV_TAP_FILENAME='"\"/dev/net/tun\""'
+   SETCAP="setcap cap_sys_nice,cap_net_admin,cap_net_raw+ep"
+   ;;
+mingw*)
+   AC_DEFINE([TARGET_WIN32], [1], [Are we running WIN32?])
+   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["W"], [Target prefix])
+   CPPFLAGS="${CPPFLAGS} -DWIN32_LEAN_AND_MEAN"
+   CPPFLAGS="${CPPFLAGS} -DNTDDI_VERSION=NTDDI_WINXP -D_WIN32_WINNT=_WIN32_WINNT_WINXP"
+   WIN32=yes
+   SETCAP="chmod u+s"
+   TGTPFX="${target}-"
+   ;;
+solaris*)
+   AC_DEFINE([TARGET_SOLARIS], [1], [Are we running on Solaris?])
+   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["S"], [Target prefix])
+   SETCAP="chmod u+s"
+   ;;
+darwin*)
+   AC_DEFINE([TARGET_DARWIN], [1], [Are we running on Mac OS X?])
+   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["M"], [Target prefix])
+   dnl some Mac OS X tendering (we use vararg macros...)
+   CPPFLAGS="$CPPFLAGS -no-cpp-precomp"
+   SETCAP="chmod u+s"
+   have_tap_header="yes"
+   ;;
+*)
+   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["X"], [Target prefix])
+   CPPFLAGS="${CPPFLAGS-}"
+   SETCAP="chmod u+s"
+   have_tap_header="yes"
+   ;;
+esac
+
 dnl Start the list of host support.
 TME_HOSTS=
 
-dnl Checks for Ethernet.
-AC_MSG_CHECKING([for raw Ethernet access method])
+AC_ARG_VAR([TAP_CFLAGS], [C compiler flags for tap])
+old_CFLAGS="${CFLAGS}"
+CFLAGS="${CFLAGS} ${TAP_CFLAGS}"
+AC_CHECK_HEADERS(
+	[ \
+		net/if_tun.h net/tun/if_tun.h \
+		linux/if_tun.h \
+		tap-windows.h \
+	],
+	[have_tap_header="yes"]
+)
+AC_CHECK_DECLS(
+	[TUNSETPERSIST],
+	[AC_DEFINE([ENABLE_FEATURE_TUN_PERSIST], [1], [We have persist tun capability])],
+	,
+	[[
+		#ifdef HAVE_LINUX_IF_TUN_H
+		#include <linux/if_tun.h>
+		#endif
+	]]
+)
+CFLAGS="${old_CFLAGS}"
 
-AC_CHECK_HEADERS([linux/if_tun.h net/if_tap.h net/tap/if_tap.h net/if_tun.h tap-windows.h],
-		 [TME_HOSTS="${TME_HOSTS} tun"])
+AC_ARG_ENABLE(openvpn,
+[  --enable-openvpn          use OpenVPN library of routines for cross-platform networking compatibility (e.g., TAP-Windows driver)],
+[enable_openvpn=$have_tap_header], [enable_openvpn=no])
+
+if test "x${enable_openvpn}" = xyes; then
+   TME_HOSTS="${TME_HOSTS} compat openvpn"
+   AC_DEFINE([ENABLE_OPENVPN], [], [Enable OpenVPN library routines to be used for TUN/TAP access.])
+fi
+
+AM_CONDITIONAL([USING_OPENVPN], [test "x${enable_openvpn}" = xyes])
+
+have_tap_header=
+AC_CHECK_HEADERS([linux/if_tun.h net/if_tap.h net/tap/if_tap.h net/if_tun.h],
+		 [have_tap_header="yes"])
+
+if test "x${enable_openvpn}" = xyes || test "x${have_tap_header}" = xyes; then
+   TME_HOSTS="${TME_HOSTS} tun"
+fi
 
 AC_CHECK_HEADERS([linux/filter.h net/bpf.h])
+
+dnl Checks for Ethernet.
+AC_MSG_CHECKING([for raw Ethernet access method])
 
 AC_EGREP_CPP(found_BPFVERSION,
 [
@@ -637,17 +743,6 @@ fi
 AC_MSG_RESULT($TME_HOSTS)
 
 TME_HOSTS="${TME_HOSTS} posix"
-
-AC_ARG_ENABLE(openvpn,
-[  --enable-openvpn          use OpenVPN library of routines for cross-platform networking compatibility (e.g., TAP-Windows driver)],
-[ ], [enable_openvpn=no])
-
-if test "x${enable_openvpn}" = xyes; then
-   TME_HOSTS="${TME_HOSTS} compat openvpn"
-   AC_DEFINE([ENABLE_OPENVPN], [], [Enable OpenVPN library routines to be used for TUN/TAP access.])
-fi
-
-AM_CONDITIONAL([USING_OPENVPN], [test "x${enable_openvpn}" = xyes])
 
 AC_SYS_POSIX_TERMIOS
 
@@ -1162,70 +1257,6 @@ if test "x${enable_static}" = "xyes"; then
   TME_PREOPEN='`sort -u $(top_builddir)/tme-preopen.txt`'
 fi
 AC_SUBST(TME_PREOPEN)
-AC_DEFINE_UNQUOTED([TARGET_ALIAS], ["${host}"], [A string representing our host])
-case "${target_os}" in
-netbsd*) 
-   AC_DEFINE([TARGET_NETBSD], [1], [Are we running NetBSD?])
-   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["N"], [Target prefix])
-   CPPFLAGS="${CPPFLAGS-} -D_NETBSD_SOURCE"
-   DEV_TAP_FILENAME='"\"/dev/tap\""'
-   SETCAP="chmod u+s"
-   ;;
-openbsd*) 
-   AC_DEFINE([TARGET_OPENBSD], [1], [Are we running on OpenBSD?])
-   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["O"], [Target prefix])
-   CPPFLAGS="${CPPFLAGS-}"
-   DEV_TAP_FILENAME='"\"/dev/tun\""'
-   SETCAP="chmod u+s"
-   ;;
-freebsd*) 
-   AC_DEFINE([TARGET_FREEBSD], [1], [Are we running on FreeBSD?])
-   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["F"], [Target prefix])
-   CPPFLAGS="${CPPFLAGS-}"
-   DEV_TAP_FILENAME='"\"/dev/tap\""'
-   SETCAP="chmod u+s"
-   ;;
-dragonfly*) 
-   AC_DEFINE([TARGET_DRAGONFLY], [1], [Are we running on DragonFlyBSD?])
-   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["D"], [Target prefix])
-   CPPFLAGS="${CPPFLAGS-}"
-   DEV_TAP_FILENAME='"\"/dev/tap\""'
-   SETCAP="chmod u+s"
-   ;;
-linux*) 
-   AC_DEFINE([TARGET_LINUX], [1], [Are we running on Linux?])
-   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["L"], [Target prefix])
-   CPPFLAGS="${CPPFLAGS-}"
-   DEV_TAP_FILENAME='"\"/dev/net/tun\""'
-   SETCAP="setcap cap_sys_nice,cap_net_admin,cap_net_raw+ep"
-   ;;
-mingw*)
-   AC_DEFINE([TARGET_WIN32], [1], [Are we running WIN32?])
-   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["W"], [Target prefix])
-   CPPFLAGS="${CPPFLAGS} -DWIN32_LEAN_AND_MEAN"
-   CPPFLAGS="${CPPFLAGS} -DNTDDI_VERSION=NTDDI_WINXP -D_WIN32_WINNT=_WIN32_WINNT_WINXP"
-   WIN32=yes
-   SETCAP="chmod u+s"
-   TGTPFX="${target}-"
-   ;;
-solaris*)
-   AC_DEFINE([TARGET_SOLARIS], [1], [Are we running on Solaris?])
-   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["S"], [Target prefix])
-   SETCAP="chmod u+s"
-   ;;
-darwin*)
-   AC_DEFINE([TARGET_DARWIN], [1], [Are we running on Mac OS X?])
-   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["M"], [Target prefix])
-   dnl some Mac OS X tendering (we use vararg macros...)
-   CPPFLAGS="$CPPFLAGS -no-cpp-precomp"
-   SETCAP="chmod u+s"
-   ;;
-*)
-   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["X"], [Target prefix])
-   CPPFLAGS="${CPPFLAGS-}"
-   SETCAP="chmod u+s"
-   ;;
-esac
 
 AC_ARG_VAR([IFCONFIG], [full path to ipconfig utility])
 AC_ARG_VAR([ROUTE], [full path to route utility])
@@ -1297,7 +1328,7 @@ if test "x${enable_warnings}" = "xyes" -a "x${GCC}" = "xyes"; then
 else
   CFLAGS="${CFLAGS-} -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable"
   if test "x${have_clang}" = xyes; then
-    CFLAGS="${CFLAGS-} -Wno-tautological-compare -Wno-sometimes-uninitialized-Wno-sign-compare
+    CFLAGS="${CFLAGS-} -Wno-tautological-compare -Wno-sometimes-uninitialized-Wno-sign-compare \
     		       -Wno-incompatible-pointer-types -Wno-absolute-value \
 		       -Wno-implicit-function-declaration -Wno-\#warnings -fbracket-depth=1024"
   fi
