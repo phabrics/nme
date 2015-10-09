@@ -43,9 +43,6 @@ if USING_GLIB
 libtme_la_LIBADD += $(GLIB_LIBS)
 endif
 endif
-if NEED_MMANLIB
-libtme_la_LIBADD += -lmman
-endif
 
 noinst_SCRIPTS = memory-auto.sh
 

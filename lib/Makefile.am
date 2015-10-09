@@ -14,7 +14,8 @@ MAINTAINERCLEANFILES = \
 
 EXTRA_DIST = \
 	compat.vcxproj \
-	compat.vcxproj.filters
+	compat.vcxproj.filters \
+	mman.c
 
 noinst_LTLIBRARIES = libcompat.la
 

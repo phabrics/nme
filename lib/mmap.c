@@ -6,7 +6,7 @@
 
 #ifndef HAVE_MMAP
 
-#include "mman.h"
+#include "mman.c"
 
 #ifdef WIN32
 

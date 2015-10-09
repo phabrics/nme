@@ -1,11 +1,12 @@
 #ifdef WIN32
-
 #include <windows.h>
 #include <errno.h>
 #include <io.h>
+#endif
 
 #include "mman.h"
 
+#ifdef WIN32
 #ifndef FILE_MAP_EXECUTE
 #define FILE_MAP_EXECUTE    0x0020
 #endif /* FILE_MAP_EXECUTE */
@@ -55,5 +56,4 @@ DWORD __map_mmap_prot_file(const int prot)
     
     return desiredAccess;
 }
-
 #endif
