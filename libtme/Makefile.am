@@ -7,7 +7,7 @@ AUTOM4TE = $(SHELL) $(top_srcdir)/missing --run autom4te
 
 SUBDIRS = host
 
-AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I. $(LTDLINCL) -D_TME_IMPL
+AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I. $(LTDLINCL) -I$(top_srcdir)/lib -D_TME_IMPL
 if !THREADS_POSIX
 if USING_GLIB
 AM_CPPFLAGS += $(GLIB_CFLAGS)
@@ -37,11 +37,14 @@ if THREADS_SJLJ
 libtme_la_SOURCES += threads-sjlj.c
 endif
 libtme_la_LDFLAGS = -version-info 0:0:0
-libtme_la_LIBADD = $(LIBLTDL)
+libtme_la_LIBADD = $(LIBLTDL) $(LTLIBOBJS)
 if !THREADS_POSIX
 if USING_GLIB
 libtme_la_LIBADD += $(GLIB_LIBS)
 endif
+endif
+if WIN32
+libtme_la_LIBADD += -lgdi32 -lws2_32 -lwininet -lcrypt32 -liphlpapi -lwinmm
 endif
 
 noinst_SCRIPTS = memory-auto.sh

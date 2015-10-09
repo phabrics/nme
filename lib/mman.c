@@ -11,7 +11,7 @@
 #define FILE_MAP_EXECUTE    0x0020
 #endif /* FILE_MAP_EXECUTE */
 
-int __map_mman_error(const DWORD err, const int deferr)
+static int __map_mman_error(const DWORD err, const int deferr)
 {
     if (err == 0)
         return 0;
@@ -19,7 +19,7 @@ int __map_mman_error(const DWORD err, const int deferr)
     return err;
 }
 
-DWORD __map_mmap_prot_page(const int prot)
+static DWORD __map_mmap_prot_page(const int prot)
 {
     DWORD protect = 0;
     
@@ -40,7 +40,7 @@ DWORD __map_mmap_prot_page(const int prot)
     return protect;
 }
 
-DWORD __map_mmap_prot_file(const int prot)
+static DWORD __map_mmap_prot_file(const int prot)
 {
     DWORD desiredAccess = 0;
     
