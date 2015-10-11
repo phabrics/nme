@@ -5,10 +5,10 @@ AUTOMAKE_OPTIONS = 1.4 gnu
 
 include $(top_srcdir)/lib/ltrc.inc
 
-AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(top_srcdir)/lib -I. -D_TME_IMPL
+AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(srcdir)/../eth -I$(top_srcdir)/lib -I. -D_TME_IMPL
 
-noinst_LTLIBRARIES = libopenvpn.la
-libopenvpn_la_SOURCES = \
+pkglib_LTLIBRARIES = tme_host_openvpn.la
+tme_host_openvpn_la_SOURCES = \
 	base64.c base64.h \
 	basic.h \
 	buffer.c buffer.h \
@@ -85,9 +85,10 @@ libopenvpn_la_SOURCES = \
 	status.c status.h \
 	syshead.h \
 	tun.c tun.h \
+	tap.c \
 	win32.h win32.c \
 	cryptoapi.h cryptoapi.c
-libopenvpn_la_LIBADD = \
+tme_host_openvpn_la_LIBADD = \
 	../eth/libeth.la \
 	$(SOCKETS_LIBS) \
 	$(OPTIONAL_LZO_LIBS) \
@@ -97,15 +98,15 @@ libopenvpn_la_LIBADD = \
 	$(OPTIONAL_SYSTEMD_LIBS) \
 	$(OPTIONAL_DL_LIBS)
 if WIN32
-libopenvpn_la_SOURCES += openvpn_win32_resources.rc
-libopenvpn_la_LIBADD += -lgdi32 -lws2_32 -lwininet -lcrypt32 -liphlpapi -lwinmm
+tme_host_openvpn_la_SOURCES += openvpn_win32_resources.rc
+tme_host_openvpn_la_LIBADD += -lgdi32 -lws2_32 -lwininet -lcrypt32 -liphlpapi -lwinmm
 endif
 
-libopenvpn_la_LDFLAGS = -version-info 0:0:0
+tme_host_openvpn_la_LDFLAGS = -module -version-info 0:0:0
 
 include $(top_srcdir)/modules
 
-$(noinst_LTLIBRARIES): ../eth/libeth.la
+$(pkglib_LTLIBRARIES): ../eth/libeth.la
 ../eth/libeth.la: force
 	cd `dirname $@` && $(MAKE) `basename $@`
 force: ;

@@ -693,23 +693,16 @@ AC_CHECK_DECLS(
 )
 CFLAGS="${old_CFLAGS}"
 
-AC_ARG_ENABLE(openvpn,
-[  --enable-openvpn          use OpenVPN library of routines for cross-platform networking compatibility (e.g., TAP-Windows driver)],
-[enable_openvpn=$have_tap_header], [enable_openvpn=no])
-
-if test "x${enable_openvpn}" = xyes; then
+if test "x${have_tap_header}" = xyes; then
    TME_HOSTS="${TME_HOSTS} openvpn"
-   AC_DEFINE([ENABLE_OPENVPN], [], [Enable OpenVPN library routines to be used for TUN/TAP access.])
    AC_DEFINE([OPENVPN_VERSION_RESOURCE], [PRODUCT_VERSION_RESOURCE], [Version in windows resource format])
 fi
-
-AM_CONDITIONAL([USING_OPENVPN], [test "x${enable_openvpn}" = xyes])
 
 have_tap_header=
 AC_CHECK_HEADERS([linux/if_tun.h net/if_tap.h net/tap/if_tap.h net/if_tun.h],
 		 [have_tap_header="yes"])
 
-if test "x${enable_openvpn}" = xyes || test "x${have_tap_header}" = xyes; then
+if test "x${have_tap_header}" = xyes; then
    TME_HOSTS="${TME_HOSTS} tun"
 fi
 
@@ -993,6 +986,8 @@ xglib)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_GLIB ${GLIB_CFLAGS}"
 xsjlj)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_SJLJ" ;;
 esac
 done
+
+CPPFLAGS="${CPPFLAGS-} -D_GNU_SOURCE" 
 
 AM_CONDITIONAL([THREADS_POSIX], [test "x${tme_thread_types}" = xpthreads || test "x${tme_thread_types}" = xposix])
 AM_CONDITIONAL([THREADS_SJLJ], [test "x${tme_thread_types}" = xsjlj])

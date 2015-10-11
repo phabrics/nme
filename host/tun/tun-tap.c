@@ -38,10 +38,6 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 
 /* includes: */
 #include "eth-if.h"
-#ifdef ENABLE_OPENVPN
-#include "syshead.h"
-#include "tun.h"
-#endif
 #ifdef HAVE_NET_IF_TAP_H
 #include <net/if_tap.h>
 #endif
@@ -631,10 +627,8 @@ _tme_npf_print_error(const nl_error_t *ne, char **_output)
 TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   int tap_fd, dummy_fd;
   int saved_errno, i, rc;
-#ifndef ENABLE_OPENVPN
   char dev_tap_filename[sizeof(DEV_TAP_FILENAME) + 9];
   struct ifreq ifr;
-#endif
   char if_names[TME_IF_TYPE_TOTAL][IFNAMSIZ];
   char tap_hosts[TME_IP_ADDRS_TOTAL][NI_MAXHOST];
   struct in_addr tap_addrs[TME_IP_ADDRS_TOTAL];
@@ -677,9 +671,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   ipnat_t nat;
 #endif
 #endif
-#ifdef ENABLE_OPENVPN
-  struct tuntap *tt;
-#endif
 #ifdef HAVE_IFADDRS_H
   struct ifaddrs *ifa;
   int ifa_offs[TME_IP_ADDRS_TOTAL];
@@ -698,24 +689,14 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 #define TAPNETMASK tap_addrs[TME_IP_ADDRS_NETMASK]
 #define TAPBCAST tap_addrs[TME_IP_ADDRS_BCAST]
   
-#ifdef ENABLE_OPENVPN
-  for(i=0;i<TME_IP_ADDRS_TOTAL;i++) {
-    inet_ntop(AF_INET, &tap_addrs[i], tap_hosts[i], NI_MAXHOST);
+  sprintf(dev_tap_filename, DEV_TAP_FILENAME);
+
+#ifndef HAVE_LINUX_IF_TUN_H
+  if(TAPIF[0] != '\0') {
+    strncpy(dev_tap_filename + 5, TAPIF, sizeof(DEV_TAP_FILENAME) - 1);
   }
-  tme_log(&element->tme_element_log_handle, 0, TME_OK, 
-	  (&element->tme_element_log_handle, 
-	   "trying tap interface %s with address %s, netmask %s, broadcast %s",
-	   TAPIF,
-	   tap_hosts[TME_IP_ADDRS_INET],
-	   tap_hosts[TME_IP_ADDRS_NETMASK],
-	   tap_hosts[TME_IP_ADDRS_BCAST]));
+#endif
 
-  tt = init_tun(TAPIF, "tap", TOP_SUBNET,
-		tap_hosts[TME_IP_ADDRS_INET],
-		tap_hosts[TME_IP_ADDRS_NETMASK],		
-		NULL, 0, NULL, 0, 0, 0, NULL);
-
-#else
 #ifdef HAVE_KLDFIND
   // A helper step to automate loading of the necessary kernel module on FreeBSD-derived platforms
 #define KLD_FILENAME "if_tap.ko"
@@ -728,13 +709,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 #undef KLD_FILENAME
 #endif
 
-  sprintf(dev_tap_filename, DEV_TAP_FILENAME);
-
-#ifndef HAVE_LINUX_IF_TUN_H
-  if(TAPIF[0] != '\0') {
-    strncpy(dev_tap_filename + 5, TAPIF, sizeof(DEV_TAP_FILENAME) - 1);
-  }
-#endif
   tap_fd = tme_eth_alloc(dev_tap_filename, _output);
 
   if (tap_fd < 0) {
@@ -917,7 +891,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 	     hwaddr[4],
 	     hwaddr[5]));
   }
-#endif // !ENABLE_OPENVPN
   // Perform network address translation, if available
 
 #define NATIF if_names[TME_IF_TYPE_NAT]
