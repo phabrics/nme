@@ -169,6 +169,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tap) {
 	   tap_hosts[TME_IP_ADDRS_INET],
 	   tap_hosts[TME_IP_ADDRS_NETMASK]));
 
+  error_reset();
   tt = init_tun(devs[TME_DEV],
 		devs[TME_DEV_TYPE],
 		TOP_SUBNET,

@@ -667,6 +667,12 @@ darwin*)
    ;;
 esac
 
+AM_CONDITIONAL([WIN32], [test "${WIN32}" = "yes"])
+
+AC_SUBST(DEV_TAP_FILENAME)
+AC_SUBST(SETCAP)
+AC_SUBST(TGTPFX)
+
 dnl Start the list of host support.
 TME_HOSTS=
 
@@ -1267,11 +1273,23 @@ AC_DEFINE_UNQUOTED([IPROUTE_PATH], ["$IPROUTE"], [Path to iproute tool])
 AC_DEFINE_UNQUOTED([ROUTE_PATH], ["$ROUTE"], [Path to route tool])
 AC_DEFINE_UNQUOTED([SYSTEMD_ASK_PASSWORD_PATH], ["$SYSTEMD_ASK_PASSWORD"], [Path to systemd-ask-password tool])
 
-AM_CONDITIONAL([WIN32], [test "${WIN32}" = "yes"])
+AC_ARG_ENABLE(
+	[iproute2],
+	[AS_HELP_STRING([--enable-iproute2], [enable support for iproute2 @<:@default=no@:>@])],
+	,
+	[enable_iproute2="no"]
+)
 
-AC_SUBST(DEV_TAP_FILENAME)
-AC_SUBST(SETCAP)
-AC_SUBST(TGTPFX)
+if test "${enable_iproute2}" = "yes"; then
+	test -z "${IPROUTE}" && AC_MSG_ERROR([ip utility is required but missing])
+	AC_DEFINE([ENABLE_IPROUTE], [1], [enable iproute2 support])
+else
+	if test "${WIN32}" != "yes"; then
+		test -z "${ROUTE}" && AC_MSG_ERROR([route utility is required but missing])
+		test -z "${IFCONFIG}" && AC_MSG_ERROR([ifconfig utility is required but missing])
+	fi
+fi
+
 dnl Configure debugging and/or warnings.
 AC_MSG_CHECKING([for gcc --version >= 4.8])
 AC_EGREP_CPP(_gcc_has_Og,

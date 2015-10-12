@@ -8,7 +8,7 @@ AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(srcdir)/../eth -I$(top_srcdir)/lib
 pkglib_LTLIBRARIES = tme_host_tun.la
 tme_host_tun_la_SOURCES = tun-tap.c
 tme_host_tun_la_LDFLAGS = -module -version-info 0:0:0
-tme_host_tun_la_LIBADD = $(NATLIBS)
+tme_host_tun_la_LIBADD = $(NATLIBS) \
 			 ../eth/libeth.la
 
 include $(top_srcdir)/modules

@@ -726,7 +726,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   strncpy(ifr.ifr_name, TAPIF, sizeof(TAPIF));
   
 #ifdef HAVE_LINUX_IF_TUN_H
-  ifr.ifr_flags = IFF_TAP | IFF_NO_PI;   /* IFF_TUN or IFF_TAP, plus maybe IFF_NO_PI */
+  ifr.ifr_flags = IFF_TAP | IFF_NO_PI | IFF_ONE_QUEUE;   /* IFF_TUN or IFF_TAP, plus maybe IFF_NO_PI */
   
   /* try to create the device */
   if (ioctl(tap_fd, TUNSETIFF, (void *) &ifr) < 0 )
