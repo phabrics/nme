@@ -38,70 +38,71 @@
 #include "syshead.h"
 #include "tun.h"
 
-/* macros: */
-/* device names: */
-#define TME_DEV (0)
-#define TME_DEV_TYPE (1)
-#define TME_DEV_NODE (2)
-#define TME_DEV_ADDR (3)
-#define TME_DEV_TOTAL (4)
-
-/* interface addresses: */
-#define TME_IP_ADDRS_INET (0)
-#define TME_IP_ADDRS_NETMASK (1)
-#define TME_IP_ADDRS_TOTAL (2)
-
-/* retrieve ethernet arguments */
-int _tme_openvpn_tap_args(const char * const args[], 
-			  char *devs[],
-			  struct in_addr *ip_addrs,
-			  char **_output)
-{
+/* the new TAP function: */
+TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tap) {
+  int rc;
+  struct gc_arena gc = gc_new ();
+  const char *dev, *dev_type, *dev_node, *dev_addr;
+  const char *inet, *netmask, *inet6, *remote6, *netbits;
+  unsigned char *hwaddr;
+  unsigned int hwaddr_len;
+  struct tuntap *tt;
   int arg_i;
   int usage;
   
   /* check our arguments: */
   usage = 0;
 
-  memset(ip_addrs, 0, TME_IP_ADDRS_TOTAL * sizeof(struct in_addr));
-
+  dev = dev_type = dev_node = dev_addr =
+    inet = netmask = inet6 = remote6 = netbits = NULL;
+  
   arg_i = 1;
 
   for (;;) {
     /* the interface we're supposed to use: */
     if (TME_ARG_IS(args[arg_i + 0], "dev")
 	&& args[arg_i + 1] != NULL) {
-      devs[TME_DEV] = args[arg_i + 1];
+      dev = args[arg_i + 1];
     }
 
     else if (TME_ARG_IS(args[arg_i + 0], "dev-type")
 	&& args[arg_i + 1] != NULL) {
-      devs[TME_DEV_TYPE] = args[arg_i + 1];
+      dev_type = args[arg_i + 1];
     }
 
     else if (TME_ARG_IS(args[arg_i + 0], "dev-node")
 	&& args[arg_i + 1] != NULL) {
-      devs[TME_DEV_NODE] = args[arg_i + 1];
+      dev_node = args[arg_i + 1];
     }
 
     else if (TME_ARG_IS(args[arg_i + 0], "dev-addr")
 	&& args[arg_i + 1] != NULL) {
-      devs[TME_DEV_ADDR] = args[arg_i + 1];
+      dev_addr = args[arg_i + 1];
     }
 
     else if(TME_ARG_IS(args[arg_i + 0], "inet") 
 	 && args[arg_i + 1] != NULL) {
-      inet_pton(AF_INET, args[arg_i + 1], ip_addrs + TME_IP_ADDRS_INET);      
+      inet = args[arg_i + 1];
     }
-    /*
-    else if(TME_ARG_IS(args[arg_i + 0], "inet6") 
-	 && args[arg_i + 1] != NULL) {
-      inet_pton(AF_INET6, args[arg_i + 1], ip_addrs + TME_IP_ADDRS_INET6);      
-    }
-    */
+
     else if (TME_ARG_IS(args[arg_i + 0], "netmask")
 	&& args[arg_i + 1] != NULL) {
-      inet_pton(AF_INET, args[arg_i + 1], ip_addrs + TME_IP_ADDRS_NETMASK);
+      netmask =  args[arg_i + 1];
+    }
+
+    else if(TME_ARG_IS(args[arg_i + 0], "inet6") 
+	 && args[arg_i + 1] != NULL) {
+      inet6 = args[arg_i + 1];
+    }
+
+    else if(TME_ARG_IS(args[arg_i + 0], "remote6") 
+	 && args[arg_i + 1] != NULL) {
+      remote6 = args[arg_i + 1];
+    }
+
+    else if (TME_ARG_IS(args[arg_i + 0], "netbits")
+	&& args[arg_i + 1] != NULL) {
+      netbits =  args[arg_i + 1];
     }
 
     /* if we ran out of arguments: */
@@ -123,7 +124,7 @@ int _tme_openvpn_tap_args(const char * const args[],
 
   if (usage) {
     tme_output_append_error(_output,
-			    "%s %s [ dev %s ] [ dev-type %s ] [ dev-node %s ] [ dev-addr %s ] [ inet %s ] [ netmask %s ]",
+			    "%s %s [ dev %s ] [ dev-type %s ] [ dev-node %s ] [ dev-addr %s ] [ inet %s ] [ netmask %s ] [ inet6 %s] [remote6 %s]",
 			    _("usage:"),
 			    args[0],
 			    _("NAME"),
@@ -131,77 +132,72 @@ int _tme_openvpn_tap_args(const char * const args[],
 			    _("NODE"),
 			    _("LLADDR"),
 			    _("IPADDRESS"),
-			    _("IPADDRESS"));
+			    _("IPADDRESS"),
+			    _("IP6ADDRESS"),
+			    _("IP6ADDRESS"));
     return (EINVAL);
   }
-  return (TME_OK);
-}
-
-/* the new TAP function: */
-TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tap) {
-  int i;
-  struct gc_arena gc = gc_new ();
-  char *devs[TME_DEV_TOTAL];
-  char tap_hosts[TME_IP_ADDRS_TOTAL][NI_MAXHOST];
-  struct in_addr tap_addrs[TME_IP_ADDRS_TOTAL];
-  unsigned char *hwaddr;
-  unsigned int hwaddr_len;
-  struct tuntap *tt;
   
-  for(i=0;i<TME_DEV_TOTAL;i++) {
-    devs[i]=NULL;
-  }
-  /* get the arguments: */
-  _tme_openvpn_tap_args(args, devs, tap_addrs, _output);
-
-  if(!devs[TME_DEV]) devs[TME_DEV] = "tap";
+  if(!dev) dev = "tap";
   
-  for(i=0;i<TME_IP_ADDRS_TOTAL;i++) {
-    inet_ntop(AF_INET, &tap_addrs[i], tap_hosts[i], NI_MAXHOST);
-  }
   tme_log(&element->tme_element_log_handle, 0, TME_OK, 
 	  (&element->tme_element_log_handle, 
-	   "trying tap device (%s, %s, %s) with link-layer address %s, ip address %s, netmask %s",
-	   ((devs[TME_DEV]) ? (devs[TME_DEV]) : ""),
-	   ((devs[TME_DEV_TYPE]) ? (devs[TME_DEV_TYPE]) : ""),
-	   ((devs[TME_DEV_NODE]) ? (devs[TME_DEV_TYPE]) : ""),
-	   ((devs[TME_DEV_ADDR]) ? (devs[TME_DEV_ADDR]) : ""),
-	   tap_hosts[TME_IP_ADDRS_INET],
-	   tap_hosts[TME_IP_ADDRS_NETMASK]));
-
+	   "trying tap device (%s, type %s, node %s) with addresses: link %s, ip %s/%s, ip6 %s/%s prefixlen %s",
+	   dev,
+	   (dev_type) ? (dev_type) : "",
+	   (dev_node) ? (dev_node) : "",
+	   (dev_addr) ? (dev_addr) : "",
+	   (inet) ? (inet) : "",
+	   (netmask) ? (netmask) : "",
+	   (inet6) ? (inet6) : "",
+	   (remote6) ? (remote6) : "",
+	   (netbits) ? (netbits) : ""));
+	  
   error_reset();
-  tt = init_tun(devs[TME_DEV],
-		devs[TME_DEV_TYPE],
+  tt = init_tun(dev,
+		dev_type,
 		TOP_SUBNET,
-		tap_hosts[TME_IP_ADDRS_INET],
-		tap_hosts[TME_IP_ADDRS_NETMASK],		
-		NULL, 0, NULL, 0, 0, 0, NULL);
+		inet,
+		netmask,		
+		inet6,
+		(netbits) ? (atoi(netbits)) : (0),
+		remote6,
+		0,
+		0,
+		0,
+		NULL);
 
   if(ifconfig_order() == IFCONFIG_BEFORE_TUN_OPEN) {
     /* guess actual tun/tap unit number that will be returned
        by open_tun */
-    const char *guess = guess_tuntap_dev(devs[TME_DEV],
-					 devs[TME_DEV_TYPE],
-					 devs[TME_DEV_NODE],
+    const char *guess = guess_tuntap_dev(dev,
+					 dev_type,
+					 dev_node,
 					 &gc);
     do_ifconfig(tt, guess, TME_ETHERNET_FRAME_MAX, NULL);
   }
   
   /* open the tun device */
-  open_tun(devs[TME_DEV],
-	   devs[TME_DEV_TYPE],
-	   devs[TME_DEV_NODE],
+  open_tun(dev,
+	   dev_type,
+	   dev_node,
 	   tt);
 
   /* set the hardware address */
-  if(devs[TME_DEV_ADDR])
-    set_lladdr(tt->actual_name, devs[TME_DEV_ADDR], NULL);
-
+  if(dev_addr)
+    set_lladdr(tt->actual_name, dev_addr, NULL);
+  
   /* do ifconfig */
   if(ifconfig_order() == IFCONFIG_AFTER_TUN_OPEN) {
     do_ifconfig(tt, tt->actual_name, TME_ETHERNET_FRAME_MAX, NULL);
   }
-
+  
+  /* find the interface we will use: */
+  if(inet || inet6)
+    rc = tme_eth_ifaddrs_find((inet) ? (inet) : (inet6),
+			      (inet) ? (AF_INET) : (AF_INET6),
+			      NULL, &hwaddr, &hwaddr_len);
+    
   return tme_eth_init(element, tt->fd, 4096, NULL, hwaddr, NULL);
-
+  
 }

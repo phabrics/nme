@@ -604,7 +604,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
   rc = _tme_bsd_bpf_args(args, &ifr, &packet_buffer_size, delay_time, _output);
 
   /* find the interface we will use: */
-  rc = tme_eth_ifaddrs_find(ifr.ifr_name, &ifa, NULL, NULL);
+  rc = tme_eth_ifaddrs_find(ifr.ifr_name, AF_UNSPEC, &ifa, NULL, NULL);
 
   if (rc != TME_OK) {
     tme_output_append_error(_output, _("couldn't find an interface %s"), ifr.ifr_name);
@@ -752,7 +752,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
     return (errno);
   }
   
-  setuid(getuid());
 #endif
   
   return tme_eth_init(element, bpf_fd, packet_buffer_size, delay_time, NULL, _tme_bsd_bpf_connections_new);

@@ -364,7 +364,7 @@ static int
 _tme_eth_config(struct tme_ethernet_connection *conn_eth, 
 		    struct tme_ethernet_config *config)
 {
-  abort();
+  assert(0);
 }
 
 /* this is called when control lines change: */
@@ -651,10 +651,11 @@ tme_eth_if_find(const char *ifr_name_user, struct ifreq **_ifreq, tme_uint8_t **
 #ifdef HAVE_IFADDRS_H
 /* this finds a network interface via the ifaddrs api: */
 int
-tme_eth_ifaddrs_find(const char *ifa_name_user, struct ifaddrs **_ifaddr, tme_uint8_t **_if_addr, unsigned int *_if_addr_size)
+tme_eth_ifaddrs_find(const char *ifa_name_user, int family, struct ifaddrs **_ifaddr, tme_uint8_t **_if_addr, unsigned int *_if_addr_size)
 {
   struct ifaddrs *ifaddr, *ifa;
   struct ifaddrs *ifa_user = NULL;
+  char ifa_name[INET6_ADDRSTRLEN];
 #if defined(HAVE_AF_LINK) || defined(HAVE_AF_PACKET)
   struct ifaddrs *link_ifaddrs[20];	/* FIXME - magic constant. */
   size_t link_ifaddrs_count;
@@ -695,43 +696,53 @@ tme_eth_ifaddrs_find(const char *ifa_name_user, struct ifaddrs **_ifaddr, tme_ui
     }
 #endif 
 
-    /* ignore this interface if it doesn't do IP: */
-    /* XXX is this actually important? */
-    if (ifa->ifa_addr->sa_family != AF_INET) {
-      continue;
-    }
-
     /* ignore this interface if it isn't up and running: */
     if ((ifa->ifa_flags & (IFF_UP | IFF_RUNNING))
 	!= (IFF_UP | IFF_RUNNING)) {
       continue;
     }
 
+    switch(family) {
+    case AF_UNSPEC:
+      strncpy(ifa_name, ifa->ifa_name, IFNAMSIZ);
+      break;
+    case AF_INET:
+      if(ifa->ifa_addr->sa_family != AF_INET) continue;
+      inet_ntop(family, &((struct sockaddr_in *)ifa->ifa_addr)->sin_addr, ifa_name, INET_ADDRSTRLEN);
+      break;
+    case AF_INET6:
+      if(ifa->ifa_addr->sa_family != AF_INET6) continue;
+      inet_ntop(family, &((struct sockaddr_in6 *)ifa->ifa_addr)->sin6_addr, ifa_name, INET6_ADDRSTRLEN);
+      break;
+    default:
+      return EAFNOSUPPORT;
+    }
+    
     /* if we don't have an interface yet, take this one depending on
        whether the user asked for an interface by name or not.  if he
        did, and this is it, take this one.  if he didn't, and this
        isn't a loopback interface, take this one: */
-    if (ifa_user == NULL
-	&& ((ifa_name_user != NULL && strlen(ifa_name_user))
-	    ? !strncmp(ifa->ifa_name, ifa_name_user, strlen(ifa->ifa_name))
-	    : !(ifa->ifa_flags & IFF_LOOPBACK))) {
+    if ((ifa_name_user != NULL && strlen(ifa_name_user))
+	? !strncmp(ifa_name, ifa_name_user, strlen(ifa_name))
+	: !(ifa->ifa_flags & IFF_LOOPBACK)) {
       ifa_user = ifa;
       break;
     }
-
+    
   }
-
+  
   /* if we don't have an interface to return: */
   if (ifa_user == NULL) {
     return ENOENT;
   }
-
+  
   /* return this interface: */
-  *_ifaddr = (struct ifaddrs *) tme_memdup(ifa_user, sizeof(struct ifaddrs));
-
+  if (_ifaddr != NULL)
+    *_ifaddr = (struct ifaddrs *) tme_memdup(ifa_user, sizeof(struct ifaddrs));
+    
   /* assume that we can't find this interface's hardware address: */
   if (_if_addr != NULL) {
-    *_if_addr = NULL;
+      *_if_addr = NULL;
   }
   if (_if_addr_size != NULL) {    
     *_if_addr_size = 0;
@@ -848,7 +859,7 @@ tme_eth_connections_new(struct tme_element *element,
   conn->tme_connection_score = tme_ethernet_connection_score;
   conn->tme_connection_make = _tme_eth_connection_make;
   conn->tme_connection_break = _tme_eth_connection_break;
-
+  
   /* fill in the Ethernet connection: */
   conn_eth->tme_ethernet_connection_config = _tme_eth_config;
   conn_eth->tme_ethernet_connection_ctrl = _tme_eth_ctrl;

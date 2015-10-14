@@ -185,7 +185,8 @@ int tme_eth_if_find _TME_P((_tme_const char *,
 
 #endif
 #ifdef HAVE_IFADDRS_H
-int tme_eth_ifaddrs_find _TME_P((_tme_const char *, 
+int tme_eth_ifaddrs_find _TME_P((_tme_const char *,
+				 int family,
 				 struct ifaddrs **, 
 				 tme_uint8_t **, 
 				 unsigned int *));

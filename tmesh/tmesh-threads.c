@@ -57,6 +57,11 @@ void tme_threads_gtk_init(void)
     return;
   }
 
+  /* make sure we aren't running setuid */
+#ifdef HAVE_SETUID
+  setuid(getuid());
+#endif
+  
   /* conjure up an argv.  this is pretty bad: */
   argv = argv_buffer;
   argc = 0;

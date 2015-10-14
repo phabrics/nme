@@ -858,7 +858,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   close(dummy_fd);
 
   /* find the interface we will use: */
-  rc = tme_eth_ifaddrs_find(TAPIF, &ifa, &hwaddr, &hwaddr_len);
+  rc = tme_eth_ifaddrs_find(TAPIF, AF_UNSPEC, &ifa, &hwaddr, &hwaddr_len);
   
   for(i=0;i<TME_IP_ADDRS_TOTAL;i++) {
     if((rc = getnameinfo(*(struct sockaddr **)((char *)ifa + ifa_offs[i]),
@@ -901,7 +901,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 	   "trying nat interface %s", NATIF));
 	   
   /* find the interface we will use: */
-  rc = tme_eth_ifaddrs_find(NATIF, &ifa, NULL, NULL);
+  rc = tme_eth_ifaddrs_find(NATIF, AF_UNSPEC, &ifa, NULL, NULL);
 
   if (rc != TME_OK) {
     tme_output_append_error(_output, _("couldn't find an interface %s"), NATIF);
@@ -1280,11 +1280,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
  exit_nat:
   close(dummy_fd);
 #endif // TME_DO_APF
-
-#ifdef SIOCAIFADDR
-  // For BSD, we run setuid until here
-  setuid(getuid());
-#endif
 
   return tme_eth_init(element, tap_fd, 4096, NULL, hwaddr, _tme_tun_tap_connections_new);
 

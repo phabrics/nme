@@ -635,9 +635,10 @@ linux*)
    AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["L"], [Target prefix])
    CPPFLAGS="${CPPFLAGS-}"
    DEV_TAP_FILENAME='"\"/dev/net/tun\""'
-   SETCAP="setcap cap_sys_nice,cap_net_admin,cap_net_raw+ep"
+   SETCAP="chmod u+s"
+#   SETCAP="setcap cap_sys_nice,cap_net_admin,cap_net_raw+ep"
    ;;
-mingw*)
+mingw*|cygwin*)
    AC_DEFINE([TARGET_WIN32], [1], [Are we running WIN32?])
    AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["W"], [Target prefix])
    CPPFLAGS="${CPPFLAGS} -DWIN32_LEAN_AND_MEAN"
@@ -983,7 +984,7 @@ fi
 
 for tme_thread_type in ${tme_thread_types}; do
 case "x${tme_thread_type}" in
-xpthreads | xposix)  CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_POSIX -D_GNU_SOURCE" 
+xpthreads | xposix)  CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_POSIX"
 #	  	     CFLAGS="${CFLAGS-} -pthread"
 		     ;;
 xglib)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_GLIB ${GLIB_CFLAGS}"
