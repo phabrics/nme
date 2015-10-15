@@ -100,7 +100,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tap) {
       remote6 = args[arg_i + 1];
     }
 
-    else if (TME_ARG_IS(args[arg_i + 0], "netbits")
+    else if (TME_ARG_IS(args[arg_i + 0], "prefixlen")
 	&& args[arg_i + 1] != NULL) {
       netbits =  args[arg_i + 1];
     }
@@ -142,7 +142,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tap) {
   
   tme_log(&element->tme_element_log_handle, 0, TME_OK, 
 	  (&element->tme_element_log_handle, 
-	   "trying tap device (%s, type %s, node %s) with addresses: link %s, ip %s/%s, ip6 %s/%s prefixlen %s",
+	   "trying tap device (%s, type %s, node %s) with addresses: link %s, ip %s/%s, ip6 %s/%s rem6 %s",
 	   dev,
 	   (dev_type) ? (dev_type) : "",
 	   (dev_node) ? (dev_node) : "",
@@ -150,8 +150,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tap) {
 	   (inet) ? (inet) : "",
 	   (netmask) ? (netmask) : "",
 	   (inet6) ? (inet6) : "",
-	   (remote6) ? (remote6) : "",
-	   (netbits) ? (netbits) : ""));
+	   (netbits) ? (netbits) : "",
+	   (remote6) ? (remote6) : ""));
 	  
   error_reset();
   tt = init_tun(dev,
@@ -167,6 +167,10 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tap) {
 		0,
 		NULL);
 
+  if(!tt) return (EINVAL);
+
+  if(inet6) tt->ipv6 = TRUE;
+  
   if(ifconfig_order() == IFCONFIG_BEFORE_TUN_OPEN) {
     /* guess actual tun/tap unit number that will be returned
        by open_tun */
@@ -193,11 +197,24 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tap) {
   }
   
   /* find the interface we will use: */
-  if(inet || inet6)
-    rc = tme_eth_ifaddrs_find((inet) ? (inet) : (inet6),
-			      (inet) ? (AF_INET) : (AF_INET6),
-			      NULL, &hwaddr, &hwaddr_len);
+#ifdef HAVE_IFADDRS_H
+  struct ifaddrs *ifa;
+  
+  rc = tme_eth_ifaddrs_find(tt->actual_name, AF_UNSPEC, &ifa, &hwaddr, &hwaddr_len);
     
+  if(hwaddr_len == TME_ETHERNET_ADDR_SIZE) {
+    tme_log(&element->tme_element_log_handle, 0, TME_OK, 
+	    (&element->tme_element_log_handle, 
+	     "hardware address on tap interface %s set to %02x:%02x:%02x:%02x:%02x:%02x",
+	     ifa->ifa_name, 
+	     hwaddr[0],
+	     hwaddr[1],
+	     hwaddr[2],
+	     hwaddr[3],
+	     hwaddr[4],
+	     hwaddr[5]));
+  }
+#endif
   return tme_eth_init(element, tt->fd, 4096, NULL, hwaddr, NULL);
   
 }

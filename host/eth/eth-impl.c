@@ -723,7 +723,7 @@ tme_eth_ifaddrs_find(const char *ifa_name_user, int family, struct ifaddrs **_if
        did, and this is it, take this one.  if he didn't, and this
        isn't a loopback interface, take this one: */
     if ((ifa_name_user != NULL && strlen(ifa_name_user))
-	? !strncmp(ifa_name, ifa_name_user, strlen(ifa_name))
+	? !strncmp(ifa_name, ifa_name_user, strlen(ifa_name_user))
 	: !(ifa->ifa_flags & IFF_LOOPBACK)) {
       ifa_user = ifa;
       break;
