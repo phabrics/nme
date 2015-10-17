@@ -44,7 +44,7 @@
 #define tme_thread_cooperative() FALSE
 
 /* initializing and starting: */
-#define tme_threads_init() do { } while (/* CONSTCOND */ 0)
+#define _tme_threads_init() do { } while (/* CONSTCOND */ 0)
 
 /* thread suspension: */
 #define tme_thread_suspend_others()	do { } while (/* CONSTCOND */ 0)

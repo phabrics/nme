@@ -47,7 +47,7 @@
 
 /* initializing and starting: */
 void tme_sjlj_threads_init _TME_P((void));
-#define tme_threads_init tme_sjlj_threads_init
+#define _tme_threads_init tme_sjlj_threads_init
 #ifdef _TME_HAVE_GLIB
 void tme_sjlj_threads_glib_yield _TME_P((void));
 #define tme_threads_glib_yield tme_sjlj_threads_glib_yield

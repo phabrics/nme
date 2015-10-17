@@ -81,6 +81,8 @@ struct tme_module {
 };
 
 /* globals: */
+tme_threads_fn tme_threads_run;
+
 #ifdef TME_THREADS_POSIX
 pthread_rwlock_t tme_rwlock_suspere;
 

@@ -21,8 +21,7 @@ pkginclude_HEADERS = memory.h \
 	recode.h \
 	token.h \
 	completion.h \
-	runlength.h \
-	tmesh.h
+	runlength.h
 
 info_TEXINFOS = tme.texi
 tme_TEXINFOS = fdl.texi

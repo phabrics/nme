@@ -787,11 +787,8 @@ AM_CONDITIONAL([USING_GLIB], [test "x${have_glib}" = xyes])
 dnl Checks for GTK.
 AM_PATH_GTK_3_0([], have_gtk=yes, have_gtk=no)
 if test "x$have_gtk" = xyes; then
-  AC_DEFINE(HAVE_GTK, [], [Define if you are compiling with GTK.])
   TME_HOSTS="${TME_HOSTS} gtk"
 fi
-
-AM_CONDITIONAL([USING_GTK], [test "x${have_gtk}" = xyes])
 
 dnl Characterize any graphics displays and remember the areas of
 dnl the smallest and largest screens.

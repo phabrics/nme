@@ -580,7 +580,7 @@ main(int argc, char **argv)
   int arg_i;
   const char *pre_threads_filename;
   const char *log_filename;
-  int interactive, using_gtk;
+  int interactive;
   struct tmesh_io io;
   struct tmesh_support support;
   struct _tmesh_input *input_stdin;
@@ -605,14 +605,9 @@ main(int argc, char **argv)
   inheritsched_str = NULL;
 #endif // HAVE_PTHREAD_SETSCHEDPARAM
 #endif // TME_THREADS_POSIX
-  
+
   /* check our command line: */
   usage = FALSE;
-#ifdef HAVE_GTK
-  using_gtk = TRUE;
-#else
-  using_gtk = FALSE;
-#endif
   pre_threads_filename = NULL;
   log_filename = "/dev/null";
   interactive = TRUE;
@@ -684,18 +679,6 @@ main(int argc, char **argv)
     }
 #endif // HAVE_PTHREAD_SETSCHEDPARAM  
 #endif // TME_THREADS_POSIX
-#ifdef HAVE_GTK
-    else if (!strcmp(opt, "--gui-mode")) {
-      if (++arg_i < argc) {
-	if(strcmp(argv[arg_i], "gtk")) {
-	  using_gtk = FALSE;
-	}
-      } else {
-	usage = TRUE;
-	break;
-      }
-    }
-#endif
     else if (!strcmp(opt, "-c")
 	     || !strcmp(opt, "--noninteractive")) {
       interactive = FALSE;
@@ -845,7 +828,7 @@ main(int argc, char **argv)
   }
 #endif // HAVE_PTHREAD_SETSCHEDPARAM  
 #endif
-  
+
   /* initialize libtmesh: */
   (void) tmesh_init();
 
@@ -921,9 +904,6 @@ main(int argc, char **argv)
     tme_thread_create(&tmesh_thread, (tme_thread_t) _tmesh_th, NULL);
   }
 
-  if(using_gtk)
-    tme_threads_gtk_init();
-  
   /* run the threads: */
   tme_threads_run();
 

@@ -41,7 +41,37 @@ _TME_RCSID("$Id: gtk-display.c,v 1.4 2010/06/05 14:28:17 fredette Exp $");
 
 /* macros: */
 
-/* the GTK display callout function.  it must be called with the mutex locked: */
+void _tme_gtk_init(void)
+{
+  char **argv;
+  char *argv_buffer[3];
+  int argc;
+
+  /* GTK requires program to be running non-setuid */
+#ifdef HAVE_SETUID
+  setuid(getuid());
+#endif
+  
+  /* conjure up an argv.  this is pretty bad: */
+  argv = argv_buffer;
+  argc = 0;
+  argv[argc++] = "tmesh";
+#if 1
+  argv[argc++] = "--gtk-debug=signals";
+#endif
+  argv[argc] = NULL;
+  gtk_init(&argc, &argv);
+}
+
+void _tme_gtk_run(void) {
+#ifdef TME_THREADS_SJLJ
+  tme_sjlj_threads_run(1);
+#endif
+  _tme_thread_suspended();
+  gtk_main();
+}
+
+    /* the GTK display callout function.  it must be called with the mutex locked: */
 void
 _tme_gtk_display_callout(struct tme_gtk_display *display,
 			 int new_callouts)
@@ -285,7 +315,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   }
 
   /* call gtk_init if we haven't already: */
-  //tme_threads_gtk_init();
+  tme_threads_init(_tme_gtk_init, _tme_gtk_run);
 
   /* start our data structure: */
   display = tme_new0(struct tme_gtk_display, 1);

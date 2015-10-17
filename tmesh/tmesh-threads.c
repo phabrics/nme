@@ -37,59 +37,12 @@ _TME_RCSID("$Id: threads-sjlj.c,v 1.18 2010/06/05 19:10:28 fredette Exp $");
 /* includes: */
 #include <tme/threads.h>
 #include <tme/module.h>
-#ifdef HAVE_GTK
-#ifndef G_ENABLE_DEBUG
-#define G_ENABLE_DEBUG (0)
-#endif /* !G_ENABLE_DEBUG */
-#include <gtk/gtk.h>
 
-/* nonzero iff we're using the gtk main loop: */
-static int tme_using_gtk;
-
-void tme_threads_gtk_init(void)
-{
-  char **argv;
-  char *argv_buffer[3];
-  int argc;
-
-  /* if we've already initialized GTK: */
-  if (tme_using_gtk) {
-    return;
-  }
-
-  /* make sure we aren't running setuid */
-#ifdef HAVE_SETUID
-  setuid(getuid());
+void tmesh_threads_run() {
+#ifdef TME_THREADS_SJLJ
+  tme_sjlj_threads_run(0);
 #endif
-  
-  /* conjure up an argv.  this is pretty bad: */
-  argv = argv_buffer;
-  argc = 0;
-  argv[argc++] = "tmesh";
-#if 1
-  argv[argc++] = "--gtk-debug=signals";
-#endif
-  argv[argc] = NULL;
-  gtk_init(&argc, &argv);
-
-  /* we are now using GTK: */
-  tme_using_gtk = TRUE;
-}
-#else 
-#define tme_using_gtk FALSE
-#endif /* !HAVE_GTK */
-
-void tme_threads_run() {
-  tme_sjlj_threads_run(tme_using_gtk);
-
   _tme_thread_suspended();
-#ifdef HAVE_GTK
-  /* if we're using the GTK main loop, yield to GTK and
-     call gtk_main(): */
-  if (tme_using_gtk) {
-    gtk_main();
-  } else
-#endif /* HAVE_GTK */
   while(1) {
     usleep(1000000);
   }
@@ -110,7 +63,7 @@ static _tme_inline int tme_module_init _TME_P((void)) {
 /* this initializes libtme: */
 void tme_init _TME_P((void)) {
   /* initialize the threading system: */
-  tme_threads_init();
+  tme_threads_init(NULL, tmesh_threads_run);
 
   /* initialize the module system: */
   tme_module_init();

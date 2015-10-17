@@ -44,7 +44,6 @@ _TME_RCSID("$Id: tme.h,v 1.3 2006/09/30 12:43:39 fredette Exp $");
 #include <tme/element.h>
 #include <tme/module.h>
 #include <tme/threads.h>
-#include <tme/tmesh.h>
 #include <tme/hash.h>
 #include <tme/misc.h>
 
