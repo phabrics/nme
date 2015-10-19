@@ -180,12 +180,17 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tap) {
 					 &gc);
     do_ifconfig(tt, guess, TME_ETHERNET_FRAME_MAX, NULL);
   }
+
+  /* temporarily turn off ipv6 to disable protocol info being prepended to packets on Linux */
+  tt->ipv6 = FALSE;
   
   /* open the tun device */
   open_tun(dev,
 	   dev_type,
 	   dev_node,
 	   tt);
+
+  if(inet6) tt->ipv6 = TRUE;
 
   /* set the hardware address */
   if(dev_addr)

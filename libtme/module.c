@@ -37,6 +37,7 @@
 _TME_RCSID("$Id: module.c,v 1.10 2010/06/05 19:04:42 fredette Exp $");
 
 /* includes: */
+#include <tme/threads.h>
 #include <tme/module.h>
 #include <tme/log.h>
 #include <tme/misc.h>
