@@ -1,9 +1,7 @@
-/* $Id: threads.h,v 1.10 2010/06/05 19:36:35 fredette Exp $ */
-
-/* tme/threads.h - header file for threads: */
+/* libtme/threads.c - threads management: */
 
 /*
- * Copyright (c) 2003 Matt Fredette
+ * Copyright (c) 2015 Ruben Agin
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,30 +31,39 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _TME_THREADS_H
-#define _TME_THREADS_H
-
-#include <tme/common.h>
-_TME_RCSID("$Id: threads.h,v 1.10 2010/06/05 19:36:35 fredette Exp $");
-
 /* includes: */
-#include <errno.h>
-#include <sys/time.h>
+#include <tme/threads.h>
 
-/* setjmp/longjmp threading: */
+/* globals: */
+static tme_threads_fn _tme_threads_run;
+static int inited;
+
+void tme_threads_init(tme_threads_fn init, tme_threads_fn run) {
+  _tme_threads_run = run;
+  if(!inited) {
+    _tme_threads_init();
+    inited=1;
+  }
+  if(init)
+    (*init)();
+}
+
+void tme_threads_run(void) {
+  if(_tme_threads_run) (*_tme_threads_run)();
+}
+
 #ifdef TME_THREADS_POSIX
-#include "threads-posix.h"
-#define tme_threads_glib_yield() do { } while (/* CONSTCOND */ 0)
-#elif defined(TME_THREADS_GLIB)
-#include "threads-glib.h"
-#define tme_threads_glib_yield() do { } while (/* CONSTCOND */ 0)
-#elif defined(TME_THREADS_SJLJ)
-#include "threads-sjlj.h"
+pthread_rwlock_t tme_rwlock_suspere;
+
+#ifdef HAVE_PTHREAD_SETSCHEDPARAM
+static pthread_attr_t *attrp;
+
+void tme_thread_set_defattr(pthread_attr_t *attr) {
+  attrp=attr;
+}
+pthread_attr_t *tme_thread_defattr() {
+  return attrp;
+}
+#endif // HAVE_PTHREAD_SETSCHEDPARAM
 #endif
 
-typedef void (*tme_threads_fn) _TME_P((void));
-
-void tme_threads_init _TME_P((tme_threads_fn init, tme_threads_fn run));
-void tme_threads_run _TME_P((void));
-
-#endif /* !_TME_THREADS_H */

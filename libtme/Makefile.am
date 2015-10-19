@@ -27,6 +27,7 @@ libtme_la_SOURCES = misc-host.c \
 	recode-host.c \
 	recode-impl.h \
 	module.c \
+	threads.c \
 	element.c \
 	log.c \
 	hash.c \

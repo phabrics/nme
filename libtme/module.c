@@ -37,7 +37,6 @@
 _TME_RCSID("$Id: module.c,v 1.10 2010/06/05 19:04:42 fredette Exp $");
 
 /* includes: */
-#include <tme/threads.h>
 #include <tme/module.h>
 #include <tme/log.h>
 #include <tme/misc.h>
@@ -79,24 +78,6 @@ struct tme_module {
   /* any "submodule" symbol prefix: */
   char *tme_module_submodule;
 };
-
-/* globals: */
-tme_threads_fn tme_threads_run;
-
-#ifdef TME_THREADS_POSIX
-pthread_rwlock_t tme_rwlock_suspere;
-
-#ifdef HAVE_PTHREAD_SETSCHEDPARAM
-static pthread_attr_t *attrp;
-
-void tme_thread_set_defattr(pthread_attr_t *attr) {
-  attrp=attr;
-}
-pthread_attr_t *tme_thread_defattr() {
-  return attrp;
-}
-#endif // HAVE_PTHREAD_SETSCHEDPARAM
-#endif
 
 static tme_mutex_t _tme_module_mutex;
 #define lt_preloaded_symbols	lt__PROGRAM__LTX_preloaded_symbols
