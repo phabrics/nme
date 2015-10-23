@@ -13,7 +13,7 @@ if USING_GLIB
 AM_CPPFLAGS += $(GLIB_CFLAGS)
 endif
 endif
-noinst_LTLIBRARIES = libtme.la
+lib_LTLIBRARIES = libtme.la
 pkginclude_HEADERS = memory-auto.h
 libtme_la_SOURCES = misc-host.c \
 	memory-auto.c \
