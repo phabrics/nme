@@ -716,7 +716,7 @@ main(int argc, char **argv)
   /* initialize libtme: */
   tme_init();
 
-  tme_thread_enter(NULL);
+  //  tme_thread_enter(NULL);
   
 #ifdef TME_THREADS_POSIX
   thread = pthread_self();

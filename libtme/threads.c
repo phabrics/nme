@@ -55,7 +55,7 @@ void tme_threads_run(void) {
   tme_thread_resume_others();
   _tme_thread_suspended();
 #ifdef TME_THREADS_SJLJ
-  tme_sjlj_threads_run(use_glib);
+  tme_sjlj_threads_run(using_glib);
 #endif
   if(_tme_threads_run) (*_tme_threads_run)();
   while(1) {
@@ -82,5 +82,9 @@ pthread_attr_t *tme_thread_defattr() {
   return attrp;
 }
 #endif // HAVE_PTHREAD_SETSCHEDPARAM
+#elif defined(TME_THREADS_GLIB)
+GRWLock tme_rwlock_suspere;
 #endif
+
+
 
