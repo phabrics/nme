@@ -242,6 +242,9 @@ struct tme_stp222x_timer {
   /* a condition for waking up the thread for this timer: */
   struct tme_stp22xx_cond tme_stp222x_timer_cond;
 
+  /* a mutex for waking up the thread for this timer: */
+  tme_mutex_t tme_stp222x_timer_mutex;
+
   /* thread for this timer: */
   tme_threadid_t tme_stp222x_timer_thread;
 
@@ -384,6 +387,7 @@ struct tme_stp222x {
   tme_uint32_t tme_stp222x_mdu_retry;
   tme_time_t tme_stp222x_mdu_retry_sleep;
   struct tme_stp22xx_cond tme_stp222x_mdu_retry_cond;
+  tme_mutex_t tme_stp222x_mdu_retry_mutex;
   tme_threadid_t tme_stp222x_mdu_retry_thread;
 
   /* the UPA bus reset level: */

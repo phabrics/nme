@@ -38,16 +38,6 @@ _TME_RCSID("$Id: threads-sjlj.c,v 1.18 2010/06/05 19:10:28 fredette Exp $");
 #include <tme/threads.h>
 #include <tme/module.h>
 
-void tmesh_threads_run() {
-#ifdef TME_THREADS_SJLJ
-  tme_sjlj_threads_run(0);
-#endif
-  _tme_thread_suspended();
-  while(1) {
-    usleep(1000000);
-  }
-}
-
 /* this initializes modules: */
 static _tme_inline int tme_module_init _TME_P((void)) {
   int rc;
@@ -63,7 +53,7 @@ static _tme_inline int tme_module_init _TME_P((void)) {
 /* this initializes libtme: */
 void tme_init _TME_P((void)) {
   /* initialize the threading system: */
-  tme_threads_init(NULL, tmesh_threads_run);
+  tme_threads_init(NULL, NULL, FALSE);
 
   /* initialize the module system: */
   tme_module_init();

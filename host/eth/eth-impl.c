@@ -205,10 +205,7 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
   unsigned long sleep_usec;
   const struct tme_ethernet_header *ethernet_header;
   
-  tme_thread_enter();
-
-  /* lock the mutex: */
-  tme_mutex_lock(&eth->tme_eth_mutex);
+  tme_thread_enter(&eth->tme_eth_mutex);
 
   /* loop forever: */
   for (;;) {
@@ -788,7 +785,7 @@ tme_eth_ifaddrs_find(const char *ifa_name_user, int family, struct ifaddrs **_if
 
 #endif /* AF_HWADDR */
 
-  freeifaddrs(ifaddr);
+  //  freeifaddrs(ifaddr);
 
   /* done: */
   return (TME_OK);

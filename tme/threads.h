@@ -56,7 +56,8 @@ _TME_RCSID("$Id: threads.h,v 1.10 2010/06/05 19:36:35 fredette Exp $");
 
 typedef void (*tme_threads_fn) _TME_P((void));
 
-void tme_threads_init _TME_P((tme_threads_fn init, tme_threads_fn run));
+void tme_threads_init _TME_P((tme_threads_fn init, tme_threads_fn run, int use_glib));
 void tme_threads_run _TME_P((void));
+void tme_thread_enter _TME_P((tme_mutex_t *mutex));
 
 #endif /* !_TME_THREADS_H */

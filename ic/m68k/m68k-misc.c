@@ -273,8 +273,11 @@ tme_m68k_idle(struct tme_m68k *ic)
 static _tme_thret
 _tme_m68k_th(struct tme_m68k *ic)
 {
-  tme_thread_enter();
+  tme_thread_enter(&ic->tme_m68k_external_mutex);
 
+  /* unlock the external mutex: */
+  tme_mutex_unlock(&ic->tme_m68k_external_mutex);
+  
   /* we use longjmp to redispatch: */
   do { } while (setjmp(ic->_tme_m68k_dispatcher));
 

@@ -355,8 +355,11 @@ _tme_am9513_th_timer(struct tme_am9513 *am9513)
   struct tme_am9513_counter *counter;
   tme_uint32_t counter_elapsed;
 
-  tme_thread_enter();
+  tme_thread_enter(&am9513->tme_am9513_mutex);
 
+  /* unlock our mutex: */
+  tme_mutex_unlock(&am9513->tme_am9513_mutex);
+  
   /* loop forever: */
   for (;;) {
 

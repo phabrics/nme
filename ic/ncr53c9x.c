@@ -2900,10 +2900,7 @@ static _tme_thret
 _tme_ncr53c9x_timeout_th(struct tme_ncr53c9x *ncr53c9x)
 {
 
-  tme_thread_enter();
-
-  /* lock our mutex: */
-  tme_mutex_lock(&ncr53c9x->tme_ncr53c9x_mutex);
+  tme_thread_enter(&ncr53c9x->tme_ncr53c9x_mutex);
 
   /* loop forever: */
   for (;;) {

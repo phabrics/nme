@@ -138,12 +138,12 @@ _tme_stp222x_mdu_retry_th(void *_stp222x)
   signed long buffer_i;
   unsigned int dispatch_state;
 
-  tme_thread_enter();
-
   /* recover our data structures: */
   stp222x = (struct tme_stp222x *) _stp222x;
 
   /* enter: */
+  tme_thread_enter(&stp222x->tme_stp222x_mdu_retry_mutex);
+
   tme_stp22xx_enter(&stp222x->tme_stp222x);
 
   /* loop forever: */
@@ -1077,6 +1077,9 @@ tme_stp222x_mdu_init(struct tme_stp222x *stp222x)
 
   /* initialize the retry condition: */
   tme_stp22xx_cond_init(&stp222x->tme_stp222x_mdu_retry_cond);
+
+  /* initialize the retry condition: */
+  tme_mutex_init(&stp222x->tme_stp222x_mdu_retry_mutex);
 
   /* start the retry thread: */
   tme_thread_create(&stp222x->tme_stp222x_mdu_retry_thread, _tme_stp222x_mdu_retry_th, stp222x);

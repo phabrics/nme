@@ -309,10 +309,7 @@ _tme_isil7170_th_timer(struct tme_isil7170 *isil7170)
   tme_time_t now;
 #endif /* TME_ISIL7170_TRACK_INT_RATE */
 
-  tme_thread_enter();
-
-  /* lock the mutex: */
-  tme_mutex_lock(&isil7170->tme_isil7170_mutex);
+  tme_thread_enter(&isil7170->tme_isil7170_mutex);
 
   /* loop forever: */
   for (;;) {

@@ -397,13 +397,10 @@ _tme_sunfb_callout_th(void *_sunfb)
 {
   struct tme_sunfb *sunfb;
 
-  tme_thread_enter();
-  
+  tme_thread_enter(&sunfb->tme_sunfb_mutex);
+
   /* recover our data structure: */
   sunfb = _sunfb;
-
-  /* lock the mutex: */
-  tme_mutex_lock(&sunfb->tme_sunfb_mutex);
 
   /* loop forever: */
   for (;;) {

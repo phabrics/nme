@@ -143,13 +143,13 @@ _tme_stp222x_timer_th(void *_timer)
   tme_time_t now;
   tme_time_t sleep;
 
-  tme_thread_enter();
-
   /* recover our data structures: */
   timer = (struct tme_stp222x_timer *) _timer;
   stp222x = timer->tme_stp222x_timer_stp222x;
 
   /* enter: */
+  tme_thread_enter(&timer->tme_stp222x_timer_mutex);
+
   tme_stp22xx_enter(&stp222x->tme_stp222x);
 
   /* loop forever: */
@@ -336,6 +336,7 @@ tme_stp222x_timer_init(struct tme_stp222x *stp222x,
   /* initialize and reset the timer: */
   timer->tme_stp222x_timer_stp222x = stp222x;
   tme_stp22xx_cond_init(&timer->tme_stp222x_timer_cond);
+  tme_mutex_init(&timer->tme_stp222x_timer_mutex);
   _tme_stp222x_timer_reset(timer, 0);
 
   /* start the thread for this timer: */

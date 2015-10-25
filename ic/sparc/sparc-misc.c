@@ -174,7 +174,10 @@ _tme_sparc_idle_reset(struct tme_sparc *ic)
 static _tme_thret
 _tme_sparc_th(struct tme_sparc *ic)
 {
-  tme_thread_enter();
+  tme_thread_enter(&ic->tme_sparc_external_mutex);
+
+  /* unlock the external mutex: */
+  tme_mutex_unlock(&ic->tme_sparc_external_mutex);
   
   /* we use longjmp to redispatch: */
   do { } while (setjmp(ic->_tme_sparc_dispatcher));

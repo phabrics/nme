@@ -3744,13 +3744,10 @@ _tme_stp103x_tick_compare_th(void *_ic)
   unsigned long tick_compare_time_tv_usec;
   tme_time_t sleep;
 
-  tme_thread_enter();
+  tme_thread_enter(&ic->tme_sparc_external_mutex);
 
   /* recover our data structure: */
   ic = (struct tme_sparc *) _ic;
-
-  /* lock the external mutex: */
-  tme_mutex_lock(&ic->tme_sparc_external_mutex);
 
   /* loop forever: */
   for (;;) {

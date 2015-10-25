@@ -399,7 +399,7 @@ _tmesh_th(void *junk)
   char *output;
   unsigned int consumed;
 
-  tme_thread_enter();
+  tme_thread_enter(NULL);
 
   /* loop while we have a current input buffer: */
   for (; (io = _tmesh_io) != NULL;) {
@@ -716,7 +716,7 @@ main(int argc, char **argv)
   /* initialize libtme: */
   tme_init();
 
-  tme_thread_enter();
+  tme_thread_enter(NULL);
   
 #ifdef TME_THREADS_POSIX
   thread = pthread_self();

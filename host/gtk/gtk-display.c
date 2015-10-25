@@ -63,14 +63,6 @@ void _tme_gtk_init(void)
   gtk_init(&argc, &argv);
 }
 
-void _tme_gtk_run(void) {
-#ifdef TME_THREADS_SJLJ
-  tme_sjlj_threads_run(1);
-#endif
-  _tme_thread_suspended();
-  gtk_main();
-}
-
     /* the GTK display callout function.  it must be called with the mutex locked: */
 void
 _tme_gtk_display_callout(struct tme_gtk_display *display,
@@ -315,7 +307,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   }
 
   /* call gtk_init if we haven't already: */
-  tme_threads_init(_tme_gtk_init, _tme_gtk_run);
+  tme_threads_init(_tme_gtk_init, gtk_main, TRUE);
 
   /* start our data structure: */
   display = tme_new0(struct tme_gtk_display, 1);

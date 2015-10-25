@@ -1456,10 +1456,7 @@ static _tme_thret
 _tme_am7990_poll_th(struct tme_am7990 *am7990)
 {
 
-  tme_thread_enter();
-
-  /* lock our mutex: */
-  tme_mutex_lock(&am7990->tme_am7990_mutex);
+  tme_thread_enter(&am7990->tme_am7990_mutex);
 
   /* loop forever: */
   for (;;) {

@@ -214,8 +214,11 @@ _tme_posix_serial_th_ctrl(struct tme_posix_serial *serial)
   int modem_state, modem_state_out;
   unsigned int ctrl;
 
-  tme_thread_enter();
+  tme_thread_enter(&serial->tme_posix_serial_mutex);
 
+  /* unlock the mutex: */
+  tme_mutex_unlock(&serial->tme_posix_serial_mutex);
+  
   /* loop forever: */
   for (;;) {
    
@@ -282,10 +285,7 @@ _tme_posix_serial_th_writer(struct tme_posix_serial *serial)
   unsigned int buffer_output_size;
   int rc;
 
-  tme_thread_enter();
-
-  /* lock the mutex: */
-  tme_mutex_lock(&serial->tme_posix_serial_mutex);
+  tme_thread_enter(&serial->tme_posix_serial_mutex);
 
   /* loop forever: */
   for (;;) {
@@ -346,8 +346,11 @@ _tme_posix_serial_th_reader(struct tme_posix_serial *serial)
   int buffer_was_empty;
   int rc;
 
-  tme_thread_enter();
+  tme_thread_enter(&serial->tme_posix_serial_mutex);
 
+  /* unlock the mutex: */
+  tme_mutex_unlock(&serial->tme_posix_serial_mutex);
+  
   /* loop forever: */
   for (;;) {
 
