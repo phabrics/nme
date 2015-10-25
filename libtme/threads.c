@@ -36,15 +36,15 @@
 
 /* globals: */
 static tme_threads_fn _tme_threads_run;
-static int inited, using_glib, running;
-static tme_cond_t thr_cond;
+static int inited, using_glib;
 
 void tme_threads_init(tme_threads_fn init, tme_threads_fn run, int use_glib) {
   _tme_threads_run = run;
   using_glib = use_glib;
   if(!inited) {
     _tme_threads_init();
-    tme_cond_init(&thr_cond);
+    _tme_thread_resumed();
+    tme_thread_suspend_others();
     inited=TRUE;
   }
   if(init)
@@ -52,8 +52,7 @@ void tme_threads_init(tme_threads_fn init, tme_threads_fn run, int use_glib) {
 }
 
 void tme_threads_run(void) {
-  tme_cond_notify(&thr_cond, TRUE);
-  running=TRUE;
+  tme_thread_resume_others();
   _tme_thread_suspended();
 #ifdef TME_THREADS_SJLJ
   tme_sjlj_threads_run(use_glib);
@@ -66,10 +65,8 @@ void tme_threads_run(void) {
 
 void tme_thread_enter(tme_mutex_t *mutex) {
   _tme_thread_resumed();
-  if(mutex) {
+  if(mutex)
     tme_mutex_lock(mutex);
-    if(!running) tme_cond_wait_yield(&thr_cond, mutex);
-  }
 }
 
 #ifdef TME_THREADS_POSIX

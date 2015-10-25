@@ -343,10 +343,10 @@ _tme_serial_ms_th_rate(void *_serial_ms)
 {
   struct tme_serial_ms *serial_ms;
 
-  tme_thread_enter(&serial_ms->tme_serial_ms_mutex);
-
   /* recover our data structure: */
   serial_ms = _serial_ms;
+
+  tme_thread_enter(&serial_ms->tme_serial_ms_mutex);
 
   /* loop forever: */
   for (;;) {

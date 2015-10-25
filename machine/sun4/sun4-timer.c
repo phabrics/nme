@@ -265,10 +265,10 @@ _tme_sun4_timer_th(struct tme_sun4_timer *timer)
   tme_time_t now;
   tme_time_t sleep;
 
-  tme_thread_enter(&sun4->tme_sun4_mutex);
-
   /* recover our sun4: */
   sun4 = timer->tme_sun4_timer_sun4;
+
+  tme_thread_enter(&sun4->tme_sun4_mutex);
 
   /* loop forever: */
   for (;;) {
