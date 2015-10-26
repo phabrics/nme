@@ -810,11 +810,11 @@ _tme_suncg2_callout_th(void *_suncg2)
 {
   struct tme_suncg2 *suncg2;
 
-  tme_thread_enter(&suncg2->tme_suncg2_mutex);
-  
   /* recover our data structure: */
   suncg2 = _suncg2;
 
+  tme_thread_enter(&suncg2->tme_suncg2_mutex);
+  
   /* the callout thread is no longer running: */
   suncg2->tme_suncg2_flags &= ~TME_SUNCG2_FLAG_CALLOUT_THREAD_RUNNING;
 
