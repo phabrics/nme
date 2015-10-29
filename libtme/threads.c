@@ -37,39 +37,8 @@
 /* globals: */
 static tme_threads_fn _tme_threads_run;
 static int inited, using_glib;
-
-void tme_threads_init(tme_threads_fn init, tme_threads_fn run, int use_glib) {
-  _tme_threads_run = run;
-  using_glib = use_glib;
-  if(!inited) {
-    _tme_threads_init();
-    _tme_thread_resumed();
-    tme_thread_suspend_others();
-    inited=TRUE;
-  }
-  if(init)
-    (*init)();
-}
-
-void tme_threads_run(void) {
-  tme_thread_resume_others();
-  _tme_thread_suspended();
-#ifdef TME_THREADS_SJLJ
-  tme_sjlj_threads_run(using_glib);
-#endif
-  if(_tme_threads_run) (*_tme_threads_run)();
-  while(1) {
-    usleep(1000000);
-  }
-}
-
-void tme_thread_enter(tme_mutex_t *mutex) {
-  _tme_thread_resumed();
-  if(mutex)
-    tme_mutex_lock(mutex);
-}
-
 #ifdef TME_THREADS_POSIX
+static pthread_rwlock_t tme_rwlock_start;
 pthread_rwlock_t tme_rwlock_suspere;
 
 #ifdef HAVE_PTHREAD_SETSCHEDPARAM
@@ -83,8 +52,58 @@ pthread_attr_t *tme_thread_defattr() {
 }
 #endif // HAVE_PTHREAD_SETSCHEDPARAM
 #elif defined(TME_THREADS_GLIB)
+static GRWLock tme_rwlock_start;
 GRWLock tme_rwlock_suspere;
 #endif
 
+void tme_threads_init(tme_threads_fn init, tme_threads_fn run, int use_glib) {
+  _tme_threads_run = run;
+  using_glib = use_glib;
+  if(!inited) {
+    _tme_threads_init();
+    if(!tme_thread_cooperative()) {
+#ifdef TME_THREADS_POSIX
+      pthread_rwlock_init(&tme_rwlock_start, NULL);      
+      pthread_rwlock_wrlock(&tme_rwlock_start);
+#elif defined(TME_THREADS_GLIB)
+      g_rw_lock_init(&tme_rwlock_start);
+      g_rw_lock_writer_lock(&tme_rwlock_start);
+#endif
+    }
+    _tme_thread_resumed();  
+    inited=TRUE;
+  }
+  if(init)
+    (*init)();
+}
 
+void tme_threads_run(void) {
+  if(!tme_thread_cooperative()) {
+#ifdef TME_THREADS_POSIX
+    pthread_rwlock_unlock(&tme_rwlock_start);
+#elif defined(TME_THREADS_GLIB)
+    g_rw_lock_writer_unlock(&tme_rwlock_start);  
+#endif
+  }
+  _tme_thread_suspended();  
+#ifdef TME_THREADS_SJLJ
+  tme_sjlj_threads_run(using_glib);
+#endif
+  if(_tme_threads_run) (*_tme_threads_run)();
+  while(1) {
+    usleep(1000000);
+  }
+}
 
+void tme_thread_enter(tme_mutex_t *mutex) {
+  if(!tme_thread_cooperative()) {
+#ifdef TME_THREADS_POSIX
+    pthread_rwlock_rdlock(&tme_rwlock_start);
+#elif defined(TME_THREADS_GLIB)
+    g_rw_lock_reader_lock(&tme_rwlock_start);
+#endif
+  }
+  _tme_thread_resumed();  
+  if(mutex)
+    tme_mutex_lock(mutex);
+}
