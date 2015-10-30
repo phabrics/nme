@@ -44,6 +44,28 @@ _TME_RCSID("$Id: bus-device.h,v 1.9 2009/08/29 17:48:27 fredette Exp $");
 #include <tme/generic/bus.h>
 
 /* macros: */
+#if defined _WIN32 && !defined __GNUC__
+# ifdef LIBTME_GENERIC_BUILD
+#  ifdef DLL_EXPORT
+#   define LIBTME_GENERIC_SCOPE            __declspec (dllexport)
+#   define LIBTME_GENERIC_SCOPE_VAR extern __declspec (dllexport)
+#  endif
+# elif defined _MSC_VER
+#  define LIBTME_GENERIC_SCOPE
+#  define LIBTME_GENERIC_SCOPE_VAR  extern __declspec (dllimport)
+# elif defined DLL_EXPORT
+#  define LIBTME_GENERIC_SCOPE             __declspec (dllimport)
+#  define LIBTME_GENERIC_SCOPE_VAR  extern __declspec (dllimport)
+# endif
+#elif (defined(_WIN32) || defined(__CYGWIN__)) && !defined(LIBTME_GENERIC_BUILD) && defined(DLL_EXPORT)
+#define LIBTME_GENERIC_SCOPE             __declspec (dllimport)
+#define LIBTME_GENERIC_SCOPE_VAR  extern __declspec (dllimport)
+#endif
+
+#ifndef LIBTME_GENERIC_SCOPE
+# define LIBTME_GENERIC_SCOPE
+# define LIBTME_GENERIC_SCOPE_VAR extern
+#endif
 
 /* this indexes an initiator bus router array for a device with a port size
    of 8 * (2 ^ siz_lg2) bits: */
@@ -112,7 +134,7 @@ extern _tme_const tme_bus_lane_t tme_bus_device_router_32el[];
 
 /* prototypes: */
 int tme_bus_device_connection_score _TME_P((struct tme_connection *, unsigned int *));
-int tme_bus_device_connection_make _TME_P((struct tme_connection *, unsigned int));
+LIBTME_GENERIC_SCOPE_VAR int tme_bus_device_connection_make _TME_P((struct tme_connection *, unsigned int));
 int tme_bus_device_connection_break _TME_P((struct tme_connection *, unsigned int));
 int tme_bus_device_connections_new _TME_P((struct tme_element *, _tme_const char * _tme_const *, struct tme_connection **, char **));
 
