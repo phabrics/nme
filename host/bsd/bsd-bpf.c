@@ -275,9 +275,9 @@ _tme_bsd_bpf_config(struct tme_ethernet_connection *conn_eth,
   TME_BSD_BPF_LEN(program) = bpf_filter_size - first_pc;
   TME_BSD_BPF_INSNS(program) = bpf_filter + first_pc;
 #ifdef HAVE_LSF
-  if (setsockopt(bpf->tme_eth_fd, SOL_SOCKET, SO_ATTACH_FILTER, &program, sizeof(program)) == -1) {
+  if (setsockopt(bpf->tme_eth_handle, SOL_SOCKET, SO_ATTACH_FILTER, &program, sizeof(program)) == -1) {
 #else
-  if (ioctl(bpf->tme_eth_fd, BIOCSETF, &program) < 0) {
+  if (ioctl(bpf->tme_eth_handle, BIOCSETF, &program) < 0) {
 #endif
     tme_log(&bpf->tme_eth_element->tme_element_log_handle, 0, errno,
 	    (&bpf->tme_eth_element->tme_element_log_handle,

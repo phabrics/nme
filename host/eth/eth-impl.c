@@ -99,7 +99,7 @@ _tme_eth_callout(struct tme_ethernet *eth, int new_callouts)
   if (eth->tme_eth_callout_flags & TME_ETH_CALLOUT_RUNNING) {
     return;
   }
-
+  
   /* callouts are now running: */
   eth->tme_eth_callout_flags |= TME_ETH_CALLOUT_RUNNING;
 
@@ -177,8 +177,11 @@ _tme_eth_callout(struct tme_ethernet *eth, int new_callouts)
 	assert(rc <= sizeof(frame));
 
 	/* do the write: */
-	status = tme_thread_write(eth->tme_eth_fd, frame, rc);
-
+#ifdef OPENVPN_ETH
+	status = write_tun(eth->tme_eth_handle, frame, rc);
+#else
+	status = tme_thread_write(eth->tme_eth_handle, frame, rc);
+#endif
 	/* writes must succeed: */
 	assert (status == rc);
 
@@ -259,7 +262,7 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
 	    (&eth->tme_eth_element->tme_element_log_handle,
 	     _("calling read")));
 #if 0
-    rc = tme_thread_select_yield(eth->tme_eth_fd + 1,
+    rc = tme_thread_select_yield(eth->tme_eth_handle + 1,
 				 &fdset_read_in,
 				 NULL,
 				 NULL,
@@ -268,9 +271,14 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
 
     }
     
+#elif defined(OPENVPN_ETH)
+    buffer_end = 
+      read_tun(eth->tme_eth_handle,
+	       eth->tme_eth_buffer,
+	       eth->tme_eth_buffer_size);
 #else
     buffer_end = 
-      tme_thread_read_yield(eth->tme_eth_fd,
+      tme_thread_read_yield(eth->tme_eth_handle,
 			    eth->tme_eth_buffer,
 			    eth->tme_eth_buffer_size);
 #endif
@@ -477,7 +485,7 @@ _tme_eth_read(struct tme_ethernet_connection *conn_eth,
 
 #if 0
 /* this finds a network interface via traditional ioctls: */
-int
+_tme_eth_static int
 tme_eth_if_find(const char *ifr_name_user, struct ifreq **_ifreq, tme_uint8_t **_if_addr, unsigned int *_if_addr_size)
 {
   int saved_errno;
@@ -647,7 +655,7 @@ tme_eth_if_find(const char *ifr_name_user, struct ifreq **_ifreq, tme_uint8_t **
 
 #ifdef HAVE_IFADDRS_H
 /* this finds a network interface via the ifaddrs api: */
-int
+_tme_eth_static int
 tme_eth_ifaddrs_find(const char *ifa_name_user, int family, struct ifaddrs **_ifaddr, tme_uint8_t **_if_addr, unsigned int *_if_addr_size)
 {
   struct ifaddrs *ifaddr, *ifa;
@@ -793,7 +801,7 @@ tme_eth_ifaddrs_find(const char *ifa_name_user, int family, struct ifaddrs **_if
 #endif // HAVE_IFADDRS_H
 
 /* Allocate an ethernet device */
-int tme_eth_alloc(char *dev_filename, char **_output)
+_tme_eth_static int tme_eth_alloc(char *dev_filename, char **_output)
 {
   int fd, minor;
   char dev_minor[4];
@@ -829,7 +837,7 @@ int tme_eth_alloc(char *dev_filename, char **_output)
 }
 
 /* this makes a new connection side for a ETH: */
-int
+_tme_eth_static int
 tme_eth_connections_new(struct tme_element *element, 
 			const char * const *args, 
 			struct tme_connection **_conns)
@@ -869,8 +877,12 @@ tme_eth_connections_new(struct tme_element *element,
   return (TME_OK);
 }
 
-int tme_eth_init(struct tme_element *element, 
-		 int fd, 
+_tme_eth_static int tme_eth_init(struct tme_element *element, 
+#ifdef OPENVPN_ETH
+		 struct tuntap *handle,
+#else
+		 int handle,
+#endif
 		 unsigned int sz, 
 		 void *data,
 		 unsigned char *addr,
@@ -881,7 +893,7 @@ int tme_eth_init(struct tme_element *element,
   /* start our data structure: */
   eth = tme_new0(struct tme_ethernet, 1);
   eth->tme_eth_element = element;
-  eth->tme_eth_fd = fd;
+  eth->tme_eth_handle = handle;
   eth->tme_eth_buffer_size = sz;
   eth->tme_eth_buffer = tme_new(tme_uint8_t, sz);
   eth->tme_eth_data = data;

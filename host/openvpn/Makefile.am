@@ -88,8 +88,9 @@ tme_host_openvpn_la_SOURCES = \
 	tap.c \
 	win32.h win32.c \
 	cryptoapi.h cryptoapi.c
+
 tme_host_openvpn_la_LIBADD = \
-	../eth/libeth.la \
+	$(top_builddir)/generic/libtme-generic.la \
 	$(SOCKETS_LIBS) \
 	$(OPTIONAL_LZO_LIBS) \
 	$(OPTIONAL_PKCS11_HELPER_LIBS) \
@@ -97,6 +98,7 @@ tme_host_openvpn_la_LIBADD = \
 	$(OPTIONAL_SELINUX_LIBS) \
 	$(OPTIONAL_SYSTEMD_LIBS) \
 	$(OPTIONAL_DL_LIBS)
+
 if WIN32
 tme_host_openvpn_la_SOURCES += openvpn_win32_resources.rc
 tme_host_openvpn_la_LIBADD += -lgdi32 -lws2_32 -lwininet -lcrypt32 -liphlpapi -lwinmm
@@ -106,7 +108,4 @@ tme_host_openvpn_la_LDFLAGS = -module -version-info 0:0:0
 
 include $(top_srcdir)/modules
 
-$(pkglib_LTLIBRARIES): ../eth/libeth.la
-../eth/libeth.la: force
-	cd `dirname $@` && $(MAKE) `basename $@`
-force: ;
+tap.lo: ../eth/eth-impl.c

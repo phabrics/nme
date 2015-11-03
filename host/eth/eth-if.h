@@ -122,6 +122,16 @@ _TME_RCSID("$Id: eth-impl.h,v 1.1 2003/05/18 00:02:23 fredette Exp $");
 #ifdef HAVE_IFADDRS_H
 #include <ifaddrs.h>
 #endif
+#ifdef OPENVPN_HOST
+#include "syshead.h"
+#include "tun.h"
+#define _tme_eth_static static
+#ifndef TME_THREADS_SJLJ
+#define OPENVPN_ETH
+#endif
+#else
+#define _tme_eth_static
+#endif
 
 /* structures: */
 
@@ -147,8 +157,12 @@ struct tme_ethernet {
   struct tme_ethernet_connection *tme_eth_eth_connection;
 
   /* the Ethernet file descriptor: */
-  int tme_eth_fd;
-
+#ifdef OPENVPN_ETH
+  struct tuntap *tme_eth_handle;
+#else
+  int tme_eth_handle;
+#endif
+  
   /* the size of the packet buffer for the interface: */
   size_t tme_eth_buffer_size;
 
@@ -177,6 +191,7 @@ struct tme_ethernet {
 };
 
 /* prototypes: */
+#ifndef OPENVPN_HOST
 #if 0
 int tme_eth_if_find _TME_P((_tme_const char *, 
 			    struct ifreq **, 
@@ -199,11 +214,15 @@ int tme_eth_connections_new _TME_P((struct tme_element *element,
 				    const char * const *args, 
 				    struct tme_connection **_conns));
 
-int tme_eth_init _TME_P((struct tme_element *element, 
-			 int fd, 
+int tme_eth_init _TME_P((struct tme_element *element,
+#ifdef OPENVPN_ETH
+			 struct tuntap *tt,
+#else
+			 int fd,
+#endif
 			 unsigned int sz, 
 			 void *data,
 			 unsigned char *addr,
 			 typeof(tme_eth_connections_new) eth_connections_new));
-
+#endif // !_tme_eth_static
 #endif /* !_HOST_ETH_IMPL_H */

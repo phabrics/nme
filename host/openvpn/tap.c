@@ -34,9 +34,8 @@
 #include <tme/common.h>
 
 /* includes: */
-#include "eth-if.h"
-#include "syshead.h"
-#include "tun.h"
+#define OPENVPN_HOST
+#include "eth-impl.c"
 
 /* the new TAP function: */
 TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tap) {
@@ -181,9 +180,10 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tap) {
     do_ifconfig(tt, guess, TME_ETHERNET_FRAME_MAX, NULL);
   }
 
+#ifndef OPENVPN_ETH
   /* temporarily turn off ipv6 to disable protocol info being prepended to packets on Linux */
   tt->ipv6 = FALSE;
-  
+#endif
   /* open the tun device */
   open_tun(dev,
 	   dev_type,
@@ -220,6 +220,12 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tap) {
 	     hwaddr[5]));
   }
 #endif
-  return tme_eth_init(element, tt->fd, 4096, NULL, hwaddr, NULL);
+  return tme_eth_init(element,
+#ifdef OPENVPN_ETH
+		      tt,
+#else
+		      tt->fd,
+#endif
+		      4096, NULL, hwaddr, NULL);
   
 }

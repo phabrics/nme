@@ -248,7 +248,7 @@ _tme_tun_tap_config(struct tme_ethernet_connection *conn_eth,
 
   /* set the filter on the TAP device: */
   TME_TUN_TAP_LEN((TME_TUN_TAP_PROG *)tap_filter) = tap_filter_size;
-  if (ioctl(tap->tme_eth_fd, TUNSETTXFILTER, tap_filter) < 0) {
+  if (ioctl(tap->tme_eth_handle, TUNSETTXFILTER, tap_filter) < 0) {
     tme_log(&tap->tme_eth_element->tme_element_log_handle, 0, errno,
 	    (&tap->tme_eth_element->tme_element_log_handle,
 	     _("failed to set the filter")));
