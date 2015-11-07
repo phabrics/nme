@@ -369,7 +369,23 @@ static int
 _tme_eth_config(struct tme_ethernet_connection *conn_eth, 
 		    struct tme_ethernet_config *config)
 {
-  assert(0);
+  struct tme_ethernet *eth;
+
+  /* recover our data structures: */
+  eth = conn_eth->tme_ethernet_connection.tme_connection_element->tme_element_private;
+
+  /* if this Ethernet is promiscuous, we will accept all packets: */
+  if(!(config->tme_ethernet_config_flags & TME_ETHERNET_CONFIG_PROMISC ||
+       (eth->tme_eth_addr && (config->tme_ethernet_config_addr_count > 0) &&
+	memcmp(eth->tme_eth_addr,
+	       config->tme_ethernet_config_addrs,
+	       TME_ETHERNET_ADDR_SIZE))))
+    return TME_OK;
+  
+  tme_free(eth->tme_eth_addr);
+  eth->tme_eth_addr = NULL;    
+  
+  return TME_OK;
 }
 
 /* this is called when control lines change: */

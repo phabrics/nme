@@ -34,7 +34,7 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.68])
 m4_include(version.m4)
-AC_INIT([tme], [0.12beta9])
+AC_INIT([tme], [0.12beta10])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
@@ -1354,7 +1354,7 @@ fi
 AC_SUBST(CFLAGS_NO_STRICT_ALIASING)
 
 dnl For platforms, like Windows, where libraries must have all their symbols resolved
-LDFLAGS="${LDFLAGS-} -no-undefined --enable-auto-import --enable-runtime-pseudo-reloc"
+LDFLAGS="${LDFLAGS-} -no-undefined"
 
 dnl Generate tmeconfig.h.  The whether-to-generate logic is cribbed 
 dnl from glib-1.2.1's configure.ac.

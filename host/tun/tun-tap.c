@@ -282,7 +282,7 @@ _tme_tun_tap_connections_new(struct tme_element *element,
   conn_eth = (struct tme_ethernet_connection *) (*_conns);
 
   /* fill in the Ethernet connection: */
-  conn_eth->tme_ethernet_connection_config = _tme_tun_tap_config;
+  //  conn_eth->tme_ethernet_connection_config = _tme_tun_tap_config;
 
   /* done: */
   return (TME_OK);
