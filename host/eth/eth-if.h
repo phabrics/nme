@@ -159,6 +159,7 @@ struct tme_ethernet {
   /* the Ethernet file descriptor: */
 #ifdef OPENVPN_ETH
   struct tuntap *tme_eth_handle;
+  struct event_set *tme_eth_event_set;
 #else
   int tme_eth_handle;
 #endif

@@ -207,6 +207,13 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
   ssize_t buffer_end;
   unsigned long sleep_usec;
   const struct tme_ethernet_header *ethernet_header;
+#ifdef OPENVPN_ETH
+  int rc;
+  struct timeval tv;
+  tv.tv_sec = BIG_TIMEOUT;
+  tv.tv_usec = 0;
+  struct event_set_return esr[4];
+#endif
   
   tme_thread_enter(&eth->tme_eth_mutex);
 
@@ -272,10 +279,15 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
     }
     
 #elif defined(OPENVPN_ETH)
-    buffer_end = 
+    tun_set(eth->tme_eth_handle, eth->tme_eth_event_set, EVENT_READ, (void*)0, NULL);
+    
+    rc = event_wait(eth->tme_eth_event_set, &tv, esr, SIZE(esr));
+
+    buffer_end = (rc<=0) ? (rc) : 
       read_tun(eth->tme_eth_handle,
 	       eth->tme_eth_buffer,
 	       eth->tme_eth_buffer_size);
+    
 #else
     buffer_end = 
       tme_thread_read_yield(eth->tme_eth_handle,
@@ -905,7 +917,11 @@ _tme_eth_static int tme_eth_init(struct tme_element *element,
 		 typeof(tme_eth_connections_new) eth_connections_new)
 {
   struct tme_ethernet *eth;
-
+#ifdef OPENVPN_ETH
+  unsigned int flags = 0;
+  int event_set_max;
+#endif
+  
   /* start our data structure: */
   eth = tme_new0(struct tme_ethernet, 1);
   eth->tme_eth_element = element;
@@ -914,6 +930,12 @@ _tme_eth_static int tme_eth_init(struct tme_element *element,
   eth->tme_eth_buffer = tme_new(tme_uint8_t, sz);
   eth->tme_eth_data = data;
   eth->tme_eth_addr = addr;
+  
+#ifdef OPENVPN_ETH
+  event_set_max = 4;
+  flags |= EVENT_METHOD_FAST;
+  eth->tme_eth_event_set = event_set_init(&event_set_max, flags);
+#endif
   
   /* start the threads: */
   tme_mutex_init(&eth->tme_eth_mutex);
