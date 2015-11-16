@@ -89,7 +89,6 @@ _tme_eth_callout(struct tme_ethernet *eth, int new_callouts)
   int status;
   tme_ethernet_fid_t frame_id;
   struct tme_ethernet_frame_chunk frame_chunk_buffer;
-  tme_uint8_t frame[TME_ETHERNET_FRAME_MAX];
   
   /* add in any new callouts: */
   eth->tme_eth_callout_flags |= new_callouts;
@@ -154,9 +153,10 @@ _tme_eth_callout(struct tme_ethernet *eth, int new_callouts)
       
       /* make a frame chunk to receive this frame: */
       frame_chunk_buffer.tme_ethernet_frame_chunk_next = NULL;
-      frame_chunk_buffer.tme_ethernet_frame_chunk_bytes = frame;
+      frame_chunk_buffer.tme_ethernet_frame_chunk_bytes
+	= BPTR(eth->tme_eth_to_tun);
       frame_chunk_buffer.tme_ethernet_frame_chunk_bytes_count
-	= sizeof(frame);
+	= TME_ETHERNET_FRAME_MAX;
 
       /* do the callout: */
       rc = (conn_eth == NULL
@@ -178,9 +178,14 @@ _tme_eth_callout(struct tme_ethernet *eth, int new_callouts)
 
 	/* do the write: */
 #ifdef OPENVPN_ETH
-	status = write_tun(eth->tme_eth_handle, frame, rc);
+#ifdef TUN_PASS_BUFFER
+	status = write_tun_buffered(eth->tme_eth_handle,
+				    eth->tme_eth_to_tun);
 #else
-	status = tme_thread_write(eth->tme_eth_handle, frame, rc);
+	status = write_tun(eth->tme_eth_handle, BPTR(eth->tme_eth_to_tun), rc);
+#endif
+#else
+	status = tme_thread_write(eth->tme_eth_handle, eth->tme_eth_to_tun, rc);
 #endif
 	/* writes must succeed: */
 	assert (status == rc);
@@ -208,7 +213,8 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
   unsigned long sleep_usec;
   const struct tme_ethernet_header *ethernet_header;
 #ifdef OPENVPN_ETH
-  int rc;
+  int rc, can_write, i;
+  unsigned int flags;
   struct timeval tv;
   tv.tv_sec = BIG_TIMEOUT;
   tv.tv_usec = 0;
@@ -279,29 +285,51 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
     }
     
 #elif defined(OPENVPN_ETH)
-    tun_set(eth->tme_eth_handle, eth->tme_eth_event_set, EVENT_READ, (void*)0, NULL);
+    flags = EVENT_READ;
     
-    rc = event_wait(eth->tme_eth_event_set, &tv, esr, SIZE(esr));
+    can_write = eth->tme_eth_can_write;
+    if(!can_write) {
+      /* wait for signal transition to write */
+      flags |= EVENT_WRITE;
+    }
+    
+    tun_set(eth->tme_eth_handle, eth->tme_eth_event_set, flags, (void*)0, NULL);
 
-    buffer_end = (rc<=0) ? (rc) : 
-      read_tun(eth->tme_eth_handle,
-	       eth->tme_eth_buffer,
-	       eth->tme_eth_buffer_size);
-    
+    buffer_end = rc = event_wait(eth->tme_eth_event_set, &tv, esr, SIZE(esr));
+
+    for (i = 0; i < rc; ++i) {
+      if(esr[i].rwflags & EVENT_READ) {
+#ifdef TUN_PASS_BUFFER
+	read_tun_buffered(eth->tme_eth_handle,
+			  eth->tme_eth_buffer,
+			  eth->tme_eth_buffer_size);
+	buffer_end = eth->tme_eth_buffer.buf.len;
+#else
+	buffer_end =
+	  read_tun(eth->tme_eth_handle,
+		   BPTR(eth->tme_eth_buffer),
+		   eth->tme_eth_buffer_size);
+#endif
+      }
+      if(esr[i].rwflags & EVENT_WRITE)
+	can_write = TRUE;
+    }
 #else
     buffer_end = 
       tme_thread_read_yield(eth->tme_eth_handle,
 			    eth->tme_eth_buffer,
 			    eth->tme_eth_buffer_size);
 #endif
-    /* lock the mutex: */
-    tme_mutex_lock(&eth->tme_eth_mutex);
-
     /* if the read failed: */
-    if (buffer_end <= 0) {
+    if (buffer_end <= 0
+#ifdef OPENVPN_ETH
+	&& !can_write
+#endif
+	) {
       tme_log(&eth->tme_eth_element->tme_element_log_handle, 1, errno,
 	      (&eth->tme_eth_element->tme_element_log_handle,
-	       _("failed to read packets")));
+	       _("failed to read/write packets")));
+      tme_mutex_lock(&eth->tme_eth_mutex);
       continue;
     }
 
@@ -309,7 +337,7 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
     /* Filter out multicast packets we sent or unicast packets not destined for us. 
        This should remove all duplicate packets on, i.e., tap interfaces...
      */
-    ethernet_header = (struct tme_ethernet_header *) (eth->tme_eth_buffer);
+    ethernet_header = (struct tme_ethernet_header *) (BPTR(eth->tme_eth_buffer));
     
     if(!eth->tme_eth_addr ||
        (((ethernet_header->tme_ethernet_header_dst[0] & 0x1)
@@ -323,11 +351,19 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
       tme_log(&eth->tme_eth_element->tme_element_log_handle, 1, TME_OK,
 	      (&eth->tme_eth_element->tme_element_log_handle,
 	       _("read %ld bytes of packets"), (long) buffer_end));
+      tme_mutex_lock(&eth->tme_eth_mutex);
       eth->tme_eth_buffer_offset = 0;
       eth->tme_eth_buffer_end = buffer_end;
-
-      /* call out that we can be read again: */
       _tme_eth_callout(eth, TME_ETH_CALLOUT_CTRL);
+    } else {
+      tme_mutex_lock(&eth->tme_eth_mutex);
+#ifdef OPENVPN_ETH
+      if(can_write && !eth->tme_eth_can_write) {
+	/* signal transition that we can write */
+	eth->tme_eth_can_write = TRUE;	 
+	//_tme_eth_callout(eth, TME_ETH_CALLOUT_CTRL);
+      }
+#endif
     }
   }
   /* NOTREACHED */
@@ -473,7 +509,7 @@ _tme_eth_read(struct tme_ethernet_connection *conn_eth,
     /* form the single frame chunk: */
     frame_chunk_buffer.tme_ethernet_frame_chunk_next = NULL;
     frame_chunk_buffer.tme_ethernet_frame_chunk_bytes
-      = eth->tme_eth_buffer + eth->tme_eth_buffer_offset;
+      = BPTR(eth->tme_eth_buffer) + eth->tme_eth_buffer_offset;
     frame_chunk_buffer.tme_ethernet_frame_chunk_bytes_count
       = buffer_offset_next;
 
@@ -927,15 +963,23 @@ _tme_eth_static int tme_eth_init(struct tme_element *element,
   eth->tme_eth_element = element;
   eth->tme_eth_handle = handle;
   eth->tme_eth_buffer_size = sz;
-  eth->tme_eth_buffer = tme_new(tme_uint8_t, sz);
-  eth->tme_eth_data = data;
-  eth->tme_eth_addr = addr;
-  
 #ifdef OPENVPN_ETH
+  eth->_tme_eth_buffer = alloc_buf(sz);
+  eth->_tme_eth_to_tun = alloc_buf(TME_ETHERNET_FRAME_MAX);
+  eth->tme_eth_buffer = &eth->_tme_eth_buffer;
+  eth->tme_eth_to_tun = &eth->_tme_eth_to_tun;
   event_set_max = 4;
   flags |= EVENT_METHOD_FAST;
   eth->tme_eth_event_set = event_set_init(&event_set_max, flags);
+#else
+  eth->tme_eth_buffer = tme_new(tme_uint8_t, sz);
+  eth->tme_eth_to_tun = tme_new(tme_uint8_t, TME_ETHERNET_FRAME_MAX);
 #endif
+  eth->tme_eth_buffer_offset = 0;
+  eth->tme_eth_buffer_end = 0;
+  eth->tme_eth_can_write = TRUE;
+  eth->tme_eth_data = data;
+  eth->tme_eth_addr = addr;
   
   /* start the threads: */
   tme_mutex_init(&eth->tme_eth_mutex);

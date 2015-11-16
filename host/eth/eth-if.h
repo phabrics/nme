@@ -168,13 +168,25 @@ struct tme_ethernet {
   size_t tme_eth_buffer_size;
 
   /* the packet buffer for the interface: */
+#ifdef OPENVPN_ETH
+  struct buffer _tme_eth_buffer;
+  struct buffer _tme_eth_to_tun;
+  struct buffer *tme_eth_buffer;
+  struct buffer *tme_eth_to_tun;
+#else
+#define BPTR(x) x
   tme_uint8_t *tme_eth_buffer;
+  tme_uint8_t *tme_eth_to_tun;
+#endif
 
   /* the next offset within the packet buffer, and the end of the data
      in the packet buffer: */
   size_t tme_eth_buffer_offset;
   size_t tme_eth_buffer_end;
 
+  /* whether we can write to ethernet device */
+  int tme_eth_can_write;
+  
   /* ethernet interface type-specific data */
   void *tme_eth_data;
 
