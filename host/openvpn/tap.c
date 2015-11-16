@@ -48,6 +48,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tap) {
   struct tuntap *tt;
   int arg_i;
   int usage;
+  struct frame frame;
   
   /* check our arguments: */
   usage = 0;
@@ -153,6 +154,9 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tap) {
 	   (remote6) ? (remote6) : ""));
 	  
   error_reset();
+#ifdef WIN32
+  init_win32();
+#endif
   tt = init_tun(dev,
 		dev_type,
 		TOP_SUBNET,
@@ -168,6 +172,29 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tap) {
 
   if(!tt) return (EINVAL);
 
+  memset(&frame, 0, sizeof(frame));  
+  tun_adjust_frame_parameters(&frame, TAP_MTU_EXTRA_DEFAULT);
+
+  frame_align_to_extra_frame(&frame);
+  frame_or_align_flags(&frame,
+		       FRAME_HEADROOM_MARKER_FRAGMENT
+		       |FRAME_HEADROOM_MARKER_READ_LINK
+		       |FRAME_HEADROOM_MARKER_READ_STREAM);
+  
+  frame_finalize(&frame,
+		 false,
+		 LINK_MTU_DEFAULT,
+		 true,
+		 TUN_MTU_DEFAULT);
+
+#ifdef WIN32
+  overlapped_io_init (&tt->reads, &frame, FALSE, true);
+  overlapped_io_init (&tt->writes, &frame, TRUE, true);
+  tt->rw_handle.read = tt->reads.overlapped.hEvent;
+  tt->rw_handle.write = tt->writes.overlapped.hEvent;
+  tt->adapter_index = TUN_ADAPTER_INDEX_INVALID;
+#endif
+  
   if(inet6) tt->ipv6 = TRUE;
   
   if(ifconfig_order() == IFCONFIG_BEFORE_TUN_OPEN) {
@@ -177,7 +204,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tap) {
 					 dev_type,
 					 dev_node,
 					 &gc);
-    do_ifconfig(tt, guess, TME_ETHERNET_FRAME_MAX, NULL);
+    do_ifconfig(tt, guess, TUN_MTU_SIZE(&frame), NULL);
   }
 
 #ifndef OPENVPN_ETH
@@ -198,7 +225,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tap) {
   
   /* do ifconfig */
   if(ifconfig_order() == IFCONFIG_AFTER_TUN_OPEN) {
-    do_ifconfig(tt, tt->actual_name, TME_ETHERNET_FRAME_MAX, NULL);
+    do_ifconfig(tt, tt->actual_name, TUN_MTU_SIZE(&frame), NULL);
   }
   
   /* find the interface we will use: */
@@ -226,6 +253,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tap) {
 #else
 		      tt->fd,
 #endif
-		      4096, NULL, hwaddr, NULL);
+		      MAX_RW_SIZE_TUN(&frame), NULL, hwaddr, NULL);
   
 }

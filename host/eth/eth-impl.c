@@ -156,7 +156,7 @@ _tme_eth_callout(struct tme_ethernet *eth, int new_callouts)
       frame_chunk_buffer.tme_ethernet_frame_chunk_bytes
 	= BPTR(eth->tme_eth_to_tun);
       frame_chunk_buffer.tme_ethernet_frame_chunk_bytes_count
-	= TME_ETHERNET_FRAME_MAX;
+	= eth->tme_eth_buffer_size;
 
       /* do the callout: */
       rc = (conn_eth == NULL
@@ -174,15 +174,16 @@ _tme_eth_callout(struct tme_ethernet *eth, int new_callouts)
       if (rc > 0) {
 
 	/* check the size of the frame: */
-	assert(rc <= sizeof(frame));
+	assert(rc <= eth->tme_eth_buffer_size);
 
 	/* do the write: */
 #ifdef OPENVPN_ETH
+	eth->tme_eth_to_tun->len = rc;
 #ifdef TUN_PASS_BUFFER
 	status = write_tun_buffered(eth->tme_eth_handle,
 				    eth->tme_eth_to_tun);
 #else
-	status = write_tun(eth->tme_eth_handle, BPTR(eth->tme_eth_to_tun), rc);
+	status = write_tun(eth->tme_eth_handle, BPTR(eth->tme_eth_to_tun), BLEN(eth->tme_eth_to_tun));
 #endif
 #else
 	status = tme_thread_write(eth->tme_eth_handle, eth->tme_eth_to_tun, rc);
@@ -303,7 +304,7 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
 	read_tun_buffered(eth->tme_eth_handle,
 			  eth->tme_eth_buffer,
 			  eth->tme_eth_buffer_size);
-	buffer_end = eth->tme_eth_buffer.buf.len;
+	buffer_end = eth->tme_eth_buffer->len;
 #else
 	buffer_end =
 	  read_tun(eth->tme_eth_handle,
@@ -965,7 +966,7 @@ _tme_eth_static int tme_eth_init(struct tme_element *element,
   eth->tme_eth_buffer_size = sz;
 #ifdef OPENVPN_ETH
   eth->_tme_eth_buffer = alloc_buf(sz);
-  eth->_tme_eth_to_tun = alloc_buf(TME_ETHERNET_FRAME_MAX);
+  eth->_tme_eth_to_tun = alloc_buf(sz);
   eth->tme_eth_buffer = &eth->_tme_eth_buffer;
   eth->tme_eth_to_tun = &eth->_tme_eth_to_tun;
   event_set_max = 4;
