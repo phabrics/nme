@@ -916,8 +916,9 @@ main(int argc, char **argv)
       handle_error_en(rc, "pthread_attr_destroy");
   }
 #endif
-  
-  tme_thread_join(tmesh_thread);
+
+  if(interactive)
+    tme_thread_join(tmesh_thread);
 
   /* done: */
   exit(0);

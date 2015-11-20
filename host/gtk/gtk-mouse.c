@@ -594,6 +594,8 @@ _tme_gtk_mouse_attach(struct tme_gtk_screen *screen)
 void
 _tme_gtk_mouse_new(struct tme_gtk_display *display)
 {
+  GdkDisplay *gdkdisplay;
+  
   /* we have no mouse connection: */
   display->tme_gtk_display_mouse_connection = NULL;
   
@@ -601,6 +603,8 @@ _tme_gtk_mouse_new(struct tme_gtk_display *display)
   display->tme_gtk_display_mouse_buffer
     = tme_mouse_buffer_new(1024);
 
+  gdkdisplay = gdk_display_get_default();
+
   display->tme_gtk_display_mouse_cursor
-    = gdk_cursor_new(GDK_BLANK_CURSOR);
+    = gdk_cursor_new_for_display(gdkdisplay, GDK_BLANK_CURSOR);
 }

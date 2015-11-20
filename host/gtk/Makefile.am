@@ -12,13 +12,11 @@ tme_host_gtk_la_LIBADD = $(top_builddir)/generic/libtme-generic.la \
 	                 $(GTK_LIBS)
 EXTRA_DIST = gtk-keymap-make.pl
 
-if USING_X
-tme_host_gtk_la_LIBADD += -lX11
-else
+gtk-keyboard.c:  gtk-keymap.h
+
 BUILT_SOURCES = gtk-keymap.h
 CLEANFILES = gtk-keymap.h
 gtk-keymap.h: gtk-keymap-make.pl
 	  $(PERL) $< > $@
-endif
 
 include $(top_srcdir)/modules

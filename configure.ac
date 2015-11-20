@@ -214,7 +214,7 @@ AC_CHECK_SHIFTSIGNED(8)
 AC_CHECK_SHIFTSIGNED(16)
 AC_CHECK_SHIFTSIGNED(32)
 if test "x$cross_compiling" = xyes; then
-   case ${target} in
+   case ${host} in
    	i686-w64-mingw32)
 	   ac_cv_float_format_float=IEEE754_SINGLE
 	   ac_cv_float_format_double=IEEE754_DOUBLE
@@ -601,7 +601,7 @@ AC_MSG_RESULT(no)
 ])
 
 AC_DEFINE_UNQUOTED([TARGET_ALIAS], ["${host}"], [A string representing our host])
-case "${target_os}" in
+case "${host_os}" in
 netbsd*) 
    AC_DEFINE([TARGET_NETBSD], [1], [Are we running NetBSD?])
    AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["N"], [Target prefix])
@@ -645,7 +645,7 @@ mingw*|cygwin*)
    CPPFLAGS="${CPPFLAGS} -DNTDDI_VERSION=NTDDI_WINXP -D_WIN32_WINNT=_WIN32_WINNT_WINXP"
    WIN32=yes
    SETCAP="chmod u+s"
-   TGTPFX="${target}-"
+   TGTPFX="${host}-"
    ;;
 solaris*)
    AC_DEFINE([TARGET_SOLARIS], [1], [Are we running on Solaris?])
@@ -971,7 +971,24 @@ AC_ARG_ENABLE(threads,
 [  --enable-threads=THRs  Enable preemptive thread support utilizing the given threading models (compiled-in order of usage by platform availability: 'pthreads (or posix)','glib').  Defaults to 'yes', any available.  Turn off threads with 'no' or --disable-threads; this will use setjmp/longjmp.], [tme_thread_types=${enableval}], [enable_threads=yes])
 
 if test "x${enable_threads}" = xyes; then
-   tme_thread_types=pthreads
+   dnl Make brackets safe to use.
+   changequote(<<, >>)dnl
+
+   dnl set the default threads based on platform
+   case "${host_os}" in
+   mingw*)
+	tme_thread_types=glib
+	;;
+   cygwin*) 
+	tme_thread_types=sjlj
+   	;;
+   *) 
+	tme_thread_types=pthreads
+   	;;
+   esac
+
+   dnl Make brackets the quote characters again.
+   changequote([, ])dnl
 fi
 
 # 128-bit integral type required to enable preemptive thread support
@@ -1150,9 +1167,25 @@ dnl The list of host support is finished.
 AC_SUBST(TME_HOSTS)
 
 dnl Configure recode.
+dnl Make brackets safe to use.
+changequote(<<, >>)dnl
+
+# set the default recode option
+case "${host_cpu}" in
+i[3456789]86)
+recode=yes
+;;
+*) 
+recode=no
+;;
+esac
+
+dnl Make brackets the quote characters again.
+changequote([, ])dnl
+
 AC_ARG_ENABLE(recode,
-[  --enable-recode         enable recode (dynamic binary translation) (default=if target supports)],
-[ ], [enable_recode=])
+[  --enable-recode         enable recode (dynamic binary translation) (default=if host supports)],
+[ ], [enable_recode=$recode])
 if test "${recode_size_guest_max}" = 0; then
     enable_recode=no
     recode_size_guest_max=1
@@ -1160,70 +1193,73 @@ fi
 if test "x${enable_recode}" = xno; then
     recode_hosts=
 else
-    AC_MSG_CHECKING([for target recode support])
-
-    dnl Make brackets safe to use.
-    changequote(<<, >>)dnl
-
     recode_hosts="mmap x86"
-    
-    # get the host maximum guest size:
-    case "${target_cpu}" in
-    i[3456789]86)
-	recode_size_guest_max_host=64
-	;;
-    x86_64)
-	recode_size_guest_max_host=128
-	;;
-    *) 
-       	 recode_hosts=
-         recode_size_guest_max_host= ;;
-    esac
-
-    dnl Make brackets the quote characters again.
-    changequote([, ])dnl
-
-    if test "x${recode_hosts}" = x; then
-	AC_MSG_RESULT([no])
-	if test "x${enable_recode}" = xrequired; then
-	    AC_MSG_ERROR([recode required but not supported on ${target}])
-	fi
-    else
-	if test "x${recode_size_guest_max_host}" = x; then
-	    AC_MSG_ERROR([internal error - no maximum recode guest size for ${target_cpu}])
-	fi
-	if test `expr ${recode_size_guest_max} \< ${recode_size_guest_max_host}` = 1; then
-	    recode_size_guest_max=$recode_size_guest_max_host
-	fi
-	AC_MSG_RESULT([up to ${recode_size_guest_max}-bit guests using ${recode_hosts}])
-    fi
 fi
+
+AC_MSG_CHECKING([for host recode support])
+
+dnl Make brackets safe to use.
+changequote(<<, >>)dnl
 
 # get the host maximum guest size:
-case "${target_cpu}" in
-i[3456789]86)
-  bus_size_max_host=32
-  ;;
+case "${host_cpu}" in
+     i[3456789]86)
+     recode_size_guest_max_host=64
+     ;;
 x86_64)
-  bus_size_max_host=64
-  ;;
+     recode_size_guest_max_host=128
+     ;;
 *) 
-  bus_size_max_host= ;;
+     recode_hosts=
+     recode_size_guest_max_host= ;;
 esac
 
-dnl Configure miscellaneous target support.
-AC_MSG_CHECKING([for target recode bus size])
+dnl Make brackets the quote characters again.
+changequote([, ])dnl
 
-if test `expr ${bus_size_max} \< ${bus_size_max_host}` = 1; then
-    bus_size_max=$bus_size_max_host
+if test "x${recode_hosts}" = x; then
+   AC_MSG_RESULT([no])
+   if test "x${enable_recode}" = xrequired; then
+      AC_MSG_ERROR([recode required but not supported on ${host}])
+   fi
+else
+   if test "x${recode_size_guest_max_host}" = x; then
+      AC_MSG_ERROR([internal error - no maximum recode guest size for ${host_cpu}])
+   fi
+   if test `expr ${recode_size_guest_max} \< ${recode_size_guest_max_host}` = 1; then
+      recode_size_guest_max=$recode_size_guest_max_host
+   fi
+   AC_MSG_RESULT([up to ${recode_size_guest_max}-bit guests using ${recode_hosts}])
+
+   # get the host maximum guest size:
+   changequote(<<, >>)dnl
+   case "${host_cpu}" in
+   i[3456789]86)
+     bus_size_max_host=32
+     ;;
+   x86_64)
+     bus_size_max_host=64
+     ;;
+   *) 
+     bus_size_max_host=
+     ;;
+   esac
+   changequote([, ])dnl
+
+   dnl Configure miscellaneous host support.
+   AC_MSG_CHECKING([for host recode bus size])
+
+   if test `expr ${bus_size_max} \< ${bus_size_max_host}` = 1; then
+      bus_size_max=$bus_size_max_host
+   fi
+   AC_MSG_RESULT([using ${bus_size_max}-bit bus for guests using ${host_cpu}])
 fi
-AC_MSG_RESULT([using ${bus_size_max}-bit bus for guests using ${target_cpu}])
 
-dnl Configure miscellaneous target support.
-AC_MSG_CHECKING([for target miscellaneous support])
+dnl Configure miscellaneous host support.
+AC_MSG_CHECKING([for host miscellaneous support])
 changequote(<<, >>)dnl
-case "${target}" in
-i[3456789]86-* | x86_64-*) misc_hosts="x86" ;;
+case "${host_cpu}" in
+i[3456789]86 | x86_64) misc_hosts="x86" ;;
 *) misc_hosts=no ;;
 esac
 changequote([, ])dnl
@@ -1422,7 +1458,7 @@ TMEEOF
     `echo $VERSION | sed -e 's,^\([0-9][0-9]*\)\.[0-9][0-9]*$,\1,'` ')' >> ${outfile}-tmp
   echo '#define TME_RELEASE_MINOR (' \
     `echo $VERSION | sed -e 's,^[0-9][0-9]*\.\([0-9][0-9]*\)$,\1,'` ')' >> ${outfile}-tmp
-  echo '#define TME_BUILD_TARGET "'$target'"' >> ${outfile}-tmp
+  echo '#define TME_BUILD_HOST "'$host'"' >> ${outfile}-tmp
   echo '#ifdef _TME_HAVE___INT128' >> ${outfile}-tmp
   echo '#define TME_HAVE_INT128_T' >> ${outfile}-tmp
   echo '#define _TME_ALIGNOF_INT128_T 16' >> ${outfile}-tmp
@@ -1643,7 +1679,7 @@ misc_hosts="$misc_hosts"
 srcdir="$srcdir"
 PACKAGE="$PACKAGE"
 VERSION="$VERSION"
-target="$target"
+host="$host"
 ac_cv_sizeof_void_p="$ac_cv_sizeof_void_p"
 ac_cv_sizeof_int="$ac_cv_sizeof_int"
 ac_cv_sizeof_long="$ac_cv_sizeof_long"
