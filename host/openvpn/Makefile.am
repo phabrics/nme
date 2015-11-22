@@ -23,11 +23,13 @@ tme_host_openvpn_la_SOURCES = \
 	error.c error.h \
 	event.c event.h \
 	fdmisc.c fdmisc.h \
+	forward.c forward.h forward-inline.h \
 	fragment.c fragment.h \
 	gremlin.c gremlin.h \
 	helper.c helper.h \
 	httpdigest.c httpdigest.h \
 	lladdr.c lladdr.h \
+	init.c init.h \
 	integer.h \
 	interval.c interval.h \
 	list.c list.h \
@@ -50,6 +52,7 @@ tme_host_openvpn_la_SOURCES = \
 	pkcs11.c pkcs11.h pkcs11_backend.h \
 	pkcs11_openssl.c \
 	pkcs11_polarssl.c \
+        openvpn.c openvpn.h \
 	openvpn-plugin.h \
 	options.c options.h \
 	otime.c otime.h \

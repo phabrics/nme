@@ -34,7 +34,7 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.68])
 m4_include(version.m4)
-AC_INIT([tme], [0.12beta11])
+AC_INIT([tme], [0.12beta12])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
@@ -1311,7 +1311,7 @@ AC_ARG_ENABLE(
 	[iproute2],
 	[AS_HELP_STRING([--enable-iproute2], [enable support for iproute2 @<:@default=no@:>@])],
 	,
-	[enable_iproute2="no"]
+	[test "${IPROUTE}" && enable_iproute2="yes" || enable_iproute2="no"]
 )
 
 if test "${enable_iproute2}" = "yes"; then
