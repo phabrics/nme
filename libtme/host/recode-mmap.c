@@ -49,6 +49,9 @@ _TME_RCSID("$Id: recode-mmap.c,v 1.2 2008/07/01 02:00:53 fredette Exp $");
 #else
 #include "mman.h"
 #endif
+#ifdef WIN32
+#include <windows.h>
+#endif
 
 /* this host function allocates memory for building and running thunks: */
 void
@@ -64,6 +67,10 @@ tme_recode_host_thunks_alloc(struct tme_recode_ic *ic,
   size_page = sysconf(_SC_PAGESIZE);
 #elif defined(_SC_PAGE_SIZE)
   size_page = sysconf(_SC_PAGE_SIZE);
+#elif defined(WIN32)
+  SYSTEM_INFO si;
+  GetSystemInfo(&si);
+  size_page = si.dwPageSize;  
 #else
   size_page = 4096;
 #endif

@@ -97,6 +97,7 @@ Networking
 * PPP::
 * IPv4 Network Address Translation::
 * Proxy ARP/NDP::
+* OpenVPN::
 * Network Descriptions::
 * Network Services::
 
@@ -233,8 +234,8 @@ Windows - Preliminary support for building/running on Windows
 platforms is provided through Cygwin. It should work out of the
 box. See below for details. It should also build (natively or cross)
 on MinGW, and run under the Wine emulator (use --without-x
---enable-threads=glib configure options). No Ethernet support is
-available for Windows, yet.
+--enable-threads=glib configure options). Preliminary Ethernet support is
+available for Windows, using OpenVPN.
 
 @item
 Other - It should work on any POSIX platforms, sans whatever features
@@ -519,6 +520,7 @@ is the topic of the next section.
 * PPP::
 * IPv4 Network Address Translation::
 * Proxy ARP/NDP::
+* OpenVPN::
 * Network Descriptions::
 * Network Services::
 @end menu
@@ -879,6 +881,24 @@ NDP is the IPv6 generalization of ARP. The above instructions should
 apply, with commands used for IPv6 instead (ip -6). If your router
 doesn't have a route to your host, this may be needed to use IPv6
 networking.
+
+@node OpenVPN
+@subsection OpenVPN
+
+Preliminary support for OpenVPN is now provided for the purposes of
+creating and using TAP devices on multiple platforms.  OpenVPN is
+compiled in as another host module, with a special tap leaf interface,
+that uses the same options as OpenVPN itself.  See the OpenVPN docs
+for further information.
+
+In particular, it can be used to configure tap interfaces with IP
+or IPv6 addresses.  Here is a sample line that can be used to accomplish
+this:
+
+@code{tap0 at le0: tme/host/openvpn/tap --dev tap --ifconfig 10.0.77.1 255.255.255.0 --ifconfig-ipv6 "2001:db8::1/64" "2001:db8::2" --tun-ipv6}
+
+Note that this is currently the only way to get networking support
+under Windows.  
 
 @node Network Descriptions
 @subsection Network Descriptions

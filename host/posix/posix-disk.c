@@ -59,6 +59,9 @@ _TME_RCSID("$Id: posix-disk.c,v 1.6 2010/06/05 14:28:57 fredette Exp $");
 #else
 #include "mman.h"
 #endif
+#ifdef WIN32
+#include <windows.h>
+#endif
 #ifdef HAVE_STDARG_H
 #include <stdarg.h>
 #else  /* HAVE_STDARG_H */
@@ -716,6 +719,10 @@ _tme_posix_disk_open(struct tme_posix_disk *posix_disk,
   page_size = sysconf(_SC_PAGESIZE);
 #elif defined(_SC_PAGE_SIZE)
   page_size = sysconf(_SC_PAGE_SIZE);
+#elif defined(WIN32)
+  SYSTEM_INFO si;
+  GetSystemInfo(&si);
+  page_size = si.dwPageSize;  
 #else
   page_size = 4096;
 #endif

@@ -286,6 +286,8 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
     }
     
 #elif defined(OPENVPN_ETH)
+    event_reset(eth->tme_eth_event_set);
+    
     flags = EVENT_READ;
     
     can_write = eth->tme_eth_can_write;
@@ -321,19 +323,26 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
 			    eth->tme_eth_buffer,
 			    eth->tme_eth_buffer_size);
 #endif
-    /* if the read failed: */
-    if (buffer_end <= 0
+    tme_mutex_lock(&eth->tme_eth_mutex);
+
 #ifdef OPENVPN_ETH
-	&& !can_write
+    if(can_write && !eth->tme_eth_can_write) {
+      /* signal transition that we can write */
+      eth->tme_eth_can_write = TRUE;	 
+      //_tme_eth_callout(eth, TME_ETH_CALLOUT_CTRL);
+    }
 #endif
-	) {
-      tme_log(&eth->tme_eth_element->tme_element_log_handle, 1, errno,
-	      (&eth->tme_eth_element->tme_element_log_handle,
-	       _("failed to read/write packets")));
-      tme_mutex_lock(&eth->tme_eth_mutex);
+
+    /* if the read failed: */
+    if(buffer_end <= 0) {
+#ifdef OPENVPN_ETH
+      if(!can_write)
+#endif
+	tme_log(&eth->tme_eth_element->tme_element_log_handle, 1, errno,
+		(&eth->tme_eth_element->tme_element_log_handle,
+		 _("failed to read/write packets")));
       continue;
     }
-
 
     /* Filter out multicast packets we sent or unicast packets not destined for us. 
        This should remove all duplicate packets on, i.e., tap interfaces...
@@ -352,19 +361,9 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
       tme_log(&eth->tme_eth_element->tme_element_log_handle, 1, TME_OK,
 	      (&eth->tme_eth_element->tme_element_log_handle,
 	       _("read %ld bytes of packets"), (long) buffer_end));
-      tme_mutex_lock(&eth->tme_eth_mutex);
       eth->tme_eth_buffer_offset = 0;
       eth->tme_eth_buffer_end = buffer_end;
       _tme_eth_callout(eth, TME_ETH_CALLOUT_CTRL);
-    } else {
-      tme_mutex_lock(&eth->tme_eth_mutex);
-#ifdef OPENVPN_ETH
-      if(can_write && !eth->tme_eth_can_write) {
-	/* signal transition that we can write */
-	eth->tme_eth_can_write = TRUE;	 
-	//_tme_eth_callout(eth, TME_ETH_CALLOUT_CTRL);
-      }
-#endif
     }
   }
   /* NOTREACHED */
