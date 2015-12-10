@@ -185,7 +185,7 @@ _tme_mk48txx_bus_cycle(void *_mk48txx, struct tme_bus_cycle *cycle_init)
 
     /* sample the time of day: */
     tme_get_time(&now);
-    _now = TME_TIME_SEC(now);
+    _now = TME_TIME_GET_SEC(now);
     now_tm = gmtime_r(&_now, &now_tm_buffer);
 
     /* put the time-of-day into the registers: */

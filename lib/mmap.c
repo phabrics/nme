@@ -1,3 +1,6 @@
+/* this might enable large-file support: */
+#define _FILE_OFFSET_BITS 64
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #elif defined(_MSC_VER)

@@ -139,7 +139,7 @@ tme_cond_sleep_yield _TME_P((tme_cond_t *cond, tme_mutex_t *mutex,
   int rc;
 
   end_time =  TME_TIME_GET_FRAC(*timeout)
-    + TME_TIME_SEC(*timeout) * G_USEC_PER_SEC
+    + TME_TIME_GET_SEC(*timeout) * G_USEC_PER_SEC
     + g_get_monotonic_time();
   
   _tme_thread_suspended();

@@ -244,7 +244,7 @@ _tme_serial_ms_callout(struct tme_serial_ms *serial_ms, int new_callouts)
 
 	/* see how many microseconds have passed since the last event
 	   was read, clipping it at one second: */
-	passed_sec = TME_TIME_SEC(now);
+	passed_sec = TME_TIME_GET_SEC(now);
 	passed_usec = TME_TIME_GET_FRAC(now);
 	passed_usec -= TME_TIME_GET_FRAC(serial_ms->tme_serial_ms_event_read_last);
 	if (passed_usec < 0) {
@@ -252,7 +252,7 @@ _tme_serial_ms_callout(struct tme_serial_ms *serial_ms, int new_callouts)
 	  passed_usec += 1000000;
 	}
 	assert (passed_usec > 0 && passed_usec < 1000000);
-	passed_sec -= TME_TIME_SEC(serial_ms->tme_serial_ms_event_read_last);
+	passed_sec -= TME_TIME_GET_SEC(serial_ms->tme_serial_ms_event_read_last);
 	if (passed_sec > 0) {
 	  passed_usec = 1000000;
 	}

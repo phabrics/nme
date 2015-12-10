@@ -194,7 +194,7 @@ tme_cond_sleep_yield _TME_P((tme_cond_t *cond, tme_mutex_t *mutex,
   struct timespec t;
   int rc;
   
-  _TME_TIME_SETV(t, TME_TIME_SEC(*timeout), TME_TIME_GET_FRAC(*timeout) * 1000, tv_sec, tv_nsec);
+  _TME_TIME_SETV(t, TME_TIME_GET_SEC(*timeout), TME_TIME_GET_FRAC(*timeout) * 1000, tv_sec, tv_nsec);
   clock_gettime(CLOCK_REALTIME, &abstime);
   _TME_TIME_INC(abstime, t, tv_sec, tv_nsec);
   if ((_TME_TIME_GET_FRAC(abstime,tv_nsec)/1000) >= 1000000) {

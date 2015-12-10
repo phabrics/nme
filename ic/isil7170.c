@@ -340,12 +340,12 @@ _tme_isil7170_th_timer(struct tme_isil7170 *isil7170)
 		   "timer interrupt rate: %ld/sec",
 		   (isil7170->tme_isil7170_int_sample
 		    / (TME_ISIL7170_TRACK_INT_RATE
-		       + (unsigned long) (TME_TIME_SEC(now)
-					  - TME_TIME_SEC(isil7170->tme_isil7170_int_sample_time))))));
+		       + (unsigned long) (TME_TIME_GET_SEC(now)
+					  - TME_TIME_GET_SEC(isil7170->tme_isil7170_int_sample_time))))));
 	}
 
 	/* reset the sample: */
-        TME_TIME_SEC(now) += TME_ISIL7170_TRACK_INT_RATE;
+        TME_TIME_INC_SEC(now, TME_ISIL7170_TRACK_INT_RATE);
 	isil7170->tme_isil7170_int_sample_time = now;
 	isil7170->tme_isil7170_int_sample = 0;
       }
@@ -435,7 +435,7 @@ _tme_isil7170_bus_cycle(void *_isil7170, struct tme_bus_cycle *cycle_init)
 
     /* sample the time of day: */
     tme_get_time(&now);
-    _now = TME_TIME_SEC(now);
+    _now = TME_TIME_GET_SEC(now);
     now_tm = gmtime_r(&_now, &now_tm_buffer);
 
     /* put the time-of-day into the registers: */

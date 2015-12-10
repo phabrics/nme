@@ -1001,7 +1001,7 @@ case "x${tme_thread_type}" in
 xpthreads | xposix)  CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_POSIX"
 #	  	     CFLAGS="${CFLAGS-} -pthread"
 		     ;;
-xglib)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_GLIB ${GLIB_CFLAGS}"
+xglib)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_GLIB -DUSE_GLIB_TIME ${GLIB_CFLAGS}"
 #	 LDFLAGS="${LDFLAGS-} ${GLIB_LIBS}"
 	 ;;
 xsjlj)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_SJLJ" ;;
@@ -1497,6 +1497,7 @@ TMEEOF
   echo 'typedef tme_int'`expr $ac_cv_sizeof_void_p \* 8`'_t tme_intptr_t;' >> ${outfile}-tmp
   echo 'typedef tme_uint'`expr $ac_cv_sizeof_void_p \* 8`'_t tme_uintptr_t;' >> ${outfile}-tmp
   echo '#if defined(USE_GLIB_TIME) && defined(_TME_HAVE_GLIB)' >> ${outfile}-tmp
+  echo '#include <glib.h>' >> ${outfile}-tmp
   echo 'typedef gint64 tme_time_t;' >> ${outfile}-tmp
   echo '#elif defined(USE_GETTIMEOFDAY) || !defined(_TME_HAVE_CLOCK_GETTIME)' >> ${outfile}-tmp
   echo 'typedef struct timeval tme_time_t;' >> ${outfile}-tmp

@@ -692,13 +692,13 @@ _tme_sparc_timing_loop_start(struct tme_sparc *ic,
 	usec32 = ((tme_uint32_t) cycles_scaled_max) / ic->tme_sparc_cycles_scaled_per_usec;
 
 	/* assume that we will sleep for less than one second: */
-	TME_TIME_SEC(sleep_buffer) = 0;
+	TME_TIME_SET_SEC(sleep_buffer, 0);
 
 	/* if the sleep time is one second or more: */
 	if (__tme_predict_false(usec32 >= 1000000)) {
 
 	  /* set the sleep time seconds: */
-	  TME_TIME_SEC(sleep_buffer) = (usec32 / 1000000);
+	  TME_TIME_SET_SEC(sleep_buffer, (usec32 / 1000000));
 
 	  /* get the microseconds: */
 	  usec32 = (usec32 % 1000000);

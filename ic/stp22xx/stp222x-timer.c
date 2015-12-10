@@ -83,15 +83,15 @@ _tme_stp222x_timer_update(struct tme_stp222x_timer *timer,
 	       "timer %d timer interrupt rate: %ld/sec",
 	       (timer == &timer->tme_stp222x_timer_stp222x->tme_stp222x_timers[1]),
 	       (timer->tme_stp222x_timer_track_ints
-		/ (unsigned long) (TME_TIME_SEC(*now)
-				   - (TME_TIME_SEC(timer->tme_stp222x_timer_track_sample)
+		/ (unsigned long) (TME_TIME_GET_SEC(*now)
+				   - (TME_TIME_GET_SEC(timer->tme_stp222x_timer_track_sample)
 				      - TME_STP222X_TIMER_TRACK_INT_RATE)))));
     }
 
     /* reset the sampling: */
     timer->tme_stp222x_timer_track_ints = 0;
     timer->tme_stp222x_timer_track_sample = *now;
-    TME_TIME_SEC(timer->tme_stp222x_timer_track_sample) += TME_STP222X_TIMER_TRACK_INT_RATE;
+    TME_TIME_INC_SEC(timer->tme_stp222x_timer_track_sample, TME_STP222X_TIMER_TRACK_INT_RATE);
   }
 
 #endif /* TME_STP222X_TIMER_TRACK_INT_RATE */
@@ -183,9 +183,9 @@ _tme_stp222x_timer_reset(struct tme_stp222x_timer *timer,
   period = ((limit - (count + 1)) & TME_STP222X_TIMER_COUNT_COUNT) + 1;
 
   /* save this timer's initial period: */
-  TME_TIME_SEC(timer->tme_stp222x_timer_period) = 0;
+  TME_TIME_SET_SEC(timer->tme_stp222x_timer_period, 0);
   if (__tme_predict_false(period >= 1000000)) {
-    TME_TIME_SEC(timer->tme_stp222x_timer_period) = period / 1000000;
+    TME_TIME_SET_SEC(timer->tme_stp222x_timer_period, period / 1000000);
     period %= 1000000;
   }
   TME_TIME_SET_FRAC(timer->tme_stp222x_timer_period, period);
@@ -210,7 +210,7 @@ _tme_stp222x_timer_count(struct tme_stp222x_timer *timer)
   _tme_stp222x_timer_update(timer, &now, &sleep);
 
   /* get the absolute count until the next limit: */
-  count = TME_TIME_SEC(sleep);
+  count = TME_TIME_GET_SEC(sleep);
   count *= 1000000;
   count += TME_TIME_GET_FRAC(sleep);
 

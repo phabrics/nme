@@ -135,10 +135,10 @@ _tme_mm58167_bus_cycle(void *_mm58167, struct tme_bus_cycle *cycle_init)
 
   /* if the seconds value has changed, convert it, and an update is
      rippling through the system: */
-  if (TME_TIME_SEC(now)
-      != TME_TIME_SEC(mm58167->tme_mm58167_sampled_time)) {
+  if (TME_TIME_GET_SEC(now)
+      != TME_TIME_GET_SEC(mm58167->tme_mm58167_sampled_time)) {
     mm58167->tme_mm58167_status |= TME_MM58167_STATUS_RIPPLING;
-    _now = TME_TIME_SEC(now);
+    _now = TME_TIME_GET_SEC(now);
     now_tm = gmtime_r(&_now, &mm58167->tme_mm58167_sampled_tm);
     if (now_tm != &mm58167->tme_mm58167_sampled_tm) {
       mm58167->tme_mm58167_sampled_tm = *now_tm;

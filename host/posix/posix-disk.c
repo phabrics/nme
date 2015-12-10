@@ -668,11 +668,11 @@ _tme_posix_disk_open(struct tme_posix_disk *posix_disk,
     return (EINVAL);
   }
 
+  /* the block size must be at least one: */
+  block_size = 1;
+
   /* if this is a character device, determine its block size: */
   if (S_ISCHR(statbuf.st_mode)) {
-
-    /* the block size must be at least one: */
-    block_size = 1;
 
     /* allocate space for the block: */
     block = tme_new(tme_uint8_t, block_size);

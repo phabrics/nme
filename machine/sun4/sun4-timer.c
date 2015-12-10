@@ -170,15 +170,15 @@ _tme_sun4_timer_update(struct tme_sun4_timer *timer, tme_time_t *now, tme_time_t
 		? 10
 		: 14),
 	       (timer->tme_sun4_timer_track_ints
-		/ (unsigned long) (TME_TIME_SEC(*now)
-				   - (TME_TIME_SEC(timer->tme_sun4_timer_track_sample)
+		/ (unsigned long) (TME_TIME_GET_SEC(*now)
+				   - (TME_TIME_GET_SEC(timer->tme_sun4_timer_track_sample)
 				      - TME_SUN4_TIMER_TRACK_INT_RATE)))));
     }
 
     /* reset the sampling: */
     timer->tme_sun4_timer_track_ints = 0;
     timer->tme_sun4_timer_track_sample = *now;
-    TME_TIME_SEC(timer->tme_sun4_timer_track_sample) += TME_SUN4_TIMER_TRACK_INT_RATE;
+    TME_TIME_INC_SEC(timer->tme_sun4_timer_track_sample, TME_SUN4_TIMER_TRACK_INT_RATE);
   }
 
 #endif /* TME_SUN4_TIMER_TRACK_INT_RATE */
@@ -242,9 +242,9 @@ _tme_sun4_timer_reset(struct tme_sun4_timer *timer)
   /* convert the timer's period from 500ns ticks to a tme_time_t
      and save it: */
   usecs = ticks / 2;
-  TME_TIME_SEC(timer->tme_sun4_timer_period) = 0;
+  TME_TIME_SET_SEC(timer->tme_sun4_timer_period, 0);
   if (__tme_predict_false(usecs >= 1000000)) {
-    TME_TIME_SEC(timer->tme_sun4_timer_period) = usecs / 1000000;
+    TME_TIME_SET_SEC(timer->tme_sun4_timer_period, usecs / 1000000);
     usecs %= 1000000;
   }
   TME_TIME_SET_FRAC(timer->tme_sun4_timer_period, usecs);
@@ -345,7 +345,7 @@ _tme_sun4_timer_cycle_control(void *_sun4, struct tme_bus_cycle *cycle_init)
       TME_TIME_DEC(last_reset, timer->tme_sun4_timer_period);
 
       /* get the number of microseconds since the last reset: */
-      usecs = TME_TIME_SEC(now) - TME_TIME_SEC(last_reset);
+      usecs = TME_TIME_GET_SEC(now) - TME_TIME_GET_SEC(last_reset);
       usecs *= 1000000;
       usecs
 	+= (((tme_int32_t) TME_TIME_GET_FRAC(now))

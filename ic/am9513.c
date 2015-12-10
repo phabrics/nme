@@ -374,7 +374,7 @@ _tme_am9513_th_timer(struct tme_am9513 *am9513)
 
     /* calculate the number of basic ticks that have elapsed: */
     basic_elapsed = am9513->tme_am9513_basic_clock;
-    basic_elapsed *= TME_TIME_SEC(elapsed);
+    basic_elapsed *= TME_TIME_GET_SEC(elapsed);
     basic_elapsed += (am9513->tme_am9513_basic_clock_msec * TME_TIME_GET_FRAC(elapsed)) / 1000;
 
     /* assume that we will sleep for one second: */
@@ -479,13 +479,13 @@ _tme_am9513_th_timer(struct tme_am9513 *am9513)
       for (TME_TIME_INC_FRAC(counter->tme_am9513_counter_int_sample_time, TME_TIME_GET_FRAC(elapsed));
 	   TME_TIME_GET_FRAC(counter->tme_am9513_counter_int_sample_time) >= 1000000;
 	   TME_TIME_INC_FRAC(counter->tme_am9513_counter_int_sample_time, -1000000)) {
-	TME_TIME_SEC(counter->tme_am9513_counter_int_sample_time)++;
+	TME_TIME_INC_SEC(counter->tme_am9513_counter_int_sample_time, 1);
       }
-      TME_TIME_SEC(counter->tme_am9513_counter_int_sample_time) += TME_TIME_SEC(elapsed);
+      TME_TIME_INC_SEC(counter->tme_am9513_counter_int_sample_time, TME_TIME_GET_SEC(elapsed));
 
       /* if the sample time has finished, report on the interrupt
          rate: */
-      if (TME_TIME_SEC(counter->tme_am9513_counter_int_sample_time)
+      if (TME_TIME_GET_SEC(counter->tme_am9513_counter_int_sample_time)
 	  >= TME_AM9513_TRACK_INT_RATE) {
 	if (counter->tme_am9513_counter_int_sample > 0) {
 	  tme_log(TME_AM9513_LOG_HANDLE(am9513),
@@ -494,7 +494,7 @@ _tme_am9513_th_timer(struct tme_am9513 *am9513)
 		   "timer %d interrupt rate: %ld/sec",
 		   counter_i,
 		   (counter->tme_am9513_counter_int_sample
-		    / (unsigned long) TME_TIME_SEC(counter->tme_am9513_counter_int_sample_time))));
+		    / (unsigned long) TME_TIME_GET_SEC(counter->tme_am9513_counter_int_sample_time))));
 	}
 
 	/* reset the sample: */
