@@ -312,7 +312,7 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
 #ifdef BIOCSTSTAMP
   // Assume timespec (nanosecond-accuracy) macros
   struct bpf_xhdr the_bpf_header;
-#define TME_BPF_TIME_SEC(a) _TME_TIME_SEC(a,bt_sec)
+#define TME_BPF_TIME_SEC(a) _TME_TIME_GET_FRAC(a,bt_sec)
 #define TME_BPF_TIME_EQ(x,y) _TME_TIME_EQ(x,y,bt_sec,bt_frac)
 #define TME_BPF_TIME_EQV(a,x,y) _TME_TIME_EQV(a,x,y,bt_sec,bt_frac)
 #define TME_BPF_TIME_GT(x,y) _TME_TIME_GT(x,y,bt_sec,bt_frac)
@@ -329,7 +329,7 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
 #else
   // Make timeval (microsecond-accuracy) macros
   struct bpf_hdr the_bpf_header;
-#define TME_BPF_TIME_SEC(a) _TME_TIME_SEC(a,tv_sec)
+#define TME_BPF_TIME_SEC(a) _TME_TIME_GET_FRAC(a,tv_sec)
 #define TME_BPF_TIME_EQ(x,y) _TME_TIME_EQ(x,y,tv_sec,tv_usec)
 #define TME_BPF_TIME_EQV(a,x,y) _TME_TIME_EQV(a,x,y,tv_sec,tv_usec)
 #define TME_BPF_TIME_GT(x,y) _TME_TIME_GT(x,y,tv_sec,tv_usec)
@@ -433,10 +433,10 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
          time: */
       if (TME_TIME_GT(tstamp, bpf->tme_eth_delay_release)) {
 	/* set the sleep time: */
-	assert (TME_TIME_SEC(bpf->tme_eth_delay_release) - TME_TIME_SEC(tstamp) <= 1);
+	assert (TME_TIME_GET_SEC(bpf->tme_eth_delay_release) - TME_TIME_GET_SEC(tstamp) <= 1);
 	bpf->tme_eth_delay_sleep
-	  = ((TME_TIME_SEC(bpf->tme_eth_delay_release)
-	      == TME_TIME_SEC(tstamp))
+	  = ((TME_TIME_GET_SEC(bpf->tme_eth_delay_release)
+	      == TME_TIME_GET_SEC(tstamp))
 	      ? 0
 	     : 1000000UL)
 	  + TME_TIME_GET_FRAC(tstamp) - 

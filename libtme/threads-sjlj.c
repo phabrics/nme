@@ -408,8 +408,8 @@ _tme_sjlj_timeout_time(tme_time_t *timeout)
   }
 
   /* if the earliest timeout has already timed out: */
-  secs_other += TME_TIME_SEC(now);
-  secs = TME_TIME_SEC(thread_timeout->tme_sjlj_thread_timeout);
+  secs_other += TME_TIME_GET_SEC(now);
+  secs = TME_TIME_GET_SEC(thread_timeout->tme_sjlj_thread_timeout);
   if (__tme_predict_false(secs_other > secs
 			  || ((secs -= secs_other) == 0
 			      && usecs == 0))) {
@@ -636,7 +636,7 @@ tme_sjlj_threads_glib_yield(void)
 
 	/* convert the timeout into milliseconds, and clip it at ten
 	   seconds: */
-	secs = TME_TIME_SEC(timeout);
+	secs = TME_TIME_GET_SEC(timeout);
 	msecs = (TME_TIME_GET_FRAC(timeout) + 999) / 1000;
 	if (msecs == 1000) {
 	  secs++;
@@ -865,7 +865,7 @@ tme_sjlj_cond_sleep_yield(tme_cond_t *cond, tme_mutex_t *mutex, const tme_time_t
   tme_sjlj_thread_blocked.tme_sjlj_thread_cond = cond;
 
   /* sleep and yield: */
-  tme_sjlj_sleep_yield(TME_TIME_SEC(*sleep), TME_TIME_GET_FRAC(*sleep));
+  tme_sjlj_sleep_yield(TME_TIME_GET_SEC(*sleep), TME_TIME_GET_FRAC(*sleep));
 }
 
 /* this notifies one or more threads waiting on a condition: */
@@ -1155,7 +1155,7 @@ tme_sjlj_sleep(unsigned long sec, unsigned long usec)
     sec++;
     TME_TIME_INC_FRAC(then, -1000000);
   }
-  TME_TIME_SEC(then) += sec;
+  TME_TIME_INC_SEC(then, sec);
   
   /* select for the sleep period: */
   for (;;) {
