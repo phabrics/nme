@@ -9,6 +9,8 @@
 #  Copyright (C) 2006-2012 Alon Bar-Lev <alon.barlev@gmail.com>
 #
 
+AM_CPPFLAGS = -D_TME_IMPL
+
 MAINTAINERCLEANFILES = \
 	$(srcdir)/Makefile.in
 

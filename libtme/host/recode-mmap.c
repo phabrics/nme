@@ -33,9 +33,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* this might enable large-file support: */
-#define _FILE_OFFSET_BITS 64
-
 #include <tme/common.h>
 _TME_RCSID("$Id: recode-mmap.c,v 1.2 2008/07/01 02:00:53 fredette Exp $");
 

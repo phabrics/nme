@@ -33,9 +33,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* this might enable large-file support: */
-#define _FILE_OFFSET_BITS 64
-
 #include <tme/common.h>
 _TME_RCSID("$Id: posix-memory.c,v 1.7 2009/08/30 21:50:17 fredette Exp $");
 

@@ -33,9 +33,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* this might enable large-file support: */
-#define _FILE_OFFSET_BITS 64
-
 #include <tme/common.h>
 _TME_RCSID("$Id: posix-disk.c,v 1.6 2010/06/05 14:28:57 fredette Exp $");
 
@@ -87,6 +84,14 @@ _TME_RCSID("$Id: posix-disk.c,v 1.6 2010/06/05 14:28:57 fredette Exp $");
 #define TME_POSIX_DISK_BUFFER_DEFAULT_AGG_POST	(1UL * 1024UL * 1024UL)
 
 /* types: */
+#ifndef __blksize_t_defined
+#ifdef TME_HAVE_INT64_T
+typedef tme_int64_t __blksize_t;
+#else
+typedef size_t __blksize_t;
+#endif
+#define __blksize_t_defined
+#endif
 
 /* a posix disk buffer: */
 struct tme_posix_disk_buffer {
@@ -115,7 +120,7 @@ struct tme_posix_disk_buffer {
 #define tme_posix_disk_buffer_size _tme_posix_disk_buffer_iov.iov_len
 #define tme_posix_disk_buffer_data _tme_posix_disk_buffer_iov.iov_base
 #else
-  size_t tme_posix_disk_buffer_size;
+  __blksize_t tme_posix_disk_buffer_size;
   void *tme_posix_disk_buffer_data;
 #endif
 };
@@ -140,7 +145,7 @@ struct tme_posix_disk {
 #ifdef HAVE_STRUCT_STAT_ST_BLKSIZE
 #define tme_posix_disk_block_size tme_posix_disk_stat.st_blksize
 #else
-  size_t tme_posix_disk_block_size;
+  __blksize_t tme_posix_disk_block_size;
 #endif
   /* our connection: */
   struct tme_disk_connection *tme_posix_disk_connection;
@@ -167,7 +172,7 @@ _tme_posix_disk_buffer_free(struct tme_posix_disk *posix_disk,
   struct iovec iovecs[1];
 #define ssize iovecs[0].iov_len
 #else
-  ssize_t ssize;
+  __blksize_t ssize;
 #endif
   /* if this buffer is mmapped: */
   if (buffer->tme_posix_disk_buffer_flags 
@@ -229,9 +234,9 @@ _tme_posix_disk_buffer_get(struct tme_posix_disk *posix_disk,
 #define ssize iovecs[2].iov_len
 #else
   void *data;
-  size_t size, size_agg, ssize;
+  __blksize_t size, size_agg, ssize;
 #endif
-  unsigned long agg_pre, agg_post;
+  __blksize_t agg_pre, agg_post;
   struct tme_posix_disk_buffer *buffer;
   struct tme_posix_disk_buffer *buffer_free_nosize;
   struct tme_posix_disk_buffer *buffer_free_sized;
@@ -632,7 +637,7 @@ _tme_posix_disk_open(struct tme_posix_disk *posix_disk,
 #ifdef HAVE_STRUCT_STAT_ST_BLKSIZE
 #define block_size statbuf.st_blksize
 #else
-  size_t block_size;
+  __blksize_t block_size;
 #endif
   tme_uint8_t *block;
   int page_size;

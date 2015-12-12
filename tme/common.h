@@ -37,14 +37,14 @@
 #define _TME_COMMON_H
 
 /* includes: */
-#include <assert.h>
-#include <unistd.h>
-#include <tmeconfig.h>
 #ifdef _TME_IMPL
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 #endif /* _TME_IMPL */
+#include <assert.h>
+#include <unistd.h>
+#include <tmeconfig.h>
 #include <sys/types.h>
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h>

@@ -236,6 +236,8 @@ if test $ac_cv_c_long_double = yes; then
   AC_CHECK_FLOAT_LIMITS(long double, LDBL_MAX/LDBL_MIN)
 fi
 
+AC_SYS_LARGEFILE
+
 AC_CHECK_MEMBERS([struct stat.st_rdev, struct stat.st_blksize])
 
 AC_CHECK_TYPES([cpuset_t, cpu_set_t],[],[],[
