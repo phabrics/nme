@@ -165,6 +165,23 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tap) {
     do_ifconfig(tt, tt->actual_name, TUN_MTU_SIZE(&frame), es);
   }
   
+  /* run the up script */
+  run_up_down(options.up_script,
+	      NULL,
+	      OPENVPN_PLUGIN_UP,
+	      tt->actual_name,
+	      dev_type_string(options.dev, options.dev_type),
+	      TUN_MTU_SIZE(&frame),
+	      EXPANDED_SIZE(&frame),
+	      print_in_addr_t(tt->local, IA_EMPTY_IF_UNDEF, &gc),
+	      print_in_addr_t(tt->remote_netmask, IA_EMPTY_IF_UNDEF, &gc),
+	      "init",
+	      NULL,
+	      "up",
+	      es);
+
+  hwaddr = NULL;
+  
   /* find the interface we will use: */
 #ifdef HAVE_IFADDRS_H
   struct ifaddrs *ifa;

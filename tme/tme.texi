@@ -892,10 +892,12 @@ that uses the same options as OpenVPN itself.  See the OpenVPN docs
 for further information.
 
 In particular, it can be used to configure tap interfaces with IP
-or IPv6 addresses.  Here is a sample line that can be used to accomplish
-this:
+or IPv6 addresses.  It can also be used to run postconfiguration scripts
+that can, e.g., set up NAT using the filter rules appropriate to the
+platform.  Here is a sample line that can be used to accomplish
+these:
 
-@code{tap0 at le0: tme/host/openvpn/tap --dev tap --ifconfig 10.0.77.1 255.255.255.0 --ifconfig-ipv6 "2001:db8::1/64" "2001:db8::2" --tun-ipv6}
+@code{tap0 at le0: tme/host/openvpn/tap --dev tap --ifconfig 10.0.77.1 255.255.255.0 --ifconfig-ipv6 "2001:db8::1/64" "2001:db8::2" --tun-ipv6 --up nat.sh}
 
 Note that this is currently the only way to get networking support
 under Windows.  
