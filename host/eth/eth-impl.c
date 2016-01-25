@@ -1,9 +1,7 @@
-/* $Id: eth-if.c,v 1.3 2003/10/16 02:48:23 fredette Exp $ */
-
-/* host/eth/eth-if.c - ETH interface support: */
+/* host/eth/eth-impl.c - Common Ethernet host interface implementation */
 
 /*
- * Copyright (c) 2001, 2003 Matt Fredette
+ * Copyright (c) 2014, 2015, 2016 Ruben Agin
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -153,8 +151,10 @@ _tme_eth_callout(struct tme_ethernet *eth, int new_callouts)
       
       /* make a frame chunk to receive this frame: */
       frame_chunk_buffer.tme_ethernet_frame_chunk_next = NULL;
+
       frame_chunk_buffer.tme_ethernet_frame_chunk_bytes
-	= BPTR(eth->tme_eth_to_tun);
+	= BPTR(eth->tme_eth_out);
+
       frame_chunk_buffer.tme_ethernet_frame_chunk_bytes_count
 	= eth->tme_eth_buffer_size;
 
@@ -178,15 +178,17 @@ _tme_eth_callout(struct tme_ethernet *eth, int new_callouts)
 
 	/* do the write: */
 #ifdef OPENVPN_ETH
-	eth->tme_eth_to_tun->len = rc;
+	eth->tme_eth_out->len = rc;
+#ifdef OPENVPN_TUN
 #ifdef TUN_PASS_BUFFER
 	status = write_tun_buffered(eth->tme_eth_handle,
-				    eth->tme_eth_to_tun);
+				    eth->tme_eth_out);
 #else
-	status = write_tun(eth->tme_eth_handle, BPTR(eth->tme_eth_to_tun), BLEN(eth->tme_eth_to_tun));
+	status = write_tun(eth->tme_eth_handle, BPTR(eth->tme_eth_out), BLEN(eth->tme_eth_out));
+#endif
 #endif
 #else
-	status = tme_thread_write(eth->tme_eth_handle, eth->tme_eth_to_tun, rc);
+	status = tme_thread_write(eth->tme_eth_handle, eth->tme_eth_out, rc);
 #endif
 	/* writes must succeed: */
 	assert (status == rc);
@@ -295,13 +297,14 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
       /* wait for signal transition to write */
       flags |= EVENT_WRITE;
     }
-    
+#ifdef OPENVPN_TUN
     tun_set(eth->tme_eth_handle, eth->tme_eth_event_set, flags, (void*)0, NULL);
-
+#endif
     buffer_end = rc = event_wait(eth->tme_eth_event_set, &tv, esr, SIZE(esr));
 
     for (i = 0; i < rc; ++i) {
       if(esr[i].rwflags & EVENT_READ) {
+#ifdef OPENVPN_TUN
 #ifdef TUN_PASS_BUFFER
 	read_tun_buffered(eth->tme_eth_handle,
 			  eth->tme_eth_buffer,
@@ -312,6 +315,7 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
 	  read_tun(eth->tme_eth_handle,
 		   BPTR(eth->tme_eth_buffer),
 		   eth->tme_eth_buffer_size);
+#endif
 #endif
       }
       if(esr[i].rwflags & EVENT_WRITE)
@@ -943,14 +947,24 @@ tme_eth_connections_new(struct tme_element *element,
 
 _tme_eth_static int tme_eth_init(struct tme_element *element, 
 #ifdef OPENVPN_ETH
-		 struct tuntap *handle,
-#else
-		 int handle,
+#ifdef OPENVPN_TUN
+				 struct tuntap *tt,
 #endif
-		 unsigned int sz, 
-		 void *data,
-		 unsigned char *addr,
-		 typeof(tme_eth_connections_new) eth_connections_new)
+#ifdef OPENVPN_SOCKET
+				 struct link_socket *sock,
+#endif
+#else
+#if !defined(OPENVPN_HOST) || defined(OPENVPN_TUN)
+				 int tt,
+#endif
+#ifdef OPENVPN_SOCKET
+				 int sock,
+#endif
+#endif
+				 unsigned int sz, 
+				 void *data,
+				 unsigned char *addr,
+				 typeof(tme_eth_connections_new) eth_connections_new)
 {
   struct tme_ethernet *eth;
 #ifdef OPENVPN_ETH
@@ -961,19 +975,30 @@ _tme_eth_static int tme_eth_init(struct tme_element *element,
   /* start our data structure: */
   eth = tme_new0(struct tme_ethernet, 1);
   eth->tme_eth_element = element;
-  eth->tme_eth_handle = handle;
   eth->tme_eth_buffer_size = sz;
 #ifdef OPENVPN_ETH
+#ifdef OPENVPN_TUN
+  eth->tme_eth_handle = tt;
+#endif
+#ifdef OPENVPN_SOCKET
+  eth->tme_sock_handle = sock;
+#endif
   eth->_tme_eth_buffer = alloc_buf(sz);
-  eth->_tme_eth_to_tun = alloc_buf(sz);
   eth->tme_eth_buffer = &eth->_tme_eth_buffer;
-  eth->tme_eth_to_tun = &eth->_tme_eth_to_tun;
+  eth->_tme_eth_out = alloc_buf(sz);  
+  eth->tme_eth_out = &eth->_tme_eth_out;
   event_set_max = 4;
   flags |= EVENT_METHOD_FAST;
   eth->tme_eth_event_set = event_set_init(&event_set_max, flags);
 #else
+#if !defined(OPENVPN_HOST) || defined(OPENVPN_TUN)
+  eth->tme_eth_handle = tt;
+#endif
+#ifdef OPENVPN_SOCKET
+  eth->tme_sock_handle = sock;
+#endif
   eth->tme_eth_buffer = tme_new(tme_uint8_t, sz);
-  eth->tme_eth_to_tun = tme_new(tme_uint8_t, TME_ETHERNET_FRAME_MAX);
+  eth->tme_eth_out = tme_new(tme_uint8_t, TME_ETHERNET_FRAME_MAX);  
 #endif
   eth->tme_eth_buffer_offset = 0;
   eth->tme_eth_buffer_end = 0;

@@ -1,9 +1,7 @@
-/* $Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $ */
-
-/* host/tun/tun-tap.c - TUN TAP Ethernet support: */
+/* host/tun/tun-tap.c - Native TUN TAP Ethernet support: */
 
 /*
- * Copyright (c) 2001, 2003 Matt Fredette
+ * Copyright (c) 2014, 2015 Ruben Agin
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

@@ -53,7 +53,11 @@ tme_host_openvpn_la_SOURCES = \
 	pkcs11_openssl.c \
 	pkcs11_polarssl.c \
         openvpn.c openvpn.h \
+	openvpn-link.c \
 	openvpn-plugin.h \
+	openvpn-server.c \
+	openvpn-setup.c \
+	openvpn-tap.c \
 	options.c options.h \
 	otime.c otime.h \
 	packet_id.c packet_id.h \
@@ -85,7 +89,6 @@ tme_host_openvpn_la_SOURCES = \
 	status.c status.h \
 	syshead.h \
 	tun.c tun.h \
-	tap.c \
 	win32.h win32.c \
 	cryptoapi.h cryptoapi.c
 
@@ -108,4 +111,6 @@ tme_host_openvpn_la_LDFLAGS = -module -version-info 0:0:0
 
 include $(top_srcdir)/modules
 
-tap.lo: ../eth/eth-impl.c
+openvpn-link.lo: ../eth/eth-impl.c
+openvpn-server.lo: ../eth/eth-impl.c
+openvpn-tap.lo: ../eth/eth-impl.c
