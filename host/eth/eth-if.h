@@ -120,17 +120,6 @@ _TME_RCSID("$Id: eth-impl.h,v 1.1 2003/05/18 00:02:23 fredette Exp $");
 #ifdef HAVE_IFADDRS_H
 #include <ifaddrs.h>
 #endif
-#if defined(OPENVPN_TUN) || defined(OPENVPN_SOCKET)
-#define OPENVPN_HOST
-#include "syshead.h"
-#include "tun.h"
-#define _tme_eth_static static
-#ifndef TME_THREADS_SJLJ
-#define OPENVPN_ETH
-#endif
-#else
-#define _tme_eth_static
-#endif
 
 /* structures: */
 
@@ -156,37 +145,21 @@ struct tme_ethernet {
   struct tme_ethernet_connection *tme_eth_eth_connection;
 
   /* the Ethernet file descriptor: */
-#ifdef OPENVPN_ETH
-  struct event_set *tme_eth_event_set;
-#ifdef OPENVPN_TUN
-  struct tuntap *tme_eth_handle;
-#endif
-#ifdef OPENVPN_SOCKET
-  struct link_socket *tme_sock_handle;
-#endif
-#else
-#if !defined(OPENVPN_HOST) || defined(OPENVPN_TUN)
   int tme_eth_handle;
-#endif
-#ifdef OPENVPN_SOCKET
-  int tme_sock_handle;
-#endif
-#endif
-  
+
+  /* callbacks for ethernet i/o */
+  int (*tme_ethernet_read)(void *data);
+  int (*tme_ethernet_write)(void *data);
+
   /* the size of the packet buffer for the interface: */
   size_t tme_eth_buffer_size;
 
+  /* the length of the packet buffer data for the interface: */
+  size_t tme_eth_data_length;
+  
   /* the packet buffer for the interface: */
-#ifdef OPENVPN_ETH
-  struct buffer _tme_eth_buffer;
-  struct buffer _tme_eth_out;
-  struct buffer *tme_eth_buffer;
-  struct buffer *tme_eth_out;
-#else
-#define BPTR(x) x
   tme_uint8_t *tme_eth_buffer;
   tme_uint8_t *tme_eth_out;
-#endif
 
   /* the next offset within the packet buffer, and the end of the data
      in the packet buffer: */
@@ -213,11 +186,6 @@ struct tme_ethernet {
 };
 
 /* prototypes: */
-#ifdef OPENVPN_HOST
-int openvpn_setup _TME_P((const char *args[],
-			  struct tuntap **tt,
-			  struct link_socket **sock));
-#else
 #if 0
 int tme_eth_if_find _TME_P((_tme_const char *, 
 			    struct ifreq **, 
@@ -241,24 +209,10 @@ int tme_eth_connections_new _TME_P((struct tme_element *element,
 				    struct tme_connection **_conns));
 
 int tme_eth_init _TME_P((struct tme_element *element,
-#ifdef OPENVPN_ETH
-#ifdef OPENVPN_TUN
-			 struct tuntap *tt,
-#endif
-#ifdef OPENVPN_SOCKET
-			 struct link_socket *sock,
-#endif
-#else
-#if !defined(OPENVPN_HOST) || defined(OPENVPN_TUN)
-			 int tt,
-#endif
-#ifdef OPENVPN_SOCKET
-			 int sock,
-#endif
-#endif
+			 int fd,
 			 unsigned int sz, 
 			 void *data,
 			 unsigned char *addr,
 			 typeof(tme_eth_connections_new) eth_connections_new));
-#endif // !_tme_eth_static
+
 #endif /* !_HOST_ETH_IMPL_H */

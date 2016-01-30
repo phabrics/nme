@@ -38,6 +38,22 @@
 #include "eth-impl.c"
 #include "options.h"
 
+int openvpn_socket_write(void *handle, void *buffer, int len) {
+  /*
+   * Get the address we will be sending the packet to.
+   */
+  link_socket_get_outgoing_addr(&c->c2.buf, get_link_socket_info (c),
+				&c->c2.to_link_addr);
+  
+  status = link_socket_write(eth->tme_sock_handle,
+			     eth->tme_eth_out);
+				   
+}
+#endif
+#else
+	status = tme_thread_write(eth->tme_eth_handle, eth->tme_eth_out, rc);
+#endif
+
 /* the new TAP function: */
 TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn_socket,link) {
   int sz;

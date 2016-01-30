@@ -153,11 +153,11 @@ _tme_eth_callout(struct tme_ethernet *eth, int new_callouts)
       frame_chunk_buffer.tme_ethernet_frame_chunk_next = NULL;
 
       frame_chunk_buffer.tme_ethernet_frame_chunk_bytes
-	= BPTR(eth->tme_eth_out);
+	= eth->tme_eth_out;
 
-      frame_chunk_buffer.tme_ethernet_frame_chunk_bytes_count
-	= eth->tme_eth_buffer_size;
-
+      frame_chunk_buffer.tme_ethernet_frame_chunk_bytes_count =
+	eth->tme_eth_buffer_size;
+      
       /* do the callout: */
       rc = (conn_eth == NULL
 	    ? TME_OK
@@ -176,20 +176,15 @@ _tme_eth_callout(struct tme_ethernet *eth, int new_callouts)
 	/* check the size of the frame: */
 	assert(rc <= eth->tme_eth_buffer_size);
 
+	/* set the length: */
+	eth->tme_eth_data_length = rc;
+	
 	/* do the write: */
-#ifdef OPENVPN_ETH
-	eth->tme_eth_out->len = rc;
-#ifdef OPENVPN_TUN
-#ifdef TUN_PASS_BUFFER
-	status = write_tun_buffered(eth->tme_eth_handle,
-				    eth->tme_eth_out);
-#else
-	status = write_tun(eth->tme_eth_handle, BPTR(eth->tme_eth_out), BLEN(eth->tme_eth_out));
-#endif
-#endif
-#else
-	status = tme_thread_write(eth->tme_eth_handle, eth->tme_eth_out, rc);
-#endif
+	status =
+	  (eth->tme_eth_handle) ?
+	  (tme_thread_write(eth->tme_eth_handle, eth->tme_eth_out, rc)) :
+	  (eth->tme_ethernet_write(eth->tme_eth_data));
+
 	/* writes must succeed: */
 	assert (status == rc);
 
@@ -203,7 +198,7 @@ _tme_eth_callout(struct tme_ethernet *eth, int new_callouts)
     }
 
   }
-  
+
   /* put in any later callouts, and clear that callouts are running: */
   eth->tme_eth_callout_flags = later_callouts;
 }
@@ -215,14 +210,6 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
   ssize_t buffer_end;
   unsigned long sleep_usec;
   const struct tme_ethernet_header *ethernet_header;
-#ifdef OPENVPN_ETH
-  int rc, can_write, i;
-  unsigned int flags;
-  struct timeval tv;
-  tv.tv_sec = BIG_TIMEOUT;
-  tv.tv_usec = 0;
-  struct event_set_return esr[4];
-#endif
   
   tme_thread_enter(&eth->tme_eth_mutex);
 
@@ -286,46 +273,14 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
     if (rc == 1) {
 
     }
-    
-#elif defined(OPENVPN_ETH)
-    event_reset(eth->tme_eth_event_set);
-    
-    flags = EVENT_READ;
-    
-    can_write = eth->tme_eth_can_write;
-    if(!can_write) {
-      /* wait for signal transition to write */
-      flags |= EVENT_WRITE;
-    }
-#ifdef OPENVPN_TUN
-    tun_set(eth->tme_eth_handle, eth->tme_eth_event_set, flags, (void*)0, NULL);
-#endif
-    buffer_end = rc = event_wait(eth->tme_eth_event_set, &tv, esr, SIZE(esr));
-
-    for (i = 0; i < rc; ++i) {
-      if(esr[i].rwflags & EVENT_READ) {
-#ifdef OPENVPN_TUN
-#ifdef TUN_PASS_BUFFER
-	read_tun_buffered(eth->tme_eth_handle,
-			  eth->tme_eth_buffer,
-			  eth->tme_eth_buffer_size);
-	buffer_end = eth->tme_eth_buffer->len;
 #else
-	buffer_end =
-	  read_tun(eth->tme_eth_handle,
-		   BPTR(eth->tme_eth_buffer),
-		   eth->tme_eth_buffer_size);
-#endif
-#endif
-      }
-      if(esr[i].rwflags & EVENT_WRITE)
-	can_write = TRUE;
-    }
-#else
-    buffer_end = 
-      tme_thread_read_yield(eth->tme_eth_handle,
-			    eth->tme_eth_buffer,
-			    eth->tme_eth_buffer_size);
+    buffer_end =
+      (eth->tme_eth_handle) ?
+      (tme_thread_read_yield(eth->tme_eth_handle,
+			     eth->tme_eth_buffer,
+			     eth->tme_eth_buffer_size)) :
+      (eth->tme_ethernet_read(eth->tme_eth_data));
+      
 #endif
     tme_mutex_lock(&eth->tme_eth_mutex);
 
@@ -351,7 +306,7 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
     /* Filter out multicast packets we sent or unicast packets not destined for us. 
        This should remove all duplicate packets on, i.e., tap interfaces...
      */
-    ethernet_header = (struct tme_ethernet_header *) (BPTR(eth->tme_eth_buffer));
+    ethernet_header = (struct tme_ethernet_header *) (eth->tme_eth_buffer);
     
     if(!eth->tme_eth_addr ||
        (((ethernet_header->tme_ethernet_header_dst[0] & 0x1)
@@ -513,7 +468,7 @@ _tme_eth_read(struct tme_ethernet_connection *conn_eth,
     /* form the single frame chunk: */
     frame_chunk_buffer.tme_ethernet_frame_chunk_next = NULL;
     frame_chunk_buffer.tme_ethernet_frame_chunk_bytes
-      = BPTR(eth->tme_eth_buffer) + eth->tme_eth_buffer_offset;
+      = eth->tme_eth_buffer + eth->tme_eth_buffer_offset;
     frame_chunk_buffer.tme_ethernet_frame_chunk_bytes_count
       = buffer_offset_next;
 
@@ -553,7 +508,7 @@ _tme_eth_read(struct tme_ethernet_connection *conn_eth,
 
 #if 0
 /* this finds a network interface via traditional ioctls: */
-_tme_eth_static int
+int
 tme_eth_if_find(const char *ifr_name_user, struct ifreq **_ifreq, tme_uint8_t **_if_addr, unsigned int *_if_addr_size)
 {
   int saved_errno;
@@ -723,7 +678,7 @@ tme_eth_if_find(const char *ifr_name_user, struct ifreq **_ifreq, tme_uint8_t **
 
 #ifdef HAVE_IFADDRS_H
 /* this finds a network interface via the ifaddrs api: */
-_tme_eth_static int
+int
 tme_eth_ifaddrs_find(const char *ifa_name_user, int family, struct ifaddrs **_ifaddr, tme_uint8_t **_if_addr, unsigned int *_if_addr_size)
 {
   struct ifaddrs *ifaddr, *ifa;
@@ -869,7 +824,7 @@ tme_eth_ifaddrs_find(const char *ifa_name_user, int family, struct ifaddrs **_if
 #endif // HAVE_IFADDRS_H
 
 /* Allocate an ethernet device */
-_tme_eth_static int tme_eth_alloc(char *dev_filename, char **_output)
+int tme_eth_alloc(char *dev_filename, char **_output)
 {
   int fd, minor;
   char dev_minor[4];
@@ -905,7 +860,7 @@ _tme_eth_static int tme_eth_alloc(char *dev_filename, char **_output)
 }
 
 /* this makes a new connection side for a ETH: */
-_tme_eth_static int
+int
 tme_eth_connections_new(struct tme_element *element, 
 			const char * const *args, 
 			struct tme_connection **_conns)
@@ -945,61 +900,24 @@ tme_eth_connections_new(struct tme_element *element,
   return (TME_OK);
 }
 
-_tme_eth_static int tme_eth_init(struct tme_element *element, 
-#ifdef OPENVPN_ETH
-#ifdef OPENVPN_TUN
-				 struct tuntap *tt,
-#endif
-#ifdef OPENVPN_SOCKET
-				 struct link_socket *sock,
-#endif
-#else
-#if !defined(OPENVPN_HOST) || defined(OPENVPN_TUN)
-				 int tt,
-#endif
-#ifdef OPENVPN_SOCKET
-				 int sock,
-#endif
-#endif
-				 unsigned int sz, 
-				 void *data,
-				 unsigned char *addr,
-				 typeof(tme_eth_connections_new) eth_connections_new)
+int tme_eth_init(struct tme_element *element, 
+		 int fd,
+		 unsigned int sz, 
+		 void *data,
+		 unsigned char *addr,
+		 typeof(tme_eth_connections_new) eth_connections_new)
 {
   struct tme_ethernet *eth;
-#ifdef OPENVPN_ETH
-  unsigned int flags = 0;
-  int event_set_max;
-#endif
   
   /* start our data structure: */
   eth = tme_new0(struct tme_ethernet, 1);
   eth->tme_eth_element = element;
+  eth->tme_eth_handle = fd;
+  if(fd) {
+    eth->tme_eth_buffer = tme_new(tme_uint8_t, sz);
+    eth->tme_eth_out = tme_new(tme_uint8_t, TME_ETHERNET_FRAME_MAX);
+  }
   eth->tme_eth_buffer_size = sz;
-#ifdef OPENVPN_ETH
-#ifdef OPENVPN_TUN
-  eth->tme_eth_handle = tt;
-#endif
-#ifdef OPENVPN_SOCKET
-  eth->tme_sock_handle = sock;
-#endif
-  eth->_tme_eth_buffer = alloc_buf(sz);
-  eth->tme_eth_buffer = &eth->_tme_eth_buffer;
-  eth->_tme_eth_out = alloc_buf(sz);  
-  eth->tme_eth_out = &eth->_tme_eth_out;
-  event_set_max = 4;
-  flags |= EVENT_METHOD_FAST;
-  eth->tme_eth_event_set = event_set_init(&event_set_max, flags);
-#else
-#if !defined(OPENVPN_HOST) || defined(OPENVPN_TUN)
-  eth->tme_eth_handle = tt;
-#endif
-#ifdef OPENVPN_SOCKET
-  eth->tme_sock_handle = sock;
-#endif
-  eth->tme_eth_buffer = tme_new(tme_uint8_t, sz);
-  eth->tme_eth_out = tme_new(tme_uint8_t, TME_ETHERNET_FRAME_MAX);  
-#endif
   eth->tme_eth_buffer_offset = 0;
   eth->tme_eth_buffer_end = 0;
   eth->tme_eth_can_write = TRUE;

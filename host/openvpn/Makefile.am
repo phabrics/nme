@@ -53,9 +53,7 @@ tme_host_openvpn_la_SOURCES = \
 	pkcs11_openssl.c \
 	pkcs11_polarssl.c \
         openvpn.c openvpn.h \
-	openvpn-link.c \
 	openvpn-plugin.h \
-	openvpn-server.c \
 	openvpn-setup.c \
 	openvpn-tap.c \
 	options.c options.h \
@@ -93,7 +91,7 @@ tme_host_openvpn_la_SOURCES = \
 	cryptoapi.h cryptoapi.c
 
 tme_host_openvpn_la_LIBADD = \
-	$(top_builddir)/generic/libtme-generic.la \
+	../eth/libeth.la \
 	$(SOCKETS_LIBS) \
 	$(OPTIONAL_LZO_LIBS) \
 	$(OPTIONAL_PKCS11_HELPER_LIBS) \
@@ -111,6 +109,7 @@ tme_host_openvpn_la_LDFLAGS = -module -version-info 0:0:0
 
 include $(top_srcdir)/modules
 
-openvpn-link.lo: ../eth/eth-impl.c
-openvpn-server.lo: ../eth/eth-impl.c
-openvpn-tap.lo: ../eth/eth-impl.c
+$(pkglib_LTLIBRARIES): ../eth/libeth.la
+../eth/libeth.la: force
+	cd `dirname $@` && $(MAKE) `basename $@`
+force: ;
