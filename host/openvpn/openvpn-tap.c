@@ -104,7 +104,7 @@ static int _tme_openvpn_tun_read(void *data) {
 #endif // !TME_THREADS_SJLJ
 
 /* the new TAP function: */
-TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn_tun,tap) {
+TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tun_tap) {
   int rc;
   unsigned char *hwaddr = NULL;
   int sz;

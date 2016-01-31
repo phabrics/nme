@@ -84,7 +84,7 @@ struct tuntap *setup_tuntap() {
     do_ifconfig(tt, guess, TUN_MTU_SIZE(&frame), es);
   }
 
-#ifndef OPENVPN_ETH
+#ifdef TME_THREADS_SJLJ
   /* temporarily turn off ipv6 to disable protocol info being prepended to packets on Linux */
   tt->ipv6 = FALSE;
 #endif
