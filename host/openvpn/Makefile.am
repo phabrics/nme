@@ -53,6 +53,7 @@ tme_host_openvpn_la_SOURCES = \
 	pkcs11_openssl.c \
 	pkcs11_polarssl.c \
         openvpn.c openvpn.h \
+	openvpn-link.c \
 	openvpn-plugin.h \
 	openvpn-setup.c \
 	openvpn-tap.c \

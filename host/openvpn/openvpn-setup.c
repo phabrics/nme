@@ -38,7 +38,6 @@
 #include "options.h"
 
 static struct gc_arena gc;
-static struct frame frame;
 static struct env_set *es;
 static struct options options;       /**< Options loaded from command line or
 				      *   configuration file. */
@@ -52,7 +51,7 @@ struct signal_info *sig;      /**< Internal error signaling object. */
 struct signal_info siginfo_static; /* GLOBAL */
 
 static inline
-struct tuntap *setup_tuntap() {
+struct tuntap *setup_tuntap(struct frame *frame) {
   /* TUN/TAP specific stuff */
   struct tuntap *tt = init_tun(options.dev,
 			       options.dev_type,
@@ -72,7 +71,7 @@ struct tuntap *setup_tuntap() {
   /* flag tunnel for IPv6 config if --tun-ipv6 is set */
   tt->ipv6 = options.tun_ipv6;
 
-  init_tun_post(tt, &frame, &options.tuntap_options);
+  init_tun_post(tt, frame, &options.tuntap_options);
   
   if(ifconfig_order() == IFCONFIG_BEFORE_TUN_OPEN) {
     /* guess actual tun/tap unit number that will be returned
@@ -81,7 +80,7 @@ struct tuntap *setup_tuntap() {
 					 options.dev_type,
 					 options.dev_node,
 					 &gc);
-    do_ifconfig(tt, guess, TUN_MTU_SIZE(&frame), es);
+    do_ifconfig(tt, guess, TUN_MTU_SIZE(frame), es);
   }
 
 #ifdef TME_THREADS_SJLJ
@@ -102,7 +101,7 @@ struct tuntap *setup_tuntap() {
   
   /* do ifconfig */
   if(ifconfig_order() == IFCONFIG_AFTER_TUN_OPEN) {
-    do_ifconfig(tt, tt->actual_name, TUN_MTU_SIZE(&frame), es);
+    do_ifconfig(tt, tt->actual_name, TUN_MTU_SIZE(frame), es);
   }
   
   /* run the up script */
@@ -111,8 +110,8 @@ struct tuntap *setup_tuntap() {
 	      OPENVPN_PLUGIN_UP,
 	      tt->actual_name,
 	      dev_type_string(options.dev, options.dev_type),
-	      TUN_MTU_SIZE(&frame),
-	      EXPANDED_SIZE(&frame),
+	      TUN_MTU_SIZE(frame),
+	      EXPANDED_SIZE(frame),
 	      print_in_addr_t(tt->local, IA_EMPTY_IF_UNDEF, &gc),
 	      print_in_addr_t(tt->remote_netmask, IA_EMPTY_IF_UNDEF, &gc),
 	      "init",
@@ -124,7 +123,7 @@ struct tuntap *setup_tuntap() {
 }
 
 static inline
-struct link_socket *setup_socket() {
+struct link_socket *setup_socket(struct frame *frame) {
   struct link_socket *link_socket = link_socket_new();
   unsigned int sockflags = options.sockflags;
 
@@ -167,13 +166,13 @@ struct link_socket *setup_socket() {
 			   options.mark,
 			   sockflags);
   
-  link_socket_init_phase2(link_socket, &frame,
+  link_socket_init_phase2(link_socket, frame,
 			   &sig->signal_received);
 
   return link_socket;
 }
 
-int openvpn_setup(const char *args[], struct tuntap **tt, struct link_socket **sock) {
+int openvpn_setup(const char *args[], struct tuntap **tt, struct link_socket **sock, struct frame *frame) {
   int arg_i;
 
   gc = gc_new ();  
@@ -215,21 +214,21 @@ int openvpn_setup(const char *args[], struct tuntap **tt, struct link_socket **s
   /* set certain options as environmental variables */
   setenv_settings(es, &options);
 
-  memset(&frame, 0, sizeof(frame));  
+  memset(frame, 0, sizeof(*frame));  
   /*
    * Adjust frame size based on the --tun-mtu-extra parameter.
    */
   if(options.ce.tun_mtu_extra_defined)
-    tun_adjust_frame_parameters(&frame, options.ce.tun_mtu_extra);
+    tun_adjust_frame_parameters(frame, options.ce.tun_mtu_extra);
 
   /* See frame_finalize_options (struct context *c, const struct options *o) */
-  frame_align_to_extra_frame(&frame);
-  frame_or_align_flags(&frame,
+  frame_align_to_extra_frame(frame);
+  frame_or_align_flags(frame,
 		       FRAME_HEADROOM_MARKER_FRAGMENT
 		       |FRAME_HEADROOM_MARKER_READ_LINK
 		       |FRAME_HEADROOM_MARKER_READ_STREAM);
   
-  frame_finalize(&frame,
+  frame_finalize(frame,
 		 options.ce.link_mtu_defined,
 		 options.ce.link_mtu,
 		 options.ce.tun_mtu_defined,
@@ -237,11 +236,9 @@ int openvpn_setup(const char *args[], struct tuntap **tt, struct link_socket **s
 
   sig = &siginfo_static;
   
-  if(sock) *sock = setup_socket();
+  if(sock) *sock = setup_socket(frame);
   
   /* tun/tap persist command? */
   if(!do_persist_tuntap(&options) && tt)
-    *tt = setup_tuntap();
-  
-  return MAX_RW_SIZE_TUN(&frame);
+    *tt = setup_tuntap(frame);
 }

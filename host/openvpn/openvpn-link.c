@@ -34,34 +34,127 @@
 #include <tme/common.h>
 
 /* includes: */
-#define OPENVPN_SOCKET
-#include "eth-impl.c"
+#include "eth-if.h"
+#include "syshead.h"
+#include "socket.h"
 #include "options.h"
 
-int openvpn_socket_write(void *handle, void *buffer, int len) {
+#ifndef TME_THREADS_SJLJ
+typedef struct _tme_openvpn_sock {
+  struct tme_ethernet *eth;
+  struct link_socket *ls;
+  struct frame frame;
+  struct event_set *event_set;
+  struct buffer inbuf;
+  struct buffer outbuf;
+} tme_openvpn_sock;
+
+static int _tme_openvpn_sock_write(void *data) {
+  tme_openvpn_sock *sock = data;
+  struct link_socket_actual *to_addr;	/* IP address of remote */
+  
+  sock->outbuf.len = sock->eth->tme_eth_data_length;
   /*
    * Get the address we will be sending the packet to.
    */
-  link_socket_get_outgoing_addr(&c->c2.buf, get_link_socket_info (c),
-				&c->c2.to_link_addr);
+  link_socket_get_outgoing_addr(&sock->outbuf, &sock->ls->info,
+				&to_addr);
   
-  status = link_socket_write(eth->tme_sock_handle,
-			     eth->tme_eth_out);
-				   
+  return link_socket_write(sock->ls, &sock->outbuf, to_addr);
 }
-#endif
-#else
-	status = tme_thread_write(eth->tme_eth_handle, eth->tme_eth_out, rc);
-#endif
+
+static int _tme_openvpn_sock_read(void *data) {
+  int status, rc, can_write, i;
+  unsigned int flags;
+  struct timeval tv;
+  tv.tv_sec = BIG_TIMEOUT;
+  tv.tv_usec = 0;
+  struct event_set_return esr[4];
+  tme_openvpn_sock *sock = data;
+  struct link_socket_actual from;               /* address of incoming datagram */
+
+  event_reset(sock->event_set);
+    
+  flags = EVENT_READ;
+    
+  can_write = sock->eth->tme_eth_can_write;
+  if(!can_write) {
+    /* wait for signal transition to write */
+    flags |= EVENT_WRITE;
+  }
+
+  socket_set(sock->ls, sock->event_set, flags, (void*)0, NULL);
+  rc = event_wait(sock->event_set, &tv, esr, SIZE(esr));
+
+  for (i = 0; i < rc; ++i) {
+    if(esr[i].rwflags & EVENT_READ) {
+      ASSERT(buf_init(&sock->inbuf, FRAME_HEADROOM_ADJ(&sock->frame, FRAME_HEADROOM_MARKER_READ_LINK)));
+
+      status = link_socket_read(sock->ls,
+				&sock->inbuf,
+				MAX_RW_SIZE_LINK(&sock->frame),
+				&from);
+      //      if (socket_connection_reset (link_socket, status))
+      /* check recvfrom status */
+      check_status (status, "read", sock->ls, NULL);
+      if(sock->inbuf.len > 0) {
+	if(!link_socket_verify_incoming_addr(&sock->inbuf, &sock->ls->info, &from))
+	  link_socket_bad_incoming_addr(&sock->inbuf, &sock->ls->info, &from);
+	//	link_socket_set_outgoing_addr (&sock->inbuf, &sock->ls->info, &from, NULL, es);
+	/* Did we just receive an openvpn ping packet? */
+	if (is_ping_msg (&sock->inbuf)) {
+	  dmsg (D_PING, "RECEIVED PING PACKET");
+	  sock->inbuf.len = 0; /* drop packet */
+	}
+      }
+    }
+    if(esr[i].rwflags & EVENT_WRITE)
+      can_write = TRUE;
+  }
+  return sock->inbuf.len;
+}
+#endif // !TME_THREADS_SJLJ
 
 /* the new TAP function: */
-TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn_socket,link) {
+TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,link_socket) {
+  int rc;
   int sz;
-  struct link_socket *sock;
+  int fd = 0;
+  void *data = NULL;
+  struct link_socket *ls;
+  struct frame frame;
 
-  sz = openvpn_setup(args, NULL, &sock);
+  openvpn_setup(args, NULL, &ls, &frame);
+  sz = BUF_SIZE(&frame);
   
-  return tme_eth_init(element,
-		      sock,
-		      sz, NULL, NULL, NULL);
+#ifdef TME_THREADS_SJLJ
+  fd = tt->fd;
+#else
+  int event_set_max = 4;
+  unsigned int flags = EVENT_METHOD_FAST;
+  tme_openvpn_sock *sock = data = tme_new0(tme_openvpn_sock, 1);
+  
+  sock->ls = ls;
+  sock->inbuf = alloc_buf(sz);
+  sock->outbuf = alloc_buf(sz);
+  sock->event_set = event_set_init(&event_set_max, flags);
+#endif
+  rc = tme_eth_init(element,
+		    fd,
+		    sz,
+		    data,
+		    NULL,
+		    NULL);
+  
+#ifndef TME_THREADS_SJLJ
+  if(rc == TME_OK) {
+    /* recover our data structure: */
+    sock->eth = (struct tme_ethernet *) element->tme_element_private;
+    sock->eth->tme_ethernet_write = _tme_openvpn_sock_write;
+    sock->eth->tme_ethernet_read = _tme_openvpn_sock_read;
+    sock->eth->tme_eth_buffer = BPTR(&sock->inbuf);
+    sock->eth->tme_eth_out = BPTR(&sock->outbuf);
+  }
+#endif
+  return rc;
 }

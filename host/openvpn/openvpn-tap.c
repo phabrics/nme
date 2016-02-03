@@ -43,6 +43,7 @@
 typedef struct _tme_openvpn_tun {
   struct tme_ethernet *eth;
   struct tuntap *tt;
+  struct frame frame;
   struct event_set *event_set;
   struct buffer inbuf;
   struct buffer outbuf;
@@ -60,7 +61,6 @@ static int _tme_openvpn_tun_write(void *data) {
 }
 
 static int _tme_openvpn_tun_read(void *data) {
-  ssize_t buffer_end;
   int rc, can_write, i;
   unsigned int flags;
   struct timeval tv;
@@ -72,34 +72,30 @@ static int _tme_openvpn_tun_read(void *data) {
   event_reset(tun->event_set);
     
   flags = EVENT_READ;
-    
   can_write = tun->eth->tme_eth_can_write;
+    
   if(!can_write) {
     /* wait for signal transition to write */
     flags |= EVENT_WRITE;
   }
 
   tun_set(tun->tt, tun->event_set, flags, (void*)0, NULL);
-  buffer_end = rc = event_wait(tun->event_set, &tv, esr, SIZE(esr));
-
+  rc = event_wait(tun->event_set, &tv, esr, SIZE(esr));
+  
   for (i = 0; i < rc; ++i) {
     if(esr[i].rwflags & EVENT_READ) {
 #ifdef TUN_PASS_BUFFER
-      read_tun_buffered(tun->tt,
-			&tun->inbuf,
-			tun->eth->tme_eth_buffer_size);
-      buffer_end = tun->inbuf.len;
+      read_tun_buffered(tun->tt, &tun->inbuf, MAX_RW_SIZE_TUN(&tun->frame));
 #else
-      buffer_end =
-	read_tun(tun->tt,
-		 BPTR(&tun->inbuf),
-		 tun->eth->tme_eth_buffer_size);
+      ASSERT(buf_init(&tun->inbuf, FRAME_HEADROOM(&tun->frame)));
+      ASSERT(buf_safe(&tun->inbuf, MAX_RW_SIZE_TUN(&tun->frame)));
+      tun->inbuf.len = read_tun(tun->tt, BPTR(&tun->inbuf), MAX_RW_SIZE_TUN(&tun->frame));
 #endif
     }
     if(esr[i].rwflags & EVENT_WRITE)
       can_write = TRUE;
   }
-  return buffer_end;
+  return tun->inbuf.len;
 }
 #endif // !TME_THREADS_SJLJ
 
@@ -111,8 +107,10 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tun_tap) {
   int fd = 0;
   void *data = NULL;
   struct tuntap *tt;
+  struct frame frame;
   
-  sz = openvpn_setup(args, &tt, NULL);
+  openvpn_setup(args, &tt, NULL, &frame);
+  sz = BUF_SIZE(&frame);
 
 #ifdef TME_THREADS_SJLJ
   fd = tt->fd;
@@ -122,6 +120,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tun_tap) {
   tme_openvpn_tun *tun = data = tme_new0(tme_openvpn_tun, 1);
   
   tun->tt = tt;
+  tun->frame = frame;
   tun->inbuf = alloc_buf(sz);
   tun->outbuf = alloc_buf(sz);
   tun->event_set = event_set_init(&event_set_max, flags);
