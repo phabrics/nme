@@ -34,15 +34,10 @@
 #include <tme/common.h>
 
 /* includes: */
-#include "syshead.h"
+#include "openvpn-setup.h"
 #include "options.h"
 
-static struct gc_arena gc;
-static struct env_set *es;
-static struct options options;       /**< Options loaded from command line or
-				      *   configuration file. */
-struct link_socket_addr link_socket_addr; /**< Local and remote addresses on the
-					   *   external network. */
+struct gc_arena gc;
 
 const struct link_socket *accept_from; /* possibly do accept() on a parent link_socket */
 
@@ -51,34 +46,34 @@ struct signal_info *sig;      /**< Internal error signaling object. */
 struct signal_info siginfo_static; /* GLOBAL */
 
 static inline
-struct tuntap *setup_tuntap(struct frame *frame) {
+struct tuntap *setup_tuntap(struct frame *frame, struct link_socket_addr *lsa, struct options *options, struct env_set *es) {
   /* TUN/TAP specific stuff */
-  struct tuntap *tt = init_tun(options.dev,
-			       options.dev_type,
-			       options.topology,
-			       options.ifconfig_local,
-			       options.ifconfig_remote_netmask,
-			       options.ifconfig_ipv6_local,
-			       options.ifconfig_ipv6_netbits,
-			       options.ifconfig_ipv6_remote,
-			       addr_host(&link_socket_addr.local),
-			       addr_host(&link_socket_addr.remote),
-			       !options.ifconfig_nowarn,
+  struct tuntap *tt = init_tun(options->dev,
+			       options->dev_type,
+			       options->topology,
+			       options->ifconfig_local,
+			       options->ifconfig_remote_netmask,
+			       options->ifconfig_ipv6_local,
+			       options->ifconfig_ipv6_netbits,
+			       options->ifconfig_ipv6_remote,
+			       ((lsa!=NULL) ? (addr_host(&lsa->local)) : (0)),
+			       ((lsa!=NULL) ? (addr_host(&lsa->remote)) : (0)),
+			       !options->ifconfig_nowarn,
 			       es);
 
   if(!tt) return tt;
 
   /* flag tunnel for IPv6 config if --tun-ipv6 is set */
-  tt->ipv6 = options.tun_ipv6;
+  tt->ipv6 = options->tun_ipv6;
 
-  init_tun_post(tt, frame, &options.tuntap_options);
+  init_tun_post(tt, frame, &options->tuntap_options);
   
   if(ifconfig_order() == IFCONFIG_BEFORE_TUN_OPEN) {
     /* guess actual tun/tap unit number that will be returned
        by open_tun */
-    const char *guess = guess_tuntap_dev(options.dev,
-					 options.dev_type,
-					 options.dev_node,
+    const char *guess = guess_tuntap_dev(options->dev,
+					 options->dev_type,
+					 options->dev_node,
 					 &gc);
     do_ifconfig(tt, guess, TUN_MTU_SIZE(frame), es);
   }
@@ -88,16 +83,16 @@ struct tuntap *setup_tuntap(struct frame *frame) {
   tt->ipv6 = FALSE;
 #endif
   /* open the tun device */
-  open_tun(options.dev,
-	   options.dev_type,
-	   options.dev_node,
+  open_tun(options->dev,
+	   options->dev_type,
+	   options->dev_node,
 	   tt);
 
-  tt->ipv6 = options.tun_ipv6;
+  tt->ipv6 = options->tun_ipv6;
 
   /* set the hardware address */
-  if(options.lladdr)
-    set_lladdr(tt->actual_name, options.lladdr, es);
+  if(options->lladdr)
+    set_lladdr(tt->actual_name, options->lladdr, es);
   
   /* do ifconfig */
   if(ifconfig_order() == IFCONFIG_AFTER_TUN_OPEN) {
@@ -105,11 +100,11 @@ struct tuntap *setup_tuntap(struct frame *frame) {
   }
   
   /* run the up script */
-  run_up_down(options.up_script,
+  run_up_down(options->up_script,
 	      NULL,
 	      OPENVPN_PLUGIN_UP,
 	      tt->actual_name,
-	      dev_type_string(options.dev, options.dev_type),
+	      dev_type_string(options->dev, options->dev_type),
 	      TUN_MTU_SIZE(frame),
 	      EXPANDED_SIZE(frame),
 	      print_in_addr_t(tt->local, IA_EMPTY_IF_UNDEF, &gc),
@@ -123,22 +118,22 @@ struct tuntap *setup_tuntap(struct frame *frame) {
 }
 
 static inline
-struct link_socket *setup_socket(struct frame *frame) {
+struct link_socket *setup_link_socket(struct frame *frame, struct link_socket_addr *lsa, struct options *options) {
   struct link_socket *link_socket = link_socket_new();
-  unsigned int sockflags = options.sockflags;
+  unsigned int sockflags = options->sockflags;
 
 #if PORT_SHARE
-  if (options.port_share_host && options.port_share_port)
+  if (options->port_share_host && options->port_share_port)
     sockflags |= SF_PORT_SHARE;
 #endif
 
   link_socket_init_phase1 (link_socket,
 			   connection_list_defined (&options),
-			   options.ce.local,
-			   options.ce.local_port,
-			   options.ce.remote,
-			   options.ce.remote_port,
-			   options.ce.proto,
+			   options->ce.local,
+			   options->ce.local_port,
+			   options->ce.remote,
+			   options->ce.remote_port,
+			   options->ce.proto,
 			   LS_MODE_DEFAULT,
 			   accept_from,
 #ifdef ENABLE_HTTP_PROXY
@@ -148,22 +143,22 @@ struct link_socket *setup_socket(struct frame *frame) {
 			   socks_proxy,
 #endif
 #ifdef ENABLE_DEBUG
-			   options.gremlin,
+			   options->gremlin,
 #endif
-			   options.ce.bind_local,
-			   options.ce.remote_float,
-			   options.inetd,
-			   &link_socket_addr,
-			   options.ipchange,
+			   options->ce.bind_local,
+			   options->ce.remote_float,
+			   options->inetd,
+			   lsa,
+			   options->ipchange,
 			   NULL,
-			   options.resolve_retry_seconds,
-			   options.ce.connect_retry_seconds,
-			   options.ce.connect_timeout,
-			   options.ce.connect_retry_max,
-			   options.ce.mtu_discover_type,
-			   options.rcvbuf,
-			   options.sndbuf,
-			   options.mark,
+			   options->resolve_retry_seconds,
+			   options->ce.connect_retry_seconds,
+			   options->ce.connect_timeout,
+			   options->ce.connect_retry_max,
+			   options->ce.mtu_discover_type,
+			   options->rcvbuf,
+			   options->sndbuf,
+			   options->mark,
 			   sockflags);
   
   link_socket_init_phase2(link_socket, frame,
@@ -172,8 +167,17 @@ struct link_socket *setup_socket(struct frame *frame) {
   return link_socket;
 }
 
-int openvpn_setup(const char *args[], struct tuntap **tt, struct link_socket **sock, struct frame *frame) {
+struct frame *openvpn_setup(const char *args[], struct tuntap **tt, struct link_socket **sock, struct env_set **es) {
   int arg_i;
+  struct options options;       /**< Options loaded from command line or
+				 *   configuration file. */
+  struct frame *frame;
+  struct link_socket_addr *lsa; /**< Local and remote addresses on the
+				 *   external network. */
+  struct env_set *_es;
+
+  frame = tme_new0(struct frame, 1);
+  lsa = tme_new0(struct link_socket_addr, 1);
 
   gc = gc_new ();  
   arg_i = 0;
@@ -183,17 +187,17 @@ int openvpn_setup(const char *args[], struct tuntap **tt, struct link_socket **s
   error_reset();
 
   /* initialize environmental variable store */
-  es = env_set_create(NULL);
+  _es = env_set_create(NULL);
 #ifdef WIN32
   init_win32();
-  set_win_sys_path_via_env(es);
+  set_win_sys_path_via_env(_es);
 #endif
 
   /* initialize options to default state */
   init_options(&options, true);
 
   /* parse command line options, and read configuration file */
-  parse_argv(&options, arg_i, args, M_USAGE, OPT_P_DEFAULT, NULL, es);
+  parse_argv(&options, arg_i, args, M_USAGE, OPT_P_DEFAULT, NULL, _es);
 
   /* set dev options */
   init_options_dev(&options);
@@ -212,7 +216,7 @@ int openvpn_setup(const char *args[], struct tuntap **tt, struct link_socket **s
   pre_setup(&options);
 
   /* set certain options as environmental variables */
-  setenv_settings(es, &options);
+  setenv_settings(_es, &options);
 
   memset(frame, 0, sizeof(*frame));  
   /*
@@ -236,9 +240,12 @@ int openvpn_setup(const char *args[], struct tuntap **tt, struct link_socket **s
 
   sig = &siginfo_static;
   
-  if(sock) *sock = setup_socket(frame);
+  if(sock) *sock = setup_link_socket(frame, lsa, &options);
   
   /* tun/tap persist command? */
   if(!do_persist_tuntap(&options) && tt)
-    *tt = setup_tuntap(frame);
+    *tt = setup_tuntap(frame, lsa, &options, _es);
+
+  if(es) *es = _es;
+  return frame;
 }

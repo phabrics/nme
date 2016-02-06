@@ -35,15 +35,13 @@
 
 /* includes: */
 #include "eth-if.h"
-#include "syshead.h"
-#include "tun.h"
-#include "options.h"
+#include "openvpn-setup.h"
 
 #ifndef TME_THREADS_SJLJ
 typedef struct _tme_openvpn_tun {
   struct tme_ethernet *eth;
   struct tuntap *tt;
-  struct frame frame;
+  struct frame *frame;
   struct event_set *event_set;
   struct buffer inbuf;
   struct buffer outbuf;
@@ -85,11 +83,11 @@ static int _tme_openvpn_tun_read(void *data) {
   for (i = 0; i < rc; ++i) {
     if(esr[i].rwflags & EVENT_READ) {
 #ifdef TUN_PASS_BUFFER
-      read_tun_buffered(tun->tt, &tun->inbuf, MAX_RW_SIZE_TUN(&tun->frame));
+      read_tun_buffered(tun->tt, &tun->inbuf, MAX_RW_SIZE_TUN(tun->frame));
 #else
-      ASSERT(buf_init(&tun->inbuf, FRAME_HEADROOM(&tun->frame)));
-      ASSERT(buf_safe(&tun->inbuf, MAX_RW_SIZE_TUN(&tun->frame)));
-      tun->inbuf.len = read_tun(tun->tt, BPTR(&tun->inbuf), MAX_RW_SIZE_TUN(&tun->frame));
+      ASSERT(buf_init(&tun->inbuf, 0));
+      ASSERT(buf_safe(&tun->inbuf, MAX_RW_SIZE_TUN(tun->frame)));
+      tun->inbuf.len = read_tun(tun->tt, BPTR(&tun->inbuf), MAX_RW_SIZE_TUN(tun->frame));
 #endif
     }
     if(esr[i].rwflags & EVENT_WRITE)
@@ -103,14 +101,11 @@ static int _tme_openvpn_tun_read(void *data) {
 TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tun_tap) {
   int rc;
   unsigned char *hwaddr = NULL;
-  int sz;
   int fd = 0;
   void *data = NULL;
   struct tuntap *tt;
-  struct frame frame;
-  
-  openvpn_setup(args, &tt, NULL, &frame);
-  sz = BUF_SIZE(&frame);
+  struct frame *frame = openvpn_setup(args, &tt, NULL, NULL);
+  int sz = BUF_SIZE(frame);
 
 #ifdef TME_THREADS_SJLJ
   fd = tt->fd;

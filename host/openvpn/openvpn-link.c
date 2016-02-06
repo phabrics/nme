@@ -35,15 +35,14 @@
 
 /* includes: */
 #include "eth-if.h"
-#include "syshead.h"
-#include "socket.h"
-#include "options.h"
+#include "openvpn-setup.h"
 
 #ifndef TME_THREADS_SJLJ
 typedef struct _tme_openvpn_sock {
   struct tme_ethernet *eth;
   struct link_socket *ls;
-  struct frame frame;
+  struct env_set *es;
+  struct frame *frame;
   struct event_set *event_set;
   struct buffer inbuf;
   struct buffer outbuf;
@@ -88,11 +87,10 @@ static int _tme_openvpn_sock_read(void *data) {
 
   for (i = 0; i < rc; ++i) {
     if(esr[i].rwflags & EVENT_READ) {
-      ASSERT(buf_init(&sock->inbuf, FRAME_HEADROOM_ADJ(&sock->frame, FRAME_HEADROOM_MARKER_READ_LINK)));
-
+      ASSERT(buf_init(&sock->inbuf, 0));
       status = link_socket_read(sock->ls,
 				&sock->inbuf,
-				MAX_RW_SIZE_LINK(&sock->frame),
+				MAX_RW_SIZE_LINK(sock->frame),
 				&from);
       //      if (socket_connection_reset (link_socket, status))
       /* check recvfrom status */
@@ -100,7 +98,7 @@ static int _tme_openvpn_sock_read(void *data) {
       if(sock->inbuf.len > 0) {
 	if(!link_socket_verify_incoming_addr(&sock->inbuf, &sock->ls->info, &from))
 	  link_socket_bad_incoming_addr(&sock->inbuf, &sock->ls->info, &from);
-	//	link_socket_set_outgoing_addr (&sock->inbuf, &sock->ls->info, &from, NULL, es);
+	link_socket_set_outgoing_addr(&sock->inbuf, &sock->ls->info, &from, NULL, sock->es);
 	/* Did we just receive an openvpn ping packet? */
 	if (is_ping_msg (&sock->inbuf)) {
 	  dmsg (D_PING, "RECEIVED PING PACKET");
@@ -116,25 +114,25 @@ static int _tme_openvpn_sock_read(void *data) {
 #endif // !TME_THREADS_SJLJ
 
 /* the new TAP function: */
-TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,link_socket) {
+TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,socket_link) {
   int rc;
-  int sz;
   int fd = 0;
   void *data = NULL;
   struct link_socket *ls;
-  struct frame frame;
-
-  openvpn_setup(args, NULL, &ls, &frame);
-  sz = BUF_SIZE(&frame);
+  struct env_set *es;
+  struct frame *frame = openvpn_setup(args, NULL, &ls, &es);
+  int sz = BUF_SIZE(frame);
   
 #ifdef TME_THREADS_SJLJ
-  fd = tt->fd;
+  fd = ls->fd;
 #else
   int event_set_max = 4;
   unsigned int flags = EVENT_METHOD_FAST;
   tme_openvpn_sock *sock = data = tme_new0(tme_openvpn_sock, 1);
   
   sock->ls = ls;
+  sock->es = es;
+  sock->frame = frame;
   sock->inbuf = alloc_buf(sz);
   sock->outbuf = alloc_buf(sz);
   sock->event_set = event_set_init(&event_set_max, flags);
