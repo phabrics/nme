@@ -128,7 +128,7 @@ struct link_socket *setup_link_socket(struct frame *frame, struct link_socket_ad
 #endif
 
   link_socket_init_phase1 (link_socket,
-			   connection_list_defined (&options),
+			   connection_list_defined(options),
 			   options->ce.local,
 			   options->ce.local_port,
 			   options->ce.remote,
@@ -225,6 +225,13 @@ struct frame *openvpn_setup(const char *args[], struct tuntap **tt, struct link_
   if(options.ce.tun_mtu_extra_defined)
     tun_adjust_frame_parameters(frame, options.ce.tun_mtu_extra);
 
+  /*
+   * Adjust frame size based on link socket parameters.
+   * (Since TCP is a stream protocol, we need to insert
+   * a packet length uint16_t in the buffer.)
+   */
+  socket_adjust_frame_parameters(frame, options.ce.proto);
+
   /* See frame_finalize_options (struct context *c, const struct options *o) */
   frame_align_to_extra_frame(frame);
   frame_or_align_flags(frame,
@@ -237,6 +244,17 @@ struct frame *openvpn_setup(const char *args[], struct tuntap **tt, struct link_
 		 options.ce.link_mtu,
 		 options.ce.tun_mtu_defined,
 		 options.ce.tun_mtu);
+
+  /* packets with peer-id (P_DATA_V2) need 3 extra bytes in frame (on client)
+   * and need link_mtu+3 bytes on socket reception (on server).
+   *
+   * accomodate receive path in f->extra_link
+   *            send path in f->extra_buffer (+leave room for alignment)
+   *
+   * f->extra_frame is adjusted when peer-id option is push-received
+   */
+  frame_add_to_extra_link(frame, 3);
+  frame_add_to_extra_buffer(frame, 8);
 
   sig = &siginfo_static;
   

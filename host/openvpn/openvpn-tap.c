@@ -85,8 +85,7 @@ static int _tme_openvpn_tun_read(void *data) {
 #ifdef TUN_PASS_BUFFER
       read_tun_buffered(tun->tt, &tun->inbuf, MAX_RW_SIZE_TUN(tun->frame));
 #else
-      ASSERT(buf_init(&tun->inbuf, 0));
-      ASSERT(buf_safe(&tun->inbuf, MAX_RW_SIZE_TUN(tun->frame)));
+      ASSERT(buf_init(&tun->inbuf, FRAME_HEADROOM(tun->frame)));
       tun->inbuf.len = read_tun(tun->tt, BPTR(&tun->inbuf), MAX_RW_SIZE_TUN(tun->frame));
 #endif
     }
@@ -154,7 +153,11 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tun_tap) {
     tun->eth = (struct tme_ethernet *) element->tme_element_private;
     tun->eth->tme_ethernet_write = _tme_openvpn_tun_write;
     tun->eth->tme_ethernet_read = _tme_openvpn_tun_read;
+    ASSERT(buf_init(&tun->inbuf, FRAME_HEADROOM(tun->frame)));
+    ASSERT(buf_safe(&tun->inbuf, MAX_RW_SIZE_TUN(tun->frame)));
     tun->eth->tme_eth_buffer = BPTR(&tun->inbuf);
+    ASSERT(buf_init(&tun->outbuf, FRAME_HEADROOM_ADJ(tun->frame, FRAME_HEADROOM_MARKER_READ_LINK)));
+    ASSERT(buf_safe(&tun->outbuf, MAX_RW_SIZE_TUN(tun->frame)));
     tun->eth->tme_eth_out = BPTR(&tun->outbuf);
   }
 #endif

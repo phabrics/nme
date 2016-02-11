@@ -55,7 +55,7 @@ tme_host_openvpn_la_SOURCES = \
         openvpn.c openvpn.h \
 	openvpn-link.c \
 	openvpn-plugin.h \
-	openvpn-setup.c \
+	openvpn-setup.c openvpn-setup.h \
 	openvpn-tap.c \
 	options.c options.h \
 	otime.c otime.h \

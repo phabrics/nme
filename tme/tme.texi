@@ -885,6 +885,35 @@ networking.
 @node OpenVPN
 @subsection OpenVPN
 
+TME networking capabilities are expanded using the OpenVPN tools.  These
+come included with TME to provide alternate methods for network access,
+besides the built-in BPF and TAP.  One advantage of using these is that,
+in some cases, they allow for greater portability to platforms that
+don't have native BPF or TAP.  Another pro is that OpenVPN provides
+value-added capabilities such as encryption, fragmentation, compression,
+virtual networking, and scripting.  These can be used to greatly
+expand the domain of application to larger systems.  There is an
+ongoing effort to bring in more of this functionality over time.
+
+To begin with, some OpenVPN capability has been imported using modules
+that map to certain elements in the OpenVPN program.  In particular,
+TUN/TAP devices and link sockets are two new TME elements that
+can be used to network machines and hosts.  The elements can
+be thought of as subsets of OpenVPN itself, with the capabilities
+specified using the same command-line options that it provides.
+Some will work and some won't, depending on what has been implemented,
+and what is needed for that element.
+
+The following sections outline these methods.
+
+@menu
+* Auto NAT::
+* Manual NAT::
+@end menu
+
+@node OpenVPN TUN/TAP Devices
+@subsubsection OpenVPN TUN/TAP Devices
+
 Preliminary support for OpenVPN is now provided for the purposes of
 creating and using TAP devices on multiple platforms.  OpenVPN is
 compiled in as another host module, with a special tap leaf interface,
@@ -901,6 +930,82 @@ these:
 
 Note that this is currently the only way to get networking support
 under Windows.  
+
+@node OpenVPN Socket Link Devices
+@subsubsection OpenVPN Socket Link Devices
+
+OpenVPN provides network links via sockets, for the purposes of creating
+private networks over existing L3 networks, using IP protocols.  We
+use this to expand ethernet networking capability with P2P links between
+network elements of machines on different host machines or networks.  These
+links are also known as tunnels because they can be used to make virtual
+networks through physical networks.
+
+The usage is quite simple:  network elements are connected to link elements
+in the same fashion as they are connected to other devices.  You can think
+of them as virtual ethernet or TAP devices.  The link elements are paired
+together, and can be in the same or other machine configurations to provide
+a bridge for the ethernet traffic to flow between them.
+
+Link elements are paired by IP address.  They are implemented using sockets,
+so they have a local and remote address.  The local address must be specified;
+the remote may be specified or floating.  The encapsulating protocol may be
+specified as UDP (stateless) or TCP (session-oriented).  In the latter case,
+both machines must be running and connected for either to proceed.
+
+The sample machine configurations provide examples of different scenarios where
+they might be used.  The simplest is a peer-to-peer connection between two
+machines (or even two elements theoretically).  This demonstrates the extreme
+flexibility of TME in specifying different network configurations over other
+networks which might not have the needed resources or topology.  In particular,
+TAP devices aren't available on every platform (ex: Cygwin).  You can bridge
+between a platform that doesn't and one that does to give external network
+access.  Once again, the possibilities are limited only by the firewalls.  You
+can also use proxies to overcome this (not yet implemented, but coming soon),
+or customize the firewall rules.
+
+Here is the peer-to-peer connection specification:
+
+Machine A -
+@code{link0 at le0: tme/host/openvpn/socket/link --dev tap --local 192.168.0.1 --remote 192.168.0.2}
+
+Machine B -
+@code{link1 at le0: tme/host/openvpn/socket/link --dev tap --local 192.168.0.2 --remote 192.168.0.1}
+
+This creates a network of two machines, but no external access.
+
+Here's a network description that allows for two remote machines, each on different hosts, to be connected to
+two local machines, networked using the BPF/TAP combo, and connected externally via AutoNAT.
+
+Host 1:
+Machine A -
+@code{tap1: tme/host/tun/tap inet 10.0.77.1 netmask 255.255.255.0 bcast 10.0.77.255}
+@code{link2 at tap1: tme/host/openvpn/socket/link --dev tap --local 192.168.0.1 --remote 192.168.0.2 --proto tcp-server}
+@code{bpf1 at le0: tme/host/bsd/bpf interface tap0}
+
+Machine B -
+@code{link3: tme/host/openvpn/socket/link --dev tap --local 192.168.0.1 --lport 1195 --remote 192.168.0.3}
+@code{bpf1 at le0: tme/host/bsd/bpf interface tap0}
+@code{bpf2 at link3: tme/host/bsd/bpf interface tap0}
+
+Host 2:
+Machine B -
+@code{link4 at le0: tme/host/openvpn/socket/link --dev tap --local 192.168.0.2 --remote 192.168.0.1 --proto tcp-client}
+
+Machine D -
+@code{link5 at le0: tme/host/openvpn/socket/link --dev tap --local 192.168.0.3 --remote 192.168.0.1 1195}
+
+To avoid confusion, element names in the samples are unique, but the actual names of elements are unimportant,
+so long as they are unique within a single machine configuration.  Also, when connecting more than one link,
+different ports must be used (or the addresses must otherwise be unique, perhaps using different interfaces).
+OpenVPN allows for shared ports, but it hasn't been tested yet.  The default protocol is UDP, but TCP can be
+used as well, using the --proto argument to the openvpn element as shown above.
+
+As you can tell, this can get pretty complicated.  The following section is a discussion of the BPF/TAP
+network bridge, for making a local network on the host.  The capabilities and documentation will continue
+to improve, but TME is a great platform for experimentation.  Perhaps, there are other configurations
+that have yet to be thought of... or better ways of accomplishing these tasks.  There are no correct methods,
+but these idioms are a good starting point.
 
 @node Network Descriptions
 @subsection Network Descriptions

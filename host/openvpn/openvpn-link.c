@@ -37,13 +37,14 @@
 #include "eth-if.h"
 #include "openvpn-setup.h"
 
-#ifndef TME_THREADS_SJLJ
 typedef struct _tme_openvpn_sock {
   struct tme_ethernet *eth;
   struct link_socket *ls;
   struct env_set *es;
   struct frame *frame;
+#ifndef TME_THREADS_SJLJ
   struct event_set *event_set;
+#endif
   struct buffer inbuf;
   struct buffer outbuf;
 } tme_openvpn_sock;
@@ -63,14 +64,30 @@ static int _tme_openvpn_sock_write(void *data) {
 }
 
 static int _tme_openvpn_sock_read(void *data) {
-  int status, rc, can_write, i;
+  int status, rc;
+  tme_openvpn_sock *sock = data;
+  struct link_socket_actual from;               /* address of incoming datagram */
+#ifdef TME_THREADS_SJLJ
+  fd_set fdset_read_in;
+
+  /* select on the fd for reading: */
+  FD_ZERO(&fdset_read_in);
+  FD_SET(sock->ls->sd, &fdset_read_in);
+  rc = tme_sjlj_select_yield(sock->ls->sd + 1,
+			     &fdset_read_in,
+			     NULL,
+			     NULL,
+			     NULL);
+  if (rc != 1) {
+    return (rc);
+  }
+#else
+  int can_write, i;
   unsigned int flags;
   struct timeval tv;
   tv.tv_sec = BIG_TIMEOUT;
   tv.tv_usec = 0;
   struct event_set_return esr[4];
-  tme_openvpn_sock *sock = data;
-  struct link_socket_actual from;               /* address of incoming datagram */
 
   event_reset(sock->event_set);
     
@@ -84,10 +101,13 @@ static int _tme_openvpn_sock_read(void *data) {
 
   socket_set(sock->ls, sock->event_set, flags, (void*)0, NULL);
   rc = event_wait(sock->event_set, &tv, esr, SIZE(esr));
-
+  
   for (i = 0; i < rc; ++i) {
+    if(esr[i].rwflags & EVENT_WRITE)
+      can_write = TRUE;
     if(esr[i].rwflags & EVENT_READ) {
-      ASSERT(buf_init(&sock->inbuf, 0));
+#endif
+      ASSERT(buf_init(&sock->inbuf, FRAME_HEADROOM_ADJ(sock->frame, FRAME_HEADROOM_MARKER_READ_LINK)));
       status = link_socket_read(sock->ls,
 				&sock->inbuf,
 				MAX_RW_SIZE_LINK(sock->frame),
@@ -105,13 +125,12 @@ static int _tme_openvpn_sock_read(void *data) {
 	  sock->inbuf.len = 0; /* drop packet */
 	}
       }
+#ifndef TME_THREADS_SJLJ
     }
-    if(esr[i].rwflags & EVENT_WRITE)
-      can_write = TRUE;
   }
+#endif
   return sock->inbuf.len;
 }
-#endif // !TME_THREADS_SJLJ
 
 /* the new TAP function: */
 TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,socket_link) {
@@ -122,12 +141,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,socket_link) {
   struct env_set *es;
   struct frame *frame = openvpn_setup(args, NULL, &ls, &es);
   int sz = BUF_SIZE(frame);
-  
-#ifdef TME_THREADS_SJLJ
-  fd = ls->fd;
-#else
-  int event_set_max = 4;
-  unsigned int flags = EVENT_METHOD_FAST;
   tme_openvpn_sock *sock = data = tme_new0(tme_openvpn_sock, 1);
   
   sock->ls = ls;
@@ -135,6 +148,11 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,socket_link) {
   sock->frame = frame;
   sock->inbuf = alloc_buf(sz);
   sock->outbuf = alloc_buf(sz);
+  
+#ifndef TME_THREADS_SJLJ
+  int event_set_max = 4;
+  unsigned int flags = EVENT_METHOD_FAST;
+
   sock->event_set = event_set_init(&event_set_max, flags);
 #endif
   rc = tme_eth_init(element,
@@ -144,15 +162,17 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,socket_link) {
 		    NULL,
 		    NULL);
   
-#ifndef TME_THREADS_SJLJ
   if(rc == TME_OK) {
     /* recover our data structure: */
     sock->eth = (struct tme_ethernet *) element->tme_element_private;
     sock->eth->tme_ethernet_write = _tme_openvpn_sock_write;
     sock->eth->tme_ethernet_read = _tme_openvpn_sock_read;
+    ASSERT(buf_init(&sock->inbuf, FRAME_HEADROOM_ADJ(sock->frame, FRAME_HEADROOM_MARKER_READ_LINK)));
+    ASSERT(buf_safe(&sock->inbuf, MAX_RW_SIZE_LINK(sock->frame)));
     sock->eth->tme_eth_buffer = BPTR(&sock->inbuf);
+    ASSERT(buf_init(&sock->outbuf, FRAME_HEADROOM(sock->frame)));
+    ASSERT(buf_safe(&sock->outbuf, MAX_RW_SIZE_LINK(sock->frame)));
     sock->eth->tme_eth_out = BPTR(&sock->outbuf);
   }
-#endif
   return rc;
 }
