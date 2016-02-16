@@ -53,6 +53,8 @@ static int _tme_openvpn_sock_write(void *data) {
   tme_openvpn_sock *sock = data;
   struct link_socket_actual *to_addr;	/* IP address of remote */
   
+  ASSERT(buf_init(&sock->outbuf, FRAME_HEADROOM(sock->frame)));
+
   sock->outbuf.len = sock->eth->tme_eth_data_length;
   /*
    * Get the address we will be sending the packet to.
@@ -125,6 +127,7 @@ static int _tme_openvpn_sock_read(void *data) {
 	  sock->inbuf.len = 0; /* drop packet */
 	}
       }
+      sock->eth->tme_eth_buffer = BPTR(&sock->inbuf);
 #ifndef TME_THREADS_SJLJ
     }
   }

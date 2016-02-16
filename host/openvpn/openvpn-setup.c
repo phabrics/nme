@@ -199,6 +199,11 @@ struct frame *openvpn_setup(const char *args[], struct tuntap **tt, struct link_
   /* parse command line options, and read configuration file */
   parse_argv(&options, arg_i, args, M_USAGE, OPT_P_DEFAULT, NULL, _es);
 
+  /* set verbosity and mute levels */
+  set_check_status(D_LINK_ERRORS, D_READ_WRITE);
+  set_debug_level(options.verbosity, SDL_CONSTRAIN);
+  set_mute_cutoff(options.mute);
+
   /* set dev options */
   init_options_dev(&options);
 

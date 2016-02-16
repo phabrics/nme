@@ -907,8 +907,8 @@ and what is needed for that element.
 The following sections outline these methods.
 
 @menu
-* Auto NAT::
-* Manual NAT::
+* OpenVPN TUN/TAP Devices::
+* OpenVPN Socket Link Devices::
 @end menu
 
 @node OpenVPN TUN/TAP Devices
