@@ -72,6 +72,11 @@ static int _tme_openvpn_sock_read(void *data) {
 #ifdef TME_THREADS_SJLJ
   fd_set fdset_read_in;
 
+  stream_buf_read_setup(sock->ls);
+#ifdef WIN32
+  socket_recv_queue(sock->ls, 0);
+#endif
+  
   /* select on the fd for reading: */
   FD_ZERO(&fdset_read_in);
   FD_SET(sock->ls->sd, &fdset_read_in);
@@ -114,7 +119,11 @@ static int _tme_openvpn_sock_read(void *data) {
 				&sock->inbuf,
 				MAX_RW_SIZE_LINK(sock->frame),
 				&from);
-      //      if (socket_connection_reset (link_socket, status))
+      if(socket_connection_reset(sock->ls, status)) {
+	//	register_signal (c, SIGUSR1, "connection-reset"); /* SOFT-SIGUSR1 -- TCP connection reset */
+	msg (D_STREAM_ERRORS, "Connection reset, restarting [%d]", status);
+      }
+	
       /* check recvfrom status */
       check_status (status, "read", sock->ls, NULL);
       if(sock->inbuf.len > 0) {
