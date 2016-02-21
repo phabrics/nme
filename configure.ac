@@ -640,14 +640,17 @@ linux*)
    SETCAP="chmod u+s"
 #   SETCAP="setcap cap_sys_nice,cap_net_admin,cap_net_raw+ep"
    ;;
-mingw*|cygwin*)
+mingw*)
    AC_DEFINE([TARGET_WIN32], [1], [Are we running WIN32?])
    AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["W"], [Target prefix])
    CPPFLAGS="${CPPFLAGS} -DWIN32_LEAN_AND_MEAN"
    CPPFLAGS="${CPPFLAGS} -DNTDDI_VERSION=NTDDI_WINXP -D_WIN32_WINNT=_WIN32_WINNT_WINXP"
    WIN32=yes
    SETCAP="chmod u+s"
-   TGTPFX="${host}-"
+   ;;
+cygwin*)   
+   WIN32=cygwin
+   SETCAP="chmod u+s"
    ;;
 solaris*)
    AC_DEFINE([TARGET_SOLARIS], [1], [Are we running on Solaris?])
@@ -1320,7 +1323,7 @@ if test "${enable_iproute2}" = "yes"; then
 	test -z "${IPROUTE}" && AC_MSG_ERROR([ip utility is required but missing])
 	AC_DEFINE([ENABLE_IPROUTE], [1], [enable iproute2 support])
 else
-	if test "${WIN32}" != "yes"; then
+	if test -z "${WIN32}"; then
 		test -z "${ROUTE}" && AC_MSG_ERROR([route utility is required but missing])
 		test -z "${IFCONFIG}" && AC_MSG_ERROR([ifconfig utility is required but missing])
 	fi
