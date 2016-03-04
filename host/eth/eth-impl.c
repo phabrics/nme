@@ -44,6 +44,7 @@ _TME_RCSID("$Id: eth-if.c,v 1.3 2003/10/16 02:48:23 fredette Exp $");
 #define TME_ETH_CALLOUTS_MASK	(-2)
 #define TME_ETH_CALLOUT_CTRL	TME_BIT(1)
 #define TME_ETH_CALLOUT_READ	TME_BIT(2)
+#define TME_ETH_CALLOUT_CONFIG	TME_BIT(3)
 
 /* ARP and RARP opcodes: */
 #define TME_NET_ARP_OPCODE_REQUEST	(0x0001)
@@ -87,6 +88,8 @@ _tme_eth_callout(struct tme_ethernet *eth, int new_callouts)
   int status;
   tme_ethernet_fid_t frame_id;
   struct tme_ethernet_frame_chunk frame_chunk_buffer;
+  struct tme_ethernet_config config;
+  const tme_uint8_t *config_addrs[2];
   
   /* add in any new callouts: */
   eth->tme_eth_callout_flags |= new_callouts;
@@ -113,6 +116,45 @@ _tme_eth_callout(struct tme_ethernet *eth, int new_callouts)
     /* get our Ethernet connection: */
     conn_eth = eth->tme_eth_eth_connection;
 
+    /* if we need to call out new config information: */
+    if (callouts & TME_ETH_CALLOUT_CONFIG) {
+      
+      /* form the new config: */
+      memset(&config, 0, sizeof(config));
+
+      /* if we're in promiscuous mode or any bits the logical address
+	 filter are nonzero: */
+      if (!eth->tme_eth_addr) {
+	/* we have to be in promiscuous mode: */
+	config.tme_ethernet_config_flags |= TME_ETHERNET_CONFIG_PROMISC;
+      }
+
+      /* otherwise, we only need to see packets addressed to our
+	 physical address, and broadcast packets: */
+      else {
+      
+	/* our Ethernet addresses: */
+	config.tme_ethernet_config_addr_count = 2;
+	config_addrs[0] = eth->tme_eth_addr;
+	config_addrs[1] = &tme_ethernet_addr_broadcast[0];
+	config.tme_ethernet_config_addrs = config_addrs;
+      }
+
+      /* unlock the mutex: */
+      tme_mutex_unlock(&eth->tme_eth_mutex);
+      
+      /* do the callout: */
+      rc = (conn_eth == NULL
+	    ? TME_OK
+	    : ((*conn_eth->tme_ethernet_connection_config)
+	       (conn_eth,
+		&config)));
+      assert (rc == TME_OK);
+      
+      /* lock the mutex: */
+      tme_mutex_lock(&eth->tme_eth_mutex);
+    }
+    
     /* if we need to call out new control information: */
     if (callouts & TME_ETH_CALLOUT_CTRL) {
 
@@ -284,25 +326,14 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
 #endif
     tme_mutex_lock(&eth->tme_eth_mutex);
 
-#ifdef OPENVPN_ETH
-    if(can_write && !eth->tme_eth_can_write) {
-      /* signal transition that we can write */
-      eth->tme_eth_can_write = TRUE;	 
-      //_tme_eth_callout(eth, TME_ETH_CALLOUT_CTRL);
-    }
-#endif
-
     /* if the read failed: */
     if(buffer_end <= 0) {
-#ifdef OPENVPN_ETH
-      if(!can_write)
-#endif
-	tme_log(&eth->tme_eth_element->tme_element_log_handle, 1, errno,
-		(&eth->tme_eth_element->tme_element_log_handle,
-		 _("failed to read/write packets")));
+      tme_log(&eth->tme_eth_element->tme_element_log_handle, 1, errno,
+	      (&eth->tme_eth_element->tme_element_log_handle,
+	       _("failed to read/write packets")));
       continue;
     }
-
+    
     /* Filter out multicast packets we sent or unicast packets not destined for us. 
        This should remove all duplicate packets on, i.e., tap interfaces...
      */
@@ -385,7 +416,7 @@ _tme_eth_config(struct tme_ethernet_connection *conn_eth,
   if(!(config->tme_ethernet_config_flags & TME_ETHERNET_CONFIG_PROMISC ||
        (eth->tme_eth_addr && (config->tme_ethernet_config_addr_count > 0) &&
 	memcmp(eth->tme_eth_addr,
-	       config->tme_ethernet_config_addrs,
+	       config->tme_ethernet_config_addrs[0],
 	       TME_ETHERNET_ADDR_SIZE))))
     return TME_OK;
   
@@ -920,9 +951,9 @@ int tme_eth_init(struct tme_element *element,
   eth->tme_eth_buffer_size = sz;
   eth->tme_eth_buffer_offset = 0;
   eth->tme_eth_buffer_end = 0;
-  eth->tme_eth_can_write = TRUE;
   eth->tme_eth_data = data;
   eth->tme_eth_addr = addr;
+  eth->tme_eth_callout_flags = TME_ETH_CALLOUT_CONFIG;
   
   /* start the threads: */
   tme_mutex_init(&eth->tme_eth_mutex);

@@ -39,4 +39,7 @@
 #include "tun.h"
 #include "ping.h"
 
-struct frame *openvpn_setup _TME_P((const char *args[], struct tuntap **tt, struct link_socket **sock, struct env_set **es));
+#define OPENVPN_CAN_WRITE 1
+#define OPENVPN_FAST_IO 2
+
+struct frame *openvpn_setup _TME_P((const char *args[], struct tuntap **tt, struct link_socket **sock, struct env_set **es, u_char *flags, struct event_set **event_set));

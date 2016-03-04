@@ -139,7 +139,7 @@ struct link_socket *setup_link_socket(struct frame *frame, struct link_socket_ad
 #ifdef ENABLE_HTTP_PROXY
 			   http_proxy,
 #endif
-#ifdef ENABLE_SOCKS
+#ifdef ENABLE_OPENVPNS
 			   socks_proxy,
 #endif
 #ifdef ENABLE_DEBUG
@@ -167,7 +167,36 @@ struct link_socket *setup_link_socket(struct frame *frame, struct link_socket_ad
   return link_socket;
 }
 
-struct frame *openvpn_setup(const char *args[], struct tuntap **tt, struct link_socket **sock, struct env_set **es) {
+/*
+ * Fast I/O setup.  Fast I/O is an optimization which only works
+ * if all of the following are true:
+ *
+ * (1) The platform is not Windows
+ * (2) --proto udp is enabled
+ * (3) --shaper is disabled
+ */
+static bool
+do_setup_fast_io(struct options *options) {
+  if (options->fast_io) {
+#ifdef WIN32
+    msg (M_INFO, "NOTE: --fast-io is disabled since we are running on Windows");
+#else
+    if (!proto_is_udp(options->ce.proto))
+      msg (M_INFO, "NOTE: --fast-io is disabled since we are not using UDP");
+    else {
+#ifdef ENABLE_FEATURE_SHAPER
+      if (options->shaper)
+	msg (M_INFO, "NOTE: --fast-io is disabled since we are using --shaper");
+      else
+#endif
+	return true;
+    }
+#endif
+  }
+  return false;
+}
+
+struct frame *openvpn_setup(const char *args[], struct tuntap **tt, struct link_socket **sock, struct env_set **es, u_char *flags, struct event_set **event_set) {
   int arg_i;
   struct options options;       /**< Options loaded from command line or
 				 *   configuration file. */
@@ -260,6 +289,16 @@ struct frame *openvpn_setup(const char *args[], struct tuntap **tt, struct link_
    */
   frame_add_to_extra_link(frame, 3);
   frame_add_to_extra_buffer(frame, 8);
+
+  if(do_setup_fast_io(&options))
+    *flags |= OPENVPN_FAST_IO;
+  
+  if(event_set) {
+    int maxevents = 0;
+    if(sock) maxevents++;
+    if(tt) maxevents++;
+    *event_set = event_set_init(&maxevents, EVENT_METHOD_FAST);
+  }
 
   sig = &siginfo_static;
   

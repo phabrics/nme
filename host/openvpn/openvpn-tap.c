@@ -42,6 +42,7 @@ typedef struct _tme_openvpn_tun {
   struct tme_ethernet *eth;
   struct tuntap *tt;
   struct frame *frame;
+  u_char flags;
   struct event_set *event_set;
   struct buffer inbuf;
   struct buffer outbuf;
@@ -51,6 +52,19 @@ static int _tme_openvpn_tun_write(void *data) {
   tme_openvpn_tun *tun = data;
   
   tun->outbuf.len = tun->eth->tme_eth_data_length;
+  if(!(tun->flags & (OPENVPN_CAN_WRITE | OPENVPN_FAST_IO))) {
+    /* unlock our mutex: */
+    tme_mutex_unlock(&tun->eth->tme_eth_mutex);
+      
+    /* sleep for the delay sleep time (msec): */
+    tme_thread_sleep_yield(0, 500);
+      
+    /* lock our mutex: */
+    tme_mutex_lock(&tun->eth->tme_eth_mutex);
+  }
+
+  if(tun->flags & OPENVPN_CAN_WRITE) tun->flags &= ~OPENVPN_CAN_WRITE;
+  
 #ifdef TUN_PASS_BUFFER
   return write_tun_buffered(tun->tt, &tun->outbuf);
 #else
@@ -59,40 +73,42 @@ static int _tme_openvpn_tun_write(void *data) {
 }
 
 static int _tme_openvpn_tun_read(void *data) {
-  int rc, can_write, i;
+  int rc;
   unsigned int flags;
   struct timeval tv;
-  tv.tv_sec = BIG_TIMEOUT;
-  tv.tv_usec = 0;
-  struct event_set_return esr[4];
+  struct event_set_return esr;
   tme_openvpn_tun *tun = data;
 
-  event_reset(tun->event_set);
+  while(1) {
+    event_reset(tun->event_set);
     
-  flags = EVENT_READ;
-  can_write = tun->eth->tme_eth_can_write;
+    flags = EVENT_READ;
     
-  if(!can_write) {
-    /* wait for signal transition to write */
-    flags |= EVENT_WRITE;
-  }
+    if((tun->flags & OPENVPN_CAN_WRITE) && !(tun->flags & OPENVPN_FAST_IO)) {
+      tv.tv_sec = 0;
+      tv.tv_usec = 500000;
+    } else {
+      /* wait for signal transition to write */
+      if(!(tun->flags & OPENVPN_FAST_IO)) flags |= EVENT_WRITE;
+      tv.tv_sec = BIG_TIMEOUT;
+      tv.tv_usec = 0;
+    }
 
-  tun_set(tun->tt, tun->event_set, flags, (void*)0, NULL);
-  rc = event_wait(tun->event_set, &tv, esr, SIZE(esr));
+    tun_set(tun->tt, tun->event_set, flags, (void*)0, NULL);
+    rc = event_wait(tun->event_set, &tv, &esr, 1);
   
-  for (i = 0; i < rc; ++i) {
-    if(esr[i].rwflags & EVENT_READ) {
+    if(esr.rwflags & EVENT_WRITE)
+      tun->flags |= OPENVPN_CAN_WRITE;
+    if(esr.rwflags & EVENT_READ) {
 #ifdef TUN_PASS_BUFFER
       read_tun_buffered(tun->tt, &tun->inbuf, MAX_RW_SIZE_TUN(tun->frame));
 #else
       ASSERT(buf_init(&tun->inbuf, FRAME_HEADROOM(tun->frame)));
       tun->inbuf.len = read_tun(tun->tt, BPTR(&tun->inbuf), MAX_RW_SIZE_TUN(tun->frame));
 #endif
+      return tun->inbuf.len;
     }
-    if(esr[i].rwflags & EVENT_WRITE)
-      can_write = TRUE;
   }
-  return tun->inbuf.len;
 }
 #endif // !TME_THREADS_SJLJ
 
@@ -103,21 +119,28 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tun_tap) {
   int fd = 0;
   void *data = NULL;
   struct tuntap *tt;
-  struct frame *frame = openvpn_setup(args, &tt, NULL, NULL);
+  u_char flags;
+  struct event_set *event_set;
+  struct frame *frame = openvpn_setup(args, &tt, NULL, NULL, &flags,
+#ifdef TME_THREADS_SJLJ
+				      NULL
+#else
+				      &event_set
+#endif
+				      );
   int sz = BUF_SIZE(frame);
 
 #ifdef TME_THREADS_SJLJ
   fd = tt->fd;
 #else
-  int event_set_max = 4;
-  unsigned int flags = EVENT_METHOD_FAST;
   tme_openvpn_tun *tun = data = tme_new0(tme_openvpn_tun, 1);
   
   tun->tt = tt;
   tun->frame = frame;
+  tun->flags = flags | OPENVPN_CAN_WRITE;
   tun->inbuf = alloc_buf(sz);
   tun->outbuf = alloc_buf(sz);
-  tun->event_set = event_set_init(&event_set_max, flags);
+  tun->event_set = event_set;
 #endif
   
   /* find the interface we will use: */
