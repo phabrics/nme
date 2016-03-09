@@ -94,6 +94,10 @@ static int _tme_openvpn_tun_read(void *data) {
       tv.tv_usec = 0;
     }
 
+#if defined(WIN32)
+    tun_show_debug(tun->tt);
+#endif
+
     tun_set(tun->tt, tun->event_set, flags, (void*)0, NULL);
     rc = event_wait(tun->event_set, &tv, &esr, 1);
   
@@ -106,6 +110,7 @@ static int _tme_openvpn_tun_read(void *data) {
       ASSERT(buf_init(&tun->inbuf, FRAME_HEADROOM(tun->frame)));
       tun->inbuf.len = read_tun(tun->tt, BPTR(&tun->inbuf), MAX_RW_SIZE_TUN(tun->frame));
 #endif
+      tun->eth->tme_eth_buffer = BPTR(&tun->inbuf);
       return tun->inbuf.len;
     }
   }
