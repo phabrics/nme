@@ -759,7 +759,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 	    (&element->tme_element_log_handle,
 	     _("couldn't open inet socket to set ip parameters for tap interface %s; try setting them manually using e.g., ifconfig or ip"),
 	     TAPIF));
-    goto exit_nat;
+    goto exit_tap;
   }
   
 #if defined(TUNGIFINFO) && !defined(TAPGIFINFO)
@@ -855,6 +855,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
 #endif
   close(dummy_fd);
 
+ exit_tap:
   /* find the interface we will use: */
   rc = tme_eth_ifaddrs_find(TAPIF, AF_UNSPEC, &ifa, &hwaddr, &hwaddr_len);
   

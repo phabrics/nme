@@ -53,7 +53,7 @@ static _tme_inline int tme_module_init _TME_P((void)) {
 /* this initializes libtme: */
 void tme_init _TME_P((void)) {
   /* initialize the threading system: */
-  tme_threads_init(NULL, NULL, FALSE);
+  tme_threads_init(NULL, tme_threads_main, FALSE);
 
   /* initialize the module system: */
   tme_module_init();

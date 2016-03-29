@@ -722,11 +722,12 @@ tme_eth_ifaddrs_find(const char *ifa_name_user, int family, struct ifaddrs **_if
 #ifdef HAVE_AF_LINK
   #define AF_HWADDR AF_LINK
   struct sockaddr_dl *sadl;
-#endif				/* HAVE_AF_LINK */
+#else				/* HAVE_AF_LINK */
 #ifdef HAVE_AF_PACKET
   #define AF_HWADDR AF_PACKET
   struct sockaddr_ll *sadl;
 #endif				/* HAVE_AF_PACKET */
+#endif 
 #endif 
 
   if (getifaddrs(&ifaddr) == -1) {

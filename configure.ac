@@ -273,7 +273,7 @@ dnl Checks for library functions and prototypes.
 #AC_FUNC_MALLOC
 #AC_FUNC_MMAP
 #AC_FUNC_REALLOC
-AC_CHECK_FUNCS([clock_gettime memmove memset munmap pow ptsname ptsname_r select socket sqrt strchr strerror strrchr strstr strtoul devname fdevname kldfind])
+AC_CHECK_FUNCS([clock_gettime memmove memset munmap pow ptsname ptsname_r sqrt strchr strerror strrchr strstr strtoul devname fdevname kldfind])
 
 SOCKET_INCLUDES="
 #ifdef HAVE_STDLIB_H
@@ -424,6 +424,65 @@ AC_CHECK_FUNCS([ \
 	chsize ftruncate execve getpeereid umask access \
 	epoll_create sendmsg recvmsg
 ])
+
+AC_CHECK_LIB(
+	[dl],
+	[dlopen],
+	[DL_LIBS="-ldl"]
+)
+AC_SUBST([DL_LIBS])
+
+AC_CHECK_LIB(
+	[nsl],
+	[inet_ntoa],
+	[SOCKETS_LIBS="${SOCKETS_LIBS} -lnsl"]
+)
+AC_CHECK_LIB(
+	[socket],
+	[socket],
+	[SOCKETS_LIBS="${SOCKETS_LIBS} -lsocket"]
+)
+AC_CHECK_LIB(
+	[resolv],
+	[gethostbyname],
+	[SOCKETS_LIBS="${SOCKETS_LIBS} -lresolv"]
+)
+AC_SUBST([SOCKETS_LIBS])
+
+old_LIBS="${LIBS}"
+LIBS="${LIBS} ${SOCKETS_LIBS}"
+AC_CHECK_FUNCS([sendmsg recvmsg inet_ntop inet_pton])
+# Windows use stdcall for winsock so we cannot auto detect these
+m4_define(
+	[SOCKET_FUNCS],
+[socket recv recvfrom send sendto listen dnl
+accept connect bind select gethostbyname inet_ntoa]dnl
+)
+m4_define(
+	[SOCKET_OPT_FUNCS],
+	[setsockopt getsockopt getsockname poll]dnl
+)
+if test "${WIN32}" = "yes"; then
+	m4_foreach(
+		[F],
+		m4_split(SOCKET_FUNCS SOCKET_OPT_FUNCS),
+			m4_define([UF], [[m4_join([_], [HAVE], m4_toupper(F))]])
+			AC_DEFINE([UF], [1], [Win32 builtin])
+	)
+else
+	AC_CHECK_FUNCS(
+		SOCKET_FUNCS,
+		,
+		[AC_MSG_ERROR([Required library function not found])]
+	)
+	AC_CHECK_FUNCS(SOCKET_OPT_FUNCS)
+fi
+LIBS="${old_LIBS}"
+
+# we assume res_init() always exist, but need to find out *where*...
+AC_SEARCH_LIBS(__res_init, resolv bind, ,
+    AC_SEARCH_LIBS(res_9_init, resolv bind, ,
+	AC_SEARCH_LIBS(res_init, resolv bind, , )))
 
 AC_REPLACE_FUNCS([basename daemon dirname gettimeofday inet_ntop inet_pton])
 AC_REPLACE_FUNCS([mmap munmap mprotect msync mlock munlock])
@@ -1503,11 +1562,15 @@ TMEEOF
   echo 'typedef tme_uint'`expr $ac_cv_sizeof_void_p \* 8`'_t tme_uintptr_t;' >> ${outfile}-tmp
   echo '#if defined(USE_GLIB_TIME) && defined(_TME_HAVE_GLIB)' >> ${outfile}-tmp
   echo '#include <glib.h>' >> ${outfile}-tmp
+  echo 'typedef GPollFD tme_pollfd_t;' >> ${outfile}-tmp
   echo 'typedef gint64 tme_time_t;' >> ${outfile}-tmp
-  echo '#elif defined(USE_GETTIMEOFDAY) || !defined(_TME_HAVE_CLOCK_GETTIME)' >> ${outfile}-tmp
+  echo '#else' >> ${outfile}-tmp
+  echo 'typedef struct pollfd tme_pollfd_t;' >> ${outfile}-tmp
+  echo '#if defined(USE_GETTIMEOFDAY) || !defined(_TME_HAVE_CLOCK_GETTIME)' >> ${outfile}-tmp
   echo 'typedef struct timeval tme_time_t;' >> ${outfile}-tmp
   echo '#else' >> ${outfile}-tmp
   echo 'typedef struct timespec tme_time_t;' >> ${outfile}-tmp
+  echo '#endif' >> ${outfile}-tmp
   echo '#endif' >> ${outfile}-tmp
   cat <<TMEEOF >> ${outfile}-tmp
 

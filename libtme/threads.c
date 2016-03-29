@@ -86,9 +86,7 @@ void tme_threads_run(void) {
 #endif
   }
   _tme_thread_suspended();  
-#ifdef TME_THREADS_SJLJ
-  tme_sjlj_threads_run(using_glib);
-#endif
+  if(using_glib) tme_threads_glib_yield();
   if(_tme_threads_run) (*_tme_threads_run)();
   while(1) {
     usleep(1000000);
