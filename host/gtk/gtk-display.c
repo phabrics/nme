@@ -307,7 +307,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   }
 
   /* call gtk_init if we haven't already: */
-  tme_threads_init(_tme_gtk_init, gtk_main, TRUE);
+  tme_threads_init(_tme_gtk_init, gtk_main);
 
   /* start our data structure: */
   display = tme_new0(struct tme_gtk_display, 1);

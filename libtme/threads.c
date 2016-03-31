@@ -36,7 +36,7 @@
 
 /* globals: */
 static tme_threads_fn _tme_threads_run;
-static int inited, using_glib;
+static int inited;
 #ifdef TME_THREADS_POSIX
 static pthread_rwlock_t tme_rwlock_start;
 pthread_rwlock_t tme_rwlock_suspere;
@@ -56,9 +56,8 @@ static GRWLock tme_rwlock_start;
 GRWLock tme_rwlock_suspere;
 #endif
 
-void tme_threads_init(tme_threads_fn init, tme_threads_fn run, int use_glib) {
+void tme_threads_init(tme_threads_fn init, tme_threads_fn run) {
   _tme_threads_run = run;
-  using_glib = use_glib;
   if(!inited) {
     _tme_threads_init();
     if(!tme_thread_cooperative()) {
@@ -86,7 +85,7 @@ void tme_threads_run(void) {
 #endif
   }
   _tme_thread_suspended();  
-  if(using_glib) tme_threads_glib_yield();
+  tme_threads_yield();
   if(_tme_threads_run) (*_tme_threads_run)();
   while(1) {
     usleep(1000000);

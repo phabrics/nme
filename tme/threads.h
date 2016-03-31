@@ -46,19 +46,15 @@ _TME_RCSID("$Id: threads.h,v 1.10 2010/06/05 19:36:35 fredette Exp $");
 /* setjmp/longjmp threading: */
 #ifdef TME_THREADS_POSIX
 #include "threads-posix.h"
-#define tme_threads_glib_yield() do { } while (/* CONSTCOND */ 0)
-#define tme_threads_main NULL
 #elif defined(TME_THREADS_GLIB)
 #include "threads-glib.h"
-#define tme_threads_glib_yield() do { } while (/* CONSTCOND */ 0)
-#define tme_threads_main NULL
 #elif defined(TME_THREADS_SJLJ)
 #include "threads-sjlj.h"
 #endif
 
 typedef void (*tme_threads_fn) _TME_P((void));
 
-void tme_threads_init _TME_P((tme_threads_fn init, tme_threads_fn run, int use_glib));
+void tme_threads_init _TME_P((tme_threads_fn init, tme_threads_fn run));
 void tme_threads_run _TME_P((void));
 void tme_thread_enter _TME_P((tme_mutex_t *mutex));
 

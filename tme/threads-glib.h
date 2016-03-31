@@ -45,6 +45,8 @@
 
 /* initializing and starting: */
 #define _tme_threads_init() g_rw_lock_init(&tme_rwlock_suspere)
+#define tme_threads_yield() do { } while (/* CONSTCOND */ 0)
+#define tme_threads_main NULL
 
 /* thread suspension: */
 extern GRWLock tme_rwlock_suspere;
