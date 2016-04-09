@@ -48,19 +48,14 @@
 /* initializing and starting: */
 void tme_sjlj_threads_init _TME_P((void));
 #define _tme_threads_init tme_sjlj_threads_init
+int tme_sjlj_threads_main_iter _TME_P((void));
+#define tme_threads_main_iter tme_sjlj_threads_main_iter
 #ifdef _TME_HAVE_GLIB
-void tme_sjlj_threads_glib_yield _TME_P((void));
-#define tme_threads_yield tme_sjlj_threads_glib_yield
-#define tme_threads_main glib_main
+void tme_sjlj_threads_glib_yield _TME_P((void *));
+#define tme_threads_glib_yield tme_sjlj_threads_glib_yield
 #else
-#define tme_threads_yield() do { } while (/* CONSTCOND */ 0)
-#ifdef _TME_HAVE_SELECT
-void tme_sjlj_threads_main _TME_P((int));
-#define tme_threads_main tme_sjlj_threads_main
-#else
-#define tme_threads_main NULL
+#define tme_threads_glib_yield NULL
 #endif
-#endif /* _TME_HAVE_GLIB */
 
 /* thread suspension: */
 #define tme_thread_suspend_others()	do { } while (/* CONSTCOND */ 0)

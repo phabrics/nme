@@ -35,7 +35,8 @@
 #include <tme/threads.h>
 
 /* globals: */
-static tme_threads_fn _tme_threads_run;
+static tme_threads_fn1 _tme_threads_run;
+static void *_tme_threads_arg;
 static int inited;
 #ifdef TME_THREADS_POSIX
 static pthread_rwlock_t tme_rwlock_start;
@@ -56,8 +57,9 @@ static GRWLock tme_rwlock_start;
 GRWLock tme_rwlock_suspere;
 #endif
 
-void tme_threads_init(tme_threads_fn init, tme_threads_fn run) {
+void tme_threads_init(tme_threads_fn init, tme_threads_fn1 run, void *arg) {
   _tme_threads_run = run;
+  _tme_threads_arg = arg;
   if(!inited) {
     _tme_threads_init();
     if(!tme_thread_cooperative()) {
@@ -84,12 +86,11 @@ void tme_threads_run(void) {
     g_rw_lock_writer_unlock(&tme_rwlock_start);  
 #endif
   }
-  _tme_thread_suspended();  
-  tme_threads_yield();
-  if(_tme_threads_run) (*_tme_threads_run)();
-  while(1) {
-    usleep(1000000);
-  }
+  _tme_thread_suspended();
+  do {
+    if(_tme_threads_run) (*_tme_threads_run)(_tme_threads_arg);
+    else if(_tme_threads_arg) (*(tme_threads_fn)_tme_threads_arg)();
+  } while(!tme_threads_main_iter());
 }
 
 void tme_thread_enter(tme_mutex_t *mutex) {

@@ -1563,9 +1563,11 @@ TMEEOF
   echo '#if defined(USE_GLIB_TIME) && defined(_TME_HAVE_GLIB)' >> ${outfile}-tmp
   echo '#include <glib.h>' >> ${outfile}-tmp
   echo 'typedef GPollFD tme_pollfd_t;' >> ${outfile}-tmp
+  echo 'typedef guint tme_nfds_t;' >> ${outfile}-tmp
   echo 'typedef gint64 tme_time_t;' >> ${outfile}-tmp
   echo '#else' >> ${outfile}-tmp
   echo 'typedef struct pollfd tme_pollfd_t;' >> ${outfile}-tmp
+  echo 'typedef unsigned int tme_nfds_t;' >> ${outfile}-tmp
   echo '#if defined(USE_GETTIMEOFDAY) || !defined(_TME_HAVE_CLOCK_GETTIME)' >> ${outfile}-tmp
   echo 'typedef struct timeval tme_time_t;' >> ${outfile}-tmp
   echo '#else' >> ${outfile}-tmp

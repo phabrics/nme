@@ -45,8 +45,8 @@
 
 /* initializing and starting: */
 #define _tme_threads_init() g_rw_lock_init(&tme_rwlock_suspere)
-#define tme_threads_yield() do { } while (/* CONSTCOND */ 0)
-#define tme_threads_main NULL
+#define tme_threads_main_iter() tme_thread_sleep_yield(1,0)
+#define tme_threads_glib_yield(x) NULL
 
 /* thread suspension: */
 extern GRWLock tme_rwlock_suspere;
@@ -179,6 +179,7 @@ static _tme_inline void tme_thread_sleep_yield _TME_P((unsigned long sec, unsign
   
   _tme_thread_resumed();
 
+  return 0;
 }
 
 /* I/O: */
