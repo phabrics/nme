@@ -90,6 +90,15 @@ struct tme_sjlj_thread {
   /* any condition that this thread is waiting on: */
   tme_cond_t *tme_sjlj_thread_cond;
 
+#ifdef HAVE_SELECT
+  int tme_sjlj_thread_max_fd;
+  
+  /* the thread loop fd sets: */
+  fd_set tme_sjlj_thread_fdset_read;
+  fd_set tme_sjlj_thread_fdset_write;
+  fd_set tme_sjlj_thread_fdset_except;
+#endif
+
   /* true if thread is blocked on an fd: */
   int tme_sjlj_thread_fd_cond;
   
@@ -111,7 +120,7 @@ struct tme_sjlj_thread_fd {
   struct tme_sjlj_thread *tme_sjlj_fd_thread_read;
   struct tme_sjlj_thread *tme_sjlj_fd_thread_write;
   struct tme_sjlj_thread *tme_sjlj_fd_thread_except;
-}
+};
 
 /* globals: */
 
@@ -695,7 +704,7 @@ tme_sjlj_threads_glib_yield(void *mainloop)
   
   if(mainloop) (*(tme_threads_fn)mainloop)();
   
-  glib_main();
+  g_main_loop_run(g_main_loop_new(NULL,TRUE));
 }      
 
 #endif /* HAVE_GLIB */
@@ -808,7 +817,6 @@ tme_sjlj_threads_main_iter()
 
   return 0;
 }
-#endif /* HAVE_SELECT */
 
 /* this creates a new thread: */
 void
@@ -1039,16 +1047,21 @@ tme_sjlj_select_yield(int nfds,
 		      fd_set *fdset_except_in,
 		      tme_time_t *timeout_in)
 {
+  fd_set fdset_read, fdset_write, fdset_except;
   int max_fd_old;
   int max_fd_new;
   int max_fd, fd;
   GIOCondition fd_condition_old;
   GIOCondition fd_condition_new;
   tme_time_t timeout_out;
+  struct tme_sjlj_thread *thread;
   int rc;
 
   /* we can't deal if there are more than FD_SETSIZE fds: */
   assert(nfds <= FD_SETSIZE);
+
+  /* get the active thread: */
+  thread = tme_sjlj_thread_active;
 
   /* in case we end up yielding, we need to save the original
      descriptor sets: */
@@ -1112,7 +1125,7 @@ tme_sjlj_select_yield(int nfds,
     if (fd <= max_fd_new) {
 #define CHECK_FD_SET(fd_set, condition)				\
       do {							\
-	if (FD_ISSET(fd, &fd_set)) {	\
+	if (FD_ISSET(fd, &thread->fd_set)) {	\
 	  fd_condition_new |= condition;			\
 	  FD_SET(fd, &thread->fd_set);				\
 	}							\
@@ -1120,9 +1133,9 @@ tme_sjlj_select_yield(int nfds,
 	  FD_CLR(fd, &thread->fd_set);				\
 	}							\
       } while (/* CONSTCOND */ 0)
-      CHECK_FD_SET(fdset_read, G_IO_IN);
-      CHECK_FD_SET(fdset_write, G_IO_OUT);
-      CHECK_FD_SET(fdset_except, G_IO_ERR);
+      CHECK_FD_SET(tme_sjlj_thread_fdset_read, G_IO_IN);
+      CHECK_FD_SET(tme_sjlj_thread_fdset_write, G_IO_OUT);
+      CHECK_FD_SET(tme_sjlj_thread_fdset_except, G_IO_ERR);
 #undef CHECK_FD_SET
     }
 

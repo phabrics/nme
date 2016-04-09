@@ -63,7 +63,7 @@ static int tme_thread_cooperative() {
 /* initializing and starting: */
 #define _tme_threads_init() pthread_rwlock_init(&tme_rwlock_suspere, NULL)
 #define tme_threads_main_iter() tme_thread_sleep_yield(1,0)
-#define tme_threads_glib_yield(x) NULL
+#define tme_threads_glib_yield 0
 
 /* thread suspension: */
 extern pthread_rwlock_t tme_rwlock_suspere;

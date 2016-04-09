@@ -171,8 +171,10 @@ _tme_gtk_display_callout(struct tme_gtk_display *display,
   /* put in any later callouts, and clear that callouts are running: */
   display->tme_gtk_display_callout_flags = later_callouts;
 
+#if (tme_threads_glib_yield != 0)
   /* yield to GTK: */
   tme_threads_glib_yield(NULL);
+#endif
 }
 
 /* this is a GTK callback for an enter notify event, that has the

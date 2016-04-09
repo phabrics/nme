@@ -46,7 +46,7 @@
 /* initializing and starting: */
 #define _tme_threads_init() g_rw_lock_init(&tme_rwlock_suspere)
 #define tme_threads_main_iter() tme_thread_sleep_yield(1,0)
-#define tme_threads_glib_yield(x) NULL
+#define tme_threads_glib_yield 0
 
 /* thread suspension: */
 extern GRWLock tme_rwlock_suspere;
@@ -172,7 +172,7 @@ static _tme_inline void tme_thread_create _TME_P((tme_threadid_t *t, tme_thread_
 #define tme_thread_exit() return NULL
 
 /* sleeping: */
-static _tme_inline void tme_thread_sleep_yield _TME_P((unsigned long sec, unsigned long usec)) { 
+static _tme_inline int tme_thread_sleep_yield _TME_P((unsigned long sec, unsigned long usec)) { 
   _tme_thread_suspended();
 
   g_usleep(usec + sec * G_USEC_PER_SEC);

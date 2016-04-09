@@ -54,7 +54,7 @@ int tme_sjlj_threads_main_iter _TME_P((void));
 void tme_sjlj_threads_glib_yield _TME_P((void *));
 #define tme_threads_glib_yield tme_sjlj_threads_glib_yield
 #else
-#define tme_threads_glib_yield NULL
+#define tme_threads_glib_yield 0
 #endif
 
 /* thread suspension: */
