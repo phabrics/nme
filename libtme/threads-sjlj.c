@@ -1311,6 +1311,7 @@ tme_sjlj_yield(void)
   if(tme_sjlj_thread_blocked.tme_sjlj_thread_fd_cond != 0) {
     blocked = TRUE;
   }
+  tme_sjlj_thread_blocked.tme_sjlj_thread_fd_cond = 0;
   
   /* see if this thread is blocked for some amount of time: */
   if (!TME_TIME_EQV(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep, 0, 0)) {
