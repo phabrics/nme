@@ -57,7 +57,7 @@ static GRWLock tme_rwlock_start;
 GRWLock tme_rwlock_suspere;
 #endif
 
-void tme_threads_init(tme_threads_fn init, tme_threads_fn1 run, void *arg) {
+void tme_threads_init(tme_threads_fn1 run, void *arg) {
   _tme_threads_run = run;
   _tme_threads_arg = arg;
   if(!inited) {
@@ -74,8 +74,6 @@ void tme_threads_init(tme_threads_fn init, tme_threads_fn1 run, void *arg) {
     _tme_thread_resumed();  
     inited=TRUE;
   }
-  if(init)
-    (*init)();
 }
 
 void tme_threads_run(void) {
@@ -87,10 +85,8 @@ void tme_threads_run(void) {
 #endif
   }
   _tme_thread_suspended();
-  do {
-    if(_tme_threads_run) (*_tme_threads_run)(_tme_threads_arg);
-    else if(_tme_threads_arg) (*(tme_threads_fn)_tme_threads_arg)();
-  } while(!tme_threads_main_iter());
+  /* Run the main loop */
+  for(;!(*_tme_threads_run)(_tme_threads_arg););
 }
 
 void tme_thread_enter(tme_mutex_t *mutex) {

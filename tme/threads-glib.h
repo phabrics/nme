@@ -45,8 +45,6 @@
 
 /* initializing and starting: */
 #define _tme_threads_init() g_rw_lock_init(&tme_rwlock_suspere)
-#define tme_threads_main_iter() tme_thread_sleep_yield(1,0)
-#define tme_threads_glib_yield 0
 
 /* thread suspension: */
 extern GRWLock tme_rwlock_suspere;
@@ -180,6 +178,11 @@ static _tme_inline int tme_thread_sleep_yield _TME_P((unsigned long sec, unsigne
   _tme_thread_resumed();
 
   return 0;
+}
+
+/* A default main iterator for use in the main thread loop */
+static _tme_inline int tme_threads_main_iter _TME_P((void *usec)) {
+  tme_thread_sleep_yield(0,(usec) ? (unsigned long)usec : 1000000);
 }
 
 /* I/O: */

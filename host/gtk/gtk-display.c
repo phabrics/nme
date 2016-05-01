@@ -171,8 +171,8 @@ _tme_gtk_display_callout(struct tme_gtk_display *display,
   /* put in any later callouts, and clear that callouts are running: */
   display->tme_gtk_display_callout_flags = later_callouts;
 
-#if (tme_threads_glib_yield != 0)
   /* yield to GTK: */
+#ifdef tme_threads_glib_yield
   tme_threads_glib_yield(NULL);
 #endif
 }
@@ -309,8 +309,9 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   }
 
   /* call gtk_init if we haven't already: */
-  tme_threads_init(_tme_gtk_init, tme_threads_glib_yield, gtk_main);
-
+  tme_threads_init(tme_threads_main_iter, gtk_main);
+  _tme_gtk_init();
+  
   /* start our data structure: */
   display = tme_new0(struct tme_gtk_display, 1);
   display->tme_gtk_display_element = element;

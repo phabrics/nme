@@ -48,13 +48,16 @@
 /* initializing and starting: */
 void tme_sjlj_threads_init _TME_P((void));
 #define _tme_threads_init tme_sjlj_threads_init
-int tme_sjlj_threads_main_iter _TME_P((void));
-#define tme_threads_main_iter tme_sjlj_threads_main_iter
+int tme_sjlj_threads_main_iter _TME_P((void *event_check));
 #ifdef _TME_HAVE_GLIB
-void tme_sjlj_threads_glib_yield _TME_P((void *));
+void tme_sjlj_threads_glib_yield _TME_P((void *main_loop));
+#endif
+
+#if defined(USE_GLIB_TIME) && defined(_TME_HAVE_GLIB)
+#define tme_threads_main_iter tme_sjlj_threads_glib_yield
 #define tme_threads_glib_yield tme_sjlj_threads_glib_yield
 #else
-#define tme_threads_glib_yield 0
+#define tme_threads_main_iter tme_sjlj_threads_main_iter
 #endif
 
 /* thread suspension: */
