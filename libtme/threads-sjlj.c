@@ -717,7 +717,7 @@ tme_sjlj_threads_main_iter(void *event_check)
   
   if(tme_sjlj_threads_all == NULL) return -1;
 
-  //  events = (*(tme_threads_fn1)event_check)();
+  (*(tme_threads_fn)event_check)();
   
   /* if we have file descriptors to select on: */
   if (tme_sjlj_main_max_fd >= 0) {

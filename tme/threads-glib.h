@@ -182,7 +182,8 @@ static _tme_inline int tme_thread_sleep_yield _TME_P((unsigned long sec, unsigne
 
 /* A default main iterator for use in the main thread loop */
 static _tme_inline int tme_threads_main_iter _TME_P((void *usec)) {
-  tme_thread_sleep_yield(0,(usec) ? (unsigned long)usec : 1000000);
+  g_usleep((usec) ? (unsigned long)usec : 1000000);
+  return 0;
 }
 
 /* I/O: */

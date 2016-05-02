@@ -86,7 +86,10 @@ void tme_threads_run(void) {
   }
   _tme_thread_suspended();
   /* Run the main loop */
-  for(;!(*_tme_threads_run)(_tme_threads_arg););
+  if(_tme_threads_run)
+    for(;!(*_tme_threads_run)(_tme_threads_arg););
+  else
+    (*(tme_threads_fn)_tme_threads_arg)();
 }
 
 void tme_thread_enter(tme_mutex_t *mutex) {

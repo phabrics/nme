@@ -41,8 +41,11 @@ _TME_RCSID("$Id: gtk-display.c,v 1.4 2010/06/05 14:28:17 fredette Exp $");
 
 /* macros: */
 
-void _tme_gtk_init(void)
-{
+static _tme_inline void _tme_gtk_main_iter(void) {
+  gtk_main_iteration_do(FALSE);
+}
+
+static void _tme_gtk_init(void) {
   char **argv;
   char *argv_buffer[3];
   int argc;
@@ -309,7 +312,13 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   }
 
   /* call gtk_init if we haven't already: */
-  tme_threads_init(tme_threads_main_iter, gtk_main);
+#ifdef tme_threads_glib_yield
+  tme_threads_init(tme_threads_glib_yield, gtk_main);
+#elif defined(tme_threads_main_iter)
+  tme_threads_init(tme_threads_main_iter, _tme_gtk_main_iter);
+#else
+  tme_threads_init(NULL, gtk_main);
+#endif
   _tme_gtk_init();
   
   /* start our data structure: */
