@@ -41,32 +41,13 @@ _TME_RCSID("$Id: threads-sjlj.c,v 1.18 2010/06/05 19:10:28 fredette Exp $");
 #include <stdlib.h>
 #include <sys/time.h>
 #include <time.h>
-#ifdef HAVE_SYS_SELECT_H
-#include <sys/select.h>
-#endif
-#ifdef HAVE_POLL_H
-#include <poll.h>
-#endif
 #include <setjmp.h>
-
-/* if we don't have GLIB, fake a few definitions to keep things
-   compiling: */
-#ifdef HAVE_GLIB
-#ifndef G_ENABLE_DEBUG
-#define G_ENABLE_DEBUG (0)
-#endif /* !G_ENABLE_DEBUG */
-#include <glib.h>
-#else  /* !HAVE_GLIB */
-typedef int GIOCondition;
-#define G_IO_IN		TME_BIT(0)
-#define G_IO_OUT		TME_BIT(1)
-#define G_IO_ERR	TME_BIT(2)
-#endif /* !HAVE_GLIB */
 
 /* thread states: */
 #define TME_SJLJ_THREAD_STATE_BLOCKED		(1)
 #define TME_SJLJ_THREAD_STATE_RUNNABLE		(2)
 #define TME_SJLJ_THREAD_STATE_DISPATCHING	(3)
+#define TME_MAX_FD 1023
 
 /* types: */
 
@@ -90,7 +71,8 @@ struct tme_sjlj_thread {
   /* any condition that this thread is waiting on: */
   tme_cond_t *tme_sjlj_thread_cond;
 
-  /* any fds that this thread is waiting on: */
+  /* range of fds that this thread is waiting on: */
+  int tme_sjlj_thread_min_fd;
   int tme_sjlj_thread_max_fd;
   
   /* if nonzero, the amount of time that this thread is sleeping,
@@ -107,7 +89,7 @@ struct tme_sjlj_thread {
 
 /* thread(s) blocked on a file descriptor */
 struct tme_sjlj_thread_fd {
-  GIOCondition tme_sjlj_fd_thread_conditions;
+  unsigned int tme_sjlj_fd_thread_conditions;
   struct tme_sjlj_thread *tme_sjlj_fd_thread_read;
   struct tme_sjlj_thread *tme_sjlj_fd_thread_write;
   struct tme_sjlj_thread *tme_sjlj_fd_thread_except;
@@ -140,18 +122,11 @@ static int tme_sjlj_thread_exiting;
 /* this is a jmp_buf back to the dispatcher: */
 static jmp_buf tme_sjlj_dispatcher_jmp;
 
-/* number of fds to select/poll on */
-static int tme_sjlj_main_max_fd;
-
-#ifdef HAVE_SELECT
-/* the main loop fd sets: */
-static fd_set tme_sjlj_main_fdset_read;
-static fd_set tme_sjlj_main_fdset_write;
-static fd_set tme_sjlj_main_fdset_except;
-#endif
+/* the main loop events: */
+static struct event_set *tme_sjlj_main_events;
 
 /* for each file descriptor, any threads blocked on it: */
-static struct tme_sjlj_thread_fd tme_sjlj_fd_thread[FD_SETSIZE];
+static struct tme_sjlj_thread_fd tme_sjlj_fd_thread[TME_MAX_FD + 1];
 
 /* the dispatch number: */
 static tme_uint32_t _tme_sjlj_thread_dispatch_number;
@@ -162,36 +137,13 @@ static tme_time_t _tme_sjlj_now;
 /* if nonzero, the last dispatched thread ran for only a short time: */
 int tme_sjlj_thread_short;
 
-#ifdef HAVE_GLIB
-
-/* nonzero iff we're using the glib main loop: */
-static int tme_sjlj_using_glib;
-
-/* for each file descriptor, the GLIB tag for the fd event source: */
-static gint tme_sjlj_fd_tag[FD_SETSIZE];
-
-/* this set iff the idle callback is set: */
-static int tme_sjlj_idle_set;
-
-/* any timeout source ID: */
-static guint _tme_sjlj_glib_timeout_id;
-
-/* any timeout time: */
-static tme_time_t _tme_sjlj_glib_timeout;
-
-#endif /* HAVE_GLIB */
-
 /* this initializes the threads system: */
 void
 tme_sjlj_threads_init()
 {
-  int fd;
-
-#ifdef HAVE_GLIB
-  /* assume that we won't be using the GLIB main loop: */
-  tme_sjlj_using_glib = FALSE;
-  tme_sjlj_idle_set = FALSE;
-#endif
+  int fd = TME_MAX_FD + 1;
+  int i;
+  
   /* there are no threads: */
   tme_sjlj_threads_all = NULL;
   tme_sjlj_threads_timeout = NULL;
@@ -201,22 +153,19 @@ tme_sjlj_threads_init()
   tme_sjlj_thread_exiting = FALSE;
 
   /* no threads are waiting on any fds: */
-  tme_sjlj_main_max_fd = -1;
-#ifdef HAVE_SELECT
-  FD_ZERO(&tme_sjlj_main_fdset_read);
-  FD_ZERO(&tme_sjlj_main_fdset_write);
-  FD_ZERO(&tme_sjlj_main_fdset_except);
-  for (fd = 0; fd < FD_SETSIZE; fd++) {
+  tme_sjlj_main_events = event_set_init(&fd, 0);
+  
+  for (i = 0; i < fd; i++) {
     tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_conditions = 0;
     tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_read = NULL;
     tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_write = NULL;
     tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_except = NULL;
   }
-#endif
-  tme_sjlj_thread_blocked.tme_sjlj_thread_max_fd = -1;
 
   /* initialize the thread-blocked structure: */
   tme_sjlj_thread_blocked.tme_sjlj_thread_cond = NULL;
+  tme_sjlj_thread_blocked.tme_sjlj_thread_min_fd = TME_MAX_FD + 1;
+  tme_sjlj_thread_blocked.tme_sjlj_thread_max_fd = -1;
   TME_TIME_SETV(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep, 0, 0);
 }
 
@@ -361,7 +310,7 @@ _tme_sjlj_threads_dispatching_timeout(void)
    the dispatching list: */
 static void
 _tme_sjlj_threads_dispatching_fd(int fd,
-				 GIOCondition fd_conditions)
+				 unsigned int fd_conditions)
 {
   struct tme_sjlj_thread *thread;
   struct tme_sjlj_thread_fd *fd_thread = &tme_sjlj_fd_thread[fd];
@@ -372,9 +321,9 @@ _tme_sjlj_threads_dispatching_fd(int fd,
        fd_conditions &= (fd_conditions - 1)) {
 
     /* move the thread for this condition to the dispatching list: */
-    thread = ((fd_conditions & G_IO_IN)
+    thread = ((fd_conditions & EVENT_READ)
 	      ? fd_thread->tme_sjlj_fd_thread_read
-	      : (fd_conditions & G_IO_OUT)
+	      : (fd_conditions & EVENT_WRITE)
 	      ? fd_thread->tme_sjlj_fd_thread_write
 	      : fd_thread->tme_sjlj_fd_thread_except);
     assert (thread != NULL);
@@ -384,7 +333,7 @@ _tme_sjlj_threads_dispatching_fd(int fd,
 
 /* this makes the timeout time: */
 static void
-_tme_sjlj_timeout_time(tme_time_t *timeout)
+_tme_sjlj_timeout_time(struct timeval *timeout)
 {
   tme_time_t now;
   struct tme_sjlj_thread *thread_timeout;
@@ -427,7 +376,8 @@ _tme_sjlj_timeout_time(tme_time_t *timeout)
   }
 
   /* return the timeout time: */
-  TME_TIME_SETV(*timeout, secs, usecs);
+  timeout->tv_val = secs;
+  timeout->tv_usec = usecs;
 }
 
 /* this dispatches all dispatching threads: */
@@ -504,231 +454,20 @@ tme_sjlj_dispatch(volatile int passes)
   _tme_sjlj_thread_dispatch_number++;
 }
 
-#ifdef HAVE_GLIB
-
-/* this handles a GLIB callback for a timeout: */
-static gint
-_tme_sjlj_glib_callback_timeout(gpointer callback_pointer)
-{
-
-  /* we were in GLIB for an unknown amount of time: */
-  tme_thread_long();
-
-  /* this GLIB timeout will soon be removed, so forget it: */
-  _tme_sjlj_glib_timeout_id = 0;
-
-  /* move all threads that have timed out to the dispatching list: */
-  _tme_sjlj_threads_dispatching_timeout();
-
-  /* dispatch: */
-  tme_sjlj_dispatch(1);
-
-  /* yield to GLIB: */
-  tme_sjlj_threads_glib_yield(NULL);
-
-  /* remove this timeout: */
-  return (FALSE);
-
-  /* unused: */
-  callback_pointer = 0;
-}
-
-/* this handles a GLIB callback for a file descriptor: */
-static gboolean
-_tme_sjlj_glib_callback_fd(GIOChannel *chan,
-			   GIOCondition fd_conditions,
-			   gpointer callback_pointer)
-{
-
-  /* we were in GLIB for an unknown amount of time: */
-  tme_thread_long();
-
-  /* move all threads that match the conditions on this file
-     descriptor to the dispatching list: */
-  _tme_sjlj_threads_dispatching_fd(g_io_channel_unix_get_fd(chan), fd_conditions);
-
-  /* dispatch: */
-  tme_sjlj_dispatch(1);
-
-  /* yield to GLIB: */
-  tme_sjlj_threads_glib_yield(NULL);
-
-  /* unused: */
-  callback_pointer = 0;
-
-  return TRUE;
-}
-
-/* this handles a GLIB callback for an idle: */
-static gint
-_tme_sjlj_glib_callback_idle(gpointer callback_pointer)
-{
-
-  /* we were in GLIB for an unknown amount of time: */
-  tme_thread_long();
-
-  /* move all runnable threads to the dispatching list: */
-  _tme_sjlj_threads_dispatching_runnable();
-
-  /* move all threads that have timed out to the dispatching list: */
-  _tme_sjlj_threads_dispatching_timeout();
-
-  /* dispatch: */
-  tme_sjlj_dispatch(1);
-
-  /* yield to GLIB: */
-  tme_sjlj_threads_glib_yield(NULL);
-
-  /* if there are no runnable threads: */
-  if (tme_sjlj_threads_runnable == NULL) {
-
-    /* remove this idle: */
-    tme_sjlj_idle_set = FALSE;
-    return (FALSE);
-  }
-
-  /* preserve this idle: */
-  return (TRUE);
-
-  /* unused: */
-  callback_pointer = 0;
-}
-
-/* this yields to GLIB: */
-void
-tme_sjlj_threads_glib_yield(void *main_loop)
-{
-  struct tme_sjlj_thread *thread_timeout;
-  tme_time_t timeout;
-  unsigned long secs;
-  tme_uint32_t msecs;
-
-  /* if there are no runnable threads: */
-  if (tme_sjlj_threads_runnable == NULL) {
-    /* if there are no threads at all: */
-    if (__tme_predict_false(tme_sjlj_threads_all == NULL)) {
-
-      tme_sjlj_using_glib = FALSE;
-  
-      /* quit the GLIB main loop: */
-      //      glib_main_quit();
-      return;
-    }
-
-    /* if there is a GLIB timeout, but the timeout list is empty or the
-       GLIB timeout isn't for the earliest timeout: */
-    thread_timeout = tme_sjlj_threads_timeout;
-    if (_tme_sjlj_glib_timeout_id != 0
-	&& (thread_timeout == NULL
-	    || !TME_TIME_EQ(_tme_sjlj_glib_timeout, thread_timeout->tme_sjlj_thread_timeout))) {
-      /* remove the GLIB timeout: */
-      g_source_remove(_tme_sjlj_glib_timeout_id);
-      _tme_sjlj_glib_timeout_id = 0;
-    }
-
-    /* if the timeout list is not empty, but there is no GLIB timeout: */
-    if (tme_sjlj_threads_timeout != NULL
-	&& _tme_sjlj_glib_timeout_id == 0) {
-
-      /* get the timeout: */
-      _tme_sjlj_timeout_time(&timeout);
-
-      /* if there are still no runnable threads: */
-      /* NB: if the earliest timeout has already timed out,
-	 _tme_sjlj_timeout_time() has already made the thread
-	 runnable: */
-      if (tme_sjlj_threads_runnable == NULL) {
-
-	/* convert the timeout into milliseconds, and clip it at ten
-	   seconds: */
-	secs = TME_TIME_GET_SEC(timeout);
-	msecs = (TME_TIME_GET_FRAC(timeout) + 999) / 1000;
-	if (msecs == 1000) {
-	  secs++;
-	  msecs = 0;
-	}
-	msecs
-	  = (secs >= 10
-	     ? (10 * 1000)
-	     : ((secs * 1000) + msecs));
-
-	/* GLIB timeouts can expire up to one millisecond early, so we
-	   always add one: */
-	msecs++;
-
-	/* add the timeout: */
-	/* XXX we have to call g_timeout_add_full here, because
-	   there are no glib_timeout_add_ functions that allow you to
-	   specify the priority, and glib_timeout_add() uses
-	   G_PRIORITY_DEFAULT, which means our (usually very
-	   frequent) timeouts always win over glib's event handling,
-	   meaning the glib windows never update: */
-	_tme_sjlj_glib_timeout_id
-	  = g_timeout_add_full(G_PRIORITY_DEFAULT_IDLE,
-			       msecs,
-			       _tme_sjlj_glib_callback_timeout,
-			       NULL,
-			       NULL);
-	assert (_tme_sjlj_glib_timeout_id != 0);
-	_tme_sjlj_glib_timeout = tme_sjlj_threads_timeout->tme_sjlj_thread_timeout;
-      }
-    }
-  }
-
-  /* if there are runnable threads: */
-  if (tme_sjlj_threads_runnable != NULL) {
-
-    /* if the idle callback isn't set */
-    if (!tme_sjlj_idle_set) {
-
-      /* set the idle callback: */
-      g_idle_add_full(G_PRIORITY_DEFAULT_IDLE,
-		      _tme_sjlj_glib_callback_idle,
-		      NULL, NULL);
-      tme_sjlj_idle_set = TRUE;
-    }
-  }
-
-  if(tme_sjlj_using_glib) return;
-
-  tme_sjlj_using_glib = TRUE;
-  
-  if(main_loop) (*(tme_threads_fn)main_loop)();
-  
-  g_main_loop_run(g_main_loop_new(NULL,TRUE));
-}      
-
-#endif /* HAVE_GLIB */
-
 /* this is the main loop iteration function: */
 int
 tme_sjlj_threads_main_iter(void *event_check)
 {
   int fd;
-#ifdef HAVE_SELECT
-  fd_set fdset_read_out;
-  fd_set fdset_write_out;
-  fd_set fdset_except_out;
-#endif
-  GIOCondition fd_conditions;
-  tme_time_t timeout_buffer;
-  tme_time_t *timeout;
+  struct timeval timeout_buffer;
+  struct timeval *timeout;
   int rc;
+  struct event_set_return esr[64];
   
   if(tme_sjlj_threads_all == NULL) return -1;
 
   (*(tme_threads_fn)event_check)();
   
-  /* if we have file descriptors to select on: */
-  if (tme_sjlj_main_max_fd >= 0) {
-#ifdef HAVE_SELECT
-    /* make the fd sets: */
-    fdset_read_out = tme_sjlj_main_fdset_read;
-    fdset_write_out = tme_sjlj_main_fdset_write;
-    fdset_except_out = tme_sjlj_main_fdset_except;
-#endif
-  }
-
   /* make the select timeout: */
 
   /* if the timeout list is empty: */
@@ -739,32 +478,22 @@ tme_sjlj_threads_main_iter(void *event_check)
        at all in select), or we must be selecting on file
        descriptors: */
     timeout = NULL;
-    assert (tme_sjlj_threads_runnable != NULL
-	    || tme_sjlj_main_max_fd >= 0);
+    assert (tme_sjlj_threads_runnable != NULL);
+	    //	    || tme_sjlj_main_max_fd >= 0);
   }
 
   /* otherwise, the timeout list is not empty: */
   else {
-
-    /* make the timeout: */
-    _tme_sjlj_timeout_time(&timeout_buffer);
+    timeout_buffer.tv_val = 0;
+    timeout_buffer.tv_usec = 0;
     timeout = &timeout_buffer;
+
+    if (tme_sjlj_threads_runnable == NULL)  
+      /* if there are no runnable threads, make the timeout: */
+      _tme_sjlj_timeout_time(timeout);
   }
 
-  /* if there are runnable threads, make this a poll: */
-  if (tme_sjlj_threads_runnable != NULL) {
-    TME_TIME_SETV(timeout_buffer, 0, 0);
-    timeout = &timeout_buffer;
-  }
-
-#ifdef HAVE_SELECT
-  /* do the select: */
-  rc = tme_select(tme_sjlj_main_max_fd + 1,
-		  &fdset_read_out,
-		  &fdset_write_out,
-		  &fdset_except_out,
-		  timeout);
-#endif
+  rc = event_wait(tme_sjlj_main_events, timeout, esr, SIZE(esr));
   
   /* we were in select() for an unknown amount of time: */
   tme_thread_long();
@@ -777,30 +506,15 @@ tme_sjlj_threads_main_iter(void *event_check)
 
   /* if some fds are ready, dispatch them: */
   if (rc > 0) {	
-    for (fd = tme_sjlj_main_max_fd; fd >= 0; fd--) {
-#ifdef HAVE_SELECT
-      fd_conditions = 0;
-      if (FD_ISSET(fd, &fdset_read_out)) {
-	fd_conditions |= G_IO_IN;
-      }
-      if (FD_ISSET(fd, &fdset_write_out)) {
-	fd_conditions |= G_IO_OUT;
-      }
-      if (FD_ISSET(fd, &fdset_except_out)) {
-	fd_conditions |= G_IO_ERR;
-      }
-#endif
-      if (fd_conditions != 0) {
+    for (fd = 0; fd < rc; ++fd) {
+      const struct event_set_return *e = &esr[fd];
+      
+      if (e->rwflags != 0) {
 
 	/* move all threads that match the conditions on this file
 	   descriptor to the dispatching list: */
-	_tme_sjlj_threads_dispatching_fd(fd, fd_conditions);
+	_tme_sjlj_threads_dispatching_fd((int)e->arg, e->rwflags);
 
-	/* stop if there are no more file descriptors left in the
-	   sets: */
-	if (--rc == 0) {
-	  break;
-	}
       }
     }
   }
@@ -831,6 +545,7 @@ tme_sjlj_thread_create(tme_threadid_t *thr, tme_thread_t func, void *func_privat
   thread->tme_sjlj_thread_func_private = func_private;
   thread->tme_sjlj_thread_func = func;
   thread->tme_sjlj_thread_cond = NULL;
+  thread->tme_sjlj_thread_min_fd = TME_MAX_FD + 1;
   thread->tme_sjlj_thread_max_fd = -1;
   TME_TIME_SETV(thread->tme_sjlj_thread_sleep, 0, 0);
   thread->timeout_prev = NULL;
@@ -897,6 +612,7 @@ tme_sjlj_cond_notify(tme_cond_t *cond, int broadcast)
     }
   }
 }
+#if 0
 /* this sleeps: */
 void
 tme_sjlj_sleep(unsigned long sec, unsigned long usec)
@@ -941,7 +657,7 @@ tme_sjlj_sleep(unsigned long sec, unsigned long usec)
     /* loop to see if the timeout really expired: */
   }
 }
-
+#endif
 /* this sleeps and yields: */
 void
 tme_sjlj_sleep_yield(unsigned long sec, unsigned long usec)
@@ -958,236 +674,122 @@ tme_sjlj_sleep_yield(unsigned long sec, unsigned long usec)
   tme_thread_yield();
 }
 
-#if 0
-int tme_sjlj_poll_yield(tme_pollfd_t *fds,
-			tme_nfds_t nfds,
-			tme_time_t *timeout_in) {
-  tme_nfds_t fd;
-  tme_time_t timeout_out;
-  GIOChannel *chan;
-
-  /* do a polling select: */
-  TME_TIME_SETV(timeout_out, 0, 0);
-  rc = tme_poll(fds, nfds, &timeout_out);
-  tme_thread_long();
-  if (rc != 0
-      || (timeout_in != NULL
-	  && TME_TIME_EQV(*timeout_in, 0, 0))) {
-    return (rc);
-  }
-
-  for(fd = 0; fd < nfds; fd++) {
-    /* it should be safe to remove this fd, even if we're
-       currently in a callback for it.  if we happen to get a
-       callback for it later anyways, _tme_sjlj_glib_callback_fd()
-       will ignore it: */
-    g_source_remove(tme_sjlj_fd_tag[fd]);
-    chan = g_io_channel_unix_new(fd);
-    tme_sjlj_fd_tag[fd] = 
-      g_io_add_watch(chan,
-		     fd_condition_new,
-		     _tme_sjlj_glib_callback_fd,
-		     NULL);
-    g_io_channel_unref(chan);
-  }
+tme_event_set_t *tme_sjlj_event_set_init(int *maxevents, unsigned int flags) {
+  tme_event_set_t *tes;
+  struct event_set *es;
+  es = event_set_init(maxevents, flags);
+  tes = (tme_event_set_t *) tme_malloc(sizeof(tme_event_set_t) + sizeof(tme_event_t) * (*maxevents));
+  tes->es = es;
+  tes->num_events = 0;
+  return tes;
 }
 
-/* this reads, yielding if the fd is not ready: */
-ssize_t
-tme_sjlj_read_yield(int fd, void *data, size_t count)
-{
-  int rc;
-  tme_pollfd_t fds[1];
-
-  fds[0].fd = fd;
-  fds[0].events = G_IO_IN;
-  rc = tme_sjlj_poll_yield(fds, 1, NULL);
-  if (rc != 1) {
-    return (rc);
-  }
-  
-  /* do the read: */
-  return (read(fd, data, count));
+void tme_sjlj_event_ctl(struct tme_event_set *es, event_t event, unsigned int rwflags, void *arg) {
+  event_ctl(es->es, event, rwflags, arg);
+  es->events[es->num_events].fd = event;
+  es->events[es->num_events++].flags = rwflags;
 }
 
-/* this writes, yielding if the fd is not ready: */
-ssize_t
-tme_sjlj_write_yield(int fd, void *data, size_t count)
-{
-  int rc;
-  tme_pollfd_t fds[1];
-
-  fds[0].fd = fd;
-  fds[0].events = G_IO_OUT;
-  rc = tme_sjlj_poll_yield(fds, 1, NULL);
-  if (rc != 1) {
-    return (rc);
-  }
-  
-  /* do the write: */
-  return (write(fd, data, count));
-}
-#endif
-
-#ifdef HAVE_SELECT
 /* this selects and yields: */
 int
-tme_sjlj_select_yield(int nfds,
-		      fd_set *fdset_read_in,
-		      fd_set *fdset_write_in,
-		      fd_set *fdset_except_in,
-		      tme_time_t *timeout_in)
+tme_sjlj_event_wait_yield(struct tme_event_set *es, const struct timeval *timeout_in, struct event_set_return *out, int outlen)
 {
-  fd_set fdset_read, fdset_write, fdset_except;
-  int max_fd_old;
-  int max_fd_new;
-  int max_fd, fd;
-  GIOCondition fd_condition_old;
-  GIOCondition fd_condition_new;
-  tme_time_t timeout_out;
+  int fd_old;
+  int fd_new;
+  int min_fd, max_fd, fd;
+  unsigned int fd_condition_old;
+  unsigned int fd_condition_new;
+  struct timeval timeout_out;
   struct tme_sjlj_thread *thread;
-  int rc;
+  int rc, i;
 
-  /* we can't deal if there are more than FD_SETSIZE fds: */
-  assert(nfds <= FD_SETSIZE);
+  /* do a polling select: */
+  timeout_out.tv_val = 0;
+  timeout_out.tv_usec = 0;
+  rc = event_wait(es->es, &timeout_out, out, outlen);
+  tme_thread_long();
+  if(rc != 0 ||
+     timeout_in != NULL &&
+     timeout_in->tv_sec == 0 &&
+     timeout_in->tv_usec == 0) {
+    return (rc);
+  }
 
   /* get the active thread: */
   thread = tme_sjlj_thread_active;
 
-  /* in case we end up yielding, we need to save the original
-     descriptor sets: */
-  if (fdset_read_in != NULL) {
-    fdset_read = *fdset_read_in;
+  min_fd = TME_MAX_FD + 1;
+  max_fd = -1;
+  
+  /* we are yielding.  copy out the fds to merge with current events */
+  for (i = 0; i <= es->num_events; i++) {
+    fd = es->events[i].fd;
+    if(fd < min_fd) min_fd = fd;
+    if(fd > max_fd) max_fd = fd;
+    tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_conditions = es->events[i].flags;
   }
-  if (fdset_write_in != NULL) {
-    fdset_write = *fdset_write_in;
-  }
-  if (fdset_except_in != NULL) {
-    fdset_except = *fdset_except_in;
-  }
+  
+  event_free(es);
 
-  /* do a polling select: */
-  TME_TIME_SETV(timeout_out, 0, 0);
-  rc = tme_select(nfds, fdset_read_in, fdset_write_in, fdset_except_in, &timeout_out);
-  tme_thread_long();
-  if (rc != 0
-      || (timeout_in != NULL
-	  && TME_TIME_EQV(*timeout_in, 0, 0))) {
-    return (rc);
-  }
+  tme_sjlj_thread_blocked.tme_sjlj_thread_min_fd = min_fd;
+  if(thread->tme_sjlj_thread_min_fd < min_fd)
+    min_fd = thread->tme_sjlj_thread_min_fd;
+  tme_sjlj_thread_blocked.tme_sjlj_thread_max_fd = max_fd;
+  if(thread->tme_sjlj_thread_max_fd > max_fd)
+    max_fd = thread->tme_sjlj_thread_max_fd;
 
-  /* we are yielding.  zero any unused descriptor sets and set the
-     timeout time: */
-
-  if (fdset_read_in == NULL) {
-    FD_ZERO(&fdset_read);
-  }
-  if (fdset_write_in == NULL) {
-    FD_ZERO(&fdset_write);
-  }
-  if (fdset_except_in == NULL) {
-    FD_ZERO(&fdset_except);
-  }
-
-  max_fd_old = thread->tme_sjlj_thread_max_fd;
-  max_fd_new = nfds - 1;
-  max_fd = TME_MAX(max_fd_old, max_fd_new);
-  for (fd = 0; fd <= max_fd; fd++) {
-
+  for (fd = min_fd; fd <= max_fd; fd++) {
     /* the old and new conditions on this fd start out empty: */
     fd_condition_old = 0;
-    fd_condition_new = 0;
 
     /* check the old fd sets: */
-    if (fd <= max_fd_old) {
-      if(tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_read == thread)
-	fd_condition_old |= G_IO_IN;
-      if(tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_write == thread)
-	fd_condition_old |= G_IO_OUT;
-      if(tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_except == thread)
-	fd_condition_old |= G_IO_ERR;
-    }
+    if(tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_read == thread)
+      fd_condition_old |= EVENT_READ;
+    if(tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_write == thread)
+      fd_condition_old |= EVENT_WRITE;
+    if(tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_except == thread)
+      fd_condition_old |= EVENT_UNDEF;
     
     /* check the new fd sets: */
-    if (fd <= max_fd_new) {
-      if (FD_ISSET(fd, &fdset_read)) {
-	fd_condition_new |= G_IO_IN;
-      }	
-      if (FD_ISSET(fd, &fdset_write)) {
-	fd_condition_new |= G_IO_OUT;
-      }	
-      if (FD_ISSET(fd, &fdset_except)) {
-	fd_condition_new |= G_IO_ERR;
-      }	
-    }
 
-    /* if the conditions have changed: */
-    if (fd_condition_new != fd_condition_old) {
+    /* if the conditions haven't changed: */
+    if (tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_conditions == fd_condition_old)
+      continue;
 
-      /* if there is any blocking on this file descriptor, remove it: */
-      if (tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_conditions != 0) {
-	/* remove this fd from our main loop's fd sets: */
-	assert(fd <= tme_sjlj_main_max_fd);
-
-	FD_CLR(fd, &tme_sjlj_main_fdset_read);
-	FD_CLR(fd, &tme_sjlj_main_fdset_write);
-	FD_CLR(fd, &tme_sjlj_main_fdset_except);
-	if (fd == tme_sjlj_main_max_fd) {
-	  for (; --tme_sjlj_main_max_fd > 0; ) {
-	    if (tme_sjlj_fd_thread[tme_sjlj_main_max_fd].tme_sjlj_fd_thread_conditions != 0) {
-	      break;
-	    }
-	  }
-	}
-      }
-
-      /* update the blocking by this thread on this file descriptor: */
-      assert ((tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_conditions
-	       & fd_condition_old)
-	      == fd_condition_old);
-      tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_conditions
-	= ((tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_conditions
-	    & ~fd_condition_old)
-	   | fd_condition_new);
-#define UPDATE_FD_THREAD(fd_thread, condition)			\
-      do {							\
-	if (fd_condition_old & condition) {			\
-	  assert(tme_sjlj_fd_thread[fd].fd_thread == thread);	\
-	  tme_sjlj_fd_thread[fd].fd_thread = NULL;		\
-	}							\
-	if (fd_condition_new & condition) {			\
-	  assert(tme_sjlj_fd_thread[fd].fd_thread == NULL);	\
-	  tme_sjlj_fd_thread[fd].fd_thread = thread;		\
-	}							\
-      } while	(/* CONSTCOND */ 0)
-      UPDATE_FD_THREAD(tme_sjlj_fd_thread_read, G_IO_IN);
-      UPDATE_FD_THREAD(tme_sjlj_fd_thread_write, G_IO_OUT);
-      UPDATE_FD_THREAD(tme_sjlj_fd_thread_except, G_IO_ERR);
+    /* if there is any blocking on this file descriptor, remove it: */
+    /* remove this fd from our main loop's fd sets: */
+    event_del(tme_sjlj_main_events, fd);
+      
+    fd_condition_new = 0;
+    /* update the blocking by this thread on this file descriptor: */
+#define UPDATE_FD_THREAD(fd_thread, condition)				\
+    do {								\
+      if (fd_condition_old & condition) {				\
+	assert(tme_sjlj_fd_thread[fd].fd_thread == thread);		\
+	tme_sjlj_fd_thread[fd].fd_thread = NULL;			\
+      }									\
+      if (tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_conditions & condition) { \
+	assert(tme_sjlj_fd_thread[fd].fd_thread == NULL);		\
+	tme_sjlj_fd_thread[fd].fd_thread = thread;			\
+      }									\
+      /* get the conditions for all threads for this fd: */		\
+      if(tme_sjlj_fd_thread[fd].fd_thread)				\
+	fd_condition_new |= condition;					\
+    } while	(/* CONSTCOND */ 0)
+    UPDATE_FD_THREAD(tme_sjlj_fd_thread_read, EVENT_READ);
+    UPDATE_FD_THREAD(tme_sjlj_fd_thread_write, EVENT_WRITE);
+    UPDATE_FD_THREAD(tme_sjlj_fd_thread_except, EVENT_UNDEF);
 #undef UPDATE_FD_THREAD    
 
-      /* get the conditions for all threads for this fd: */
-      fd_condition_new = tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_conditions;
+    /* reset the new fd conditions for this thread: */
+    tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_conditions = 0;
 
-      /* if there is any blocking on this file descriptor, add it: */
-      if (fd_condition_new != 0) {
-	/* add this fd to main loop's relevant fd sets: */
-	if (fd_condition_new & G_IO_IN) {
-	  FD_SET(fd, &tme_sjlj_main_fdset_read);
-	}
-	if (fd_condition_new & G_IO_OUT) {
-	  FD_SET(fd, &tme_sjlj_main_fdset_write);
-	}
-	if (fd_condition_new & G_IO_ERR) {
-	  FD_SET(fd, &tme_sjlj_main_fdset_except);
-	}
-	if (fd > tme_sjlj_main_max_fd) {
-	  tme_sjlj_main_max_fd = fd;
-	}
-      }
+    /* if there is any blocking on this file descriptor, add it: */
+    if (fd_condition_new != 0) {
+      /* add this fd to main loop's relevant fd sets: */
+      event_ctl(tme_sjlj_main_events, fd, fd_condition_new, (void *)fd);
     }
   }
-  tme_sjlj_thread_blocked.tme_sjlj_thread_max_fd = 
-    thread->tme_sjlj_thread_max_fd = max_fd_new;
 
   if (timeout_in != NULL) {
     tme_sjlj_thread_blocked.tme_sjlj_thread_sleep = *timeout_in;
@@ -1202,52 +804,24 @@ tme_sjlj_select_yield(int nfds,
   return (0);
 }
 
-/* this reads, yielding if the fd is not ready: */
+/* this reads or writes, yielding if the fd is not ready: */
 ssize_t
-tme_sjlj_read_yield(int fd, void *data, size_t count)
+tme_sjlj_event_yield(int fd, void *data, size_t count, unsigned int rwflags)
 {
-  int rc;
-  fd_set fdset_read_in;
+  int rc = 1;
+  struct tme_event_set *es = tme_event_set_init(&rc, EVENT_METHOD_FAST);
+  
+  tme_event_ctl(es, fd, rwflags, 0);
 
-  /* select on the fd for reading: */
-  FD_ZERO(&fdset_read_in);
-  FD_SET(fd, &fdset_read_in);
-  rc = tme_sjlj_select_yield(fd + 1,
-			     &fdset_read_in,
-			     NULL,
-			     NULL,
-			     NULL);
+  rc = tme_event_wait_yield(es, NULL, NULL, 0);
+
   if (rc != 1) {
     return (rc);
   }
 
   /* do the read: */
-  return (read(fd, data, count));
+  return ((event == EVENT_READ) ? (read(fd, data, count)) : (write(fd, data, count));
 }
-
-/* this writes, yielding if the fd is not ready: */
-ssize_t
-tme_sjlj_write_yield(int fd, void *data, size_t count)
-{
-  int rc;
-  fd_set fdset_write_in;
-
-  /* select on the fd for writing: */
-  FD_ZERO(&fdset_write_in);
-  FD_SET(fd, &fdset_write_in);
-  rc = tme_sjlj_select_yield(fd + 1,
-			     NULL,
-			     &fdset_write_in,
-			     NULL,
-			     NULL);
-  if (rc != 1) {
-    return (rc);
-  }
-
-  /* do the write: */
-  return (write(fd, data, count));
-}
-#endif // HAVE_SELECT
 
 /* this exits a thread: */
 void
@@ -1290,6 +864,11 @@ tme_sjlj_yield(void)
   if(tme_sjlj_thread_blocked.tme_sjlj_thread_max_fd >= 0) {
     blocked = TRUE;
   }
+  
+  thread->tme_sjlj_thread_min_fd = tme_sjlj_thread_blocked.tme_sjlj_thread_min_fd;
+  thread->tme_sjlj_thread_max_fd = tme_sjlj_thread_blocked.tme_sjlj_thread_max_fd;
+
+  tme_sjlj_thread_blocked.tme_sjlj_thread_min_fd = TME_MAX_FD + 1;
   tme_sjlj_thread_blocked.tme_sjlj_thread_max_fd = -1;
   
   /* see if this thread is blocked for some amount of time: */

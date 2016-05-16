@@ -846,7 +846,6 @@ AM_PATH_GLIB_2_0([], have_glib=yes, have_glib=no)
 if test "x$have_glib" = xyes; then
   AC_DEFINE(HAVE_GLIB, [], [Define if you are compiling with GLIB.])
 fi
-AM_CONDITIONAL([USING_GLIB], [test "x${have_glib}" = xyes])
 
 dnl Checks for GTK.
 AM_PATH_GTK_3_0([], have_gtk=yes, have_gtk=no)
@@ -1075,6 +1074,7 @@ done
 CPPFLAGS="${CPPFLAGS-} -D_GNU_SOURCE" 
 
 AM_CONDITIONAL([THREADS_POSIX], [test "x${tme_thread_types}" = xpthreads || test "x${tme_thread_types}" = xposix])
+AM_CONDITIONAL([THREADS_GLIB], [test "x${tme_thread_type}" = xglib])
 AM_CONDITIONAL([THREADS_SJLJ], [test "x${tme_thread_types}" = xsjlj])
 AC_MSG_RESULT($tme_thread_types)
 
@@ -1562,12 +1562,8 @@ TMEEOF
   echo 'typedef tme_uint'`expr $ac_cv_sizeof_void_p \* 8`'_t tme_uintptr_t;' >> ${outfile}-tmp
   echo '#if defined(USE_GLIB_TIME) && defined(_TME_HAVE_GLIB)' >> ${outfile}-tmp
   echo '#include <glib.h>' >> ${outfile}-tmp
-  echo 'typedef GPollFD tme_pollfd_t;' >> ${outfile}-tmp
-  echo 'typedef guint tme_nfds_t;' >> ${outfile}-tmp
   echo 'typedef gint64 tme_time_t;' >> ${outfile}-tmp
   echo '#else' >> ${outfile}-tmp
-  echo 'typedef struct pollfd tme_pollfd_t;' >> ${outfile}-tmp
-  echo 'typedef unsigned int tme_nfds_t;' >> ${outfile}-tmp
   echo '#if defined(USE_GETTIMEOFDAY) || !defined(_TME_HAVE_CLOCK_GETTIME)' >> ${outfile}-tmp
   echo 'typedef struct timeval tme_time_t;' >> ${outfile}-tmp
   echo '#else' >> ${outfile}-tmp

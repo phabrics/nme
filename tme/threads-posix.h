@@ -292,6 +292,9 @@ static _tme_inline ssize_t tme_thread_write _TME_P((int fd, const void *buf, siz
 
 #define tme_thread_read_yield tme_thread_read
 #define tme_thread_write_yield tme_thread_write
+#define tme_event_set_init event_set_init
+#define tme_event_ctl event_ctl
+#define tme_event_wait_yield event_wait
 
 #ifdef HAVE_CPUSET_CREATE
 typedef cpuset_t *tme_cpuset_t;

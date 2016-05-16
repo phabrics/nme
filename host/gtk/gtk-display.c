@@ -174,10 +174,6 @@ _tme_gtk_display_callout(struct tme_gtk_display *display,
   /* put in any later callouts, and clear that callouts are running: */
   display->tme_gtk_display_callout_flags = later_callouts;
 
-  /* yield to GTK: */
-#ifdef tme_threads_glib_yield
-  tme_threads_glib_yield(NULL);
-#endif
 }
 
 /* this is a GTK callback for an enter notify event, that has the
@@ -312,9 +308,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   }
 
   /* call gtk_init if we haven't already: */
-#ifdef tme_threads_glib_yield
-  tme_threads_init(tme_threads_glib_yield, gtk_main);
-#elif defined(tme_threads_main_iter)
+#ifdef tme_threads_main_iter
   tme_threads_init(tme_threads_main_iter, _tme_gtk_main_iter);
 #else
   tme_threads_init(NULL, gtk_main);

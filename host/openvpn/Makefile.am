@@ -21,7 +21,7 @@ tme_host_openvpn_la_SOURCES = \
 	dhcp.c dhcp.h \
 	errlevel.h \
 	error.c error.h \
-	event.c event.h \
+	event.h \
 	fdmisc.c fdmisc.h \
 	forward.c forward.h forward-inline.h \
 	fragment.c fragment.h \

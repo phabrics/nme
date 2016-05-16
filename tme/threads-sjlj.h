@@ -49,16 +49,7 @@
 void tme_sjlj_threads_init _TME_P((void));
 #define _tme_threads_init tme_sjlj_threads_init
 int tme_sjlj_threads_main_iter _TME_P((void *event_check));
-#ifdef _TME_HAVE_GLIB
-void tme_sjlj_threads_glib_yield _TME_P((void *main_loop));
-#endif
-
-#if defined(USE_GLIB_TIME) && defined(_TME_HAVE_GLIB)
-#define tme_threads_main_iter tme_sjlj_threads_glib_yield
-#define tme_threads_glib_yield tme_sjlj_threads_glib_yield
-#else
 #define tme_threads_main_iter tme_sjlj_threads_main_iter
-#endif
 
 /* thread suspension: */
 #define tme_thread_suspend_others()	do { } while (/* CONSTCOND */ 0)
@@ -159,13 +150,26 @@ void tme_sjlj_sleep_yield _TME_P((unsigned long, unsigned long));
 /* I/O: */
 #define tme_thread_read read
 #define tme_thread_write write
-#define tme_thread_select select
-int tme_sjlj_select_yield _TME_P((int, fd_set *, fd_set *, fd_set *, tme_time_t *));
-ssize_t tme_sjlj_read_yield _TME_P((int, void *, size_t));
-ssize_t tme_sjlj_write_yield _TME_P((int, void *, size_t));
-#define tme_thread_select_yield tme_sjlj_select_yield
-#define tme_thread_read_yield tme_sjlj_read_yield
-#define tme_thread_write_yield tme_sjlj_write_yield
+typedef struct tme_event {
+  event_t fd;
+  unsigned int flags;
+} tme_event_t;
+
+typedef struct tme_event_set {
+  struct event_set *es;
+  int num_events;
+  tme_event_t events[0];
+} tme_event_set_t;
+
+tme_event_set_t *tme_sjlj_event_set_init _TME_P((int *maxevents, unsigned int flags));
+void tme_sjlj_event_ctl _TME_P((struct event_set *es, event_t event, unsigned int rwflags, void *arg));
+int tme_sjlj_event_wait_yield _TME_P((struct tme_event_set *es, const struct timeval *tv, struct event_set_return *out, int outlen));
+ssize_t tme_sjlj_event_yield _TME_P((int, void *, size_t, unsigned int));
+#define tme_event_set_init tme_sjlj_event_set_init
+#define tme_event_ctl tme_sjlj_event_ctl
+#define tme_event_wait_yield tme_sjlj_event_wait_yield
+#define tme_thread_read_yield(fd, data, count) tme_sjlj_event_yield(fd, data, count, EVENT_READ)
+#define tme_thread_write_yield(fd, data, count) tme_sjlj_event_yield(fd, data, count, EVENT_WRITE)
 
 /* time: */
 void tme_sjlj_gettimeofday _TME_P((tme_time_t *));
