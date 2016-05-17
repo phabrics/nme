@@ -376,7 +376,7 @@ _tme_sjlj_timeout_time(struct timeval *timeout)
   }
 
   /* return the timeout time: */
-  timeout->tv_val = secs;
+  timeout->tv_sec = secs;
   timeout->tv_usec = usecs;
 }
 
@@ -484,7 +484,7 @@ tme_sjlj_threads_main_iter(void *event_check)
 
   /* otherwise, the timeout list is not empty: */
   else {
-    timeout_buffer.tv_val = 0;
+    timeout_buffer.tv_sec = 0;
     timeout_buffer.tv_usec = 0;
     timeout = &timeout_buffer;
 
@@ -704,7 +704,7 @@ tme_sjlj_event_wait_yield(struct tme_event_set *es, const struct timeval *timeou
   int rc, i;
 
   /* do a polling select: */
-  timeout_out.tv_val = 0;
+  timeout_out.tv_sec = 0;
   timeout_out.tv_usec = 0;
   rc = event_wait(es->es, &timeout_out, out, outlen);
   tme_thread_long();
@@ -792,7 +792,7 @@ tme_sjlj_event_wait_yield(struct tme_event_set *es, const struct timeval *timeou
   }
 
   if (timeout_in != NULL) {
-    tme_sjlj_thread_blocked.tme_sjlj_thread_sleep = *timeout_in;
+    TME_TIME_SETV(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep, timeout_in->tv_sec, timeout_in->tv_usec);
     for (; TME_TIME_GET_FRAC(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep) >= 1000000; ) {
       TME_TIME_ADDV(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep, 1, -1000000);
     }
@@ -820,7 +820,7 @@ tme_sjlj_event_yield(int fd, void *data, size_t count, unsigned int rwflags)
   }
 
   /* do the read: */
-  return ((event == EVENT_READ) ? (read(fd, data, count)) : (write(fd, data, count));
+  return (rwflags == EVENT_READ) ? (read(fd, data, count)) : (write(fd, data, count));
 }
 
 /* this exits a thread: */

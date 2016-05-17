@@ -162,7 +162,7 @@ typedef struct tme_event_set {
 } tme_event_set_t;
 
 tme_event_set_t *tme_sjlj_event_set_init _TME_P((int *maxevents, unsigned int flags));
-void tme_sjlj_event_ctl _TME_P((struct event_set *es, event_t event, unsigned int rwflags, void *arg));
+void tme_sjlj_event_ctl _TME_P((struct tme_event_set *es, event_t event, unsigned int rwflags, void *arg));
 int tme_sjlj_event_wait_yield _TME_P((struct tme_event_set *es, const struct timeval *tv, struct event_set_return *out, int outlen));
 ssize_t tme_sjlj_event_yield _TME_P((int, void *, size_t, unsigned int));
 #define tme_event_set_init tme_sjlj_event_set_init

@@ -5,12 +5,11 @@ AUTOMAKE_OPTIONS = 1.4 gnu
 
 include $(top_srcdir)/lib/ltrc.inc
 
-AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(srcdir)/../eth -I$(top_srcdir)/lib -I. -D_TME_IMPL
+AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(srcdir)/../eth -I$(top_srcdir)/lib -I$(top_srcdir)/tme -I. -D_TME_IMPL
 
 pkglib_LTLIBRARIES = tme_host_openvpn.la
 tme_host_openvpn_la_SOURCES = \
 	base64.c base64.h \
-	basic.h \
 	buffer.c buffer.h \
 	circ_list.h \
 	clinat.c clinat.h \
@@ -21,8 +20,7 @@ tme_host_openvpn_la_SOURCES = \
 	dhcp.c dhcp.h \
 	errlevel.h \
 	error.c error.h \
-	event.h \
-	fdmisc.c fdmisc.h \
+	fdmisc.h \
 	forward.c forward.h forward-inline.h \
 	fragment.c fragment.h \
 	gremlin.c gremlin.h \
@@ -60,7 +58,7 @@ tme_host_openvpn_la_SOURCES = \
 	options.c options.h \
 	otime.c otime.h \
 	packet_id.c packet_id.h \
-	perf.c perf.h \
+	perf.c \
 	pf.c pf.h pf-inline.h \
 	ping.c ping.h ping-inline.h \
 	plugin.c plugin.h \
