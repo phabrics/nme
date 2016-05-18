@@ -3,7 +3,7 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
-SUBDIRS = generic ic machine scsi host bus
+SUBDIRS = generic ic machine scsi host bus libopenvpn
 
 pkginclude_HEADERS = memory.h \
 	common.h \
@@ -23,7 +23,6 @@ pkginclude_HEADERS = memory.h \
 	completion.h \
 	tmesh.h \
 	runlength.h
-
 info_TEXINFOS = tme.texi
 tme_TEXINFOS = fdl.texi
 

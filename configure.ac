@@ -1764,8 +1764,10 @@ AC_CONFIG_FILES([Makefile
 	  tme/scsi/Makefile
 	  tme/host/Makefile
 	  tme/bus/Makefile
+	  tme/libopenvpn/Makefile
           lib/Makefile
 	  libltdl/Makefile
+	  libopenvpn/Makefile
 	  libtme/Makefile
 	  libtme/host/Makefile
 	  libtme/host/x86/Makefile

@@ -7,7 +7,7 @@ AUTOM4TE = $(SHELL) $(top_srcdir)/missing --run autom4te
 
 SUBDIRS = host
 
-AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I. $(LTDLINCL) -I$(top_srcdir)/lib -I$(top_srcdir)/tme -I$(top_srcdir)/host/openvpn -D_TME_IMPL
+AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I. $(LTDLINCL) -I$(top_srcdir)/lib -D_TME_IMPL
 if THREADS_GLIB
 AM_CPPFLAGS += $(GLIB_CFLAGS)
 endif
@@ -31,14 +31,13 @@ libtme_la_SOURCES = misc-host.c \
 	hash.c \
 	token.c \
 	runlength.c \
-	alloc.c \
-	event.c \
-	fdmisc.c
+	alloc.c
+
 if THREADS_SJLJ
 libtme_la_SOURCES += threads-sjlj.c
 endif
 libtme_la_LDFLAGS = -version-info 0:0:0
-libtme_la_LIBADD = $(LIBLTDL) $(LTLIBOBJS)
+libtme_la_LIBADD = $(LIBLTDL) $(LTLIBOBJS) $(top_builddir)/libopenvpn/libopenvpn.la
 if THREADS_GLIB
 libtme_la_LIBADD += $(GLIB_LIBS)
 endif

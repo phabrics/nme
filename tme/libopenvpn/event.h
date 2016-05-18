@@ -25,10 +25,8 @@
 #ifndef EVENT_H
 #define EVENT_H
 
-#ifdef WIN32
 #include "win32.h"
 #include "sig.h"
-#endif
 #include "perf.h"
 
 /*

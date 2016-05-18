@@ -35,7 +35,7 @@
 
 /* includes: */
 #include "openvpn-setup.h"
-#include "options.h"
+#include <tme/libopenvpn/options.h>
 
 struct gc_arena gc;
 

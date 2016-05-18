@@ -34,10 +34,10 @@
 #include <tme/common.h>
 
 /* includes: */
-#include "syshead.h"
-#include "socket.h"
-#include "tun.h"
-#include "ping.h"
+#include <tme/libopenvpn/syshead.h>
+#include <tme/libopenvpn/socket.h>
+#include <tme/libopenvpn/tun.h>
+#include <tme/libopenvpn/ping.h>
 
 #define OPENVPN_CAN_WRITE 1
 #define OPENVPN_FAST_IO 2
