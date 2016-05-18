@@ -12,7 +12,6 @@ libtmesh_la_SOURCES = \
 	tmesh-util.c \
 	tmesh-cmds.c \
 	tmesh-threads.c
-libtmesh_la_LDFLAGS = -version-info 0:0:0
 libtmesh_la_LIBADD = $(top_builddir)/libtme/libtme.la
 
 bin_PROGRAMS = tmesh

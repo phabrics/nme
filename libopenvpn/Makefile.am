@@ -7,7 +7,7 @@ include $(top_srcdir)/lib/ltrc.inc
 
 AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(top_srcdir)/lib -I$(top_srcdir)/tme/libopenvpn -I. -D_TME_IMPL
 
-lib_LTLIBRARIES = libopenvpn.la
+noinst_LTLIBRARIES = libopenvpn.la
 libopenvpn_la_SOURCES = \
 	base64.c \
 	buffer.c \
@@ -21,7 +21,7 @@ libopenvpn_la_SOURCES = \
 	fdmisc.c \
 	forward.c \
 	fragment.c \
-	gremlin.c 
+	gremlin.c \
 	helper.c \
 	httpdigest.c \
 	lladdr.c \

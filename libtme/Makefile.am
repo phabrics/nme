@@ -41,9 +41,6 @@ libtme_la_LIBADD = $(LIBLTDL) $(LTLIBOBJS) $(top_builddir)/libopenvpn/libopenvpn
 if THREADS_GLIB
 libtme_la_LIBADD += $(GLIB_LIBS)
 endif
-if WIN32
-libtme_la_LIBADD += -lgdi32 -lws2_32 -lwininet -lcrypt32 -liphlpapi -lwinmm
-endif
 
 noinst_SCRIPTS = memory-auto.sh
 
