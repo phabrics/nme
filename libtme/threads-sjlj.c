@@ -156,10 +156,10 @@ tme_sjlj_threads_init()
   tme_sjlj_main_events = event_set_init(&fd, 0);
   
   for (i = 0; i < fd; i++) {
-    tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_conditions = 0;
-    tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_read = NULL;
-    tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_write = NULL;
-    tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_except = NULL;
+    tme_sjlj_fd_thread[i].tme_sjlj_fd_thread_conditions = 0;
+    tme_sjlj_fd_thread[i].tme_sjlj_fd_thread_read = NULL;
+    tme_sjlj_fd_thread[i].tme_sjlj_fd_thread_write = NULL;
+    tme_sjlj_fd_thread[i].tme_sjlj_fd_thread_except = NULL;
   }
 
   /* initialize the thread-blocked structure: */
@@ -459,8 +459,7 @@ int
 tme_sjlj_threads_main_iter(void *event_check)
 {
   int fd;
-  struct timeval timeout_buffer;
-  struct timeval *timeout;
+  struct timeval timeout;
   int rc;
   struct event_set_return esr[64];
   
@@ -477,23 +476,24 @@ tme_sjlj_threads_main_iter(void *event_check)
        either be runnable threads (in which case we will not block
        at all in select), or we must be selecting on file
        descriptors: */
-    timeout = NULL;
+    timeout.tv_sec = BIG_TIMEOUT;
+    timeout.tv_usec = 0;
     assert (tme_sjlj_threads_runnable != NULL);
 	    //	    || tme_sjlj_main_max_fd >= 0);
   }
 
   /* otherwise, the timeout list is not empty: */
   else {
-    timeout_buffer.tv_sec = 0;
-    timeout_buffer.tv_usec = 0;
-    timeout = &timeout_buffer;
-
-    if (tme_sjlj_threads_runnable == NULL)  
-      /* if there are no runnable threads, make the timeout: */
-      _tme_sjlj_timeout_time(timeout);
+    _tme_sjlj_timeout_time(&timeout);
   }
 
-  rc = event_wait(tme_sjlj_main_events, timeout, esr, SIZE(esr));
+  /* if there are runnable threads, make this a poll: */
+  if (tme_sjlj_threads_runnable != NULL) {
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 0;
+  }
+  
+  rc = event_wait(tme_sjlj_main_events, &timeout, esr, SIZE(esr));
   
   /* we were in select() for an unknown amount of time: */
   tme_thread_long();
@@ -684,6 +684,11 @@ tme_event_set_t *tme_sjlj_event_set_init(int *maxevents, unsigned int flags) {
   return tes;
 }
 
+void tme_sjlj_event_free(struct tme_event_set *es) {
+  event_free(es->es);
+  tme_free(es);
+}
+
 void tme_sjlj_event_ctl(struct tme_event_set *es, event_t event, unsigned int rwflags, void *arg) {
   event_ctl(es->es, event, rwflags, arg);
   es->events[es->num_events].fd = event;
@@ -729,7 +734,7 @@ tme_sjlj_event_wait_yield(struct tme_event_set *es, const struct timeval *timeou
     tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_conditions = es->events[i].flags;
   }
   
-  event_free(es);
+  tme_event_free(es);
 
   tme_sjlj_thread_blocked.tme_sjlj_thread_min_fd = min_fd;
   if(thread->tme_sjlj_thread_min_fd < min_fd)
