@@ -43,9 +43,7 @@ typedef struct _tme_openvpn_sock {
   struct env_set *es;
   struct frame *frame;
   u_char flags;
-#ifndef TME_THREADS_SJLJ
-  struct event_set *event_set;
-#endif
+  tme_event_set_t *event_set;
   struct buffer inbuf;
   struct buffer outbuf;
 } tme_openvpn_sock;
@@ -84,49 +82,11 @@ static int _tme_openvpn_sock_read(void *data) {
   tme_openvpn_sock *sock = data;
   struct link_socket_actual from;               /* address of incoming datagram */
   while(1) {
-#ifdef TME_THREADS_SJLJ
-    fd_set fdset_read_in;
-    fd_set fdset_read_out;
-    tme_time_t tv;
-
-    stream_buf_read_setup(sock->ls);
-#ifdef WIN32
-    socket_recv_queue(sock->ls, 0);
-#endif
-    
-    /* select on the fd for reading: */
-    FD_ZERO(&fdset_read_in);
-    FD_ZERO(&fdset_read_out);
-    FD_SET(sock->ls->sd, &fdset_read_in);
-
-    if((sock->flags & OPENVPN_CAN_WRITE) && !(sock->flags & OPENVPN_FAST_IO)) {
-      TME_TIME_SETV(tv,0,500000);
-    } else {
-      /* wait for signal transition to write */
-      if(!(sock->flags & OPENVPN_FAST_IO))
-	FD_SET(sock->ls->sd, &fdset_read_out);
-      TME_TIME_SETV(tv,BIG_TIMEOUT,0);
-    }
-    
-    rc = tme_sjlj_select_yield(sock->ls->sd + 1,
-			       &fdset_read_in,
-			       &fdset_read_out,
-			       NULL,
-			       &tv);
-
-    if ((rc != 1)&&(rc!=2)) {
-      return (rc);
-    }
-
-    if(FD_ISSET(sock->ls->sd, &fdset_read_out))
-      sock->flags |= OPENVPN_CAN_WRITE;
-    if(FD_ISSET(sock->ls->sd, &fdset_read_in)) {
-#else
     unsigned int flags;
     struct timeval tv;
     struct event_set_return esr;
     
-    event_reset(sock->event_set);
+    tme_event_reset(sock->event_set);
 
     /*
      * On win32 we use the keyboard or an event object as a source
@@ -150,12 +110,11 @@ static int _tme_openvpn_sock_read(void *data) {
     if(socket_read_residual(sock->ls))
       esr.rwflags = EVENT_READ;
     else
-      rc = event_wait(sock->event_set, &tv, &esr, 1);
+      rc = tme_event_wait(sock->event_set, &tv, &esr, 1);
     
     if(esr.rwflags & EVENT_WRITE)
       sock->flags |= OPENVPN_CAN_WRITE;
     if(esr.rwflags & EVENT_READ) {
-#endif
       ASSERT(buf_init(&sock->inbuf, FRAME_HEADROOM_ADJ(sock->frame, FRAME_HEADROOM_MARKER_READ_LINK)));
       status = link_socket_read(sock->ls,
 				&sock->inbuf,
@@ -192,14 +151,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,socket_link) {
   struct link_socket *ls;
   struct env_set *es;
   u_char flags = 0;
-  struct event_set *event_set;
-  struct frame *frame = openvpn_setup(args, NULL, &ls, &es, &flags,
-#ifdef TME_THREADS_SJLJ
-				      NULL
-#else
-				      &event_set
-#endif
-				      );
+  tme_event_set_t *event_set;
+  struct frame *frame = openvpn_setup(args, NULL, &ls, &es, &flags, &event_set);
   int sz = BUF_SIZE(frame);
   tme_openvpn_sock *sock = data = tme_new0(tme_openvpn_sock, 1);
   
@@ -209,9 +162,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,socket_link) {
   sock->flags = flags | OPENVPN_CAN_WRITE;
   sock->inbuf = alloc_buf(sz);
   sock->outbuf = alloc_buf(sz);
-#ifndef TME_THREADS_SJLJ
   sock->event_set = event_set;
-#endif
 
   rc = tme_eth_init(element,
 		    fd,

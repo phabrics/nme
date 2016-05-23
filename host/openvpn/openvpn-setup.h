@@ -32,6 +32,7 @@
  */
 
 #include <tme/common.h>
+#include <tme/threads.h>
 
 /* includes: */
 #include <tme/libopenvpn/syshead.h>
@@ -42,4 +43,4 @@
 #define OPENVPN_CAN_WRITE 1
 #define OPENVPN_FAST_IO 2
 
-struct frame *openvpn_setup _TME_P((const char *args[], struct tuntap **tt, struct link_socket **sock, struct env_set **es, u_char *flags, struct event_set **event_set));
+struct frame *openvpn_setup _TME_P((const char *args[], struct tuntap **tt, struct link_socket **sock, struct env_set **es, u_char *flags, tme_event_set_t **event_set));

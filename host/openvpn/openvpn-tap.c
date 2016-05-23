@@ -37,13 +37,12 @@
 #include "eth-if.h"
 #include "openvpn-setup.h"
 
-#ifndef TME_THREADS_SJLJ
 typedef struct _tme_openvpn_tun {
   struct tme_ethernet *eth;
   struct tuntap *tt;
   struct frame *frame;
   u_char flags;
-  struct event_set *event_set;
+  tme_event_set_t *event_set;
   struct buffer inbuf;
   struct buffer outbuf;
 } tme_openvpn_tun;
@@ -80,7 +79,7 @@ static int _tme_openvpn_tun_read(void *data) {
   tme_openvpn_tun *tun = data;
 
   while(1) {
-    event_reset(tun->event_set);
+    tme_event_reset(tun->event_set);
     
     flags = EVENT_READ;
     
@@ -99,7 +98,7 @@ static int _tme_openvpn_tun_read(void *data) {
 #endif
 
     tun_set(tun->tt, tun->event_set, flags, (void*)0, NULL);
-    rc = event_wait(tun->event_set, &tv, &esr, 1);
+    rc = tme_event_wait(tun->event_set, &tv, &esr, 1);
   
     if(esr.rwflags & EVENT_WRITE)
       tun->flags |= OPENVPN_CAN_WRITE;
@@ -115,7 +114,6 @@ static int _tme_openvpn_tun_read(void *data) {
     }
   }
 }
-#endif // !TME_THREADS_SJLJ
 
 /* the new TAP function: */
 TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tun_tap) {
@@ -125,19 +123,10 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tun_tap) {
   void *data = NULL;
   struct tuntap *tt;
   u_char flags;
-  struct event_set *event_set;
-  struct frame *frame = openvpn_setup(args, &tt, NULL, NULL, &flags,
-#ifdef TME_THREADS_SJLJ
-				      NULL
-#else
-				      &event_set
-#endif
-				      );
+  tme_event_set_t *event_set;
+  struct frame *frame = openvpn_setup(args, &tt, NULL, NULL, &flags, &event_set);
   int sz = BUF_SIZE(frame);
 
-#ifdef TME_THREADS_SJLJ
-  fd = tt->fd;
-#else
   tme_openvpn_tun *tun = data = tme_new0(tme_openvpn_tun, 1);
   
   tun->tt = tt;
@@ -146,7 +135,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tun_tap) {
   tun->inbuf = alloc_buf(sz);
   tun->outbuf = alloc_buf(sz);
   tun->event_set = event_set;
-#endif
   
   /* find the interface we will use: */
 #ifdef HAVE_IFADDRS_H
@@ -175,7 +163,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tun_tap) {
 		    hwaddr,
 		    NULL);
   
-#ifndef TME_THREADS_SJLJ
   if(rc == TME_OK) {
     /* recover our data structure: */
     tun->eth = (struct tme_ethernet *) element->tme_element_private;
@@ -188,6 +175,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tun_tap) {
     ASSERT(buf_safe(&tun->outbuf, MAX_RW_SIZE_TUN(tun->frame)));
     tun->eth->tme_eth_out = BPTR(&tun->outbuf);
   }
-#endif
+
   return rc;
 }

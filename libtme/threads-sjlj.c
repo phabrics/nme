@@ -47,7 +47,8 @@ _TME_RCSID("$Id: threads-sjlj.c,v 1.18 2010/06/05 19:10:28 fredette Exp $");
 #define TME_SJLJ_THREAD_STATE_BLOCKED		(1)
 #define TME_SJLJ_THREAD_STATE_RUNNABLE		(2)
 #define TME_SJLJ_THREAD_STATE_DISPATCHING	(3)
-#define TME_MAX_FD 1023
+#define TME_NUM_EVENTS 1024
+#define TME_NUM_EVFLAGS 3
 
 /* types: */
 
@@ -71,9 +72,8 @@ struct tme_sjlj_thread {
   /* any condition that this thread is waiting on: */
   tme_cond_t *tme_sjlj_thread_cond;
 
-  /* range of fds that this thread is waiting on: */
-  int tme_sjlj_thread_min_fd;
-  int tme_sjlj_thread_max_fd;
+  /* any events that this thread is waiting on: */
+  struct tme_sjlj_event_set *tme_sjlj_thread_events;
   
   /* if nonzero, the amount of time that this thread is sleeping,
      followed by the time the sleep will timeout.  all threads with
@@ -87,12 +87,24 @@ struct tme_sjlj_thread {
   tme_uint32_t tme_sjlj_thread_dispatch_number;
 };
 
-/* thread(s) blocked on a file descriptor */
-struct tme_sjlj_thread_fd {
-  unsigned int tme_sjlj_fd_thread_conditions;
-  struct tme_sjlj_thread *tme_sjlj_fd_thread_read;
-  struct tme_sjlj_thread *tme_sjlj_fd_thread_write;
-  struct tme_sjlj_thread *tme_sjlj_fd_thread_except;
+/* event envelope */
+struct tme_sjlj_event {
+  event_t event;
+  unsigned int flags;
+  void *arg;
+};
+
+/* a collection of events */
+struct tme_sjlj_event_set {
+  struct event_set *es;
+  int max_event;
+  struct tme_sjlj_event events[0];
+};
+
+/* thread blocked on an event */
+struct tme_sjlj_event_arg {
+  struct tme_sjlj_thread *thread;
+  void *arg;
 };
 
 /* globals: */
@@ -123,10 +135,7 @@ static int tme_sjlj_thread_exiting;
 static jmp_buf tme_sjlj_dispatcher_jmp;
 
 /* the main loop events: */
-static struct event_set *tme_sjlj_main_events;
-
-/* for each file descriptor, any threads blocked on it: */
-static struct tme_sjlj_thread_fd tme_sjlj_fd_thread[TME_MAX_FD + 1];
+static struct tme_sjlj_event_set *tme_sjlj_main_events;
 
 /* the dispatch number: */
 static tme_uint32_t _tme_sjlj_thread_dispatch_number;
@@ -141,8 +150,7 @@ int tme_sjlj_thread_short;
 void
 tme_sjlj_threads_init()
 {
-  int fd = TME_MAX_FD + 1;
-  int i;
+  int num = TME_NUM_EVENTS;
   
   /* there are no threads: */
   tme_sjlj_threads_all = NULL;
@@ -153,19 +161,11 @@ tme_sjlj_threads_init()
   tme_sjlj_thread_exiting = FALSE;
 
   /* no threads are waiting on any fds: */
-  tme_sjlj_main_events = event_set_init(&fd, 0);
+  tme_sjlj_main_events = tme_sjlj_event_set_init(&num, 0);
   
-  for (i = 0; i < fd; i++) {
-    tme_sjlj_fd_thread[i].tme_sjlj_fd_thread_conditions = 0;
-    tme_sjlj_fd_thread[i].tme_sjlj_fd_thread_read = NULL;
-    tme_sjlj_fd_thread[i].tme_sjlj_fd_thread_write = NULL;
-    tme_sjlj_fd_thread[i].tme_sjlj_fd_thread_except = NULL;
-  }
-
   /* initialize the thread-blocked structure: */
   tme_sjlj_thread_blocked.tme_sjlj_thread_cond = NULL;
-  tme_sjlj_thread_blocked.tme_sjlj_thread_min_fd = TME_MAX_FD + 1;
-  tme_sjlj_thread_blocked.tme_sjlj_thread_max_fd = -1;
+  tme_sjlj_thread_blocked.tme_sjlj_thread_events = NULL;
   TME_TIME_SETV(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep, 0, 0);
 }
 
@@ -306,28 +306,19 @@ _tme_sjlj_threads_dispatching_timeout(void)
   }
 }
 
-/* this moves all threads with the given file descriptor conditions to
+/* this moves all threads with the given event flags to
    the dispatching list: */
 static void
-_tme_sjlj_threads_dispatching_fd(int fd,
-				 unsigned int fd_conditions)
+_tme_sjlj_threads_dispatching_event(struct tme_sjlj_event_arg *event_arg,
+				    unsigned int flags)
 {
-  struct tme_sjlj_thread *thread;
-  struct tme_sjlj_thread_fd *fd_thread = &tme_sjlj_fd_thread[fd];
+  int i;
   
-  /* loop over all set conditions: */
-  for (fd_conditions &= fd_thread->tme_sjlj_fd_thread_conditions;
-       fd_conditions != 0;
-       fd_conditions &= (fd_conditions - 1)) {
-
-    /* move the thread for this condition to the dispatching list: */
-    thread = ((fd_conditions & EVENT_READ)
-	      ? fd_thread->tme_sjlj_fd_thread_read
-	      : (fd_conditions & EVENT_WRITE)
-	      ? fd_thread->tme_sjlj_fd_thread_write
-	      : fd_thread->tme_sjlj_fd_thread_except);
-    assert (thread != NULL);
-    _tme_sjlj_change_state(thread, TME_SJLJ_THREAD_STATE_DISPATCHING);
+  for(i=0;i<TME_NUM_EVFLAGS;i++) {
+    if(flags & (1<<i)) {
+      _tme_sjlj_change_state(event_arg->thread, TME_SJLJ_THREAD_STATE_DISPATCHING);
+    }
+    event_arg++;
   }
 }
 
@@ -478,8 +469,8 @@ tme_sjlj_threads_main_iter(void *event_check)
        descriptors: */
     timeout.tv_sec = BIG_TIMEOUT;
     timeout.tv_usec = 0;
-    assert (tme_sjlj_threads_runnable != NULL);
-	    //	    || tme_sjlj_main_max_fd >= 0);
+    assert (tme_sjlj_threads_runnable != NULL
+	    || tme_sjlj_main_events->max_event >= 0);
   }
 
   /* otherwise, the timeout list is not empty: */
@@ -493,7 +484,7 @@ tme_sjlj_threads_main_iter(void *event_check)
     timeout.tv_usec = 0;
   }
   
-  rc = event_wait(tme_sjlj_main_events, &timeout, esr, SIZE(esr));
+  rc = event_wait(tme_sjlj_main_events->es, &timeout, esr, SIZE(esr));
   
   /* we were in select() for an unknown amount of time: */
   tme_thread_long();
@@ -513,7 +504,7 @@ tme_sjlj_threads_main_iter(void *event_check)
 
 	/* move all threads that match the conditions on this file
 	   descriptor to the dispatching list: */
-	_tme_sjlj_threads_dispatching_fd((int)e->arg, e->rwflags);
+	_tme_sjlj_threads_dispatching_event((struct tme_sjlj_event_arg *)e->arg, e->rwflags);
 
       }
     }
@@ -545,8 +536,7 @@ tme_sjlj_thread_create(tme_threadid_t *thr, tme_thread_t func, void *func_privat
   thread->tme_sjlj_thread_func_private = func_private;
   thread->tme_sjlj_thread_func = func;
   thread->tme_sjlj_thread_cond = NULL;
-  thread->tme_sjlj_thread_min_fd = TME_MAX_FD + 1;
-  thread->tme_sjlj_thread_max_fd = -1;
+  thread->tme_sjlj_thread_events = NULL;
   TME_TIME_SETV(thread->tme_sjlj_thread_sleep, 0, 0);
   thread->timeout_prev = NULL;
 
@@ -674,39 +664,72 @@ tme_sjlj_sleep_yield(unsigned long sec, unsigned long usec)
   tme_thread_yield();
 }
 
-tme_event_set_t *tme_sjlj_event_set_init(int *maxevents, unsigned int flags) {
-  tme_event_set_t *tes;
+struct tme_sjlj_event_set *tme_sjlj_event_set_init(int *maxevents, unsigned int flags) {
+  struct tme_sjlj_event_set *tes;
   struct event_set *es;
   es = event_set_init(maxevents, flags);
-  tes = (tme_event_set_t *) tme_malloc(sizeof(tme_event_set_t) + sizeof(tme_event_t) * (*maxevents));
+  tes = (struct tme_sjlj_event_set *) tme_malloc(sizeof(struct tme_sjlj_event_set) + sizeof(struct tme_sjlj_event) * (*maxevents));
   tes->es = es;
-  tes->num_events = 0;
+  tes->max_event = -1;
   return tes;
 }
 
-void tme_sjlj_event_free(struct tme_event_set *es) {
+void tme_sjlj_event_free(struct tme_sjlj_event_set *es) {
   event_free(es->es);
   tme_free(es);
 }
 
-void tme_sjlj_event_ctl(struct tme_event_set *es, event_t event, unsigned int rwflags, void *arg) {
+void tme_sjlj_event_reset(struct tme_sjlj_event_set *es)
+{
+  event_reset(es->es);
+}
+
+int tme_sjlj_event_del(struct tme_sjlj_event_set *es, event_t event)
+{
+  int i, rc;
+  
+  event_del(es->es, event);
+  for(i=0;i<=es->max_event;i++)
+    if(es->events[i].event == event) break;
+  if(i > es->max_event)
+    return -1;
+  es->events[i].event = UNDEFINED_EVENT;
+  rc = i;
+  while(i == es->max_event) {
+    if(es->events[i--].event == UNDEFINED_EVENT)
+      es->max_event--;
+    if(i<0) break;
+  }
+  return rc;
+}
+
+int tme_sjlj_event_ctl(struct tme_sjlj_event_set *es, event_t event, unsigned int rwflags, void *arg) {
+  int i, min_event;
+  
   event_ctl(es->es, event, rwflags, arg);
-  es->events[es->num_events].fd = event;
-  es->events[es->num_events++].flags = rwflags;
+  min_event = es->max_event + 1;
+  for(i=es->max_event;i>=0;i--) {
+    if(es->events[i].event == event) break;
+    if(es->events[i].event == UNDEFINED_EVENT)
+      min_event = i;
+  }
+  if(i < 0) {
+    i = min_event;
+    es->events[i].event = event;
+  }
+  es->events[i].flags = rwflags;
+  es->events[i].arg = arg;
+  if(i > es->max_event)
+    es->max_event++;
+  return i;
 }
 
 /* this selects and yields: */
 int
-tme_sjlj_event_wait_yield(struct tme_event_set *es, const struct timeval *timeout_in, struct event_set_return *out, int outlen)
+tme_sjlj_event_wait_yield(struct tme_sjlj_event_set *es, const struct timeval *timeout_in, struct event_set_return *out, int outlen)
 {
-  int fd_old;
-  int fd_new;
-  int min_fd, max_fd, fd;
-  unsigned int fd_condition_old;
-  unsigned int fd_condition_new;
   struct timeval timeout_out;
-  struct tme_sjlj_thread *thread;
-  int rc, i;
+  int rc;
 
   /* do a polling select: */
   timeout_out.tv_sec = 0;
@@ -720,81 +743,7 @@ tme_sjlj_event_wait_yield(struct tme_event_set *es, const struct timeval *timeou
     return (rc);
   }
 
-  /* get the active thread: */
-  thread = tme_sjlj_thread_active;
-
-  min_fd = TME_MAX_FD + 1;
-  max_fd = -1;
-  
-  /* we are yielding.  copy out the fds to merge with current events */
-  for (i = 0; i <= es->num_events; i++) {
-    fd = es->events[i].fd;
-    if(fd < min_fd) min_fd = fd;
-    if(fd > max_fd) max_fd = fd;
-    tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_conditions = es->events[i].flags;
-  }
-  
-  tme_event_free(es);
-
-  tme_sjlj_thread_blocked.tme_sjlj_thread_min_fd = min_fd;
-  if(thread->tme_sjlj_thread_min_fd < min_fd)
-    min_fd = thread->tme_sjlj_thread_min_fd;
-  tme_sjlj_thread_blocked.tme_sjlj_thread_max_fd = max_fd;
-  if(thread->tme_sjlj_thread_max_fd > max_fd)
-    max_fd = thread->tme_sjlj_thread_max_fd;
-
-  for (fd = min_fd; fd <= max_fd; fd++) {
-    /* the old and new conditions on this fd start out empty: */
-    fd_condition_old = 0;
-
-    /* check the old fd sets: */
-    if(tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_read == thread)
-      fd_condition_old |= EVENT_READ;
-    if(tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_write == thread)
-      fd_condition_old |= EVENT_WRITE;
-    if(tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_except == thread)
-      fd_condition_old |= EVENT_UNDEF;
-    
-    /* check the new fd sets: */
-
-    /* if the conditions haven't changed: */
-    if (tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_conditions == fd_condition_old)
-      continue;
-
-    /* if there is any blocking on this file descriptor, remove it: */
-    /* remove this fd from our main loop's fd sets: */
-    event_del(tme_sjlj_main_events, fd);
-      
-    fd_condition_new = 0;
-    /* update the blocking by this thread on this file descriptor: */
-#define UPDATE_FD_THREAD(fd_thread, condition)				\
-    do {								\
-      if (fd_condition_old & condition) {				\
-	assert(tme_sjlj_fd_thread[fd].fd_thread == thread);		\
-	tme_sjlj_fd_thread[fd].fd_thread = NULL;			\
-      }									\
-      if (tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_conditions & condition) { \
-	assert(tme_sjlj_fd_thread[fd].fd_thread == NULL);		\
-	tme_sjlj_fd_thread[fd].fd_thread = thread;			\
-      }									\
-      /* get the conditions for all threads for this fd: */		\
-      if(tme_sjlj_fd_thread[fd].fd_thread)				\
-	fd_condition_new |= condition;					\
-    } while	(/* CONSTCOND */ 0)
-    UPDATE_FD_THREAD(tme_sjlj_fd_thread_read, EVENT_READ);
-    UPDATE_FD_THREAD(tme_sjlj_fd_thread_write, EVENT_WRITE);
-    UPDATE_FD_THREAD(tme_sjlj_fd_thread_except, EVENT_UNDEF);
-#undef UPDATE_FD_THREAD    
-
-    /* reset the new fd conditions for this thread: */
-    tme_sjlj_fd_thread[fd].tme_sjlj_fd_thread_conditions = 0;
-
-    /* if there is any blocking on this file descriptor, add it: */
-    if (fd_condition_new != 0) {
-      /* add this fd to main loop's relevant fd sets: */
-      event_ctl(tme_sjlj_main_events, fd, fd_condition_new, (void *)fd);
-    }
-  }
+  tme_sjlj_thread_blocked.tme_sjlj_thread_events = es;
 
   if (timeout_in != NULL) {
     TME_TIME_SETV(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep, timeout_in->tv_sec, timeout_in->tv_usec);
@@ -811,21 +760,21 @@ tme_sjlj_event_wait_yield(struct tme_event_set *es, const struct timeval *timeou
 
 /* this reads or writes, yielding if the fd is not ready: */
 ssize_t
-tme_sjlj_event_yield(int fd, void *data, size_t count, unsigned int rwflags)
+tme_sjlj_event_yield(event_t event, void *data, size_t count, unsigned int rwflags)
 {
   int rc = 1;
-  struct tme_event_set *es = tme_event_set_init(&rc, EVENT_METHOD_FAST);
+  struct tme_sjlj_event_set *es = tme_sjlj_event_set_init(&rc, EVENT_METHOD_FAST);
   
-  tme_event_ctl(es, fd, rwflags, 0);
+  tme_sjlj_event_ctl(es, event, rwflags, 0);
 
-  rc = tme_event_wait_yield(es, NULL, NULL, 0);
+  rc = tme_sjlj_event_wait_yield(es, NULL, NULL, 0);
 
   if (rc != 1) {
     return (rc);
   }
 
   /* do the read: */
-  return (rwflags == EVENT_READ) ? (read(fd, data, count)) : (write(fd, data, count));
+  return (rwflags == EVENT_READ) ? (read(event, data, count)) : (write(event, data, count));
 }
 
 /* this exits a thread: */
@@ -848,7 +797,10 @@ tme_sjlj_yield(void)
   int blocked;
   struct tme_sjlj_thread **_thread_prev;
   struct tme_sjlj_thread *thread_other;
-
+  struct tme_sjlj_event_arg *event_arg;
+  struct tme_sjlj_event_set *es;
+  int rc, i, j;
+  
   /* get the active thread: */
   thread = tme_sjlj_thread_active;
 
@@ -865,16 +817,79 @@ tme_sjlj_yield(void)
   thread->tme_sjlj_thread_cond = tme_sjlj_thread_blocked.tme_sjlj_thread_cond;
   tme_sjlj_thread_blocked.tme_sjlj_thread_cond = NULL;
 
-  /* see if this thread is blocked on any file descriptors: */
-  if(tme_sjlj_thread_blocked.tme_sjlj_thread_max_fd >= 0) {
-    blocked = TRUE;
+  /* see if this thread is blocked on any events: */
+  es = tme_sjlj_thread_blocked.tme_sjlj_thread_events;
+
+  if(es) {
+    for(i=0;i<=es->max_event;i++) {
+      if(es->events[i].event == UNDEFINED_EVENT)
+	continue;
+      j = -1;
+      if(thread->tme_sjlj_thread_events)
+	j = tme_sjlj_event_del(thread->tme_sjlj_thread_events, es->events[i].event);
+      if(j<0) {
+	rc = tme_sjlj_event_del(tme_sjlj_main_events, es->events[i].event);
+	if(rc<0)
+	  rc = tme_sjlj_event_ctl(tme_sjlj_main_events,
+				  es->events[i].event,
+				  es->events[i].flags,
+				  tme_new0(struct tme_sjlj_event_arg, TME_NUM_EVFLAGS));
+	else {
+	  tme_sjlj_main_events->events[rc].event = es->events[i].event;
+	  tme_sjlj_main_events->events[rc].flags |= es->events[i].flags;
+	  event_ctl(tme_sjlj_main_events->es,
+		    es->events[i].event,
+		    tme_sjlj_main_events->events[rc].flags,
+		    tme_sjlj_main_events->events[rc].arg);
+	}
+      }
+      else if(es->events[i].flags != thread->tme_sjlj_thread_events->events[j].flags) {
+	rc = (int)thread->tme_sjlj_thread_events->events[j].arg;
+	tme_sjlj_main_events->events[rc].flags &= ~thread->tme_sjlj_thread_events->events[j].flags;
+	tme_sjlj_main_events->events[rc].flags |= es->events[i].flags;
+	event_ctl(tme_sjlj_main_events->es,
+		  es->events[i].event,
+		  tme_sjlj_main_events->events[rc].flags,
+		  tme_sjlj_main_events->events[rc].arg);
+      }
+      event_arg = (struct tme_sjlj_event_arg *)tme_sjlj_main_events->events[rc].arg;
+      for(j=0;j<TME_NUM_EVFLAGS;j++) {
+	if(es->events[i].flags & (1<<j)) {
+	  event_arg->thread = thread;
+	  event_arg->arg = es->events[i].arg;
+	}
+	event_arg++;
+      }
+      es->events[i].arg = (void *)rc;
+    }
+    blocked = i;
+  }
+
+  if(thread->tme_sjlj_thread_events) {
+    for(i=0;i<=thread->tme_sjlj_thread_events->max_event;i++) {
+      j = (int)thread->tme_sjlj_thread_events->events[i].arg;
+      if(tme_sjlj_main_events->events[j].flags &= ~thread->tme_sjlj_thread_events->events[i].flags)
+	event_ctl(tme_sjlj_main_events->es,
+		  tme_sjlj_main_events->events[j].event,
+		  tme_sjlj_main_events->events[j].flags,
+		  tme_sjlj_main_events->events[j].arg);
+      else {
+	event_del(tme_sjlj_main_events->es,
+		  tme_sjlj_main_events->events[j].event);
+	tme_sjlj_main_events->events[j].event = UNDEFINED_EVENT;
+	tme_free(tme_sjlj_main_events->events[j].arg);
+	while(j == tme_sjlj_main_events->max_event) {
+	  if(tme_sjlj_main_events->events[j--].event == UNDEFINED_EVENT)
+	    tme_sjlj_main_events->max_event--;
+	  if(j<0) break;
+	}
+      }
+    }
+    tme_sjlj_event_free(thread->tme_sjlj_thread_events);
   }
   
-  thread->tme_sjlj_thread_min_fd = tme_sjlj_thread_blocked.tme_sjlj_thread_min_fd;
-  thread->tme_sjlj_thread_max_fd = tme_sjlj_thread_blocked.tme_sjlj_thread_max_fd;
-
-  tme_sjlj_thread_blocked.tme_sjlj_thread_min_fd = TME_MAX_FD + 1;
-  tme_sjlj_thread_blocked.tme_sjlj_thread_max_fd = -1;
+  thread->tme_sjlj_thread_events = es;
+  tme_sjlj_thread_blocked.tme_sjlj_thread_events = NULL;
   
   /* see if this thread is blocked for some amount of time: */
   if (!TME_TIME_EQV(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep, 0, 0)) {

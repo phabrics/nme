@@ -292,7 +292,13 @@ static _tme_inline ssize_t tme_thread_write _TME_P((int fd, const void *buf, siz
 
 #define tme_thread_read_yield tme_thread_read
 #define tme_thread_write_yield tme_thread_write
+
+typedef struct event_set tme_event_set_t;
+
 #define tme_event_set_init event_set_init
+#define tme_event_free event_free
+#define tme_event_reset event_reset
+#define tme_event_del event_del
 #define tme_event_ctl event_ctl
 #define tme_event_wait_yield event_wait
 

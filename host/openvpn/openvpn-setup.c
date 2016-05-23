@@ -196,7 +196,7 @@ do_setup_fast_io(struct options *options) {
   return false;
 }
 
-struct frame *openvpn_setup(const char *args[], struct tuntap **tt, struct link_socket **sock, struct env_set **es, u_char *flags, struct event_set **event_set) {
+struct frame *openvpn_setup(const char *args[], struct tuntap **tt, struct link_socket **sock, struct env_set **es, u_char *flags, tme_event_set_t **event_set) {
   int arg_i;
   struct options options;       /**< Options loaded from command line or
 				 *   configuration file. */
@@ -297,7 +297,7 @@ struct frame *openvpn_setup(const char *args[], struct tuntap **tt, struct link_
     int maxevents = 0;
     if(sock) maxevents++;
     if(tt) maxevents++;
-    *event_set = event_set_init(&maxevents, EVENT_METHOD_FAST);
+    *event_set = tme_event_set_init(&maxevents, EVENT_METHOD_FAST);
   }
 
   sig = &siginfo_static;
