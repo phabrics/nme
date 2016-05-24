@@ -777,7 +777,7 @@ tme_sjlj_event_yield(event_t event, void *data, size_t count, unsigned int rwfla
 
   /* do the read: */
   if(esr.rwflags & EVENT_WRITE)
-    write(event, data, count));  
+    write(event, data, count);  
   if(esr.rwflags & EVENT_READ)
     return read(event, data, count);
 }
