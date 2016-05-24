@@ -97,8 +97,11 @@ static int _tme_openvpn_tun_read(void *data) {
     tun_show_debug(tun->tt);
 #endif
 
-    tun_set(tun->tt, tun->event_set, flags, (void*)0, NULL);
-    rc = tme_event_wait(tun->event_set, &tv, &esr, 1);
+    tun_set(tun->tt, tme_event_set(tun->event_set), flags, (void*)0, NULL);
+
+    tme_event_ctl(tun->event_set, tun_event_handle(tun->tt), flags, 0);
+
+    rc = tme_event_wait_yield(tun->event_set, &tv, &esr, 1);
   
     if(esr.rwflags & EVENT_WRITE)
       tun->flags |= OPENVPN_CAN_WRITE;

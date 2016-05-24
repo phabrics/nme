@@ -9,7 +9,7 @@ pkglib_LTLIBRARIES = tme_host_openvpn.la
 tme_host_openvpn_la_SOURCES = \
 	openvpn-link.c \
 	openvpn-setup.c openvpn-setup.h \
-	openvpn-tap.c \
+	openvpn-tap.c
 tme_host_openvpn_la_LIBADD = ../eth/libeth.la
 tme_host_openvpn_la_LDFLAGS = -module -version-info 0:0:0
 

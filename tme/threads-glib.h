@@ -216,6 +216,7 @@ static _tme_inline ssize_t tme_thread_write _TME_P((int fd, const void *buf, siz
 
 typedef struct event_set tme_event_set_t;
 
+#define tme_event_set(s) (s)
 #define tme_event_set_init event_set_init
 #define tme_event_free event_free
 #define tme_event_reset event_reset

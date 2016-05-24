@@ -106,11 +106,14 @@ static int _tme_openvpn_sock_read(void *data) {
       tv.tv_usec = 0;
     }
     
-    socket_set(sock->ls, sock->event_set, flags, (void*)0, NULL);
+    socket_set(sock->ls, tme_event_set(sock->event_set), flags, (void*)0, NULL);
+
+    tme_event_ctl(sock->event_set, socket_event_handle(sock->ls), flags, 0);
+
     if(socket_read_residual(sock->ls))
       esr.rwflags = EVENT_READ;
     else
-      rc = tme_event_wait(sock->event_set, &tv, &esr, 1);
+      rc = tme_event_wait_yield(sock->event_set, &tv, &esr, 1);
     
     if(esr.rwflags & EVENT_WRITE)
       sock->flags |= OPENVPN_CAN_WRITE;

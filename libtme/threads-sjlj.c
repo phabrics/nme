@@ -682,6 +682,7 @@ void tme_sjlj_event_free(struct tme_sjlj_event_set *es) {
 void tme_sjlj_event_reset(struct tme_sjlj_event_set *es)
 {
   event_reset(es->es);
+  es->max_event = -1;
 }
 
 int tme_sjlj_event_del(struct tme_sjlj_event_set *es, event_t event)
@@ -730,7 +731,7 @@ tme_sjlj_event_wait_yield(struct tme_sjlj_event_set *es, const struct timeval *t
 {
   struct timeval timeout_out;
   int rc;
-
+  
   /* do a polling select: */
   timeout_out.tv_sec = 0;
   timeout_out.tv_usec = 0;
@@ -763,18 +764,22 @@ ssize_t
 tme_sjlj_event_yield(event_t event, void *data, size_t count, unsigned int rwflags)
 {
   int rc = 1;
-  struct tme_sjlj_event_set *es = tme_sjlj_event_set_init(&rc, EVENT_METHOD_FAST);
+  struct tme_sjlj_event_set *es = tme_sjlj_event_set_init(&rc, 0);
+  struct event_set_return esr;
   
   tme_sjlj_event_ctl(es, event, rwflags, 0);
 
-  rc = tme_sjlj_event_wait_yield(es, NULL, NULL, 0);
+  rc = tme_sjlj_event_wait_yield(es, NULL, &esr, 1);
 
   if (rc != 1) {
     return (rc);
   }
 
   /* do the read: */
-  return (rwflags == EVENT_READ) ? (read(event, data, count)) : (write(event, data, count));
+  if(esr.rwflags & EVENT_WRITE)
+    write(event, data, count));  
+  if(esr.rwflags & EVENT_READ)
+    return read(event, data, count);
 }
 
 /* this exits a thread: */
