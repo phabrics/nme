@@ -98,6 +98,7 @@ struct tme_sjlj_event {
 struct tme_sjlj_event_set {
   struct event_set *es;
   int max_event;
+  unsigned int flags;
   struct tme_sjlj_event events[0];
 };
 
@@ -137,6 +138,9 @@ static jmp_buf tme_sjlj_dispatcher_jmp;
 /* the main loop events: */
 static struct tme_sjlj_event_set *tme_sjlj_main_events;
 
+/* the read/write events: */
+struct tme_sjlj_event_set *tme_sjlj_rw_events;
+
 /* the dispatch number: */
 static tme_uint32_t _tme_sjlj_thread_dispatch_number;
 
@@ -162,6 +166,8 @@ tme_sjlj_threads_init()
 
   /* no threads are waiting on any fds: */
   tme_sjlj_main_events = tme_sjlj_event_set_init(&num, 0);
+  num = 1;
+  tme_sjlj_rw_events = tme_sjlj_event_set_init(&num, EVENT_METHOD_FAST);
   
   /* initialize the thread-blocked structure: */
   tme_sjlj_thread_blocked.tme_sjlj_thread_cond = NULL;
@@ -671,25 +677,29 @@ struct tme_sjlj_event_set *tme_sjlj_event_set_init(int *maxevents, unsigned int 
   tes = (struct tme_sjlj_event_set *) tme_malloc(sizeof(struct tme_sjlj_event_set) + sizeof(struct tme_sjlj_event) * (*maxevents));
   tes->es = es;
   tes->max_event = -1;
+  tes->flags = flags;
   return tes;
 }
 
 void tme_sjlj_event_free(struct tme_sjlj_event_set *es) {
-  event_free(es->es);
+  if(es->es)
+    event_free(es->es);
   tme_free(es);
 }
 
 void tme_sjlj_event_reset(struct tme_sjlj_event_set *es)
 {
-  event_reset(es->es);
+  if(es->es)
+    event_reset(es->es);
   es->max_event = -1;
 }
 
 int tme_sjlj_event_del(struct tme_sjlj_event_set *es, event_t event)
 {
   int i, rc;
-  
-  event_del(es->es, event);
+
+  if(es->es)
+    event_del(es->es, event);
   for(i=0;i<=es->max_event;i++)
     if(es->events[i].event == event) break;
   if(i > es->max_event)
@@ -705,15 +715,17 @@ int tme_sjlj_event_del(struct tme_sjlj_event_set *es, event_t event)
 }
 
 int tme_sjlj_event_ctl(struct tme_sjlj_event_set *es, event_t event, unsigned int rwflags, void *arg) {
-  int i, min_event;
+  int i = -1, min_event;
   
-  event_ctl(es->es, event, rwflags, arg);
+  if(es->es)
+    event_ctl(es->es, event, rwflags, arg);
   min_event = es->max_event + 1;
-  for(i=es->max_event;i>=0;i--) {
-    if(es->events[i].event == event) break;
-    if(es->events[i].event == UNDEFINED_EVENT)
-      min_event = i;
-  }
+  if(!(es->flags & EVENT_METHOD_FAST))
+    for(i=es->max_event;i>=0;i--) {
+      if(es->events[i].event == event) break;
+      if(es->events[i].event == UNDEFINED_EVENT)
+	min_event = i;
+    }
   if(i < 0) {
     i = min_event;
     es->events[i].event = event;
@@ -763,23 +775,20 @@ tme_sjlj_event_wait_yield(struct tme_sjlj_event_set *es, const struct timeval *t
 ssize_t
 tme_sjlj_event_yield(event_t event, void *data, size_t count, unsigned int rwflags)
 {
-  int rc = 1;
-  struct tme_sjlj_event_set *es = tme_sjlj_event_set_init(&rc, 0);
+  int rc;
   struct event_set_return esr;
-  
-  tme_sjlj_event_ctl(es, event, rwflags, 0);
 
-  rc = tme_sjlj_event_wait_yield(es, NULL, &esr, 1);
+  tme_sjlj_event_reset(tme_sjlj_rw_events);
+  tme_sjlj_event_ctl(tme_sjlj_rw_events, event, rwflags, 0);
 
-  if (rc != 1) {
-    return (rc);
-  }
+  rc = tme_sjlj_event_wait_yield(tme_sjlj_rw_events, NULL, &esr, 1);
 
   /* do the read: */
   if(esr.rwflags & EVENT_WRITE)
-    write(event, data, count);  
+    rc = write(event, data, count);  
   if(esr.rwflags & EVENT_READ)
-    return read(event, data, count);
+    rc = read(event, data, count);
+  return rc;
 }
 
 /* this exits a thread: */
@@ -803,7 +812,7 @@ tme_sjlj_yield(void)
   struct tme_sjlj_thread **_thread_prev;
   struct tme_sjlj_thread *thread_other;
   struct tme_sjlj_event_arg *event_arg;
-  struct tme_sjlj_event_set *es;
+  struct tme_sjlj_event_set *es, *es2 = NULL;
   int rc, i, j;
   
   /* get the active thread: */
@@ -826,6 +835,10 @@ tme_sjlj_yield(void)
   es = tme_sjlj_thread_blocked.tme_sjlj_thread_events;
 
   if(es) {
+    rc = es->max_event + 1;
+    es2 = tme_sjlj_event_set_init(&rc, 0);
+    event_free(es2->es);
+    es2->es = NULL;
     for(i=0;i<=es->max_event;i++) {
       if(es->events[i].event == UNDEFINED_EVENT)
 	continue;
@@ -865,7 +878,10 @@ tme_sjlj_yield(void)
 	}
 	event_arg++;
       }
-      es->events[i].arg = (void *)rc;
+      tme_sjlj_event_ctl(es2,
+			 es->events[i].event,
+			 es->events[i].flags,
+			 (void *)rc);			      
     }
     blocked = i;
   }
@@ -893,7 +909,7 @@ tme_sjlj_yield(void)
     tme_sjlj_event_free(thread->tme_sjlj_thread_events);
   }
   
-  thread->tme_sjlj_thread_events = es;
+  thread->tme_sjlj_thread_events = es2;
   tme_sjlj_thread_blocked.tme_sjlj_thread_events = NULL;
   
   /* see if this thread is blocked for some amount of time: */
