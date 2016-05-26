@@ -5,7 +5,7 @@ AUTOMAKE_OPTIONS = 1.4 gnu
 
 AUTOM4TE = $(SHELL) $(top_srcdir)/missing --run autom4te
 
-AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I. -D_TME_IMPL 
+AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(top_srcdir)/lib -I. -D_TME_IMPL 
 
 pkglib_LTLIBRARIES = tme_ic_sparc.la
 tme_ic_sparc_la_SOURCES = \

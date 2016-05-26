@@ -12,7 +12,6 @@ tmelibopenvpn_HEADERS = \
 	circ_list.h \
 	clinat.h \
 	common.h \
-	compat.h compat-stdbool.h \
 	crypto.h crypto_backend.h \
 	crypto_openssl.h \
 	crypto_polarssl.h \

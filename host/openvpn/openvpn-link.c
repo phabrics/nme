@@ -78,14 +78,15 @@ static int _tme_openvpn_sock_write(void *data) {
 }
 
 static int _tme_openvpn_sock_read(void *data) {
-  int status, rc;
+  int status;
+  unsigned int flags;
+  struct timeval tv;
+  struct event_set *es;
+  struct event_set_return esr;
   tme_openvpn_sock *sock = data;
   struct link_socket_actual from;               /* address of incoming datagram */
+  
   while(1) {
-    unsigned int flags;
-    struct timeval tv;
-    struct event_set_return esr;
-    
     tme_event_reset(sock->event_set);
 
     /*
@@ -106,14 +107,22 @@ static int _tme_openvpn_sock_read(void *data) {
       tv.tv_usec = 0;
     }
     
-    socket_set(sock->ls, tme_event_set(sock->event_set), flags, (void*)0, NULL);
+    es = tme_event_set(sock->event_set);
 
-    tme_event_ctl(sock->event_set, socket_event_handle(sock->ls), flags, 0);
+    socket_set(sock->ls, es, flags, (void*)0, NULL);
+
+    if(es != sock->event_set) {
+      tme_event_set(sock->event_set) = NULL;
+      tme_event_ctl(sock->event_set, socket_event_handle(sock->ls), flags, 0);
+      tme_event_set(sock->event_set) = es;
+    }
 
     if(socket_read_residual(sock->ls))
       esr.rwflags = EVENT_READ;
-    else
-      rc = tme_event_wait_yield(sock->event_set, &tv, &esr, 1);
+    else {
+      status = tme_event_wait_yield(sock->event_set, &tv, &esr, 1);
+      if(status<0) return status;
+    }
     
     if(esr.rwflags & EVENT_WRITE)
       sock->flags |= OPENVPN_CAN_WRITE;

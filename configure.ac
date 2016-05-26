@@ -55,6 +55,83 @@ AC_PROG_YACC
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 
+AC_DEFINE_UNQUOTED([TARGET_ALIAS], ["${host}"], [A string representing our host])
+case "${host_os}" in
+netbsd*) 
+   AC_DEFINE([TARGET_NETBSD], [1], [Are we running NetBSD?])
+   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["N"], [Target prefix])
+   CPPFLAGS="${CPPFLAGS-} -D_NETBSD_SOURCE"
+   DEV_TAP_FILENAME='"\"/dev/tap\""'
+   SETCAP="chmod u+s"
+   ;;
+openbsd*) 
+   AC_DEFINE([TARGET_OPENBSD], [1], [Are we running on OpenBSD?])
+   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["O"], [Target prefix])
+   CPPFLAGS="${CPPFLAGS-}"
+   DEV_TAP_FILENAME='"\"/dev/tun\""'
+   SETCAP="chmod u+s"
+   ;;
+freebsd*) 
+   AC_DEFINE([TARGET_FREEBSD], [1], [Are we running on FreeBSD?])
+   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["F"], [Target prefix])
+   CPPFLAGS="${CPPFLAGS-}"
+   DEV_TAP_FILENAME='"\"/dev/tap\""'
+   SETCAP="chmod u+s"
+   ;;
+dragonfly*) 
+   AC_DEFINE([TARGET_DRAGONFLY], [1], [Are we running on DragonFlyBSD?])
+   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["D"], [Target prefix])
+   CPPFLAGS="${CPPFLAGS-}"
+   DEV_TAP_FILENAME='"\"/dev/tap\""'
+   SETCAP="chmod u+s"
+   ;;
+linux*) 
+   AC_DEFINE([TARGET_LINUX], [1], [Are we running on Linux?])
+   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["L"], [Target prefix])
+   CPPFLAGS="${CPPFLAGS-}"
+   DEV_TAP_FILENAME='"\"/dev/net/tun\""'
+   SETCAP="chmod u+s"
+#   SETCAP="setcap cap_sys_nice,cap_net_admin,cap_net_raw+ep"
+   ;;
+mingw*)
+   AC_DEFINE([TARGET_WIN32], [1], [Are we running WIN32?])
+   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["W"], [Target prefix])
+   CPPFLAGS="${CPPFLAGS} -DWIN32_LEAN_AND_MEAN"
+   CPPFLAGS="${CPPFLAGS} -DNTDDI_VERSION=NTDDI_WINXP -D_WIN32_WINNT=_WIN32_WINNT_WINXP"
+   WIN32=yes
+   SETCAP="chmod u+s"
+   ;;
+cygwin*)   
+   WIN32=cygwin
+   SETCAP="chmod u+s"
+   ;;
+solaris*)
+   AC_DEFINE([TARGET_SOLARIS], [1], [Are we running on Solaris?])
+   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["S"], [Target prefix])
+   SETCAP="chmod u+s"
+   ;;
+darwin*)
+   AC_DEFINE([TARGET_DARWIN], [1], [Are we running on Mac OS X?])
+   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["M"], [Target prefix])
+   dnl some Mac OS X tendering (we use vararg macros...)
+   CPPFLAGS="$CPPFLAGS -no-cpp-precomp"
+   SETCAP="chmod u+s"
+   have_tap_header="yes"
+   ;;
+*)
+   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["X"], [Target prefix])
+   CPPFLAGS="${CPPFLAGS-}"
+   SETCAP="chmod u+s"
+   have_tap_header="yes"
+   ;;
+esac
+
+AM_CONDITIONAL([WIN32], [test "${WIN32}" = "yes"])
+
+AC_SUBST(DEV_TAP_FILENAME)
+AC_SUBST(SETCAP)
+AC_SUBST(TGTPFX)
+
 # Checks for libraries.
 # FIXME: Replace `main' with a function in `-lm':
 #AC_CHECK_LIB([m], [main])
@@ -660,83 +737,6 @@ AC_DEFINE(HAVE_AF_PACKET, [], [Define if you have AF_PACKET.])
 ], [
 AC_MSG_RESULT(no)
 ])
-
-AC_DEFINE_UNQUOTED([TARGET_ALIAS], ["${host}"], [A string representing our host])
-case "${host_os}" in
-netbsd*) 
-   AC_DEFINE([TARGET_NETBSD], [1], [Are we running NetBSD?])
-   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["N"], [Target prefix])
-   CPPFLAGS="${CPPFLAGS-} -D_NETBSD_SOURCE"
-   DEV_TAP_FILENAME='"\"/dev/tap\""'
-   SETCAP="chmod u+s"
-   ;;
-openbsd*) 
-   AC_DEFINE([TARGET_OPENBSD], [1], [Are we running on OpenBSD?])
-   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["O"], [Target prefix])
-   CPPFLAGS="${CPPFLAGS-}"
-   DEV_TAP_FILENAME='"\"/dev/tun\""'
-   SETCAP="chmod u+s"
-   ;;
-freebsd*) 
-   AC_DEFINE([TARGET_FREEBSD], [1], [Are we running on FreeBSD?])
-   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["F"], [Target prefix])
-   CPPFLAGS="${CPPFLAGS-}"
-   DEV_TAP_FILENAME='"\"/dev/tap\""'
-   SETCAP="chmod u+s"
-   ;;
-dragonfly*) 
-   AC_DEFINE([TARGET_DRAGONFLY], [1], [Are we running on DragonFlyBSD?])
-   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["D"], [Target prefix])
-   CPPFLAGS="${CPPFLAGS-}"
-   DEV_TAP_FILENAME='"\"/dev/tap\""'
-   SETCAP="chmod u+s"
-   ;;
-linux*) 
-   AC_DEFINE([TARGET_LINUX], [1], [Are we running on Linux?])
-   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["L"], [Target prefix])
-   CPPFLAGS="${CPPFLAGS-}"
-   DEV_TAP_FILENAME='"\"/dev/net/tun\""'
-   SETCAP="chmod u+s"
-#   SETCAP="setcap cap_sys_nice,cap_net_admin,cap_net_raw+ep"
-   ;;
-mingw*)
-   AC_DEFINE([TARGET_WIN32], [1], [Are we running WIN32?])
-   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["W"], [Target prefix])
-   CPPFLAGS="${CPPFLAGS} -DWIN32_LEAN_AND_MEAN"
-   CPPFLAGS="${CPPFLAGS} -DNTDDI_VERSION=NTDDI_WINXP -D_WIN32_WINNT=_WIN32_WINNT_WINXP"
-   WIN32=yes
-   SETCAP="chmod u+s"
-   ;;
-cygwin*)   
-   WIN32=cygwin
-   SETCAP="chmod u+s"
-   ;;
-solaris*)
-   AC_DEFINE([TARGET_SOLARIS], [1], [Are we running on Solaris?])
-   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["S"], [Target prefix])
-   SETCAP="chmod u+s"
-   ;;
-darwin*)
-   AC_DEFINE([TARGET_DARWIN], [1], [Are we running on Mac OS X?])
-   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["M"], [Target prefix])
-   dnl some Mac OS X tendering (we use vararg macros...)
-   CPPFLAGS="$CPPFLAGS -no-cpp-precomp"
-   SETCAP="chmod u+s"
-   have_tap_header="yes"
-   ;;
-*)
-   AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["X"], [Target prefix])
-   CPPFLAGS="${CPPFLAGS-}"
-   SETCAP="chmod u+s"
-   have_tap_header="yes"
-   ;;
-esac
-
-AM_CONDITIONAL([WIN32], [test "${WIN32}" = "yes"])
-
-AC_SUBST(DEV_TAP_FILENAME)
-AC_SUBST(SETCAP)
-AC_SUBST(TGTPFX)
 
 dnl Start the list of host support.
 TME_HOSTS=

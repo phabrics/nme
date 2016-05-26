@@ -74,7 +74,9 @@ libopenvpn_la_SOURCES = \
 	ssl_verify_openssl.c \
 	ssl_verify_polarssl.c \
 	status.c \
-	tun.c
+	tun.c \
+	win32.c \
+	cryptoapi.c
 
 libopenvpn_la_LIBADD = \
 	$(SOCKETS_LIBS) \

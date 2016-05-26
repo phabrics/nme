@@ -72,9 +72,10 @@ static int _tme_openvpn_tun_write(void *data) {
 }
 
 static int _tme_openvpn_tun_read(void *data) {
-  int rc;
+  int status;
   unsigned int flags;
   struct timeval tv;
+  struct event_set *es;
   struct event_set_return esr;
   tme_openvpn_tun *tun = data;
 
@@ -97,12 +98,19 @@ static int _tme_openvpn_tun_read(void *data) {
     tun_show_debug(tun->tt);
 #endif
 
-    tun_set(tun->tt, tme_event_set(tun->event_set), flags, (void*)0, NULL);
+    es = tme_event_set(tun->event_set);
 
-    tme_event_ctl(tun->event_set, tun_event_handle(tun->tt), flags, 0);
+    tun_set(tun->tt, es, flags, (void*)0, NULL);
 
-    rc = tme_event_wait_yield(tun->event_set, &tv, &esr, 1);
-  
+    if(es != tun->event_set) {
+      tme_event_set(tun->event_set) = NULL;
+      tme_event_ctl(tun->event_set, tun_event_handle(tun->tt), flags, 0);
+      tme_event_set(tun->event_set) = es;
+    }
+    
+    status = tme_event_wait_yield(tun->event_set, &tv, &esr, 1);
+    if(status<0) return status;
+
     if(esr.rwflags & EVENT_WRITE)
       tun->flags |= OPENVPN_CAN_WRITE;
     if(esr.rwflags & EVENT_READ) {
