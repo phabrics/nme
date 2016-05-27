@@ -12,11 +12,14 @@ tmelibopenvpn_HEADERS = \
 	circ_list.h \
 	clinat.h \
 	common.h \
+	console.h \
+	cryptoapi.h \
 	crypto.h crypto_backend.h \
 	crypto_openssl.h \
 	crypto_polarssl.h \
 	dhcp.h \
 	errlevel.h \
+	error.h \
 	event.h \
 	fdmisc.h \
 	forward.h forward-inline.h \
@@ -24,18 +27,16 @@ tmelibopenvpn_HEADERS = \
 	gremlin.h \
 	helper.h \
 	httpdigest.h \
-	lladdr.h \
 	init.h \
 	integer.h \
 	interval.h \
 	list.h \
+	lladdr.h \
 	lzo.h \
 	manage.h \
 	mbuf.h \
 	memdbg.h \
 	misc.h \
-	platform.h \
-	console.h \
 	mroute.h \
 	mss.h \
 	mstats.h \
@@ -45,7 +46,6 @@ tmelibopenvpn_HEADERS = \
 	multi.h \
 	ntlm.h \
 	occ.h occ-inline.h \
-	pkcs11.h pkcs11_backend.h \
 	openvpn.h \
 	openvpn-plugin.h \
 	options.h \
@@ -54,6 +54,8 @@ tmelibopenvpn_HEADERS = \
 	perf.h \
 	pf.h pf-inline.h \
 	ping.h ping-inline.h \
+	pkcs11.h pkcs11_backend.h \
+	platform.h \
 	plugin.h \
 	pool.h \
 	proto.h \
@@ -79,5 +81,4 @@ tmelibopenvpn_HEADERS = \
 	status.h \
 	syshead.h \
 	tun.h \
-	win32.h \
-	cryptoapi.h
+	win32.h
