@@ -41,7 +41,6 @@ _TME_RCSID("$Id: threads.h,v 1.10 2010/06/05 19:36:35 fredette Exp $");
 
 /* includes: */
 #include <errno.h>
-#include <sys/time.h>
 #include <tme/libopenvpn/syshead.h>
 #include <tme/libopenvpn/event.h>
 

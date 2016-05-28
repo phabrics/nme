@@ -34,7 +34,7 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.68])
 m4_include(version.m4)
-AC_INIT([tme], [0.12beta19])
+AC_INIT([tme], [0.12beta20])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
@@ -1067,7 +1067,7 @@ xpthreads | xposix)  CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_POSIX"
 xglib)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_GLIB -DUSE_GLIB_TIME ${GLIB_CFLAGS}"
 #	 LDFLAGS="${LDFLAGS-} ${GLIB_LIBS}"
 	 ;;
-xsjlj)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_SJLJ" ;;
+xsjlj)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_SJLJ -DUSE_GETTIMEOFDAY" ;;
 esac
 done
 

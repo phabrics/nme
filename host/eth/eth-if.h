@@ -41,9 +41,6 @@ _TME_RCSID("$Id: eth-impl.h,v 1.1 2003/05/18 00:02:23 fredette Exp $");
 #include <tme/generic/ethernet.h>
 #include <tme/threads.h>
 #include <tme/misc.h>
-#ifdef HAVE_TIME_H
-#include <time.h>
-#endif
 #include <stdio.h>
 #include <string.h>
 #include <stddef.h>	/* for offsetof */

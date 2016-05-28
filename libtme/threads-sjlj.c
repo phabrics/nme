@@ -39,8 +39,6 @@ _TME_RCSID("$Id: threads-sjlj.c,v 1.18 2010/06/05 19:10:28 fredette Exp $");
 /* includes: */
 #include <tme/threads.h>
 #include <stdlib.h>
-#include <sys/time.h>
-#include <time.h>
 #include <setjmp.h>
 
 /* thread states: */
@@ -813,7 +811,7 @@ tme_sjlj_yield(void)
   struct tme_sjlj_thread *thread_other;
   struct tme_sjlj_event_arg *event_arg;
   struct tme_sjlj_event_set *es, *es2 = NULL;
-  int rc, i, j;
+  int i, j, changed;
   
   /* get the active thread: */
   thread = tme_sjlj_thread_active;
@@ -835,53 +833,54 @@ tme_sjlj_yield(void)
   es = tme_sjlj_thread_blocked.tme_sjlj_thread_events;
 
   if(es) {
-    rc = es->max_event + 1;
-    es2 = tme_sjlj_event_set_init(&rc, 0);
+    j = es->max_event + 1;
+    es2 = tme_sjlj_event_set_init(&j, 0);
     event_free(es2->es);
     es2->es = NULL;
     for(i=0;i<=es->max_event;i++) {
       if(es->events[i].event == UNDEFINED_EVENT)
 	continue;
       j = -1;
+      changed = FALSE;
       if(thread->tme_sjlj_thread_events)
 	j = tme_sjlj_event_del(thread->tme_sjlj_thread_events, es->events[i].event);
       if(j<0) {
-	rc = tme_sjlj_event_del(tme_sjlj_main_events, es->events[i].event);
-	if(rc<0)
-	  rc = tme_sjlj_event_ctl(tme_sjlj_main_events,
-				  es->events[i].event,
-				  es->events[i].flags,
-				  tme_new0(struct tme_sjlj_event_arg, TME_NUM_EVFLAGS));
-	else {
-	  tme_sjlj_main_events->events[rc].event = es->events[i].event;
-	  tme_sjlj_main_events->events[rc].flags |= es->events[i].flags;
-	  event_ctl(tme_sjlj_main_events->es,
-		    es->events[i].event,
-		    tme_sjlj_main_events->events[rc].flags,
-		    tme_sjlj_main_events->events[rc].arg);
+	changed = TRUE;
+	j = tme_sjlj_event_del(tme_sjlj_main_events, es->events[i].event);
+	if(j<0)
+	  j = tme_sjlj_event_ctl(tme_sjlj_main_events,
+				 es->events[i].event,
+				 es->events[i].flags,
+				 tme_new0(struct tme_sjlj_event_arg, TME_NUM_EVFLAGS));
+	else
+	  tme_sjlj_main_events->events[j].event = es->events[i].event;
+      } else {
+	if(es->events[i].flags != thread->tme_sjlj_thread_events->events[j].flags) {
+	  changed = TRUE;
+	  tme_sjlj_main_events->events[(int)thread->tme_sjlj_thread_events->events[j].arg].flags
+	    &= ~thread->tme_sjlj_thread_events->events[j].flags;
 	}
-      }
-      else if(es->events[i].flags != thread->tme_sjlj_thread_events->events[j].flags) {
-	rc = (int)thread->tme_sjlj_thread_events->events[j].arg;
-	tme_sjlj_main_events->events[rc].flags &= ~thread->tme_sjlj_thread_events->events[j].flags;
-	tme_sjlj_main_events->events[rc].flags |= es->events[i].flags;
-	event_ctl(tme_sjlj_main_events->es,
-		  es->events[i].event,
-		  tme_sjlj_main_events->events[rc].flags,
-		  tme_sjlj_main_events->events[rc].arg);
-      }
-      event_arg = (struct tme_sjlj_event_arg *)tme_sjlj_main_events->events[rc].arg;
-      for(j=0;j<TME_NUM_EVFLAGS;j++) {
-	if(es->events[i].flags & (1<<j)) {
-	  event_arg->thread = thread;
-	  event_arg->arg = es->events[i].arg;
-	}
-	event_arg++;
+	j = (int)thread->tme_sjlj_thread_events->events[j].arg;
       }
       tme_sjlj_event_ctl(es2,
 			 es->events[i].event,
 			 es->events[i].flags,
-			 (void *)rc);			      
+			 (void *)j);			      
+      if(changed) {
+	tme_sjlj_main_events->events[j].flags |= es->events[i].flags;
+	event_ctl(tme_sjlj_main_events->es,
+		  es->events[i].event,
+		  tme_sjlj_main_events->events[j].flags,
+		  tme_sjlj_main_events->events[j].arg);
+	event_arg = (struct tme_sjlj_event_arg *)tme_sjlj_main_events->events[j].arg;
+	for(j=0;j<TME_NUM_EVFLAGS;j++) {
+	  if(es->events[i].flags & (1<<j)) {
+	    event_arg->thread = thread;
+	    event_arg->arg = es->events[i].arg;
+	  }
+	  event_arg++;
+	}
+      }
     }
     blocked = i;
   }

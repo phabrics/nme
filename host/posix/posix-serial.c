@@ -43,7 +43,6 @@ _TME_RCSID("$Id: posix-serial.c,v 1.11 2007/08/24 00:57:01 fredette Exp $");
 #include <stdio.h>
 #include <termios.h>
 #include <sys/types.h>
-#include <sys/time.h>
 #include <sys/ioctl.h>
 //#include <pty.h>
 

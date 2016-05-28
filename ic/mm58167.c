@@ -39,8 +39,6 @@ _TME_RCSID("$Id: mm58167.c,v 1.8 2009/08/29 21:22:47 fredette Exp $");
 /* includes: */
 #include <tme/generic/bus-device.h>
 #include <tme/ic/mm58167.h>
-#include <time.h>
-#include <sys/time.h>
 
 /* macros: */
 

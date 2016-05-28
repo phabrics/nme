@@ -40,8 +40,6 @@ _TME_RCSID("$Id: mk48txx.c,v 1.4 2010/06/05 14:54:10 fredette Exp $");
 #include <tme/generic/bus-device.h>
 #include <tme/ic/mk48txx.h>
 #include <tme/misc.h>
-#include <time.h>
-#include <sys/time.h>
 
 /* macros: */
 

@@ -39,8 +39,6 @@ _TME_RCSID("$Id: ncr53c9x.c,v 1.5 2010/06/05 15:50:40 fredette Exp $");
 /* includes: */
 #include <tme/generic/bus-device.h>
 #include <tme/generic/scsi.h>
-#include <sys/time.h>
-#include <time.h>
 
 /* TODO: */
 

@@ -39,7 +39,6 @@ _TME_RCSID("$Id: misc.c,v 1.8 2010/06/05 19:02:38 fredette Exp $");
 /* includes: */
 #include <tme/misc.h>
 #include <ctype.h>
-#include <time.h>
 #include <errno.h>
 
 /* this tokenizes a string by whitespace: */

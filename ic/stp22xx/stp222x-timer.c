@@ -38,7 +38,6 @@
 #include <tme/common.h>
 _TME_RCSID("$Id: stp222x-timer.c,v 1.3 2010/06/05 14:38:00 fredette Exp $");
 
-#include <time.h>
 /* includes: */
 #include "stp222x-impl.h"
 

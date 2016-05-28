@@ -40,8 +40,6 @@ _TME_RCSID("$Id: am9513.c,v 1.17 2010/06/05 14:36:59 fredette Exp $");
 #include <tme/generic/bus-device.h>
 #include <tme/ic/am9513.h>
 #include <sys/types.h>
-#include <sys/time.h>
-#include <time.h>
 
 /* macros: */
 #define TME_AM9513_CMD_SET_BUS_16BIT		(0xffef)

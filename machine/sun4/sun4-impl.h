@@ -45,7 +45,6 @@ _TME_RCSID("$Id: sun4-impl.h,v 1.3 2009/08/30 14:01:55 fredette Exp $");
 #include <tme/ic/sparc.h>
 #include <tme/element.h>
 #include <sys/types.h>
-#include <sys/time.h>
 
 /* macros: */
 

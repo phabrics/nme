@@ -52,6 +52,12 @@
 #ifdef HAVE_SYS_ENDIAN_H
 #include <sys/endian.h>
 #endif
+#ifdef HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
+#ifdef HAVE_TIME_H
+#include <time.h>
+#endif
 
 #ifdef _TME_HAVE_BYTESWAP_H
 /* byteswap.h is needed for the bswap functions: */

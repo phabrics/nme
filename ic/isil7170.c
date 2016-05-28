@@ -40,8 +40,6 @@ _TME_RCSID("$Id: isil7170.c,v 1.6 2010/06/05 14:37:27 fredette Exp $");
 #include <tme/generic/bus-device.h>
 #include <tme/ic/isil7170.h>
 #include <tme/misc.h>
-#include <time.h>
-#include <sys/time.h>
 
 /* macros: */
 
