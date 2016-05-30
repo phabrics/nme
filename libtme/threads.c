@@ -38,6 +38,10 @@
 static tme_threads_fn1 _tme_threads_run;
 static void *_tme_threads_arg;
 static int inited;
+#ifdef TME_THREADS_SJLJ
+/* the i/o events: */
+tme_event_set_t *tme_events;
+#endif
 #ifdef TME_THREADS_POSIX
 static pthread_rwlock_t tme_rwlock_start;
 pthread_rwlock_t tme_rwlock_suspere;
@@ -84,6 +88,10 @@ void tme_threads_run(void) {
     g_rw_lock_writer_unlock(&tme_rwlock_start);  
 #endif
   }
+#ifdef TME_THREADS_SJLJ
+  int rc = 1;
+  tme_events = tme_event_set_init(&rc, EVENT_METHOD_FAST);
+#endif
   _tme_thread_suspended();
   /* Run the main loop */
   if(_tme_threads_run)
@@ -104,3 +112,30 @@ void tme_thread_enter(tme_mutex_t *mutex) {
   if(mutex)
     tme_mutex_lock(mutex);
 }
+
+#ifndef TME_THREADS_DIRECT_IO
+/* this reads or writes, yielding if the event is not ready: */
+ssize_t
+tme_event_yield(event_t event, void *data, size_t count, unsigned int rwflags)
+{
+  int rc = 1;
+  struct event_set_return esr;
+#ifndef TME_THREADS_SJLJ
+  tme_event_set_t *tme_events = tme_event_set_init(&rc, EVENT_METHOD_FAST);
+#endif
+  
+  tme_event_reset(tme_events);
+  tme_event_ctl(tme_events, event, rwflags, 0);
+
+  _tme_thread_suspended();
+  rc = tme_event_wait_yield(tme_events, NULL, &esr, 1);
+  _tme_thread_resumed();  
+
+  /* do the i/o: */
+  if(esr.rwflags & EVENT_WRITE)
+    rc = tme_thread_write(event, data, count);  
+  if(esr.rwflags & EVENT_READ)
+    rc = tme_thread_read(event, data, count);
+  return rc;
+}
+#endif

@@ -60,4 +60,37 @@ void tme_threads_init _TME_P((tme_threads_fn1 run, void *arg));
 void tme_threads_run _TME_P((void));
 void tme_thread_enter _TME_P((tme_mutex_t *mutex));
 
+/* I/O: */
+static _tme_inline ssize_t tme_thread_read _TME_P((event_t event, void *buf, size_t count)) {
+  int rc;
+  
+  _tme_thread_suspended();
+
+  rc = read(event, buf, count);
+
+  _tme_thread_resumed();
+
+  return rc;
+}
+
+static _tme_inline ssize_t tme_thread_write _TME_P((event_t event, const void *buf, size_t count)) {
+  int rc;
+  
+  _tme_thread_suspended();
+
+  rc = write(event, buf, count);
+
+  _tme_thread_resumed();
+
+  return rc;
+}
+
+#ifdef TME_THREADS_DIRECT_IO
+#define tme_thread_read_yield tme_thread_read
+#define tme_thread_write_yield tme_thread_write
+#else
+ssize_t tme_event_yield _TME_P((event_t, void *, size_t, unsigned int));
+#define tme_thread_read_yield(event, data, count) tme_event_yield(event, data, count, EVENT_READ)
+#define tme_thread_write_yield(event, data, count) tme_event_yield(event, data, count, EVENT_WRITE)
+#endif
 #endif /* !_TME_THREADS_H */

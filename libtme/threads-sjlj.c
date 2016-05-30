@@ -136,9 +136,6 @@ static jmp_buf tme_sjlj_dispatcher_jmp;
 /* the main loop events: */
 static struct tme_sjlj_event_set *tme_sjlj_main_events;
 
-/* the read/write events: */
-struct tme_sjlj_event_set *tme_sjlj_rw_events;
-
 /* the dispatch number: */
 static tme_uint32_t _tme_sjlj_thread_dispatch_number;
 
@@ -164,8 +161,6 @@ tme_sjlj_threads_init()
 
   /* no threads are waiting on any fds: */
   tme_sjlj_main_events = tme_sjlj_event_set_init(&num, 0);
-  num = 1;
-  tme_sjlj_rw_events = tme_sjlj_event_set_init(&num, EVENT_METHOD_FAST);
   
   /* initialize the thread-blocked structure: */
   tme_sjlj_thread_blocked.tme_sjlj_thread_cond = NULL;
@@ -767,26 +762,6 @@ tme_sjlj_event_wait_yield(struct tme_sjlj_event_set *es, const struct timeval *t
   tme_thread_yield();
   /* NOTREACHED */
   return (0);
-}
-
-/* this reads or writes, yielding if the fd is not ready: */
-ssize_t
-tme_sjlj_event_yield(event_t event, void *data, size_t count, unsigned int rwflags)
-{
-  int rc;
-  struct event_set_return esr;
-
-  tme_sjlj_event_reset(tme_sjlj_rw_events);
-  tme_sjlj_event_ctl(tme_sjlj_rw_events, event, rwflags, 0);
-
-  rc = tme_sjlj_event_wait_yield(tme_sjlj_rw_events, NULL, &esr, 1);
-
-  /* do the read: */
-  if(esr.rwflags & EVENT_WRITE)
-    rc = write(event, data, count);  
-  if(esr.rwflags & EVENT_READ)
-    rc = read(event, data, count);
-  return rc;
 }
 
 /* this exits a thread: */

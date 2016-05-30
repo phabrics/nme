@@ -186,34 +186,9 @@ static _tme_inline int tme_threads_main_iter _TME_P((void *usec)) {
   return 0;
 }
 
-/* I/O: */
-static _tme_inline ssize_t tme_thread_read _TME_P((int fd, void *buf, size_t count)) {
-  int rc;
-  
-  _tme_thread_suspended();
+#define TME_THREADS_DIRECT_IO
 
-  rc = read(fd, buf, count);
-
-  _tme_thread_resumed();
-
-  return rc;
-}
-
-static _tme_inline ssize_t tme_thread_write _TME_P((int fd, const void *buf, size_t count)) {
-  int rc;
-  
-  _tme_thread_suspended();
-
-  rc = write(fd, buf, count);
-
-  _tme_thread_resumed();
-
-  return rc;
-}
-
-#define tme_thread_read_yield tme_thread_read
-#define tme_thread_write_yield tme_thread_write
-
+/* Events: */
 typedef struct event_set tme_event_set_t;
 
 #define tme_event_set(s) (s)

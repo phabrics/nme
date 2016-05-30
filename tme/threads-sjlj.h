@@ -147,10 +147,7 @@ void tme_sjlj_sleep _TME_P((unsigned long, unsigned long));
 void tme_sjlj_sleep_yield _TME_P((unsigned long, unsigned long));
 #define tme_thread_sleep_yield tme_sjlj_sleep_yield
 
-/* I/O: */
-#define tme_thread_read read
-#define tme_thread_write write
-
+/* Events: */
 typedef struct tme_sjlj_event_set tme_event_set_t;
 
 tme_event_set_t *tme_sjlj_event_set_init _TME_P((int *maxevents, unsigned int flags));
@@ -159,7 +156,6 @@ void tme_sjlj_event_reset _TME_P((tme_event_set_t *es));
 int tme_sjlj_event_del _TME_P((tme_event_set_t *es, event_t event));
 int tme_sjlj_event_ctl _TME_P((tme_event_set_t *es, event_t event, unsigned int rwflags, void *arg));
 int tme_sjlj_event_wait_yield _TME_P((tme_event_set_t *es, const struct timeval *tv, struct event_set_return *out, int outlen));
-ssize_t tme_sjlj_event_yield _TME_P((event_t, void *, size_t, unsigned int));
 #define tme_event_set(s) (*(struct event_set **)(s))
 #define tme_event_set_init tme_sjlj_event_set_init
 #define tme_event_free tme_sjlj_event_free
@@ -167,8 +163,6 @@ ssize_t tme_sjlj_event_yield _TME_P((event_t, void *, size_t, unsigned int));
 #define tme_event_del tme_sjlj_event_del
 #define tme_event_ctl tme_sjlj_event_ctl
 #define tme_event_wait_yield tme_sjlj_event_wait_yield
-#define tme_thread_read_yield(fd, data, count) tme_sjlj_event_yield(fd, data, count, EVENT_READ)
-#define tme_thread_write_yield(fd, data, count) tme_sjlj_event_yield(fd, data, count, EVENT_WRITE)
 
 /* time: */
 void tme_sjlj_gettimeofday _TME_P((tme_time_t *));
