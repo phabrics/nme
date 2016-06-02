@@ -40,6 +40,7 @@ _TME_RCSID("$Id: tmesh.c,v 1.4 2009/08/30 17:06:38 fredette Exp $");
 #include <tme/tme.h>
 #include <tme/tmesh.h>
 #include <tme/hash.h>
+#include <tme/libopenvpn/openvpn-setup.h>
 #include <stdio.h>
 #include <string.h>
 /* macros: */
@@ -587,6 +588,7 @@ main(int argc, char **argv)
   char *output;
   int yield, rc;
   tme_threadid_t tmesh_thread;
+  struct env_set *es;
 #ifdef TME_THREADS_POSIX
   pthread_t thread;
 #ifdef HAVE_PTHREAD_SETAFFINITY_NP
@@ -702,6 +704,14 @@ main(int argc, char **argv)
   }
   if (usage) do_usage(argv0, NULL);
 
+  if(init_static()) {
+    es = openvpn_setup(&argv[arg_i], argc - arg_i, NULL);
+#ifdef WIN32
+    set_win_sys_path_via_env(es);
+#endif
+  } else
+    exit(1);
+  
   if (!strcmp(log_filename, "-")) {
     _tmesh_log = stdout;
   }

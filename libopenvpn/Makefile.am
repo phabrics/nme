@@ -47,6 +47,7 @@ libopenvpn_la_SOURCES = \
 	pkcs11_openssl.c \
 	pkcs11_polarssl.c \
         openvpn.c \
+        openvpn-setup.c \
 	options.c \
 	otime.c \
 	packet_id.c \

@@ -35,12 +35,14 @@
 #include <tme/threads.h>
 
 /* includes: */
-#include <tme/libopenvpn/syshead.h>
-#include <tme/libopenvpn/socket.h>
-#include <tme/libopenvpn/tun.h>
-#include <tme/libopenvpn/ping.h>
+#include "syshead.h"
+#include "socket.h"
+#include "tun.h"
+#include "ping.h"
 
 #define OPENVPN_CAN_WRITE 1
 #define OPENVPN_FAST_IO 2
 
-struct frame *openvpn_setup _TME_P((const char *args[], struct tuntap **tt, struct link_socket **sock, struct env_set **es, u_char *flags, tme_event_set_t **event_set));
+struct env_set *openvpn_setup _TME_P((const char *args[], int argc, struct options *options));
+
+struct frame *openvpn_setup_frame _TME_P((struct options *options, struct tuntap **tt, struct link_socket **sock, struct env_set *es, u_char *flags, tme_event_set_t **event_set));

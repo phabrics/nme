@@ -35,7 +35,7 @@
 
 /* includes: */
 #include "eth-if.h"
-#include "openvpn-setup.h"
+#include <tme/libopenvpn/openvpn-setup.h>
 
 typedef struct _tme_openvpn_tun {
   struct tme_ethernet *eth;
@@ -133,13 +133,21 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tun_tap) {
   int fd = 0;
   void *data = NULL;
   struct tuntap *tt;
+  struct env_set *es;
   u_char flags;
   tme_event_set_t *event_set;
-  struct frame *frame = openvpn_setup(args, &tt, NULL, NULL, &flags, &event_set);
-  int sz = BUF_SIZE(frame);
-
+  struct frame *frame;
+  int sz;
+  struct options options;
   tme_openvpn_tun *tun = data = tme_new0(tme_openvpn_tun, 1);
+  int arg_i = 0;
+
+  while(args[++arg_i] != NULL);
   
+  es = openvpn_setup(args, arg_i, &options);
+  frame = openvpn_setup_frame(&options, &tt, NULL, es, &flags, &event_set);
+  sz = BUF_SIZE(frame);
+
   tun->tt = tt;
   tun->frame = frame;
   tun->flags = flags | OPENVPN_CAN_WRITE;

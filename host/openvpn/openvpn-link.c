@@ -35,7 +35,7 @@
 
 /* includes: */
 #include "eth-if.h"
-#include "openvpn-setup.h"
+#include <tme/libopenvpn/openvpn-setup.h>
 
 typedef struct _tme_openvpn_sock {
   struct tme_ethernet *eth;
@@ -164,9 +164,17 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,socket_link) {
   struct env_set *es;
   u_char flags = 0;
   tme_event_set_t *event_set;
-  struct frame *frame = openvpn_setup(args, NULL, &ls, &es, &flags, &event_set);
-  int sz = BUF_SIZE(frame);
+  struct frame *frame;
+  int sz;
+  struct options options;
   tme_openvpn_sock *sock = data = tme_new0(tme_openvpn_sock, 1);
+  int arg_i = 0;
+
+  while(args[++arg_i] != NULL);
+
+  es = openvpn_setup(args, arg_i, &options);
+  frame = openvpn_setup_frame(&options, NULL, &ls, es, &flags, &event_set);
+  sz = BUF_SIZE(frame);
   
   sock->ls = ls;
   sock->es = es;

@@ -35,9 +35,7 @@
 
 /* includes: */
 #include "openvpn-setup.h"
-#include <tme/libopenvpn/options.h>
-
-struct gc_arena gc;
+#include "options.h"
 
 const struct link_socket *accept_from; /* possibly do accept() on a parent link_socket */
 
@@ -48,6 +46,7 @@ struct signal_info siginfo_static; /* GLOBAL */
 static inline
 struct tuntap *setup_tuntap(struct frame *frame, struct link_socket_addr *lsa, struct options *options, struct env_set *es) {
   /* TUN/TAP specific stuff */
+  struct gc_arena gc;
   struct tuntap *tt = init_tun(options->dev,
 			       options->dev_type,
 			       options->topology,
@@ -62,6 +61,8 @@ struct tuntap *setup_tuntap(struct frame *frame, struct link_socket_addr *lsa, s
 			       es);
 
   if(!tt) return tt;
+
+  gc = gc_new ();  
 
   /* flag tunnel for IPv6 config if --tun-ipv6 is set */
   tt->ipv6 = options->tun_ipv6;
@@ -196,75 +197,66 @@ do_setup_fast_io(struct options *options) {
   return false;
 }
 
-struct frame *openvpn_setup(const char *args[], struct tuntap **tt, struct link_socket **sock, struct env_set **es, u_char *flags, tme_event_set_t **event_set) {
-  int arg_i;
-  struct options options;       /**< Options loaded from command line or
-				 *   configuration file. */
-  struct frame *frame;
-  struct link_socket_addr *lsa; /**< Local and remote addresses on the
-				 *   external network. */
-  struct env_set *_es;
-
-  frame = tme_new0(struct frame, 1);
-  lsa = tme_new0(struct link_socket_addr, 1);
-
-  gc = gc_new ();  
-  arg_i = 0;
-
-  while(args[++arg_i] != NULL);
-
-  error_reset();
-
+struct env_set *openvpn_setup(const char *args[], int argc, struct options *options) {
+  struct options _options;
   /* initialize environmental variable store */
-  _es = env_set_create(NULL);
-#ifdef WIN32
-  init_win32();
-  set_win_sys_path_via_env(_es);
-#endif
-
+  struct env_set *es = env_set_create(NULL);
+  
+  if(!options) options = &_options;
+  
   /* initialize options to default state */
-  init_options(&options, true);
+  init_options(options, true);
 
   /* parse command line options, and read configuration file */
-  parse_argv(&options, arg_i, args, M_USAGE, OPT_P_DEFAULT, NULL, _es);
+  if(argc)
+    parse_argv(options, argc, args, M_USAGE, OPT_P_DEFAULT, NULL, es);
 
+  if(!options->dev)
+    options->dev = "null";
+  
   /* set verbosity and mute levels */
   set_check_status(D_LINK_ERRORS, D_READ_WRITE);
-  set_debug_level(options.verbosity, SDL_CONSTRAIN);
-  set_mute_cutoff(options.mute);
+  set_debug_level(options->verbosity, SDL_CONSTRAIN);
+  set_mute_cutoff(options->mute);
 
   /* set dev options */
-  init_options_dev(&options);
+  init_options_dev(options);
 
   /* sanity check on options */
-  options_postprocess(&options);
+  options_postprocess(options);
 
   /* show all option settings */
-  show_settings(&options);
+  show_settings(options);
 
   /* print version number */
   //msg(M_INFO, "%s", title_string);
   show_library_versions(M_INFO);
 
   /* misc stuff */
-  pre_setup(&options);
+  pre_setup(options);
 
   /* set certain options as environmental variables */
-  setenv_settings(_es, &options);
+  setenv_settings(es, options);
 
-  memset(frame, 0, sizeof(*frame));  
+  return es;
+}
+
+struct frame *openvpn_setup_frame(struct options *options, struct tuntap **tt, struct link_socket **sock, struct env_set *es, u_char *flags, tme_event_set_t **event_set) {
+  struct frame *frame = tme_new0(struct frame, 1);
+  struct link_socket_addr *lsa = tme_new0(struct link_socket_addr, 1);
+
   /*
    * Adjust frame size based on the --tun-mtu-extra parameter.
    */
-  if(options.ce.tun_mtu_extra_defined)
-    tun_adjust_frame_parameters(frame, options.ce.tun_mtu_extra);
+  if(options->ce.tun_mtu_extra_defined)
+    tun_adjust_frame_parameters(frame, options->ce.tun_mtu_extra);
 
   /*
    * Adjust frame size based on link socket parameters.
    * (Since TCP is a stream protocol, we need to insert
    * a packet length uint16_t in the buffer.)
    */
-  socket_adjust_frame_parameters(frame, options.ce.proto);
+  socket_adjust_frame_parameters(frame, options->ce.proto);
 
   /* See frame_finalize_options (struct context *c, const struct options *o) */
   frame_align_to_extra_frame(frame);
@@ -274,10 +266,10 @@ struct frame *openvpn_setup(const char *args[], struct tuntap **tt, struct link_
 		       |FRAME_HEADROOM_MARKER_READ_STREAM);
   
   frame_finalize(frame,
-		 options.ce.link_mtu_defined,
-		 options.ce.link_mtu,
-		 options.ce.tun_mtu_defined,
-		 options.ce.tun_mtu);
+		 options->ce.link_mtu_defined,
+		 options->ce.link_mtu,
+		 options->ce.tun_mtu_defined,
+		 options->ce.tun_mtu);
 
   /* packets with peer-id (P_DATA_V2) need 3 extra bytes in frame (on client)
    * and need link_mtu+3 bytes on socket reception (on server).
@@ -290,7 +282,7 @@ struct frame *openvpn_setup(const char *args[], struct tuntap **tt, struct link_
   frame_add_to_extra_link(frame, 3);
   frame_add_to_extra_buffer(frame, 8);
 
-  if(do_setup_fast_io(&options))
+  if(do_setup_fast_io(options))
     *flags |= OPENVPN_FAST_IO;
   
   if(event_set) {
@@ -302,12 +294,11 @@ struct frame *openvpn_setup(const char *args[], struct tuntap **tt, struct link_
 
   sig = &siginfo_static;
   
-  if(sock) *sock = setup_link_socket(frame, lsa, &options);
+  if(sock) *sock = setup_link_socket(frame, lsa, options);
   
   /* tun/tap persist command? */
-  if(!do_persist_tuntap(&options) && tt)
-    *tt = setup_tuntap(frame, lsa, &options, _es);
+  if(!do_persist_tuntap(options) && tt)
+    *tt = setup_tuntap(frame, lsa, options, es);
 
-  if(es) *es = _es;
   return frame;
 }
