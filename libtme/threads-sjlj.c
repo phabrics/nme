@@ -455,7 +455,8 @@ tme_sjlj_threads_main_iter(void *event_check)
   
   if(tme_sjlj_threads_all == NULL) return -1;
 
-  (*(tme_threads_fn)event_check)();
+  if(event_check)
+    (*(tme_threads_fn)event_check)();
   
   /* make the select timeout: */
 
