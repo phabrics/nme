@@ -96,7 +96,7 @@ struct tme_posix_memory {
   unsigned int tme_posix_memory_type;
 
   /* the file descriptor to any backing file: */
-  int tme_posix_memory_fd;
+  tme_thread_handle_t tme_posix_memory_handle;
 
   /* this is nonzero if the backing file is mmapped: */
   int tme_posix_memory_mapped;
@@ -374,6 +374,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,memory) {
   unsigned int memory_type;
   unsigned long memory_size;
   const char *filename;
+  tme_thread_handle_t handle;
   int fd;
   struct stat statbuf;
   struct tme_posix_memory *memory;
@@ -381,7 +382,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,memory) {
   ssize_t bytes_read;
   int arg_i;
   int usage;
-
+  
   /* assume we have no backing file: */
   filename = NULL;
   memory_type = -1;
@@ -450,14 +451,14 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,memory) {
   memory->tme_posix_memory_type = memory_type;
 
   /* if we have a backing file: */
-  fd = -1;
+  handle = TME_INVALID_HANDLE;
   if (filename != NULL) {
 
     /* open the file for reading: */
-    fd = open(filename, (memory_type == TME_POSIX_MEMORY_ROM
-			 ? O_RDONLY
-			 : O_RDWR));
-    if (fd < 0) {
+    handle = tme_thread_open(filename, (memory_type == TME_POSIX_MEMORY_ROM
+					? TME_FILE_FLAG_RO
+					: 0), &fd);
+    if (handle == TME_INVALID_HANDLE) {
       tme_output_append_error(_output,
 			      "%s",
 			      filename);
@@ -470,7 +471,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,memory) {
       tme_output_append_error(_output,
 			      "%s",
 			      filename);
-      close(fd);
+      tme_thread_close(handle);
       tme_free(memory);
       return (errno);
     }
@@ -479,7 +480,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,memory) {
       tme_output_append_error(_output,
 			      "%s",
 			      filename);
-      close(fd);
+      tme_thread_close(handle);
       tme_free(memory);
       return (EINVAL);
     }
@@ -505,12 +506,12 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,memory) {
     memory->tme_posix_memory_contents = tme_new0(tme_uint8_t, memory_size);
 
     /* if we have to, read in the backing file: */
-    if (fd >= 0) {
-      bytes_read = read(fd, memory->tme_posix_memory_contents, memory_size);
+    if (handle != TME_INVALID_HANDLE) {
+      bytes_read = tme_thread_read_yield(handle, memory->tme_posix_memory_contents, memory_size);
       if (bytes_read < 0
 	  || memory_size != (unsigned long) bytes_read) {
 	/* XXX diagnostic: */
-	close(fd);
+	tme_thread_close(handle);
 	tme_free(memory->tme_posix_memory_contents);
 	tme_free(memory);
 	return (-1);
@@ -518,14 +519,14 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,memory) {
 
       /* if this is a ROM, we can close the file now: */
       if (memory_type == TME_POSIX_MEMORY_ROM) {
-	close(fd);
-	fd = -1;
+	tme_thread_close(handle);
+	handle = TME_INVALID_HANDLE;
       }
     }
   }
 
-  /* remember any backing fd: */
-  memory->tme_posix_memory_fd = fd;
+  /* remember any backing handle: */
+  memory->tme_posix_memory_handle = handle;
 
   /* initialize our rwlock: */
   tme_rwlock_init(&memory->tme_posix_memory_rwlock);

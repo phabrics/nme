@@ -84,7 +84,7 @@ struct tme_posix_tape_segment {
   char *tme_posix_tape_segment_filename;
 
   /* the file descriptor of this tape segment: */
-  int tme_posix_tape_segment_fd;
+  tme_thread_handle_t tme_posix_tape_segment_handle;
 
   /* this is nonzero iff this tape segment is a real tape: */
   int tme_posix_tape_segment_real_tape;
@@ -276,8 +276,8 @@ _tme_posix_tape_segments_close(struct tme_posix_tape *posix_tape)
     posix_tape->tme_posix_tape_segments = segment->tme_posix_tape_segment_next;
 
     /* if the segment file descriptor is open, close it: */
-    if (segment->tme_posix_tape_segment_fd >= 0) {
-      close(segment->tme_posix_tape_segment_fd);
+    if (segment->tme_posix_tape_segment_handle != TME_INVALID_HANDLE) {
+      tme_thread_close(segment->tme_posix_tape_segment_handle);
     }
 
     /* free the segment filename: */
@@ -312,14 +312,13 @@ _tme_posix_tape_segment_open(struct tme_posix_tape *posix_tape,
   posix_tape->tme_posix_tape_segment_current = NULL;
 
   /* open the segment: */
-  segment->tme_posix_tape_segment_fd
-    = open(segment->tme_posix_tape_segment_filename,
-	   ((posix_tape->tme_posix_tape_flags & TME_POSIX_TAPE_FLAG_RO)
-	    ? O_RDONLY
-	    : O_RDWR));
-
+  segment->tme_posix_tape_segment_handle
+    = tme_thread_open(segment->tme_posix_tape_segment_filename,
+		      posix_tape->tme_posix_tape_flags,
+		      NULL);
+  
   /* if the open failed: */
-  if (segment->tme_posix_tape_segment_fd < 0) {
+  if (segment->tme_posix_tape_segment_handle == TME_INVALID_HANDLE) {
     return (errno);
   }
 
@@ -348,9 +347,9 @@ _tme_posix_tape_rewind(struct tme_posix_tape *posix_tape)
     assert (!segment->tme_posix_tape_segment_real_tape);
 
     /* if the segment is open, close it: */
-    if (segment->tme_posix_tape_segment_fd >= 0) {
-      close(segment->tme_posix_tape_segment_fd);
-      segment->tme_posix_tape_segment_fd = -1;
+    if (segment->tme_posix_tape_segment_handle != TME_INVALID_HANDLE) {
+      tme_thread_close(segment->tme_posix_tape_segment_handle);
+      segment->tme_posix_tape_segment_handle = TME_INVALID_HANDLE;
     }
   }
 
@@ -361,7 +360,7 @@ _tme_posix_tape_rewind(struct tme_posix_tape *posix_tape)
   if (segment->tme_posix_tape_segment_real_tape) {
 
     /* the tape must be open: */
-    assert (segment->tme_posix_tape_segment_fd >= 0);
+    assert (segment->tme_posix_tape_segment_handle != TME_INVALID_HANDLE);
 
     /* XXX TBD */
     abort();
@@ -372,13 +371,13 @@ _tme_posix_tape_rewind(struct tme_posix_tape *posix_tape)
 
     /* if the file isn't open, open it, else
        seek it to the beginning: */
-    if (segment->tme_posix_tape_segment_fd < 0) {
+    if (segment->tme_posix_tape_segment_handle == TME_INVALID_HANDLE) {
       rc = _tme_posix_tape_segment_open(posix_tape,
 					segment);
     }
     else {
-      if (lseek(segment->tme_posix_tape_segment_fd,
-		0, SEEK_SET) != 0) {
+      if (tme_thread_seek(segment->tme_posix_tape_segment_handle,
+			  0, TME_SEEK_SET) != 0) {
 	rc = errno;
       }
     }
@@ -409,9 +408,9 @@ _tme_posix_tape_mark_skip(struct tme_posix_tape *posix_tape,
   assert (!segment->tme_posix_tape_segment_real_tape);
 
   /* if this segment is open, close it: */
-  if (segment->tme_posix_tape_segment_fd >= 0) {
-    close(segment->tme_posix_tape_segment_fd);
-    segment->tme_posix_tape_segment_fd = -1;
+  if (segment->tme_posix_tape_segment_handle != TME_INVALID_HANDLE) {
+    tme_thread_close(segment->tme_posix_tape_segment_handle);
+    segment->tme_posix_tape_segment_handle = TME_INVALID_HANDLE;
   }
 
   /* skip the marks: */
@@ -439,9 +438,9 @@ _tme_posix_tape_mark_skip(struct tme_posix_tape *posix_tape,
   /* if we are skipping in reverse, we must leave the tape on the
      beginning of media side of the file mark: */
   if (!forward) {
-    rc = (lseek(segment->tme_posix_tape_segment_fd,
-		0,
-		SEEK_END) < 0);
+    rc = (tme_thread_seek(segment->tme_posix_tape_segment_handle,
+			  0,
+			  TME_SEEK_END) < 0);
     assert (rc == 0);
   }
 
@@ -531,18 +530,18 @@ _tme_posix_tape_xfer1(struct tme_posix_tape *posix_tape,
     else {
 
       /* do the read: */
-      rc = read(segment->tme_posix_tape_segment_fd,
-		posix_tape->tme_posix_tape_buffer_data,
-		count_bytes_user);
+      rc = tme_thread_read_yield(segment->tme_posix_tape_segment_handle,
+				 posix_tape->tme_posix_tape_buffer_data,
+				 count_bytes_user);
 
       /* if this segment is not a real tape, and we're expected to
 	 transfer more bytes than the user requested, seek over the
 	 extra bytes, leaving the medium "positioned after the block": */
       if (!segment->tme_posix_tape_segment_real_tape
 	  && count_bytes_tape > count_bytes_user) {
-	lseek(segment->tme_posix_tape_segment_fd,
-	      (count_bytes_tape - count_bytes_user),
-	      SEEK_CUR);
+	tme_thread_seek(segment->tme_posix_tape_segment_handle,
+			(count_bytes_tape - count_bytes_user),
+			TME_SEEK_CUR);
       }
     }
   }
@@ -555,9 +554,9 @@ _tme_posix_tape_xfer1(struct tme_posix_tape *posix_tape,
 	    && segment->tme_posix_tape_segment_real_tape);
 
     /* do the write: */
-    rc = write(segment->tme_posix_tape_segment_fd,
-	       posix_tape->tme_posix_tape_buffer_data,
-	       count_bytes_user);
+    rc = tme_thread_write_yield(segment->tme_posix_tape_segment_handle,
+				posix_tape->tme_posix_tape_buffer_data,
+				count_bytes_user);
   }
 
   /* if the transfer got an error: */
@@ -973,7 +972,8 @@ __tme_posix_tape_command(struct tme_posix_tape *posix_tape,
   int usage;
   int rc;
   int new_callouts;
-
+  int fd;
+  
   /* assume we won't need any new callouts: */
   new_callouts = 0;
 
@@ -1034,17 +1034,17 @@ __tme_posix_tape_command(struct tme_posix_tape *posix_tape,
       *_prev = segment;
 
       /* open the segment file: */
-      segment->tme_posix_tape_segment_fd
-	= open(segment->tme_posix_tape_segment_filename,
-	       O_RDONLY);
-      if (segment->tme_posix_tape_segment_fd < 0) {
+      segment->tme_posix_tape_segment_handle
+	= tme_thread_open(segment->tme_posix_tape_segment_filename,
+			  TME_FILE_FLAG_RO,
+			  &fd);
+      if (segment->tme_posix_tape_segment_handle == TME_INVALID_HANDLE) {
 	rc = errno;
 	break;
       }
 
       /* stat the segment file: */
-      if (fstat(segment->tme_posix_tape_segment_fd,
-		&statbuf) < 0) {
+      if (fstat(fd, &statbuf) < 0) {
 	rc = errno;
 	break;
       }
@@ -1083,8 +1083,8 @@ __tme_posix_tape_command(struct tme_posix_tape *posix_tape,
 
       /* if this is not the first segment, close the file: */
       if (posix_tape->tme_posix_tape_segments != segment) {
-	close(segment->tme_posix_tape_segment_fd);
-	segment->tme_posix_tape_segment_fd = -1;
+	tme_thread_close(segment->tme_posix_tape_segment_handle);
+	segment->tme_posix_tape_segment_handle = TME_INVALID_HANDLE;
       }
 
       /* advance to the next segment filename: */

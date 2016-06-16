@@ -143,6 +143,7 @@ struct tme_posix_disk {
   int tme_posix_disk_flags;
 
   /* the file descriptor: */
+  tme_thread_handle_t tme_posix_disk_handle;
   int tme_posix_disk_fd;
 
   /* the stat buffer: */
@@ -201,15 +202,15 @@ _tme_posix_disk_buffer_free(struct tme_posix_disk *posix_disk,
 	& TME_POSIX_DISK_BUFFER_DIRTY) {
 	    
       /* seek to the buffer's position: */
-      rc = (lseek(posix_disk->tme_posix_disk_fd,
-		  buffer->tme_posix_disk_buffer_pos,
-		  SEEK_SET) < 0);
+      rc = (tme_thread_seek(posix_disk->tme_posix_disk_handle,
+			    buffer->tme_posix_disk_buffer_pos,
+			    TME_SEEK_SET) < 0);
       assert (rc == 0);
 	    
       /* write out the buffer: */
-      ssize = write(posix_disk->tme_posix_disk_fd,
-		    buffer->tme_posix_disk_buffer_data,
-		    buffer->tme_posix_disk_buffer_size);
+      ssize = tme_thread_write_yield(posix_disk->tme_posix_disk_handle,
+				     buffer->tme_posix_disk_buffer_data,
+				     buffer->tme_posix_disk_buffer_size);
       assert (ssize == buffer->tme_posix_disk_buffer_size);
     }
 
@@ -464,19 +465,19 @@ _tme_posix_disk_buffer_get(struct tme_posix_disk *posix_disk,
 	    = TME_POSIX_DISK_BUFFER_READABLE;
 
 	  /* seek to the buffer's position: */
-	  rc = (lseek(posix_disk->tme_posix_disk_fd,
-		      (pos_least
-		       - agg_pre),
-		      SEEK_SET) < 0);
+	  rc = (tme_thread_seek(posix_disk->tme_posix_disk_handle,
+				(pos_least
+				 - agg_pre),
+		      TME_SEEK_SET) < 0);
 	  assert (rc == 0);
 	  
 	  /* read in the buffer.  if the read fails with more
 	     read-ahead than is needed to meet the block size, try the
 	     read one more time with just that needed read-ahead: */
 	  for (;;) {
-	    ssize = read(posix_disk->tme_posix_disk_fd,
-			 data,
-			 size_agg);
+	    ssize = tme_thread_read_yield(posix_disk->tme_posix_disk_handle,
+					  data,
+					  size_agg);
 	    if (ssize == size_agg) {
 	      break;
 	    }
@@ -637,6 +638,7 @@ _tme_posix_disk_open(struct tme_posix_disk *posix_disk,
 		     int flags,
 		     char **_output)
 {
+  tme_thread_handle_t handle;
   int fd;
   struct stat statbuf;
 #ifdef HAVE_STRUCT_STAT_ST_BLKSIZE
@@ -648,12 +650,8 @@ _tme_posix_disk_open(struct tme_posix_disk *posix_disk,
   int page_size;
 
   /* open the file: */
-  fd = open(filename,
-	    ((flags
-	      & TME_POSIX_DISK_FLAG_RO)
-	     ? O_RDONLY
-	     : O_RDWR));
-  if (fd < 0) {
+  handle = tme_thread_open(filename, flags, &fd);
+  if (handle == TME_INVALID_HANDLE) {
     tme_output_append_error(_output,
 			    "%s",
 			    filename);
@@ -665,7 +663,7 @@ _tme_posix_disk_open(struct tme_posix_disk *posix_disk,
     tme_output_append_error(_output,
 			    "%s",
 			    filename);
-    close(fd);
+    tme_thread_close(handle);
     return (errno);
   }
 
@@ -674,7 +672,7 @@ _tme_posix_disk_open(struct tme_posix_disk *posix_disk,
     tme_output_append_error(_output,
 			    "%s",
 			    filename);
-    close(fd);
+    tme_thread_close(handle);
     return (EINVAL);
   }
 
@@ -692,17 +690,17 @@ _tme_posix_disk_open(struct tme_posix_disk *posix_disk,
     for (; block_size <= TME_POSIX_DISK_BLOCK_SIZE_MAX; ) {
 
       /* do the read: */
-      if (read(fd, block, block_size) >= 0) {
+      if (tme_thread_read_yield(handle, block, block_size) >= 0) {
 	break;
       }
 
       /* seek back to the beginning: */
-      if (lseek(fd, 0, SEEK_SET) < 0) {
+      if (tme_thread_seek(handle, 0, TME_SEEK_SET) < 0) {
 	tme_free(block);
 	tme_output_append_error(_output,
 				"%s",
 				filename);
-	close(fd);
+	tme_thread_close(handle);
 	return (errno);
       }
 
@@ -719,7 +717,7 @@ _tme_posix_disk_open(struct tme_posix_disk *posix_disk,
       tme_output_append_error(_output,
 			      "%s",
 			      filename);
-      close(fd);
+      tme_thread_close(handle);
       return (EINVAL);
     }
   }
@@ -745,6 +743,7 @@ _tme_posix_disk_open(struct tme_posix_disk *posix_disk,
 
   /* update the disk structure: */
   posix_disk->tme_posix_disk_flags = flags;
+  posix_disk->tme_posix_disk_handle = handle;
   posix_disk->tme_posix_disk_fd = fd;
   posix_disk->tme_posix_disk_stat = statbuf;
 #ifndef HAVE_STRUCT_STAT_ST_BLKSIZE
@@ -768,8 +767,8 @@ _tme_posix_disk_close(struct tme_posix_disk *posix_disk)
   }
 
   /* close the disk: */
-  close(posix_disk->tme_posix_disk_fd);
-  posix_disk->tme_posix_disk_fd = -1;
+  tme_thread_close(posix_disk->tme_posix_disk_handle);
+  posix_disk->tme_posix_disk_handle = TME_INVALID_HANDLE;
 }
 
 /* our internal command function: */
@@ -793,7 +792,7 @@ __tme_posix_disk_command(struct tme_posix_disk *posix_disk,
     arg_i++;
 
     /* if a disk is currently loaded, it must be unloaded first: */
-    if (posix_disk->tme_posix_disk_fd >= 0) {
+    if (posix_disk->tme_posix_disk_handle != TME_INVALID_HANDLE) {
       tme_output_append_error(_output,
 			      _("%s: disk already loaded; must unload first"),
 			      args[0]);
@@ -846,7 +845,7 @@ __tme_posix_disk_command(struct tme_posix_disk *posix_disk,
   else if (TME_ARG_IS(args[arg_i], "unload")) {
 
     /* if no disk is currently loaded: */
-    if (posix_disk->tme_posix_disk_fd < 0) {
+    if (posix_disk->tme_posix_disk_handle == TME_INVALID_HANDLE) {
       tme_output_append_error(_output,
 			      _("%s: no disk loaded"),
 			      args[0]);

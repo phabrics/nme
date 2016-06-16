@@ -62,7 +62,7 @@ _TME_RCSID("$Id: tmesh.c,v 1.4 2009/08/30 17:06:38 fredette Exp $");
 
 /* an input buffer: */
 struct _tmesh_input {
-#ifdef WIN32
+#if defined(WIN32) && !defined(TME_THREADS_DIRECT_IO)
   event_t _tmesh_input_fp;
 #else
   FILE *_tmesh_input_fp;
@@ -486,17 +486,35 @@ _tmesh_th(void *_passes)
 
     /* try to read more input: */
     rc = (num_passes) ?
-      (tme_thread_read(fileno(input->_tmesh_input_fp),
-		       input->_tmesh_input_buffer
-		       + input->_tmesh_input_buffer_head,
-		       sizeof(input->_tmesh_input_buffer)
-		       - input->_tmesh_input_buffer_head)) :
-      (tme_thread_read_yield(fileno(input->_tmesh_input_fp),
+      (tme_read(
+#ifdef WIN32
+#ifdef TME_THREADS_DIRECT_IO
+		_get_osfhandle(fileno(input->_tmesh_input_fp)),
+#else
+		input->_tmesh_input_fp->hand,
+#endif
+#else
+		fileno(input->_tmesh_input_fp),
+#endif
+		input->_tmesh_input_buffer
+		+ input->_tmesh_input_buffer_head,
+		sizeof(input->_tmesh_input_buffer)
+		- input->_tmesh_input_buffer_head)) :
+      (tme_thread_read_yield(
+#ifdef WIN32
+#ifdef TME_THREADS_DIRECT_IO
+			     _get_osfhandle(fileno(input->_tmesh_input_fp)),
+#else
+			     input->_tmesh_input_fp,
+#endif
+#else
+			     fileno(input->_tmesh_input_fp),
+#endif
 			     input->_tmesh_input_buffer
 			     + input->_tmesh_input_buffer_head,
 			     sizeof(input->_tmesh_input_buffer)
 			     - input->_tmesh_input_buffer_head));
-    
+      
     /* if the read failed: */
     if (rc < 0) {
       fprintf(stderr, "%s: %s\n",
@@ -866,7 +884,7 @@ main(int argc, char **argv)
   /* create our stdin input buffer, and stuff it with the command to
      source the pre-threads commands: */
   input_stdin = tme_new0(struct _tmesh_input, 1);
-#ifdef WIN32
+#if defined(WIN32) && !defined(TME_THREADS_DIRECT_IO)
   input_stdin->_tmesh_input_fp = &win32_signal.in;
 #else
   input_stdin->_tmesh_input_fp = stdin;
