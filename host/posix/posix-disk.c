@@ -731,6 +731,7 @@ _tme_posix_disk_open(struct tme_posix_disk *posix_disk,
   SYSTEM_INFO si;
   GetSystemInfo(&si);
   page_size = si.dwPageSize;  
+  block_size = si.dwAllocationGranularity;
 #else
   page_size = 4096;
 #endif
@@ -741,6 +742,11 @@ _tme_posix_disk_open(struct tme_posix_disk *posix_disk,
        page_size <<= 1);
   block_size = page_size;
 
+  tme_log(&posix_disk->tme_posix_disk_element->tme_element_log_handle,
+	  0, TME_OK,
+	  (&posix_disk->tme_posix_disk_element->tme_element_log_handle,
+	   _("Opened file %s of size %llu, block size %llu"), filename, statbuf.st_size, block_size));
+  
   /* update the disk structure: */
   posix_disk->tme_posix_disk_flags = flags;
   posix_disk->tme_posix_disk_handle = handle;

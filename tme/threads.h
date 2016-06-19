@@ -91,8 +91,20 @@ static _tme_inline tme_handle_t tme_open _TME_P((const char *path, int flags, in
 #define TME_SEEK_CUR FILE_CURRENT
 #define TME_SEEK_END FILE_END
 static _tme_inline off_t tme_seek _TME_P((tme_handle_t hand, off_t off, int where)) {
-  off_t ret;
-  return (SetFilePointerEx(hand, (LARGE_INTEGER)off, (PLARGE_INTEGER)&ret, where)) ? (ret) : (-1);
+  LARGE_INTEGER pos, ret;
+#ifdef TME_HAVE_INT64_T
+  pos.QuadPart = off;
+#else
+  pos.u.LowPart = (DWORD)off;
+  pos.u.HighPart = (LONG)(off>>32);
+#endif
+  return (SetFilePointerEx(hand, pos, &ret, where)) ?
+#ifdef TME_HAVE_INT64_T
+    (ret.QuadPart)
+#else
+    ((ret.u.LowPart) | (ret.u.HighPart << 32))
+#endif
+    : (-1);
 }
 static _tme_inline ssize_t tme_read _TME_P((tme_handle_t hand, void *buf, size_t count)) {
   int ret;
