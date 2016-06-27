@@ -224,9 +224,9 @@ _tme_eth_callout(struct tme_ethernet *eth, int new_callouts)
 	/* do the write: */
 	status =
 	  (eth->tme_eth_handle) ?
-	  (tme_thread_write(eth->tme_eth_handle, eth->tme_eth_out, rc)) :
+	  (tme_thread_write_yield(eth->tme_eth_handle, eth->tme_eth_out, rc, &eth->tme_eth_mutex)) :
 	  (eth->tme_ethernet_write(eth->tme_eth_data));
-
+      
 	/* writes must succeed: */
 	assert (status == rc);
 
@@ -278,14 +278,8 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
       /* set the delay sleeping flag: */
       eth->tme_eth_delay_sleeping = TRUE;
 
-      /* unlock our mutex: */
-      tme_mutex_unlock(&eth->tme_eth_mutex);
-      
       /* sleep for the delay sleep time: */
-      tme_thread_sleep_yield(0, sleep_usec);
-      
-      /* lock our mutex: */
-      tme_mutex_lock(&eth->tme_eth_mutex);
+      tme_thread_sleep_yield(0, sleep_usec, &eth->tme_eth_mutex);
       
       continue;
     }
@@ -299,33 +293,19 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
       continue;
     }
 
-    /* unlock the mutex: */
-    tme_mutex_unlock(&eth->tme_eth_mutex);
-
     /* read the ETH socket: */
     tme_log(&eth->tme_eth_element->tme_element_log_handle, 1, TME_OK,
 	    (&eth->tme_eth_element->tme_element_log_handle,
 	     _("calling read")));
-#if 0
-    rc = tme_thread_select_yield(eth->tme_eth_handle + 1,
-				 &fdset_read_in,
-				 NULL,
-				 NULL,
-				 NULL);
-    if (rc == 1) {
 
-    }
-#else
     buffer_end =
       (eth->tme_eth_handle) ?
       (tme_thread_read_yield(eth->tme_eth_handle,
 			     eth->tme_eth_buffer,
-			     eth->tme_eth_buffer_size)) :
+			     eth->tme_eth_buffer_size,
+			     &eth->tme_eth_mutex)) :
       (eth->tme_ethernet_read(eth->tme_eth_data));
-      
-#endif
-    tme_mutex_lock(&eth->tme_eth_mutex);
-
+    
     /* if the read failed: */
     if(buffer_end <= 0) {
       tme_log(&eth->tme_eth_element->tme_element_log_handle, 1, errno,

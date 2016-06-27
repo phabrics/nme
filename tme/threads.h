@@ -141,10 +141,45 @@ typedef tme_handle_t tme_thread_handle_t;
 #define tme_thread_open tme_open
 #define tme_thread_close tme_close
 #define tme_thread_seek tme_seek
-#define tme_thread_read tme_read
-#define tme_thread_write tme_write
+/* Events: */
+typedef struct event_set tme_event_set_t;
 
-static _tme_inline ssize_t tme_thread_read_yield _TME_P((tme_handle_t hand, void *buf, size_t count)) {
+#define tme_event_set(s) (s)
+#define tme_event_set_init event_set_init
+#define tme_event_free event_free
+#define tme_event_reset event_reset
+#define tme_event_del event_del
+#define tme_event_ctl event_ctl
+
+static _tme_inline
+int tme_event_wait _TME_P((tme_event_set_t *es, const struct timeval *tv, struct event_set_return *out, int outlen)) {
+  int rc;
+
+  _tme_thread_suspended();
+  
+  rc = event_wait(es, tv, out, outlen);
+
+  _tme_thread_resumed();
+
+  return rc;
+}
+
+static _tme_inline
+int tme_event_wait_yield _TME_P((tme_event_set_t *es, const struct timeval *tv, struct event_set_return *out, int outlen, tme_mutex_t *mutex)) {
+  int rc;
+
+  if(mutex) {
+    tme_mutex_unlock(mutex);
+  
+    rc = tme_event_wait(es, tv, out, outlen);
+    
+    tme_mutex_lock(mutex);
+  } else rc = event_wait(es, tv, out, outlen);
+
+  return rc;
+}
+
+static _tme_inline ssize_t tme_thread_read _TME_P((tme_handle_t hand, void *buf, size_t count)) {
   int rc;
 
   _tme_thread_suspended();
@@ -156,7 +191,21 @@ static _tme_inline ssize_t tme_thread_read_yield _TME_P((tme_handle_t hand, void
   return rc;
 }
 
-static _tme_inline ssize_t tme_thread_write_yield _TME_P((tme_handle_t hand, const void *buf, size_t count)) {
+static _tme_inline ssize_t tme_thread_read_yield _TME_P((tme_handle_t hand, void *buf, size_t count, tme_mutex_t *mutex)) {
+  int rc;
+
+  if(mutex) {
+    tme_mutex_unlock(mutex);
+    
+    rc = tme_thread_read(hand, buf, count);
+    
+    tme_mutex_lock(mutex);
+  } else rc = tme_read(hand, buf, count);
+
+  return rc;
+}
+
+static _tme_inline ssize_t tme_thread_write _TME_P((tme_handle_t hand, const void *buf, size_t count)) {
   int rc;
 
   _tme_thread_suspended();
@@ -164,6 +213,20 @@ static _tme_inline ssize_t tme_thread_write_yield _TME_P((tme_handle_t hand, con
   rc = tme_write(hand, buf, count);
 
   _tme_thread_resumed();
+
+  return rc;
+}
+
+static _tme_inline ssize_t tme_thread_write_yield _TME_P((tme_handle_t hand, const void *buf, size_t count, tme_mutex_t *mutex)) {
+  int rc;
+
+  if(mutex) {
+    tme_mutex_unlock(mutex);
+    
+    rc = tme_thread_write(hand, buf, count);
+    
+    tme_mutex_lock(mutex);
+  } else rc = tme_write(hand, buf, count);
 
   return rc;
 }
@@ -211,11 +274,11 @@ typedef tme_handle_t tme_thread_handle_t;
 #define tme_thread_open tme_open
 #define tme_thread_close tme_close
 #define tme_thread_seek tme_seek
-#define tme_thread_read tme_read
-#define tme_thread_write tme_write
 #endif /* WIN32 */
-ssize_t tme_event_yield _TME_P((event_t, void *, size_t, unsigned int));
-#define tme_thread_read_yield(event, data, count) tme_event_yield(event, data, count, EVENT_READ)
-#define tme_thread_write_yield(event, data, count) tme_event_yield(event, data, count, EVENT_WRITE)
+ssize_t tme_event_yield _TME_P((event_t, void *, size_t, unsigned int, tme_mutex_t *));
+#define tme_thread_read_yield(event, data, count, mutex) ((mutex) ? (tme_event_yield(event, data, count, EVENT_READ, mutex)) : (tme_read(event, data, count)))
+#define tme_thread_write_yield(event, data, count, mutex) ((mutex) ? (tme_event_yield(event, data, count, EVENT_WRITE, mutex)) : (tme_write(event, data, count)))
+#define tme_thread_read(event, data, count) tme_event_yield(event, data, count, EVENT_READ, NULL)
+#define tme_thread_write(event, data, count) tme_event_yield(event, data, count, EVENT_WRITE, NULL)
 #endif /* !TME_THREADS_DIRECT_IO */
 #endif /* !_TME_THREADS_H */

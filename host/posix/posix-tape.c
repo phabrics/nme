@@ -532,7 +532,8 @@ _tme_posix_tape_xfer1(struct tme_posix_tape *posix_tape,
       /* do the read: */
       rc = tme_thread_read_yield(segment->tme_posix_tape_segment_handle,
 				 posix_tape->tme_posix_tape_buffer_data,
-				 count_bytes_user);
+				 count_bytes_user,
+				 &posix_tape->tme_posix_tape_mutex);				 
 
       /* if this segment is not a real tape, and we're expected to
 	 transfer more bytes than the user requested, seek over the
@@ -556,7 +557,8 @@ _tme_posix_tape_xfer1(struct tme_posix_tape *posix_tape,
     /* do the write: */
     rc = tme_thread_write_yield(segment->tme_posix_tape_segment_handle,
 				posix_tape->tme_posix_tape_buffer_data,
-				count_bytes_user);
+				count_bytes_user,
+				&posix_tape->tme_posix_tape_mutex);
   }
 
   /* if the transfer got an error: */

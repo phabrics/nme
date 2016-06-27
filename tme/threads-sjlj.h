@@ -142,10 +142,9 @@ void tme_sjlj_exit _TME_P((void));
 #define tme_thread_exit tme_sjlj_exit
 
 /* sleeping: */
-void tme_sjlj_sleep _TME_P((unsigned long, unsigned long));
-#define tme_thread_sleep tme_sjlj_sleep
-void tme_sjlj_sleep_yield _TME_P((unsigned long, unsigned long));
+void tme_sjlj_sleep_yield _TME_P((unsigned long, unsigned long, tme_mutex_t *));
 #define tme_thread_sleep_yield tme_sjlj_sleep_yield
+#define tme_thread_sleep(s,u) tme_sjlj_sleep_yield(s,u,NULL)
 
 /* Events: */
 typedef struct tme_sjlj_event_set tme_event_set_t;
@@ -155,7 +154,7 @@ void tme_sjlj_event_free _TME_P((tme_event_set_t *es));
 void tme_sjlj_event_reset _TME_P((tme_event_set_t *es));
 int tme_sjlj_event_del _TME_P((tme_event_set_t *es, event_t event));
 int tme_sjlj_event_ctl _TME_P((tme_event_set_t *es, event_t event, unsigned int rwflags, void *arg));
-int tme_sjlj_event_wait_yield _TME_P((tme_event_set_t *es, const struct timeval *tv, struct event_set_return *out, int outlen));
+int tme_sjlj_event_wait_yield _TME_P((tme_event_set_t *es, const struct timeval *tv, struct event_set_return *out, int outlen, tme_mutex_t *mutex));
 #define tme_event_set(s) (*(struct event_set **)(s))
 #define tme_event_set_init tme_sjlj_event_set_init
 #define tme_event_free tme_sjlj_event_free
@@ -163,6 +162,7 @@ int tme_sjlj_event_wait_yield _TME_P((tme_event_set_t *es, const struct timeval 
 #define tme_event_del tme_sjlj_event_del
 #define tme_event_ctl tme_sjlj_event_ctl
 #define tme_event_wait_yield tme_sjlj_event_wait_yield
+#define tme_event_wait(es, tv, out, outlen) tme_event_wait_yield(es, tv, out, outlen, NULL)
 
 /* time: */
 void tme_sjlj_gettimeofday _TME_P((tme_time_t *));

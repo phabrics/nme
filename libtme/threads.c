@@ -116,7 +116,7 @@ void tme_thread_enter(tme_mutex_t *mutex) {
 #ifndef TME_THREADS_DIRECT_IO
 /* this reads or writes, yielding if the event is not ready: */
 ssize_t
-tme_event_yield(event_t event, void *data, size_t count, unsigned int rwflags)
+tme_event_yield(event_t event, void *data, size_t count, unsigned int rwflags, tme_mutex_t *mutex)
 {
   int rc = 1;
   struct event_set_return esr;
@@ -127,9 +127,7 @@ tme_event_yield(event_t event, void *data, size_t count, unsigned int rwflags)
   tme_event_reset(tme_events);
   tme_event_ctl(tme_events, event, rwflags, 0);
 
-  _tme_thread_suspended();
-  rc = tme_event_wait_yield(tme_events, NULL, &esr, 1);
-  _tme_thread_resumed();  
+  rc = tme_event_wait_yield(tme_events, NULL, &esr, 1, mutex);
 
   /* do the i/o: */
   if(esr.rwflags & EVENT_WRITE)

@@ -52,14 +52,8 @@ static int _tme_openvpn_tun_write(void *data) {
   
   tun->outbuf.len = tun->eth->tme_eth_data_length;
   if(!(tun->flags & (OPENVPN_CAN_WRITE | OPENVPN_FAST_IO))) {
-    /* unlock our mutex: */
-    tme_mutex_unlock(&tun->eth->tme_eth_mutex);
-      
     /* sleep for the delay sleep time (msec): */
-    tme_thread_sleep_yield(0, 500);
-      
-    /* lock our mutex: */
-    tme_mutex_lock(&tun->eth->tme_eth_mutex);
+    tme_thread_sleep_yield(0, 500, &tun->eth->tme_eth_mutex);
   }
 
   if(tun->flags & OPENVPN_CAN_WRITE) tun->flags &= ~OPENVPN_CAN_WRITE;
@@ -108,7 +102,7 @@ static int _tme_openvpn_tun_read(void *data) {
       tme_event_set(tun->event_set) = es;
     }
     
-    status = tme_event_wait_yield(tun->event_set, &tv, &esr, 1);
+    status = tme_event_wait_yield(tun->event_set, &tv, &esr, 1, &tun->eth->tme_eth_mutex);
     if(status<0) return status;
 
     if(esr.rwflags & EVENT_WRITE)

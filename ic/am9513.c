@@ -355,9 +355,6 @@ _tme_am9513_th_timer(struct tme_am9513 *am9513)
 
   tme_thread_enter(&am9513->tme_am9513_mutex);
 
-  /* unlock our mutex: */
-  tme_mutex_unlock(&am9513->tme_am9513_mutex);
-  
   /* loop forever: */
   for (;;) {
 
@@ -377,9 +374,6 @@ _tme_am9513_th_timer(struct tme_am9513 *am9513)
 
     /* assume that we will sleep for one second: */
     basic_sleep = am9513->tme_am9513_basic_clock;
-
-    /* lock our mutex: */
-    tme_mutex_lock(&am9513->tme_am9513_mutex);
 
     /* check all of the counters: */
     for (counter_i = 0;
@@ -508,11 +502,8 @@ _tme_am9513_th_timer(struct tme_am9513 *am9513)
       _tme_am9513_callout(am9513);
     }
 
-    /* unlock our mutex: */
-    tme_mutex_unlock(&am9513->tme_am9513_mutex);
-
     /* sleep: */
-    tme_thread_sleep_yield(0, (basic_sleep * 1000) / am9513->tme_am9513_basic_clock_msec);
+    tme_thread_sleep_yield(0, (basic_sleep * 1000) / am9513->tme_am9513_basic_clock_msec, &am9513->tme_am9513_mutex);
   }
   /* NOTREACHED */
   tme_thread_exit();

@@ -500,21 +500,21 @@ _tmesh_th(void *_passes)
 		+ input->_tmesh_input_buffer_head,
 		sizeof(input->_tmesh_input_buffer)
 		- input->_tmesh_input_buffer_head)) :
-      (tme_thread_read_yield(
+      (tme_thread_read(
 #ifdef WIN32
 #ifdef TME_THREADS_DIRECT_IO
-			     _get_osfhandle(fileno(input->_tmesh_input_fp)),
+		       _get_osfhandle(fileno(input->_tmesh_input_fp)),
 #else
-			     input->_tmesh_input_fp,
+		       input->_tmesh_input_fp,
 #endif
 #else
-			     fileno(input->_tmesh_input_fp),
+		       fileno(input->_tmesh_input_fp),
 #endif
-			     input->_tmesh_input_buffer
-			     + input->_tmesh_input_buffer_head,
-			     sizeof(input->_tmesh_input_buffer)
-			     - input->_tmesh_input_buffer_head));
-      
+		       input->_tmesh_input_buffer
+		       + input->_tmesh_input_buffer_head,
+		       sizeof(input->_tmesh_input_buffer)
+		       - input->_tmesh_input_buffer_head));
+    
     /* if the read failed: */
     if (rc < 0) {
       fprintf(stderr, "%s: %s\n",

@@ -210,7 +210,9 @@ _tme_posix_disk_buffer_free(struct tme_posix_disk *posix_disk,
       /* write out the buffer: */
       ssize = tme_thread_write_yield(posix_disk->tme_posix_disk_handle,
 				     buffer->tme_posix_disk_buffer_data,
-				     buffer->tme_posix_disk_buffer_size);
+				     buffer->tme_posix_disk_buffer_size,
+				     &posix_disk->tme_posix_disk_mutex);
+      
       assert (ssize == buffer->tme_posix_disk_buffer_size);
     }
 
@@ -477,7 +479,8 @@ _tme_posix_disk_buffer_get(struct tme_posix_disk *posix_disk,
 	  for (;;) {
 	    ssize = tme_thread_read_yield(posix_disk->tme_posix_disk_handle,
 					  data,
-					  size_agg);
+					  size_agg,
+					  &posix_disk->tme_posix_disk_mutex);
 	    if (ssize == size_agg) {
 	      break;
 	    }
@@ -565,6 +568,7 @@ _tme_posix_disk_read(struct tme_disk_connection *conn_disk,
 				  size,
 				  TRUE,
 				  &buffer);
+				  
   assert (rc == TME_OK);
 
   /* unlock the mutex: */
@@ -636,7 +640,8 @@ static int
 _tme_posix_disk_open(struct tme_posix_disk *posix_disk,
 		     const char *filename,
 		     int flags,
-		     char **_output)
+		     char **_output,
+		     tme_mutex_t *mutex)
 {
   tme_thread_handle_t handle;
   int fd;
@@ -648,7 +653,7 @@ _tme_posix_disk_open(struct tme_posix_disk *posix_disk,
 #endif
   tme_uint8_t *block;
   int page_size;
-
+  
   /* open the file: */
   handle = tme_thread_open(filename, flags, &fd);
   if (handle == TME_INVALID_HANDLE) {
@@ -657,7 +662,7 @@ _tme_posix_disk_open(struct tme_posix_disk *posix_disk,
 			    filename);
     return (errno);
   }
-
+  
   /* stat the file: */
   if (fstat(fd, &statbuf) < 0) {
     tme_output_append_error(_output,
@@ -666,7 +671,7 @@ _tme_posix_disk_open(struct tme_posix_disk *posix_disk,
     tme_thread_close(handle);
     return (errno);
   }
-
+  
   /* we will handle a character device, but not a block device: */
   if (S_ISBLK(statbuf.st_mode)) {
     tme_output_append_error(_output,
@@ -675,25 +680,25 @@ _tme_posix_disk_open(struct tme_posix_disk *posix_disk,
     tme_thread_close(handle);
     return (EINVAL);
   }
-
+  
   /* the block size must be at least one: */
   block_size = 1;
-
+  
   /* if this is a character device, determine its block size: */
   if (S_ISCHR(statbuf.st_mode)) {
-
+    
     /* allocate space for the block: */
     block = tme_new(tme_uint8_t, block_size);
-
+    
     /* loop trying to read a block at offset zero, doubling the block
        size until we succeed: */
     for (; block_size <= TME_POSIX_DISK_BLOCK_SIZE_MAX; ) {
-
+      
       /* do the read: */
-      if (tme_thread_read_yield(handle, block, block_size) >= 0) {
+      if (tme_thread_read_yield(handle, block, block_size, mutex) >= 0) {
 	break;
       }
-
+      
       /* seek back to the beginning: */
       if (tme_thread_seek(handle, 0, TME_SEEK_SET) < 0) {
 	tme_free(block);
@@ -703,15 +708,15 @@ _tme_posix_disk_open(struct tme_posix_disk *posix_disk,
 	tme_thread_close(handle);
 	return (errno);
       }
-
+      
       /* resize the block: */
       block_size <<= 1;
       block = tme_renew(tme_uint8_t, block, block_size);
     }
-
+    
     /* free the block: */
     tme_free(block);
-
+    
     /* if we failed: */
     if (block_size > TME_POSIX_DISK_BLOCK_SIZE_MAX) {
       tme_output_append_error(_output,
@@ -721,7 +726,7 @@ _tme_posix_disk_open(struct tme_posix_disk *posix_disk,
       return (EINVAL);
     }
   }
-
+  
   /* get the page size: */
 #ifdef _SC_PAGESIZE
   page_size = sysconf(_SC_PAGESIZE);
@@ -737,15 +742,14 @@ _tme_posix_disk_open(struct tme_posix_disk *posix_disk,
 #endif
   
   /* if we're mmapping, the block size must be at least the page size: */
-  for (;
-       page_size < block_size;
-       page_size <<= 1);
+  for (;page_size < block_size;page_size <<= 1);
+  
   block_size = page_size;
-
+  
   tme_log(&posix_disk->tme_posix_disk_element->tme_element_log_handle,
-	  0, TME_OK,
-	  (&posix_disk->tme_posix_disk_element->tme_element_log_handle,
-	   _("Opened file %s of size %llu, block size %llu"), filename, statbuf.st_size, block_size));
+    0, TME_OK,
+    (&posix_disk->tme_posix_disk_element->tme_element_log_handle,
+    _("Opened file %s of size %llu, block size %llu"), filename, statbuf.st_size, block_size));
   
   /* update the disk structure: */
   posix_disk->tme_posix_disk_flags = flags;
@@ -763,15 +767,14 @@ static void
 _tme_posix_disk_close(struct tme_posix_disk *posix_disk)
 {
   struct tme_posix_disk_buffer *buffer;
-
+  
   /* free all of the buffers: */
   for (buffer = posix_disk->tme_posix_disk_buffers;
        buffer != NULL;
        buffer = buffer->tme_posix_disk_buffer_next) {
-    _tme_posix_disk_buffer_free(posix_disk,
-				buffer);
+    _tme_posix_disk_buffer_free(posix_disk, buffer);
   }
-
+  
   /* close the disk: */
   tme_thread_close(posix_disk->tme_posix_disk_handle);
   posix_disk->tme_posix_disk_handle = TME_INVALID_HANDLE;
@@ -841,7 +844,8 @@ __tme_posix_disk_command(struct tme_posix_disk *posix_disk,
     else if ((rc = _tme_posix_disk_open(posix_disk,
 					filename,
 					flags,
-					_output)) == TME_OK) {
+					_output,
+					&posix_disk->tme_posix_disk_mutex)) == TME_OK) {
 
       /* nothing to do */
     }
@@ -909,7 +913,7 @@ _tme_posix_disk_command(struct tme_element *element,
   rc = __tme_posix_disk_command(posix_disk,
 				args, 
 				_output);
-
+  
   /* unlock the mutex: */
   tme_mutex_unlock(&posix_disk->tme_posix_disk_mutex);
 
@@ -1116,7 +1120,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,disk) {
   rc = _tme_posix_disk_open(posix_disk,
 			    filename,
 			    flags,
-			    _output);
+			    _output,
+			    NULL);
   if (rc != TME_OK) {
     tme_free(posix_disk);
     return (rc);

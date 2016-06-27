@@ -507,7 +507,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,memory) {
 
     /* if we have to, read in the backing file: */
     if (handle != TME_INVALID_HANDLE) {
-      bytes_read = tme_thread_read_yield(handle, memory->tme_posix_memory_contents, memory_size);
+      bytes_read = tme_read(handle, memory->tme_posix_memory_contents, memory_size);
       if (bytes_read < 0
 	  || memory_size != (unsigned long) bytes_read) {
 	/* XXX diagnostic: */

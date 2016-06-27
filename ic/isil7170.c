@@ -383,14 +383,9 @@ _tme_isil7170_th_timer(struct tme_isil7170 *isil7170)
     /* we are sleeping: */
     isil7170->tme_isil7170_timer_sleeping = int_mask;
 
-    /* unlock our mutex: */
-    tme_mutex_unlock(&isil7170->tme_isil7170_mutex);
-
     /* sleep: */
-    tme_thread_sleep_yield(0, sleep_usec);
-
-    /* lock our mutex: */
-    tme_mutex_lock(&isil7170->tme_isil7170_mutex);
+    tme_thread_sleep_yield(0, sleep_usec, &isil7170->tme_isil7170_mutex);
+    
   }
   /* NOTREACHED */
   tme_thread_exit();

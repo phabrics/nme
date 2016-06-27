@@ -134,7 +134,7 @@ _tme_gtk_screen_th_update(struct tme_gtk_display *display)
 
     _tme_thread_resumed();
     /* update again in .5 seconds: */
-    tme_thread_sleep_yield(0, 500000);
+    tme_thread_sleep(0, 500000);
     _tme_thread_suspended();
   }
   _tme_thread_resumed();

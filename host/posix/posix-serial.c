@@ -215,9 +215,6 @@ _tme_posix_serial_th_ctrl(struct tme_posix_serial *serial)
 
   tme_thread_enter(&serial->tme_posix_serial_mutex);
 
-  /* unlock the mutex: */
-  tme_mutex_unlock(&serial->tme_posix_serial_mutex);
-  
   /* loop forever: */
   for (;;) {
    
@@ -236,9 +233,6 @@ _tme_posix_serial_th_ctrl(struct tme_posix_serial *serial)
       modem_state &= ~(TIOCM_DTR | TIOCM_RTS | TIOCM_CTS);
       modem_state |= modem_state_out & ~(TIOCM_CD | TIOCM_RI | TIOCM_DSR);
     }
-    
-    /* lock the mutex: */
-    tme_mutex_lock(&serial->tme_posix_serial_mutex);
     
     /* update the control outputs: */
     ctrl = (serial->tme_posix_serial_ctrl_callout
@@ -266,11 +260,8 @@ _tme_posix_serial_th_ctrl(struct tme_posix_serial *serial)
       _tme_posix_serial_callout(serial);
     }
     
-    /* unlock the mutex: */
-    tme_mutex_unlock(&serial->tme_posix_serial_mutex);
-
     /* check the controls again in .5 seconds: */
-    tme_thread_sleep_yield(0, 500000);
+    tme_thread_sleep_yield(0, 500000, &serial->tme_posix_serial_mutex);
   }
   /* NOTREACHED */
   tme_thread_exit();
@@ -305,16 +296,11 @@ _tme_posix_serial_th_writer(struct tme_posix_serial *serial)
 				TME_SERIAL_COPY_PEEK);
     assert(buffer_output_size > 0);
 
-    /* unlock the mutex: */
-    tme_mutex_unlock(&serial->tme_posix_serial_mutex);
-
     /* try to write the device: */
     rc = tme_thread_write_yield(serial->tme_posix_serial_fd_out,
 				buffer_output,
-				buffer_output_size);
-
-    /* lock the mutex: */
-    tme_mutex_lock(&serial->tme_posix_serial_mutex);
+				buffer_output_size,
+				&serial->tme_posix_serial_mutex);
 
     /* if the write was successful: */
     if (rc > 0) {
@@ -347,16 +333,14 @@ _tme_posix_serial_th_reader(struct tme_posix_serial *serial)
 
   tme_thread_enter(&serial->tme_posix_serial_mutex);
 
-  /* unlock the mutex: */
-  tme_mutex_unlock(&serial->tme_posix_serial_mutex);
-  
   /* loop forever: */
   for (;;) {
 
     /* try to read the device: */
     rc = tme_thread_read_yield(serial->tme_posix_serial_fd_in,
 			       buffer_input,
-			       sizeof(buffer_input));
+			       sizeof(buffer_input),
+			       &serial->tme_posix_serial_mutex);
 
     /* if the read failed: */
     if (rc < 0) {
@@ -368,9 +352,6 @@ _tme_posix_serial_th_reader(struct tme_posix_serial *serial)
     if (rc == 0) {
       break;
     }
-
-    /* lock the mutex: */
-    tme_mutex_lock(&serial->tme_posix_serial_mutex);
 
     /* remember if this buffer was empty: */
     buffer_was_empty =
@@ -559,9 +540,8 @@ _tme_posix_serial_th_reader(struct tme_posix_serial *serial)
       _tme_posix_serial_callout(serial);
     }
 
-    /* unlock the mutex: */
-    tme_mutex_unlock(&serial->tme_posix_serial_mutex);
   }
+
   /* NOTREACHED */
   tme_thread_exit();
 }

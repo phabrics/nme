@@ -170,11 +170,15 @@ static _tme_inline void tme_thread_create _TME_P((tme_threadid_t *t, tme_thread_
 #define tme_thread_exit() _tme_thread_suspended();return NULL
 
 /* sleeping: */
-static _tme_inline int tme_thread_sleep_yield _TME_P((unsigned long sec, unsigned long usec)) { 
+static _tme_inline int tme_thread_sleep_yield _TME_P((unsigned long sec, unsigned long usec, tme_mutex_t *mutex)) { 
+  g_mutex_unlock(mutex);
+  
   _tme_thread_suspended();
 
   g_usleep(usec + sec * G_USEC_PER_SEC);
   
+  g_mutex_lock(mutex);
+
   _tme_thread_resumed();
 
   return 0;
@@ -187,14 +191,3 @@ static _tme_inline int tme_threads_main_iter _TME_P((void *usec)) {
 }
 
 #define TME_THREADS_DIRECT_IO
-
-/* Events: */
-typedef struct event_set tme_event_set_t;
-
-#define tme_event_set(s) (s)
-#define tme_event_set_init event_set_init
-#define tme_event_free event_free
-#define tme_event_reset event_reset
-#define tme_event_del event_del
-#define tme_event_ctl event_ctl
-#define tme_event_wait_yield event_wait

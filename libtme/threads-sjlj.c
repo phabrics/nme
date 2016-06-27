@@ -569,14 +569,11 @@ void
 tme_sjlj_cond_sleep_yield(tme_cond_t *cond, tme_mutex_t *mutex, const tme_time_t *sleep)
 {
 
-  /* unlock the mutex: */
-  tme_mutex_unlock(mutex);
-
   /* remember that this thread is waiting on this condition: */
   tme_sjlj_thread_blocked.tme_sjlj_thread_cond = cond;
 
   /* sleep and yield: */
-  tme_sjlj_sleep_yield(TME_TIME_GET_SEC(*sleep), TME_TIME_GET_FRAC(*sleep));
+  tme_sjlj_sleep_yield(TME_TIME_GET_SEC(*sleep), TME_TIME_GET_FRAC(*sleep), mutex);
 }
 
 /* this notifies one or more threads waiting on a condition: */
@@ -650,7 +647,7 @@ tme_sjlj_sleep(unsigned long sec, unsigned long usec)
 #endif
 /* this sleeps and yields: */
 void
-tme_sjlj_sleep_yield(unsigned long sec, unsigned long usec)
+tme_sjlj_sleep_yield(unsigned long sec, unsigned long usec, tme_mutex_t *mutex)
 {
 
   /* set the sleep interval: */
@@ -660,6 +657,9 @@ tme_sjlj_sleep_yield(unsigned long sec, unsigned long usec)
   }
   TME_TIME_SETV(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep, sec, usec);
 
+  /* unlock the mutex: */
+  if(mutex) tme_mutex_unlock(mutex);
+  
   /* yield: */
   tme_thread_yield();
 }
@@ -733,7 +733,7 @@ int tme_sjlj_event_ctl(struct tme_sjlj_event_set *es, event_t event, unsigned in
 
 /* this selects and yields: */
 int
-tme_sjlj_event_wait_yield(struct tme_sjlj_event_set *es, const struct timeval *timeout_in, struct event_set_return *out, int outlen)
+tme_sjlj_event_wait_yield(struct tme_sjlj_event_set *es, const struct timeval *timeout_in, struct event_set_return *out, int outlen, tme_mutex_t *mutex)
 {
   struct timeval timeout_out;
   int rc;
@@ -750,6 +750,7 @@ tme_sjlj_event_wait_yield(struct tme_sjlj_event_set *es, const struct timeval *t
     return (rc);
   }
 
+  if(mutex) tme_mutex_unlock(mutex);
   tme_sjlj_thread_blocked.tme_sjlj_thread_events = es;
 
   if (timeout_in != NULL) {

@@ -62,16 +62,10 @@ static int _tme_openvpn_sock_write(void *data) {
 				&to_addr);
 
   if(!(sock->flags & (OPENVPN_CAN_WRITE | OPENVPN_FAST_IO))) {
-      /* unlock our mutex: */
-      tme_mutex_unlock(&sock->eth->tme_eth_mutex);
-      
-      /* sleep for the delay sleep time (msec): */
-      tme_thread_sleep_yield(0, 500);
-      
-      /* lock our mutex: */
-      tme_mutex_lock(&sock->eth->tme_eth_mutex);
+    /* sleep for the delay sleep time (msec): */
+    tme_thread_sleep_yield(0, 500, &sock->eth->tme_eth_mutex);
   }
-
+  
   if(sock->flags & OPENVPN_CAN_WRITE) sock->flags &= ~OPENVPN_CAN_WRITE;
   
   return link_socket_write(sock->ls, &sock->outbuf, to_addr);
@@ -120,7 +114,8 @@ static int _tme_openvpn_sock_read(void *data) {
     if(socket_read_residual(sock->ls))
       esr.rwflags = EVENT_READ;
     else {
-      status = tme_event_wait_yield(sock->event_set, &tv, &esr, 1);
+      status = tme_event_wait_yield(sock->event_set, &tv, &esr, 1, &sock->eth->tme_eth_mutex);
+
       if(status<0) return status;
     }
     
@@ -135,6 +130,7 @@ static int _tme_openvpn_sock_read(void *data) {
       if(socket_connection_reset(sock->ls, status)) {
 	//	register_signal (c, SIGUSR1, "connection-reset"); /* SOFT-SIGUSR1 -- TCP connection reset */
 	msg (D_STREAM_ERRORS, "Connection reset, restarting [%d]", status);
+	return status;
       }
       
       /* check recvfrom status */

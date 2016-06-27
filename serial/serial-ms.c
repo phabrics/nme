@@ -368,14 +368,9 @@ _tme_serial_ms_th_rate(void *_serial_ms)
       /* after we sleep, we need to call out a mouse event read: */
       serial_ms->tme_serial_ms_rate_do_callout = TRUE;
 
-      /* unlock our mutex: */
-      tme_mutex_unlock(&serial_ms->tme_serial_ms_mutex);
-
       /* sleep: */
-      tme_thread_sleep_yield(0, serial_ms->tme_serial_ms_rate_sleep_usec);
+      tme_thread_sleep_yield(0, serial_ms->tme_serial_ms_rate_sleep_usec, &serial_ms->tme_serial_ms_mutex);
 	
-      /* lock our mutex: */
-      tme_mutex_lock(&serial_ms->tme_serial_ms_mutex);
     }
 
     /* otherwise, we need to wait on the condition: */

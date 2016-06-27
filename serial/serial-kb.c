@@ -345,14 +345,9 @@ _tme_serial_kb_th_rate(struct tme_serial_kb *serial_kb)
 	/* we are now sleeping: */
 	serial_kb->tme_serial_kb_rate_sleeping = TRUE;
 
-	/* unlock our mutex: */
-	tme_mutex_unlock(&serial_kb->tme_serial_kb_mutex);
-
 	/* sleep for the rate-limiting time: */
-	tme_thread_sleep_yield(0, serial_kb->tme_serial_kb_rate_sleep);
+	tme_thread_sleep_yield(0, serial_kb->tme_serial_kb_rate_sleep, &serial_kb->tme_serial_kb_mutex);
 	
-	/* lock our mutex: */
-	tme_mutex_lock(&serial_kb->tme_serial_kb_mutex);
       }
     }
 
