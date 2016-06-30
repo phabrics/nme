@@ -50,6 +50,7 @@ void tme_sjlj_threads_init _TME_P((void));
 #define _tme_threads_init tme_sjlj_threads_init
 int tme_sjlj_threads_main_iter _TME_P((void *event_check));
 #define tme_threads_main_iter tme_sjlj_threads_main_iter
+#define _tme_threads_main_iter tme_sjlj_threads_main_iter
 
 /* thread suspension: */
 #define tme_thread_suspend_others()	do { } while (/* CONSTCOND */ 0)
@@ -144,7 +145,6 @@ void tme_sjlj_exit _TME_P((void));
 /* sleeping: */
 void tme_sjlj_sleep_yield _TME_P((unsigned long, unsigned long, tme_mutex_t *));
 #define tme_thread_sleep_yield tme_sjlj_sleep_yield
-#define tme_thread_sleep(s,u) tme_sjlj_sleep_yield(s,u,NULL)
 
 /* Events: */
 typedef struct tme_sjlj_event_set tme_event_set_t;

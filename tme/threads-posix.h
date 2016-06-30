@@ -269,6 +269,8 @@ static _tme_inline int tme_threads_main_iter _TME_P((void *usec)) {
   return usleep((usec) ? (unsigned long)usec : 1000000);
 }
 
+#define _tme_threads_main_iter(fn) fn()
+
 #define TME_THREADS_DIRECT_IO
 
 #ifdef HAVE_CPUSET_CREATE

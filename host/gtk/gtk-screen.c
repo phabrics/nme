@@ -40,9 +40,13 @@ _TME_RCSID("$Id: gtk-screen.c,v 1.11 2009/08/30 21:39:03 fredette Exp $");
 #include "gtk-display.h"
 #include <stdlib.h>
 
+static _tme_inline void _tme_gtk_main_iter(void) {
+  gtk_main_iteration_do(FALSE);
+}
+
 /* the GTK screens update thread: */
-gboolean
-_tme_gtk_screen_update(gpointer disp)
+int
+_tme_gtk_screen_update(void *disp)
 {
   struct tme_gtk_display *display;
   struct tme_gtk_screen *screen;
@@ -54,6 +58,8 @@ _tme_gtk_screen_update(gpointer disp)
   tme_uint32_t *i;
   tme_uint32_t last_i, j;
 #endif
+
+  _tme_threads_main_iter(_tme_gtk_main_iter);
 
   display = (struct tme_gtk_display *)disp;
   
@@ -121,7 +127,7 @@ _tme_gtk_screen_update(gpointer disp)
   tme_mutex_unlock(&display->tme_gtk_display_mutex);
 
   _tme_thread_suspended();
-  return TRUE;
+  return (TME_OK);
 }
 
 /* the (default) GTK screens update thread: */
@@ -132,10 +138,11 @@ _tme_gtk_screen_th_update(struct tme_gtk_display *display)
   for (;;) {
     _tme_gtk_screen_update(display);
 
+    /* update again in .5 seconds:
     _tme_thread_resumed();
-    /* update again in .5 seconds: */
     tme_thread_sleep(0, 500000);
     _tme_thread_suspended();
+    */
   }
   _tme_thread_resumed();
   /* NOTREACHED */

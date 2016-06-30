@@ -41,10 +41,6 @@ _TME_RCSID("$Id: gtk-display.c,v 1.4 2010/06/05 14:28:17 fredette Exp $");
 
 /* macros: */
 
-static _tme_inline void _tme_gtk_main_iter(void) {
-  gtk_main_iteration_do(FALSE);
-}
-
 static void _tme_gtk_init(void) {
   char **argv;
   char *argv_buffer[3];
@@ -307,18 +303,14 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
     return (EINVAL);
   }
 
-  /* call gtk_init if we haven't already: */
-#ifdef tme_threads_main_iter
-  tme_threads_init(tme_threads_main_iter, _tme_gtk_main_iter);
-#else
-  tme_threads_init(NULL, gtk_main);
-#endif
-  _tme_gtk_init();
-  
   /* start our data structure: */
   display = tme_new0(struct tme_gtk_display, 1);
   display->tme_gtk_display_element = element;
 
+  /* call gtk_init if we haven't already: */
+  tme_threads_init(_tme_gtk_screen_update, display);
+  _tme_gtk_init();
+  
   /* create the keyboard: */
   _tme_gtk_keyboard_new(display);
 
@@ -331,12 +323,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   /* start the threads: */
   tme_mutex_init(&display->tme_gtk_display_mutex);
 
-#ifdef TME_THREADS_SJLJ
-  tme_thread_create(&display->tme_gtk_display_thread, (tme_thread_t) _tme_gtk_screen_th_update, display);
-#else
-  gdk_threads_add_timeout(500, _tme_gtk_screen_update, display);
-#endif
-  
   /* fill the element: */
   element->tme_element_private = display;
   element->tme_element_connections_new = _tme_gtk_display_connections_new;

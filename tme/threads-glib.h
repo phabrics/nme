@@ -190,4 +190,6 @@ static _tme_inline int tme_threads_main_iter _TME_P((void *usec)) {
   return 0;
 }
 
+#define _tme_threads_main_iter(fn) fn()
+
 #define TME_THREADS_DIRECT_IO
