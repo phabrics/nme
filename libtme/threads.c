@@ -113,10 +113,9 @@ void tme_thread_enter(tme_mutex_t *mutex) {
     tme_mutex_lock(mutex);
 }
 
-#ifndef TME_THREADS_DIRECT_IO
 /* this reads or writes, yielding if the event is not ready: */
 ssize_t
-tme_event_yield(event_t event, void *data, size_t count, unsigned int rwflags, tme_mutex_t *mutex)
+tme_event_yield(tme_event_t hand, void *data, size_t count, unsigned int rwflags, tme_mutex_t *mutex)
 {
   int rc = 1;
   struct event_set_return esr;
@@ -125,22 +124,27 @@ tme_event_yield(event_t event, void *data, size_t count, unsigned int rwflags, t
 #endif
   
   tme_event_reset(tme_events);
-  tme_event_ctl(tme_events, event, rwflags, 0);
+  tme_event_ctl(tme_events, tme_event_handle(hand), rwflags, 0);
+
+#ifdef WIN32
+  if (rwflags & EVENT_READ)
+    tme_read_queue (hand, 0);
+#endif
 
   rc = tme_event_wait_yield(tme_events, NULL, &esr, 1, mutex);
 
   /* do the i/o: */
   if(esr.rwflags & EVENT_WRITE)
-    rc = tme_write(event, data, count);  
+    rc = tme_event_write(hand, data, count);  
   if(esr.rwflags & EVENT_READ)
-    rc = tme_read(event, data, count);
+    rc = tme_event_read(hand, data, count);
   return rc;
 }
 
 #ifdef WIN32
 
 int
-tme_read_queue (tme_handle_t hand, int maxsize)
+tme_read_queue (tme_win32_handle_t hand, int maxsize)
 {
   if (hand->reads.iostate == IOSTATE_INITIAL)
     {
@@ -204,7 +208,7 @@ tme_read_queue (tme_handle_t hand, int maxsize)
 }
 
 int
-tme_write_queue (tme_handle_t hand, struct buffer *buf)
+tme_write_queue (tme_win32_handle_t hand, struct buffer *buf)
 {
   if (hand->writes.iostate == IOSTATE_INITIAL)
     {
@@ -344,5 +348,22 @@ tme_finalize (
   return ret;
 }
 
+tme_win32_handle_t tme_win32_open(const char *path, int flags, int *fd) {
+  tme_win32_handle_t hand;
+
+  hand = tme_new0(tme_win32_handle_t, 1);
+  hand->hand = NULL;
+ /* manual reset event, initially set according to event_state */
+  hand->reads.overlapped.hEvent = CreateEvent (NULL, TRUE, FALSE, NULL);
+  if (hand->reads.overlapped.hEvent == NULL)
+    msg (M_ERR, "Error: overlapped_io_init: CreateEvent failed");
+  hand->writes.overlapped.hEvent = CreateEvent (NULL, TRUE, TRUE, NULL);
+  if (hand->writes.overlapped.hEvent == NULL)
+    msg (M_ERR, "Error: overlapped_io_init: CreateEvent failed");
+
+  hand->rw_handle.read = hand->reads.overlapped.hEvent;
+  hand->rw_handle.write = hand->writes.overlapped.hEvent;
+
+  return hand;
+}
 #endif // WIN32
-#endif // !TME_THREADS_DIRECT_IO
