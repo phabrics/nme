@@ -60,6 +60,11 @@ pthread_attr_t *tme_thread_defattr() {
 static GRWLock tme_rwlock_start;
 GRWLock tme_rwlock_suspere;
 #endif
+#ifdef WIN32
+tme_win32_handle_t win32_stdin;
+tme_win32_handle_t win32_stdout;
+tme_win32_handle_t win32_stderr;
+#endif
 
 void tme_threads_init(tme_threads_fn1 run, void *arg) {
   _tme_threads_run = run;
@@ -75,6 +80,14 @@ void tme_threads_init(tme_threads_fn1 run, void *arg) {
       g_rw_lock_writer_lock(&tme_rwlock_start);
 #endif
     }
+#ifdef WIN32
+    win32_stdin = tme_win32_open(NULL, TME_FILE_FLAG_RO, NULL);
+    win32_stdout = tme_win32_open(NULL, TME_FILE_FLAG_WO, NULL);
+    win32_stderr = tme_win32_open(NULL, TME_FILE_FLAG_WO, NULL);
+    win32_stdin->handle = GetStdHandle(STD_INPUT_HANDLE);
+    win32_stdout->handle = GetStdHandle(STD_OUTPUT_HANDLE);
+    win32_stderr->handle = GetStdHandle(STD_ERROR_HANDLE);
+#endif
     _tme_thread_resumed();  
     inited=TRUE;
   }
@@ -115,7 +128,7 @@ void tme_thread_enter(tme_mutex_t *mutex) {
 
 /* this reads or writes, yielding if the event is not ready: */
 ssize_t
-tme_event_yield(tme_event_t hand, void *data, size_t count, unsigned int rwflags, tme_mutex_t *mutex)
+tme_event_yield(tme_event_t hand, void *data, size_t len, unsigned int rwflags, tme_mutex_t *mutex)
 {
   int rc = 1;
   struct event_set_return esr;
@@ -127,17 +140,24 @@ tme_event_yield(tme_event_t hand, void *data, size_t count, unsigned int rwflags
   tme_event_ctl(tme_events, tme_event_handle(hand), rwflags, 0);
 
 #ifdef WIN32
-  if (rwflags & EVENT_READ)
+  if (rwflags & EVENT_READ) {
+    hand->reads.buf_init.data = data;
+    hand->reads.buf_init.len = len;
     tme_read_queue (hand, 0);
+  }
+  if (rwflags & EVENT_WRITE) {
+    hand->writes.buf_init.data = data;
+    hand->writes.buf_init.len = len;
+  }
 #endif
 
   rc = tme_event_wait_yield(tme_events, NULL, &esr, 1, mutex);
 
   /* do the i/o: */
   if(esr.rwflags & EVENT_WRITE)
-    rc = tme_event_write(hand, data, count);  
+    rc = tme_event_write(hand, data, len);  
   if(esr.rwflags & EVENT_READ)
-    rc = tme_event_read(hand, data, count);
+    rc = tme_event_read(hand, data, len);
   return rc;
 }
 
@@ -162,7 +182,7 @@ tme_read_queue (tme_win32_handle_t hand, int maxsize)
       ASSERT (ResetEvent (hand->reads.overlapped.hEvent));
 
       status = ReadFile(
-		      hand->hand,
+		      hand->handle,
 		      BPTR (&hand->reads.buf),
 		      len,
 		      &hand->reads.size,
@@ -224,7 +244,7 @@ tme_write_queue (tme_win32_handle_t hand, struct buffer *buf)
       ASSERT (ResetEvent (hand->writes.overlapped.hEvent));
 
       status = WriteFile(
-			hand->hand,
+			hand->handle,
 			BPTR (&hand->writes.buf),
 			BLEN (&hand->writes.buf),
 			&hand->writes.size,
@@ -350,20 +370,63 @@ tme_finalize (
 
 tme_win32_handle_t tme_win32_open(const char *path, int flags, int *fd) {
   tme_win32_handle_t hand;
+  HANDLE handle;
 
+  if(path) {
+    handle = tme_open(path, flags, fd);
+    if(handle == INVALID_HANDLE_VALUE)
+      return NULL;
+  }
+  
   hand = tme_new0(tme_win32_handle_t, 1);
-  hand->hand = NULL;
- /* manual reset event, initially set according to event_state */
+  hand->handle = handle;
+  
+  /* manual reset event, initially set according to event_state */
   hand->reads.overlapped.hEvent = CreateEvent (NULL, TRUE, FALSE, NULL);
-  if (hand->reads.overlapped.hEvent == NULL)
+  if(hand->reads.overlapped.hEvent == NULL)
     msg (M_ERR, "Error: overlapped_io_init: CreateEvent failed");
-  hand->writes.overlapped.hEvent = CreateEvent (NULL, TRUE, TRUE, NULL);
-  if (hand->writes.overlapped.hEvent == NULL)
-    msg (M_ERR, "Error: overlapped_io_init: CreateEvent failed");
-
+  
+  if(!(flags & TME_FILE_FLAG_RO)) {
+    hand->writes.overlapped.hEvent = CreateEvent (NULL, TRUE, TRUE, NULL);
+    if (hand->writes.overlapped.hEvent == NULL)
+      msg (M_ERR, "Error: overlapped_io_init: CreateEvent failed");
+  }
+  
   hand->rw_handle.read = hand->reads.overlapped.hEvent;
   hand->rw_handle.write = hand->writes.overlapped.hEvent;
 
   return hand;
+}
+
+void tme_win32_close(tme_win32_handle_t hand) {
+  if (hand->handle != NULL)
+    {
+      dmsg (D_WIN32_IO_LOW, "Attempting CancelIO on TAP-Windows adapter");
+      if (!CancelIo (hand->handle))
+	msg (M_WARN | M_ERRNO, "Warning: CancelIO failed on TAP-Windows adapter");
+    }
+
+  dmsg (D_WIN32_IO_LOW, "Attempting close of overlapped read event on TAP-Windows adapter");
+
+  if (hand->reads.overlapped.hEvent)
+    {
+      if (!CloseHandle (hand->reads.overlapped.hEvent))
+	msg (M_WARN | M_ERRNO, "Warning: CloseHandle failed on overlapped I/O event object");
+    }
+
+  dmsg (D_WIN32_IO_LOW, "Attempting close of overlapped write event on TAP-Windows adapter");
+
+  if (hand->writes.overlapped.hEvent)
+    {
+      if (!CloseHandle (hand->writes.overlapped.hEvent))
+	msg (M_WARN | M_ERRNO, "Warning: CloseHandle failed on overlapped I/O event object");
+    }
+
+  if (hand->handle != NULL)
+    {
+      dmsg (D_WIN32_IO_LOW, "Attempting CloseHandle on TAP-Windows adapter");
+      if (!CloseHandle (hand->handle))
+	msg (M_WARN | M_ERRNO, "Warning: CloseHandle failed on TAP-Windows adapter");
+    }
 }
 #endif // WIN32

@@ -62,11 +62,7 @@ _TME_RCSID("$Id: tmesh.c,v 1.4 2009/08/30 17:06:38 fredette Exp $");
 
 /* an input buffer: */
 struct _tmesh_input {
-#if defined(WIN32) && !defined(TME_THREADS_DIRECT_IO)
-  event_t _tmesh_input_fp;
-#else
-  FILE *_tmesh_input_fp;
-#endif
+  tme_thread_handle_t _tmesh_input_handle;
   char _tmesh_input_buffer[1024];
   unsigned int _tmesh_input_buffer_head;
   unsigned int _tmesh_input_buffer_tail;
@@ -125,7 +121,7 @@ _tmesh_pre_getc(struct tmesh_io *io)
   input = io->tmesh_io_private;
 
   /* get the next character: */
-  c = getc(input->_tmesh_input_fp);
+  c = getc(input->_tmesh_input_handle);
   
   return (c == EOF ? TMESH_C_EOF : c);
 }
@@ -166,7 +162,7 @@ _tmesh_close(struct tmesh_io *io_old, struct tmesh_io *io_new)
   input = io_old->tmesh_io_private;
 
   /* close the file and free the input: */
-  fclose(input->_tmesh_input_fp);
+  tme_thread_close(input->_tmesh_input_handle);
   tme_free(input);
 
   /* set the new, emerging input: */
@@ -185,10 +181,10 @@ _tmesh_open(struct tmesh_io *io_new, struct tmesh_io *io_old, char **_output)
   input = tme_new0(struct _tmesh_input, 1);
 
   /* try to open the file: */
-  input->_tmesh_input_fp = fopen(io_new->tmesh_io_name, "r");
+  input->_tmesh_input_handle = tme_thread_open(io_new->tmesh_io_name, TME_FILE_FLAG_RO, NULL);
   
   /* if the open failed: */
-  if (input->_tmesh_input_fp == NULL) {
+  if (input->_tmesh_input_handle == TME_INVALID_HANDLE) {
     saved_errno = errno;
     tme_free(input);
     return (saved_errno);
@@ -462,7 +458,7 @@ _tmesh_th(void *_passes)
 
     /* If return to console & running interactive, then put up the next prompt, else exit thread: */
     if((yield || (passes && !num_passes))
-       && isatty(fileno(input->_tmesh_input_fp))
+       && isatty(fileno(input->_tmesh_input_handle))
        && isatty(fileno(stdout)))
       if(num_passes) {
 	if(yield) break;
@@ -487,29 +483,13 @@ _tmesh_th(void *_passes)
     /* try to read more input: */
     rc = (num_passes) ?
       (tme_read(
-#ifdef WIN32
-#ifdef TME_THREADS_DIRECT_IO
-		_get_osfhandle(fileno(input->_tmesh_input_fp)),
-#else
-		input->_tmesh_input_fp->hand,
-#endif
-#else
-		fileno(input->_tmesh_input_fp),
-#endif
+		input->_tmesh_input_handle,
 		input->_tmesh_input_buffer
 		+ input->_tmesh_input_buffer_head,
 		sizeof(input->_tmesh_input_buffer)
 		- input->_tmesh_input_buffer_head)) :
       (tme_thread_read(
-#ifdef WIN32
-#ifdef TME_THREADS_DIRECT_IO
-		       _get_osfhandle(fileno(input->_tmesh_input_fp)),
-#else
-		       input->_tmesh_input_fp,
-#endif
-#else
-		       fileno(input->_tmesh_input_fp),
-#endif
+		       input->_tmesh_input_handle,
 		       input->_tmesh_input_buffer
 		       + input->_tmesh_input_buffer_head,
 		       sizeof(input->_tmesh_input_buffer)
@@ -884,11 +864,8 @@ main(int argc, char **argv)
   /* create our stdin input buffer, and stuff it with the command to
      source the pre-threads commands: */
   input_stdin = tme_new0(struct _tmesh_input, 1);
-#if defined(WIN32) && !defined(TME_THREADS_DIRECT_IO)
-  input_stdin->_tmesh_input_fp = &win32_signal.in;
-#else
-  input_stdin->_tmesh_input_fp = stdin;
-#endif
+  input_stdin->_tmesh_input_handle = TME_STD_HANDLE(stdin);
+
   snprintf(input_stdin->_tmesh_input_buffer,
 	   sizeof(input_stdin->_tmesh_input_buffer) - 1,
 	   "source %s\n",
