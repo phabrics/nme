@@ -175,7 +175,7 @@ write_tme_buffered _TME_P((tme_win32_handle_t hand, void *data, int len))
 }
 #else
 #define TME_INVALID_HANDLE -1
-#define TME_STD_HANDLE(hand) hand
+#define TME_STD_HANDLE(hand) fileno(hand)
 typedef int tme_handle_t;
 static _tme_inline tme_handle_t tme_open _TME_P((const char *path, int flags, int *fd)) {
   tme_handle_t hand;

@@ -378,7 +378,7 @@ tme_win32_handle_t tme_win32_open(const char *path, int flags, int *fd) {
       return NULL;
   }
   
-  hand = tme_new0(tme_win32_handle_t, 1);
+  hand = tme_new0(struct tme_win32_handle, 1);
   hand->handle = handle;
   
   /* manual reset event, initially set according to event_state */
