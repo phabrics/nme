@@ -93,7 +93,7 @@ linux*)
    SETCAP="chmod u+s"
 #   SETCAP="setcap cap_sys_nice,cap_net_admin,cap_net_raw+ep"
    ;;
-mingw*)
+mingw* | msys*)
    AC_DEFINE([TARGET_WIN32], [1], [Are we running WIN32?])
    AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["W"], [Target prefix])
    CPPFLAGS="${CPPFLAGS} -DWIN32_LEAN_AND_MEAN"
@@ -350,7 +350,7 @@ dnl Checks for library functions and prototypes.
 #AC_FUNC_MALLOC
 #AC_FUNC_MMAP
 #AC_FUNC_REALLOC
-AC_CHECK_FUNCS([clock_gettime memmove memset munmap pow ptsname ptsname_r sqrt strchr strerror strrchr strstr strtoul devname fdevname kldfind])
+AC_CHECK_FUNCS([clock_gettime memmove memset munmap pow ptsname ptsname_r sqrt strchr strerror strrchr strstr strtoul devname fdevname kldfind isinff])
 
 SOCKET_INCLUDES="
 #ifdef HAVE_STDLIB_H
@@ -1039,7 +1039,7 @@ if test "x${enable_threads}" = xyes; then
 
    dnl set the default threads based on platform
    case "${host_os}" in
-   mingw*)
+   mingw* | msys*)
 	tme_thread_types=glib
 	;;
    cygwin*) 

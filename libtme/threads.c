@@ -81,12 +81,15 @@ void tme_threads_init(tme_threads_fn1 run, void *arg) {
 #endif
     }
 #ifdef WIN32
-    win32_stdin = tme_win32_open(NULL, TME_FILE_FLAG_RO, NULL);
-    win32_stdout = tme_win32_open(NULL, TME_FILE_FLAG_WO, NULL);
-    win32_stderr = tme_win32_open(NULL, TME_FILE_FLAG_WO, NULL);
-    win32_stdin->handle = GetStdHandle(STD_INPUT_HANDLE);
-    win32_stdout->handle = GetStdHandle(STD_OUTPUT_HANDLE);
-    win32_stderr->handle = GetStdHandle(STD_ERROR_HANDLE);
+    win32_stdin = tme_new0(struct tme_win32_handle, 1);
+    win32_stdout = tme_new0(struct tme_win32_handle, 1);
+    win32_stderr = tme_new0(struct tme_win32_handle, 1);
+    win32_stdin->rw_handle.read = win32_stdin->reads.overlapped.hEvent =
+      win32_stdin->handle = GetStdHandle(STD_INPUT_HANDLE);
+    win32_stdout->rw_handle.write = win32_stdout->writes.overlapped.hEvent =
+      win32_stdout->handle = GetStdHandle(STD_OUTPUT_HANDLE);
+    win32_stderr->rw_handle.read = win32_stderr->reads.overlapped.hEvent =
+      win32_stderr->handle = GetStdHandle(STD_ERROR_HANDLE);
 #endif
     _tme_thread_resumed();  
     inited=TRUE;
@@ -370,15 +373,13 @@ tme_finalize (
 
 tme_win32_handle_t tme_win32_open(const char *path, int flags, int *fd) {
   tme_win32_handle_t hand;
-  HANDLE handle;
+  HANDLE handle = tme_open(path, flags, fd);
 
-  if(path) {
-    handle = tme_open(path, flags, fd);
-    if(handle == INVALID_HANDLE_VALUE)
-      return NULL;
-  }
+  if(handle == INVALID_HANDLE_VALUE)
+    return NULL;
   
   hand = tme_new0(struct tme_win32_handle, 1);
+
   hand->handle = handle;
   
   /* manual reset event, initially set according to event_state */
