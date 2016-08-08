@@ -48,76 +48,79 @@ typedef struct _tme_openvpn_tun {
 } tme_openvpn_tun;
 
 static int _tme_openvpn_tun_write(void *data) {
+  int status;
+  unsigned int flags;
+  struct event_set *es;
+  struct event_set_return esr;
   tme_openvpn_tun *tun = data;
   
   tun->outbuf.len = tun->eth->tme_eth_data_length;
-  if(!(tun->flags & (OPENVPN_CAN_WRITE | OPENVPN_FAST_IO))) {
-    /* sleep for the delay sleep time (msec): */
-    tme_thread_sleep_yield(0, 500, &tun->eth->tme_eth_mutex);
-  }
-
-  if(tun->flags & OPENVPN_CAN_WRITE) tun->flags &= ~OPENVPN_CAN_WRITE;
-  
-#ifdef TUN_PASS_BUFFER
-  return write_tun_buffered(tun->tt, &tun->outbuf);
-#else
-  return write_tun(tun->tt, BPTR(&tun->outbuf), BLEN(&tun->outbuf));
+  tme_event_reset(tun->event_set);
+    
+  flags = EVENT_WRITE;
+    
+#if defined(WIN32)
+  tun_show_debug(tun->tt);
 #endif
+
+  tme_event_ctl(tun->event_set, tun_event_handle(tun->tt), flags, 0);
+    
+  status = tme_event_wait_yield(tun->event_set, NULL, &esr, 1, &tun->eth->tme_eth_mutex);
+  if(status<0) return status;
+
+  status = -1;
+
+  if(esr.rwflags & EVENT_WRITE) {
+#ifdef TUN_PASS_BUFFER
+    status = write_tun_buffered(tun->tt, &tun->outbuf);
+#else
+    status = write_tun(tun->tt, BPTR(&tun->outbuf), BLEN(&tun->outbuf));
+#endif
+  }
+  return status;
+
 }
 
 static int _tme_openvpn_tun_read(void *data) {
   int status;
   unsigned int flags;
-  struct timeval tv;
   struct event_set *es;
   struct event_set_return esr;
   tme_openvpn_tun *tun = data;
 
-  while(1) {
-    tme_event_reset(tun->event_set);
+  tme_event_reset(tun->event_set);
     
-    flags = EVENT_READ;
+  flags = EVENT_READ;
     
-    if((tun->flags & OPENVPN_CAN_WRITE) && !(tun->flags & OPENVPN_FAST_IO)) {
-      tv.tv_sec = 0;
-      tv.tv_usec = 500000;
-    } else {
-      /* wait for signal transition to write */
-      if(!(tun->flags & OPENVPN_FAST_IO)) flags |= EVENT_WRITE;
-      tv.tv_sec = BIG_TIMEOUT;
-      tv.tv_usec = 0;
-    }
-
 #if defined(WIN32)
-    tun_show_debug(tun->tt);
+  tun_show_debug(tun->tt);
 #endif
 
-    es = tme_event_set(tun->event_set);
+  es = tme_event_set(tun->event_set);
 
-    tun_set(tun->tt, es, flags, (void*)0, NULL);
+  tun_set(tun->tt, es, flags, (void*)0, NULL);
 
-    if(es != tun->event_set) {
-      tme_event_set(tun->event_set) = NULL;
-      tme_event_ctl(tun->event_set, tun_event_handle(tun->tt), flags, 0);
-      tme_event_set(tun->event_set) = es;
-    }
-    
-    status = tme_event_wait_yield(tun->event_set, &tv, &esr, 1, &tun->eth->tme_eth_mutex);
-    if(status<0) return status;
-
-    if(esr.rwflags & EVENT_WRITE)
-      tun->flags |= OPENVPN_CAN_WRITE;
-    if(esr.rwflags & EVENT_READ) {
-#ifdef TUN_PASS_BUFFER
-      read_tun_buffered(tun->tt, &tun->inbuf, MAX_RW_SIZE_TUN(tun->frame));
-#else
-      ASSERT(buf_init(&tun->inbuf, FRAME_HEADROOM(tun->frame)));
-      tun->inbuf.len = read_tun(tun->tt, BPTR(&tun->inbuf), MAX_RW_SIZE_TUN(tun->frame));
-#endif
-      tun->eth->tme_eth_buffer = BPTR(&tun->inbuf);
-      return tun->inbuf.len;
-    }
+  if(es != tun->event_set) {
+    tme_event_set(tun->event_set) = NULL;
+    tme_event_ctl(tun->event_set, tun_event_handle(tun->tt), flags, 0);
+    tme_event_set(tun->event_set) = es;
   }
+    
+  status = tme_event_wait_yield(tun->event_set, NULL, &esr, 1, &tun->eth->tme_eth_mutex);
+  if(status<0) return status;
+
+  tun->inbuf.len = -1;
+  
+  if(esr.rwflags & EVENT_READ) {
+#ifdef TUN_PASS_BUFFER
+    read_tun_buffered(tun->tt, &tun->inbuf, MAX_RW_SIZE_TUN(tun->frame));
+#else
+    ASSERT(buf_init(&tun->inbuf, FRAME_HEADROOM(tun->frame)));
+    tun->inbuf.len = read_tun(tun->tt, BPTR(&tun->inbuf), MAX_RW_SIZE_TUN(tun->frame));
+#endif
+    tun->eth->tme_eth_buffer = BPTR(&tun->inbuf);
+  }
+  return tun->inbuf.len;
 }
 
 /* the new TAP function: */

@@ -49,6 +49,10 @@ typedef struct _tme_openvpn_sock {
 } tme_openvpn_sock;
 
 static int _tme_openvpn_sock_write(void *data) {
+  int status;
+  unsigned int flags;
+  struct event_set *es;
+  struct event_set_return esr;
   tme_openvpn_sock *sock = data;
   struct link_socket_actual *to_addr;	/* IP address of remote */
   
@@ -61,94 +65,88 @@ static int _tme_openvpn_sock_write(void *data) {
   link_socket_get_outgoing_addr(&sock->outbuf, &sock->ls->info,
 				&to_addr);
 
-  if(!(sock->flags & (OPENVPN_CAN_WRITE | OPENVPN_FAST_IO))) {
-    /* sleep for the delay sleep time (msec): */
-    tme_thread_sleep_yield(0, 500, &sock->eth->tme_eth_mutex);
+  tme_event_reset(sock->event_set);
+    
+  flags = EVENT_WRITE;
+    
+  tme_event_ctl(sock->event_set, socket_event_handle(sock->ls), flags, 0);
+    
+  status = tme_event_wait_yield(sock->event_set, NULL, &esr, 1, &sock->eth->tme_eth_mutex);
+  if(status<0) return status;
+
+  status = -1;
+
+  if(esr.rwflags & EVENT_WRITE) {
+    status = link_socket_write(sock->ls, &sock->outbuf, to_addr);
   }
-  
-  if(sock->flags & OPENVPN_CAN_WRITE) sock->flags &= ~OPENVPN_CAN_WRITE;
-  
-  return link_socket_write(sock->ls, &sock->outbuf, to_addr);
+  return status;
 }
 
 static int _tme_openvpn_sock_read(void *data) {
   int status;
   unsigned int flags;
-  struct timeval tv;
   struct event_set *es;
   struct event_set_return esr;
   tme_openvpn_sock *sock = data;
   struct link_socket_actual from;               /* address of incoming datagram */
   
-  while(1) {
-    tme_event_reset(sock->event_set);
+  tme_event_reset(sock->event_set);
+  
+  /*
+   * On win32 we use the keyboard or an event object as a source
+   * of asynchronous signals.
+   */
+  //    wait_signal(sock->event_set, (void*)&err_shift);
+  
+  flags = EVENT_READ;
+  
+  es = tme_event_set(sock->event_set);
 
-    /*
-     * On win32 we use the keyboard or an event object as a source
-     * of asynchronous signals.
-     */
-    //    wait_signal(sock->event_set, (void*)&err_shift);
-    
-    flags = EVENT_READ;
-    
-    if((sock->flags & OPENVPN_CAN_WRITE) && !(sock->flags & OPENVPN_FAST_IO)) {
-      tv.tv_sec = 0;
-      tv.tv_usec = 500000;
-    } else {
-      /* wait for signal transition to write */
-      if(!(sock->flags & OPENVPN_FAST_IO)) flags |= EVENT_WRITE;
-      tv.tv_sec = BIG_TIMEOUT;
-      tv.tv_usec = 0;
-    }
-    
-    es = tme_event_set(sock->event_set);
+  socket_set(sock->ls, es, flags, (void*)0, NULL);
 
-    socket_set(sock->ls, es, flags, (void*)0, NULL);
-
-    if(es != sock->event_set) {
-      tme_event_set(sock->event_set) = NULL;
-      tme_event_ctl(sock->event_set, socket_event_handle(sock->ls), flags, 0);
-      tme_event_set(sock->event_set) = es;
-    }
-
-    if(socket_read_residual(sock->ls))
-      esr.rwflags = EVENT_READ;
-    else {
-      status = tme_event_wait_yield(sock->event_set, &tv, &esr, 1, &sock->eth->tme_eth_mutex);
-
-      if(status<0) return status;
-    }
-    
-    if(esr.rwflags & EVENT_WRITE)
-      sock->flags |= OPENVPN_CAN_WRITE;
-    if(esr.rwflags & EVENT_READ) {
-      ASSERT(buf_init(&sock->inbuf, FRAME_HEADROOM_ADJ(sock->frame, FRAME_HEADROOM_MARKER_READ_LINK)));
-      status = link_socket_read(sock->ls,
-				&sock->inbuf,
-				MAX_RW_SIZE_LINK(sock->frame),
-				&from);
-      if(socket_connection_reset(sock->ls, status)) {
-	//	register_signal (c, SIGUSR1, "connection-reset"); /* SOFT-SIGUSR1 -- TCP connection reset */
-	msg (D_STREAM_ERRORS, "Connection reset, restarting [%d]", status);
-	return status;
-      }
-      
-      /* check recvfrom status */
-      check_status (status, "read", sock->ls, NULL);
-      if(sock->inbuf.len > 0) {
-	if(!link_socket_verify_incoming_addr(&sock->inbuf, &sock->ls->info, &from))
-	  link_socket_bad_incoming_addr(&sock->inbuf, &sock->ls->info, &from);
-	link_socket_set_outgoing_addr(&sock->inbuf, &sock->ls->info, &from, NULL, sock->es);
-	/* Did we just receive an openvpn ping packet? */
-	if (is_ping_msg (&sock->inbuf)) {
-	  dmsg (D_PING, "RECEIVED PING PACKET");
-	  sock->inbuf.len = 0; /* drop packet */
-	}
-      }
-      sock->eth->tme_eth_buffer = BPTR(&sock->inbuf);
-      return sock->inbuf.len;
-    }
+  if(es != sock->event_set) {
+    tme_event_set(sock->event_set) = NULL;
+    tme_event_ctl(sock->event_set, socket_event_handle(sock->ls), flags, 0);
+    tme_event_set(sock->event_set) = es;
   }
+
+  if(socket_read_residual(sock->ls))
+    esr.rwflags = EVENT_READ;
+  else {
+    status = tme_event_wait_yield(sock->event_set, NULL, &esr, 1, &sock->eth->tme_eth_mutex);
+
+    if(status<0) return status;
+  }
+    
+  sock->inbuf.len = -1;
+
+  if(esr.rwflags & EVENT_READ) {
+    ASSERT(buf_init(&sock->inbuf, FRAME_HEADROOM_ADJ(sock->frame, FRAME_HEADROOM_MARKER_READ_LINK)));
+    status = link_socket_read(sock->ls,
+			      &sock->inbuf,
+			      MAX_RW_SIZE_LINK(sock->frame),
+			      &from);
+    if(socket_connection_reset(sock->ls, status)) {
+      //	register_signal (c, SIGUSR1, "connection-reset"); /* SOFT-SIGUSR1 -- TCP connection reset */
+      msg (D_STREAM_ERRORS, "Connection reset, restarting [%d]", status);
+      return status;
+    }
+    
+    /* check recvfrom status */
+    check_status (status, "read", sock->ls, NULL);
+    if(sock->inbuf.len > 0) {
+      if(!link_socket_verify_incoming_addr(&sock->inbuf, &sock->ls->info, &from))
+	link_socket_bad_incoming_addr(&sock->inbuf, &sock->ls->info, &from);
+      link_socket_set_outgoing_addr(&sock->inbuf, &sock->ls->info, &from, NULL, sock->es);
+      /* Did we just receive an openvpn ping packet? */
+      if (is_ping_msg (&sock->inbuf)) {
+	dmsg (D_PING, "RECEIVED PING PACKET");
+	sock->inbuf.len = 0; /* drop packet */
+      }
+    }
+    sock->eth->tme_eth_buffer = BPTR(&sock->inbuf);
+  }
+  return sock->inbuf.len;
 }
 
 /* the new TAP function: */
