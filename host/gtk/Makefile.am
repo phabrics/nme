@@ -10,13 +10,18 @@ tme_host_gtk_la_SOURCES = gtk-mouse.c gtk-keyboard.c gtk-screen.c gtk-display.c 
 tme_host_gtk_la_LDFLAGS = -module -version-info 0:0:0
 tme_host_gtk_la_LIBADD = $(top_builddir)/generic/libtme-generic.la \
 	                 $(GTK_LIBS)
-EXTRA_DIST = gtk-keymap-make.pl
+EXTRA_DIST = gtk-keymap-make.pl gtk-keymap-def.h
 
 gtk-keyboard.c:  gtk-keymap.h
 
 BUILT_SOURCES = gtk-keymap.h
 CLEANFILES = gtk-keymap.h
+if USING_X
 gtk-keymap.h: gtk-keymap-make.pl
 	  $(PERL) $< > $@
+else
+gtk-keymap.h: gtk-keymap-def.h
+	  cp $< $@
+endif
 
 include $(top_srcdir)/modules

@@ -110,22 +110,6 @@ _tmesh_remove_consumed(struct _tmesh_input *input)
   input->_tmesh_input_buffer_tail = 0;
 }
 
-/* our pre-getc function: */
-static int
-_tmesh_pre_getc(struct tmesh_io *io)
-{
-  struct _tmesh_input *input;
-  int c;
-
-  /* recover our input: */
-  input = io->tmesh_io_private;
-
-  /* get the next character: */
-  c = getc(input->_tmesh_input_handle);
-  
-  return (c == EOF ? TMESH_C_EOF : c);
-}
-
 /* our getc function: */
 static int
 _tmesh_getc(struct tmesh_io *io)
