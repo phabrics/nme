@@ -655,7 +655,7 @@ _tme_posix_disk_open(struct tme_posix_disk *posix_disk,
   int page_size;
   
   /* open the file: */
-  handle = tme_thread_open(filename, flags);
+  handle = tme_thread_open(filename, ((flags & TME_POSIX_DISK_FLAG_RO) ? TME_FILE_RO : TME_FILE_RW));
   if (handle == TME_INVALID_HANDLE) {
     tme_output_append_error(_output,
 			    "%s",

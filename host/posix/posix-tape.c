@@ -314,7 +314,7 @@ _tme_posix_tape_segment_open(struct tme_posix_tape *posix_tape,
   /* open the segment: */
   segment->tme_posix_tape_segment_handle
     = tme_thread_open(segment->tme_posix_tape_segment_filename,
-		      posix_tape->tme_posix_tape_flags);
+		      ((posix_tape->tme_posix_tape_flags & TME_POSIX_TAPE_FLAG_RO) ? TME_FILE_RO : TME_FILE_RW));
   
   /* if the open failed: */
   if (segment->tme_posix_tape_segment_handle == TME_INVALID_HANDLE) {

@@ -69,19 +69,14 @@ void tme_thread_enter _TME_P((tme_mutex_t *mutex));
 #define TME_FILE_NB		0
 
 typedef HANDLE tme_handle_t;
-static _tme_inline tme_handle_t tme_open _TME_P((const char *path, int flags)) {
-  tme_handle_t hand;
-  
-  hand = CreateFile(path,
-		    flags,
-		    0, /* was: FILE_SHARE_READ */
-		    0,			
-		    OPEN_EXISTING,		
-		    FILE_ATTRIBUTE_NORMAL,	
-		    0);
-
-  return hand;
-}
+#define tme_open(path,flags) \
+  CreateFile(path, \
+	     flags, \
+	     0, /* was: FILE_SHARE_READ */ \
+	     0, \
+	     OPEN_EXISTING, \
+	     FILE_ATTRIBUTE_NORMAL, \
+	     0);
 #define tme_fd(hand, flags) _open_osfhandle((intptr_t)hand, flags);
 #define tme_close CloseHandle
 #define TME_SEEK_SET FILE_BEGIN
