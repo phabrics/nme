@@ -41,9 +41,11 @@ _TME_RCSID("$Id: posix-serial.c,v 1.11 2007/08/24 00:57:01 fredette Exp $");
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
+#ifndef WIN32
 #include <termios.h>
-#include <sys/types.h>
 #include <sys/ioctl.h>
+#endif
+#include <sys/types.h>
 //#include <pty.h>
 
 /* macros: */
@@ -78,10 +80,10 @@ struct tme_posix_serial {
   int tme_posix_serial_callouts_running;
 
   /* our input file descriptor: */
-  int tme_posix_serial_fd_in;
+  tme_thread_handle_t tme_posix_serial_hand_in;
 
   /* our output file descriptor: */
-  int tme_posix_serial_fd_out;
+  tme_thread_handle_t tme_posix_serial_hand_out;
 
   /* if we're emulating break: */
   int tme_posix_serial_emulate_break;
@@ -217,17 +219,49 @@ _tme_posix_serial_th_ctrl(struct tme_posix_serial *serial)
 
   /* loop forever: */
   for (;;) {
-   
+    ctrl = (serial->tme_posix_serial_ctrl_callout
+	    & ~(TME_SERIAL_CTRL_CTS
+		| TME_SERIAL_CTRL_DCD
+		| TME_SERIAL_CTRL_RI
+		| TME_SERIAL_CTRL_BREAK));
+#ifdef WIN32
     /* get the modem state of the input device: */
-    if (ioctl(serial->tme_posix_serial_fd_in, TIOCMGET, &modem_state) < 0) {
+    if (GetCommModemStatus(TME_WIN32_HANDLE(serial->tme_posix_serial_hand_in), &modem_state) == 0) {
       modem_state = 0;
     }
 
     /* if the output device is different, get the modem state of the
        output device and merge it in: */
-    if (serial->tme_posix_serial_fd_out
-	!= serial->tme_posix_serial_fd_in) {
-      if (ioctl(serial->tme_posix_serial_fd_in, TIOCMGET, &modem_state_out) < 0) {
+    if (serial->tme_posix_serial_hand_out
+	!= serial->tme_posix_serial_hand_in) {
+      if (GetCommModemStatus(TME_WIN32_HANDLE(serial->tme_posix_serial_hand_out), &modem_state_out) == 0) {
+	modem_state_out = 0;
+      }
+      modem_state &= ~(MS_CTS_ON);
+      modem_state |= modem_state_out & ~(MS_RLSD_ON | MS_RING_ON | MS_DSR_ON);
+    }
+    
+    /* update the control outputs: */
+    if (modem_state & MS_CTS_ON) {
+      ctrl |= TME_SERIAL_CTRL_CTS;
+    }
+    if (modem_state & MS_RLSD_ON) {
+      ctrl |= TME_SERIAL_CTRL_DCD;
+    }
+    if (modem_state & MS_RING_ON) {
+      ctrl |= TME_SERIAL_CTRL_RI;
+    }
+#else
+    /* get the modem state of the input device: */
+    if (ioctl(serial->tme_posix_serial_hand_in, TIOCMGET, &modem_state) < 0) {
+      modem_state = 0;
+    }
+
+    /* if the output device is different, get the modem state of the
+       output device and merge it in: */
+    if (serial->tme_posix_serial_hand_out
+	!= serial->tme_posix_serial_hand_in) {
+      if (ioctl(serial->tme_posix_serial_hand_out, TIOCMGET, &modem_state_out) < 0) {
 	modem_state_out = 0;
       }
       modem_state &= ~(TIOCM_DTR | TIOCM_RTS | TIOCM_CTS);
@@ -235,11 +269,6 @@ _tme_posix_serial_th_ctrl(struct tme_posix_serial *serial)
     }
     
     /* update the control outputs: */
-    ctrl = (serial->tme_posix_serial_ctrl_callout
-	    & ~(TME_SERIAL_CTRL_CTS
-		| TME_SERIAL_CTRL_DCD
-		| TME_SERIAL_CTRL_RI
-		| TME_SERIAL_CTRL_BREAK));
     if (modem_state & TIOCM_CTS) {
       ctrl |= TME_SERIAL_CTRL_CTS;
     }
@@ -249,11 +278,11 @@ _tme_posix_serial_th_ctrl(struct tme_posix_serial *serial)
     if (modem_state & TIOCM_RI) {
       ctrl |= TME_SERIAL_CTRL_RI;
     }
+#endif
     if (serial->tme_posix_serial_ctrl_callout_break > 0) {
       ctrl |= TME_SERIAL_CTRL_BREAK;
       serial->tme_posix_serial_ctrl_callout_break--;
     }
-    
     /* if the control outputs have changed, call out the change: */
     if (ctrl != serial->tme_posix_serial_ctrl_callout) {
       serial->tme_posix_serial_ctrl_callout = ctrl;
@@ -297,7 +326,7 @@ _tme_posix_serial_th_writer(struct tme_posix_serial *serial)
     assert(buffer_output_size > 0);
 
     /* try to write the device: */
-    rc = tme_thread_write_yield(serial->tme_posix_serial_fd_out,
+    rc = tme_thread_write_yield(serial->tme_posix_serial_hand_out,
 				buffer_output,
 				buffer_output_size,
 				&serial->tme_posix_serial_mutex);
@@ -337,7 +366,7 @@ _tme_posix_serial_th_reader(struct tme_posix_serial *serial)
   for (;;) {
 
     /* try to read the device: */
-    rc = tme_thread_read_yield(serial->tme_posix_serial_fd_in,
+    rc = tme_thread_read_yield(serial->tme_posix_serial_hand_in,
 			       buffer_input,
 			       sizeof(buffer_input),
 			       &serial->tme_posix_serial_mutex);
@@ -551,24 +580,97 @@ static int
 _tme_posix_serial_config(struct tme_serial_connection *conn_serial, struct tme_serial_config *config)
 {
   struct tme_posix_serial *serial;
+#ifdef WIN32
+  DCB dcb;
+#else
   struct termios serial_termios;
   tme_uint32_t config_baud;
   speed_t termios_baud;
+#endif
   int is_input, rc;
-
+  struct tme_element *element;
+  
   /* recover our data structure: */
   serial = conn_serial->tme_serial_connection.tme_connection_element->tme_element_private;
-
+  element = serial->tme_posix_serial_element;
+  
   /* lock our mutex: */
   tme_mutex_lock(&serial->tme_posix_serial_mutex);
 
   /* loop over the input and output devices: */
   for (is_input = 2; is_input-- > 0; ) {
-
+    
     /* get the current configuration of the device: */
+#ifdef WIN32
+    /* update the configuration: */
+    //  Initialize the DCB structure.
+    SecureZeroMemory(&dcb, sizeof(DCB));
+    dcb.DCBlength = sizeof(DCB);
+    
+    //  Build on the current configuration by first retrieving all current
+    //  settings.
+    rc = GetCommState(TME_WIN32_HANDLE(is_input
+      ? serial->tme_posix_serial_hand_in
+      : serial->tme_posix_serial_hand_out),
+      &dcb);
+    
+    if (!rc) {
+    //  Handle the error.
+    tme_log(&element->tme_element_log_handle, 0, TME_OK,
+      (&element->tme_element_log_handle,
+      "GetCommState failed with error %d.", GetLastError()));
+    return (2);
+  }
+    
+    //  Fill in some DCB values and set the com state: 
+    //  57,600 bps, 8 data bits, no parity, and 1 stop bit.
+    dcb.BaudRate = config->tme_serial_config_baud;   //  baud rate
+    if (is_input) {
+    dcb.fParity   = TRUE;      //  parity check
+    if (config->tme_serial_config_flags & TME_SERIAL_FLAGS_CHECK_PARITY) {
+    switch (config->tme_serial_config_parity) {
+    default: assert(FALSE);
+    case TME_SERIAL_PARITY_NONE: break;
+    case TME_SERIAL_PARITY_ODD:
+      dcb.Parity   = ODDPARITY;      //  parity bit
+      break;
+    case TME_SERIAL_PARITY_EVEN:
+      dcb.Parity   = EVENPARITY;      //  parity bit
+      break;
+    }
+  } else
+    dcb.Parity   = NOPARITY;      //  parity bit
+  } else
+    dcb.fParity   = FALSE;      //  parity check
+    
+    dcb.ByteSize = config->tme_serial_config_bits_data; //  data size, xmit and rcv
+    switch (config->tme_serial_config_bits_stop) {
+    case 1:
+      dcb.StopBits = ONESTOPBIT;    //  stop bit
+      break;
+    default: assert(FALSE);
+    case 2:
+      dcb.StopBits = TWOSTOPBITS;    //  stop bit
+      break;
+    }
+    
+    rc = SetCommState(TME_WIN32_HANDLE(is_input
+      ? serial->tme_posix_serial_hand_in
+      : serial->tme_posix_serial_hand_out),
+      &dcb);
+    
+    if (!rc) {
+    //  Handle the error.
+    tme_log(&element->tme_element_log_handle, 0, TME_OK,
+      (&element->tme_element_log_handle,
+      "SetCommState failed with error %d.", GetLastError()));
+    return (3);
+  }
+    
+#else
     rc = tcgetattr((is_input
-		    ? serial->tme_posix_serial_fd_in
-		    : serial->tme_posix_serial_fd_out),
+		    ? serial->tme_posix_serial_hand_in
+		    : serial->tme_posix_serial_hand_out),
 		   &serial_termios);
     
     /* update the configuration: */
@@ -635,10 +737,11 @@ _tme_posix_serial_config(struct tme_serial_connection *conn_serial, struct tme_s
 
     /* set the configuration on the devices: */
     rc = tcsetattr((is_input
-		    ? serial->tme_posix_serial_fd_in
-		    : serial->tme_posix_serial_fd_out),
+		    ? serial->tme_posix_serial_hand_in
+		    : serial->tme_posix_serial_hand_out),
 		   TCSADRAIN,
 		   &serial_termios);
+#endif
   }
 
   /* unlock our mutex: */
@@ -655,15 +758,38 @@ _tme_posix_serial_ctrl(struct tme_serial_connection *conn_serial, unsigned int c
   struct tme_posix_serial *serial;
   int modem_state;
   int rc;
-
+  tme_handle_t hand;
+  
   /* recover our data structure: */
   serial = conn_serial->tme_serial_connection.tme_connection_element->tme_element_private;
 
   /* lock our mutex: */
   tme_mutex_lock(&serial->tme_posix_serial_mutex);
 
+#ifdef WIN32
+  hand = TME_WIN32_HANDLE(serial->tme_posix_serial_hand_out);
+  /* update the modem state: */
+  if (control & TME_SERIAL_CTRL_DTR) {
+    EscapeCommFunction(hand, SETDTR);
+  }
+  else {
+    EscapeCommFunction(hand, CLRDTR);
+  }
+  if (control & TME_SERIAL_CTRL_RTS) {
+    EscapeCommFunction(hand, SETRTS);
+  }
+  else {
+    EscapeCommFunction(hand, CLRRTS);
+  }
+
+  /* send a break: */
+  if (control & TME_SERIAL_CTRL_BREAK) {
+    TransmitCommChar(hand, '\0');
+  }
+
+#else
   /* get the current output device modem state: */
-  rc = ioctl(serial->tme_posix_serial_fd_out, TIOCMGET, &modem_state);
+  rc = ioctl(serial->tme_posix_serial_hand_out, TIOCMGET, &modem_state);
 
   /* update the modem state: */
   if (control & TME_SERIAL_CTRL_DTR) {
@@ -680,13 +806,13 @@ _tme_posix_serial_ctrl(struct tme_serial_connection *conn_serial, unsigned int c
   }
 
   /* set the new modem state: */
-  rc = ioctl(serial->tme_posix_serial_fd_out, TIOCMSET, &modem_state);
+  rc = ioctl(serial->tme_posix_serial_hand_out, TIOCMSET, &modem_state);
 
   /* send a break: */
   if (control & TME_SERIAL_CTRL_BREAK) {
-    tcsendbreak(serial->tme_posix_serial_fd_out, 0);
+    tcsendbreak(serial->tme_posix_serial_hand_out, 0);
   }
-
+#endif
   /* remember these controls.  if the OK_READ is set, call out a read: */
   serial->tme_posix_serial_ctrl_callin = control;
   if (control & TME_SERIAL_CTRL_OK_READ) {
@@ -844,7 +970,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
   const char *filename_out;
 #define PTSLEN 32
   char *filename;
-  int fd_in, fd_out;
+  tme_thread_handle_t hand_in, hand_out;
   int usage;
   int arg_i;
   int saved_errno;
@@ -929,27 +1055,29 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
   }
 
   /* open the devices: */
-  fd_in = fd_out = -1;
-  if (fd_in < 0
+  hand_in = hand_out = TME_INVALID_HANDLE;
+  if (hand_in == TME_INVALID_HANDLE
       && !strcmp(filename_in, "-")) {
-    fd_in = STDIN_FILENO;
+    hand_in = STDIN_FILENO;
+    hand_in = TME_STD_HANDLE(stdin);
   }
-  if (fd_out < 0
+  if (hand_out == TME_INVALID_HANDLE
       && !strcmp(filename_out, "-")) {
-    fd_out = STDOUT_FILENO;
+    hand_out = STDOUT_FILENO;
+    hand_out = TME_STD_HANDLE(stdout);
   }
-  if (fd_in < 0) {
+  if (hand_in == TME_INVALID_HANDLE) {
 #ifdef HAVE_PTSNAME
     if (strstr(filename_in, PTMDEV) != NULL) {
-      fd_in = posix_openpt( O_RDWR );
+      hand_in = posix_openpt( O_RDWR );
 #ifdef HAVE_PTSNAME_R
       filename = tme_malloc(PTSLEN);
-      ptsname_r(fd_in, filename, PTSLEN);
+      ptsname_r(hand_in, filename, PTSLEN);
 #else
-      filename = tme_strdup(ptsname(fd_in));
+      filename = tme_strdup(ptsname(hand_in));
 #endif
       if (strcmp(filename_in, filename_out) == 0) {
-	fd_out = fd_in;
+	hand_out = hand_in;
 	filename_out = filename_in = filename;
       } else
 	filename_in = filename;
@@ -961,25 +1089,25 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
     } else 
 #endif
       if (strcmp(filename_in, filename_out) == 0) {
-      fd_in = fd_out = open(filename_in, O_RDWR | O_NONBLOCK);
+	hand_in = hand_out = tme_thread_open(filename_in, TME_FILE_RW | TME_FILE_NB);
     }
     else {
-      fd_in = open(filename_in, O_RDONLY | O_NONBLOCK);
+      hand_in = tme_thread_open(filename_in, TME_FILE_RO | TME_FILE_NB);
     }
-    if (fd_in < 0) {
+    if (hand_in == TME_INVALID_HANDLE) {
       tme_output_append_error(_output, "%s", filename_in);
       return (errno);
     }
   }
-  if (fd_out < 0) {
+  if (hand_out == TME_INVALID_HANDLE) {
 #ifdef HAVE_PTSNAME
     if (strstr(filename_out, PTMDEV) != NULL) {
-      fd_out = posix_openpt( O_RDWR );
+      hand_out = posix_openpt( O_RDWR );
 #ifdef HAVE_PTSNAME_R
       filename_out = tme_malloc(PTSLEN);
-      ptsname_r(fd_out, filename_out, PTSLEN);
+      ptsname_r(hand_out, filename_out, PTSLEN);
 #else
-      filename_out = tme_strdup(ptsname(fd_out));
+      filename_out = tme_strdup(ptsname(hand_out));
 #endif
       if(filename_out == NULL) {
 	tme_output_append_error(_output, "could not open serial device %s", filename_out);
@@ -988,10 +1116,10 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
 	unix98_pts_out= TRUE;
     } else
 #endif
-      fd_out = open(filename_out, O_WRONLY | O_NONBLOCK);
-    if (fd_out < 0) {
+      hand_out = tme_thread_open(filename_out, TME_FILE_WO | TME_FILE_NB);
+    if (hand_out == TME_INVALID_HANDLE) {
       saved_errno = errno;
-      close(fd_in);
+      tme_thread_close(hand_in);
       tme_output_append_error(_output, "%s", filename_out);
       return (saved_errno);
     }
@@ -1000,8 +1128,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
   /* start the serial structure: */
   serial = tme_new0(struct tme_posix_serial, 1);
   serial->tme_posix_serial_element = element;
-  serial->tme_posix_serial_fd_in = fd_in;
-  serial->tme_posix_serial_fd_out = fd_out;
+  serial->tme_posix_serial_hand_in = hand_in;
+  serial->tme_posix_serial_hand_out = hand_out;
   serial->tme_posix_serial_emulate_break = emulate_break;
   serial->tme_posix_serial_ctrl_callout = 0;
   serial->tme_posix_serial_ctrl_callout_last = 0;
@@ -1023,8 +1151,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
 
 #ifdef HAVE_PTSNAME
   if(unix98_pts_in) {
-    if((grantpt(fd_in) < 0) ||
-       (unlockpt(fd_in) < 0)) {
+    if((grantpt(hand_in) < 0) ||
+       (unlockpt(hand_in) < 0)) {
       tme_output_append_error(_output, "could not open serial input slave device %s", filename_in);
       return (errno);
     }
@@ -1035,8 +1163,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
     tme_free(filename_in);
   }
   if(unix98_pts_out) {
-    if((grantpt(fd_out) < 0) ||
-       (unlockpt(fd_out) < 0)) {
+    if((grantpt(hand_out) < 0) ||
+       (unlockpt(hand_out) < 0)) {
       tme_output_append_error(_output, "could not open serial output slave device %s", filename_out);
       return (errno);
     }

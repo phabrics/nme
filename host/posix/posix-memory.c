@@ -456,8 +456,9 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,memory) {
 
     /* open the file for reading: */
     handle = tme_thread_open(filename, (memory_type == TME_POSIX_MEMORY_ROM
-					? TME_FILE_FLAG_RO
-					: 0), &fd);
+					? TME_FILE_RO
+					: 0));
+    
     if (handle == TME_INVALID_HANDLE) {
       tme_output_append_error(_output,
 			      "%s",
@@ -466,6 +467,9 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,memory) {
       return (errno);
     }
 
+    fd = tme_thread_fd(handle, (memory_type == TME_POSIX_MEMORY_ROM
+				? TME_FILE_RO
+				: 0));
     /* stat the file: */
     if (fstat(fd, &statbuf) < 0) {
       tme_output_append_error(_output,

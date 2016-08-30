@@ -314,8 +314,7 @@ _tme_posix_tape_segment_open(struct tme_posix_tape *posix_tape,
   /* open the segment: */
   segment->tme_posix_tape_segment_handle
     = tme_thread_open(segment->tme_posix_tape_segment_filename,
-		      posix_tape->tme_posix_tape_flags,
-		      NULL);
+		      posix_tape->tme_posix_tape_flags);
   
   /* if the open failed: */
   if (segment->tme_posix_tape_segment_handle == TME_INVALID_HANDLE) {
@@ -1038,13 +1037,14 @@ __tme_posix_tape_command(struct tme_posix_tape *posix_tape,
       /* open the segment file: */
       segment->tme_posix_tape_segment_handle
 	= tme_thread_open(segment->tme_posix_tape_segment_filename,
-			  TME_FILE_FLAG_RO,
-			  &fd);
+			  TME_FILE_RO);
       if (segment->tme_posix_tape_segment_handle == TME_INVALID_HANDLE) {
 	rc = errno;
 	break;
       }
-
+      
+      fd = tme_thread_fd(segment->tme_posix_tape_segment_handle,
+			 TME_FILE_RO);
       /* stat the segment file: */
       if (fstat(fd, &statbuf) < 0) {
 	rc = errno;

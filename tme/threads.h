@@ -61,30 +61,28 @@ void tme_threads_run _TME_P((void));
 void tme_thread_enter _TME_P((tme_mutex_t *mutex));
 
 /* I/O: */
-/* file flags: */
-#define TME_FILE_FLAG_RO		TME_BIT(0)
-#define TME_FILE_FLAG_WO		TME_BIT(1)
-
 #ifdef WIN32
+/* file flags: */
+#define TME_FILE_RO		GENERIC_READ
+#define TME_FILE_WO		GENERIC_WRITE
+#define TME_FILE_RW		GENERIC_READ | GENERIC_WRITE
+#define TME_FILE_NB		0
+
 typedef HANDLE tme_handle_t;
-static _tme_inline tme_handle_t tme_open _TME_P((const char *path, int flags, int *fd)) {
+static _tme_inline tme_handle_t tme_open _TME_P((const char *path, int flags)) {
   tme_handle_t hand;
   
   hand = CreateFile(path,
-		    ((flags & TME_FILE_FLAG_RO)
-		     ? GENERIC_READ		
-		     : GENERIC_READ | GENERIC_WRITE),
+		    flags,
 		    0, /* was: FILE_SHARE_READ */
 		    0,			
 		    OPEN_EXISTING,		
 		    FILE_ATTRIBUTE_NORMAL,	
 		    0);
-  if(fd)
-    *fd = _open_osfhandle((intptr_t)hand, ((flags & TME_FILE_FLAG_RO)
-					   ? O_RDONLY  
-					   : O_RDWR));
+
   return hand;
 }
+#define tme_fd(hand, flags) _open_osfhandle((intptr_t)hand, flags);
 #define tme_close CloseHandle
 #define TME_SEEK_SET FILE_BEGIN
 #define TME_SEEK_CUR FILE_CURRENT
@@ -124,7 +122,7 @@ typedef struct tme_win32_handle {
 extern tme_win32_handle_t win32_stdin;
 extern tme_win32_handle_t win32_stdout;
 extern tme_win32_handle_t win32_stderr;
-tme_win32_handle_t tme_win32_open _TME_P((const char *path, int flags, int *fd));
+tme_win32_handle_t tme_win32_open _TME_P((const char *path, int flags));
 void tme_win32_close _TME_P((tme_win32_handle_t));
 int tme_read_queue _TME_P((tme_win32_handle_t hand, int maxsize));
 int tme_write_queue _TME_P((tme_win32_handle_t hand, struct buffer *buf));
@@ -174,18 +172,16 @@ write_tme_buffered _TME_P((tme_win32_handle_t hand, void *data, int len))
   return tme_write_win32 (hand, &buf);
 }
 #else
+/* file flags: */
+#define TME_FILE_RO		O_RDONLY
+#define TME_FILE_WO		O_WRONLY
+#define TME_FILE_RW		O_RDWR
+#define TME_FILE_NB		O_NONBLOCK
 #define TME_INVALID_HANDLE -1
 #define TME_STD_HANDLE(hand) fileno(hand)
 typedef int tme_handle_t;
-static _tme_inline tme_handle_t tme_open _TME_P((const char *path, int flags, int *fd)) {
-  tme_handle_t hand;
-
-  hand = open(path, ((flags & TME_FILE_FLAG_RO)
-                    ? O_RDONLY  
-		    : O_RDWR));
-  if(fd) *fd = hand;
-  return hand;
-}
+#define tme_open open
+#define tme_fd(hand, flags) hand
 #define tme_close close
 #define TME_SEEK_SET SEEK_SET
 #define TME_SEEK_CUR SEEK_CUR
@@ -200,11 +196,13 @@ typedef tme_handle_t tme_thread_handle_t;
 #ifdef WIN32
 #define TME_INVALID_HANDLE INVALID_HANDLE_VALUE
 #define TME_STD_HANDLE(hand) win32_##hand->handle
+#define TME_WIN32_HANDLE(hand) hand
 typedef tme_win32_handle_t tme_event_t;
 #else
 typedef tme_handle_t tme_event_t;
 #endif
 #define tme_thread_open tme_open
+#define tme_thread_fd tme_fd
 #define tme_thread_close tme_close
 #define tme_thread_seek tme_seek
 #define tme_read _tme_read
@@ -309,9 +307,11 @@ static _tme_inline ssize_t tme_thread_write_yield _TME_P((tme_thread_handle_t ha
 #ifdef WIN32
 #define TME_INVALID_HANDLE TME_WIN32_INVALID_HANDLE
 #define TME_STD_HANDLE(hand) win32_##hand
+#define TME_WIN32_HANDLE(hand) (hand)->handle
 typedef tme_win32_handle_t tme_thread_handle_t;
 typedef tme_win32_handle_t tme_event_t;
 #define tme_thread_open tme_win32_open
+#define tme_thread_fd(hand,flags) tme_fd((hand)->handle, flags)
 #define tme_thread_close tme_win32_close
 #define tme_thread_seek(hand, off, flags) tme_seek((hand)->handle, off, flags)
 #define tme_read(hand,data,len) _tme_read((hand)->handle, data, len)
@@ -322,6 +322,7 @@ typedef tme_win32_handle_t tme_event_t;
 typedef tme_handle_t tme_thread_handle_t;
 typedef tme_handle_t tme_event_t;
 #define tme_thread_open tme_open
+#define tme_thread_fd tme_fd
 #define tme_thread_close tme_close
 #define tme_thread_seek tme_seek
 #define tme_read _tme_read

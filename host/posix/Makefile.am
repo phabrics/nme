@@ -8,10 +8,9 @@ AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(top_srcdir)/lib -I. -D_TME_IMPL
 pkglib_LTLIBRARIES = tme_host_posix.la
 tme_host_posix_la_SOURCES = posix-memory.c \
 	posix-disk.c \
-	posix-tape.c
-if USING_TERMIOS
-tme_host_posix_la_SOURCES += posix-serial.c
-endif
+	posix-tape.c \
+	posix-serial.c
+
 tme_host_posix_la_LDFLAGS = -module -version-info 0:0:0
 tme_host_posix_la_LIBADD = $(top_builddir)/generic/libtme-generic.la
 
