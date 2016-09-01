@@ -581,7 +581,9 @@ _tme_posix_serial_config(struct tme_serial_connection *conn_serial, struct tme_s
 {
   struct tme_posix_serial *serial;
 #ifdef WIN32
+  tme_handle_t hand;
   DCB dcb;
+  COMMTIMEOUTS timeouts;
 #else
   struct termios serial_termios;
   tme_uint32_t config_baud;
@@ -603,45 +605,46 @@ _tme_posix_serial_config(struct tme_serial_connection *conn_serial, struct tme_s
     /* get the current configuration of the device: */
 #ifdef WIN32
     /* update the configuration: */
+    hand = TME_WIN32_HANDLE(is_input
+			    ? serial->tme_posix_serial_hand_in
+			    : serial->tme_posix_serial_hand_out);
+
     //  Initialize the DCB structure.
     SecureZeroMemory(&dcb, sizeof(DCB));
     dcb.DCBlength = sizeof(DCB);
-    
+
     //  Build on the current configuration by first retrieving all current
     //  settings.
-    rc = GetCommState(TME_WIN32_HANDLE(is_input
-      ? serial->tme_posix_serial_hand_in
-      : serial->tme_posix_serial_hand_out),
-      &dcb);
+    rc = GetCommState(hand, &dcb);
     
     if (!rc) {
-    //  Handle the error.
-    tme_log(&element->tme_element_log_handle, 0, TME_OK,
-      (&element->tme_element_log_handle,
-      "GetCommState failed with error %d.", GetLastError()));
-    return (2);
-  }
+      //  Handle the error.
+      tme_log(&element->tme_element_log_handle, 0, TME_OK,
+	      (&element->tme_element_log_handle,
+	       "GetCommState failed with error %d.", GetLastError()));
+      return (2);
+    }
     
     //  Fill in some DCB values and set the com state: 
     //  57,600 bps, 8 data bits, no parity, and 1 stop bit.
     dcb.BaudRate = config->tme_serial_config_baud;   //  baud rate
     if (is_input) {
-    dcb.fParity   = TRUE;      //  parity check
-    if (config->tme_serial_config_flags & TME_SERIAL_FLAGS_CHECK_PARITY) {
-    switch (config->tme_serial_config_parity) {
-    default: assert(FALSE);
-    case TME_SERIAL_PARITY_NONE: break;
-    case TME_SERIAL_PARITY_ODD:
-      dcb.Parity   = ODDPARITY;      //  parity bit
-      break;
-    case TME_SERIAL_PARITY_EVEN:
-      dcb.Parity   = EVENPARITY;      //  parity bit
-      break;
-    }
-  } else
-    dcb.Parity   = NOPARITY;      //  parity bit
-  } else
-    dcb.fParity   = FALSE;      //  parity check
+      dcb.fParity   = TRUE;      //  parity check
+      if (config->tme_serial_config_flags & TME_SERIAL_FLAGS_CHECK_PARITY) {
+	switch (config->tme_serial_config_parity) {
+	default: assert(FALSE);
+	case TME_SERIAL_PARITY_NONE: break;
+	case TME_SERIAL_PARITY_ODD:
+	  dcb.Parity   = ODDPARITY;      //  parity bit
+	  break;
+	case TME_SERIAL_PARITY_EVEN:
+	  dcb.Parity   = EVENPARITY;      //  parity bit
+	  break;
+	}
+      } else
+	dcb.Parity   = NOPARITY;      //  parity bit
+    } else
+      dcb.fParity   = FALSE;      //  parity check
     
     dcb.ByteSize = config->tme_serial_config_bits_data; //  data size, xmit and rcv
     switch (config->tme_serial_config_bits_stop) {
@@ -654,18 +657,44 @@ _tme_posix_serial_config(struct tme_serial_connection *conn_serial, struct tme_s
       break;
     }
     
-    rc = SetCommState(TME_WIN32_HANDLE(is_input
-      ? serial->tme_posix_serial_hand_in
-      : serial->tme_posix_serial_hand_out),
-      &dcb);
+    rc = SetCommState(hand, &dcb);
     
     if (!rc) {
-    //  Handle the error.
-    tme_log(&element->tme_element_log_handle, 0, TME_OK,
-      (&element->tme_element_log_handle,
-      "SetCommState failed with error %d.", GetLastError()));
-    return (3);
-  }
+      //  Handle the error.
+      tme_log(&element->tme_element_log_handle, 0, TME_OK,
+	      (&element->tme_element_log_handle,
+	       "SetCommState failed with error %d.", GetLastError()));
+      return (3);
+    }
+    rc = GetCommTimeouts(hand, &timeouts);
+    
+    if(rc) {
+      tme_log(&element->tme_element_log_handle, 0, TME_OK,
+	      (&element->tme_element_log_handle,
+	       "Old Timeouts: %d %d %d %d %d",
+	       timeouts.ReadIntervalTimeout,
+	       timeouts.ReadTotalTimeoutMultiplier,
+	       timeouts.ReadTotalTimeoutConstant,
+	       timeouts.WriteTotalTimeoutMultiplier,
+	       timeouts.WriteTotalTimeoutConstant));
+    }
+    timeouts.ReadIntervalTimeout = 100;
+    timeouts.ReadTotalTimeoutMultiplier = 100;
+    timeouts.ReadTotalTimeoutConstant = 100;
+    timeouts.WriteTotalTimeoutMultiplier = 100;
+    timeouts.WriteTotalTimeoutConstant = 100;
+
+    rc = SetCommTimeouts(hand, &timeouts);
+    if(rc) {
+      tme_log(&element->tme_element_log_handle, 0, TME_OK,
+	      (&element->tme_element_log_handle,
+	       "New Timeouts: %d %d %d %d %d",
+	       timeouts.ReadIntervalTimeout,
+	       timeouts.ReadTotalTimeoutMultiplier,
+	       timeouts.ReadTotalTimeoutConstant,
+	       timeouts.WriteTotalTimeoutMultiplier,
+	       timeouts.WriteTotalTimeoutConstant));
+    }
     
 #else
     rc = tcgetattr((is_input

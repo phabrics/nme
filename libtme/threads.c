@@ -383,16 +383,13 @@ tme_win32_handle_t tme_win32_open(const char *path, int flags) {
   hand->handle = handle;
   
   /* manual reset event, initially set according to event_state */
-  if(!(flags & TME_FILE_WO)) {
-    hand->reads.overlapped.hEvent = CreateEvent (NULL, TRUE, FALSE, NULL);
-    if(hand->reads.overlapped.hEvent == NULL)
-      msg (M_ERR, "Error: overlapped_io_init: CreateEvent failed");
-  }
-  if(!(flags & TME_FILE_RO)) {
-    hand->writes.overlapped.hEvent = CreateEvent (NULL, TRUE, TRUE, NULL);
-    if (hand->writes.overlapped.hEvent == NULL)
-      msg (M_ERR, "Error: overlapped_io_init: CreateEvent failed");
-  }
+  hand->reads.overlapped.hEvent = CreateEvent (NULL, TRUE, FALSE, NULL);
+  if(hand->reads.overlapped.hEvent == NULL)
+    msg (M_ERR, "Error: overlapped_io_init: CreateEvent failed");
+
+  hand->writes.overlapped.hEvent = CreateEvent (NULL, TRUE, TRUE, NULL);
+  if (hand->writes.overlapped.hEvent == NULL)
+    msg (M_ERR, "Error: overlapped_io_init: CreateEvent failed");
   
   hand->rw_handle.read = hand->reads.overlapped.hEvent;
   hand->rw_handle.write = hand->writes.overlapped.hEvent;
