@@ -1118,10 +1118,10 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
     } else 
 #endif
       if (strcmp(filename_in, filename_out) == 0) {
-	hand_in = hand_out = tme_thread_open(filename_in, TME_FILE_RW | TME_FILE_NB);
+	hand_in = hand_out = tme_async_open(filename_in, TME_FILE_RW | TME_FILE_NB, 1024);
     }
     else {
-      hand_in = tme_thread_open(filename_in, TME_FILE_RO | TME_FILE_NB);
+      hand_in = tme_async_open(filename_in, TME_FILE_RO | TME_FILE_NB, 1024);
     }
     if (hand_in == TME_INVALID_HANDLE) {
       tme_output_append_error(_output, "%s", filename_in);
@@ -1145,7 +1145,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
 	unix98_pts_out= TRUE;
     } else
 #endif
-      hand_out = tme_thread_open(filename_out, TME_FILE_WO | TME_FILE_NB);
+      hand_out = tme_async_open(filename_out, TME_FILE_WO | TME_FILE_NB, 1024);
     if (hand_out == TME_INVALID_HANDLE) {
       saved_errno = errno;
       tme_thread_close(hand_in);

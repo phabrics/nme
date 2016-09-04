@@ -69,14 +69,14 @@ void tme_thread_enter _TME_P((tme_mutex_t *mutex));
 #define TME_FILE_NB		0
 
 typedef HANDLE tme_handle_t;
-#define tme_open(path,flags) \
+#define tme_open(path,flags,attr) \
   CreateFile(path, \
 	     flags, \
 	     0, /* was: FILE_SHARE_READ */ \
 	     0, \
 	     OPEN_EXISTING, \
-	     FILE_ATTRIBUTE_NORMAL, \
-	     0);
+	     attr, \
+	     0)
 #define tme_fd(hand, flags) _open_osfhandle((intptr_t)hand, flags);
 #define tme_close CloseHandle
 #define TME_SEEK_SET FILE_BEGIN
@@ -117,7 +117,7 @@ typedef struct tme_win32_handle {
 extern tme_win32_handle_t win32_stdin;
 extern tme_win32_handle_t win32_stdout;
 extern tme_win32_handle_t win32_stderr;
-tme_win32_handle_t tme_win32_open _TME_P((const char *path, int flags));
+tme_win32_handle_t tme_win32_open _TME_P((const char *path, int flags, int attr, size_t size));
 void tme_win32_close _TME_P((tme_win32_handle_t));
 int tme_read_queue _TME_P((tme_win32_handle_t hand, int maxsize));
 int tme_write_queue _TME_P((tme_win32_handle_t hand, struct buffer *buf));
@@ -193,10 +193,13 @@ typedef tme_handle_t tme_thread_handle_t;
 #define TME_STD_HANDLE(hand) win32_##hand->handle
 #define TME_WIN32_HANDLE(hand) hand
 typedef tme_win32_handle_t tme_event_t;
+#define tme_thread_open(hand, flags) tme_open(hand, flags, FILE_ATTRIBUTE_NORMAL)
+#define tme_async_open(hand, flags, size) tme_open(hand, flags, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED)
 #else
 typedef tme_handle_t tme_event_t;
-#endif
 #define tme_thread_open tme_open
+#define tme_async_open(hand, flags, size) tme_open(hand, flags)
+#endif
 #define tme_thread_fd tme_fd
 #define tme_thread_close tme_close
 #define tme_thread_seek tme_seek
@@ -305,7 +308,8 @@ static _tme_inline ssize_t tme_thread_write_yield _TME_P((tme_thread_handle_t ha
 #define TME_WIN32_HANDLE(hand) (hand)->handle
 typedef tme_win32_handle_t tme_thread_handle_t;
 typedef tme_win32_handle_t tme_event_t;
-#define tme_thread_open tme_win32_open
+#define tme_thread_open(hand, flags) tme_win32_open(hand, flags, FILE_ATTRIBUTE_NORMAL, 0)
+#define tme_async_open(hand, flags, size) tme_win32_open(hand, flags, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, size)
 #define tme_thread_fd(hand,flags) tme_fd((hand)->handle, flags)
 #define tme_thread_close tme_win32_close
 #define tme_thread_seek(hand, off, flags) tme_seek((hand)->handle, off, flags)
@@ -317,6 +321,7 @@ typedef tme_win32_handle_t tme_event_t;
 typedef tme_handle_t tme_thread_handle_t;
 typedef tme_handle_t tme_event_t;
 #define tme_thread_open tme_open
+#define tme_async_open(hand, flags, size) tme_open(hand, flags)
 #define tme_thread_fd tme_fd
 #define tme_thread_close tme_close
 #define tme_thread_seek tme_seek

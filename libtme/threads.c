@@ -148,10 +148,6 @@ tme_event_yield(tme_event_t hand, void *data, size_t len, unsigned int rwflags, 
     hand->reads.buf_init.len = len;
     tme_read_queue (hand, 0);
   }
-  if (rwflags & EVENT_WRITE) {
-    hand->writes.buf_init.data = data;
-    hand->writes.buf_init.len = len;
-  }
 #endif
 
   rc = tme_event_wait_yield(tme_events, NULL, &esr, 1, mutex);
@@ -371,9 +367,9 @@ tme_finalize (
   return ret;
 }
 
-tme_win32_handle_t tme_win32_open(const char *path, int flags) {
+tme_win32_handle_t tme_win32_open(const char *path, int flags, int attr, size_t size) {
   tme_win32_handle_t hand;
-  HANDLE handle = tme_open(path, flags);
+  HANDLE handle = tme_open(path, flags, attr);
 
   if(handle == INVALID_HANDLE_VALUE)
     return NULL;
@@ -394,6 +390,10 @@ tme_win32_handle_t tme_win32_open(const char *path, int flags) {
   hand->rw_handle.read = hand->reads.overlapped.hEvent;
   hand->rw_handle.write = hand->writes.overlapped.hEvent;
 
+  hand->writes.buf_init = alloc_buf(size);
+  ASSERT (buf_init (&hand->writes.buf_init, 0));
+  hand->writes.buf_init.len = size;
+  ASSERT (buf_safe (&hand->writes.buf_init, 0));
   return hand;
 }
 
