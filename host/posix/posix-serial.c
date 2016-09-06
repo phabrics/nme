@@ -226,7 +226,7 @@ _tme_posix_serial_th_ctrl(struct tme_posix_serial *serial)
 		| TME_SERIAL_CTRL_BREAK));
 #ifdef WIN32
     /* get the modem state of the input device: */
-    if (GetCommModemStatus(TME_EVENT_HANDLE(serial->tme_posix_serial_hand_in), &modem_state) == 0) {
+    if (GetCommModemStatus(TME_WIN32_HANDLE(serial->tme_posix_serial_hand_in), &modem_state) == 0) {
       modem_state = 0;
     }
 
@@ -234,7 +234,7 @@ _tme_posix_serial_th_ctrl(struct tme_posix_serial *serial)
        output device and merge it in: */
     if (serial->tme_posix_serial_hand_out
 	!= serial->tme_posix_serial_hand_in) {
-      if (GetCommModemStatus(TME_EVENT_HANDLE(serial->tme_posix_serial_hand_out), &modem_state_out) == 0) {
+      if (GetCommModemStatus(TME_WIN32_HANDLE(serial->tme_posix_serial_hand_out), &modem_state_out) == 0) {
 	modem_state_out = 0;
       }
       modem_state &= ~(MS_CTS_ON);
@@ -608,7 +608,7 @@ _tme_posix_serial_config(struct tme_serial_connection *conn_serial, struct tme_s
     /* get the current configuration of the device: */
 #ifdef WIN32
     /* update the configuration: */
-    hand = TME_EVENT_HANDLE(is_input
+    hand = TME_WIN32_HANDLE(is_input
 			    ? serial->tme_posix_serial_hand_in
 			    : serial->tme_posix_serial_hand_out);
 
@@ -799,7 +799,7 @@ _tme_posix_serial_ctrl(struct tme_serial_connection *conn_serial, unsigned int c
   tme_mutex_lock(&serial->tme_posix_serial_mutex);
 
 #ifdef WIN32
-  hand = TME_EVENT_HANDLE(serial->tme_posix_serial_hand_out);
+  hand = TME_WIN32_HANDLE(serial->tme_posix_serial_hand_out);
   /* update the modem state: */
   if (control & TME_SERIAL_CTRL_DTR) {
     EscapeCommFunction(hand, SETDTR);
