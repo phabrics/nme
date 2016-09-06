@@ -131,10 +131,13 @@ void tme_thread_enter(tme_mutex_t *mutex) {
 
 /* this reads or writes, yielding if the event is not ready: */
 ssize_t
-tme_event_yield(tme_event_t hand, void *data, size_t len, unsigned int rwflags, tme_mutex_t *mutex)
+tme_event_yield(tme_event_t hand, void *data, size_t len, unsigned int rwflags, tme_mutex_t *mutex, void **outbuf)
 {
   int rc = 1;
   struct event_set_return esr;
+#ifdef WIN32
+  struct buffer buf;
+#endif
 #ifndef TME_THREADS_SJLJ
   tme_event_set_t *tme_events = tme_event_set_init(&rc, EVENT_METHOD_FAST);
 #endif
@@ -144,10 +147,18 @@ tme_event_yield(tme_event_t hand, void *data, size_t len, unsigned int rwflags, 
 
 #ifdef WIN32
   if (rwflags & EVENT_READ) {
-    hand->reads.buf_init.data = data;
-    hand->reads.buf_init.len = len;
+    if(!hand->writes.buf_init.data) {
+      hand->reads.buf_init.data = data;
+      hand->reads.buf_init.len = len;
+    }
     tme_read_queue (hand, 0);
   }
+  CLEAR(buf);
+  if (rwflags & EVENT_WRITE) {
+    buf.data = data;
+    buf.len = len;
+  }
+  data = &buf;
 #endif
 
   rc = tme_event_wait_yield(tme_events, NULL, &esr, 1, mutex);
@@ -155,8 +166,16 @@ tme_event_yield(tme_event_t hand, void *data, size_t len, unsigned int rwflags, 
   /* do the i/o: */
   if(esr.rwflags & EVENT_WRITE)
     rc = tme_event_write(hand, data, len);  
-  if(esr.rwflags & EVENT_READ)
+  if(esr.rwflags & EVENT_READ) {
     rc = tme_event_read(hand, data, len);
+    if(outbuf)
+#ifdef WIN32
+      if(hand->writes.buf_init.data)
+	*outbuf = buf.data;
+      else
+#endif
+	*outbuf = data;
+  }
   return rc;
 }
 
@@ -181,12 +200,12 @@ tme_read_queue (tme_win32_handle_t hand, int maxsize)
       ASSERT (ResetEvent (hand->reads.overlapped.hEvent));
 
       status = ReadFile(
-		      hand->handle,
-		      BPTR (&hand->reads.buf),
-		      len,
-		      &hand->reads.size,
-		      &hand->reads.overlapped
-		      );
+			hand->handle,
+			BPTR (&hand->reads.buf),
+			len,
+			&hand->reads.size,
+			&hand->reads.overlapped
+			);
 
       if (status) /* operation completed immediately? */
 	{
@@ -197,8 +216,8 @@ tme_read_queue (tme_win32_handle_t hand, int maxsize)
 	  hand->reads.status = 0;
 
 	  dmsg (D_WIN32_IO, "WIN32 I/O: TAP Read immediate return [%d,%d]",
-	       (int) len,
-	       (int) hand->reads.size);	       
+		(int) len,
+		(int) hand->reads.size);	       
 	}
       else
 	{
@@ -208,7 +227,7 @@ tme_read_queue (tme_win32_handle_t hand, int maxsize)
 	      hand->reads.iostate = IOSTATE_QUEUED;
 	      hand->reads.status = err;
 	      dmsg (D_WIN32_IO, "WIN32 I/O: TAP Read queued [%d]",
-		   (int) len);
+		    (int) len);
 	    }
 	  else /* error occurred */
 	    {
@@ -217,8 +236,8 @@ tme_read_queue (tme_win32_handle_t hand, int maxsize)
 	      hand->reads.iostate = IOSTATE_IMMEDIATE_RETURN;
 	      hand->reads.status = err;
 	      dmsg (D_WIN32_IO, "WIN32 I/O: TAP Read error [%d] : %s",
-		   (int) len,
-		   strerror_win32 (status, &gc));
+		    (int) len,
+		    strerror_win32 (status, &gc));
 	      gc_free (&gc);
 	    }
 	}
@@ -243,12 +262,12 @@ tme_write_queue (tme_win32_handle_t hand, struct buffer *buf)
       ASSERT (ResetEvent (hand->writes.overlapped.hEvent));
 
       status = WriteFile(
-			hand->handle,
-			BPTR (&hand->writes.buf),
-			BLEN (&hand->writes.buf),
-			&hand->writes.size,
-			&hand->writes.overlapped
-			);
+			 hand->handle,
+			 BPTR (&hand->writes.buf),
+			 BLEN (&hand->writes.buf),
+			 &hand->writes.size,
+			 &hand->writes.overlapped
+			 );
 
       if (status) /* operation completed immediately? */
 	{
@@ -260,8 +279,8 @@ tme_write_queue (tme_win32_handle_t hand, struct buffer *buf)
 	  hand->writes.status = 0;
 
 	  dmsg (D_WIN32_IO, "WIN32 I/O: TAP Write immediate return [%d,%d]",
-	       BLEN (&hand->writes.buf),
-	       (int) hand->writes.size);	       
+		BLEN (&hand->writes.buf),
+		(int) hand->writes.size);	       
 	}
       else
 	{
@@ -271,7 +290,7 @@ tme_write_queue (tme_win32_handle_t hand, struct buffer *buf)
 	      hand->writes.iostate = IOSTATE_QUEUED;
 	      hand->writes.status = err;
 	      dmsg (D_WIN32_IO, "WIN32 I/O: TAP Write queued [%d]",
-		   BLEN (&hand->writes.buf));
+		    BLEN (&hand->writes.buf));
 	    }
 	  else /* error occurred */
 	    {
@@ -280,8 +299,8 @@ tme_write_queue (tme_win32_handle_t hand, struct buffer *buf)
 	      hand->writes.iostate = IOSTATE_IMMEDIATE_RETURN;
 	      hand->writes.status = err;
 	      dmsg (D_WIN32_IO, "WIN32 I/O: TAP Write error [%d] : %s",
-		   BLEN (&hand->writes.buf),
-		   strerror_win32 (err, &gc));
+		    BLEN (&hand->writes.buf),
+		    strerror_win32 (err, &gc));
 	      gc_free (&gc);
 	    }
 	}
@@ -390,10 +409,17 @@ tme_win32_handle_t tme_win32_open(const char *path, int flags, int attr, size_t 
   hand->rw_handle.read = hand->reads.overlapped.hEvent;
   hand->rw_handle.write = hand->writes.overlapped.hEvent;
 
-  hand->writes.buf_init = alloc_buf(size);
-  ASSERT (buf_init (&hand->writes.buf_init, 0));
-  hand->writes.buf_init.len = size;
-  ASSERT (buf_safe (&hand->writes.buf_init, 0));
+  if(size) {
+    hand->reads.buf_init = alloc_buf(size);
+    ASSERT (buf_init (&hand->reads.buf_init, 0));
+    hand->reads.buf_init.len = size;
+    ASSERT (buf_safe (&hand->reads.buf_init, 0));
+
+    hand->writes.buf_init = alloc_buf(size);
+    ASSERT (buf_init (&hand->writes.buf_init, 0));
+    hand->writes.buf_init.len = size;
+    ASSERT (buf_safe (&hand->writes.buf_init, 0));
+  } 
   return hand;
 }
 

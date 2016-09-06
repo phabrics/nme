@@ -142,7 +142,7 @@ struct tme_ethernet {
   struct tme_ethernet_connection *tme_eth_eth_connection;
 
   /* the Ethernet file descriptor: */
-  int tme_eth_handle;
+  tme_thread_handle_t tme_eth_handle;
 
   /* callbacks for ethernet i/o */
   int (*tme_ethernet_read)(void *data);
@@ -206,7 +206,7 @@ int tme_eth_connections_new _TME_P((struct tme_element *element,
 				    struct tme_connection **_conns));
 
 int tme_eth_init _TME_P((struct tme_element *element,
-			 int fd,
+			 tme_thread_handle_t hand,
 			 unsigned int sz, 
 			 void *data,
 			 unsigned char *addr,

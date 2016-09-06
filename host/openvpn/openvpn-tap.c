@@ -127,7 +127,6 @@ static int _tme_openvpn_tun_read(void *data) {
 TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tun_tap) {
   int rc;
   unsigned char *hwaddr = NULL;
-  int fd = 0;
   void *data = NULL;
   struct tuntap *tt;
   struct env_set *es;
@@ -173,7 +172,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tun_tap) {
   }
 #endif
   rc = tme_eth_init(element,
-		    fd,
+		    TME_INVALID_HANDLE,
 		    sz,
 		    data,
 		    hwaddr,

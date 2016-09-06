@@ -913,7 +913,7 @@ tme_eth_connections_new(struct tme_element *element,
 }
 
 int tme_eth_init(struct tme_element *element, 
-		 int fd,
+		 tme_thread_handle_t hand,
 		 unsigned int sz, 
 		 void *data,
 		 unsigned char *addr,
@@ -924,8 +924,8 @@ int tme_eth_init(struct tme_element *element,
   /* start our data structure: */
   eth = tme_new0(struct tme_ethernet, 1);
   eth->tme_eth_element = element;
-  eth->tme_eth_handle = fd;
-  if(fd) {
+  eth->tme_eth_handle = hand;
+  if(hand != TME_INVALID_HANDLE) {
     eth->tme_eth_buffer = tme_new(tme_uint8_t, sz);
     eth->tme_eth_out = tme_new(tme_uint8_t, TME_ETHERNET_FRAME_MAX);
   }

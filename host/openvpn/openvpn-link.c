@@ -152,7 +152,6 @@ static int _tme_openvpn_sock_read(void *data) {
 /* the new TAP function: */
 TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,socket_link) {
   int rc;
-  int fd = 0;
   void *data = NULL;
   struct link_socket *ls;
   struct env_set *es;
@@ -179,7 +178,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,socket_link) {
   sock->event_set = event_set;
 
   rc = tme_eth_init(element,
-		    fd,
+		    TME_INVALID_HANDLE,
 		    sz,
 		    data,
 		    NULL,

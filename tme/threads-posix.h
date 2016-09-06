@@ -271,8 +271,6 @@ static _tme_inline int tme_threads_main_iter _TME_P((void *usec)) {
 
 #define _tme_threads_main_iter(fn) fn()
 
-#define TME_THREADS_DIRECT_IO
-
 #ifdef HAVE_CPUSET_CREATE
 typedef cpuset_t *tme_cpuset_t;
 typedef cpuid_t tme_cpuid_t;

@@ -467,12 +467,13 @@ _tmesh_th(void *_passes)
 
     /* try to read more input: */
     rc = (num_passes) ?
-      (tme_read(
-		input->_tmesh_input_handle,
-		input->_tmesh_input_buffer
-		+ input->_tmesh_input_buffer_head,
-		sizeof(input->_tmesh_input_buffer)
-		- input->_tmesh_input_buffer_head)) :
+      (tme_thread_read_yield(
+			     input->_tmesh_input_handle,
+			     input->_tmesh_input_buffer
+			     + input->_tmesh_input_buffer_head,
+			     sizeof(input->_tmesh_input_buffer)
+			     - input->_tmesh_input_buffer_head,
+			     NULL)) :
       (tme_thread_read(
 		       input->_tmesh_input_handle,
 		       input->_tmesh_input_buffer
