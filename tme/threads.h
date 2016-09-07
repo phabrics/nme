@@ -174,6 +174,7 @@ typedef tme_win32_handle_t tme_thread_handle_t;
 
 #else /* TME_THREADS_SJLJ */
 
+#define TME_THREADS_DIRECTIO
 #define TME_THREAD_HANDLE(hand) hand
 #define TME_INVALID_HANDLE INVALID_HANDLE_VALUE
 typedef tme_handle_t tme_thread_handle_t;
