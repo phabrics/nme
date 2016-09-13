@@ -51,6 +51,16 @@ _TME_RCSID("$Id: posix-serial.c,v 1.11 2007/08/24 00:57:01 fredette Exp $");
 /* macros: */
 #define TME_POSIX_SERIAL_BUFFER_SIZE	(4096)
 #define PTMDEV "/dev/ptm"
+#ifdef WIN32
+#define TME_TIMEOUTS_READINT 0
+#define TME_TIMEOUTS_READMUL 1
+#define TME_TIMEOUTS_READCONST 2
+#define TME_TIMEOUTS_WRITEMUL 3
+#define TME_TIMEOUTS_WRITECONST 4
+#define TME_TIMEOUTS_TOTAL 5
+#else
+#define TME_TIMEOUTS_TOTAL 1
+#endif
 
 /* structures: */
 struct tme_posix_serial {
@@ -92,6 +102,9 @@ struct tme_posix_serial {
   /* our output file descriptor: */
   tme_event_t tme_posix_serial_hand_out;
 #endif
+  /* if we have a timeout: */
+  int tme_posix_serial_timeouts[TME_TIMEOUTS_TOTAL];
+
   /* if we're emulating break: */
   int tme_posix_serial_emulate_break;
 
@@ -701,11 +714,11 @@ _tme_posix_serial_config(struct tme_serial_connection *conn_serial, struct tme_s
 	       timeouts.WriteTotalTimeoutMultiplier,
 	       timeouts.WriteTotalTimeoutConstant));
     }
-    timeouts.ReadIntervalTimeout = 100;
-    timeouts.ReadTotalTimeoutMultiplier = 100;
-    timeouts.ReadTotalTimeoutConstant = 100;
-    timeouts.WriteTotalTimeoutMultiplier = 100;
-    timeouts.WriteTotalTimeoutConstant = 100;
+    timeouts.ReadIntervalTimeout = serial->tme_posix_serial_timeouts[TME_TIMEOUTS_READINT];
+    timeouts.ReadTotalTimeoutMultiplier = serial->tme_posix_serial_timeouts[TME_TIMEOUTS_READMUL];
+    timeouts.ReadTotalTimeoutConstant = serial->tme_posix_serial_timeouts[TME_TIMEOUTS_READCONST];
+    timeouts.WriteTotalTimeoutMultiplier = serial->tme_posix_serial_timeouts[TME_TIMEOUTS_WRITEMUL];
+    timeouts.WriteTotalTimeoutConstant = serial->tme_posix_serial_timeouts[TME_TIMEOUTS_WRITECONST];
 
     rc = SetCommTimeouts(hand, &timeouts);
     if(rc) {
@@ -1039,6 +1052,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
   /* initialize: */
   filename_in = NULL;
   filename_out = NULL;
+  int i, timeouts[TME_TIMEOUTS_TOTAL];
   emulate_break = FALSE;
   arg_i = 1;
   usage = FALSE;
@@ -1069,6 +1083,17 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
 	     && filename_out == NULL) {
       filename_in = filename_out = args[arg_i + 1];
       arg_i += 2;
+    }
+
+    /* the device timeouts for input and output: */
+    else if (TME_ARG_IS(args[arg_i + 0], "timeouts")) {
+      arg_i++;
+      for(i=0;i<=TME_TIMEOUTS_TOTAL;i++)
+	if((args[arg_i] != NULL) &&
+	   ((timeouts[i] = atoi(args[arg_i])) > 0))
+	  arg_i++;
+	else
+	  break;
     }
 
     /* if we're supposed to emulate break: */
@@ -1202,6 +1227,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
   serial->tme_posix_serial_element = element;
   serial->tme_posix_serial_hand_in = hand_in;
   serial->tme_posix_serial_hand_out = hand_out;
+  for(i=0;i<TME_TIMEOUTS_TOTAL;i++)
+    serial->tme_posix_serial_timeouts[i] = timeouts[i];
   serial->tme_posix_serial_emulate_break = emulate_break;
   serial->tme_posix_serial_ctrl_callout = 0;
   serial->tme_posix_serial_ctrl_callout_last = 0;
