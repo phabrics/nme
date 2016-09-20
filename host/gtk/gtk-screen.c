@@ -41,7 +41,9 @@ _TME_RCSID("$Id: gtk-screen.c,v 1.11 2009/08/30 21:39:03 fredette Exp $");
 #include <stdlib.h>
 
 static _tme_inline void _tme_gtk_main_iter(void) {
-  gtk_main_iteration_do(FALSE);
+  while (gtk_events_pending ())
+    gtk_main_iteration ();
+  //  gtk_main_iteration_do(FALSE);
 }
 
 /* the GTK screens update thread: */
