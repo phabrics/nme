@@ -484,7 +484,9 @@ tme_sjlj_threads_main_iter(void *event_check)
     timeout.tv_usec = 0;
   }
   
-  rc = event_wait(tme_sjlj_main_events->es, &timeout, esr, SIZE(esr));
+  rc = (tme_sjlj_main_events->max_event >= 0) ?
+    (event_wait(tme_sjlj_main_events->es, &timeout, esr, SIZE(esr))) :
+    (tme_sjlj_main_events->max_event);
   
   /* we were in select() for an unknown amount of time: */
   tme_thread_long();
@@ -743,7 +745,7 @@ tme_sjlj_event_wait_yield(struct tme_sjlj_event_set *es, const struct timeval *t
   timeout_out.tv_usec = 0;
   rc = event_wait(es->es, &timeout_out, out, outlen);
   tme_thread_long();
-  if(rc != 0 ||
+  if(rc > 0 ||
      timeout_in != NULL &&
      timeout_in->tv_sec == 0 &&
      timeout_in->tv_usec == 0) {
@@ -758,6 +760,8 @@ tme_sjlj_event_wait_yield(struct tme_sjlj_event_set *es, const struct timeval *t
     for (; TME_TIME_GET_FRAC(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep) >= 1000000; ) {
       TME_TIME_ADDV(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep, 1, -1000000);
     }
+  } else {
+    TME_TIME_SETV(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep, BIG_TIMEOUT, 0);
   }
 
   /* yield: */

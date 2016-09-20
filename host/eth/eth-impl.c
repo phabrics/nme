@@ -223,7 +223,7 @@ _tme_eth_callout(struct tme_ethernet *eth, int new_callouts)
 	
 	/* do the write: */
 	status =
-	  (eth->tme_eth_handle) ?
+	  (eth->tme_eth_handle != TME_INVALID_HANDLE) ?
 	  (tme_thread_write_yield(eth->tme_eth_handle, eth->tme_eth_out, rc, &eth->tme_eth_mutex)) :
 	  (eth->tme_ethernet_write(eth->tme_eth_data));
       
@@ -299,7 +299,7 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
 	     _("calling read")));
 
     buffer_end =
-      (eth->tme_eth_handle) ?
+      (eth->tme_eth_handle != TME_INVALID_HANDLE) ?
       (tme_thread_read_yield(eth->tme_eth_handle,
 			     eth->tme_eth_buffer,
 			     eth->tme_eth_buffer_size,
