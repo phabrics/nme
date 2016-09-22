@@ -34,7 +34,7 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.68])
 m4_include(version.m4)
-AC_INIT([tme], [0.12beta30])
+AC_INIT([tme], [0.12beta31])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
@@ -1039,10 +1039,7 @@ if test "x${enable_threads}" = xyes; then
 
    dnl set the default threads based on platform
    case "${host_os}" in
-   mingw* | msys*)
-	tme_thread_types=glib
-	;;
-   cygwin*) 
+   mingw* | msys* | cygwin*) 
 	tme_thread_types=sjlj
    	;;
    *) 

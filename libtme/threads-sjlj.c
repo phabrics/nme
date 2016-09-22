@@ -3,7 +3,7 @@
 /* libtme/threads-sjlj.c - implementation of setjmp/longjmp threads: */
 
 /*
- * Copyright (c) 2003 Matt Fredette
+ * Copyright (c) 2003 Matt Fredette, 2014-2016 Ruben Agin
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,7 +39,9 @@ _TME_RCSID("$Id: threads-sjlj.c,v 1.18 2010/06/05 19:10:28 fredette Exp $");
 /* includes: */
 #include <tme/threads.h>
 #include <stdlib.h>
+#ifndef WIN32
 #include <setjmp.h>
+#endif
 
 /* thread states: */
 #define TME_SJLJ_THREAD_STATE_BLOCKED		(1)
@@ -64,7 +66,9 @@ struct tme_sjlj_thread {
   struct tme_sjlj_thread **state_prev;
 
   /* the thread function: */
+#ifndef WIN32
   void *tme_sjlj_thread_func_private;
+#endif
   tme_thread_t tme_sjlj_thread_func;
 
   /* any condition that this thread is waiting on: */
@@ -123,18 +127,20 @@ static struct tme_sjlj_thread *tme_sjlj_threads_dispatching;
 /* the active thread: */
 static struct tme_sjlj_thread *tme_sjlj_thread_active;
 
-/* this dummy thread structure is filled before a yield to represent
-   what, if anything, the active thread is blocking on when it yields: */
-static struct tme_sjlj_thread tme_sjlj_thread_blocked;
-
 /* this is set if the active thread is exiting: */
 static int tme_sjlj_thread_exiting;
 
+#ifndef WIN32
 /* this is a jmp_buf back to the dispatcher: */
 static jmp_buf tme_sjlj_dispatcher_jmp;
+#endif
 
 /* the main loop events: */
 static struct tme_sjlj_event_set *tme_sjlj_main_events;
+
+/* this dummy thread structure is filled before a yield to represent
+   what, if anything, the active thread is blocking on when it yields: */
+static struct tme_sjlj_thread tme_sjlj_thread_blocked;
 
 /* the dispatch number: */
 static tme_uint32_t _tme_sjlj_thread_dispatch_number;
@@ -163,6 +169,9 @@ tme_sjlj_threads_init()
   tme_sjlj_main_events = tme_sjlj_event_set_init(&num, 0);
   
   /* initialize the thread-blocked structure: */
+#ifdef WIN32
+  tme_sjlj_thread_blocked.tme_sjlj_thread_func = ConvertThreadToFiber(NULL);
+#endif
   tme_sjlj_thread_blocked.tme_sjlj_thread_cond = NULL;
   tme_sjlj_thread_blocked.tme_sjlj_thread_events = NULL;
   TME_TIME_SETV(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep, 0, 0);
@@ -409,6 +418,9 @@ tme_sjlj_dispatch(volatile int passes)
       
       /* when this active thread yields, we'll return here, where we
 	 will continue the inner dispatching loop: */
+#ifdef WIN32
+      SwitchToFiber(thread->tme_sjlj_thread_func);
+#else
       rc_one = setjmp(tme_sjlj_dispatcher_jmp);
       if (rc_one) {
 	continue;
@@ -418,6 +430,7 @@ tme_sjlj_dispatch(volatile int passes)
          tme_sjlj_exit(): */
       (*thread->tme_sjlj_thread_func)(thread->tme_sjlj_thread_func_private);
       tme_sjlj_exit();
+#endif
     }
   }
 
@@ -535,8 +548,12 @@ tme_sjlj_thread_create(tme_threadid_t *thr, tme_thread_t func, void *func_privat
   }
 
   /* initialize the thread: */
+#ifdef WIN32
+  thread->tme_sjlj_thread_func = CreateFiber(0, func, func_private);
+#else
   thread->tme_sjlj_thread_func_private = func_private;
   thread->tme_sjlj_thread_func = func;
+#endif
   thread->tme_sjlj_thread_cond = NULL;
   thread->tme_sjlj_thread_events = NULL;
   TME_TIME_SETV(thread->tme_sjlj_thread_sleep, 0, 0);
@@ -959,7 +976,11 @@ tme_sjlj_yield(void)
   }
 
   /* jump back to the dispatcher: */
+#ifdef WIN32
+  SwitchToFiber(tme_sjlj_thread_blocked.tme_sjlj_thread_func);
+#else
   longjmp(tme_sjlj_dispatcher_jmp, TRUE);
+#endif
 }
 
 #ifndef TME_NO_DEBUG_LOCKS
