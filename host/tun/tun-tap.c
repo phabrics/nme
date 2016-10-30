@@ -860,6 +860,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   rc = tme_eth_ifaddrs_find(TAPIF, AF_UNSPEC, &ifa, &hwaddr, &hwaddr_len);
   
   for(i=0;i<TME_IP_ADDRS_TOTAL;i++) {
+    tap_hosts[i][0]='\0';
     if((rc = getnameinfo(*(struct sockaddr **)((char *)ifa + ifa_offs[i]),
 			 sizeof(struct sockaddr_in),
 			 tap_hosts[i], NI_MAXHOST, NULL, 0, NI_NUMERICHOST)))
@@ -908,6 +909,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   } else {
     strncpy(NATIF, ifa->ifa_name, IFNAMSIZ);
     for(i=0;i<TME_IP_ADDRS_TOTAL;i++) {
+      nat_hosts[i][0]='\0';
       if((rc = getnameinfo(*(struct sockaddr **)((char *)ifa + ifa_offs[i]),
 			   sizeof(struct sockaddr_in),
 			   nat_hosts[i], NI_MAXHOST, NULL, 0, NI_NUMERICHOST)))

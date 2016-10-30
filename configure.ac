@@ -34,7 +34,7 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.68])
 m4_include(version.m4)
-AC_INIT([tme], [0.12beta31])
+AC_INIT([tme], [0.12beta32])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
@@ -1560,12 +1560,15 @@ TMEEOF
   echo '#if defined(USE_GLIB_TIME) && defined(_TME_HAVE_GLIB)' >> ${outfile}-tmp
   echo '#include <glib.h>' >> ${outfile}-tmp
   echo 'typedef gint64 tme_time_t;' >> ${outfile}-tmp
-  echo '#else' >> ${outfile}-tmp
-  echo '#if defined(USE_GETTIMEOFDAY) || !defined(_TME_HAVE_CLOCK_GETTIME)' >> ${outfile}-tmp
+  echo '#define TME_FRAC_PER_SEC G_USEC_PER_SEC' >> ${outfile}-tmp
+  echo '#elif defined(WIN32) && !defined(USE_GETTIMEOFDAY)' >> ${outfile}-tmp
+  echo '#include <windows.h>' >> ${outfile}-tmp
+  echo 'typedef tme_uint64_t tme_time_t;' >> ${outfile}-tmp
+  echo '#define TME_FRAC_PER_SEC 10000000' >> ${outfile}-tmp
+  echo '#elif defined(USE_GETTIMEOFDAY) || !defined(_TME_HAVE_CLOCK_GETTIME)' >> ${outfile}-tmp
   echo 'typedef struct timeval tme_time_t;' >> ${outfile}-tmp
   echo '#else' >> ${outfile}-tmp
   echo 'typedef struct timespec tme_time_t;' >> ${outfile}-tmp
-  echo '#endif' >> ${outfile}-tmp
   echo '#endif' >> ${outfile}-tmp
   cat <<TMEEOF >> ${outfile}-tmp
 

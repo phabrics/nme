@@ -405,18 +405,34 @@ tme_bswap_u128(tme_uint128_t x)
 #define _TME_TIME_SUB(a,x,y,sec,frac) (a).sec = (x).sec - (y).sec; (a).frac = (x).frac - (y).frac;
 #define _TME_TIME_DEC(a,x,sec,frac) (a).sec -= (x).sec; (a).frac -= (x).frac;
 
-#if defined(USE_GLIB_TIME) && defined(_TME_HAVE_GLIB)
+#if defined(WIN32) && !defined(USE_GETTIMEOFDAY) || defined(USE_GLIB_TIME) && defined(_TME_HAVE_GLIB)
+#ifdef USE_GLIB_TIME
 #define tme_get_time(x) (*(x) = g_get_real_time(), TME_OK)
+#else
+static _tme_inline int tme_get_time _TME_P((tme_time_t *time)) {
+  FILETIME filetime;
+  ULARGE_INTEGER _time;
+  GetSystemTimeAsFileTime(&filetime);
+  _time.u.HighPart = filetime.dwHighDateTime;
+  _time.u.LowPart = filetime.dwLowDateTime;
+#ifdef TME_HAVE_INT64_T
+  *time = _time.QuadPart;
+#else
+  *time = (_time.u.LowPart) | (_time.u.HighPart << 32);
+#endif
+  return TME_OK;
+}
+#endif
 #define TME_TIME_T(x) typeof(x)
-#define TME_TIME_GET_SEC(a) ((a) / G_USEC_PER_SEC)
+#define TME_TIME_GET_SEC(a) ((a) / TME_FRAC_PER_SEC)
 #define TME_TIME_SET_SEC(a,x) TME_TIME_SETV(a,x,TME_TIME_GET_FRAC(a))
 #define TME_TIME_EQ(x,y) (x == y)
-#define TME_TIME_EQV(a,x,y) ((a) == (u) + (s) * G_USEC_PER_SEC)
+#define TME_TIME_EQV(a,s,u) ((a) == (u) + (s) * TME_FRAC_PER_SEC)
 #define TME_TIME_GT(x,y) (x > y)
-#define TME_TIME_SETV(a,s,u) ((a) = (u) + (s) * G_USEC_PER_SEC)
+#define TME_TIME_SETV(a,s,u) ((a) = (u) + (s) * TME_FRAC_PER_SEC)
 #define TME_TIME_ADDV(a,s,u) TME_TIME_SETV(a, TME_TIME_GET_SEC(a) + s, TME_TIME_GET_FRAC(a) + u)
 #define TME_TIME_INC_SEC(a,x) TME_TIME_ADDV(a,x,0)
-#define TME_TIME_GET_FRAC(a) ((a) % G_USEC_PER_SEC)
+#define TME_TIME_GET_FRAC(a) ((a) % TME_FRAC_PER_SEC)
 #define TME_TIME_SET_FRAC(a,x) TME_TIME_SETV(a,TME_TIME_GET_SEC(a), x)
 #define TME_TIME_INC_FRAC(a,x) TME_TIME_ADDV(a,0,x)
 #define TME_TIME_FRAC_LT(x,y) (TME_TIME_GET_FRAC(x) < TME_TIME_GET_FRAC(y))

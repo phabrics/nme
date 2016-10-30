@@ -581,6 +581,9 @@ tme_sjlj_cond_wait_yield(tme_cond_t *cond, tme_mutex_t *mutex)
 
   /* yield: */
   tme_thread_yield();
+
+  /* lock the mutex: */
+  tme_mutex_lock(mutex);
 }
 
 /* this makes a thread sleep on a condition: */
@@ -681,6 +684,9 @@ tme_sjlj_sleep_yield(unsigned long sec, unsigned long usec, tme_mutex_t *mutex)
   
   /* yield: */
   tme_thread_yield();
+
+  /* lock the mutex: */
+  if(mutex) tme_mutex_lock(mutex);
 }
 
 struct tme_sjlj_event_set *tme_sjlj_event_set_init(int *maxevents, unsigned int flags) {
@@ -769,6 +775,7 @@ tme_sjlj_event_wait_yield(struct tme_sjlj_event_set *es, const struct timeval *t
     return (rc);
   }
 
+  /* unlock the mutex: */
   if(mutex) tme_mutex_unlock(mutex);
   tme_sjlj_thread_blocked.tme_sjlj_thread_events = es;
 
@@ -783,8 +790,10 @@ tme_sjlj_event_wait_yield(struct tme_sjlj_event_set *es, const struct timeval *t
 
   /* yield: */
   tme_thread_yield();
-  /* NOTREACHED */
-  return (0);
+
+  /* lock the mutex: */
+  if(mutex) tme_mutex_lock(mutex);
+  return event_wait(tme_sjlj_thread_active->tme_sjlj_thread_events->es, &timeout_out, out, outlen);
 }
 
 /* this exits a thread: */
@@ -833,8 +842,6 @@ tme_sjlj_yield(void)
   if(es) {
     j = es->max_event + 1;
     es2 = tme_sjlj_event_set_init(&j, 0);
-    event_free(es2->es);
-    es2->es = NULL;
     for(i=0;i<=es->max_event;i++) {
       if(es->events[i].event == UNDEFINED_EVENT)
 	continue;
