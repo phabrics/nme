@@ -119,7 +119,6 @@ typedef tme_win32_handle_t tme_event_t;
 extern tme_win32_handle_t win32_stdin;
 extern tme_win32_handle_t win32_stdout;
 extern tme_win32_handle_t win32_stderr;
-#define TME_STD_HANDLE(hand) TME_WIN32_HANDLE(win32_##hand)
 tme_win32_handle_t tme_win32_open _TME_P((const char *path, int flags, int attr, size_t size));
 void tme_win32_close _TME_P((tme_win32_handle_t));
 int tme_read_queue _TME_P((tme_win32_handle_t hand, int maxsize));
@@ -164,21 +163,25 @@ write_tme_buffered _TME_P((tme_win32_handle_t hand, struct buffer *buf))
 
 #ifdef TME_THREADS_SJLJ
 
+#define TME_STD_HANDLE(hand) win32_##hand
 #define TME_THREAD_HANDLE TME_WIN32_HANDLE
 #define TME_INVALID_HANDLE TME_WIN32_INVALID_HANDLE
 typedef tme_win32_handle_t tme_thread_handle_t;
-#define tme_thread_open(hand, flags) tme_win32_open(hand, flags, FILE_ATTRIBUTE_NORMAL, 0)
-#define tme_thread_close tme_win32_close
+#define tme_sync_open(hand, flags) tme_win32_open(hand, flags, FILE_ATTRIBUTE_NORMAL, 0)
+#define tme_thread_open(hand, flags) tme_event_open(hand, flags, 0)
+#define tme_thread_close tme_event_close
 #define tme_event_read(hand,data,len) read_tme_buffered(hand, data, len)
 #define tme_event_write(hand,data,len) write_tme_buffered(hand, data)
 
 #else /* TME_THREADS_SJLJ */
 
 #define TME_THREADS_DIRECTIO
+#define TME_STD_HANDLE(hand) TME_WIN32_HANDLE(win32_##hand)
 #define TME_THREAD_HANDLE(hand) hand
 #define TME_INVALID_HANDLE INVALID_HANDLE_VALUE
 typedef tme_handle_t tme_thread_handle_t;
-#define tme_thread_open(hand, flags) tme_open(hand, flags, FILE_ATTRIBUTE_NORMAL)
+#define tme_sync_open(hand, flags) tme_open(hand, flags, FILE_ATTRIBUTE_NORMAL)
+#define tme_thread_open tme_sync_open
 #define tme_thread_close tme_close
 #define tme_event_read tme_read
 #define tme_event_write tme_write
@@ -205,6 +208,7 @@ typedef tme_handle_t tme_event_t;
 #define TME_SEEK_CUR SEEK_CUR
 #define TME_SEEK_END SEEK_END
 #define tme_seek lseek
+#define tme_sync_open tme_open
 #define tme_thread_open tme_open
 #define tme_thread_close tme_close
 #define tme_event_open(hand, flags, size) tme_open(hand, flags)

@@ -321,6 +321,11 @@ _tme_posix_tape_segment_open(struct tme_posix_tape *posix_tape,
     return (errno);
   }
 
+  tme_log(&posix_tape->tme_posix_tape_element->tme_element_log_handle,
+    0, TME_OK,
+    (&posix_tape->tme_posix_tape_element->tme_element_log_handle,
+     _("Opened segment %s"), segment->tme_posix_tape_segment_filename));
+
   /* set the current segment: */
   posix_tape->tme_posix_tape_segment_current = segment;
   return (TME_OK);
@@ -533,6 +538,11 @@ _tme_posix_tape_xfer1(struct tme_posix_tape *posix_tape,
 				 posix_tape->tme_posix_tape_buffer_data,
 				 count_bytes_user,
 				 &posix_tape->tme_posix_tape_mutex);				 
+
+      tme_log(&posix_tape->tme_posix_tape_element->tme_element_log_handle,
+	      0, TME_OK,
+	      (&posix_tape->tme_posix_tape_element->tme_element_log_handle,
+	       _("Read %d bytes"), rc));
 
       /* if this segment is not a real tape, and we're expected to
 	 transfer more bytes than the user requested, seek over the
@@ -1082,6 +1092,11 @@ __tme_posix_tape_command(struct tme_posix_tape *posix_tape,
 	/* this tape must be read-only: */
 	flags |= TME_POSIX_TAPE_FLAG_RO;
       }
+
+      tme_log(&posix_tape->tme_posix_tape_element->tme_element_log_handle,
+	      0, TME_OK,
+	      (&posix_tape->tme_posix_tape_element->tme_element_log_handle,
+	       _("Opened segment %s of size %llu"), segment->tme_posix_tape_segment_filename, statbuf.st_size));
 
       /* if this is not the first segment, close the file: */
       if (posix_tape->tme_posix_tape_segments != segment) {

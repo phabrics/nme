@@ -203,7 +203,7 @@ tme_read_queue (tme_win32_handle_t hand, int maxsize)
 			hand->handle,
 			BPTR (&hand->reads.buf),
 			len,
-			&hand->reads.size,
+			NULL,
 			&hand->reads.overlapped
 			);
 
@@ -215,7 +215,17 @@ tme_read_queue (tme_win32_handle_t hand, int maxsize)
 	  hand->reads.iostate = IOSTATE_IMMEDIATE_RETURN;
 	  hand->reads.status = 0;
 
-	  dmsg (D_WIN32_IO, "WIN32 I/O: TAP Read immediate return [%d,%d]",
+	  status = GetOverlappedResult(
+				       hand->handle,
+				       &hand->reads.overlapped,
+				       &hand->reads.size,
+				       FALSE
+				       );
+
+	  if (!status)
+	    hand->reads.size = 0;
+	  
+	  dmsg (D_WIN32_IO, "WIN32 I/O: TME Read immediate return [%d,%d]",
 		(int) len,
 		(int) hand->reads.size);	       
 	}
@@ -226,7 +236,7 @@ tme_read_queue (tme_win32_handle_t hand, int maxsize)
 	    {
 	      hand->reads.iostate = IOSTATE_QUEUED;
 	      hand->reads.status = err;
-	      dmsg (D_WIN32_IO, "WIN32 I/O: TAP Read queued [%d]",
+	      dmsg (D_WIN32_IO, "WIN32 I/O: TME Read queued [%d]",
 		    (int) len);
 	    }
 	  else /* error occurred */
@@ -235,7 +245,8 @@ tme_read_queue (tme_win32_handle_t hand, int maxsize)
 	      ASSERT (SetEvent (hand->reads.overlapped.hEvent));
 	      hand->reads.iostate = IOSTATE_IMMEDIATE_RETURN;
 	      hand->reads.status = err;
-	      dmsg (D_WIN32_IO, "WIN32 I/O: TAP Read error [%d] : %s",
+	      hand->reads.size = 0;
+	      dmsg (D_WIN32_IO, "WIN32 I/O: TME Read error [%d] : %s",
 		    (int) len,
 		    strerror_win32 (status, &gc));
 	      gc_free (&gc);
@@ -278,7 +289,7 @@ tme_write_queue (tme_win32_handle_t hand, struct buffer *buf)
 
 	  hand->writes.status = 0;
 
-	  dmsg (D_WIN32_IO, "WIN32 I/O: TAP Write immediate return [%d,%d]",
+	  dmsg (D_WIN32_IO, "WIN32 I/O: TME Write immediate return [%d,%d]",
 		BLEN (&hand->writes.buf),
 		(int) hand->writes.size);	       
 	}
@@ -289,7 +300,7 @@ tme_write_queue (tme_win32_handle_t hand, struct buffer *buf)
 	    {
 	      hand->writes.iostate = IOSTATE_QUEUED;
 	      hand->writes.status = err;
-	      dmsg (D_WIN32_IO, "WIN32 I/O: TAP Write queued [%d]",
+	      dmsg (D_WIN32_IO, "WIN32 I/O: TME Write queued [%d]",
 		    BLEN (&hand->writes.buf));
 	    }
 	  else /* error occurred */
@@ -298,7 +309,7 @@ tme_write_queue (tme_win32_handle_t hand, struct buffer *buf)
 	      ASSERT (SetEvent (hand->writes.overlapped.hEvent));
 	      hand->writes.iostate = IOSTATE_IMMEDIATE_RETURN;
 	      hand->writes.status = err;
-	      dmsg (D_WIN32_IO, "WIN32 I/O: TAP Write error [%d] : %s",
+	      dmsg (D_WIN32_IO, "WIN32 I/O: TME Write error [%d] : %s",
 		    BLEN (&hand->writes.buf),
 		    strerror_win32 (err, &gc));
 	      gc_free (&gc);
@@ -334,7 +345,7 @@ tme_finalize (
 	  ret = io->size;
 	  io->iostate = IOSTATE_INITIAL;
 	  ASSERT (ResetEvent (io->overlapped.hEvent));
-	  dmsg (D_WIN32_IO, "WIN32 I/O: TAP Completion success [%d]", ret);
+	  dmsg (D_WIN32_IO, "WIN32 I/O: TME Completion success [%d]", ret);
 	}
       else
 	{
@@ -346,7 +357,7 @@ tme_finalize (
 		 then DON'T execute this code */
 	      io->iostate = IOSTATE_INITIAL;
 	      ASSERT (ResetEvent (io->overlapped.hEvent));
-	      msg (D_WIN32_IO | M_ERRNO, "WIN32 I/O: TAP Completion error");
+	      msg (D_WIN32_IO | M_ERRNO, "WIN32 I/O: TME Completion error");
 	    }
 	}
       break;
@@ -359,7 +370,7 @@ tme_finalize (
 	  /* error return for a non-queued operation */
 	  SetLastError (io->status);
 	  ret = -1;
-	  msg (D_WIN32_IO | M_ERRNO, "WIN32 I/O: TAP Completion non-queued error");
+	  msg (D_WIN32_IO | M_ERRNO, "WIN32 I/O: TME Completion non-queued error");
 	}
       else
 	{
@@ -367,14 +378,14 @@ tme_finalize (
 	  if (buf)
 	    *buf = io->buf;
 	  ret = io->size;
-	  dmsg (D_WIN32_IO, "WIN32 I/O: TAP Completion non-queued success [%d]", ret);
+	  dmsg (D_WIN32_IO, "WIN32 I/O: TME Completion non-queued success [%d]", ret);
 	}
       break;
 
     case IOSTATE_INITIAL: /* were we called without proper queueing? */
       SetLastError (ERROR_INVALID_FUNCTION);
       ret = -1;
-      dmsg (D_WIN32_IO, "WIN32 I/O: TAP Completion BAD STATE");
+      dmsg (D_WIN32_IO, "WIN32 I/O: TME Completion BAD STATE");
       break;
 
     default:
