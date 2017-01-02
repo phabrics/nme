@@ -118,8 +118,12 @@ struct tme_posix_disk_buffer {
      and size_t = unsigned definitions may not match.  the bizarre
      solution is to declare structs with appropriately-typed members,
      and then use those members: */
+#ifdef WIN32
+  tme_off_t tme_posix_disk_buffer_pos;
+#else
   struct stat _tme_posix_disk_buffer_stat;
 #define tme_posix_disk_buffer_pos _tme_posix_disk_buffer_stat.st_size
+#endif
 #ifdef HAVE_SYS_UIO_H
   struct iovec _tme_posix_disk_buffer_iov;
 #define tme_posix_disk_buffer_size _tme_posix_disk_buffer_iov.iov_len

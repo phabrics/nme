@@ -60,10 +60,19 @@ pthread_attr_t *tme_thread_defattr() {
 static GRWLock tme_rwlock_start;
 GRWLock tme_rwlock_suspere;
 #endif
+
 #ifdef WIN32
-tme_win32_handle_t win32_stdin;
-tme_win32_handle_t win32_stdout;
-tme_win32_handle_t win32_stderr;
+
+struct tme_win32_handle {
+  HANDLE handle;
+  struct overlapped_io reads;
+  struct overlapped_io writes;
+  struct rw_handle rw_handle;
+};
+
+tme_event_t win32_stdin;
+tme_event_t win32_stdout;
+tme_event_t win32_stderr;
 #endif
 
 void tme_threads_init(tme_threads_fn1 run, void *arg) {
@@ -129,60 +138,10 @@ void tme_thread_enter(tme_mutex_t *mutex) {
     tme_mutex_lock(mutex);
 }
 
-/* this reads or writes, yielding if the event is not ready: */
-ssize_t
-tme_event_yield(tme_event_t hand, void *data, size_t len, unsigned int rwflags, tme_mutex_t *mutex, void **outbuf)
-{
-  int rc = 1;
-  struct event_set_return esr;
-#ifdef WIN32
-  struct buffer buf;
-#endif
-#ifndef TME_THREADS_SJLJ
-  tme_event_set_t *tme_events = tme_event_set_init(&rc, EVENT_METHOD_FAST);
-#endif
-  
-  tme_event_reset(tme_events);
-  tme_event_ctl(tme_events, tme_event_handle(hand), rwflags, 0);
-
-#ifdef WIN32
-  if (rwflags & EVENT_READ) {
-    if(!hand->writes.buf_init.data) {
-      hand->reads.buf_init.data = data;
-      hand->reads.buf_init.len = len;
-    }
-    tme_read_queue (hand, 0);
-  }
-  CLEAR(buf);
-  if (rwflags & EVENT_WRITE) {
-    buf.data = data;
-    buf.len = len;
-  }
-  data = &buf;
-#endif
-
-  rc = tme_event_wait_yield(tme_events, NULL, &esr, 1, mutex);
-
-  /* do the i/o: */
-  if(esr.rwflags & EVENT_WRITE)
-    rc = tme_event_write(hand, data, len);  
-  if(esr.rwflags & EVENT_READ) {
-    rc = tme_event_read(hand, data, len);
-    if(outbuf)
-#ifdef WIN32
-      if(hand->writes.buf_init.data)
-	*outbuf = buf.data;
-      else
-#endif
-	*outbuf = data;
-  }
-  return rc;
-}
-
 #ifdef WIN32
 
 int
-tme_read_queue (tme_win32_handle_t hand, int maxsize)
+tme_read_queue (tme_event_t hand, int maxsize)
 {
   if (hand->reads.iostate == IOSTATE_INITIAL)
     {
@@ -203,7 +162,7 @@ tme_read_queue (tme_win32_handle_t hand, int maxsize)
 			hand->handle,
 			BPTR (&hand->reads.buf),
 			len,
-			NULL,
+			&hand->reads.size,
 			&hand->reads.overlapped
 			);
 
@@ -215,16 +174,6 @@ tme_read_queue (tme_win32_handle_t hand, int maxsize)
 	  hand->reads.iostate = IOSTATE_IMMEDIATE_RETURN;
 	  hand->reads.status = 0;
 
-	  status = GetOverlappedResult(
-				       hand->handle,
-				       &hand->reads.overlapped,
-				       &hand->reads.size,
-				       FALSE
-				       );
-
-	  if (!status)
-	    hand->reads.size = 0;
-	  
 	  dmsg (D_WIN32_IO, "WIN32 I/O: TME Read immediate return [%d,%d]",
 		(int) len,
 		(int) hand->reads.size);	       
@@ -257,7 +206,7 @@ tme_read_queue (tme_win32_handle_t hand, int maxsize)
 }
 
 int
-tme_write_queue (tme_win32_handle_t hand, struct buffer *buf)
+tme_write_queue (tme_event_t hand, struct buffer *buf)
 {
   if (hand->writes.iostate == IOSTATE_INITIAL)
     {
@@ -343,6 +292,7 @@ tme_finalize (
 	  if (buf)
 	    *buf = io->buf;
 	  ret = io->size;
+	  io->overlapped.Offset += ret;	  
 	  io->iostate = IOSTATE_INITIAL;
 	  ASSERT (ResetEvent (io->overlapped.hEvent));
 	  dmsg (D_WIN32_IO, "WIN32 I/O: TME Completion success [%d]", ret);
@@ -378,6 +328,7 @@ tme_finalize (
 	  if (buf)
 	    *buf = io->buf;
 	  ret = io->size;
+	  io->overlapped.Offset += ret;	  
 	  dmsg (D_WIN32_IO, "WIN32 I/O: TME Completion non-queued success [%d]", ret);
 	}
       break;
@@ -392,14 +343,37 @@ tme_finalize (
       ASSERT (0);
     }
 
+  if (GetLastError() == ERROR_HANDLE_EOF)
+    ret = 0;
   if (buf)
     buf->len = ret;
   return ret;
 }
 
-tme_win32_handle_t tme_win32_open(const char *path, int flags, int attr, size_t size) {
-  tme_win32_handle_t hand;
-  HANDLE handle = tme_open(path, flags, attr);
+static _tme_inline int
+tme_write_win32 (tme_event_t hand, struct buffer *buf)
+{
+  int err = 0;
+  int status = 0;
+  if (overlapped_io_active (&hand->writes))
+    {
+      status = tme_finalize (hand->handle, &hand->writes, NULL);
+      if (status < 0)
+	err = GetLastError ();
+    }
+  tme_write_queue (hand, buf);
+  if (status < 0)
+    {
+      SetLastError (err);
+      return status;
+    }
+  else
+    return BLEN (buf);
+}
+
+tme_event_t tme_win32_open(const char *path, int flags, int attr, size_t size) {
+  tme_event_t hand;
+  HANDLE handle = CreateFile(path, flags, 0, 0, OPEN_EXISTING, attr, 0);
 
   if(handle == INVALID_HANDLE_VALUE)
     return NULL;
@@ -434,7 +408,7 @@ tme_win32_handle_t tme_win32_open(const char *path, int flags, int attr, size_t 
   return hand;
 }
 
-void tme_win32_close(tme_win32_handle_t hand) {
+void tme_win32_close(tme_event_t hand) {
   if (hand->handle != NULL)
     {
       dmsg (D_WIN32_IO_LOW, "Attempting CancelIO on TAP-Windows adapter");
@@ -465,4 +439,91 @@ void tme_win32_close(tme_win32_handle_t hand) {
 	msg (M_WARN | M_ERRNO, "Warning: CloseHandle failed on TAP-Windows adapter");
     }
 }
-#endif // WIN32
+
+#ifdef TME_THREADS_SJLJ
+
+tme_off_t tme_thread_seek (tme_thread_handle_t hand, tme_off_t off, int where)
+{
+
+}
+
+static _tme_inline int
+tme_event_read (tme_event_t hand, struct buffer *buf, int len)
+{
+  return tme_finalize (hand->handle, &hand->reads, buf);
+}
+
+static _tme_inline int
+tme_event_write (tme_event_t hand, struct buffer *buf, int len)
+{
+  return tme_write_win32 (hand, buf);
+}
+#else
+#define tme_event_read tme_read
+#define tme_event_write tme_write
+#endif
+
+#else // WIN32
+#define tme_event_read tme_read
+#define tme_event_write tme_write
+#endif // !WIN32
+
+static _tme_inline event_t
+tme_event_handle (const tme_event_t hand)
+{
+#ifdef WIN32
+  return &hand->rw_handle;
+#else
+  return hand;
+#endif
+}
+
+/* this reads or writes, yielding if the event is not ready: */
+ssize_t
+tme_event_yield(tme_event_t hand, void *data, size_t len, unsigned int rwflags, tme_mutex_t *mutex, void **outbuf)
+{
+  int rc = 1;
+  struct event_set_return esr;
+#ifdef WIN32
+  struct buffer buf;
+#endif
+#ifndef TME_THREADS_SJLJ
+  tme_event_set_t *tme_events = tme_event_set_init(&rc, EVENT_METHOD_FAST);
+#endif
+  
+  tme_event_reset(tme_events);
+  tme_event_ctl(tme_events, tme_event_handle(hand), rwflags, 0);
+
+#ifdef WIN32
+  if (rwflags & EVENT_READ) {
+    if(!hand->writes.buf_init.data) {
+      hand->reads.buf_init.data = data;
+      hand->reads.buf_init.len = len;
+    }
+    tme_read_queue (hand, 0);
+  }
+  CLEAR(buf);
+  if (rwflags & EVENT_WRITE) {
+    buf.data = data;
+    buf.len = len;
+  }
+  data = &buf;
+#endif
+
+  rc = tme_event_wait_yield(tme_events, NULL, &esr, 1, mutex);
+
+  /* do the i/o: */
+  if(esr.rwflags & EVENT_WRITE)
+    rc = tme_event_write(hand, data, len);  
+  if(esr.rwflags & EVENT_READ) {
+    rc = tme_event_read(hand, data, len);
+    if(outbuf)
+#ifdef WIN32
+      if(hand->writes.buf_init.data)
+	*outbuf = buf.data;
+      else
+#endif
+	*outbuf = data;
+  }
+  return rc;
+}

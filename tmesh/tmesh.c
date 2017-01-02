@@ -166,7 +166,7 @@ _tmesh_open(struct tmesh_io *io_new, struct tmesh_io *io_old, char **_output)
 
   /* try to open the file: */
   input->_tmesh_input_handle =
-    tme_sync_open(io_new->tmesh_io_name, TME_FILE_RO);
+    tme_open(io_new->tmesh_io_name, TME_FILE_RO);
   
   /* if the open failed: */
   if (input->_tmesh_input_handle == TME_INVALID_HANDLE) {

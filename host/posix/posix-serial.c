@@ -823,7 +823,6 @@ _tme_posix_serial_ctrl(struct tme_serial_connection *conn_serial, unsigned int c
   struct tme_posix_serial *serial;
   int modem_state;
   int rc;
-  tme_handle_t hand;
   
   /* recover our data structure: */
   serial = conn_serial->tme_serial_connection.tme_connection_element->tme_element_private;
@@ -832,7 +831,7 @@ _tme_posix_serial_ctrl(struct tme_serial_connection *conn_serial, unsigned int c
   tme_mutex_lock(&serial->tme_posix_serial_mutex);
 
 #ifdef WIN32
-  hand = TME_THREAD_HANDLE(serial->tme_posix_serial_hand_out);
+  HANDLE hand = TME_THREAD_HANDLE(serial->tme_posix_serial_hand_out);
   /* update the modem state: */
   if (control & TME_SERIAL_CTRL_DTR) {
     EscapeCommFunction(hand, SETDTR);
