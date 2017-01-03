@@ -68,11 +68,15 @@ void tme_thread_enter _TME_P((tme_mutex_t *mutex));
 #define TME_FILE_RW		GENERIC_READ | GENERIC_WRITE
 #define TME_FILE_NB		0
 
-typedef LARGE_INTEGER tme_off_t;
+#ifdef TME_HAVE_INT64_T
+typedef tme_int64_t tme_off_t;
+#else
+#error "No support for 32-bit file offsets on Windows"
+#endif
 
 typedef struct tme_win32_handle *tme_event_t;
 
-#define TME_WIN32_HANDLE(hand) (HANDLE)(*(const char *)hand)
+#define TME_WIN32_HANDLE(hand) (*(HANDLE *)hand)
 extern tme_event_t win32_stdin;
 extern tme_event_t win32_stdout;
 extern tme_event_t win32_stderr;
@@ -92,6 +96,10 @@ static _tme_inline ssize_t tme_write _TME_P((HANDLE hand, const void *buf, size_
 #define tme_event_open(path, flags, size) tme_win32_open(path, flags, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, size)
 #define tme_event_close tme_win32_close
 #define tme_fd(hand, flags) _open_osfhandle((intptr_t)hand, flags);
+#define TME_SEEK_SET FILE_BEGIN
+#define TME_SEEK_CUR FILE_CURRENT
+#define TME_SEEK_END FILE_END
+tme_off_t tme_event_seek _TME_P((HANDLE hand, struct overlapped_io *io, tme_off_t off, int where));
 
 #ifdef TME_THREADS_SJLJ
 
@@ -102,11 +110,6 @@ typedef tme_event_t tme_thread_handle_t;
 #define tme_open(path, flags) tme_win32_open(path, flags, FILE_ATTRIBUTE_NORMAL, 0)
 #define tme_thread_open(path, flags) tme_event_open(path, flags, 0)
 #define tme_thread_close tme_event_close
-#define TME_SEEK_SET 0
-#define TME_SEEK_CUR 1
-#define TME_SEEK_END 2
-#define TME_SEEK_NREAD 4
-#define TME_SEEK_NWRITE 8
 tme_off_t tme_thread_seek _TME_P((tme_thread_handle_t hand, tme_off_t off, int where));
 
 #else /* TME_THREADS_SJLJ */
@@ -126,12 +129,10 @@ typedef HANDLE tme_thread_handle_t;
 	     0)
 #define tme_thread_open tme_open
 #define tme_thread_close CloseHandle
-#define TME_SEEK_SET FILE_BEGIN
-#define TME_SEEK_CUR FILE_CURRENT
-#define TME_SEEK_END FILE_END
 static _tme_inline tme_off_t tme_thread_seek _TME_P((tme_thread_handle_t hand, tme_off_t off, int where)) {
-  tme_off_t ret;
-  return (SetFilePointerEx(hand, off, &ret, where)) ? (ret) : (-1);
+  LARGE_INTEGER ret;
+
+  return (SetFilePointerEx(hand, (LARGE_INTEGER)off, &ret, where)) ? (ret.QuadPart) : (-1);
 }
 
 #endif /* !TME_THREADS_SJLJ */

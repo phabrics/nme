@@ -268,6 +268,30 @@ tme_write_queue (tme_event_t hand, struct buffer *buf)
   return hand->writes.iostate;
 }
 
+tme_off_t tme_event_seek (HANDLE hand, struct overlapped_io *io, tme_off_t off, int where)
+{
+  LARGE_INTEGER pos;
+  
+  switch(where) {
+  case TME_SEEK_SET:
+    pos.QuadPart = 0;
+    break;
+  case TME_SEEK_CUR:
+    pos.u.LowPart = io->overlapped.Offset;
+    pos.u.HighPart = io->overlapped.OffsetHigh;
+    break;
+  case TME_SEEK_END:
+    GetFileSizeEx(hand, &pos);
+    break;
+  }
+
+  pos.QuadPart += off;
+  io->overlapped.Offset = pos.u.LowPart;
+  io->overlapped.OffsetHigh = pos.u.HighPart;
+ 
+  return pos.QuadPart;
+}
+
 int
 tme_finalize (
 	      HANDLE h,
@@ -292,7 +316,7 @@ tme_finalize (
 	  if (buf)
 	    *buf = io->buf;
 	  ret = io->size;
-	  io->overlapped.Offset += ret;	  
+	  tme_event_seek(h, io, ret, TME_SEEK_CUR);
 	  io->iostate = IOSTATE_INITIAL;
 	  ASSERT (ResetEvent (io->overlapped.hEvent));
 	  dmsg (D_WIN32_IO, "WIN32 I/O: TME Completion success [%d]", ret);
@@ -328,7 +352,7 @@ tme_finalize (
 	  if (buf)
 	    *buf = io->buf;
 	  ret = io->size;
-	  io->overlapped.Offset += ret;	  
+	  tme_event_seek(h, io, ret, TME_SEEK_CUR);
 	  dmsg (D_WIN32_IO, "WIN32 I/O: TME Completion non-queued success [%d]", ret);
 	}
       break;
@@ -442,9 +466,9 @@ void tme_win32_close(tme_event_t hand) {
 
 #ifdef TME_THREADS_SJLJ
 
-tme_off_t tme_thread_seek (tme_thread_handle_t hand, tme_off_t off, int where)
-{
-
+tme_off_t tme_thread_seek (tme_thread_handle_t hand, tme_off_t off, int where) {
+  tme_event_seek(hand->handle, &hand->reads, off, where);
+  return tme_event_seek(hand->handle, &hand->writes, off, where);
 }
 
 static _tme_inline int

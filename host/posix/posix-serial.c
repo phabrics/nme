@@ -617,7 +617,7 @@ _tme_posix_serial_config(struct tme_serial_connection *conn_serial, struct tme_s
 {
   struct tme_posix_serial *serial;
 #ifdef WIN32
-  tme_handle_t hand;
+  HANDLE hand;
   DCB dcb;
   COMMTIMEOUTS timeouts;
 #else

@@ -540,7 +540,7 @@ _tme_posix_tape_xfer1(struct tme_posix_tape *posix_tape,
 				 &posix_tape->tme_posix_tape_mutex);				 
 
       tme_log(&posix_tape->tme_posix_tape_element->tme_element_log_handle,
-	      0, TME_OK,
+	      1, TME_OK,
 	      (&posix_tape->tme_posix_tape_element->tme_element_log_handle,
 	       _("Read %d bytes"), rc));
 
