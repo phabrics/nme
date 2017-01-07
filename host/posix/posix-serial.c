@@ -1027,13 +1027,63 @@ _tme_posix_serial_connections_new(struct tme_element *element,
   return (TME_OK);
 }
 
+/* this opens a serial device: */
+#ifdef TME_THREADS_DIRECTIO
+static tme_thread_handle_t
+#else
+static tme_event_t
+#endif
+_tme_posix_serial_new(struct tme_element *element,
+		      const char * const *filename,
+		      char **_output,
+		      int flags)
+{
+#ifdef TME_THREADS_DIRECTIO
+  tme_thread_handle_t hand = TME_INVALID_HANDLE;
+#else
+  tme_event_t hand = TME_INVALID_HANDLE;
+#endif
+  
+#ifdef HAVE_PTSNAME
+  if (strstr(filename, PTMDEV) != NULL) {
+    hand = posix_openpt( O_RDWR );
+    if(hand != TME_INVALID_HANDLE) {
+#ifdef HAVE_PTSNAME_R
+#define PTSLEN 32
+      filename = tme_malloc(PTSLEN);
+      ptsname_r(hand, filename, PTSLEN);
+#else
+      filename = tme_strdup(ptsname(hand));
+#endif
+      if(filename == NULL) {
+	tme_output_append_error(_output, "could not open serial device %s", filename);
+	hand = TME_INVALID_HANDLE;
+      } else if((grantpt(hand) < 0) ||
+		(unlockpt(hand) < 0)) {
+	tme_output_append_error(_output, "could not open serial input slave device %s", filename);
+	hand = TME_INVALID_HANDLE;
+      } else {
+	tme_log(&element->tme_element_log_handle, 0, TME_OK,
+		(&element->tme_element_log_handle,
+		 "using serial input slave device %s", filename));
+	tme_free(filename);
+      }
+    }
+  } else
+#endif
+#ifdef TME_THREADS_DIRECTIO
+    hand = tme_thread_open(filename, flags | TME_FILE_NB);
+#else
+  hand = tme_event_open(filename, flags | TME_FILE_NB, 1024);
+#endif
+  return hand;
+}
+
 /* the new serial function: */
 TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
   struct tme_posix_serial *serial;
   const char *filename_in;
   const char *filename_out;
-#define PTSLEN 32
-  char *filename;
 #ifdef TME_THREADS_DIRECTIO
   tme_thread_handle_t hand_in, hand_out;
 #else
@@ -1043,11 +1093,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
   int arg_i;
   int saved_errno;
   int emulate_break;
-#ifdef HAVE_PTSNAME
-  int unix98_pts_in, unix98_pts_out;
-
-  unix98_pts_in = unix98_pts_out = FALSE;
-#endif
+  int flags;
+  
   /* initialize: */
   filename_in = NULL;
   filename_out = NULL;
@@ -1135,90 +1182,31 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
   }
 
   /* open the devices: */
-  hand_in = hand_out = TME_INVALID_HANDLE;
-  if (hand_in == TME_INVALID_HANDLE
-      && !strcmp(filename_in, "-")) {
-    hand_in = STDIN_FILENO;
-    hand_in = TME_STD_HANDLE(stdin);
-  }
-  if (hand_out == TME_INVALID_HANDLE
-      && !strcmp(filename_out, "-")) {
-    hand_out = STDOUT_FILENO;
-    hand_out = TME_STD_HANDLE(stdout);
-  }
+  flags = (strcmp(filename_in, filename_out)) ? (TME_FILE_RO) : (TME_FILE_RW);
+  hand_in = (strcmp(filename_in, "-")) ?
+    (_tme_posix_serial_new(element, filename_in, _output, flags)) :
+    (TME_STD_HANDLE(stdin));
+
   if (hand_in == TME_INVALID_HANDLE) {
-#ifdef HAVE_PTSNAME
-    if (strstr(filename_in, PTMDEV) != NULL) {
-      hand_in = posix_openpt( O_RDWR );
-#ifdef HAVE_PTSNAME_R
-      filename = tme_malloc(PTSLEN);
-      ptsname_r(hand_in, filename, PTSLEN);
-#else
-      filename = tme_strdup(ptsname(hand_in));
-#endif
-      if (strcmp(filename_in, filename_out) == 0) {
-	hand_out = hand_in;
-	filename_out = filename_in = filename;
-      } else
-	filename_in = filename;
-      if(filename_in == NULL) {
-	tme_output_append_error(_output, "could not open serial device %s", filename_in);
-	return (errno);
-      } else
-	unix98_pts_in= TRUE;
-    } else 
-#endif
-      if (strcmp(filename_in, filename_out) == 0) {
-#ifdef TME_THREADS_DIRECTIO
-	hand_in = hand_out = tme_thread_open(filename_in, TME_FILE_RW | TME_FILE_NB);
-#else
-	hand_in = hand_out = tme_event_open(filename_in, TME_FILE_RW | TME_FILE_NB, 1024);
-#endif
-    }
-    else {
-#ifdef TME_THREADS_DIRECTIO
-      hand_in = tme_thread_open(filename_in, TME_FILE_RO | TME_FILE_NB);
-#else
-      hand_in = tme_event_open(filename_in, TME_FILE_RO | TME_FILE_NB, 1024);
-#endif
-    }
-    if (hand_in == TME_INVALID_HANDLE) {
-      tme_output_append_error(_output, "%s", filename_in);
-      return (errno);
-    }
+    tme_output_append_error(_output, "%s", filename_in);
+    return (errno);
   }
+
+  hand_out = (strcmp(filename_out, "-")) ?
+    ((flags == TME_FILE_RO) ?
+     (_tme_posix_serial_new(element, filename_out, _output, TME_FILE_WO)) :
+     (hand_in)) :
+    (TME_STD_HANDLE(stdout));
+  
   if (hand_out == TME_INVALID_HANDLE) {
-#ifdef HAVE_PTSNAME
-    if (strstr(filename_out, PTMDEV) != NULL) {
-      hand_out = posix_openpt( O_RDWR );
-#ifdef HAVE_PTSNAME_R
-      filename_out = tme_malloc(PTSLEN);
-      ptsname_r(hand_out, filename_out, PTSLEN);
-#else
-      filename_out = tme_strdup(ptsname(hand_out));
-#endif
-      if(filename_out == NULL) {
-	tme_output_append_error(_output, "could not open serial device %s", filename_out);
-	return (errno);
-      } else
-	unix98_pts_out= TRUE;
-    } else
-#endif
+    saved_errno = errno;
 #ifdef TME_THREADS_DIRECTIO
-      hand_out = tme_thread_open(filename_out, TME_FILE_WO | TME_FILE_NB);
+    tme_thread_close(hand_in);
 #else
-      hand_out = tme_event_open(filename_out, TME_FILE_WO | TME_FILE_NB, 1024);
+    tme_event_close(hand_in);
 #endif
-    if (hand_out == TME_INVALID_HANDLE) {
-      saved_errno = errno;
-#ifdef TME_THREADS_DIRECTIO
-      tme_thread_close(hand_in);
-#else
-      tme_event_close(hand_in);
-#endif
-      tme_output_append_error(_output, "%s", filename_out);
-      return (saved_errno);
-    }
+    tme_output_append_error(_output, "%s", filename_out);
+    return (saved_errno);
   }
 
   /* start the serial structure: */
@@ -1247,31 +1235,5 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
   element->tme_element_private = serial;
   element->tme_element_connections_new = _tme_posix_serial_connections_new;
 
-#ifdef HAVE_PTSNAME
-  if(unix98_pts_in) {
-    if((grantpt(hand_in) < 0) ||
-       (unlockpt(hand_in) < 0)) {
-      tme_output_append_error(_output, "could not open serial input slave device %s", filename_in);
-      return (errno);
-    }
-    tme_output_append_error(_output, "using serial input slave device %s", filename_in);
-    /*    tme_log(&element->tme_element_log_handle, 0, TME_OK,
-	    (&element->tme_element_log_handle,
-	    "using interface %s", filename_in));*/
-    tme_free(filename_in);
-  }
-  if(unix98_pts_out) {
-    if((grantpt(hand_out) < 0) ||
-       (unlockpt(hand_out) < 0)) {
-      tme_output_append_error(_output, "could not open serial output slave device %s", filename_out);
-      return (errno);
-    }
-    tme_output_append_error(_output, "using serial output slave device %s", filename_out);
-    /*    tme_log(&element->tme_element_log_handle, 0, TME_OK,
-	    (&element->tme_element_log_handle,
-	    "using interface %s", filename_out));*/
-    tme_free(filename_out);
-  }
-#endif
   return (TME_OK);
 }
