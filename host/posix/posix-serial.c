@@ -89,19 +89,12 @@ struct tme_posix_serial {
   /* this is nonzero iff callouts are running: */
   int tme_posix_serial_callouts_running;
 
-#ifdef TME_THREADS_DIRECTIO
-  /* our input file descriptor: */
-  tme_thread_handle_t tme_posix_serial_hand_in;
-
-  /* our output file descriptor: */
-  tme_thread_handle_t tme_posix_serial_hand_out;
-#else
   /* our input file descriptor: */
   tme_event_t tme_posix_serial_hand_in;
 
   /* our output file descriptor: */
   tme_event_t tme_posix_serial_hand_out;
-#endif
+
   /* if we have a timeout: */
   int tme_posix_serial_timeouts[TME_TIMEOUTS_TOTAL];
 
@@ -246,7 +239,7 @@ _tme_posix_serial_th_ctrl(struct tme_posix_serial *serial)
 		| TME_SERIAL_CTRL_BREAK));
 #ifdef WIN32
     /* get the modem state of the input device: */
-    if (GetCommModemStatus(TME_THREAD_HANDLE(serial->tme_posix_serial_hand_in), &modem_state) == 0) {
+    if (GetCommModemStatus(TME_WIN32_HANDLE(serial->tme_posix_serial_hand_in), &modem_state) == 0) {
       modem_state = 0;
     }
 
@@ -254,7 +247,7 @@ _tme_posix_serial_th_ctrl(struct tme_posix_serial *serial)
        output device and merge it in: */
     if (serial->tme_posix_serial_hand_out
 	!= serial->tme_posix_serial_hand_in) {
-      if (GetCommModemStatus(TME_THREAD_HANDLE(serial->tme_posix_serial_hand_out), &modem_state_out) == 0) {
+      if (GetCommModemStatus(TME_WIN32_HANDLE(serial->tme_posix_serial_hand_out), &modem_state_out) == 0) {
 	modem_state_out = 0;
       }
       modem_state &= ~(MS_CTS_ON);
@@ -346,19 +339,13 @@ _tme_posix_serial_th_writer(struct tme_posix_serial *serial)
     assert(buffer_output_size > 0);
 
     /* try to write the device: */
-#ifdef TME_THREADS_DIRECTIO
-    rc = tme_thread_write_yield(serial->tme_posix_serial_hand_out,
-				buffer_output,
-				buffer_output_size,
-				&serial->tme_posix_serial_mutex);
-#else
     rc = tme_event_yield(serial->tme_posix_serial_hand_out,
 			 buffer_output,
 			 buffer_output_size,
 			 EVENT_WRITE,
 			 &serial->tme_posix_serial_mutex,
 			 NULL);
-#endif
+
     /* if the write was successful: */
     if (rc > 0) {
 
@@ -387,27 +374,23 @@ _tme_posix_serial_th_reader(struct tme_posix_serial *serial)
   int scanner_state;
   int buffer_was_empty;
   int rc;
+  struct tme_element *element;
 
   tme_thread_enter(&serial->tme_posix_serial_mutex);
+
+  element = serial->tme_posix_serial_element;
 
   /* loop forever: */
   for (;;) {
 
     /* try to read the device: */
-#ifdef TME_THREADS_DIRECTIO
-    rc = tme_thread_read_yield(serial->tme_posix_serial_hand_in,
-			       buffer_input,
-			       sizeof(buffer_input),
-			       &serial->tme_posix_serial_mutex);
-    byte_head = buffer_input;
-#else
     rc = tme_event_yield(serial->tme_posix_serial_hand_in,
 			 buffer_input,
 			 sizeof(buffer_input),
 			 EVENT_READ,
 			 &serial->tme_posix_serial_mutex,
 			 &byte_head);
-#endif
+    
     /* if the read failed: */
     if (rc < 0) {
       /* XXX diagnostic */
@@ -416,6 +399,9 @@ _tme_posix_serial_th_reader(struct tme_posix_serial *serial)
 
     /* if we hit EOF: */
     if (rc == 0) {
+      tme_log(&element->tme_element_log_handle, 1, TME_OK,
+	      (&element->tme_element_log_handle,
+	       "encountered EOF on serial device input"));
       break;
     }
 
@@ -641,7 +627,7 @@ _tme_posix_serial_config(struct tme_serial_connection *conn_serial, struct tme_s
     /* get the current configuration of the device: */
 #ifdef WIN32
     /* update the configuration: */
-    hand = TME_THREAD_HANDLE(is_input
+    hand = TME_WIN32_HANDLE(is_input
 			    ? serial->tme_posix_serial_hand_in
 			    : serial->tme_posix_serial_hand_out);
 
@@ -831,7 +817,7 @@ _tme_posix_serial_ctrl(struct tme_serial_connection *conn_serial, unsigned int c
   tme_mutex_lock(&serial->tme_posix_serial_mutex);
 
 #ifdef WIN32
-  HANDLE hand = TME_THREAD_HANDLE(serial->tme_posix_serial_hand_out);
+  HANDLE hand = TME_WIN32_HANDLE(serial->tme_posix_serial_hand_out);
   /* update the modem state: */
   if (control & TME_SERIAL_CTRL_DTR) {
     EscapeCommFunction(hand, SETDTR);
@@ -1028,21 +1014,13 @@ _tme_posix_serial_connections_new(struct tme_element *element,
 }
 
 /* this opens a serial device: */
-#ifdef TME_THREADS_DIRECTIO
-static tme_thread_handle_t
-#else
 static tme_event_t
-#endif
 _tme_posix_serial_new(struct tme_element *element,
 		      const char * const *filename,
 		      char **_output,
 		      int flags)
 {
-#ifdef TME_THREADS_DIRECTIO
-  tme_thread_handle_t hand = TME_INVALID_HANDLE;
-#else
   tme_event_t hand = TME_INVALID_HANDLE;
-#endif
   
 #ifdef HAVE_PTSNAME
   if (strstr(filename, PTMDEV) != NULL) {
@@ -1069,13 +1047,15 @@ _tme_posix_serial_new(struct tme_element *element,
 	tme_free(filename);
       }
     }
-  } else
+    return hand;
+  }
 #endif
-#ifdef TME_THREADS_DIRECTIO
-    hand = tme_thread_open(filename, flags | TME_FILE_NB);
-#else
   hand = tme_event_open(filename, flags | TME_FILE_NB, 1024);
-#endif
+  
+  if(hand != TME_INVALID_HANDLE)
+    tme_log(&element->tme_element_log_handle, 0, TME_OK,
+	    (&element->tme_element_log_handle,
+	     "using serial device %s", filename));
   return hand;
 }
 
@@ -1084,11 +1064,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
   struct tme_posix_serial *serial;
   const char *filename_in;
   const char *filename_out;
-#ifdef TME_THREADS_DIRECTIO
-  tme_thread_handle_t hand_in, hand_out;
-#else
   tme_event_t hand_in, hand_out;
-#endif
   int usage;
   int arg_i;
   int saved_errno;
@@ -1200,11 +1176,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
   
   if (hand_out == TME_INVALID_HANDLE) {
     saved_errno = errno;
-#ifdef TME_THREADS_DIRECTIO
-    tme_thread_close(hand_in);
-#else
     tme_event_close(hand_in);
-#endif
     tme_output_append_error(_output, "%s", filename_out);
     return (saved_errno);
   }

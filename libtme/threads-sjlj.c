@@ -793,7 +793,7 @@ tme_sjlj_event_wait_yield(struct tme_sjlj_event_set *es, const struct timeval *t
 
   /* lock the mutex: */
   if(mutex) tme_mutex_lock(mutex);
-  return event_wait(tme_sjlj_thread_active->tme_sjlj_thread_events->es, &timeout_out, out, outlen);
+  return event_wait(es->es, &timeout_out, out, outlen);
 }
 
 /* this exits a thread: */
@@ -888,6 +888,9 @@ tme_sjlj_yield(void)
       }
     }
     blocked = i;
+#ifndef WIN32
+    tme_sjlj_event_free(es);
+#endif
   }
 
   if(thread->tme_sjlj_thread_events) {

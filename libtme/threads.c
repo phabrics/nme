@@ -38,10 +38,6 @@
 static tme_threads_fn1 _tme_threads_run;
 static void *_tme_threads_arg;
 static int inited;
-#ifdef TME_THREADS_SJLJ
-/* the i/o events: */
-tme_event_set_t *tme_events;
-#endif
 #ifdef TME_THREADS_POSIX
 static pthread_rwlock_t tme_rwlock_start;
 pthread_rwlock_t tme_rwlock_suspere;
@@ -113,10 +109,6 @@ void tme_threads_run(void) {
     g_rw_lock_writer_unlock(&tme_rwlock_start);  
 #endif
   }
-#ifdef TME_THREADS_SJLJ
-  int rc = 1;
-  tme_events = tme_event_set_init(&rc, EVENT_METHOD_FAST);
-#endif
   _tme_thread_suspended();
   /* Run the main loop */
   if(_tme_threads_run)
@@ -465,27 +457,30 @@ void tme_win32_close(tme_event_t hand) {
 }
 
 #ifdef TME_THREADS_SJLJ
-
 tme_off_t tme_thread_seek (tme_thread_handle_t hand, tme_off_t off, int where) {
   tme_event_seek(hand->handle, &hand->reads, off, where);
   return tme_event_seek(hand->handle, &hand->writes, off, where);
 }
-
-static _tme_inline int
-tme_event_read (tme_event_t hand, struct buffer *buf, int len)
-{
-  return tme_finalize (hand->handle, &hand->reads, buf);
-}
-
-static _tme_inline int
-tme_event_write (tme_event_t hand, struct buffer *buf, int len)
-{
-  return tme_write_win32 (hand, buf);
-}
-#else
-#define tme_event_read tme_read
-#define tme_event_write tme_write
 #endif
+
+static _tme_inline int
+tme_event_read (tme_event_t hand, void *data, int len)
+{
+  return tme_finalize (hand->handle, &hand->reads, NULL);
+}
+
+static _tme_inline int
+tme_event_write (tme_event_t hand, void *data, int len)
+{
+  struct buffer buf;
+
+  CLEAR(buf);
+
+  buf.data = data;
+  buf.len = len;
+
+  return tme_write_win32 (hand, &buf);
+}
 
 #else // WIN32
 #define tme_event_read tme_read
@@ -508,12 +503,7 @@ tme_event_yield(tme_event_t hand, void *data, size_t len, unsigned int rwflags, 
 {
   int rc = 1;
   struct event_set_return esr;
-#ifdef WIN32
-  struct buffer buf;
-#endif
-#ifndef TME_THREADS_SJLJ
   tme_event_set_t *tme_events = tme_event_set_init(&rc, EVENT_METHOD_FAST);
-#endif
   
   tme_event_reset(tme_events);
   tme_event_ctl(tme_events, tme_event_handle(hand), rwflags, 0);
@@ -526,27 +516,25 @@ tme_event_yield(tme_event_t hand, void *data, size_t len, unsigned int rwflags, 
     }
     tme_read_queue (hand, 0);
   }
-  CLEAR(buf);
-  if (rwflags & EVENT_WRITE) {
-    buf.data = data;
-    buf.len = len;
-  }
-  data = &buf;
 #endif
 
   rc = tme_event_wait_yield(tme_events, NULL, &esr, 1, mutex);
-
+  tme_event_free(tme_events);
+  
   /* do the i/o: */
   if(esr.rwflags & EVENT_WRITE)
     rc = tme_event_write(hand, data, len);  
   if(esr.rwflags & EVENT_READ) {
     rc = tme_event_read(hand, data, len);
-    if(outbuf)
 #ifdef WIN32
-      if(hand->writes.buf_init.data)
-	*outbuf = buf.data;
+    if(hand->writes.buf_init.data)
+      if(outbuf)
+	*outbuf = hand->reads.buf.data;
       else
+	memcpy(data, hand->reads.buf.data, rc);
+    else
 #endif
+      if(outbuf)
 	*outbuf = data;
   }
   return rc;

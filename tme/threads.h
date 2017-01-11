@@ -76,7 +76,7 @@ typedef tme_int64_t tme_off_t;
 
 typedef struct tme_win32_handle *tme_event_t;
 
-#define TME_WIN32_HANDLE(hand) (*(HANDLE *)hand)
+#define TME_WIN32_HANDLE(hand) (*(HANDLE *)(hand))
 extern tme_event_t win32_stdin;
 extern tme_event_t win32_stdout;
 extern tme_event_t win32_stderr;
@@ -99,7 +99,6 @@ static _tme_inline ssize_t tme_write _TME_P((HANDLE hand, const void *buf, size_
 #define TME_SEEK_SET FILE_BEGIN
 #define TME_SEEK_CUR FILE_CURRENT
 #define TME_SEEK_END FILE_END
-tme_off_t tme_event_seek _TME_P((HANDLE hand, struct overlapped_io *io, tme_off_t off, int where));
 
 #ifdef TME_THREADS_SJLJ
 
