@@ -1050,7 +1050,7 @@ _tme_posix_serial_new(struct tme_element *element,
     return hand;
   }
 #endif
-  hand = tme_event_open(filename, flags | TME_FILE_NB, 1024);
+  hand = tme_event_open(filename, flags, 1024);
   
   if(hand != TME_INVALID_HANDLE)
     tme_log(&element->tme_element_log_handle, 0, TME_OK,
@@ -1160,7 +1160,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
   /* open the devices: */
   flags = (strcmp(filename_in, filename_out)) ? (TME_FILE_RO) : (TME_FILE_RW);
   hand_in = (strcmp(filename_in, "-")) ?
-    (_tme_posix_serial_new(element, filename_in, _output, flags)) :
+    (_tme_posix_serial_new(element, filename_in, _output, flags | TME_FILE_NB)) :
     (TME_STD_HANDLE(stdin));
 
   if (hand_in == TME_INVALID_HANDLE) {

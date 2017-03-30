@@ -128,7 +128,7 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #define TME_IP_ADDRS_BCAST (2)
 #define TME_IP_ADDRS_TOTAL (3)
 
-#define TME_DO_NFT defined(HAVE_LIBNFTNL_TABLE_H) && defined(TME_NAT_NFT)
+#define TME_DO_NFT defined(HAVE_LIBMNL_LIBMNL_H) && defined(HAVE_LIBNFTNL_TABLE_H) && defined(TME_NAT_NFT)
 #define TME_DO_NPF defined(HAVE_NPF_H) && defined(TME_NAT_NPF)
 #define TME_DO_PFV (defined(HAVE_NET_PFVAR_H) || defined(HAVE_NET_PF_PFVAR_H)) && defined(TME_NAT_PFV)
 #define TME_DO_IPF defined(HAVE_NETINET_IP_NAT_H) && defined(TME_NAT_IPF)
