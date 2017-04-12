@@ -33,7 +33,8 @@ BUILT_SOURCES =	$(noinst_SCRIPTS)
 EXTRA_DIST = $(noinst_SCRIPTS) \
 	$(noinst_SCRIPTS:.sh=.m4) \
 	float-auto.c \
-	bus-device-auto.c
+	bus-device-auto.c \
+	fb-xlat-auto.pl
 
 # default rule for regenerating the portable shell scripts from m4 descriptions
 $(noinst_SCRIPTS): %.sh: %.m4
@@ -44,8 +45,16 @@ float-auto.c bus-device-auto.c: %.c: %.sh
 	$(SHELL) $< > $@
 
 # target to make fb-xlat-auto.c:
+if USING_X
+fb-xlat-auto.c: %.c: %.sh %.in
+	cat $*.in | xargs $(SHELL) $< > $@
+
+fb-xlat-auto.in: %.in: %.pl
+	$(PERL) $< src $(TME_FB_XLAT_SRC) dst $(TME_FB_XLAT_DST) > $@
+else
 fb-xlat-auto.c: %.c: %.sh
-	$(SHELL) $< src @TME_FB_XLAT_SRC@ dst @TME_FB_XLAT_DST@ > $@
+	$(SHELL) $< src $(TME_FB_XLAT_SRC) dst $(TME_FB_XLAT_DST) > $@
+endif
 
 # fb.lo depends on fb-xlat-auto.c:
 fb.lo: fb-xlat-auto.c

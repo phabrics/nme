@@ -1,10 +1,9 @@
-#! /usr/local/bin/perl -w
+#! /usr/bin/env perl
 
 # $Id: $
 
-# gtk-keymap-make.pl - compiles the complete decoding of all legal
-# first-instruction-word values into the opcode map used by the C
-# decoder:
+# gtk-keymap-make.pl - Creates a mapping of host keyboard codes to valid
+# keysyms for the guest
 
 #
 # Copyright (c) 2015 Ruben Agin
@@ -36,9 +35,17 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 #
+use strict;
+use warnings;
 use X11::Protocol;
 
-$x = X11::Protocol->new();
+my $x = X11::Protocol->new();
+my @keycode_to_modifier;
+my $keycode;
+my $x_modifier;
+my $keymap_cnt;
+my $keycode_i;
+my $keysym_i;
 
 print "static int keycode_min = ".$x->min_keycode.";\n";
 print "static int keycode_max = ".$x->max_keycode.";\n";
@@ -47,10 +54,10 @@ print "static int keycode_max = ".$x->max_keycode.";\n";
 for ($keycode = 0;
      $keycode <= $x->max_keycode;
      $keycode++) {
-    $keycode_to_modifier[$keycode] = 8;
+    push @keycode_to_modifier, 8;
 }
 
-@modifier_keymap = $x->GetModifierMapping;
+my @modifier_keymap = $x->GetModifierMapping;
 
 for ($x_modifier = 0;
      $x_modifier < 8;
@@ -68,15 +75,15 @@ for ($x_modifier = 0;
     }
 }
 
-@modifs = ("TME_KEYBOARD_MODIFIER_SHIFT",
-	   "TME_KEYBOARD_MODIFIER_LOCK",
-	   "TME_KEYBOARD_MODIFIER_CONTROL",
-	   "TME_KEYBOARD_MODIFIER_MOD1",
-	   "TME_KEYBOARD_MODIFIER_MOD2",
-	   "TME_KEYBOARD_MODIFIER_MOD3",
-	   "TME_KEYBOARD_MODIFIER_MOD4",
-	   "TME_KEYBOARD_MODIFIER_MOD5",
-	   "TME_KEYBOARD_MODIFIER_NONE");
+my @modifs = ("TME_KEYBOARD_MODIFIER_SHIFT",
+	      "TME_KEYBOARD_MODIFIER_LOCK",
+	      "TME_KEYBOARD_MODIFIER_CONTROL",
+	      "TME_KEYBOARD_MODIFIER_MOD1",
+	      "TME_KEYBOARD_MODIFIER_MOD2",
+	      "TME_KEYBOARD_MODIFIER_MOD3",
+	      "TME_KEYBOARD_MODIFIER_MOD4",
+	      "TME_KEYBOARD_MODIFIER_MOD5",
+	      "TME_KEYBOARD_MODIFIER_NONE");
 
 print "\nstatic int keycode_to_modifier[] = {\n";
 
@@ -91,10 +98,10 @@ for ($keycode = 0;
 }
 print "  ".$modifs[$keycode_to_modifier[$keycode]]."\n};\n";
 
-@keymap = $x->GetKeyboardMapping($x->min_keycode, $x->max_keycode - $x->min_keycode + 1);
+my @keymap = $x->GetKeyboardMapping($x->min_keycode, $x->max_keycode - $x->min_keycode + 1);
 $keymap_cnt = scalar @keymap;
 
-$keymap_width = scalar @{$keymap[0]};
+my $keymap_width = scalar @{$keymap[0]};
 print "\nstatic int keymap_width = ".$keymap_width.";\n";
 
 print "\nstatic guint keymap[] = {\n";

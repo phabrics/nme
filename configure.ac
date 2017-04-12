@@ -836,196 +836,11 @@ AC_MSG_RESULT($tme_nat_types)
 
 AC_SUBST(NATINC)
 
-dnl Checks for X11.
-AC_PATH_XTRA
-
-AM_CONDITIONAL([USING_X], [test "x${no_x}" = x])
-
 dnl Checks for GLIB.
 AM_PATH_GLIB_2_0([], have_glib=yes, have_glib=no)
 if test "x$have_glib" = xyes; then
   AC_DEFINE(HAVE_GLIB, [], [Define if you are compiling with GLIB.])
 fi
-
-dnl Checks for GTK.
-AM_PATH_GTK_3_0([], have_gtk=yes, have_gtk=no)
-if test "x$have_gtk" = xyes; then
-  TME_HOSTS="${TME_HOSTS} gtk"
-fi
-
-dnl Characterize any graphics displays and remember the areas of
-dnl the smallest and largest screens.
-TME_FB_XLAT_DST=
-area_smallest=0
-area_largest=0
-
-# if --with-tme-host-displays is given, characterize those given displays:
-AC_ARG_WITH(tme-host-displays,
-[  --with-tme-host-displays=DISPLAYS  support host displays with these display formats])
-for dst_key in ${with_tme_host_displays}; do
-
-  dnl Make brackets safe to use.
-  changequote(<<, >>)dnl
-
-   this_width=`echo ${dst_key} | sed -e 's/^\([0-9][0-9]*\)x\([0-9][0-9]*\)\(.*\)$/\1/'`
-  this_height=`echo ${dst_key} | sed -e 's/^\([0-9][0-9]*\)x\([0-9][0-9]*\)\(.*\)$/\2/'`
-      dst_key=`echo ${dst_key} | sed -e 's/^\([0-9][0-9]*\)x\([0-9][0-9]*\)\(.*\)$/\3/'`
-  this_area=`expr ${this_width} \* ${this_height}`
-
-  if test ${area_smallest} = 0 || test `expr ${this_area} \< ${area_smallest}` = 1; then
-    area_smallest=${this_area}
-  fi
-  if test `expr ${this_area} \> ${area_largest}` = 1; then
-    area_largest=${this_area}
-  fi
-  
-  # add in this destination display key:
-  if echo " ${TME_FB_XLAT_DST} " | grep " ${dst_key} " > /dev/null 2>&1; then :; else
-    TME_FB_XLAT_DST="${TME_FB_XLAT_DST} ${dst_key}"
-  fi
-
-  dnl Make brackets the quote characters again.
-  changequote([, ])dnl
-done
-
-# if DISPLAY is set and xdpyinfo appears to work, characterize this X display:
-if test "x${DISPLAY}" != x && xdpyinfo >/dev/null 2>&1; then
-  AC_MSG_CHECKING(characteristics of X display ${DISPLAY})
-
-  dnl Make brackets safe to use.
-  changequote(<<, >>)dnl
-
-  # get the format this display uses for bitmaps:
-  bitmap_info=`xdpyinfo | grep 'bitmap unit' | sed -e 's/bitmap unit, *bit order, *padding: *\(.*\)$/\1/'`
-  bitmap_order=`echo ${bitmap_info} | sed -e 's/\([0-9][0-9]*\), *\([LM]\)SBFirst, *\([0-9][0-9]*\).*/\2/'`
-    bitmap_pad=`echo ${bitmap_info} | sed -e 's/\([0-9][0-9]*\), *\([LM]\)SBFirst, *\([0-9][0-9]*\).*/\3/'`
-  bitmap_order=`echo ${bitmap_order} | tr A-Z a-z`
-
-  # get the format this display uses for images at its default depth.  we
-  # assume that the root window is at the default depth:
-  pixmap_order=`xdpyinfo | grep 'image byte order'`
-  pixmap_order=`echo ${pixmap_order} | sed -e 's/.*image byte order: *\([LM]\)SBFirst.*/\1/' | tr A-Z a-z`
-  pixmap_depth=`xwininfo -root | grep 'Depth:'`
-  pixmap_depth=`echo ${pixmap_depth} | sed -e 's/.*Depth: *\([0-9][0-9]*\).*/\1/'`
-  pixmap_infos=`xdpyinfo | grep bits_per_pixel | tr '\n' %`
-  save_IFS=$IFS
-  IFS=%
-  for pixmap_info in $pixmap_infos; do
-    IFS=$save_IFS
-    if test "x${pixmap_info}" = x; then continue; fi
-    this_pixmap_depth=`echo ${pixmap_info} | sed -e 's/.*depth \([0-9][0-9]*\), *bits_per_pixel \([0-9][0-9]*\), *scanline_pad \([0-9][0-9]*\).*/\1/'`
-     this_pixmap_bipp=`echo ${pixmap_info} | sed -e 's/.*depth \([0-9][0-9]*\), *bits_per_pixel \([0-9][0-9]*\), *scanline_pad \([0-9][0-9]*\).*/\2/'`
-      this_pixmap_pad=`echo ${pixmap_info} | sed -e 's/.*depth \([0-9][0-9]*\), *bits_per_pixel \([0-9][0-9]*\), *scanline_pad \([0-9][0-9]*\).*/\3/'`
-    if test "x${this_pixmap_depth}" = "x${pixmap_depth}"; then
-      pixmap_bipp=${this_pixmap_bipp}
-      pixmap_pad=${this_pixmap_pad}
-      break
-    fi
-  done
-  IFS=$save_IFS
-
-  # if this display's greatest depth is one, we use its
-  # bitmap format:
-  if test "x${pixmap_bipp}" = x; then
-    pixmap_bipp=1
-    pixmap_pad=${bitmap_pad}
-
-    # our translation functions can't handle the case when the bitmap
-    # bit order is different from the image byte order - doing so
-    # requires dealing with the bitmap unit size.  since this
-    # situation is rare, just bail:
-    if test ${bitmap_order} != ${pixmap_order}; then
-      changequote([, ])dnl
-      AC_MSG_WARN([the X display ${DISPLAY} is monochrome and needs bitmaps with a bit order that the generic code doesn't support])
-      changequote(<<, >>)dnl
-      pixmap_bipp=
-    fi
-  fi
-
-  # if this display seems usable:
-  if test "x${pixmap_bipp}" != x; then
-
-    # check the dimensions of all screens on this display:
-    dimensions=`xdpyinfo | grep dimensions | tr '\n' %`
-    save_IFS=$IFS
-    IFS=%
-    for dimension in $dimensions; do
-      IFS=$save_IFS
-      if test "x${dimension}" = x; then continue; fi
-       this_width=`echo ${dimension} | sed -e 's/.*dimensions: *\([0-9][0-9]*\)x\([0-9][0-9]*\).*/\1/'`
-      this_height=`echo ${dimension} | sed -e 's/.*dimensions: *\([0-9][0-9]*\)x\([0-9][0-9]*\).*/\2/'`
-      this_area=`expr ${this_width} \* ${this_height}`
-      if test ${area_smallest} = 0 || test `expr ${this_area} \< ${area_smallest}` = 1; then
-        area_smallest=${this_area}
-      fi
-      if test `expr ${this_area} \> ${area_largest}` = 1; then
-        area_largest=${this_area}
-      fi
-    done
-    IFS=$save_IFS
-
-    # assume an unknown set of masks and an unknown mapping type:
-    dst_masks=_r0x0_g0x0_b0x0
-    dst_map=
-    value_visual=", unknown visual"
-
-    # if the depth is greater than one:
-    if test "x${pixmap_depth}" != 1; then
-
-	# we assume that the root window uses the default visual:
-	visual=`xwininfo -root | grep 'Visual Class:' | sed -e 's/^  *Visual Class: *\([A-Za-z][A-Za-z]*\).*$/\1/'`
-
-	# get any primary masks for this visual:
-	case "x${visual}" in
-	xDirectColor | xTrueColor)
-	    dst_masks=`xdpyinfo | $EGREP '(visual id|class|blue masks):' | $EGREP -C1 $visual | grep 'blue masks' | head -1`
-	    dst_masks=`echo ${dst_masks} | sed -e 's/^.*blue masks:  *\(.*\)/\1/'`
-	    value_visual=", rgb masks ${dst_masks}"
-	    dst_masks=`echo ${dst_masks} | sed -e 's/^/_r/' -e 's/, /_g/' -e 's/, /_b/'`
-	    ;;
-	xStaticGray | xGrayScale | xStaticColor | xPseudoColor)	
-	    dst_masks=
-	    value_visual=", no subfields"
-	    ;;
-	*) ;;
-	esac
-
-	# get the mapping type for this visual:
-	case "x${visual}" in
-	xStaticGray | xStaticColor | xPseudoColor)
-	    dst_map="ml"
-	    ;;
-	xDirectColor)
-	    dst_map="mi"
-	    value_visual="${value_visual}, indexed"
-	    ;;
-	xGrayScale | xTrueColor)
-	    dst_map="ml"
-	    value_visual="${value_visual}, linear"
-	    ;;
-	*) ;;
-	esac
-    fi
-
-    dnl Make brackets the quote characters again.
-    changequote([, ])dnl
-
-    # finish the characterization:
-    if test "x${pixmap_bipp}" = "x${pixmap_depth}"; then
-      value=
-    else
-      value=" (${pixmap_bipp} bits per pixel)"
-    fi
-    AC_MSG_RESULT([${pixmap_depth}-bit${value} ${pixmap_order}sb-first images with ${pixmap_pad}-bit padding${value_visual}])
-    dst_key="d${pixmap_depth}b${pixmap_bipp}s0p${pixmap_pad}o${pixmap_order}${dst_map}${dst_masks}"
-    
-    # add in this destination display key:
-    if echo " ${TME_FB_XLAT_DST} " | grep " ${dst_key} " > /dev/null 2>&1; then :; else
-      TME_FB_XLAT_DST="${TME_FB_XLAT_DST} ${dst_key}"
-    fi
-  fi
-fi
-AC_SUBST(TME_FB_XLAT_DST)
 
 AC_MSG_CHECKING([for available threading models])
 
@@ -1173,47 +988,6 @@ for system in $systems; do
  	if echo " ${TME_FB_XLAT_SRC} " | grep " ${fb_xlat} " > /dev/null 2>&1; then :; else
 	    TME_FB_XLAT_SRC="${TME_FB_XLAT_SRC} ${fb_xlat}"
 	fi
-
-	dnl Make brackets safe to use.
-	changequote(<<, >>)dnl
-
-	# calculate the area of this frame buffer multiplied by 100:
-	 this_width=`echo ${fb_xlat} | sed -e 's/^\([0-9][0-9]*\)x\([0-9][0-9]*\)\(.*\)$/\1/'`
-	this_height=`echo ${fb_xlat} | sed -e 's/^\([0-9][0-9]*\)x\([0-9][0-9]*\)\(.*\)$/\2/'`
-	this_area=`expr ${this_width} \* ${this_height} \* 100`
-
-	dnl Make brackets the quote characters again.
-	changequote([, ])dnl
-
-	# if this frame buffer would consume at least 70 percent of
-	# the smallest destination screen, make an xlat function that
-	# scales this frame buffer down by two:
-	if test ${area_smallest} = 0; then
-	    percentage=100
-	else
-	    percentage=`expr ${this_area} / ${area_smallest}`
-	fi
-	if test `expr ${percentage} \> 70` = 1; then
-	    src_key="${fb_xlat}_h"
-	    if echo " ${TME_FB_XLAT_SRC} " | grep " ${src_key} " > /dev/null 2>&1; then :; else
-		TME_FB_XLAT_SRC="${TME_FB_XLAT_SRC} ${src_key}"
-	    fi
-	fi
-	  
-	# if this frame buffer would consume less than 30 percent of
-	# the largest destination screen, make an xlat function that
-	# scales this frame buffer up by two:
-	if test ${area_largest} = 0; then
-	    percentage=0
-	else
-	    percentage=`expr ${this_area} / ${area_largest}`
-	fi
-	if test `expr ${percentage} \< 30` = 1; then
-	    src_key="${fb_xlat}_d"
-	    if echo " ${TME_FB_XLAT_SRC} " | grep " ${src_key} " > /dev/null 2>&1; then :; else
-		TME_FB_XLAT_SRC="${TME_FB_XLAT_SRC} ${src_key}"
-	    fi
-	fi
     done
 done
 AC_SUBST(TME_MACHINE_SUBDIRS)
@@ -1223,6 +997,26 @@ AC_SUBST(TME_SERIAL_SUBDIRS)
 AC_SUBST(TME_SERIALS)
 AC_SUBST(TME_BUS_SUBDIRS)
 AC_SUBST(TME_FB_XLAT_SRC)
+
+dnl Checks for X11.
+AC_PATH_XTRA
+
+AM_CONDITIONAL([USING_X], [test "x${no_x}" = x])
+
+TME_FB_XLAT_DST=
+dnl Checks for GTK.
+AM_PATH_GTK_3_0([], have_gtk=yes, have_gtk=no)
+if test "x$have_gtk" = xyes; then
+  TME_HOSTS="${TME_HOSTS} gtk"
+  TME_FB_XLAT_DST=d24b32s0p32olml_r0xff0000_g0xff00_b0xff
+fi
+
+# if --with-tme-host-displays is given, characterize those given displays:
+AC_ARG_WITH(tme-host-displays,
+[  --with-tme-host-displays=DISPLAYS  support host displays with these display formats],
+[ TME_FB_XLAT_DST=$withval $TME_FB_XLAT_DST], [])
+
+AC_SUBST(TME_FB_XLAT_DST)
 
 dnl The list of host support is finished.
 AC_SUBST(TME_HOSTS)
