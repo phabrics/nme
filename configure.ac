@@ -1000,7 +1000,7 @@ AC_SUBST(TME_FB_XLAT_SRC)
 
 dnl Checks for X11.
 AC_PATH_XTRA
-
+AC_PERL_MODULE_VERSION(X11::Protocol 0.56, [], no_x=yes)
 AM_CONDITIONAL([USING_X], [test "x${no_x}" = x])
 
 TME_FB_XLAT_DST=
