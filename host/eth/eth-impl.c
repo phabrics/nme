@@ -916,8 +916,7 @@ int tme_eth_init(struct tme_element *element,
 		 tme_thread_handle_t hand,
 		 unsigned int sz, 
 		 void *data,
-		 unsigned char *addr,
-		 typeof(tme_eth_connections_new) eth_connections_new)
+		 unsigned char *addr)
 {
   struct tme_ethernet *eth;
   
@@ -943,10 +942,7 @@ int tme_eth_init(struct tme_element *element,
 
   /* fill the element: */
   element->tme_element_private = eth;
-  element->tme_element_connections_new =
-    (eth_connections_new) ?
-    (eth_connections_new) :
-    (tme_eth_connections_new);
+  element->tme_element_connections_new = tme_eth_connections_new;
 
   return (TME_OK);
 }

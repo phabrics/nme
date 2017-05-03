@@ -796,7 +796,7 @@ found_BPFVERSION
 [TME_HOSTS="${TME_HOSTS} bsd"])
 
 if test "x${TME_HOSTS}" != x; then
-   TME_HOSTS="eth ${TME_HOSTS}"
+   TME_HOSTS="display eth ${TME_HOSTS}"
 fi
 
 AC_MSG_RESULT($TME_HOSTS)
@@ -1582,6 +1582,7 @@ AC_CONFIG_FILES([Makefile
           host/eth/Makefile
           host/bsd/Makefile
           host/tun/Makefile
+          host/display/Makefile
           host/gtk/Makefile
           bus/Makefile
           bus/multibus/Makefile

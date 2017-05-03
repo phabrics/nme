@@ -50,7 +50,7 @@ static _tme_inline void _tme_gtk_main_iter(void) {
 int
 _tme_gtk_screen_update(void *disp)
 {
-  struct tme_gtk_display *display;
+  struct tme_display *display;
   struct tme_gtk_screen *screen;
   struct tme_fb_connection *conn_fb;
   struct tme_fb_connection *conn_fb_other;
@@ -63,20 +63,20 @@ _tme_gtk_screen_update(void *disp)
 
   _tme_threads_main_iter(_tme_gtk_main_iter);
 
-  display = (struct tme_gtk_display *)disp;
+  display = (struct tme_display *)disp;
   
   _tme_thread_resumed();
 
   /* lock the mutex: */
-  tme_mutex_lock(&display->tme_gtk_display_mutex);
+  tme_mutex_lock(&display->tme_display_mutex);
 
   /* loop over all screens: */
-  for (screen = display->tme_gtk_display_screens;
+  for (screen = display->tme_display_screens;
        screen != NULL;
-       screen = screen->tme_gtk_screen_next) {
+       screen = screen->screen.tme_screen_next) {
 
     /* skip this screen if it's unconnected: */
-    if ((conn_fb = screen->tme_gtk_screen_fb) == NULL) {
+    if ((conn_fb = screen->screen.tme_screen_fb) == NULL) {
       continue;
     }
 
@@ -102,11 +102,11 @@ _tme_gtk_screen_update(void *disp)
     }
 
     changed = FALSE;
-    if (screen->tme_gtk_screen_fb_xlat) {
+    if (screen->screen.tme_screen_fb_xlat) {
       cairo_surface_flush(screen->tme_gtk_screen_surface);
 
       /* translate this framebuffer's contents: */
-      changed = (*screen->tme_gtk_screen_fb_xlat)(conn_fb_other, conn_fb);
+      changed = (*screen->screen.tme_screen_fb_xlat)(conn_fb_other, conn_fb);
     } 
 
     /* if those contents changed, redraw the widget: */
@@ -126,7 +126,7 @@ _tme_gtk_screen_update(void *disp)
   }
 
   /* unlock the mutex: */
-  tme_mutex_unlock(&display->tme_gtk_display_mutex);
+  tme_mutex_unlock(&display->tme_display_mutex);
 
   _tme_thread_suspended();
   return (TME_OK);
@@ -134,7 +134,7 @@ _tme_gtk_screen_update(void *disp)
 
 /* the (default) GTK screens update thread: */
 _tme_thret
-_tme_gtk_screen_th_update(struct tme_gtk_display *display)
+_tme_gtk_screen_th_update(struct tme_display *display)
 {
   /* loop forever: */
   for (;;) {
@@ -172,9 +172,9 @@ _tme_gtk_screen_xlat_set(const struct tme_fb_connection *conn_fb,
   struct tme_fb_xlat fb_xlat_q;
   const struct tme_fb_xlat *fb_xlat_a;
   int scale;
-  struct tme_gtk_display *display;
+  struct tme_display *display;
   
-  scale = screen->tme_gtk_screen_fb_scale;
+  scale = screen->screen.tme_screen_fb_scale;
   if (scale < 0) scale = -scale;
   conn_fb_other = (const struct tme_fb_connection *) conn_fb->tme_fb_connection.tme_connection_other;
   
@@ -210,24 +210,24 @@ _tme_gtk_screen_xlat_set(const struct tme_fb_connection *conn_fb,
   /* ask the framebuffer translation question: */
   fb_xlat_a = tme_fb_xlat_best(&fb_xlat_q);
 
-  display = screen->tme_gtk_screen_display;
+  display = screen->screen.tme_screen_display;
 
   /* if this translation isn't optimal, log a note: */
   if (!tme_fb_xlat_is_optimal(fb_xlat_a)) {
-    tme_log(&display->tme_gtk_display_element->tme_element_log_handle, 0, TME_OK,
-	    (&display->tme_gtk_display_element->tme_element_log_handle,
+    tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
+	    (&display->tme_display_element->tme_element_log_handle,
 	     _("no optimal framebuffer translation function available")));
   }
 
   /* save the translation function: */
-  screen->tme_gtk_screen_fb_xlat = fb_xlat_a->tme_fb_xlat_func;
+  screen->screen.tme_screen_fb_xlat = fb_xlat_a->tme_fb_xlat_func;
 }
 
 /* this is called for a mode change: */
 int
 _tme_gtk_screen_mode_change(struct tme_fb_connection *conn_fb)
 {
-  struct tme_gtk_display *display;
+  struct tme_display *display;
   struct tme_gtk_screen *screen;
   struct tme_fb_connection *conn_fb_other;
   unsigned long fb_area, avail_area, percentage;
@@ -248,17 +248,17 @@ _tme_gtk_screen_mode_change(struct tme_fb_connection *conn_fb)
   conn_fb_other = (struct tme_fb_connection *) conn_fb->tme_fb_connection.tme_connection_other;
 
   /* lock our mutex: */
-  tme_mutex_lock(&display->tme_gtk_display_mutex);
+  tme_mutex_lock(&display->tme_display_mutex);
 
   /* find the screen that this framebuffer connection references: */
-  for (screen = display->tme_gtk_display_screens;
+  for (screen = display->tme_display_screens;
        (screen != NULL
-	&& screen->tme_gtk_screen_fb != conn_fb);
-       screen = screen->tme_gtk_screen_next);
+	&& screen->screen.tme_screen_fb != conn_fb);
+       screen = screen->screen.tme_screen_next);
   assert (screen != NULL);
 
   /* if the user hasn't specified a scaling, pick one: */
-  scale = screen->tme_gtk_screen_fb_scale;
+  scale = screen->screen.tme_screen_fb_scale;
   if (scale < 0) {
 
     /* calulate the areas, in square pixels, of the emulated
@@ -284,7 +284,7 @@ _tme_gtk_screen_mode_change(struct tme_fb_connection *conn_fb)
       scale = TME_FB_XLAT_SCALE_NONE;
     }
 
-    screen->tme_gtk_screen_fb_scale = -scale;
+    screen->screen.tme_screen_fb_scale = -scale;
   }
 
   /* get the required dimensions for the Gtkframe: */
@@ -389,7 +389,7 @@ _tme_gtk_screen_mode_change(struct tme_fb_connection *conn_fb)
   screen->tme_gtk_screen_full_redraw = TRUE;
 
   /* unlock our mutex: */
-  tme_mutex_unlock(&display->tme_gtk_display_mutex);
+  tme_mutex_unlock(&display->tme_display_mutex);
 
   /* done: */
   return (TME_OK);
@@ -401,7 +401,7 @@ _tme_gtk_screen_scale_set(GtkWidget *widget,
 			  struct tme_gtk_screen *screen,
 			  int scale_new)
 {
-  struct tme_gtk_display *display;
+  struct tme_display *display;
   int scale_old;
   int rc;
 
@@ -413,25 +413,25 @@ _tme_gtk_screen_scale_set(GtkWidget *widget,
   _tme_thread_resumed();
 
   /* get the display: */
-  display = screen->tme_gtk_screen_display;
+  display = screen->screen.tme_screen_display;
 
   /* lock our mutex: */
-  tme_mutex_lock(&display->tme_gtk_display_mutex);
+  tme_mutex_lock(&display->tme_display_mutex);
 
   /* get the old scaling and set the new scaling: */
-  scale_old = screen->tme_gtk_screen_fb_scale;
+  scale_old = screen->screen.tme_screen_fb_scale;
   if (scale_old < 0
       && scale_new < 0) {
     scale_new = scale_old;
   }
-  screen->tme_gtk_screen_fb_scale = scale_new;
+  screen->screen.tme_screen_fb_scale = scale_new;
 
   /* unlock our mutex: */
-  tme_mutex_unlock(&display->tme_gtk_display_mutex);
+  tme_mutex_unlock(&display->tme_display_mutex);
 
   /* call the mode change function if the scaling has changed: */
   if (scale_new != scale_old) {
-    rc = _tme_gtk_screen_mode_change(screen->tme_gtk_screen_fb);
+    rc = _tme_gtk_screen_mode_change(screen->screen.tme_screen_fb);
     assert (rc == TME_OK);
   }
   _tme_thread_suspended();
@@ -480,26 +480,26 @@ _tme_gtk_screen_scale_double(GtkWidget *widget,
 /* this creates the Screen scaling submenu: */
 static GCallback
 _tme_gtk_screen_submenu_scaling(void *_screen,
-				struct tme_gtk_display_menu_item *menu_item)
+				struct tme_display_menu_item *menu_item)
 {
   struct tme_gtk_screen *screen;
 
   screen = (struct tme_gtk_screen *) _screen;
-  menu_item->tme_gtk_display_menu_item_widget = NULL;
-  switch (menu_item->tme_gtk_display_menu_item_which) {
+  menu_item->tme_display_menu_item_widget = NULL;
+  switch (menu_item->tme_display_menu_item_which) {
   case 0:
-    menu_item->tme_gtk_display_menu_item_string = _("Default");
-    menu_item->tme_gtk_display_menu_item_widget = &screen->tme_gtk_screen_scale_default;
+    menu_item->tme_display_menu_item_string = _("Default");
+    menu_item->tme_display_menu_item_widget = &screen->tme_gtk_screen_scale_default;
     return (G_CALLBACK(_tme_gtk_screen_scale_default));
   case 1:
-    menu_item->tme_gtk_display_menu_item_string = _("Half");
-    menu_item->tme_gtk_display_menu_item_widget = &screen->tme_gtk_screen_scale_half;
+    menu_item->tme_display_menu_item_string = _("Half");
+    menu_item->tme_display_menu_item_widget = &screen->tme_gtk_screen_scale_half;
     return (G_CALLBACK(_tme_gtk_screen_scale_half));
   case 2:
-    menu_item->tme_gtk_display_menu_item_string = _("Full");
+    menu_item->tme_display_menu_item_string = _("Full");
     return (G_CALLBACK(_tme_gtk_screen_scale_none));
   case 3:
-    menu_item->tme_gtk_display_menu_item_string = _("Double");
+    menu_item->tme_display_menu_item_string = _("Double");
     return (G_CALLBACK(_tme_gtk_screen_scale_double));
   default:
     break;
@@ -572,7 +572,7 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
 			  gpointer          _screen)
 {
   struct tme_gtk_screen *screen;
-  struct tme_gtk_display *display;
+  struct tme_display *display;
   struct tme_fb_connection *conn_fb;
 
   _tme_thread_resumed();
@@ -580,16 +580,16 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
   screen = (struct tme_gtk_screen *) _screen;
 
   /* get the display: */
-  display = screen->tme_gtk_screen_display;
+  display = screen->screen.tme_screen_display;
 
   /* lock our mutex: */
-  tme_mutex_lock(&display->tme_gtk_display_mutex);
+  tme_mutex_lock(&display->tme_display_mutex);
 
   if(screen->tme_gtk_screen_surface == NULL) {
     _tme_gtk_screen_init(widget, screen);
 
     /* unlock our mutex: */
-    tme_mutex_unlock(&display->tme_gtk_display_mutex);
+    tme_mutex_unlock(&display->tme_display_mutex);
     
     _tme_thread_suspended();
     return TRUE;
@@ -603,7 +603,7 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
 					   gtk_widget_get_allocated_width(screen->tme_gtk_screen_gtkframe),
 					   gtk_widget_get_allocated_height(screen->tme_gtk_screen_gtkframe));
 
-  conn_fb = screen->tme_gtk_screen_fb;
+  conn_fb = screen->screen.tme_screen_fb;
 
   /* update our framebuffer connection: */
   conn_fb->tme_fb_connection_width = cairo_image_surface_get_width(screen->tme_gtk_screen_surface);
@@ -621,7 +621,7 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
   screen->tme_gtk_screen_full_redraw = TRUE;
 
   /* unlock our mutex: */
-  tme_mutex_unlock(&display->tme_gtk_display_mutex);
+  tme_mutex_unlock(&display->tme_display_mutex);
 
   _tme_thread_suspended();
 
@@ -649,7 +649,7 @@ _tme_gtk_screen_draw(GtkWidget *widget,
 
 /* this makes a new screen: */
 struct tme_gtk_screen *
-_tme_gtk_screen_new(struct tme_gtk_display *display)
+_tme_gtk_screen_new(struct tme_display *display)
 {
   struct tme_gtk_screen *screen, **_prev;
   GdkDisplay *gdkdisplay;
@@ -662,25 +662,28 @@ _tme_gtk_screen_new(struct tme_gtk_display *display)
 #define BLANK_SIDE (16 * 8)
 
   /* create the new screen and link it in: */
-  for (_prev = &display->tme_gtk_display_screens;
+  for (_prev = &display->tme_display_screens;
        (screen = *_prev) != NULL;
-       _prev = &screen->tme_gtk_screen_next);
+       _prev = &screen->screen.tme_screen_next);
   screen = *_prev = tme_new0(struct tme_gtk_screen, 1);
 
   /* the backpointer to the display: */
-  screen->tme_gtk_screen_display = display;
+  screen->screen.tme_screen_display = display;
   
   gdkdisplay = gdk_display_get_default();
+
+  display->tme_display_mouse_cursor
+    = gdk_cursor_new_for_display(gdkdisplay, GDK_BLANK_CURSOR);
 
   devices = gdk_display_get_device_manager(gdkdisplay);
 
   screen->tme_gtk_screen_pointer = gdk_device_manager_get_client_pointer(devices);
 
   /* there is no framebuffer connection yet: */
-  screen->tme_gtk_screen_fb = NULL;
+  screen->screen.tme_screen_fb = NULL;
 
   /* the user hasn't specified a scaling yet: */
-  screen->tme_gtk_screen_fb_scale
+  screen->screen.tme_screen_fb_scale
     = -TME_FB_XLAT_SCALE_NONE;
 
   /* we have no colorset: */
@@ -714,7 +717,7 @@ _tme_gtk_screen_new(struct tme_gtk_display *display)
 
   /* create the Screen scaling submenu: */
   submenu
-    = _tme_gtk_display_menu_radio(screen,
+    = _tme_display_menu_radio(screen,
 				  _tme_gtk_screen_submenu_scaling);
 
   /* create the Screen scaling submenu item: */
@@ -751,7 +754,7 @@ _tme_gtk_screen_new(struct tme_gtk_display *display)
   gtk_widget_show_all(screen->tme_gtk_screen_window);
 
   /* there is no translation function: */
-  screen->tme_gtk_screen_fb_xlat = NULL;
+  screen->screen.tme_screen_fb_xlat = NULL;
 
   /* attach the mouse to this screen: */
   _tme_gtk_mouse_attach(screen);
@@ -774,14 +777,14 @@ static int
 _tme_gtk_screen_connection_make(struct tme_connection *conn,
 				unsigned int state)
 {
-  struct tme_gtk_display *display;
+  struct tme_display *display;
   struct tme_gtk_screen *screen;
   struct tme_fb_connection *conn_fb;
   struct tme_fb_connection *conn_fb_other;
   char title[sizeof(PACKAGE_STRING) + 16];
 
   /* recover our data structures: */
-  display = (struct tme_gtk_display *) conn->tme_connection_element->tme_element_private;
+  display = (struct tme_display *) conn->tme_connection_element->tme_element_private;
   conn_fb = (struct tme_fb_connection *) conn;
 
   /* both sides must be framebuffer connections: */
@@ -796,11 +799,11 @@ _tme_gtk_screen_connection_make(struct tme_connection *conn,
   if (state == TME_CONNECTION_FULL) {
 
     /* lock our mutex: */
-    //tme_mutex_lock(&display->tme_gtk_display_mutex);
+    //tme_mutex_lock(&display->tme_display_mutex);
 
     /* if our initial screen is already connected, make a new screen: */
-    screen = display->tme_gtk_display_screens;
-    if (screen->tme_gtk_screen_fb != NULL) {
+    screen = display->tme_display_screens;
+    if (screen->screen.tme_screen_fb != NULL) {
       screen = _tme_gtk_screen_new(display);
     }
 
@@ -808,10 +811,10 @@ _tme_gtk_screen_connection_make(struct tme_connection *conn,
     gtk_window_set_title(GTK_WINDOW(screen->tme_gtk_screen_window), title);
 
     /* save our connection: */
-    screen->tme_gtk_screen_fb = conn_fb;
+    screen->screen.tme_screen_fb = conn_fb;
 
     /* unlock our mutex: */
-    //tme_mutex_unlock(&display->tme_gtk_display_mutex);
+    //tme_mutex_unlock(&display->tme_display_mutex);
 
     /* call our mode change function: */
     _tme_gtk_screen_mode_change(conn_fb);
@@ -822,7 +825,7 @@ _tme_gtk_screen_connection_make(struct tme_connection *conn,
 
 /* this makes a new connection side for a GTK screen: */
 int
-_tme_gtk_screen_connections_new(struct tme_gtk_display *display, 
+_tme_gtk_screen_connections_new(struct tme_display *display, 
 				struct tme_connection **_conns)
 {
   struct tme_fb_connection *conn_fb;

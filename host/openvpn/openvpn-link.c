@@ -181,7 +181,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,socket_link) {
 		    TME_INVALID_HANDLE,
 		    sz,
 		    data,
-		    NULL,
 		    NULL);
   
   if(rc == TME_OK) {

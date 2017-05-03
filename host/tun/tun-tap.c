@@ -1282,8 +1282,9 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
   close(dummy_fd);
 #endif // TME_DO_APF
 
-  return tme_eth_init(element, tap_fd, 4096, NULL, hwaddr, _tme_tun_tap_connections_new);
-
+  rc = tme_eth_init(element, tap_fd, 4096, NULL, hwaddr);
+  element->tme_element_connections_new = _tme_tun_tap_connections_new;
+  return rc;
 #undef TAPINET
 #undef TAPNETMASK
 #undef TAPBCAST

@@ -33,53 +33,24 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _HOST_GTK_GTK_DISPLAY_H
-#define _HOST_GTK_GTK_DISPLAY_H
+#ifndef _HOST_GTK_DISPLAY_H
+#define _HOST_GTK_DISPLAY_H
 
-#include <tme/common.h>
 _TME_RCSID("$Id: gtk-display.h,v 1.10 2009/08/28 01:29:47 fredette Exp $");
 
 /* includes: */
-#include <tme/generic/fb.h>
-#include <tme/generic/keyboard.h>
-#include <tme/generic/mouse.h>
-#include <tme/threads.h>
-#include <tme/hash.h>
-#ifndef G_ENABLE_DEBUG
-#define G_ENABLE_DEBUG (0)
-#endif /* !G_ENABLE_DEBUG */
-#include <gtk/gtk.h>
+#include "display.h"
 
 /* macros: */
 
-/* the callout flags: */
-#define TME_GTK_DISPLAY_CALLOUT_CHECK		(0)
-#define TME_GTK_DISPLAY_CALLOUT_RUNNING		TME_BIT(0)
-#define TME_GTK_DISPLAY_CALLOUTS_MASK		(-2)
-#define  TME_GTK_DISPLAY_CALLOUT_KEYBOARD_CTRL	TME_BIT(1)
-#define  TME_GTK_DISPLAY_CALLOUT_MOUSE_CTRL	TME_BIT(2)
-
 /* types: */
-
-struct tme_gtk_display;
 
 /* a screen: */
 struct tme_gtk_screen {
 
-  /* the next screen: */
-  struct tme_gtk_screen *tme_gtk_screen_next;
-
-  /* a backpointer to the display: */
-  struct tme_gtk_display *tme_gtk_screen_display;
-
-  /* the framebuffer connection.  unlike many other elements, this is
-     *our* side of the framebuffer connection, not the peer's side: */
-  struct tme_fb_connection *tme_gtk_screen_fb;
-
-  /* the current scaling.  if this is < 0, the user has not forced a
-     given scaling yet: */
-  int tme_gtk_screen_fb_scale;
-
+  /* the generic screen structure */
+  struct tme_screen screen;
+  
   /* any colorset signature: */
   tme_uint32_t tme_gtk_screen_colorset;
 
@@ -97,10 +68,6 @@ struct tme_gtk_screen {
   GtkWidget *tme_gtk_screen_gtkframe;
   cairo_surface_t *tme_gtk_screen_surface;
   GdkDevice *tme_gtk_screen_pointer;
-
-  /* the translation function: */
-  int (*tme_gtk_screen_fb_xlat) _TME_P((struct tme_fb_connection *, 
-					struct tme_fb_connection *));
 
   /* the mouse on label: */
   GtkWidget *tme_gtk_screen_mouse_label;
@@ -129,103 +96,28 @@ struct tme_gtk_screen {
   int tme_gtk_screen_full_redraw;
 };
 
-/* a GTK bad keysym: */
-struct tme_gtk_keysym_bad {
-
-  /* these are kept on a singly linked list: */
-  struct tme_gtk_keysym_bad *tme_gtk_keysym_bad_next;
-
-  /* the bad keysym string: */
-  char *tme_gtk_keysym_bad_string;
-
-  /* the flags and context used in the lookup: */
-  unsigned int tme_keysym_bad_flags;
-  unsigned int tme_gtk_keysym_bad_context_length;
-  tme_uint8_t *tme_gtk_keysym_bad_context;
-};
-
-/* a display: */
-struct tme_gtk_display {
-
-  /* backpointer to our element: */
-  struct tme_element *tme_gtk_display_element;
-
-  /* our mutex: */
-  tme_mutex_t tme_gtk_display_mutex;
-
-  /* our thread: */
-  tme_threadid_t tme_gtk_display_thread;
-
-  /* our keyboard connection: */
-  struct tme_keyboard_connection *tme_gtk_display_keyboard_connection;
-
-  /* our keyboard buffer: */
-  struct tme_keyboard_buffer *tme_gtk_display_keyboard_buffer;
-
-  /* our keysyms hash: */
-  tme_hash_t tme_gtk_display_keyboard_keysyms;
-
-  /* the bad keysym records: */
-  struct tme_gtk_keysym_bad *tme_gtk_display_keyboard_keysyms_bad;
-
-  /* our keysym to keycode hash: */
-  tme_hash_t tme_gtk_display_keyboard_keysym_to_keycode;
-
-  /* the next keysym to allocate for an unknown keysym string: */
-  guint tme_gtk_display_keyboard_keysym_alloc_next;
-
-  /* our mouse connection: */
-  struct tme_mouse_connection *tme_gtk_display_mouse_connection;
-
-  /* our mouse buffer: */
-  struct tme_mouse_buffer *tme_gtk_display_mouse_buffer;
-
-  /* our mouse cursor: */
-  GdkCursor *tme_gtk_display_mouse_cursor;
-
-  /* our screens: */
-  struct tme_gtk_screen *tme_gtk_display_screens;
-
-  /* the callout flags: */
-  unsigned int tme_gtk_display_callout_flags;
-
-};
-
 /* a menu item: */
-struct tme_gtk_display_menu_item {
+struct tme_display_menu_item {
 
   /* which menu item this is: */
-  unsigned int tme_gtk_display_menu_item_which;
+  unsigned int tme_display_menu_item_which;
 
   /* where to save the menu item widget: */
-  GtkWidget **tme_gtk_display_menu_item_widget;
+  GtkWidget **tme_display_menu_item_widget;
 
   /* the string for the menu item label: */
-  const char *tme_gtk_display_menu_item_string;
+  const char *tme_display_menu_item_string;
 };
 
 /* this generates menu items: */
-typedef GCallback (*tme_gtk_display_menu_items_t) _TME_P((void *, struct tme_gtk_display_menu_item *));
+typedef GCallback (*tme_display_menu_items_t) _TME_P((void *, struct tme_display_menu_item *));
 
 /* prototypes: */
-struct tme_gtk_screen *_tme_gtk_screen_new _TME_P((struct tme_gtk_display *));
-int _tme_gtk_screen_connections_new _TME_P((struct tme_gtk_display *, 
-					    struct tme_connection **));
-void _tme_gtk_keyboard_new _TME_P((struct tme_gtk_display *));
 void _tme_gtk_keyboard_attach _TME_P((struct tme_gtk_screen *));
-int _tme_gtk_keyboard_connections_new _TME_P((struct tme_gtk_display *,
-					      struct tme_connection **));
-void _tme_gtk_mouse_new _TME_P((struct tme_gtk_display *));
-void _tme_gtk_mouse_mode_off _TME_P((struct tme_gtk_screen *, guint32));
 void _tme_gtk_mouse_attach _TME_P((struct tme_gtk_screen *));
-int _tme_gtk_mouse_connections_new _TME_P((struct tme_gtk_display *,
-					   struct tme_connection **));
-int _tme_gtk_screen_update _TME_P((void *disp));
-_tme_thret _tme_gtk_screen_th_update _TME_P((struct tme_gtk_display *));
-void _tme_gtk_display_callout _TME_P((struct tme_gtk_display *,
-				      int));
-gint _tme_gtk_display_enter_focus _TME_P((GtkWidget *, GdkEvent *, gpointer));
-GtkWidget *_tme_gtk_display_menu_radio _TME_P((void *, tme_gtk_display_menu_items_t));
+int _tme_gtk_screen_update _TME_P((void *));
+gint _tme_display_enter_focus _TME_P((GtkWidget *, GdkEvent *, gpointer));
+GtkWidget *_tme_display_menu_radio _TME_P((void *, tme_display_menu_items_t));
 
-#endif /* _HOST_GTK_GTK_DISPLAY_H */
+#endif /* _HOST_GTK_DISPLAY_H */
 

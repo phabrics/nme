@@ -209,7 +209,6 @@ int tme_eth_init _TME_P((struct tme_element *element,
 			 tme_thread_handle_t hand,
 			 unsigned int sz, 
 			 void *data,
-			 unsigned char *addr,
-			 typeof(tme_eth_connections_new) eth_connections_new));
+			 unsigned char *addr));
 
 #endif /* !_HOST_ETH_IMPL_H */

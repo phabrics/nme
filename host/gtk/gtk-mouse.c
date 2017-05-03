@@ -72,7 +72,7 @@ _tme_gtk_mouse_mouse_event(GtkWidget *widget,
 			   GdkEvent *gdk_event_raw,
 			   struct tme_gtk_screen *screen)
 {
-  struct tme_gtk_display *display;
+  struct tme_display *display;
   struct tme_mouse_event tme_event;
   gint x;
   gint y;
@@ -89,10 +89,10 @@ _tme_gtk_mouse_mouse_event(GtkWidget *widget,
     = TME_MOUSE_UNITS_UNKNOWN;
 
   /* recover our data structure: */
-  display = screen->tme_gtk_screen_display;
+  display = screen->screen.tme_screen_display;
 
   /* lock the mutex: */
-  tme_mutex_lock(&display->tme_gtk_display_mutex);
+  tme_mutex_lock(&display->tme_display_mutex);
 
   /* if this is motion: */
   if (gdk_event_raw->type == GDK_MOTION_NOTIFY) {
@@ -118,7 +118,7 @@ _tme_gtk_mouse_mouse_event(GtkWidget *widget,
 	&& y == screen->tme_gtk_screen_mouse_warp_y) {
       
       /* unlock the mutex: */
-      tme_mutex_unlock(&display->tme_gtk_display_mutex);
+      tme_mutex_unlock(&display->tme_display_mutex);
 
       _tme_thread_suspended();
 
@@ -138,7 +138,7 @@ _tme_gtk_mouse_mouse_event(GtkWidget *widget,
        press and release events are always generated also: */
       
     /* unlock the mutex: */
-    tme_mutex_unlock(&display->tme_gtk_display_mutex);
+    tme_mutex_unlock(&display->tme_display_mutex);
 
     _tme_thread_suspended();
 
@@ -195,26 +195,26 @@ _tme_gtk_mouse_mouse_event(GtkWidget *widget,
   
   /* remember if the mouse buffer was empty: */
   was_empty
-    = tme_mouse_buffer_is_empty(display->tme_gtk_display_mouse_buffer);
+    = tme_mouse_buffer_is_empty(display->tme_display_mouse_buffer);
 
   /* add this tme event to the mouse buffer: */
   _tme_gtk_mouse_debug(&tme_event);
-  rc = tme_mouse_buffer_copyin(display->tme_gtk_display_mouse_buffer,
+  rc = tme_mouse_buffer_copyin(display->tme_display_mouse_buffer,
 			       &tme_event);
   assert (rc == TME_OK);
 
   /* if the mouse buffer was empty and now it isn't,
      call out the mouse controls: */
   if (was_empty
-      && !tme_mouse_buffer_is_empty(display->tme_gtk_display_mouse_buffer)) {
-    new_callouts |= TME_GTK_DISPLAY_CALLOUT_MOUSE_CTRL;
+      && !tme_mouse_buffer_is_empty(display->tme_display_mouse_buffer)) {
+    new_callouts |= TME_DISPLAY_CALLOUT_MOUSE_CTRL;
   }
 
   /* run any callouts: */
-  _tme_gtk_display_callout(display, new_callouts);
+  _tme_display_callout(display, new_callouts);
 
   /* unlock the mutex: */
-  tme_mutex_unlock(&display->tme_gtk_display_mutex);
+  tme_mutex_unlock(&display->tme_display_mutex);
 
   _tme_thread_suspended();
 
@@ -229,7 +229,7 @@ _tme_gtk_mouse_ebox_event(GtkWidget *widget,
 			  GdkEvent *gdk_event_raw,
 			  struct tme_gtk_screen *screen)
 {
-  struct tme_gtk_display *display;
+  struct tme_display *display;
   int rc;
   char *status;
   GdkWindow *window;
@@ -249,10 +249,10 @@ _tme_gtk_mouse_ebox_event(GtkWidget *widget,
   _tme_thread_resumed();
 
   /* recover our data structure: */
-  display = screen->tme_gtk_screen_display;
+  display = screen->screen.tme_screen_display;
 
   /* lock the mutex: */
-  tme_mutex_lock(&display->tme_gtk_display_mutex);
+  tme_mutex_lock(&display->tme_display_mutex);
 
   /* the mouse must not be on already: */
   assert (screen->tme_gtk_screen_mouse_keyval
@@ -309,7 +309,7 @@ _tme_gtk_mouse_ebox_event(GtkWidget *widget,
 		      GDK_POINTER_MOTION_MASK
 		      | GDK_BUTTON_PRESS_MASK
 		      | GDK_BUTTON_RELEASE_MASK,
-		      display->tme_gtk_display_mouse_cursor,
+		      display->tme_display_mouse_cursor,
 		      gdk_event_raw->key.time);
   assert (rc == 0);
   
@@ -318,7 +318,7 @@ _tme_gtk_mouse_ebox_event(GtkWidget *widget,
     = gdk_event_raw->key.keyval;
 
   /* unlock the mutex: */
-  tme_mutex_unlock(&display->tme_gtk_display_mutex);
+  tme_mutex_unlock(&display->tme_display_mutex);
 
   _tme_thread_suspended();
 
@@ -354,151 +354,16 @@ _tme_gtk_mouse_mode_off(struct tme_gtk_screen *screen,
   screen->tme_gtk_screen_mouse_keyval = GDK_KEY_VoidSymbol;
 }
 
-/* this is called when the mouse controls change: */
-static int
-_tme_gtk_mouse_ctrl(struct tme_mouse_connection *conn_mouse, 
-		    unsigned int ctrl)
-{
-  struct tme_gtk_display *display;
-
-  /* recover our data structure: */
-  display = conn_mouse
-    ->tme_mouse_connection.tme_connection_element->tme_element_private;
-
-  /* XXX TBD */
-  abort();
-
-  return (TME_OK);
-}
-
-/* this is called to read the mouse: */
-static int
-_tme_gtk_mouse_read(struct tme_mouse_connection *conn_mouse, 
-		    struct tme_mouse_event *event,
-		    unsigned int count)
-{
-  struct tme_gtk_display *display;
-  int rc;
-
-  /* recover our data structure: */
-  display = conn_mouse
-    ->tme_mouse_connection.tme_connection_element->tme_element_private;
-
-  /* lock the mutex: */
-  tme_mutex_lock(&display->tme_gtk_display_mutex);
-
-  /* copy an event out of the mouse buffer: */
-  rc = tme_mouse_buffer_copyout(display->tme_gtk_display_mouse_buffer,
-				event,
-				count);
-
-  /* unlock the mutex: */
-  tme_mutex_unlock(&display->tme_gtk_display_mutex);
-
-  return (rc);
-}
-
-/* this breaks a mouse connection: */
-static int
-_tme_gtk_mouse_connection_break(struct tme_connection *conn,
-				unsigned int state)
-{
-  abort();
-}
-
-/* this makes a new mouse connection: */
-static int
-_tme_gtk_mouse_connection_make(struct tme_connection *conn,
-			       unsigned int state)
-{
-  struct tme_gtk_display *display;
-
-  /* recover our data structure: */
-  display = conn->tme_connection_element->tme_element_private;
-
-  /* both sides must be mouse connections: */
-  assert(conn->tme_connection_type
-	 == TME_CONNECTION_MOUSE);
-  assert(conn->tme_connection_other->tme_connection_type
-	 == TME_CONNECTION_MOUSE);
-
-  /* we are always set up to answer calls across the connection, so we
-     only have to do work when the connection has gone full, namely
-     taking the other side of the connection: */
-  if (state == TME_CONNECTION_FULL) {
-
-    /* save our connection: */
-    tme_mutex_lock(&display->tme_gtk_display_mutex);
-    display->tme_gtk_display_mouse_connection
-      = (struct tme_mouse_connection *) conn->tme_connection_other;
-    tme_mutex_unlock(&display->tme_gtk_display_mutex);
-  }
-
-  return (TME_OK);
-}
-
-/* this scores a mouse connection: */
-static int
-_tme_gtk_mouse_connection_score(struct tme_connection *conn,
-				unsigned int *_score)
-{
-  struct tme_mouse_connection *conn_mouse;
-
-  /* both sides must be mouse connections: */
-  assert(conn->tme_connection_type == TME_CONNECTION_MOUSE);
-  assert(conn->tme_connection_other->tme_connection_type == TME_CONNECTION_MOUSE);
-
-  /* the other side cannot be a real mouse: */
-  conn_mouse
-    = (struct tme_mouse_connection *) conn->tme_connection_other;
-  *_score = (conn_mouse->tme_mouse_connection_read == NULL);
-  return (TME_OK);
-}
-
-/* this makes a new connection side for a GTK mouse: */
-int
-_tme_gtk_mouse_connections_new(struct tme_gtk_display *display, 
-			       struct tme_connection **_conns)
-{
-  struct tme_mouse_connection *conn_mouse;
-  struct tme_connection *conn;
-
-  /* if we don't have a mouse connection yet: */
-  if (display->tme_gtk_display_mouse_connection == NULL) {
-
-    /* create our side of a mouse connection: */
-    conn_mouse = tme_new0(struct tme_mouse_connection, 1);
-    conn = &conn_mouse->tme_mouse_connection;
-
-    /* fill in the generic connection: */
-    conn->tme_connection_next = *_conns;
-    conn->tme_connection_type = TME_CONNECTION_MOUSE;
-    conn->tme_connection_score = _tme_gtk_mouse_connection_score;
-    conn->tme_connection_make = _tme_gtk_mouse_connection_make;
-    conn->tme_connection_break = _tme_gtk_mouse_connection_break;
-
-    /* fill in the mouse connection: */
-    conn_mouse->tme_mouse_connection_ctrl = _tme_gtk_mouse_ctrl;
-    conn_mouse->tme_mouse_connection_read = _tme_gtk_mouse_read;
-
-    /* return the connection side possibility: */
-    *_conns = conn;
-  }
-
-  /* done: */
-  return (TME_OK);
-}
-
 /* this attaches the GTK mouse to a new screen: */
 void
 _tme_gtk_mouse_attach(struct tme_gtk_screen *screen)
 {
-  struct tme_gtk_display *display;
+  struct tme_display *display;
   GtkWidget *hbox0;
   GtkWidget *ebox;
 
   /* get the display: */
-  display = screen->tme_gtk_screen_display;
+  display = screen->screen.tme_screen_display;
 
   /* create the horizontal packing box for the mouse controls: */
   hbox0 = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
@@ -588,23 +453,4 @@ _tme_gtk_mouse_attach(struct tme_gtk_screen *screen)
 
   /* mouse mode is off: */
   screen->tme_gtk_screen_mouse_keyval = GDK_KEY_VoidSymbol;
-}
-
-/* this initializes mouse part of the display: */
-void
-_tme_gtk_mouse_new(struct tme_gtk_display *display)
-{
-  GdkDisplay *gdkdisplay;
-  
-  /* we have no mouse connection: */
-  display->tme_gtk_display_mouse_connection = NULL;
-  
-  /* allocate the mouse buffer: */
-  display->tme_gtk_display_mouse_buffer
-    = tme_mouse_buffer_new(1024);
-
-  gdkdisplay = gdk_display_get_default();
-
-  display->tme_gtk_display_mouse_cursor
-    = gdk_cursor_new_for_display(gdkdisplay, GDK_BLANK_CURSOR);
 }

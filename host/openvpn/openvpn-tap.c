@@ -181,8 +181,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tun_tap) {
 		    TME_INVALID_HANDLE,
 		    sz,
 		    data,
-		    hwaddr,
-		    NULL);
+		    hwaddr);
   
   if(rc == TME_OK) {
     /* recover our data structure: */
