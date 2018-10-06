@@ -1,8 +1,6 @@
 #! /usr/bin/env perl
 
-# $Id: $
-
-# gtk-keymap-make.pl - Creates a mapping of host keyboard codes to valid
+# keymap-make.pl - Creates a mapping of host keyboard codes to valid
 # keysyms for the guest
 
 #

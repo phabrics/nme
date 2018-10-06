@@ -1,5 +1,3 @@
-/* $Id: gtk-mouse.c,v 1.3 2007/03/03 15:33:22 fredette Exp $ */
-
 /* host/disp/mouse.c - generic mouse support: */
 
 /*
@@ -34,7 +32,6 @@
  */
 
 #include <tme/common.h>
-_TME_RCSID("$Id: gtk-mouse.c,v 1.3 2007/03/03 15:33:22 fredette Exp $");
 
 /* includes: */
 #include "display.h"

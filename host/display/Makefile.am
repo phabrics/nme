@@ -1,5 +1,5 @@
 ## Process this file with automake to produce Makefile.in
-# Makefile.am for The Machine Emulator host/gtk:
+# Makefile.am for The Machine Emulator host/display:
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
@@ -7,8 +7,7 @@ AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(top_srcdir)/lib -I. -D_TME_IMPL $(
 
 noinst_LTLIBRARIES = libdisplay.la
 libdisplay_la_SOURCES = display-mouse.c display-keyboard.c display.c display.h
-libdisplay_la_LIBADD = 	$(top_builddir)/generic/libtme-generic.la \
-		   	$(GTK_LIBS)
+libdisplay_la_LIBADD = 	$(top_builddir)/generic/libtme-generic.la
 
 EXTRA_DIST = keymap-make.pl keymap-def.h
 

@@ -1,5 +1,3 @@
-/* $Id: gtk-keyboard.c,v 1.10 2007/02/15 02:15:41 fredette Exp $ */
-
 /* host/disp/disp-keyboard.c - generic keyboard support: */
 
 /*
@@ -34,10 +32,10 @@
  */
 
 #include <tme/common.h>
-_TME_RCSID("$Id: gtk-keyboard.c,v 1.10 2007/02/15 02:15:41 fredette Exp $");
 
 /* includes: */
 #include "display.h"
+#include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
 
 /* macros: */

@@ -1,5 +1,3 @@
-/* $Id: gtk-display.c,v 1.4 2010/06/05 14:28:17 fredette Exp $ */
-
 /* host/disp/display.c - generic display support: */
 
 /*
@@ -34,7 +32,6 @@
  */
 
 #include <tme/common.h>
-_TME_RCSID("$Id: gtk-display.c,v 1.4 2010/06/05 14:28:17 fredette Exp $");
 
 /* includes: */
 #include "display.h"
@@ -149,14 +146,60 @@ _tme_display_callout(struct tme_display *display,
 
 }
 
-/* this makes a new connection side for a generic display: */
-int
+/* this breaks a framebuffer connection: */
+static int
+_tme_display_connection_break(struct tme_connection *conn, unsigned int state)
+{
+  abort();
+}
+
+/* this makes a new framebuffer connection: */
+static int
+_tme_display_connection_make(struct tme_connection *conn,
+			    unsigned int state)
+{
+  struct tme_display *display;
+  struct tme_screen *screen;
+
+  /* recover our data structures: */
+  display = (struct tme_display *) conn->tme_connection_element->tme_element_private;
+
+  /* both sides must be framebuffer connections: */
+  assert(conn->tme_connection_type
+	 == TME_CONNECTION_FRAMEBUFFER);
+  assert(conn->tme_connection_other->tme_connection_type
+	 == TME_CONNECTION_FRAMEBUFFER);
+
+  /* we're always set up to answer calls across the connection, so we
+     only have to do work when the connection has gone full, namely
+     taking the other side of the connection: */
+  if (state == TME_CONNECTION_FULL) {
+
+    /* lock our mutex: */
+    //tme_mutex_lock(&display->tme_display_mutex);
+
+    /* if our initial screen is already connected, make a new screen: */
+    screen = display->screen_new(display, conn);
+    /* unlock our mutex: */
+    //tme_mutex_unlock(&display->tme_display_mutex);
+
+    /* call our mode change function: */
+    display->screen_mode_change((struct tme_fb_connection *) conn);
+  }
+
+  return (TME_OK);
+}
+
+/* this makes a new connection side for a display: */
+static int
 _tme_display_connections_new(struct tme_element *element, 
 			     const char * const *args, 
 			     struct tme_connection **_conns,
 			     char **_output)
 {
   struct tme_display *display;
+  struct tme_fb_connection *conn_fb;
+  struct tme_connection *conn;
 
   /* recover our data structure: */
   display = (struct tme_display *) element->tme_element_private;
@@ -175,6 +218,23 @@ _tme_display_connections_new(struct tme_element *element,
 
   /* make any new mouse connections: */
   _tme_mouse_connections_new(display, _conns);
+
+  /* allocate a new framebuffer connection: */
+  conn_fb = tme_new0(struct tme_fb_connection, 1);
+  conn = &conn_fb->tme_fb_connection;
+  
+  /* fill in the generic connection: */
+  conn->tme_connection_next = *_conns;
+  conn->tme_connection_type = TME_CONNECTION_FRAMEBUFFER;
+  conn->tme_connection_score = tme_fb_connection_score;
+  conn->tme_connection_make = _tme_display_connection_make;
+  conn->tme_connection_break = _tme_display_connection_break;
+
+  /* fill in the framebuffer connection: */
+  conn_fb->tme_fb_connection_mode_change = display->screen_mode_change;
+
+  /* return the connection side possibility: */
+  *_conns = conn;
 
   /* done: */
   return (TME_OK);

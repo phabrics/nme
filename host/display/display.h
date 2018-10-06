@@ -1,5 +1,3 @@
-/* $Id: gtk-display.h,v 1.10 2009/08/28 01:29:47 fredette Exp $ */
-
 /* host/disp/display.h - header file for generic display support: */
 
 /*
@@ -37,7 +35,6 @@
 #define _HOST_DISPLAY_H
 
 #include <tme/common.h>
-_TME_RCSID("$Id: gtk-display.h,v 1.10 2009/08/28 01:29:47 fredette Exp $");
 
 /* includes: */
 #include <tme/generic/fb.h>
@@ -45,10 +42,6 @@ _TME_RCSID("$Id: gtk-display.h,v 1.10 2009/08/28 01:29:47 fredette Exp $");
 #include <tme/generic/mouse.h>
 #include <tme/threads.h>
 #include <tme/hash.h>
-#ifndef G_ENABLE_DEBUG
-#define G_ENABLE_DEBUG (0)
-#endif /* !G_ENABLE_DEBUG */
-#include <gtk/gtk.h>
 
 /* macros: */
 
@@ -129,7 +122,7 @@ struct tme_display {
   tme_hash_t tme_display_keyboard_keysym_to_keycode;
 
   /* the next keysym to allocate for an unknown keysym string: */
-  guint tme_display_keyboard_keysym_alloc_next;
+  unsigned int tme_display_keyboard_keysym_alloc_next;
 
   /* our mouse connection: */
   struct tme_mouse_connection *tme_display_mouse_connection;
@@ -146,6 +139,10 @@ struct tme_display {
   /* the callout flags: */
   unsigned int tme_display_callout_flags;
 
+  /* implementation-specific callback functions: */
+  struct tme_screen *(*screen_new)(struct tme_display *, struct tme_connection *);
+  int (*screen_mode_change)(struct tme_fb_connection *);
+  
 };
 
 /* prototypes: */
@@ -153,16 +150,12 @@ void _tme_keyboard_new _TME_P((struct tme_display *));
 int _tme_keyboard_connections_new _TME_P((struct tme_display *,
 					  struct tme_connection **));
 void _tme_mouse_new _TME_P((struct tme_display *));
-void _tme_mouse_mode_off _TME_P((struct tme_screen *, guint32));
+void _tme_mouse_mode_off _TME_P((struct tme_screen *, tme_uint32_t));
 int _tme_mouse_connections_new _TME_P((struct tme_display *,
 				       struct tme_connection **));
 void _tme_display_callout _TME_P((struct tme_display *,
 				  int));
 int tme_display_init _TME_P((struct tme_element *));
-int _tme_display_connections_new _TME_P((struct tme_element *, 
-					 const char * const *, 
-					 struct tme_connection **,
-					 char **));
 
 #endif /* _HOST_DISPLAY_H */
 

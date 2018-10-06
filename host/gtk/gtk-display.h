@@ -40,6 +40,10 @@ _TME_RCSID("$Id: gtk-display.h,v 1.10 2009/08/28 01:29:47 fredette Exp $");
 
 /* includes: */
 #include "display.h"
+#ifndef G_ENABLE_DEBUG
+#define G_ENABLE_DEBUG (0)
+#endif /* !G_ENABLE_DEBUG */
+#include <gtk/gtk.h>
 
 /* macros: */
 

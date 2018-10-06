@@ -649,7 +649,8 @@ _tme_gtk_screen_draw(GtkWidget *widget,
 
 /* this makes a new screen: */
 struct tme_gtk_screen *
-_tme_gtk_screen_new(struct tme_display *display)
+_tme_gtk_screen_new(struct tme_display *display,
+		    struct tme_connection *conn)
 {
   struct tme_gtk_screen *screen, **_prev;
   GdkDisplay *gdkdisplay;
@@ -658,6 +659,7 @@ _tme_gtk_screen_new(struct tme_display *display)
   GtkWidget *menu;
   GtkWidget *submenu;
   GtkWidget *menu_item;
+  char title[sizeof(PACKAGE_STRING) + 16];
 
 #define BLANK_SIDE (16 * 8)
 
@@ -679,8 +681,8 @@ _tme_gtk_screen_new(struct tme_display *display)
 
   screen->tme_gtk_screen_pointer = gdk_device_manager_get_client_pointer(devices);
 
-  /* there is no framebuffer connection yet: */
-  screen->screen.tme_screen_fb = NULL;
+  /* save our connection: */
+  screen->screen.tme_screen_fb = conn;
 
   /* the user hasn't specified a scaling yet: */
   screen->screen.tme_screen_fb_scale
@@ -762,92 +764,108 @@ _tme_gtk_screen_new(struct tme_display *display)
   /* attach the keyboard to this screen: */
   _tme_gtk_keyboard_attach(screen);
 
+  snprintf(title, sizeof(title), "%s (%s)", PACKAGE_STRING, conn->tme_connection_other->tme_connection_element->tme_element_args[0]);
+  gtk_window_set_title(GTK_WINDOW(screen->tme_gtk_screen_window), title);
+  
   return (screen);
 }
 
-/* this breaks a framebuffer connection: */
-static int
-_tme_gtk_screen_connection_break(struct tme_connection *conn, unsigned int state)
-{
-  abort();
+static void _tme_gtk_init(void) {
+  char **argv;
+  char *argv_buffer[3];
+  int argc;
+
+  /* GTK requires program to be running non-setuid */
+#ifdef HAVE_SETUID
+  setuid(getuid());
+#endif
+  
+  /* conjure up an argv.  this is pretty bad: */
+  argv = argv_buffer;
+  argc = 0;
+  argv[argc++] = "tmesh";
+#if 1
+  argv[argc++] = "--gtk-debug=signals";
+#endif
+  argv[argc] = NULL;
+  gtk_init(&argc, &argv);
 }
 
-/* this makes a new framebuffer connection: */
-static int
-_tme_gtk_screen_connection_make(struct tme_connection *conn,
-				unsigned int state)
+/* this is a GTK callback for an enter notify event, that has the
+   widget grab focus and then continue normal event processing: */
+gint
+_tme_display_enter_focus(GtkWidget *widget,
+			     GdkEvent *gdk_event_raw,
+			     gpointer junk)
 {
-  struct tme_display *display;
-  struct tme_gtk_screen *screen;
-  struct tme_fb_connection *conn_fb;
-  struct tme_fb_connection *conn_fb_other;
-  char title[sizeof(PACKAGE_STRING) + 16];
 
-  /* recover our data structures: */
-  display = (struct tme_display *) conn->tme_connection_element->tme_element_private;
-  conn_fb = (struct tme_fb_connection *) conn;
+  /* grab the focus: */
+  gtk_widget_grab_focus(widget);
 
-  /* both sides must be framebuffer connections: */
-  assert(conn->tme_connection_type
-	 == TME_CONNECTION_FRAMEBUFFER);
-  assert(conn->tme_connection_other->tme_connection_type
-	 == TME_CONNECTION_FRAMEBUFFER);
+  /* continue normal event processing: */
+  return (FALSE);
+}
 
-  /* we're always set up to answer calls across the connection, so we
-     only have to do work when the connection has gone full, namely
-     taking the other side of the connection: */
-  if (state == TME_CONNECTION_FULL) {
+/* this creates a menu of radio buttons: */
+GtkWidget *
+_tme_display_menu_radio(void *state,
+			    tme_display_menu_items_t menu_items)
+{
+  GtkWidget *menu;
+  GSList *menu_group;
+  struct tme_display_menu_item menu_item_buffer;
+  GCallback menu_func;
+  GtkWidget *menu_item;
 
-    /* lock our mutex: */
-    //tme_mutex_lock(&display->tme_display_mutex);
+  /* create the menu: */
+  menu = gtk_menu_new();
 
-    /* if our initial screen is already connected, make a new screen: */
-    screen = display->tme_display_screens;
-    if (screen->screen.tme_screen_fb != NULL) {
-      screen = _tme_gtk_screen_new(display);
+  /* create the menu items: */
+  menu_group = NULL;
+  for (menu_item_buffer.tme_display_menu_item_which = 0;
+       ;
+       menu_item_buffer.tme_display_menu_item_which++) {
+    menu_func = (*menu_items)(state, &menu_item_buffer);
+    if (menu_func == G_CALLBACK(NULL)) {
+      break;
     }
-
-    snprintf(title, sizeof(title), "%s (%s)", PACKAGE_STRING, conn->tme_connection_other->tme_connection_element->tme_element_args[0]);
-    gtk_window_set_title(GTK_WINDOW(screen->tme_gtk_screen_window), title);
-
-    /* save our connection: */
-    screen->screen.tme_screen_fb = conn_fb;
-
-    /* unlock our mutex: */
-    //tme_mutex_unlock(&display->tme_display_mutex);
-
-    /* call our mode change function: */
-    _tme_gtk_screen_mode_change(conn_fb);
+    menu_item
+      = gtk_radio_menu_item_new_with_label(menu_group,
+					   menu_item_buffer.tme_display_menu_item_string);
+    if (menu_item_buffer.tme_display_menu_item_widget != NULL) {
+      *menu_item_buffer.tme_display_menu_item_widget = menu_item;
+    }
+    menu_group
+      = gtk_radio_menu_item_get_group(GTK_RADIO_MENU_ITEM(menu_item));
+    g_signal_connect(menu_item, 
+		     "activate",
+		     menu_func,
+		     (gpointer) state);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
+    gtk_widget_show(menu_item);
   }
 
-  return (TME_OK);
+  /* return the menu: */
+  return (menu);
 }
 
-/* this makes a new connection side for a GTK screen: */
-int
-_tme_gtk_screen_connections_new(struct tme_display *display, 
-				struct tme_connection **_conns)
-{
-  struct tme_fb_connection *conn_fb;
-  struct tme_connection *conn;
+/* the new GTK display function: */
+TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
+  struct tme_display *display;
 
-  /* allocate a new framebuffer connection: */
-  conn_fb = tme_new0(struct tme_fb_connection, 1);
-  conn = &conn_fb->tme_fb_connection;
+  /* start our data structure: */
+  tme_display_init(element);
+
+  /* recover our data structure: */
+  display = element->tme_element_private;
+
+  /* setup the thread loop function: */
+  tme_threads_init(_tme_gtk_screen_update, display);
+  _tme_gtk_init();
   
-  /* fill in the generic connection: */
-  conn->tme_connection_next = *_conns;
-  conn->tme_connection_type = TME_CONNECTION_FRAMEBUFFER;
-  conn->tme_connection_score = tme_fb_connection_score;
-  conn->tme_connection_make = _tme_gtk_screen_connection_make;
-  conn->tme_connection_break = _tme_gtk_screen_connection_break;
+  /* set the display-specific functions: */
+  display->screen_new = _tme_gtk_screen_new;
+  display->screen_mode_change = _tme_gtk_screen_mode_change;
 
-  /* fill in the framebuffer connection: */
-  conn_fb->tme_fb_connection_mode_change = _tme_gtk_screen_mode_change;
-
-  /* return the connection side possibility: */
-  *_conns = conn;
-
-  /* done: */
   return (TME_OK);
 }
