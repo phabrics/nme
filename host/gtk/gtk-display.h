@@ -54,9 +54,6 @@ struct tme_gtk_screen {
 
   /* the generic screen structure */
   struct tme_screen screen;
-  
-  /* any colorset signature: */
-  tme_uint32_t tme_gtk_screen_colorset;
 
   /* the top-level window: */
   GtkWidget *tme_gtk_screen_window;
@@ -95,9 +92,6 @@ struct tme_gtk_screen {
 
   /* when mouse mode is on, the last tme buttons state: */
   unsigned int tme_gtk_screen_mouse_buttons_last;
-
-  /* if nonzero, the screen needs a full redraw: */
-  int tme_gtk_screen_full_redraw;
 };
 
 /* a menu item: */

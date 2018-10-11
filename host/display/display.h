@@ -72,10 +72,20 @@ struct tme_screen {
   /* the current scaling.  if this is < 0, the user has not forced a
      given scaling yet: */
   int tme_screen_fb_scale;
+  
+  /* any colorset signature: */
+  tme_uint32_t tme_screen_colorset;
+
+  /* if nonzero, the screen needs a full redraw: */
+  int tme_screen_full_redraw;
 
   /* the translation function: */
   int (*tme_screen_fb_xlat) _TME_P((struct tme_fb_connection *, 
-					struct tme_fb_connection *));
+				    struct tme_fb_connection *));
+
+  int (*tme_screen_set_size) _TME_P((struct tme_screen *screen,
+				     int width,
+				     int height));
 
 };
 
@@ -139,9 +149,14 @@ struct tme_display {
   /* the callout flags: */
   unsigned int tme_display_callout_flags;
 
+  /* available screen area */
+  unsigned long tme_screen_area;
+  
   /* implementation-specific callback functions: */
-  struct tme_screen *(*screen_new)(struct tme_display *, struct tme_connection *);
-  int (*screen_mode_change)(struct tme_fb_connection *);
+  struct tme_screen *(*tme_screen_new) _TME_P((struct tme_display *, struct tme_connection *));
+  int (*tme_screen_set_size) _TME_P((struct tme_screen *screen,
+				     int width,
+				     int height));
   
 };
 
