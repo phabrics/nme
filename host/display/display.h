@@ -83,10 +83,6 @@ struct tme_screen {
   int (*tme_screen_fb_xlat) _TME_P((struct tme_fb_connection *, 
 				    struct tme_fb_connection *));
 
-  int (*tme_screen_set_size) _TME_P((struct tme_screen *screen,
-				     int width,
-				     int height));
-
 };
 
 /* a bad keysym: */
@@ -154,13 +150,19 @@ struct tme_display {
   
   /* implementation-specific callback functions: */
   struct tme_screen *(*tme_screen_new) _TME_P((struct tme_display *, struct tme_connection *));
-  int (*tme_screen_set_size) _TME_P((struct tme_screen *screen,
-				     int width,
-				     int height));
+  void (*tme_screen_update) _TME_P((struct tme_screen *));
+  void (*tme_main_iter) _TME_P((void));
+  int (*tme_screen_set_size) _TME_P((struct tme_screen *,
+				     int,
+				     int));
   
 };
 
 /* prototypes: */
+void _tme_screen_scale_set _TME_P((struct tme_screen *screen,
+				   int scale_new));
+void _tme_screen_xlat_set _TME_P((const struct tme_fb_connection *conn_fb, 
+				  struct tme_screen *screen));
 void _tme_keyboard_new _TME_P((struct tme_display *));
 int _tme_keyboard_connections_new _TME_P((struct tme_display *,
 					  struct tme_connection **));

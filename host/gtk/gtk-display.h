@@ -113,7 +113,6 @@ typedef GCallback (*tme_display_menu_items_t) _TME_P((void *, struct tme_display
 /* prototypes: */
 void _tme_gtk_keyboard_attach _TME_P((struct tme_gtk_screen *));
 void _tme_gtk_mouse_attach _TME_P((struct tme_gtk_screen *));
-int _tme_gtk_screen_update _TME_P((void *));
 gint _tme_display_enter_focus _TME_P((GtkWidget *, GdkEvent *, gpointer));
 GtkWidget *_tme_display_menu_radio _TME_P((void *, tme_display_menu_items_t));
 

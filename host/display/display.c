@@ -36,6 +36,75 @@
 /* includes: */
 #include "display.h"
 
+/* the screens update thread: */
+static int
+_tme_screens_update(void *disp)
+{
+  struct tme_display *display;
+  struct tme_screen *screen;
+  struct tme_fb_connection *conn_fb;
+  struct tme_fb_connection *conn_fb_other;
+  int changed;
+  int rc;
+
+  display = (struct tme_display *)disp;
+  
+  _tme_threads_main_iter(display->tme_main_iter);
+
+  _tme_thread_resumed();
+
+  /* lock the mutex: */
+  tme_mutex_lock(&display->tme_display_mutex);
+
+  /* loop over all screens: */
+  for (screen = display->tme_display_screens;
+       screen != NULL;
+       screen = screen->tme_screen_next) {
+
+    /* skip this screen if it's unconnected: */
+    if ((conn_fb = screen->tme_screen_fb) == NULL) {
+      continue;
+    }
+
+    /* get the other side of this connection: */
+    conn_fb_other = (struct tme_fb_connection *)conn_fb->tme_fb_connection.tme_connection_other;
+
+    /* if the framebuffer has an update function, call it: */
+    if (conn_fb_other->tme_fb_connection_update != NULL) {
+      rc = (*conn_fb_other->tme_fb_connection_update)(conn_fb_other);
+      assert (rc == TME_OK);
+    }
+
+    /* if this framebuffer needs a full redraw: */
+    if (screen->tme_screen_full_redraw) {
+
+      /* force the next translation to retranslate the entire buffer: */
+      tme_fb_xlat_redraw(conn_fb_other);
+      conn_fb_other->tme_fb_connection_offset_updated_first = 0;
+      conn_fb_other->tme_fb_connection_offset_updated_last = 0 - (tme_uint32_t) 1;
+
+      /* clear the full redraw flag: */
+      screen->tme_screen_full_redraw = FALSE;
+    }
+
+    changed = FALSE;
+    if (screen->tme_screen_fb_xlat) {
+      /* translate this framebuffer's contents: */
+      changed = (*screen->tme_screen_fb_xlat)(conn_fb_other, conn_fb);
+    } 
+
+    /* if those contents changed, update the screen: */
+    if (changed && display->tme_screen_update)
+      display->tme_screen_update(screen);
+  }
+
+  /* unlock the mutex: */
+  tme_mutex_unlock(&display->tme_display_mutex);
+
+  _tme_thread_suspended();
+  return (TME_OK);
+}
+
 /* the generic display callout function.  it must be called with the mutex locked: */
 void
 _tme_display_callout(struct tme_display *display,
@@ -518,6 +587,9 @@ int tme_display_init(struct tme_element *element) {
   /* start the threads: */
   tme_mutex_init(&display->tme_display_mutex);
 
+  /* setup the thread loop function: */
+  tme_threads_init(_tme_screens_update, display);
+  
   /* fill the element: */
   element->tme_element_private = display;
   element->tme_element_connections_new = _tme_display_connections_new;

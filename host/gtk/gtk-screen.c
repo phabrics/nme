@@ -40,115 +40,31 @@ _TME_RCSID("$Id: gtk-screen.c,v 1.11 2009/08/30 21:39:03 fredette Exp $");
 #include "gtk-display.h"
 #include <stdlib.h>
 
-static _tme_inline void _tme_gtk_main_iter(void) {
+static void _tme_gtk_main_iter(void) {
   while (gtk_events_pending ())
     gtk_main_iteration ();
   //  gtk_main_iteration_do(FALSE);
 }
 
-/* the GTK screens update thread: */
-int
-_tme_gtk_screen_update(void *disp)
+/* the (default) GTK screens update function: */
+static void
+_tme_gtk_screen_update(struct tme_gtk_screen *screen)
 {
-  struct tme_display *display;
-  struct tme_gtk_screen *screen;
-  struct tme_fb_connection *conn_fb;
-  struct tme_fb_connection *conn_fb_other;
-  int changed;
-  int rc;
 #ifdef DEBUG_CAIRO
   tme_uint32_t *i;
   tme_uint32_t last_i, j;
-#endif
 
-  _tme_threads_main_iter(_tme_gtk_main_iter);
-
-  display = (struct tme_display *)disp;
-  
-  _tme_thread_resumed();
-
-  /* lock the mutex: */
-  tme_mutex_lock(&display->tme_display_mutex);
-
-  /* loop over all screens: */
-  for (screen = display->tme_display_screens;
-       screen != NULL;
-       screen = screen->screen.tme_screen_next) {
-
-    /* skip this screen if it's unconnected: */
-    if ((conn_fb = screen->screen.tme_screen_fb) == NULL) {
-      continue;
-    }
-
-    /* get the other side of this connection: */
-    conn_fb_other = (struct tme_fb_connection *)conn_fb->tme_fb_connection.tme_connection_other;
-
-    /* if the framebuffer has an update function, call it: */
-    if (conn_fb_other->tme_fb_connection_update != NULL) {
-      rc = (*conn_fb_other->tme_fb_connection_update)(conn_fb_other);
-      assert (rc == TME_OK);
-    }
-
-    /* if this framebuffer needs a full redraw: */
-    if (screen->screen.tme_screen_full_redraw) {
-
-      /* force the next translation to retranslate the entire buffer: */
-      tme_fb_xlat_redraw(conn_fb_other);
-      conn_fb_other->tme_fb_connection_offset_updated_first = 0;
-      conn_fb_other->tme_fb_connection_offset_updated_last = 0 - (tme_uint32_t) 1;
-
-      /* clear the full redraw flag: */
-      screen->screen.tme_screen_full_redraw = FALSE;
-    }
-
-    changed = FALSE;
-    if (screen->screen.tme_screen_fb_xlat) {
-      cairo_surface_flush(screen->tme_gtk_screen_surface);
-
-      /* translate this framebuffer's contents: */
-      changed = (*screen->screen.tme_screen_fb_xlat)(conn_fb_other, conn_fb);
-    } 
-
-    /* if those contents changed, redraw the widget: */
-    if (changed) {
-#ifdef DEBUG_CAIRO
-      i = (tme_uint32_t *)conn_fb->tme_fb_connection_buffer;
-      last_i = *i;
-      printf("%8x: %8x\n", i, last_i);
-      for(j=0;j<conn_fb->tme_fb_connection_buffsz;j+=sizeof(tme_uint32_t)) {
-	if(last_i != *i) { last_i = *i; printf("%8x: %8x\n", i, last_i); }
-	i++;
-      }
-#endif
-      cairo_surface_mark_dirty(screen->tme_gtk_screen_surface);
-      gtk_widget_queue_draw(screen->tme_gtk_screen_gtkframe);
-    }
+  i = (tme_uint32_t *)conn_fb->tme_fb_connection_buffer;
+  last_i = *i;
+  printf("%8x: %8x\n", i, last_i);
+  for(j=0;j<conn_fb->tme_fb_connection_buffsz;j+=sizeof(tme_uint32_t)) {
+    if(last_i != *i) { last_i = *i; printf("%8x: %8x\n", i, last_i); }
+    i++;
   }
-
-  /* unlock the mutex: */
-  tme_mutex_unlock(&display->tme_display_mutex);
-
-  _tme_thread_suspended();
-  return (TME_OK);
-}
-
-/* the (default) GTK screens update thread: */
-_tme_thret
-_tme_gtk_screen_th_update(struct tme_display *display)
-{
-  /* loop forever: */
-  for (;;) {
-    _tme_gtk_screen_update(display);
-
-    /* update again in .5 seconds:
-    _tme_thread_resumed();
-    tme_thread_sleep(0, 500000);
-    _tme_thread_suspended();
-    */
-  }
-  _tme_thread_resumed();
-  /* NOTREACHED */
-  tme_thread_exit();
+#endif
+  cairo_surface_flush(screen->tme_gtk_screen_surface);
+  cairo_surface_mark_dirty(screen->tme_gtk_screen_surface);
+  gtk_widget_queue_draw(screen->tme_gtk_screen_gtkframe);
 }
 
 /* this recovers the scanline-pad value for an image buffer: */
@@ -601,12 +517,12 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   /* recover our data structure: */
   display = element->tme_element_private;
 
-  /* setup the thread loop function: */
-  tme_threads_init(_tme_gtk_screen_update, display);
   _tme_gtk_init();
   
   /* set the display-specific functions: */
   display->tme_screen_new = _tme_gtk_screen_new;
+  display->tme_screen_update = _tme_gtk_screen_update;
+  display->tme_main_iter = _tme_gtk_main_iter;
   display->tme_screen_set_size = _tme_gtk_screen_set_size;
   display->tme_screen_area = (gdk_screen_width()
 			      * gdk_screen_height());
