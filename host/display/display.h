@@ -149,7 +149,7 @@ struct tme_display {
   unsigned long tme_screen_area;
   
   /* implementation-specific callback functions: */
-  struct tme_screen *(*tme_screen_new) _TME_P((struct tme_display *, struct tme_connection *));
+  struct tme_screen *(*tme_screen_add) _TME_P((struct tme_display *, struct tme_connection *));
   void (*tme_screen_update) _TME_P((struct tme_screen *));
   void (*tme_main_iter) _TME_P((void));
   int (*tme_screen_set_size) _TME_P((struct tme_screen *,
@@ -159,6 +159,10 @@ struct tme_display {
 };
 
 /* prototypes: */
+struct tme_screen *_tme_screen_add _TME_P((struct tme_display *,
+					   size_t,
+					   struct tme_connection *));
+#define tme_screen_new(display, screen, conn) ((screen *)_tme_screen_add(display,sizeof(screen),conn))
 void _tme_screen_scale_set _TME_P((struct tme_screen *screen,
 				   int scale_new));
 void _tme_screen_xlat_set _TME_P((const struct tme_fb_connection *conn_fb, 

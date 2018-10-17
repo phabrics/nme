@@ -476,6 +476,40 @@ _tme_screen_scale_set(struct tme_screen *screen,
   _tme_thread_suspended();
 }
 
+/* this adds a new screen: */
+struct tme_screen *
+_tme_screen_add(struct tme_display *display,
+		size_t sz,
+		struct tme_connection *conn)
+{
+  struct tme_screen *screen;
+
+  /* allocate screen structure of the given size: */
+  screen = tme_malloc0(sz);
+  
+  /* create the new screen and link it in: */
+  screen->tme_screen_next = display->tme_display_screens;
+  display->tme_display_screens = screen;
+
+  /* the backpointer to the display: */
+  screen->tme_screen_display = display;
+  
+  /* save our connection: */
+  screen->tme_screen_fb = conn;
+
+  /* the user hasn't specified a scaling yet: */
+  screen->tme_screen_fb_scale
+    = -TME_FB_XLAT_SCALE_NONE;
+
+  /* we have no colorset: */
+  screen->tme_screen_colorset = TME_FB_COLORSET_NONE;
+
+  /* there is no translation function: */
+  screen->tme_screen_fb_xlat = NULL;
+
+  return (screen);
+}
+
 /* this breaks a framebuffer connection: */
 static int
 _tme_display_connection_break(struct tme_connection *conn, unsigned int state)
@@ -509,7 +543,7 @@ _tme_display_connection_make(struct tme_connection *conn,
     //tme_mutex_lock(&display->tme_display_mutex);
 
     /* if our initial screen is already connected, make a new screen: */
-    screen = display->tme_screen_new(display, conn);
+    screen = display->tme_screen_add(display, conn);
     /* unlock our mutex: */
     //tme_mutex_unlock(&display->tme_display_mutex);
 

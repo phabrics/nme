@@ -310,7 +310,7 @@ struct tme_gtk_screen *
 _tme_gtk_screen_new(struct tme_display *display,
 		    struct tme_connection *conn)
 {
-  struct tme_gtk_screen *screen, **_prev;
+  struct tme_gtk_screen *screen;
   GdkDisplay *gdkdisplay;
   GdkDeviceManager *devices;
   GtkWidget *menu_bar;
@@ -321,15 +321,8 @@ _tme_gtk_screen_new(struct tme_display *display,
 
 #define BLANK_SIDE (16 * 8)
 
-  /* create the new screen and link it in: */
-  for (_prev = &display->tme_display_screens;
-       (screen = *_prev) != NULL;
-       _prev = &screen->screen.tme_screen_next);
-  screen = *_prev = tme_new0(struct tme_gtk_screen, 1);
+  screen = tme_screen_new(display, struct tme_gtk_screen, conn);
 
-  /* the backpointer to the display: */
-  screen->screen.tme_screen_display = display;
-  
   gdkdisplay = gdk_display_get_default();
 
   display->tme_display_mouse_cursor
@@ -338,16 +331,6 @@ _tme_gtk_screen_new(struct tme_display *display,
   devices = gdk_display_get_device_manager(gdkdisplay);
 
   screen->tme_gtk_screen_pointer = gdk_device_manager_get_client_pointer(devices);
-
-  /* save our connection: */
-  screen->screen.tme_screen_fb = conn;
-
-  /* the user hasn't specified a scaling yet: */
-  screen->screen.tme_screen_fb_scale
-    = -TME_FB_XLAT_SCALE_NONE;
-
-  /* we have no colorset: */
-  screen->screen.tme_screen_colorset = TME_FB_COLORSET_NONE;
 
   /* create the top-level window, and allow it to shrink, grow,
      and auto-shrink: */
@@ -412,9 +395,6 @@ _tme_gtk_screen_new(struct tme_display *display,
 
   /* show the top-level window: */
   gtk_widget_show_all(screen->tme_gtk_screen_window);
-
-  /* there is no translation function: */
-  screen->screen.tme_screen_fb_xlat = NULL;
 
   /* attach the mouse to this screen: */
   _tme_gtk_mouse_attach(screen);
@@ -520,7 +500,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   _tme_gtk_init();
   
   /* set the display-specific functions: */
-  display->tme_screen_new = _tme_gtk_screen_new;
+  display->tme_screen_add = _tme_gtk_screen_new;
   display->tme_screen_update = _tme_gtk_screen_update;
   display->tme_main_iter = _tme_gtk_main_iter;
   display->tme_screen_set_size = _tme_gtk_screen_set_size;
