@@ -40,31 +40,48 @@ _TME_RCSID("$Id: gtk-screen.c,v 1.11 2009/08/30 21:39:03 fredette Exp $");
 #include "gtk-display.h"
 #include <stdlib.h>
 
-static void _tme_gtk_main_iter(void) {
-  while (gtk_events_pending ())
-    gtk_main_iteration ();
+static _tme_thret
+_tme_gtk_main_iter(void *disp) {
+  /* while (gtk_events_pending ())
+     gtk_main_iteration (); */
   //  gtk_main_iteration_do(FALSE);
+  gtk_main();
 }
 
 /* the (default) GTK screens update function: */
-static void
-_tme_gtk_screen_update(struct tme_gtk_screen *screen)
+static int
+_tme_gtk_screens_update(void *disp)
 {
-#ifdef DEBUG_CAIRO
-  tme_uint32_t *i;
-  tme_uint32_t last_i, j;
+  struct tme_display *display;
+  struct tme_fb_connection *conn_fb;
+  struct tme_gtk_screen *screen;  
 
-  i = (tme_uint32_t *)conn_fb->tme_fb_connection_buffer;
-  last_i = *i;
-  printf("%8x: %8x\n", i, last_i);
-  for(j=0;j<conn_fb->tme_fb_connection_buffsz;j+=sizeof(tme_uint32_t)) {
-    if(last_i != *i) { last_i = *i; printf("%8x: %8x\n", i, last_i); }
-    i++;
+  display = (struct tme_display *)disp;
+  
+  _tme_thread_resumed();
+
+  /* lock the mutex: */
+  tme_mutex_lock(&display->tme_display_mutex);
+
+  /* loop over all screens: */
+  for (screen = display->tme_display_screens;
+       screen != NULL;
+       screen = screen->screen.tme_screen_next) {
+
+    /* if those contents changed, update the screen: */
+    if (screen->screen.tme_screen_update) {
+      cairo_surface_flush(screen->tme_gtk_screen_surface);
+      cairo_surface_mark_dirty(screen->tme_gtk_screen_surface);
+      gtk_widget_queue_draw(screen->tme_gtk_screen_gtkframe);
+    }
   }
-#endif
-  cairo_surface_flush(screen->tme_gtk_screen_surface);
-  cairo_surface_mark_dirty(screen->tme_gtk_screen_surface);
-  gtk_widget_queue_draw(screen->tme_gtk_screen_gtkframe);
+
+  /* unlock our mutex: */
+  tme_mutex_unlock(&display->tme_display_mutex);
+
+  _tme_thread_suspended();
+
+  return TRUE;
 }
 
 /* this recovers the scanline-pad value for an image buffer: */
@@ -296,11 +313,27 @@ _tme_gtk_screen_draw(GtkWidget *widget,
 		     cairo_t   *cr,
 		     gpointer   _screen)
 {
+  struct tme_display *display;
   struct tme_gtk_screen *screen;
 
+  _tme_thread_resumed();
+
   screen = (struct tme_gtk_screen *) _screen;
+
+  /* get the display: */
+  display = screen->screen.tme_screen_display;
+
+  /* lock our mutex: */
+  tme_mutex_lock(&display->tme_display_mutex);
+
   cairo_set_source_surface(cr, screen->tme_gtk_screen_surface, 0, 0);
   cairo_paint(cr);
+  screen->screen.tme_screen_update = FALSE;    
+
+  /* unlock our mutex: */
+  tme_mutex_unlock(&display->tme_display_mutex);
+
+  _tme_thread_suspended();
 
   return FALSE;
 }
@@ -318,8 +351,6 @@ _tme_gtk_screen_new(struct tme_display *display,
   GtkWidget *submenu;
   GtkWidget *menu_item;
   char title[sizeof(PACKAGE_STRING) + 16];
-
-#define BLANK_SIDE (16 * 8)
 
   screen = tme_screen_new(display, struct tme_gtk_screen, conn);
 
@@ -433,8 +464,8 @@ static void _tme_gtk_init(void) {
    widget grab focus and then continue normal event processing: */
 gint
 _tme_display_enter_focus(GtkWidget *widget,
-			     GdkEvent *gdk_event_raw,
-			     gpointer junk)
+			 GdkEvent *gdk_event_raw,
+			 gpointer junk)
 {
 
   /* grab the focus: */
@@ -447,7 +478,7 @@ _tme_display_enter_focus(GtkWidget *widget,
 /* this creates a menu of radio buttons: */
 GtkWidget *
 _tme_display_menu_radio(void *state,
-			    tme_display_menu_items_t menu_items)
+			tme_display_menu_items_t menu_items)
 {
   GtkWidget *menu;
   GSList *menu_group;
@@ -501,11 +532,16 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   
   /* set the display-specific functions: */
   display->tme_screen_add = _tme_gtk_screen_new;
-  display->tme_screen_update = _tme_gtk_screen_update;
-  display->tme_main_iter = _tme_gtk_main_iter;
+  display->tme_main_iter = NULL; // _tme_gtk_main_iter;
   display->tme_screen_set_size = _tme_gtk_screen_set_size;
   display->tme_screen_area = (gdk_screen_width()
 			      * gdk_screen_height());
+
+  /* setup the thread loop function: */
+  tme_threads_init(NULL, gtk_main);
+
+  /* unlock mutex once gtk main thread is running: */
+  g_idle_add(_tme_gtk_screens_update, display);
 
   return (TME_OK);
 }

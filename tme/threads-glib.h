@@ -48,10 +48,17 @@
 
 /* thread suspension: */
 extern GRWLock tme_rwlock_suspere;
+#ifdef THREADS_SJLJ
+#define tme_thread_suspend_others()	do { } while (/* CONSTCOND */ 0)
+#define tme_thread_resume_others()	do { } while (/* CONSTCOND */ 0)
+#define _tme_thread_suspended()	do { } while (/* CONSTCOND */ 0)
+#define _tme_thread_resumed()	do { } while (/* CONSTCOND */ 0)
+#else
 #define _tme_thread_suspended()	        g_rw_lock_reader_unlock(&tme_rwlock_suspere)
 #define _tme_thread_resumed()	        g_rw_lock_reader_lock(&tme_rwlock_suspere)
 #define tme_thread_suspend_others()	_tme_thread_suspended();g_rw_lock_writer_lock(&tme_rwlock_suspere)
 #define tme_thread_resume_others()	g_rw_lock_writer_unlock(&tme_rwlock_suspere);_tme_thread_resumed()
+#endif
 
 /* if we want speed over lock debugging, we can compile very simple
    rwlock operations: */
@@ -190,4 +197,4 @@ static _tme_inline int tme_threads_main_iter _TME_P((void *usec)) {
   return 0;
 }
 
-#define _tme_threads_main_iter(fn) fn()
+#define _tme_threads_main_iter(fn) if(fn) fn()

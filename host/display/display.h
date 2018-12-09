@@ -40,7 +40,11 @@
 #include <tme/generic/fb.h>
 #include <tme/generic/keyboard.h>
 #include <tme/generic/mouse.h>
+#ifdef THREADS_SJLJ
+#include <tme/threads-glib.h>
+#else
 #include <tme/threads.h>
+#endif
 #include <tme/hash.h>
 
 /* macros: */
@@ -51,6 +55,7 @@
 #define TME_DISPLAY_CALLOUTS_MASK		(-2)
 #define  TME_DISPLAY_CALLOUT_KEYBOARD_CTRL	TME_BIT(1)
 #define  TME_DISPLAY_CALLOUT_MOUSE_CTRL	TME_BIT(2)
+#define BLANK_SIDE (16 * 8)
 
 /* types: */
 
@@ -78,6 +83,9 @@ struct tme_screen {
 
   /* if nonzero, the screen needs a full redraw: */
   int tme_screen_full_redraw;
+
+  /* if nonzero, the screen has changed and should be updated in the display: */
+  int tme_screen_update;
 
   /* the translation function: */
   int (*tme_screen_fb_xlat) _TME_P((struct tme_fb_connection *, 
@@ -150,7 +158,6 @@ struct tme_display {
   
   /* implementation-specific callback functions: */
   struct tme_screen *(*tme_screen_add) _TME_P((struct tme_display *, struct tme_connection *));
-  void (*tme_screen_update) _TME_P((struct tme_screen *));
   void (*tme_main_iter) _TME_P((void));
   int (*tme_screen_set_size) _TME_P((struct tme_screen *,
 				     int,
@@ -159,6 +166,7 @@ struct tme_display {
 };
 
 /* prototypes: */
+int _tme_screens_update _TME_P((void *disp));
 struct tme_screen *_tme_screen_add _TME_P((struct tme_display *,
 					   size_t,
 					   struct tme_connection *));

@@ -65,10 +65,17 @@ static int tme_thread_cooperative() {
 
 /* thread suspension: */
 extern pthread_rwlock_t tme_rwlock_suspere;
+#ifdef THREADS_SJLJ
+#define tme_thread_suspend_others()	do { } while (/* CONSTCOND */ 0)
+#define tme_thread_resume_others()	do { } while (/* CONSTCOND */ 0)
+#define _tme_thread_suspended()	do { } while (/* CONSTCOND */ 0)
+#define _tme_thread_resumed()	do { } while (/* CONSTCOND */ 0)
+#else
 #define _tme_thread_suspended()	        pthread_rwlock_unlock(&tme_rwlock_suspere)
 #define _tme_thread_resumed()	        pthread_rwlock_rdlock(&tme_rwlock_suspere)
 #define tme_thread_suspend_others()	_tme_thread_suspended();if(!tme_thread_cooperative()) pthread_rwlock_wrlock(&tme_rwlock_suspere)
 #define tme_thread_resume_others()	if(!tme_thread_cooperative()) pthread_rwlock_unlock(&tme_rwlock_suspere);_tme_thread_resumed()
+#endif
 
 /* if we want speed over lock debugging, we can compile very simple
    rwlock operations: */
@@ -222,10 +229,10 @@ tme_cond_sleep_yield _TME_P((tme_cond_t *cond, tme_mutex_t *mutex,
 typedef void *_tme_thret;
 typedef _tme_thret (*tme_thread_t) _TME_P((void *));
 typedef pthread_t tme_threadid_t;
+
+#ifdef HAVE_PTHREAD_SETSCHEDPARAM
 void tme_thread_set_defattr _TME_P((pthread_attr_t *attr));
 pthread_attr_t *tme_thread_defattr _TME_P((void));
-#define tme_thread_create(t,f,a) pthread_create(t,tme_thread_defattr(),f,a)
-#ifdef HAVE_PTHREAD_SETSCHEDPARAM
 static _tme_inline void tme_thread_yield _TME_P((void)) {
   if(!tme_thread_cooperative()) return;
   
@@ -236,9 +243,11 @@ static _tme_inline void tme_thread_yield _TME_P((void)) {
   _tme_thread_resumed();
 }
 #else
+#define tme_thread_set_defattr(attr)
+#define tme_thread_defattr() NULL
 #define tme_thread_yield() do { } while (/* CONSTCOND */ 0)
 #endif
-
+#define tme_thread_create(t,f,a) pthread_create(t,tme_thread_defattr(),f,a)
 #define tme_thread_join(id) pthread_join(id,NULL)
 #define tme_thread_exit() _tme_thread_suspended();return NULL
 
@@ -269,7 +278,7 @@ static _tme_inline int tme_threads_main_iter _TME_P((void *usec)) {
   return usleep((usec) ? (unsigned long)usec : 1000000);
 }
 
-#define _tme_threads_main_iter(fn) fn()
+#define _tme_threads_main_iter(fn) if(fn) fn()
 
 #ifdef HAVE_CPUSET_CREATE
 typedef cpuset_t *tme_cpuset_t;
