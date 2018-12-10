@@ -40,11 +40,8 @@
 #include <tme/generic/fb.h>
 #include <tme/generic/keyboard.h>
 #include <tme/generic/mouse.h>
-#ifdef THREADS_SJLJ
-#include <tme/threads-glib.h>
-#else
+#define TME_THREADS_GLIB
 #include <tme/threads.h>
-#endif
 #include <tme/hash.h>
 
 /* macros: */
@@ -120,6 +117,10 @@ struct tme_display {
   /* our thread: */
   tme_threadid_t tme_display_thread;
 
+#ifdef TME_THREADS_SJLJ
+  struct tme_sjlj_thread *tme_display_sjlj_thread;
+#endif
+  
   /* our keyboard connection: */
   struct tme_keyboard_connection *tme_display_keyboard_connection;
 
@@ -158,7 +159,6 @@ struct tme_display {
   
   /* implementation-specific callback functions: */
   struct tme_screen *(*tme_screen_add) _TME_P((struct tme_display *, struct tme_connection *));
-  void (*tme_main_iter) _TME_P((void));
   int (*tme_screen_set_size) _TME_P((struct tme_screen *,
 				     int,
 				     int));
@@ -166,7 +166,7 @@ struct tme_display {
 };
 
 /* prototypes: */
-int _tme_screens_update _TME_P((void *disp));
+_tme_thret _tme_display_th_update _TME_P((void *disp));
 struct tme_screen *_tme_screen_add _TME_P((struct tme_display *,
 					   size_t,
 					   struct tme_connection *));

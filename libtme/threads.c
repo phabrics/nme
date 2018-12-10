@@ -112,7 +112,7 @@ void tme_threads_run(void) {
   _tme_thread_suspended();
   /* Run the main loop */
   if(_tme_threads_run)
-    for(;!(*_tme_threads_run)(_tme_threads_arg););
+    for(;(*_tme_threads_run)(_tme_threads_arg););
   else
     (*(tme_threads_fn)_tme_threads_arg)();
 }

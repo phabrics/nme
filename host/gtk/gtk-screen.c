@@ -40,21 +40,14 @@ _TME_RCSID("$Id: gtk-screen.c,v 1.11 2009/08/30 21:39:03 fredette Exp $");
 #include "gtk-display.h"
 #include <stdlib.h>
 
-static _tme_thret
-_tme_gtk_main_iter(void *disp) {
-  /* while (gtk_events_pending ())
-     gtk_main_iteration (); */
-  //  gtk_main_iteration_do(FALSE);
-  gtk_main();
-}
-
-/* the (default) GTK screens update function: */
 static int
-_tme_gtk_screens_update(void *disp)
-{
+_tme_gtk_screens_update(void *disp) {
   struct tme_display *display;
   struct tme_fb_connection *conn_fb;
   struct tme_gtk_screen *screen;  
+
+  while (gtk_events_pending ())
+    gtk_main_iteration ();
 
   display = (struct tme_display *)disp;
   
@@ -82,6 +75,22 @@ _tme_gtk_screens_update(void *disp)
   _tme_thread_suspended();
 
   return TRUE;
+}
+
+/* the display update thread: */
+static _tme_thret
+_tme_gtk_display_th_update(void *disp)
+{
+  struct tme_display *display;
+
+  display = (struct tme_display *)disp;
+
+  tme_thread_enter(NULL);
+
+  for(;_tme_gtk_screens_update(disp););
+
+    /* NOTREACHED */
+  tme_thread_exit();
 }
 
 /* this recovers the scanline-pad value for an image buffer: */
@@ -532,16 +541,17 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   
   /* set the display-specific functions: */
   display->tme_screen_add = _tme_gtk_screen_new;
-  display->tme_main_iter = NULL; // _tme_gtk_main_iter;
   display->tme_screen_set_size = _tme_gtk_screen_set_size;
   display->tme_screen_area = (gdk_screen_width()
 			      * gdk_screen_height());
 
   /* setup the thread loop function: */
-  tme_threads_init(NULL, gtk_main);
+  //  tme_threads_init(NULL, gtk_main);
 
   /* unlock mutex once gtk main thread is running: */
-  g_idle_add(_tme_gtk_screens_update, display);
+  //  g_idle_add(_tme_gtk_screens_update, display);
 
+  tme_threads_init(_tme_gtk_screens_update, display);
+  
   return (TME_OK);
 }

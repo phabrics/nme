@@ -528,7 +528,7 @@ tme_sjlj_threads_main_iter(void *event_check)
   /* dispatch: */
   tme_sjlj_dispatch(1);
 
-  return 0;
+  return TRUE;
 }
 
 /* this creates a new thread: */

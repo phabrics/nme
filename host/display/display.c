@@ -36,21 +36,20 @@
 /* includes: */
 #include "display.h"
 
-/* the display update thread: */
-static _tme_thret
-_tme_display_th_update(void *disp)
+
+/* the display main thread: */
+#ifdef TME_THREADS_SJLJ
+_tme_thret
+_tme_display_th_main(void *fn)
 {
-  struct tme_display *display;
-
-  display = (struct tme_display *)disp;
-
   tme_thread_enter(NULL);
 
-  for(;_tme_screens_update(disp););
+  for(;tme_sjlj_threads_main_iter(fn););
 
     /* NOTREACHED */
   tme_thread_exit();
 }
+#endif
 
 /* the screens update loop: */
 int
@@ -64,12 +63,8 @@ _tme_screens_update(void *disp)
 
   display = (struct tme_display *)disp;
   
-  _tme_threads_main_iter(display->tme_main_iter);
-
   /* lock the mutex: */
   if(tme_mutex_trylock(&display->tme_display_mutex)) return TRUE;
-
-  _tme_thread_resumed();
 
   /* loop over all screens: */
   for (screen = display->tme_display_screens;
@@ -124,8 +119,6 @@ _tme_screens_update(void *disp)
 
   /* unlock the mutex: */
   tme_mutex_unlock(&display->tme_display_mutex);
-
-  _tme_thread_suspended();
 
   return TRUE;
 }
@@ -647,8 +640,12 @@ int tme_display_init(struct tme_element *element) {
   tme_mutex_init(&display->tme_display_mutex);
 
   /* setup the thread loop function: */
+#ifdef TME_THREADS_SJLJ
+  tme_sjlj_thread_create(&display->tme_display_sjlj_thread, _tme_display_th_update, display);
+  tme_thread_create(&display->tme_display_thread, _tme_display_th_main, NULL);
+#else
   tme_thread_create(&display->tme_display_thread, _tme_display_th_update, display);
-  
+#endif  
   /* fill the element: */
   element->tme_element_private = display;
   element->tme_element_connections_new = _tme_display_connections_new;

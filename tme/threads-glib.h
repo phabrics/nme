@@ -48,7 +48,7 @@
 
 /* thread suspension: */
 extern GRWLock tme_rwlock_suspere;
-#ifdef THREADS_SJLJ
+#ifdef TME_THREADS_SJLJ
 #define tme_thread_suspend_others()	do { } while (/* CONSTCOND */ 0)
 #define tme_thread_resume_others()	do { } while (/* CONSTCOND */ 0)
 #define _tme_thread_suspended()	do { } while (/* CONSTCOND */ 0)
