@@ -36,6 +36,61 @@
 /* includes: */
 #include "display.h"
 
+/* this is for debugging only: */
+#if 0
+#include <stdio.h>
+void
+_tme_mouse_debug(const struct tme_mouse_event *event)
+{
+  fprintf(stderr,
+	  "buttons = 0x%02x dx=%d dy=%d\n",
+	  event->tme_mouse_event_buttons,
+	  event->tme_mouse_event_delta_x,
+	  event->tme_mouse_event_delta_y);
+}
+#else
+#define _tme_mouse_debug(e) do { } while (/* CONSTCOND */ 0)
+#endif
+
+/* this is a callback for a mouse event in the framebuffer event box: */
+int
+_tme_mouse_mouse_event(struct tme_keyboard_event *tme_event,
+		       struct tme_display *display)
+{
+  int was_empty;
+  int new_callouts;
+  int rc;
+
+  /* assume that we won't need any new callouts: */
+  new_callouts = 0;
+  
+  /* remember if the mouse buffer was empty: */
+  was_empty
+    = tme_mouse_buffer_is_empty(display->tme_display_mouse_buffer);
+
+  /* add this tme event to the mouse buffer: */
+  _tme_mouse_debug(tme_event);
+  rc = tme_mouse_buffer_copyin(display->tme_display_mouse_buffer,
+			       tme_event);
+  assert (rc == TME_OK);
+
+  /* if the mouse buffer was empty and now it isn't,
+     call out the mouse controls: */
+  if (was_empty
+      && !tme_mouse_buffer_is_empty(display->tme_display_mouse_buffer)) {
+    new_callouts |= TME_DISPLAY_CALLOUT_MOUSE_CTRL;
+  }
+
+  /* add in any new callouts: */
+  display->tme_display_callout_flags |= new_callouts;
+
+  /* run any callouts: */
+  //_tme_display_callout(display, new_callouts);
+
+  /* don't process this event any further: */
+  return (TRUE);
+}
+
 /* this is called when the mouse controls change: */
 static int
 _tme_mouse_ctrl(struct tme_mouse_connection *conn_mouse, 

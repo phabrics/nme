@@ -66,6 +66,8 @@ _tme_screens_update(void *disp)
   /* lock the mutex: */
   if(tme_mutex_trylock(&display->tme_display_mutex)) return TRUE;
 
+  _tme_display_callout(display, 0);
+
   /* loop over all screens: */
   for (screen = display->tme_display_screens;
        screen != NULL;

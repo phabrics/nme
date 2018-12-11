@@ -258,8 +258,11 @@ _tme_keyboard_key_event(struct tme_keyboard_event *tme_event,
     new_callouts |= TME_DISPLAY_CALLOUT_KEYBOARD_CTRL;
   }
 
+  /* add in any new callouts: */
+  display->tme_display_callout_flags |= new_callouts;
+
   /* run any callouts: */
-  _tme_display_callout(display, new_callouts);
+  //_tme_display_callout(display, new_callouts);
 
   /* don't process this event any further: */
   return (TRUE);

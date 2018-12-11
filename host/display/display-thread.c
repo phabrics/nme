@@ -42,7 +42,9 @@ _tme_display_th_update(void *disp)
 {
   tme_thread_enter(NULL);
 
-  for(;_tme_screens_update(disp);tme_thread_yield());
+  for(;_tme_screens_update(disp);) {
+    tme_thread_yield();
+  }
 
     /* NOTREACHED */
   tme_thread_exit();

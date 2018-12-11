@@ -50,22 +50,6 @@ _tme_gtk_mouse_warp_pointer(struct tme_gtk_screen *screen)
 		  screen->tme_gtk_screen_mouse_warp_y);
 }
 
-/* this is for debugging only: */
-#if 0
-#include <stdio.h>
-void
-_tme_gtk_mouse_debug(const struct tme_mouse_event *event)
-{
-  fprintf(stderr,
-	  "buttons = 0x%02x dx=%d dy=%d\n",
-	  event->tme_mouse_event_buttons,
-	  event->tme_mouse_event_delta_x,
-	  event->tme_mouse_event_delta_y);
-}
-#else
-#define _tme_gtk_mouse_debug(e) do { } while (/* CONSTCOND */ 0)
-#endif
-
 /* this is a GTK callback for a mouse event in the framebuffer event box: */
 static int
 _tme_gtk_mouse_mouse_event(GtkWidget *widget,
@@ -190,29 +174,8 @@ _tme_gtk_mouse_mouse_event(GtkWidget *widget,
     (((int) y)
      - ((int) screen->tme_gtk_screen_mouse_warp_y));
 
-  /* assume that we won't need any new callouts: */
-  new_callouts = 0;
+  _tme_mouse_mouse_event(&tme_event, display);
   
-  /* remember if the mouse buffer was empty: */
-  was_empty
-    = tme_mouse_buffer_is_empty(display->tme_display_mouse_buffer);
-
-  /* add this tme event to the mouse buffer: */
-  _tme_gtk_mouse_debug(&tme_event);
-  rc = tme_mouse_buffer_copyin(display->tme_display_mouse_buffer,
-			       &tme_event);
-  assert (rc == TME_OK);
-
-  /* if the mouse buffer was empty and now it isn't,
-     call out the mouse controls: */
-  if (was_empty
-      && !tme_mouse_buffer_is_empty(display->tme_display_mouse_buffer)) {
-    new_callouts |= TME_DISPLAY_CALLOUT_MOUSE_CTRL;
-  }
-
-  /* run any callouts: */
-  _tme_display_callout(display, new_callouts);
-
   /* unlock the mutex: */
   tme_mutex_unlock(&display->tme_display_mutex);
 
