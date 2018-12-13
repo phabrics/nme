@@ -507,13 +507,11 @@ do_usage(const char *prog_name, char *msg)
 {
   if (msg != NULL)
     fputs(msg, stderr);
-  fprintf(stderr, "\
-usage: %s [OPTIONS] INITIAL-CONFIG\n		\
-where OPTIONS are:\n				\
-  --log LOGFILE          log to LOGFILE\n			\
-  -c, --noninteractive   read no commands from standard input\n	\
-",
-	  prog_name);
+  fprintf(stderr, "usage: %s [OPTIONS] INITIAL-CONFIG \
+                   \nwhere OPTIONS are:			   \
+                   \n--log LOGFILE          log to LOGFILE		\
+                   \n-c, --noninteractive   read no commands from standard input\n",
+ 	  prog_name);
 #ifdef TME_THREADS_POSIX
 #define fpe(msg) fprintf(stderr, "\t%s", msg);          /* Shorter */
 #ifdef HAVE_PTHREAD_SETAFFINITY_NP

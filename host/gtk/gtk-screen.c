@@ -299,10 +299,7 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
   conn_fb->tme_fb_connection_buffsz = cairo_image_surface_get_stride(screen->tme_gtk_screen_surface) * conn_fb->tme_fb_connection_height;
   
   /* set the translation function */
-  _tme_screen_xlat_set(conn_fb, screen);
-
-  /* force the next translation to do a complete redraw: */
-  screen->screen.tme_screen_full_redraw = TRUE;
+  screen->screen.tme_screen_fb_xlat = NULL;
 
   /* unlock our mutex: */
   tme_mutex_unlock(&display->tme_display_mutex);

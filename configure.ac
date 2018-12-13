@@ -34,7 +34,7 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.68])
 m4_include(version.m4)
-AC_INIT([tme], [0.12beta34])
+AC_INIT([tme], [0.12beta35])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
@@ -43,6 +43,7 @@ AC_CANONICAL_TARGET
 AC_CONFIG_LIBOBJ_DIR([lib])
 AM_INIT_AUTOMAKE([subdir-objects])
 AM_PROG_CC_C_O
+AC_PREFIX_PROGRAM([tmesh])
 
 dnl Write configuration out to config.h through config.h.in.
 AC_CONFIG_HEADERS([config.h])

@@ -78,9 +78,6 @@ struct tme_screen {
   /* any colorset signature: */
   tme_uint32_t tme_screen_colorset;
 
-  /* if nonzero, the screen needs a full redraw: */
-  int tme_screen_full_redraw;
-
   /* if nonzero, the screen has changed and should be updated in the display: */
   int tme_screen_update;
 
@@ -173,8 +170,7 @@ struct tme_screen *_tme_screen_add _TME_P((struct tme_display *,
 #define tme_screen_new(display, screen, conn) ((screen *)_tme_screen_add(display,sizeof(screen),conn))
 void _tme_screen_scale_set _TME_P((struct tme_screen *screen,
 				   int scale_new));
-void _tme_screen_xlat_set _TME_P((const struct tme_fb_connection *conn_fb, 
-				  struct tme_screen *screen));
+void _tme_screen_xlat_set _TME_P((struct tme_screen *screen));
 void _tme_keyboard_new _TME_P((struct tme_display *));
 int _tme_keyboard_connections_new _TME_P((struct tme_display *,
 					  struct tme_connection **));
