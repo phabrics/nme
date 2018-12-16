@@ -66,8 +66,6 @@ _tme_gtk_mouse_mouse_event(GtkWidget *widget,
   int new_callouts;
   int rc;
 
-  _tme_thread_resumed();
-
   /* start the tme event: */
   tme_event.tme_mouse_event_delta_units
     = TME_MOUSE_UNITS_UNKNOWN;
@@ -104,8 +102,6 @@ _tme_gtk_mouse_mouse_event(GtkWidget *widget,
       /* unlock the mutex: */
       tme_mutex_unlock(&display->tme_display_mutex);
 
-      _tme_thread_suspended();
-
       /* stop propagating this event: */
       return (TRUE);
     }
@@ -123,8 +119,6 @@ _tme_gtk_mouse_mouse_event(GtkWidget *widget,
       
     /* unlock the mutex: */
     tme_mutex_unlock(&display->tme_display_mutex);
-
-    _tme_thread_suspended();
 
     /* stop propagating this event: */
     return (TRUE);
@@ -179,8 +173,6 @@ _tme_gtk_mouse_mouse_event(GtkWidget *widget,
   /* unlock the mutex: */
   tme_mutex_unlock(&display->tme_display_mutex);
 
-  _tme_thread_suspended();
-
   /* stop propagating this event: */
   return (TRUE);
 }
@@ -208,8 +200,6 @@ _tme_gtk_mouse_ebox_event(GtkWidget *widget,
   if (gdk_event_raw->type != GDK_KEY_PRESS) {
     return (FALSE);
   }
-
-  _tme_thread_resumed();
 
   /* recover our data structure: */
   display = screen->screen.tme_screen_display;
@@ -282,8 +272,6 @@ _tme_gtk_mouse_ebox_event(GtkWidget *widget,
 
   /* unlock the mutex: */
   tme_mutex_unlock(&display->tme_display_mutex);
-
-  _tme_thread_suspended();
 
   /* stop propagating this event: */
   return (TRUE);

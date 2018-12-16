@@ -52,8 +52,8 @@ _tme_display_th_main(void *fn)
 #endif
 
 /* the screens update loop: */
-int
-_tme_screens_update(void *disp)
+static _tme_thret
+_tme_display_th_update(void *disp)
 {
   struct tme_display *display;
   struct tme_screen *screen;
@@ -63,62 +63,75 @@ _tme_screens_update(void *disp)
 
   display = (struct tme_display *)disp;
   
-  /* lock the mutex: */
-  if(tme_mutex_trylock(&display->tme_display_mutex)) return TRUE;
-
-  _tme_display_callout(display, 0);
-
-  /* loop over all screens: */
-  for (screen = display->tme_display_screens;
-       screen != NULL;
-       screen = screen->tme_screen_next) {
-
-    /* skip this screen if it's unconnected: */
-    if (screen->tme_screen_update ||
-	(conn_fb = screen->tme_screen_fb) == NULL) {
-      continue;
-    }
-
-    /* get the other side of this connection: */
-    conn_fb_other = (struct tme_fb_connection *)conn_fb->tme_fb_connection.tme_connection_other;
-
-    /* if the framebuffer has an update function, call it: */
-    if (conn_fb_other->tme_fb_connection_update != NULL) {
-      rc = (*conn_fb_other->tme_fb_connection_update)(conn_fb_other);
-      assert (rc == TME_OK);
-    }
-
-    if (!screen->tme_screen_fb_xlat && conn_fb->tme_fb_connection_buffer) {
-      _tme_screen_xlat_set(screen);
-      /* force the next translation to retranslate the entire buffer: */
-      tme_fb_xlat_redraw(conn_fb_other);
-      conn_fb_other->tme_fb_connection_offset_updated_first = 0;
-      conn_fb_other->tme_fb_connection_offset_updated_last = 0 - (tme_uint32_t) 1;
-    }
-
-    if (screen->tme_screen_fb_xlat) {
-      /* translate this framebuffer's contents: */
-      screen->tme_screen_update = (*screen->tme_screen_fb_xlat)(conn_fb_other, conn_fb);
-#ifdef DEBUG_FB
-      tme_uint32_t *i;
-      tme_uint32_t last_i, j;
-
-      i = (tme_uint32_t *)conn_fb->tme_fb_connection_buffer;
-      last_i = *i;
-      printf("%8x: %8x\n", i, last_i);
-      for(j=0;j<conn_fb->tme_fb_connection_buffsz;j+=sizeof(tme_uint32_t)) {
-	if(last_i != *i) { last_i = *i; printf("%8x: %8x\n", i, last_i); }
-	i++;
-      }
+  tme_thread_enter(NULL);
+  
+  for(;;
+#ifdef TME_THREADS_SJLJ
+      tme_sjlj_yield()
+#else
+    tme_thread_yield()
 #endif
-    } 
+      ) {
+    
+    /* lock the mutex: */
+    if(tme_mutex_trylock(&display->tme_display_mutex)) continue;
+    
+    _tme_display_callout(display, 0);
+    
+    /* loop over all screens: */
+    for (screen = display->tme_display_screens;
+	 screen != NULL;
+	 screen = screen->tme_screen_next) {
+
+      /* skip this screen if it's unconnected: */
+      if (screen->tme_screen_update ||
+	  (conn_fb = screen->tme_screen_fb) == NULL) {
+	continue;
+      }
+
+      /* get the other side of this connection: */
+      conn_fb_other = (struct tme_fb_connection *)conn_fb->tme_fb_connection.tme_connection_other;
+
+      /* if the framebuffer has an update function, call it: */
+      if (conn_fb_other->tme_fb_connection_update != NULL) {
+	rc = (*conn_fb_other->tme_fb_connection_update)(conn_fb_other);
+	assert (rc == TME_OK);
+      }
+
+      if (!screen->tme_screen_fb_xlat && conn_fb->tme_fb_connection_buffer) {
+	_tme_screen_xlat_set(screen);
+	/* force the next translation to retranslate the entire buffer: */
+	tme_fb_xlat_redraw(conn_fb_other);
+	conn_fb_other->tme_fb_connection_offset_updated_first = 0;
+	conn_fb_other->tme_fb_connection_offset_updated_last = 0 - (tme_uint32_t) 1;
+      }
+
+      if (screen->tme_screen_fb_xlat && !screen->tme_screen_update) {
+	/* translate this framebuffer's contents: */
+	screen->tme_screen_update = (*screen->tme_screen_fb_xlat)(conn_fb_other, conn_fb);
+#ifdef DEBUG_FB
+	tme_uint32_t *i;
+	tme_uint32_t last_i, j;
+
+	i = (tme_uint32_t *)conn_fb->tme_fb_connection_buffer;
+	last_i = *i;
+	printf("%8x: %8x\n", i, last_i);
+	for(j=0;j<conn_fb->tme_fb_connection_buffsz;j+=sizeof(tme_uint32_t)) {
+	  if(last_i != *i) { last_i = *i; printf("%8x: %8x\n", i, last_i); }
+	  i++;
+	}
+#endif
+      } 
+    }
+    
+    /* unlock the mutex: */
+    tme_mutex_unlock(&display->tme_display_mutex);
 
   }
+  
+  /* NOTREACHED */
+  tme_thread_exit();
 
-  /* unlock the mutex: */
-  tme_mutex_unlock(&display->tme_display_mutex);
-
-  return TRUE;
 }
 
 /* the generic display callout function.  it must be called with the mutex locked: */
@@ -433,7 +446,8 @@ _tme_screen_configure(struct tme_screen *screen)
 
   /* set the size & translation function */
   if(!display->tme_screen_set_size(screen, width, height))
-    _tme_screen_xlat_set(screen);
+    /* reset the translation function */
+    screen->tme_screen_fb_xlat = NULL;
 }
 
 /* this is called for a mode change: */
@@ -475,8 +489,6 @@ _tme_screen_scale_set(struct tme_screen *screen,
   int scale_old;
   int rc;
 
-  _tme_thread_resumed();
-
   /* get the display: */
   display = screen->tme_screen_display;
 
@@ -500,7 +512,6 @@ _tme_screen_scale_set(struct tme_screen *screen,
   /* unlock our mutex: */
   tme_mutex_unlock(&display->tme_display_mutex);
 
-  _tme_thread_suspended();
 }
 
 /* this adds a new screen: */

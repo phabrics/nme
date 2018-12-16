@@ -40,57 +40,51 @@ _TME_RCSID("$Id: gtk-screen.c,v 1.11 2009/08/30 21:39:03 fredette Exp $");
 #include "gtk-display.h"
 #include <stdlib.h>
 
-static int
-_tme_gtk_screens_update(void *disp) {
+static _tme_thret
+_tme_gtk_display_th_update(void *disp) {
   struct tme_display *display;
   struct tme_fb_connection *conn_fb;
   struct tme_gtk_screen *screen;  
 
-  while (gtk_events_pending ())
-    gtk_main_iteration ();
+  tme_thread_enter(NULL);
 
   display = (struct tme_display *)disp;
   
-  _tme_thread_resumed();
+  _tme_thread_suspended();
+  
+  for(;;) {
+    while (gtk_events_pending ())
+      gtk_main_iteration ();
 
-  /* lock the mutex: */
-  tme_mutex_lock(&display->tme_display_mutex);
+    /* lock the mutex: */
+    if(tme_mutex_trylock(&display->tme_display_mutex)) continue;
 
-  /* loop over all screens: */
-  for (screen = display->tme_display_screens;
-       screen != NULL;
-       screen = screen->screen.tme_screen_next) {
+    _tme_thread_resumed();
 
-    /* if those contents changed, update the screen: */
-    if (screen->screen.tme_screen_update) {
-      cairo_surface_flush(screen->tme_gtk_screen_surface);
-      cairo_surface_mark_dirty(screen->tme_gtk_screen_surface);
-      gtk_widget_queue_draw(screen->tme_gtk_screen_gtkframe);
+    /* loop over all screens: */
+    for (screen = display->tme_display_screens;
+	 screen != NULL;
+	 screen = screen->screen.tme_screen_next) {
+
+      /* if those contents changed, update the screen: */
+      if (screen->screen.tme_screen_update) {
+	cairo_surface_flush(screen->tme_gtk_screen_surface);
+	cairo_surface_mark_dirty(screen->tme_gtk_screen_surface);
+	gtk_widget_queue_draw(screen->tme_gtk_screen_gtkframe);
+      }
     }
+
+    /* unlock our mutex: */
+    tme_mutex_unlock(&display->tme_display_mutex);
+
+    tme_thread_yield();
+
+    _tme_thread_suspended();
   }
 
-  /* unlock our mutex: */
-  tme_mutex_unlock(&display->tme_display_mutex);
-
-  _tme_thread_suspended();
-
-  return TRUE;
-}
-
-/* the display update thread: */
-static _tme_thret
-_tme_gtk_display_th_update(void *disp)
-{
-  struct tme_display *display;
-
-  display = (struct tme_display *)disp;
-
-  tme_thread_enter(NULL);
-
-  for(;_tme_gtk_screens_update(disp););
-
-    /* NOTREACHED */
+  /* NOTREACHED */
   tme_thread_exit();
+
 }
 
 /* this recovers the scanline-pad value for an image buffer: */
@@ -259,8 +253,6 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
   struct tme_display *display;
   struct tme_fb_connection *conn_fb;
 
-  _tme_thread_resumed();
-
   screen = (struct tme_gtk_screen *) _screen;
 
   /* get the display: */
@@ -275,7 +267,6 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
     /* unlock our mutex: */
     tme_mutex_unlock(&display->tme_display_mutex);
     
-    _tme_thread_suspended();
     return TRUE;
   }
   
@@ -304,8 +295,6 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
   /* unlock our mutex: */
   tme_mutex_unlock(&display->tme_display_mutex);
 
-  _tme_thread_suspended();
-
   /* We've handled the configure event, no need for further processing. */
   return TRUE;
 }
@@ -322,8 +311,6 @@ _tme_gtk_screen_draw(GtkWidget *widget,
   struct tme_display *display;
   struct tme_gtk_screen *screen;
 
-  _tme_thread_resumed();
-
   screen = (struct tme_gtk_screen *) _screen;
 
   /* get the display: */
@@ -338,8 +325,6 @@ _tme_gtk_screen_draw(GtkWidget *widget,
 
   /* unlock our mutex: */
   tme_mutex_unlock(&display->tme_display_mutex);
-
-  _tme_thread_suspended();
 
   return FALSE;
 }
@@ -548,7 +533,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   /* unlock mutex once gtk main thread is running: */
   //  g_idle_add(_tme_gtk_screens_update, display);
 
-  tme_threads_init(_tme_gtk_screens_update, display);
+  tme_threads_init(_tme_gtk_display_th_update, display);
   
   return (TME_OK);
 }

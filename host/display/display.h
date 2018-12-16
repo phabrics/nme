@@ -163,7 +163,6 @@ struct tme_display {
 };
 
 /* prototypes: */
-_tme_thret _tme_display_th_update _TME_P((void *disp));
 struct tme_screen *_tme_screen_add _TME_P((struct tme_display *,
 					   size_t,
 					   struct tme_connection *));
