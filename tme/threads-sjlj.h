@@ -109,6 +109,7 @@ int tme_sjlj_rwlock_unlock _TME_P((struct tme_sjlj_rwlock *, _tme_const char *, 
 /* mutexes.  we use a read/write lock to represent a mutex, and always
    lock it for writing.  we do *not* allow recursive locking: */
 #define tme_mutex_t tme_rwlock_t
+#define _tme_mutex_lock tme_rwlock_wrlock
 #define tme_mutex_lock tme_rwlock_wrlock
 #define tme_mutex_trylock tme_rwlock_trywrlock
 #define tme_mutex_timedlock(t, usec) tme_mutex_trylock(t)

@@ -113,6 +113,7 @@ static _tme_inline int tme_rwlock_wrunlock _TME_P((tme_rwlock_t *l)) {
 typedef GMutex tme_mutex_t;
 #define tme_mutex_init g_mutex_init
 #define tme_mutex_destroy g_mutex_clear
+#define _tme_mutex_lock g_mutex_lock
 static _tme_inline void tme_mutex_lock _TME_P((tme_mutex_t *m)) { 
   _tme_thread_suspended();
   

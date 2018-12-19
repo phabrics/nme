@@ -59,7 +59,7 @@ _tme_gtk_display_th_update(void *disp) {
     /* lock the mutex: */
     if(tme_mutex_trylock(&display->tme_display_mutex)) continue;
 
-    _tme_thread_resumed();
+    //_tme_thread_resumed();
 
     /* loop over all screens: */
     for (screen = display->tme_display_screens;
@@ -79,7 +79,7 @@ _tme_gtk_display_th_update(void *disp) {
 
     tme_thread_yield();
 
-    _tme_thread_suspended();
+    //    _tme_thread_suspended();
   }
 
   /* NOTREACHED */
@@ -259,7 +259,7 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
   display = screen->screen.tme_screen_display;
 
   /* lock our mutex: */
-  tme_mutex_lock(&display->tme_display_mutex);
+  _tme_mutex_lock(&display->tme_display_mutex);
 
   if(screen->tme_gtk_screen_surface == NULL) {
     _tme_gtk_screen_init(widget, screen);
@@ -289,9 +289,6 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
   conn_fb->tme_fb_connection_buffer = cairo_image_surface_get_data(screen->tme_gtk_screen_surface);
   conn_fb->tme_fb_connection_buffsz = cairo_image_surface_get_stride(screen->tme_gtk_screen_surface) * conn_fb->tme_fb_connection_height;
   
-  /* set the translation function */
-  screen->screen.tme_screen_fb_xlat = NULL;
-
   /* unlock our mutex: */
   tme_mutex_unlock(&display->tme_display_mutex);
 
@@ -317,7 +314,7 @@ _tme_gtk_screen_draw(GtkWidget *widget,
   display = screen->screen.tme_screen_display;
 
   /* lock our mutex: */
-  tme_mutex_lock(&display->tme_display_mutex);
+  _tme_mutex_lock(&display->tme_display_mutex);
 
   cairo_set_source_surface(cr, screen->tme_gtk_screen_surface, 0, 0);
   cairo_paint(cr);

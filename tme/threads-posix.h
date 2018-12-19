@@ -139,7 +139,7 @@ static _tme_inline int tme_rwlock_timedlock _TME_P((tme_rwlock_t *l, unsigned lo
 typedef pthread_mutex_t tme_mutex_t;
 #define tme_mutex_init(m) pthread_mutex_init(m,NULL)
 #define tme_mutex_destroy pthread_mutex_destroy
-
+#define _tme_mutex_lock pthread_mutex_lock
 static _tme_inline int tme_mutex_lock _TME_P((tme_mutex_t *m)) { 
   int rc;
 
