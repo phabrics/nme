@@ -39,7 +39,7 @@
 
 /* the display main thread: */
 #ifdef TME_THREADS_SJLJ
-_tme_thret
+static _tme_thret
 _tme_display_th_main(void *fn)
 {
   tme_thread_enter(NULL);
@@ -275,13 +275,6 @@ _tme_screen_xlat_set(struct tme_screen *screen) {
   conn_fb->tme_fb_connection_map_pixel = NULL;
   conn_fb->tme_fb_connection_map_pixel_count = 0;
 
-  conn_fb->tme_fb_connection_bits_per_pixel = 32;
-  conn_fb->tme_fb_connection_depth = 24;
-  conn_fb->tme_fb_connection_class = TME_FB_XLAT_CLASS_COLOR;
-  conn_fb->tme_fb_connection_mask_g = 0x00ff00;
-  conn_fb->tme_fb_connection_mask_b = 0x0000ff;
-  conn_fb->tme_fb_connection_mask_r = 0xff0000;
-  
   /* get the needed colors: */
   colorset = tme_fb_xlat_colors_get(conn_fb_other, scale, conn_fb, &colors_tme);
   color_count = conn_fb->tme_fb_connection_map_pixel_count;

@@ -49,6 +49,19 @@ _TME_RCSID("$Id: gtk-display.h,v 1.10 2009/08/28 01:29:47 fredette Exp $");
 
 /* types: */
 
+/* a display: */
+struct tme_gdk_display {
+
+  /* the generic display structure */
+  struct tme_display display;
+
+  GdkDisplay *tme_gdk_display;
+  
+  GdkCursor *tme_gdk_display_cursor;
+
+  GdkSeat *tme_gdk_display_seat;
+};
+  
 /* a screen: */
 struct tme_gtk_screen {
 
@@ -68,7 +81,6 @@ struct tme_gtk_screen {
   /* the Gtkframe & cairo_surface for the framebuffer: */
   GtkWidget *tme_gtk_screen_gtkframe;
   cairo_surface_t *tme_gtk_screen_surface;
-  GdkDevice *tme_gtk_screen_pointer;
 
   /* the mouse on label: */
   GtkWidget *tme_gtk_screen_mouse_label;

@@ -46,11 +46,11 @@ _tme_gtk_display_th_update(void *disp) {
   struct tme_fb_connection *conn_fb;
   struct tme_gtk_screen *screen;  
 
-  tme_thread_enter(NULL);
+  //  tme_thread_enter(NULL);
 
   display = (struct tme_display *)disp;
   
-  _tme_thread_suspended();
+  //_tme_thread_suspended();
   
   for(;;) {
     while (gtk_events_pending ())
@@ -83,7 +83,7 @@ _tme_gtk_display_th_update(void *disp) {
   }
 
   /* NOTREACHED */
-  tme_thread_exit();
+  //  tme_thread_exit();
 
 }
 
@@ -288,6 +288,12 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
   conn_fb->tme_fb_connection_order = TME_ENDIAN_NATIVE;
   conn_fb->tme_fb_connection_buffer = cairo_image_surface_get_data(screen->tme_gtk_screen_surface);
   conn_fb->tme_fb_connection_buffsz = cairo_image_surface_get_stride(screen->tme_gtk_screen_surface) * conn_fb->tme_fb_connection_height;
+  conn_fb->tme_fb_connection_bits_per_pixel = 32;
+  conn_fb->tme_fb_connection_depth = 24;
+  conn_fb->tme_fb_connection_class = TME_FB_XLAT_CLASS_COLOR;
+  conn_fb->tme_fb_connection_mask_g = 0x00ff00;
+  conn_fb->tme_fb_connection_mask_b = 0x0000ff;
+  conn_fb->tme_fb_connection_mask_r = 0xff0000;
   
   /* unlock our mutex: */
   tme_mutex_unlock(&display->tme_display_mutex);
@@ -328,7 +334,7 @@ _tme_gtk_screen_draw(GtkWidget *widget,
 
 /* this makes a new screen: */
 struct tme_gtk_screen *
-_tme_gtk_screen_new(struct tme_display *display,
+_tme_gtk_screen_new(struct tme_gdk_display *display,
 		    struct tme_connection *conn)
 {
   struct tme_gtk_screen *screen;
@@ -342,14 +348,12 @@ _tme_gtk_screen_new(struct tme_display *display,
 
   screen = tme_screen_new(display, struct tme_gtk_screen, conn);
 
-  gdkdisplay = gdk_display_get_default();
+  display->tme_gdk_display = gdk_display_get_default();
 
-  display->tme_display_mouse_cursor
-    = gdk_cursor_new_for_display(gdkdisplay, GDK_BLANK_CURSOR);
+  display->tme_gdk_display_cursor
+    = gdk_cursor_new_for_display(display->tme_gdk_display, GDK_BLANK_CURSOR);
 
-  devices = gdk_display_get_device_manager(gdkdisplay);
-
-  screen->tme_gtk_screen_pointer = gdk_device_manager_get_client_pointer(devices);
+  display->tme_gdk_display_seat = gdk_display_get_default_seat(display->tme_gdk_display);
 
   /* create the top-level window, and allow it to shrink, grow,
      and auto-shrink: */

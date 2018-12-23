@@ -44,7 +44,12 @@ _TME_RCSID("$Id: gtk-mouse.c,v 1.3 2007/03/03 15:33:22 fredette Exp $");
 static void
 _tme_gtk_mouse_warp_pointer(struct tme_gtk_screen *screen)
 {
-  gdk_device_warp(screen->tme_gtk_screen_pointer,
+  struct tme_gdk_display *display;
+
+  /* get the display: */
+  display = screen->screen.tme_screen_display;
+
+  gdk_device_warp(gdk_seat_get_pointer(display->tme_gdk_display_seat),
 		  gdk_screen_get_default(),
 		  screen->tme_gtk_screen_mouse_warp_x,
 		  screen->tme_gtk_screen_mouse_warp_y);
@@ -106,8 +111,6 @@ _tme_gtk_mouse_mouse_event(GtkWidget *widget,
       return (TRUE);
     }
 
-    /* warp the pointer back to center: */
-    _tme_gtk_mouse_warp_pointer(screen);
   }
 
   /* otherwise, if this is a double- or triple-click: */
@@ -168,6 +171,9 @@ _tme_gtk_mouse_mouse_event(GtkWidget *widget,
     (((int) y)
      - ((int) screen->tme_gtk_screen_mouse_warp_y));
 
+  screen->tme_gtk_screen_mouse_warp_x = x;
+  screen->tme_gtk_screen_mouse_warp_y = y;
+  
   _tme_mouse_mouse_event(&tme_event, display);
   
   /* unlock the mutex: */
@@ -184,7 +190,7 @@ _tme_gtk_mouse_ebox_event(GtkWidget *widget,
 			  GdkEvent *gdk_event_raw,
 			  struct tme_gtk_screen *screen)
 {
-  struct tme_display *display;
+  struct tme_gdk_display *display;
   int rc;
   char *status;
   GdkWindow *window;
@@ -205,7 +211,7 @@ _tme_gtk_mouse_ebox_event(GtkWidget *widget,
   display = screen->screen.tme_screen_display;
 
   /* lock the mutex: */
-  _tme_mutex_lock(&display->tme_display_mutex);
+  _tme_mutex_lock(&display->display.tme_display_mutex);
 
   /* the mouse must not be on already: */
   assert (screen->tme_gtk_screen_mouse_keyval
@@ -242,36 +248,29 @@ _tme_gtk_mouse_ebox_event(GtkWidget *widget,
 			  | GDK_BUTTON_RELEASE_MASK);
   }
 
-  /* get the current width and height of the framebuffer gtkframe, and
-     halve them to get the warp center: */
-  gdk_window_get_root_coords(window,
-			     gdk_window_get_width(window)>>1,
-			     gdk_window_get_height(window)>>1,
-			     &screen->tme_gtk_screen_mouse_warp_x,
-			     &screen->tme_gtk_screen_mouse_warp_y);
-
-  /* warp the pointer to center: */
-  _tme_gtk_mouse_warp_pointer(screen);
-  
   /* grab the pointer: */
   rc
-    = gdk_device_grab(screen->tme_gtk_screen_pointer,
-		      window,
-		      GDK_OWNERSHIP_NONE,
-		      TRUE,
-		      GDK_POINTER_MOTION_MASK
-		      | GDK_BUTTON_PRESS_MASK
-		      | GDK_BUTTON_RELEASE_MASK,
-		      display->tme_display_mouse_cursor,
-		      gdk_event_raw->key.time);
+    = gdk_seat_grab(display->tme_gdk_display_seat,
+		    window,
+		    GDK_SEAT_CAPABILITY_ALL_POINTING,
+		    TRUE,
+		    display->tme_gdk_display_cursor,
+		    gdk_event_raw,
+		    NULL,
+		    NULL);
   assert (rc == 0);
+
+  gdk_device_get_position(gdk_seat_get_pointer(display->tme_gdk_display_seat),
+			  NULL,
+			  &screen->tme_gtk_screen_mouse_warp_x,
+			  &screen->tme_gtk_screen_mouse_warp_y);
   
   /* we are now in mouse mode: */
   screen->tme_gtk_screen_mouse_keyval
     = gdk_event_raw->key.keyval;
 
   /* unlock the mutex: */
-  tme_mutex_unlock(&display->tme_display_mutex);
+  tme_mutex_unlock(&display->display.tme_display_mutex);
 
   /* stop propagating this event: */
   return (TRUE);
@@ -282,12 +281,17 @@ void
 _tme_gtk_mouse_mode_off(struct tme_gtk_screen *screen,
 			guint32 time)
 {
+  struct tme_gdk_display *display;
+
+  /* get the display: */
+  display = screen->screen.tme_screen_display;
+
   /* the mouse must be on: */
   assert (screen->tme_gtk_screen_mouse_keyval
 	  != GDK_KEY_VoidSymbol);
 
   /* ungrab the pointer: */
-  gdk_device_ungrab(screen->tme_gtk_screen_pointer, time);
+  gdk_seat_ungrab(display->tme_gdk_display_seat);
 
   /* restore the old events mask on the event box: */
   gdk_window_set_events(gtk_widget_get_window(screen->tme_gtk_screen_gtkframe),

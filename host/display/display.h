@@ -142,9 +142,6 @@ struct tme_display {
   /* our mouse buffer: */
   struct tme_mouse_buffer *tme_display_mouse_buffer;
 
-  /* our mouse cursor: */
-  void *tme_display_mouse_cursor;
-
   /* our screens: */
   struct tme_screen *tme_display_screens;
 
