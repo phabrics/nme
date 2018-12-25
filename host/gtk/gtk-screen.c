@@ -261,15 +261,6 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
   /* lock our mutex: */
   _tme_mutex_lock(&display->tme_display_mutex);
 
-  if(screen->tme_gtk_screen_surface == NULL) {
-    _tme_gtk_screen_init(widget, screen);
-
-    /* unlock our mutex: */
-    tme_mutex_unlock(&display->tme_display_mutex);
-    
-    return TRUE;
-  }
-  
   cairo_surface_destroy(screen->tme_gtk_screen_surface);
 
   screen->tme_gtk_screen_surface
@@ -346,6 +337,9 @@ _tme_gtk_screen_new(struct tme_gdk_display *display,
   GtkWidget *menu_item;
   char title[sizeof(PACKAGE_STRING) + 16];
 
+  /* lock our mutex: */
+  _tme_mutex_lock(&display->display.tme_display_mutex);
+
   screen = tme_screen_new(display, struct tme_gtk_screen, conn);
 
   display->tme_gdk_display = gdk_display_get_default();
@@ -376,7 +370,7 @@ _tme_gtk_screen_new(struct tme_gdk_display *display,
   gtk_box_pack_start(GTK_BOX(screen->tme_gtk_screen_vbox0), 
 		     menu_bar,
 		     FALSE, FALSE, 0);
-  gtk_widget_show(menu_bar);
+  //  gtk_widget_show(menu_bar);
 
   /* create the Screen menu: */
   menu = gtk_menu_new();
@@ -388,14 +382,14 @@ _tme_gtk_screen_new(struct tme_gdk_display *display,
 
   /* create the Screen scaling submenu item: */
   menu_item = gtk_menu_item_new_with_label(_("Scale"));
-  gtk_widget_show(menu_item);
+  //  gtk_widget_show(menu_item);
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), submenu);
   gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
 
   /* create the Screen menu bar item, attach the menu to it, and 
      attach the menu bar item to the menu bar: */
   menu_item = gtk_menu_item_new_with_label("Screen");
-  gtk_widget_show(menu_item);
+  //  gtk_widget_show(menu_item);
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), menu);
   gtk_menu_shell_append(GTK_MENU_SHELL(menu_bar), menu_item);
 
@@ -403,7 +397,10 @@ _tme_gtk_screen_new(struct tme_gdk_display *display,
   screen->tme_gtk_screen_gtkframe = gtk_drawing_area_new();
 
   /* set a minimum size */
-  _tme_gtk_screen_set_size(screen, BLANK_SIDE, BLANK_SIDE);
+  //_tme_gtk_screen_set_size(screen, BLANK_SIDE, BLANK_SIDE);
+  //  _tme_gtk_screen_init(screen->tme_gtk_screen_gtkframe, screen);
+  
+  _tme_screen_configure(screen);
 
   /* pack the Gtkframe into the outer vertical packing box: */
   gtk_box_pack_start(GTK_BOX(screen->tme_gtk_screen_vbox0), 
@@ -416,9 +413,6 @@ _tme_gtk_screen_new(struct tme_gdk_display *display,
   g_signal_connect(screen->tme_gtk_screen_gtkframe, "configure-event",
 		   G_CALLBACK(_tme_gtk_screen_configure), screen);
 
-  /* show the top-level window: */
-  gtk_widget_show_all(screen->tme_gtk_screen_window);
-
   /* attach the mouse to this screen: */
   _tme_gtk_mouse_attach(screen);
 
@@ -428,6 +422,12 @@ _tme_gtk_screen_new(struct tme_gdk_display *display,
   snprintf(title, sizeof(title), "%s (%s)", PACKAGE_STRING, conn->tme_connection_other->tme_connection_element->tme_element_args[0]);
   gtk_window_set_title(GTK_WINDOW(screen->tme_gtk_screen_window), title);
   
+  /* unlock our mutex: */
+  tme_mutex_unlock(&display->display.tme_display_mutex);
+
+  /* show the top-level window: */
+  gtk_widget_show_all(screen->tme_gtk_screen_window);
+
   return (screen);
 }
 
@@ -503,7 +503,7 @@ _tme_display_menu_radio(void *state,
 		     menu_func,
 		     (gpointer) state);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
-    gtk_widget_show(menu_item);
+    //    gtk_widget_show(menu_item);
   }
 
   /* return the menu: */

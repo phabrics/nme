@@ -373,7 +373,7 @@ _tme_screen_xlat_set(struct tme_screen *screen) {
 }
 
 /* this is called for a configuration request: */
-static int
+int
 _tme_screen_configure(struct tme_screen *screen)
 {
   struct tme_display *display;
@@ -577,7 +577,7 @@ _tme_display_connection_make(struct tme_connection *conn,
     //tme_mutex_unlock(&display->tme_display_mutex);
 
     /* call our mode change function: */
-    _tme_screen_mode_change((struct tme_fb_connection *) conn);
+    //    _tme_screen_mode_change((struct tme_fb_connection *) conn);
   }
 
   return (TME_OK);
