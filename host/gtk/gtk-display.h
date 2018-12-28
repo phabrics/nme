@@ -60,6 +60,8 @@ struct tme_gdk_display {
   GdkCursor *tme_gdk_display_cursor;
 
   GdkSeat *tme_gdk_display_seat;
+
+  GdkMonitor *tme_gdk_display_monitor;
 };
   
 /* a screen: */
@@ -78,7 +80,7 @@ struct tme_gtk_screen {
   GtkWidget *tme_gtk_screen_scale_default;
   GtkWidget *tme_gtk_screen_scale_half;
 
-  /* the Gtkframe & cairo_surface for the framebuffer: */
+  /* the GtkWidget, GdkWindow & cairo_surface for the framebuffer: */
   GtkWidget *tme_gtk_screen_gtkframe;
   cairo_surface_t *tme_gtk_screen_surface;
 

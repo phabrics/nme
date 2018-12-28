@@ -398,7 +398,9 @@ _tme_screen_configure(struct tme_screen *screen)
 
     /* see what percentage of the host's screen would be taken up by
        an unscaled emulated framebuffer: */
-    percentage = (fb_area * 100) / display->tme_screen_area;
+    percentage = (fb_area * 100) /
+      ( display->tme_screen_width * screen-> tme_screen_scale *
+	display->tme_screen_height * screen-> tme_screen_scale );
 
     /* if this is at least 70%, halve the emulated framebuffer, else
        if this is 30% or less, double the emulated framebuffer: */

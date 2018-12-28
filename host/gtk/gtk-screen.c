@@ -175,9 +175,13 @@ _tme_gtk_screen_submenu_scaling(void *_screen,
 static int _tme_gtk_screen_set_size(struct tme_gtk_screen *screen,
 				    int width,
 				    int height) {
-  int config = (gtk_widget_get_allocated_width(screen->tme_gtk_screen_gtkframe) != width ||
-		gtk_widget_get_allocated_height(screen->tme_gtk_screen_gtkframe) != height);
-  
+  int config;
+  struct tme_fb_connection *conn_fb = screen->screen.tme_screen_fb;
+
+  /* update our framebuffer connection: */
+  config = (conn_fb->tme_fb_connection_width != width ||
+	    conn_fb->tme_fb_connection_height != height);
+
   if(config)
     /* set a minimum size */
     gtk_widget_set_size_request(screen->tme_gtk_screen_gtkframe, width, height);
@@ -252,7 +256,9 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
   struct tme_gtk_screen *screen;
   struct tme_display *display;
   struct tme_fb_connection *conn_fb;
-
+  GdkWindow *window;
+  int scale;
+  
   screen = (struct tme_gtk_screen *) _screen;
 
   /* get the display: */
@@ -263,11 +269,16 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
 
   cairo_surface_destroy(screen->tme_gtk_screen_surface);
 
+  window = gtk_widget_get_window(screen->tme_gtk_screen_gtkframe);
+  
+  screen->screen.tme_screen_scale = gdk_window_get_scale_factor(window);
+  
   screen->tme_gtk_screen_surface
-    = _tme_gtk_screen_create_similar_image(gtk_widget_get_window(screen->tme_gtk_screen_gtkframe),
-					   CAIRO_FORMAT_ARGB32,
-					   gtk_widget_get_allocated_width(screen->tme_gtk_screen_gtkframe),
-					   gtk_widget_get_allocated_height(screen->tme_gtk_screen_gtkframe));
+    = gdk_window_create_similar_image_surface(window,
+					      CAIRO_FORMAT_ARGB32,
+					      gdk_window_get_width(window) * screen->screen.tme_screen_scale,
+					      gdk_window_get_height(window) * screen->screen.tme_screen_scale,
+					      screen->screen.tme_screen_scale);
 
   conn_fb = screen->screen.tme_screen_fb;
 
@@ -331,6 +342,7 @@ _tme_gtk_screen_new(struct tme_gdk_display *display,
   struct tme_gtk_screen *screen;
   GdkDisplay *gdkdisplay;
   GdkDeviceManager *devices;
+  GdkRectangle workarea;
   GtkWidget *menu_bar;
   GtkWidget *menu;
   GtkWidget *submenu;
@@ -349,6 +361,13 @@ _tme_gtk_screen_new(struct tme_gdk_display *display,
 
   display->tme_gdk_display_seat = gdk_display_get_default_seat(display->tme_gdk_display);
 
+  display->tme_gdk_display_monitor = gdk_display_get_primary_monitor(display->tme_gdk_display);
+
+  gdk_monitor_get_workarea(display->tme_gdk_display_monitor, &workarea);
+
+  display->display.tme_screen_width = workarea.width;
+  display->display.tme_screen_height = workarea.height;
+  
   /* create the top-level window, and allow it to shrink, grow,
      and auto-shrink: */
   screen->tme_gtk_screen_window
@@ -395,8 +414,9 @@ _tme_gtk_screen_new(struct tme_gdk_display *display,
 
   /* create the Gtkframe for the framebuffer area: */
   screen->tme_gtk_screen_gtkframe = gtk_drawing_area_new();
-
-  /* set a minimum size */
+  screen->screen.tme_screen_scale = gdk_window_get_scale_factor(gtk_widget_get_window(screen->tme_gtk_screen_gtkframe));
+  
+  /* new a minimum size */
   //_tme_gtk_screen_set_size(screen, BLANK_SIDE, BLANK_SIDE);
   //  _tme_gtk_screen_init(screen->tme_gtk_screen_gtkframe, screen);
   
@@ -525,8 +545,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   /* set the display-specific functions: */
   display->tme_screen_add = _tme_gtk_screen_new;
   display->tme_screen_set_size = _tme_gtk_screen_set_size;
-  display->tme_screen_area = (gdk_screen_width()
-			      * gdk_screen_height());
 
   /* setup the thread loop function: */
   //  tme_threads_init(NULL, gtk_main);

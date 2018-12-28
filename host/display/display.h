@@ -74,6 +74,8 @@ struct tme_screen {
   /* the current scaling.  if this is < 0, the user has not forced a
      given scaling yet: */
   int tme_screen_fb_scale;
+  // This is the device scale (if any) for the host platform itself
+  int tme_screen_scale;
   
   /* any colorset signature: */
   tme_uint32_t tme_screen_colorset;
@@ -148,8 +150,9 @@ struct tme_display {
   /* the callout flags: */
   unsigned int tme_display_callout_flags;
 
-  /* available screen area */
-  unsigned long tme_screen_area;
+  /* available screen dimensions: */
+  int tme_screen_width;
+  int tme_screen_height;
   
   /* implementation-specific callback functions: */
   struct tme_screen *(*tme_screen_add) _TME_P((struct tme_display *, struct tme_connection *));
