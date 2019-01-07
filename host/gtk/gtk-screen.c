@@ -56,6 +56,9 @@ _tme_gtk_display_th_update(void *disp) {
     while (gtk_events_pending ())
       gtk_main_iteration ();
 
+    /*      if(gtk_grab_get_current() == screen->tme_gtk_screen_gtkframe)
+	_tme_gtk_mouse_warp_pointer(screen);
+    */
     /* lock the mutex: */
     if(tme_mutex_trylock(&display->tme_display_mutex)) continue;
 
@@ -65,7 +68,6 @@ _tme_gtk_display_th_update(void *disp) {
     for (screen = display->tme_display_screens;
 	 screen != NULL;
 	 screen = screen->screen.tme_screen_next) {
-
       /* if those contents changed, update the screen: */
       if (screen->screen.tme_screen_update) {
 	cairo_surface_flush(screen->tme_gtk_screen_surface);
@@ -367,6 +369,7 @@ _tme_gtk_screen_new(struct tme_gdk_display *display,
 
   display->display.tme_screen_width = workarea.width;
   display->display.tme_screen_height = workarea.height;
+  screen->screen.tme_screen_scale = gdk_monitor_get_scale_factor(display->tme_gdk_display_monitor);
   
   /* create the top-level window, and allow it to shrink, grow,
      and auto-shrink: */
@@ -414,7 +417,6 @@ _tme_gtk_screen_new(struct tme_gdk_display *display,
 
   /* create the Gtkframe for the framebuffer area: */
   screen->tme_gtk_screen_gtkframe = gtk_drawing_area_new();
-  screen->screen.tme_screen_scale = gdk_window_get_scale_factor(gtk_widget_get_window(screen->tme_gtk_screen_gtkframe));
   
   /* new a minimum size */
   //_tme_gtk_screen_set_size(screen, BLANK_SIDE, BLANK_SIDE);

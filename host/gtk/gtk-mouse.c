@@ -41,7 +41,7 @@ _TME_RCSID("$Id: gtk-mouse.c,v 1.3 2007/03/03 15:33:22 fredette Exp $");
 #include <gdk/gdkkeysyms.h>
 
 /* this warps the pointer to the middle of the Gtkframe: */
-static void
+void
 _tme_gtk_mouse_warp_pointer(struct tme_gtk_screen *screen)
 {
   struct tme_gdk_display *display;
@@ -239,16 +239,21 @@ _tme_gtk_mouse_ebox_event(GtkWidget *widget,
 
   /* if the original events mask on the framebuffer event box have
      never been saved, save them now, and add the mouse events: */
-  if (screen->tme_gtk_screen_mouse_events_old == 0) {
+  /*  if (screen->tme_gtk_screen_mouse_events_old == 0) {
     screen->tme_gtk_screen_mouse_events_old
-      = gdk_window_get_events(window);
+      = gtk_widget_get_events(screen->tme_gtk_screen_gtkframe);
     gtk_widget_add_events(screen->tme_gtk_screen_gtkframe,
 			  GDK_POINTER_MOTION_MASK
 			  | GDK_BUTTON_PRESS_MASK
 			  | GDK_BUTTON_RELEASE_MASK);
   }
-
+  */
   /* grab the pointer: */
+  gtk_grab_add(screen->tme_gtk_screen_gtkframe);
+    /*gtk_device_grab_add(screen->tme_gtk_screen_gtkframe,
+		      gdk_seat_get_pointer(display->tme_gdk_display_seat),
+		      FALSE);*/
+
   rc
     = gdk_seat_grab(display->tme_gdk_display_seat,
 		    window,
@@ -257,7 +262,7 @@ _tme_gtk_mouse_ebox_event(GtkWidget *widget,
 		    display->tme_gdk_display_cursor,
 		    gdk_event_raw,
 		    NULL,
-		    NULL);
+		    NULL); 
   assert (rc == 0);
 
   gdk_device_get_position(gdk_seat_get_pointer(display->tme_gdk_display_seat),
@@ -292,10 +297,11 @@ _tme_gtk_mouse_mode_off(struct tme_gtk_screen *screen,
 
   /* ungrab the pointer: */
   gdk_seat_ungrab(display->tme_gdk_display_seat);
+  gtk_grab_remove(screen->tme_gtk_screen_gtkframe);
+  //gtk_device_grab_remove(screen->tme_gtk_screen_gtkframe, gdk_seat_get_pointer(display->tme_gdk_display_seat));
 
   /* restore the old events mask on the event box: */
-  gdk_window_set_events(gtk_widget_get_window(screen->tme_gtk_screen_gtkframe),
-			screen->tme_gtk_screen_mouse_events_old);
+  //  gtk_widget_set_events(screen->tme_gtk_screen_gtkframe, screen->tme_gtk_screen_mouse_events_old);
 
   /* pop our message off of the statusbar: */
   gtk_statusbar_pop(GTK_STATUSBAR(screen->tme_gtk_screen_mouse_statusbar),

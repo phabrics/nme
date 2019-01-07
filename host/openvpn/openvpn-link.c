@@ -43,18 +43,17 @@ typedef struct _tme_openvpn_sock {
   struct env_set *es;
   struct frame *frame;
   u_char flags;
-  tme_event_set_t *event_set;
   struct buffer inbuf;
   struct buffer outbuf;
 } tme_openvpn_sock;
 
 static int _tme_openvpn_sock_write(void *data) {
-  int status;
   unsigned int flags;
-  struct event_set *es;
   struct event_set_return esr;
   tme_openvpn_sock *sock = data;
   struct link_socket_actual *to_addr;	/* IP address of remote */
+  int status = 1;
+  tme_event_set_t *event_set = tme_event_set_init(&status, EVENT_METHOD_FAST);
   
   ASSERT(buf_init(&sock->outbuf, FRAME_HEADROOM(sock->frame)));
 
@@ -65,13 +64,14 @@ static int _tme_openvpn_sock_write(void *data) {
   link_socket_get_outgoing_addr(&sock->outbuf, &sock->ls->info,
 				&to_addr);
 
-  tme_event_reset(sock->event_set);
+  tme_event_reset(event_set);
     
   flags = EVENT_WRITE;
     
-  tme_event_ctl(sock->event_set, socket_event_handle(sock->ls), flags, 0);
+  tme_event_ctl(event_set, socket_event_handle(sock->ls), flags, 0);
     
-  status = tme_event_wait_yield(sock->event_set, NULL, &esr, 1, &sock->eth->tme_eth_mutex);
+  status = tme_event_wait_yield(event_set, NULL, &esr, 1, &sock->eth->tme_eth_mutex);
+  tme_event_free(event_set);
   if(status<0) return status;
 
   status = -1;
@@ -83,38 +83,40 @@ static int _tme_openvpn_sock_write(void *data) {
 }
 
 static int _tme_openvpn_sock_read(void *data) {
-  int status;
   unsigned int flags;
   struct event_set *es;
   struct event_set_return esr;
   tme_openvpn_sock *sock = data;
   struct link_socket_actual from;               /* address of incoming datagram */
+  int status = 1;
+  tme_event_set_t *event_set;
   
-  tme_event_reset(sock->event_set);
-  
-  /*
-   * On win32 we use the keyboard or an event object as a source
-   * of asynchronous signals.
-   */
-  //    wait_signal(sock->event_set, (void*)&err_shift);
-  
-  flags = EVENT_READ;
-  
-  es = tme_event_set(sock->event_set);
-
-  socket_set(sock->ls, es, flags, (void*)0, NULL);
-
-  if(es != sock->event_set) {
-    tme_event_set(sock->event_set) = NULL;
-    tme_event_ctl(sock->event_set, socket_event_handle(sock->ls), flags, 0);
-    tme_event_set(sock->event_set) = es;
-  }
-
   if(socket_read_residual(sock->ls))
     esr.rwflags = EVENT_READ;
   else {
-    status = tme_event_wait_yield(sock->event_set, NULL, &esr, 1, &sock->eth->tme_eth_mutex);
+    event_set = tme_event_set_init(&status, EVENT_METHOD_FAST);
+  
+    tme_event_reset(event_set);
+  
+    /*
+     * On win32 we use the keyboard or an event object as a source
+     * of asynchronous signals.
+     */
+    //    wait_signal(event_set, (void*)&err_shift);
+  
+    flags = EVENT_READ;
+  
+    es = tme_event_set(event_set);
 
+    socket_set(sock->ls, es, flags, (void*)0, NULL);
+
+    if(es != event_set) {
+      tme_event_set(event_set) = NULL;
+      tme_event_ctl(event_set, socket_event_handle(sock->ls), flags, 0);
+      tme_event_set(event_set) = es;
+    }
+    status = tme_event_wait_yield(event_set, NULL, &esr, 1, &sock->eth->tme_eth_mutex);
+    tme_event_free(event_set);
     if(status<0) return status;
   }
     
@@ -156,7 +158,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,socket_link) {
   struct link_socket *ls;
   struct env_set *es;
   u_char flags = 0;
-  tme_event_set_t *event_set;
   struct frame *frame;
   int sz;
   struct options options;
@@ -166,7 +167,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,socket_link) {
   while(args[++arg_i] != NULL);
 
   es = openvpn_setup(args, arg_i, &options);
-  frame = openvpn_setup_frame(&options, NULL, &ls, es, &flags, &event_set);
+  frame = openvpn_setup_frame(&options, NULL, &ls, es, &flags, NULL);
   sz = BUF_SIZE(frame);
   
   sock->ls = ls;
@@ -175,7 +176,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,socket_link) {
   sock->flags = flags | OPENVPN_CAN_WRITE;
   sock->inbuf = alloc_buf(sz);
   sock->outbuf = alloc_buf(sz);
-  sock->event_set = event_set;
 
   rc = tme_eth_init(element,
 		    TME_INVALID_HANDLE,
