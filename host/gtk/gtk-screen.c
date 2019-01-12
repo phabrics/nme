@@ -46,7 +46,7 @@ _tme_gtk_display_th_update(void *disp) {
   struct tme_fb_connection *conn_fb;
   struct tme_gtk_screen *screen;  
 
-  //  tme_thread_enter(NULL);
+  tme_thread_enter(NULL);
 
   display = (struct tme_display *)disp;
   
@@ -64,10 +64,17 @@ _tme_gtk_display_th_update(void *disp) {
 
     //_tme_thread_resumed();
 
+#ifndef TME_THREADS_SJLJ
+    _tme_display_callout(display, 0);
+#endif    
+
     /* loop over all screens: */
     for (screen = display->tme_display_screens;
 	 screen != NULL;
 	 screen = screen->screen.tme_screen_next) {
+#ifndef TME_THREADS_SJLJ
+      _tme_screen_update(screen);
+#endif
       /* if those contents changed, update the screen: */
       if (screen->screen.tme_screen_update) {
 	cairo_surface_flush(screen->tme_gtk_screen_surface);
@@ -85,7 +92,7 @@ _tme_gtk_display_th_update(void *disp) {
   }
 
   /* NOTREACHED */
-  //  tme_thread_exit();
+  tme_thread_exit();
 
 }
 
@@ -267,7 +274,7 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
   display = screen->screen.tme_screen_display;
 
   /* lock our mutex: */
-  _tme_mutex_lock(&display->tme_display_mutex);
+  tme_mutex_lock(&display->tme_display_mutex);
 
   cairo_surface_destroy(screen->tme_gtk_screen_surface);
 
@@ -324,7 +331,7 @@ _tme_gtk_screen_draw(GtkWidget *widget,
   display = screen->screen.tme_screen_display;
 
   /* lock our mutex: */
-  _tme_mutex_lock(&display->tme_display_mutex);
+  tme_mutex_lock(&display->tme_display_mutex);
 
   cairo_set_source_surface(cr, screen->tme_gtk_screen_surface, 0, 0);
   cairo_paint(cr);
@@ -352,7 +359,7 @@ _tme_gtk_screen_new(struct tme_gdk_display *display,
   char title[sizeof(PACKAGE_STRING) + 16];
 
   /* lock our mutex: */
-  _tme_mutex_lock(&display->display.tme_display_mutex);
+  tme_mutex_lock(&display->display.tme_display_mutex);
 
   screen = tme_screen_new(display, struct tme_gtk_screen, conn);
 
@@ -537,7 +544,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   struct tme_display *display;
 
   /* start our data structure: */
-  tme_display_init(element);
+  display = tme_new0(struct tme_gdk_display, 1);
+  tme_display_init(element, display);
 
   /* recover our data structure: */
   display = element->tme_element_private;

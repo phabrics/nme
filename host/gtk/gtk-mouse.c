@@ -79,7 +79,7 @@ _tme_gtk_mouse_mouse_event(GtkWidget *widget,
   display = screen->screen.tme_screen_display;
 
   /* lock the mutex: */
-  _tme_mutex_lock(&display->tme_display_mutex);
+  tme_mutex_lock(&display->tme_display_mutex);
 
   /* if this is motion: */
   if (gdk_event_raw->type == GDK_MOTION_NOTIFY) {
@@ -211,7 +211,7 @@ _tme_gtk_mouse_ebox_event(GtkWidget *widget,
   display = screen->screen.tme_screen_display;
 
   /* lock the mutex: */
-  _tme_mutex_lock(&display->display.tme_display_mutex);
+  tme_mutex_lock(&display->display.tme_display_mutex);
 
   /* the mouse must not be on already: */
   assert (screen->tme_gtk_screen_mouse_keyval

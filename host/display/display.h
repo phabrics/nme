@@ -179,7 +179,6 @@ int _tme_mouse_connections_new _TME_P((struct tme_display *,
 				       struct tme_connection **));
 void _tme_display_callout _TME_P((struct tme_display *,
 				  int));
-int tme_display_init _TME_P((struct tme_element *));
 
 #endif /* _HOST_DISPLAY_H */
 

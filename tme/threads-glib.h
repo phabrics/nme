@@ -173,7 +173,7 @@ typedef GThread *tme_threadid_t;
 static _tme_inline void tme_thread_create _TME_P((tme_threadid_t *t, tme_thread_t f, void *a)) {
   *t = g_thread_new(NULL,f,a);
 }
-#define tme_thread_yield() do { } while (/* CONSTCOND */ 0)
+#define tme_thread_yield() 
 #define tme_thread_join g_thread_join
 #define tme_thread_exit() _tme_thread_suspended();return NULL
 

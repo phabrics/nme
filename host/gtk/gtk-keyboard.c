@@ -70,7 +70,7 @@ _tme_gtk_keyboard_key_event(GtkWidget *widget,
   display = screen->screen.tme_screen_display;
 
   /* lock the mutex: */
-  _tme_mutex_lock(&display->tme_display_mutex);
+  tme_mutex_lock(&display->tme_display_mutex);
 
   /* if this is a press of the mouse mode off key, turn mouse mode off
      and return now: */
