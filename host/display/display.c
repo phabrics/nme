@@ -40,17 +40,6 @@
 /* the display main thread: */
 #ifdef TME_THREADS_SJLJ
 static _tme_thret
-_tme_display_th_main(void *fn)
-{
-  tme_thread_enter(NULL);
-
-  for(;tme_sjlj_threads_main_iter(fn););
-
-    /* NOTREACHED */
-  tme_thread_exit();
-}
-
-static _tme_thret
 _tme_display_th_update(void *disp)
 {
   struct tme_display *display;
@@ -652,7 +641,6 @@ int tme_display_init(struct tme_element *element,
   /* setup the thread loop function: */
 #ifdef TME_THREADS_SJLJ
   tme_sjlj_thread_create(&display->tme_display_sjlj_thread, _tme_display_th_update, display);
-  tme_thread_create(&display->tme_display_thread, _tme_display_th_main, NULL);
 #endif  
   /* fill the element: */
   element->tme_element_private = display;

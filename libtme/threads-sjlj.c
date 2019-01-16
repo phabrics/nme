@@ -66,9 +66,7 @@ struct tme_sjlj_thread {
   struct tme_sjlj_thread **state_prev;
 
   /* the thread function: */
-#ifndef WIN32
   void *tme_sjlj_thread_func_private;
-#endif
   tme_thread_t tme_sjlj_thread_func;
 
   /* any condition that this thread is waiting on: */
@@ -169,9 +167,7 @@ tme_sjlj_threads_init()
   tme_sjlj_main_events = tme_sjlj_event_set_init(&num, 0);
   
   /* initialize the thread-blocked structure: */
-#ifdef WIN32
-  tme_sjlj_thread_blocked.tme_sjlj_thread_func = ConvertThreadToFiber(NULL);
-#endif
+  tme_sjlj_thread_blocked.tme_sjlj_thread_func = NULL;
   tme_sjlj_thread_blocked.tme_sjlj_thread_cond = NULL;
   tme_sjlj_thread_blocked.tme_sjlj_thread_events = NULL;
   TME_TIME_SETV(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep, 0, 0);
@@ -459,17 +455,36 @@ tme_sjlj_dispatch(volatile int passes)
 
 /* this is the main loop iteration function: */
 int
-tme_sjlj_threads_main_iter(void *event_check)
+tme_sjlj_threads_main(void *unused)
+{
+  struct tme_sjlj_thread *thread;
+  
+  tme_thread_enter(NULL);
+
+#ifdef WIN32
+  tme_sjlj_thread_blocked.tme_sjlj_thread_func = ConvertThreadToFiber(NULL);
+  for (thread = tme_sjlj_threads_all;
+       thread != NULL;
+       thread = thread->next)
+    thread->tme_sjlj_thread_func = CreateFiber(0,
+					       thread->tme_sjlj_thread_func,
+					       thread->tme_sjlj_thread_func_private);
+#endif
+  
+  if(tme_sjlj_threads_all)
+    for(;tme_sjlj_threads_main_iter(NULL););
+  
+    /* NOTREACHED */
+  tme_thread_exit();
+}
+
+int
+tme_sjlj_threads_main_iter(void *unused)
 {
   int fd;
   struct timeval timeout;
   int rc;
   struct event_set_return esr[64];
-  
-  if(tme_sjlj_threads_all == NULL) return -1;
-
-  if(event_check)
-    (*(tme_threads_fn)event_check)();
   
   /* make the select timeout: */
 
@@ -548,12 +563,8 @@ tme_sjlj_thread_create(tme_threadid_t *thr, tme_thread_t func, void *func_privat
   }
 
   /* initialize the thread: */
-#ifdef WIN32
-  thread->tme_sjlj_thread_func = CreateFiber(0, func, func_private);
-#else
   thread->tme_sjlj_thread_func_private = func_private;
   thread->tme_sjlj_thread_func = func;
-#endif
   thread->tme_sjlj_thread_cond = NULL;
   thread->tme_sjlj_thread_events = NULL;
   TME_TIME_SETV(thread->tme_sjlj_thread_sleep, 0, 0);

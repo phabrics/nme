@@ -40,16 +40,21 @@ _TME_RCSID("$Id: gtk-screen.c,v 1.11 2009/08/30 21:39:03 fredette Exp $");
 #include "gtk-display.h"
 #include <stdlib.h>
 
+int tme_sjlj_threads_main _TME_P((void *unused));
+
 static _tme_thret
 _tme_gtk_display_th_update(void *disp) {
   struct tme_display *display;
   struct tme_fb_connection *conn_fb;
   struct tme_gtk_screen *screen;  
 
-  tme_thread_enter(NULL);
-
   display = (struct tme_display *)disp;
   
+#ifdef TME_THREADS_SJLJ
+  tme_thread_create(&display->tme_display_thread, tme_sjlj_threads_main, NULL);
+#endif
+  tme_thread_enter(NULL);
+
   //_tme_thread_suspended();
   
   for(;;) {
