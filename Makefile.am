@@ -3,7 +3,12 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 ACLOCAL_AMFLAGS = -I m4
-SUBDIRS = tme lib libltdl libopenvpn libtme generic ic machine host bus serial scsi tmesh tools
+if USING_OPENVPN
+SUBDIRS = libopenvpn
+else
+SUBDIRS = 
+endif
+SUBDIRS += tme lib libltdl libtme generic ic machine host bus serial scsi tmesh tools
 EXTRA_DIST = modules edist
 pkgdata_DATA = tmeconfig.h tmememory.h
 

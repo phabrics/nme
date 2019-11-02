@@ -215,7 +215,7 @@ tme_float_leave(void)
 }
 
 /* missing standard functions: */
-#ifndef HAVE_ISINFF
+#if !defined(HAVE_ISINFF) && !defined(__EMSCRIPTEN__)
 int
 isinff(float x)
 {

@@ -39,7 +39,7 @@ _TME_RCSID("$Id: misc-x86.c,v 1.2 2009/11/08 17:21:18 fredette Exp $");
 /* includes: */
 #include <tme/misc.h>
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) && !defined(__EMSCRIPTEN__)
 
 /* this returns the cycle counter: */
 inline union tme_value64

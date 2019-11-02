@@ -765,23 +765,39 @@ AC_CHECK_DECLS(
 )
 CFLAGS="${old_CFLAGS}"
 
-if test "x${have_tap_header}" = xyes; then
-   TME_HOSTS="${TME_HOSTS} openvpn"
+tme_host_types="tun bsd openvpn posix gtk"
+
+for tme_host_type in ${tme_host_types}; do
+    eval enable_${tme_host_type}=no
+done
+
+AC_ARG_ENABLE(hosts,
+[  --enable-hosts=hosttypes         enable hosts (default="tun bsd openvpn posix gtk" if host supports)],
+   [tme_host_types=${enableval}], [enable_hosts=yes])
+
+if test "x${enable_hosts}" = xno; then
+   tme_host_types=
+fi
+
+for tme_host_type in ${tme_host_types}; do
+    eval enable_${tme_host_type}=yes
+done
+
+AM_CONDITIONAL([USING_OPENVPN], [test "x${enable_openvpn}" = xyes && test "x${have_tap_header}" = xyes])
+if test "x${enable_openvpn}" = xyes && test "x${have_tap_header}" = xyes; then
+   TME_HOSTS="openvpn ${TME_HOSTS}"
    AC_DEFINE([OPENVPN_VERSION_RESOURCE], [PRODUCT_VERSION_RESOURCE], [Version in windows resource format])
 fi
 
-have_tap_header=
 AC_CHECK_HEADERS([linux/if_tun.h net/if_tap.h net/tap/if_tap.h net/if_tun.h],
-		 [have_tap_header="yes"])
-
-if test "x${have_tap_header}" = xyes; then
-   TME_HOSTS="${TME_HOSTS} tun"
-fi
+		 [if test "x${enable_tun}" = xyes; then
+		     TME_HOSTS="tun ${TME_HOSTS}"
+		  fi])
 
 AC_CHECK_HEADERS([linux/filter.h net/bpf.h])
 
-dnl Checks for Ethernet.
-AC_MSG_CHECKING([for raw Ethernet access method])
+dnl Checks for host support.
+AC_MSG_CHECKING([for host support types])
 
 AC_EGREP_CPP(found_BPFVERSION,
 [
@@ -794,15 +810,18 @@ AC_EGREP_CPP(found_BPFVERSION,
 found_BPFVERSION
 #endif
 ],
-[TME_HOSTS="${TME_HOSTS} bsd"])
+[if test "x${enable_bsd}" = xyes; then
+    TME_HOSTS="bsd ${TME_HOSTS}"
+ fi])
 
 if test "x${TME_HOSTS}" != x; then
-   TME_HOSTS="display eth ${TME_HOSTS}"
+   TME_HOSTS="eth ${TME_HOSTS}"
 fi
 
+if test "x${enable_posix}" = xyes; then
+   TME_HOSTS="posix ${TME_HOSTS}"
+fi
 AC_MSG_RESULT($TME_HOSTS)
-
-TME_HOSTS="${TME_HOSTS} posix"
 
 AC_SYS_POSIX_TERMIOS
 
@@ -1008,8 +1027,10 @@ TME_FB_XLAT_DST=
 dnl Checks for GTK.
 AM_PATH_GTK_3_0([], have_gtk=yes, have_gtk=no)
 if test "x$have_gtk" = xyes; then
-  TME_HOSTS="${TME_HOSTS} gtk"
-  TME_FB_XLAT_DST=d24b32s0p32olml_r0xff0000_g0xff00_b0xff
+   if test "x${enable_gtk}" = xyes; then
+      TME_HOSTS="gtk display ${TME_HOSTS}"
+   fi
+   TME_FB_XLAT_DST=d24b32s0p32olml_r0xff0000_g0xff00_b0xff
 fi
 
 # if --with-tme-host-displays is given, characterize those given displays:

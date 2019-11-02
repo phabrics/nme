@@ -708,6 +708,7 @@ main(int argc, char **argv)
   }
   if (usage) do_usage(argv0, NULL);
 
+#ifdef TME_OPENVPN
   if(init_static()) {
     es = openvpn_setup(&argv[arg_i], argc - arg_i, NULL);
 #ifdef WIN32
@@ -716,7 +717,7 @@ main(int argc, char **argv)
 #endif
   } else
     exit(1);
-  
+#endif
   if (!strcmp(log_filename, "-")) {
     _tmesh_log = stdout;
   }
