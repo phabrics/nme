@@ -41,8 +41,6 @@ const struct link_socket *accept_from; /* possibly do accept() on a parent link_
 
 struct signal_info *sig;      /**< Internal error signaling object. */
 
-struct signal_info siginfo_static; /* GLOBAL */
-
 static inline
 struct tuntap *setup_tuntap(struct frame *frame, struct link_socket_addr *lsa, struct options *options, struct env_set *es) {
   /* TUN/TAP specific stuff */

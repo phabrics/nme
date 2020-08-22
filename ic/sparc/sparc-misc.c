@@ -1133,7 +1133,7 @@ tme_sparc32_trap(struct tme_sparc *ic, tme_uint32_t trap)
   ic->tme_sparc_ireg_uint32(TME_SPARC_IREG_PC_NEXT_NEXT) = ic->tme_sparc32_ireg_tbr + sizeof(tme_uint32_t);
 
   /* log the trap: */
-  tme_sparc_log(ic, 250, TME_OK,
+  tme_sparc_log(ic, 200 + TME_SPARC_TRAP_PRIORITY(trap), TME_OK,
 		(TME_SPARC_LOG_HANDLE(ic),
 		 _("trap tt 0x%03" TME_PRIx32 " handler-%%pc 0x%08" TME_PRIx32),
 		 TME_SPARC_TRAP_TT(trap),

@@ -108,10 +108,12 @@ TME_SPARC_FORMAT3(tme_sparc32_rdasr, tme_uint32_t)
   else {
 
     /* all other rdasr instructions are privileged: */
-    TME_SPARC_INSN_PRIV;
-
+#ifdef ENABLE_DEBUG
     value = 0;
+#else
+    TME_SPARC_INSN_PRIV;
     abort();
+#endif
   }
 
   TME_SPARC_FORMAT3_RD = value;
