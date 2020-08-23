@@ -74,44 +74,44 @@ _tme_display_th_update(void *disp)
 int
 _tme_screen_update(struct tme_screen *screen)
 {
-  struct tme_fb_connection *conn_fb;
-  struct tme_fb_connection *conn_fb_other;
-  int rc;
-
+  struct tme_fb_connection *conn_fb = screen->tme_screen_fb;
+  struct tme_fb_connection *conn_fb_other = (struct tme_fb_connection *)conn_fb->tme_fb_connection.tme_connection_other;
+  int rc = TME_OK;
+  
   /* skip this screen if it's unconnected: */
-  if (!screen->tme_screen_update &&
-      (conn_fb = screen->tme_screen_fb) &&
-      conn_fb->tme_fb_connection_buffer &&
-      (conn_fb_other = (struct tme_fb_connection *)conn_fb->tme_fb_connection.tme_connection_other) &&
-      conn_fb_other->tme_fb_connection_update) {
+  if (screen->tme_screen_update ||
+      !screen->tme_screen_fb ||
+      !conn_fb->tme_fb_connection_buffer ||
+      !conn_fb_other) return rc;
+  
+  /* if the framebuffer has an update function, call it: */
+  rc = (conn_fb_other->tme_fb_connection_update) ?
+    (*conn_fb_other->tme_fb_connection_update)(conn_fb_other) :
+    (TME_OK);
+  assert (rc == TME_OK);
 
-    /* if the framebuffer has an update function, call it: */
-    rc = (*conn_fb_other->tme_fb_connection_update)(conn_fb_other);
-    assert (rc == TME_OK);
-      
-    if (!screen->tme_screen_fb_xlat) {
-      _tme_screen_xlat_set(screen);
-      /* force the next translation to retranslate the entire buffer: */
-      tme_fb_xlat_redraw(conn_fb_other);
-      conn_fb_other->tme_fb_connection_offset_updated_first = 0;
-      conn_fb_other->tme_fb_connection_offset_updated_last = 0 - (tme_uint32_t) 1;
-    }
-
-    /* translate this framebuffer's contents: */
-    screen->tme_screen_update = (*screen->tme_screen_fb_xlat)(conn_fb_other, conn_fb);
-#ifdef DEBUG_FB
-    tme_uint32_t *i;
-    tme_uint32_t last_i, j;
-
-    i = (tme_uint32_t *)conn_fb->tme_fb_connection_buffer;
-    last_i = *i;
-    printf("%8x: %8x\n", i, last_i);
-    for(j=0;j<conn_fb->tme_fb_connection_buffsz;j+=sizeof(tme_uint32_t)) {
-      if(last_i != *i) { last_i = *i; printf("%8x: %8x\n", i, last_i); }
-      i++;
-    }
-#endif
+  if (!screen->tme_screen_fb_xlat) {
+    _tme_screen_xlat_set(screen);
+    /* force the next translation to retranslate the entire buffer: */
+    tme_fb_xlat_redraw(conn_fb_other);
+    conn_fb_other->tme_fb_connection_offset_updated_first = 0;
+    conn_fb_other->tme_fb_connection_offset_updated_last = 0 - (tme_uint32_t) 1;
   }
+  
+  /* translate this framebuffer's contents: */
+  screen->tme_screen_update = (*screen->tme_screen_fb_xlat)(conn_fb_other, conn_fb);
+#ifdef DEBUG_FB
+  tme_uint32_t *i;
+  tme_uint32_t last_i, j;
+  
+  i = (tme_uint32_t *)conn_fb->tme_fb_connection_buffer;
+  last_i = *i;
+  printf("%8x: %8x\n", i, last_i);
+  for(j=0;j<conn_fb->tme_fb_connection_buffsz;j+=sizeof(tme_uint32_t)) {
+    if(last_i != *i) { last_i = *i; printf("%8x: %8x\n", i, last_i); }
+    i++;
+  }
+#endif
 
   return rc;
 }
