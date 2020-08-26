@@ -179,13 +179,13 @@ static _tme_inline void tme_thread_create _TME_P((tme_threadid_t *t, tme_thread_
 
 /* sleeping: */
 static _tme_inline int tme_thread_sleep_yield _TME_P((unsigned long sec, unsigned long usec, tme_mutex_t *mutex)) { 
-  g_mutex_unlock(mutex);
+  if(mutex) g_mutex_unlock(mutex);
   
   _tme_thread_suspended();
 
   g_usleep(usec + sec * G_USEC_PER_SEC);
   
-  g_mutex_lock(mutex);
+  if(mutex) g_mutex_lock(mutex);
 
   _tme_thread_resumed();
 

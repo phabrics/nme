@@ -40,15 +40,32 @@ _TME_RCSID("$Id: gtk-screen.c,v 1.11 2009/08/30 21:39:03 fredette Exp $");
 #include "gtk-display.h"
 #include <stdlib.h>
 
-int tme_sjlj_threads_main _TME_P((void *unused));
+/* this is called before the screen's display is updated: */
+static int
+_tme_gtk_display_update(struct tme_display *display)
+{
+  struct tme_screen *screen;
+  struct tme_gtk_screen *scr;
+  
+  /* loop over all screens: */
+  for (screen = display->tme_display_screens;
+       screen != NULL;
+       screen = screen->tme_screen_next) {
+    /* if those contents changed, update the screen: */
+    if(screen->tme_screen_update == 1) {
+      screen->tme_screen_update++;
+      scr=screen;
+      cairo_surface_flush(scr->tme_gtk_screen_surface);
+      cairo_surface_mark_dirty(scr->tme_gtk_screen_surface);
+      gtk_widget_queue_draw(scr->tme_gtk_screen_gtkframe);
+    }
+  }
+  return TME_OK;
+}
 
 static _tme_thret
 _tme_gtk_display_th_update(void *disp) {
-  struct tme_display *display;
-  struct tme_fb_connection *conn_fb;
-  struct tme_gtk_screen *screen;  
-
-  display = (struct tme_display *)disp;
+  struct tme_display *display = (struct tme_display *)disp;
   
 #ifdef TME_THREADS_SJLJ
   tme_thread_create(&display->tme_display_thread, tme_sjlj_threads_main, NULL);
@@ -61,39 +78,12 @@ _tme_gtk_display_th_update(void *disp) {
     while (gtk_events_pending ())
       gtk_main_iteration ();
 
-    /*      if(gtk_grab_get_current() == screen->tme_gtk_screen_gtkframe)
-	_tme_gtk_mouse_warp_pointer(screen);
-    */
-    /* lock the mutex: */
-    if(tme_mutex_trylock(&display->tme_display_mutex)) continue;
+    tme_mutex_lock(&display->tme_display_mutex);
 
-    //_tme_thread_resumed();
+    /* if the framebuffer has an update function, call it: */
+    _tme_gtk_display_update(display);
 
-#ifndef TME_THREADS_SJLJ
-    _tme_display_callout(display, 0);
-#endif    
-
-    /* loop over all screens: */
-    for (screen = display->tme_display_screens;
-	 screen != NULL;
-	 screen = screen->screen.tme_screen_next) {
-#ifndef TME_THREADS_SJLJ
-      _tme_screen_update(screen);
-#endif
-      /* if those contents changed, update the screen: */
-      if (screen->screen.tme_screen_update) {
-	cairo_surface_flush(screen->tme_gtk_screen_surface);
-	cairo_surface_mark_dirty(screen->tme_gtk_screen_surface);
-	gtk_widget_queue_draw(screen->tme_gtk_screen_gtkframe);
-      }
-    }
-
-    /* unlock our mutex: */
     tme_mutex_unlock(&display->tme_display_mutex);
-
-    tme_thread_yield();
-
-    //    _tme_thread_suspended();
   }
 
   /* NOTREACHED */
@@ -340,7 +330,7 @@ _tme_gtk_screen_draw(GtkWidget *widget,
 
   cairo_set_source_surface(cr, screen->tme_gtk_screen_surface, 0, 0);
   cairo_paint(cr);
-  screen->screen.tme_screen_update = FALSE;    
+  screen->screen.tme_screen_update = 0;    
 
   /* unlock our mutex: */
   tme_mutex_unlock(&display->tme_display_mutex);
@@ -560,9 +550,10 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   /* set the display-specific functions: */
   display->tme_screen_add = _tme_gtk_screen_new;
   display->tme_screen_set_size = _tme_gtk_screen_set_size;
+  //  display->tme_display_update = _tme_gtk_display_update;
 
   /* setup the thread loop function: */
-  //  tme_threads_init(NULL, gtk_main);
+  //tme_threads_init(NULL, gtk_main);
 
   /* unlock mutex once gtk main thread is running: */
   //  g_idle_add(_tme_gtk_screens_update, display);

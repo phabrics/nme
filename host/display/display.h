@@ -118,6 +118,8 @@ struct tme_display {
 
 #ifdef TME_THREADS_SJLJ
   struct tme_sjlj_thread *tme_display_sjlj_thread;
+#else
+  tme_threadid_t tme_display_sjlj_thread;
 #endif
   
   /* our keyboard connection: */
@@ -156,6 +158,7 @@ struct tme_display {
   
   /* implementation-specific callback functions: */
   struct tme_screen *(*tme_screen_add) _TME_P((struct tme_display *, struct tme_connection *));
+  int (*tme_display_update) _TME_P((struct tme_display *));
   int (*tme_screen_set_size) _TME_P((struct tme_screen *,
 				     int,
 				     int));
@@ -179,6 +182,7 @@ int _tme_mouse_connections_new _TME_P((struct tme_display *,
 				       struct tme_connection **));
 void _tme_display_callout _TME_P((struct tme_display *,
 				  int));
+int tme_sjlj_threads_main _TME_P((void *unused));
 
 #endif /* _HOST_DISPLAY_H */
 

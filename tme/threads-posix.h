@@ -260,13 +260,13 @@ static _tme_inline int tme_thread_sleep_yield _TME_P((unsigned long sec, unsigne
 
   _TME_TIME_SETV(timeout,sec, usec * 1000,tv_sec,tv_nsec);
 
-  pthread_mutex_unlock(mutex);
+  if(mutex) pthread_mutex_unlock(mutex);
   
   _tme_thread_suspended();
 
   rc = nanosleep(&timeout, NULL);
 
-  pthread_mutex_lock(mutex);
+  if(mutex) pthread_mutex_lock(mutex);
   
   _tme_thread_resumed();
 
