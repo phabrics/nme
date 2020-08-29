@@ -111,8 +111,10 @@ TME_SPARC_FORMAT3(tme_sparc32_rdasr, tme_uint32_t)
 #ifdef ENABLE_DEBUG
     value = 0;
 #else
-    TME_SPARC_INSN_PRIV;
-    abort();
+    if(reg_rs1>15) {
+      TME_SPARC_INSN_PRIV;
+      abort();
+    }
 #endif
   }
 

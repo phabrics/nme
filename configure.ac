@@ -34,7 +34,7 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.68])
 m4_include(version.m4)
-AC_INIT([tme], [0.12beta37])
+AC_INIT([tme], [0.12beta38])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
@@ -831,7 +831,7 @@ AC_MSG_CHECKING([for available network address translation methods])
 
 # specify whether built-in NAT support should be enabled & with what NAT methods
 AC_ARG_ENABLE(nat,
-[  --enable-nat=NATs  Enable built-in NAT support utilizing the given NAT methods (compiled-in order of usage by platform availability: 'nft','npf','pf','ipf').  Defaults to 'yes', any available.  Turn off NAT with 'no' or --disable-nat.], [tme_nat_types=${enableval}], [enable_nat=yes])
+[  --enable-nat=NATs  Enable built-in NAT support utilizing the given NAT methods (compiled-in order of usage by platform availability: 'nft','npf','pf','ipf').  Defaults to 'yes', any available.  Turn off NAT with 'no' or --disable-nat.], [tme_nat_types=${enableval}], [enable_nat=no])
 
 if test "x${enable_nat}" = xyes; then
    tme_nat_types="nft npf pf"
@@ -866,7 +866,7 @@ AC_MSG_CHECKING([for available threading models])
 
 # specify whether preemptive thread support should be enabled & with what thread models
 AC_ARG_ENABLE(threads,
-[  --enable-threads=THRs  Enable preemptive thread support utilizing the given threading models (compiled-in order of usage by platform availability: 'pthreads (or posix)','glib').  Defaults to 'yes', any available.  Turn off threads with 'no' or --disable-threads; this will use setjmp/longjmp.], [tme_thread_types=${enableval}], [enable_threads=yes])
+[  --enable-threads=THRs  Enable preemptive thread support utilizing the given threading models (compiled-in order of usage by platform availability: 'pthreads (or posix)','glib').  Defaults to 'yes', any available.  Turn off threads with 'no' or --disable-threads; this will use setjmp/longjmp.], [tme_thread_types=${enableval}], [enable_threads=no])
 
 if test "x${enable_threads}" = xyes; then
    dnl Make brackets safe to use.
