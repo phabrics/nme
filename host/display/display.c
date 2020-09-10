@@ -36,6 +36,58 @@
 /* includes: */
 #include "display.h"
 
+static _tme_thret
+_tme_screen_th_update(void *disp) {
+  struct tme_fb_connection *conn_fb;
+  struct tme_screen *screen;
+  struct tme_display *display = (rfbScreenInfoPtr)disp;
+  int rc;
+  
+  tme_thread_enter(NULL);
+
+  //_tme_thread_suspended();
+  
+  for(;;) {
+    /* if the framebuffer has an update function, call it: */
+    rc = (display->tme_display_update) ?
+      (*display->tme_display_update)(display) :
+      (TME_OK);
+
+    if(rc != TME_OK) continue;
+
+    tme_mutex_lock(&display->tme_display_mutex);
+
+    /* loop over all screens: */
+    for (screen = display->tme_display_screens;
+	 screen != NULL;
+	 screen = screen->tme_screen_next)
+      switch(screen->tme_screen_update) {
+      case TME_SCREEN_UPDATE_REDRAW:
+	if(display->tme_screen_redraw)
+	  display->tme_screen_redraw(screen);
+	break;
+      case TME_SCREEN_UPDATE_RESIZE:
+	if(display->tme_screen_resize &&
+	   (conn_fb = screen->tme_screen_fb))
+	  display->tme_screen_resize(screen,
+				     conn_fb->tme_fb_connection_width,
+				     conn_fb->tme_fb_connection_height);
+	break;
+      case TME_SCREEN_UPDATE_NONE:
+	break;
+      default:
+	// custom update conditions here
+	if(display->tme_screen_update)
+	  display->tme_screen_update(screen);
+      }
+    tme_mutex_unlock(&display->tme_display_mutex);
+  }
+  
+  /* NOTREACHED */
+  tme_thread_exit();
+
+}
+
 /* the screens update loop: */
 static int
 _tme_display_update(struct tme_display *display)
@@ -50,7 +102,7 @@ _tme_display_update(struct tme_display *display)
        screen != NULL;
        screen = screen->tme_screen_next) {
     /* skip this screen if it's unconnected: */
-    if (screen->tme_screen_update ||
+    if (screen->tme_screen_update != TME_SCREEN_UPDATE_NONE ||
 	!(conn_fb = screen->tme_screen_fb) ||
 	!conn_fb->tme_fb_connection_buffer ||
 	!(conn_fb_other = (struct tme_fb_connection *)conn_fb->tme_fb_connection.tme_connection_other)) return rc;
@@ -78,7 +130,7 @@ _tme_display_update(struct tme_display *display)
     /* translate this framebuffer's contents: */
     if((*screen->tme_screen_fb_xlat)(conn_fb_other, conn_fb)) {
       /* if those contents changed, update the screen: */
-      screen->tme_screen_update++;
+      screen->tme_screen_update = TME_SCREEN_UPDATE_REDRAW;
       
 #ifdef DEBUG_FB
       tme_uint32_t *i;
@@ -123,12 +175,6 @@ _tme_display_th_update(void *disp)
     _tme_display_callout(display, 0);
     
     _tme_display_update(display);
-
-    /* if the framebuffer has an update function, call it: */
-    rc = (display->tme_display_update) ?
-      (*display->tme_display_update)(display) :
-      (TME_OK);
-    assert (rc == TME_OK);
 
     /* unlock the mutex: */
     tme_mutex_unlock(&display->tme_display_mutex);
@@ -453,9 +499,11 @@ _tme_screen_configure(struct tme_screen *screen)
 
   /* set the size & translation function */
   screen->tme_screen_fb_xlat = NULL;  
-  if(display->tme_screen_set_size(screen, width, height)) {
-    conn_fb->tme_fb_connection_buffer = NULL;  
-    screen->tme_screen_update = 0;
+  if(conn_fb->tme_fb_connection_width != width ||
+     conn_fb->tme_fb_connection_height != height)
+    screen->tme_screen_update = TME_SCREEN_UPDATE_RESIZE;
+    conn_fb->tme_fb_connection_width = width;
+    conn_fb->tme_fb_connection_height = height;
   }
 }
 
@@ -590,7 +638,10 @@ _tme_display_connection_make(struct tme_connection *conn,
     //tme_mutex_lock(&display->tme_display_mutex);
 
     /* if our initial screen is already connected, make a new screen: */
-    screen = display->tme_screen_add(display, conn);
+    screen = (display->tme_screen_add) ?
+      display->tme_screen_add(display, conn) :
+      tme_screen_new(display, struct tme_screen, conn);
+
     /* unlock our mutex: */
     //tme_mutex_unlock(&display->tme_display_mutex);
 
@@ -669,11 +720,13 @@ int tme_display_init(struct tme_element *element,
 
   /* setup the thread loop function: */
 #ifdef TME_THREADS_SJLJ
-  //  tme_thread_create(&display->tme_display_thread, tme_sjlj_threads_main, NULL);
+  tme_thread_create(&display->tme_display_thread, tme_sjlj_threads_main, NULL);
   tme_sjlj_thread_create(&display->tme_display_sjlj_thread, _tme_display_th_update, display);
 #else
   tme_thread_create(&display->tme_display_sjlj_thread, _tme_display_th_update, display);
 #endif  
+  tme_threads_init(_tme_screen_th_update, display);
+  
   /* fill the element: */
   element->tme_element_private = display;
   element->tme_element_connections_new = _tme_display_connections_new;

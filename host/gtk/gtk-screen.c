@@ -41,54 +41,18 @@ _TME_RCSID("$Id: gtk-screen.c,v 1.11 2009/08/30 21:39:03 fredette Exp $");
 #include <stdlib.h>
 
 /* this is called before the screen's display is updated: */
-static int
-_tme_gtk_display_update(struct tme_display *display)
+static void
+_tme_gtk_screen_redraw(struct tme_gtk_screen *screen)
 {
-  struct tme_screen *screen;
-  struct tme_gtk_screen *scr;
-  
-  /* loop over all screens: */
-  for (screen = display->tme_display_screens;
-       screen != NULL;
-       screen = screen->tme_screen_next) {
-    /* if those contents changed, update the screen: */
-    if(screen->tme_screen_update == 1) {
-      screen->tme_screen_update++;
-      scr=screen;
-      cairo_surface_flush(scr->tme_gtk_screen_surface);
-      cairo_surface_mark_dirty(scr->tme_gtk_screen_surface);
-      gtk_widget_queue_draw(scr->tme_gtk_screen_gtkframe);
-    }
-  }
-  return TME_OK;
+  cairo_surface_flush(screen->tme_gtk_screen_surface);
+  cairo_surface_mark_dirty(screen->tme_gtk_screen_surface);
+  gtk_widget_queue_draw(screen->tme_gtk_screen_gtkframe);
 }
 
-static _tme_thret
-_tme_gtk_display_th_update(void *disp) {
-  struct tme_display *display = (struct tme_display *)disp;
-  
-#ifdef TME_THREADS_SJLJ
-  tme_thread_create(&display->tme_display_thread, tme_sjlj_threads_main, NULL);
-#endif
-  tme_thread_enter(NULL);
-
-  //_tme_thread_suspended();
-  
-  for(;;) {
-    while (gtk_events_pending ())
-      gtk_main_iteration ();
-
-    tme_mutex_lock(&display->tme_display_mutex);
-
-    /* if the framebuffer has an update function, call it: */
-    _tme_gtk_display_update(display);
-
-    tme_mutex_unlock(&display->tme_display_mutex);
-  }
-
-  /* NOTREACHED */
-  tme_thread_exit();
-
+static int
+_tme_gtk_display_update(struct tme_display *display) {
+  gtk_main_iteration_do(FALSE);
+  return TME_OK;
 }
 
 /* this recovers the scanline-pad value for an image buffer: */
@@ -104,93 +68,137 @@ _tme_gtk_scanline_pad(int bpl)
   return (8);
 }
 
-/* this sets the screen scaling to default: */
+/* this sets the screen scaling to that indicated by the Scale menu: */
 static void
 _tme_gtk_screen_scale_default(GtkWidget *widget,
 			      struct tme_gtk_screen *screen)
 {
-  /* return now if the menu item isn't active: */
-  if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(GTK_MENU_ITEM(widget))))
-    _tme_screen_scale_set(screen,
-			  -TME_FB_XLAT_SCALE_NONE);
+  if (!gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(GTK_MENU_ITEM(widget))))
+    return;
+
+  _tme_screen_scale_set(screen, -TME_FB_XLAT_SCALE_NONE );
 }
 
-/* this sets the screen scaling to half: */
+/* this sets the screen scaling to that indicated by the Scale menu: */
 static void
 _tme_gtk_screen_scale_half(GtkWidget *widget,
 			   struct tme_gtk_screen *screen)
 {
-  if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(GTK_MENU_ITEM(widget))))
-    _tme_screen_scale_set(screen,
-			  TME_FB_XLAT_SCALE_HALF);
+  if (!gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(GTK_MENU_ITEM(widget))))
+    return;
+
+  _tme_screen_scale_set(screen, TME_FB_XLAT_SCALE_HALF );
 }
 
-/* this sets the screen scaling to none: */
+/* this sets the screen scaling to that indicated by the Scale menu: */
 static void
-_tme_gtk_screen_scale_none(GtkWidget *widget,
+_tme_gtk_screen_scale_full(GtkWidget *widget,
 			   struct tme_gtk_screen *screen)
 {
-  if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(GTK_MENU_ITEM(widget))))
-    _tme_screen_scale_set(screen,
-			  TME_FB_XLAT_SCALE_NONE);
+  if (!gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(GTK_MENU_ITEM(widget))))
+    return;
+
+  _tme_screen_scale_set(screen, TME_FB_XLAT_SCALE_NONE );
 }
 
-/* this sets the screen scaling to double: */
+/* this sets the screen scaling to that indicated by the Scale menu: */
 static void
 _tme_gtk_screen_scale_double(GtkWidget *widget,
 			     struct tme_gtk_screen *screen)
 {
-  if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(GTK_MENU_ITEM(widget))))
-    _tme_screen_scale_set(screen,
-			  TME_FB_XLAT_SCALE_DOUBLE);
+  if (!gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(GTK_MENU_ITEM(widget))))
+    return;
+
+  _tme_screen_scale_set(screen, TME_FB_XLAT_SCALE_DOUBLE );
 }
 
-/* this creates the Screen scaling submenu: */
-static GCallback
-_tme_gtk_screen_submenu_scaling(void *_screen,
-				struct tme_display_menu_item *menu_item)
+/* this sets the screen size: */
+static inline void
+_tme_screen_format_set(struct tme_gtk_screen *screen,
+		       cairo_format_t format)
 {
-  struct tme_gtk_screen *screen;
-
-  screen = (struct tme_gtk_screen *) _screen;
-  menu_item->tme_display_menu_item_widget = NULL;
-  switch (menu_item->tme_display_menu_item_which) {
-  case 0:
-    menu_item->tme_display_menu_item_string = _("Default");
-    menu_item->tme_display_menu_item_widget = &screen->tme_gtk_screen_scale_default;
-    return (G_CALLBACK(_tme_gtk_screen_scale_default));
-  case 1:
-    menu_item->tme_display_menu_item_string = _("Half");
-    menu_item->tme_display_menu_item_widget = &screen->tme_gtk_screen_scale_half;
-    return (G_CALLBACK(_tme_gtk_screen_scale_half));
-  case 2:
-    menu_item->tme_display_menu_item_string = _("Full");
-    return (G_CALLBACK(_tme_gtk_screen_scale_none));
-  case 3:
-    menu_item->tme_display_menu_item_string = _("Double");
-    return (G_CALLBACK(_tme_gtk_screen_scale_double));
-  default:
-    break;
-  }
-  return (NULL);
+  screen->tme_gtk_screen_format = format;
+  _tme_screen_configure(screen);
 }
+
+/* this sets the screen format to that indicated by the Format menu: */
+static void
+_tme_gtk_screen_format_argb32(GtkWidget *widget,
+			      struct tme_gtk_screen *screen)
+{
+  if (!gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(GTK_MENU_ITEM(widget))))
+    return;
+
+  _tme_screen_format_set(screen, CAIRO_FORMAT_ARGB32);
+}
+
+/* this sets the screen format to that indicated by the Format menu: */
+static void
+_tme_gtk_screen_format_rgb24(GtkWidget *widget,
+			     struct tme_gtk_screen *screen)
+{
+  if (!gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(GTK_MENU_ITEM(widget))))
+    return;
+
+  _tme_screen_format_set(screen, CAIRO_FORMAT_RGB24);
+}
+
+/* this sets the screen format to that indicated by the Format menu: */
+static void
+_tme_gtk_screen_format_a8(GtkWidget *widget,
+			  struct tme_gtk_screen *screen)
+{
+  if (!gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(GTK_MENU_ITEM(widget))))
+    return;
+
+  _tme_screen_format_set(screen, CAIRO_FORMAT_A8);
+}
+
+/* this sets the screen format to that indicated by the Format menu: */
+static void
+_tme_gtk_screen_format_a1(GtkWidget *widget,
+			  struct tme_gtk_screen *screen)
+{
+  if (!gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(GTK_MENU_ITEM(widget))))
+    return;
+
+  _tme_screen_format_set(screen, CAIRO_FORMAT_A1);
+}
+
+/* this sets the screen format to that indicated by the Format menu: */
+static void
+_tme_gtk_screen_format_rgb16_565(GtkWidget *widget,
+				 struct tme_gtk_screen *screen)
+{
+  if (!gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(GTK_MENU_ITEM(widget))))
+    return;
+
+  _tme_screen_format_set(screen, CAIRO_FORMAT_RGB16_565);
+}
+
+static struct tme_display_menu_item scale_items[] =
+  {
+   { _("Default"), G_CALLBACK(_tme_gtk_screen_scale_default) },
+   { _("Half"), G_CALLBACK(_tme_gtk_screen_scale_half) },
+   { _("Full"), G_CALLBACK(_tme_gtk_screen_scale_full) },
+   { _("Double"), G_CALLBACK(_tme_gtk_screen_scale_double) }
+  };
+
+static struct tme_display_menu_item format_items[] =
+  {
+   { _("ARGB32"), G_CALLBACK(_tme_gtk_screen_format_argb32) },
+   { _("RGB24"), G_CALLBACK(_tme_gtk_screen_format_rgb24) },
+   { _("A8"), G_CALLBACK(_tme_gtk_screen_format_a8) },
+   { _("A1"), G_CALLBACK(_tme_gtk_screen_format_a1) },
+   { _("RGB16_565"), G_CALLBACK(_tme_gtk_screen_format_rgb16_565) }
+  };
 
 /* Screen-specific size request */
-static int _tme_gtk_screen_set_size(struct tme_gtk_screen *screen,
-				    int width,
-				    int height) {
-  int config;
-  struct tme_fb_connection *conn_fb = screen->screen.tme_screen_fb;
-
-  /* update our framebuffer connection: */
-  config = (conn_fb->tme_fb_connection_width != width ||
-	    conn_fb->tme_fb_connection_height != height);
-
-  if(config)
-    /* set a minimum size */
-    gtk_widget_set_size_request(screen->tme_gtk_screen_gtkframe, width, height);
-  
-  return config;
+static void _tme_gtk_screen_resize(struct tme_gtk_screen *screen,
+				   int width,
+				   int height) {
+  /* set a minimum size */
+  gtk_widget_set_size_request(screen->tme_gtk_screen_gtkframe, width, height);
 }
 
 /* Create a similar image surface to the screen's target surface (i.e., backing store) */
@@ -279,7 +287,7 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
   
   screen->tme_gtk_screen_surface
     = gdk_window_create_similar_image_surface(window,
-					      CAIRO_FORMAT_ARGB32,
+					      screen->tme_gtk_screen_format,
 					      gdk_window_get_width(window) * screen->screen.tme_screen_scale,
 					      gdk_window_get_height(window) * screen->screen.tme_screen_scale,
 					      screen->screen.tme_screen_scale);
@@ -289,17 +297,17 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
   /* update our framebuffer connection: */
   conn_fb->tme_fb_connection_width = cairo_image_surface_get_width(screen->tme_gtk_screen_surface);
   conn_fb->tme_fb_connection_height = cairo_image_surface_get_height(screen->tme_gtk_screen_surface);
-  conn_fb->tme_fb_connection_skipx = cairo_image_surface_get_stride(screen->tme_gtk_screen_surface) - conn_fb->tme_fb_connection_width * sizeof(tme_uint32_t);
+  conn_fb->tme_fb_connection_skipx = 0;
   conn_fb->tme_fb_connection_scanline_pad = _tme_gtk_scanline_pad(cairo_image_surface_get_stride(screen->tme_gtk_screen_surface));
   conn_fb->tme_fb_connection_order = TME_ENDIAN_NATIVE;
   conn_fb->tme_fb_connection_buffer = cairo_image_surface_get_data(screen->tme_gtk_screen_surface);
   conn_fb->tme_fb_connection_buffsz = cairo_image_surface_get_stride(screen->tme_gtk_screen_surface) * conn_fb->tme_fb_connection_height;
-  conn_fb->tme_fb_connection_bits_per_pixel = 32;
-  conn_fb->tme_fb_connection_depth = 24;
+  conn_fb->tme_fb_connection_bits_per_pixel = 16;
+  conn_fb->tme_fb_connection_depth = 16;
   conn_fb->tme_fb_connection_class = TME_FB_XLAT_CLASS_COLOR;
-  conn_fb->tme_fb_connection_mask_g = 0x00ff00;
-  conn_fb->tme_fb_connection_mask_b = 0x0000ff;
-  conn_fb->tme_fb_connection_mask_r = 0xff0000;
+  conn_fb->tme_fb_connection_mask_g = 0x0007e0;
+  conn_fb->tme_fb_connection_mask_b = 0x00001f;
+  conn_fb->tme_fb_connection_mask_r = 0x00f800;
   
   /* unlock our mutex: */
   tme_mutex_unlock(&display->tme_display_mutex);
@@ -330,7 +338,7 @@ _tme_gtk_screen_draw(GtkWidget *widget,
 
   cairo_set_source_surface(cr, screen->tme_gtk_screen_surface, 0, 0);
   cairo_paint(cr);
-  screen->screen.tme_screen_update = 0;    
+  screen->screen.tme_screen_update = TME_SCREEN_UPDATE_NONE;    
 
   /* unlock our mutex: */
   tme_mutex_unlock(&display->tme_display_mutex);
@@ -400,12 +408,19 @@ _tme_gtk_screen_new(struct tme_gdk_display *display,
   menu = gtk_menu_new();
 
   /* create the Screen scaling submenu: */
-  submenu
-    = _tme_display_menu_radio(screen,
-				  _tme_gtk_screen_submenu_scaling);
+  submenu = _tme_display_menu_radio(screen, scale_items, TME_ARRAY_ELS(scale_items));
 
   /* create the Screen scaling submenu item: */
   menu_item = gtk_menu_item_new_with_label(_("Scale"));
+  //  gtk_widget_show(menu_item);
+  gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), submenu);
+  gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
+
+  /* create the Screen colormap submenu: */
+  submenu = _tme_display_menu_radio(screen, format_items, TME_ARRAY_ELS(format_items));
+
+  /* create the Screen scaling submenu item: */
+  menu_item = gtk_menu_item_new_with_label(_("Format"));
   //  gtk_widget_show(menu_item);
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), submenu);
   gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
@@ -423,8 +438,9 @@ _tme_gtk_screen_new(struct tme_gdk_display *display,
   /* new a minimum size */
   //_tme_gtk_screen_set_size(screen, BLANK_SIDE, BLANK_SIDE);
   //  _tme_gtk_screen_init(screen->tme_gtk_screen_gtkframe, screen);
+
   
-  _tme_screen_configure(screen);
+  _tme_screen_format_set(screen, CAIRO_FORMAT_RGB16_565);
 
   /* pack the Gtkframe into the outer vertical packing box: */
   gtk_box_pack_start(GTK_BOX(screen->tme_gtk_screen_vbox0), 
@@ -493,39 +509,30 @@ _tme_display_enter_focus(GtkWidget *widget,
 
 /* this creates a menu of radio buttons: */
 GtkWidget *
-_tme_display_menu_radio(void *state,
-			tme_display_menu_items_t menu_items)
+_tme_display_menu_radio(struct tme_gtk_screen *screen,
+			struct tme_display_menu_item menu_items[],
+			int num_items)
 {
   GtkWidget *menu;
   GSList *menu_group;
-  struct tme_display_menu_item menu_item_buffer;
-  GCallback menu_func;
   GtkWidget *menu_item;
-
+  int i;
+  
   /* create the menu: */
   menu = gtk_menu_new();
 
   /* create the menu items: */
   menu_group = NULL;
-  for (menu_item_buffer.tme_display_menu_item_which = 0;
-       ;
-       menu_item_buffer.tme_display_menu_item_which++) {
-    menu_func = (*menu_items)(state, &menu_item_buffer);
-    if (menu_func == G_CALLBACK(NULL)) {
-      break;
-    }
+  for (i=0;i<num_items;i++) {
     menu_item
       = gtk_radio_menu_item_new_with_label(menu_group,
-					   menu_item_buffer.tme_display_menu_item_string);
-    if (menu_item_buffer.tme_display_menu_item_widget != NULL) {
-      *menu_item_buffer.tme_display_menu_item_widget = menu_item;
-    }
+					   menu_items[i].name);
     menu_group
       = gtk_radio_menu_item_get_group(GTK_RADIO_MENU_ITEM(menu_item));
     g_signal_connect(menu_item, 
 		     "activate",
-		     menu_func,
-		     (gpointer) state);
+		     menu_items[i].menu_func,
+		     (gpointer) screen);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
     //    gtk_widget_show(menu_item);
   }
@@ -549,8 +556,9 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   
   /* set the display-specific functions: */
   display->tme_screen_add = _tme_gtk_screen_new;
-  display->tme_screen_set_size = _tme_gtk_screen_set_size;
-  //  display->tme_display_update = _tme_gtk_display_update;
+  display->tme_screen_resize = _tme_gtk_screen_resize;
+  display->tme_screen_redraw = _tme_gtk_screen_redraw;
+  display->tme_display_update = _tme_gtk_display_update;
 
   /* setup the thread loop function: */
   //tme_threads_init(NULL, gtk_main);
@@ -558,7 +566,5 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   /* unlock mutex once gtk main thread is running: */
   //  g_idle_add(_tme_gtk_screens_update, display);
 
-  tme_threads_init(_tme_gtk_display_th_update, display);
-  
   return (TME_OK);
 }

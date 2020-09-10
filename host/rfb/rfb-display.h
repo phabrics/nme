@@ -70,6 +70,8 @@ struct tme_gtk_screen {
   /* the generic screen structure */
   struct tme_screen screen;
 
+  rfbScreenInfoPtr server;
+  
   /* the top-level window: */
   GtkWidget *tme_gtk_screen_window;
   
