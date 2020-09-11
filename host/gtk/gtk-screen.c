@@ -51,7 +51,8 @@ _tme_gtk_screen_redraw(struct tme_gtk_screen *screen)
 
 static int
 _tme_gtk_display_update(struct tme_display *display) {
-  gtk_main_iteration_do(FALSE);
+  while (gtk_events_pending ())
+    gtk_main_iteration ();
   return TME_OK;
 }
 
@@ -194,11 +195,13 @@ static struct tme_display_menu_item format_items[] =
   };
 
 /* Screen-specific size request */
-static void _tme_gtk_screen_resize(struct tme_gtk_screen *screen,
-				   int width,
-				   int height) {
+static void _tme_gtk_screen_resize(struct tme_gtk_screen *screen) {
+  struct tme_fb_connection *conn_fb = screen->screen.tme_screen_fb;
+  
   /* set a minimum size */
-  gtk_widget_set_size_request(screen->tme_gtk_screen_gtkframe, width, height);
+  gtk_widget_set_size_request(screen->tme_gtk_screen_gtkframe,
+			      conn_fb->tme_fb_connection_width,
+			      conn_fb->tme_fb_connection_height);
 }
 
 /* Create a similar image surface to the screen's target surface (i.e., backing store) */
@@ -302,13 +305,13 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
   conn_fb->tme_fb_connection_order = TME_ENDIAN_NATIVE;
   conn_fb->tme_fb_connection_buffer = cairo_image_surface_get_data(screen->tme_gtk_screen_surface);
   conn_fb->tme_fb_connection_buffsz = cairo_image_surface_get_stride(screen->tme_gtk_screen_surface) * conn_fb->tme_fb_connection_height;
-  conn_fb->tme_fb_connection_bits_per_pixel = 16;
-  conn_fb->tme_fb_connection_depth = 16;
+  conn_fb->tme_fb_connection_bits_per_pixel = 32;
+  conn_fb->tme_fb_connection_depth = 24;
   conn_fb->tme_fb_connection_class = TME_FB_XLAT_CLASS_COLOR;
-  conn_fb->tme_fb_connection_mask_g = 0x0007e0;
-  conn_fb->tme_fb_connection_mask_b = 0x00001f;
-  conn_fb->tme_fb_connection_mask_r = 0x00f800;
-  
+  conn_fb->tme_fb_connection_mask_g = 0x00ff00;
+  conn_fb->tme_fb_connection_mask_b = 0x0000ff;
+  conn_fb->tme_fb_connection_mask_r = 0xff0000;
+
   /* unlock our mutex: */
   tme_mutex_unlock(&display->tme_display_mutex);
 
@@ -338,7 +341,6 @@ _tme_gtk_screen_draw(GtkWidget *widget,
 
   cairo_set_source_surface(cr, screen->tme_gtk_screen_surface, 0, 0);
   cairo_paint(cr);
-  screen->screen.tme_screen_update = TME_SCREEN_UPDATE_NONE;    
 
   /* unlock our mutex: */
   tme_mutex_unlock(&display->tme_display_mutex);
@@ -440,7 +442,7 @@ _tme_gtk_screen_new(struct tme_gdk_display *display,
   //  _tme_gtk_screen_init(screen->tme_gtk_screen_gtkframe, screen);
 
   
-  _tme_screen_format_set(screen, CAIRO_FORMAT_RGB16_565);
+  _tme_screen_format_set(screen, CAIRO_FORMAT_RGB24);
 
   /* pack the Gtkframe into the outer vertical packing box: */
   gtk_box_pack_start(GTK_BOX(screen->tme_gtk_screen_vbox0), 
@@ -461,6 +463,8 @@ _tme_gtk_screen_new(struct tme_gdk_display *display,
 
   snprintf(title, sizeof(title), "%s (%s)", PACKAGE_STRING, conn->tme_connection_other->tme_connection_element->tme_element_args[0]);
   gtk_window_set_title(GTK_WINDOW(screen->tme_gtk_screen_window), title);
+
+  _tme_gtk_screen_resize(screen);
   
   /* unlock our mutex: */
   tme_mutex_unlock(&display->display.tme_display_mutex);

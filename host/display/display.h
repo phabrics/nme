@@ -53,6 +53,9 @@
 #define  TME_DISPLAY_CALLOUT_KEYBOARD_CTRL	TME_BIT(1)
 #define  TME_DISPLAY_CALLOUT_MOUSE_CTRL	TME_BIT(2)
 #define BLANK_SIDE (16 * 8)
+#define TME_SCREEN_UPDATE_NONE                  (0)
+#define TME_SCREEN_UPDATE_REDRAW                (1)
+#define TME_SCREEN_UPDATE_RESIZE                (2)
 
 /* types: */
 
@@ -159,10 +162,9 @@ struct tme_display {
   /* implementation-specific callback functions: */
   struct tme_screen *(*tme_screen_add) _TME_P((struct tme_display *, struct tme_connection *));
   int (*tme_display_update) _TME_P((struct tme_display *));
-  int (*tme_screen_set_size) _TME_P((struct tme_screen *,
-				     int,
-				     int));
-  
+  int (*tme_screen_resize) _TME_P((struct tme_screen *));
+  int (*tme_screen_redraw) _TME_P((struct tme_screen *));
+  int (*tme_screen_update) _TME_P((struct tme_screen *));
 };
 
 /* prototypes: */

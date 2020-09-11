@@ -38,13 +38,14 @@
 
 static _tme_thret
 _tme_screen_th_update(void *disp) {
-  struct tme_fb_connection *conn_fb;
   struct tme_screen *screen;
-  struct tme_display *display = (rfbScreenInfoPtr)disp;
+  struct tme_display *display = (struct tme_display *)disp;
   int rc;
   
   tme_thread_enter(NULL);
-
+#ifdef TME_THREADS_SJLJ
+  tme_thread_create(&display->tme_display_thread, tme_sjlj_threads_main, NULL);
+#endif
   //_tme_thread_suspended();
   
   for(;;) {
@@ -60,18 +61,15 @@ _tme_screen_th_update(void *disp) {
     /* loop over all screens: */
     for (screen = display->tme_display_screens;
 	 screen != NULL;
-	 screen = screen->tme_screen_next)
+	 screen = screen->tme_screen_next) {
       switch(screen->tme_screen_update) {
       case TME_SCREEN_UPDATE_REDRAW:
 	if(display->tme_screen_redraw)
 	  display->tme_screen_redraw(screen);
 	break;
       case TME_SCREEN_UPDATE_RESIZE:
-	if(display->tme_screen_resize &&
-	   (conn_fb = screen->tme_screen_fb))
-	  display->tme_screen_resize(screen,
-				     conn_fb->tme_fb_connection_width,
-				     conn_fb->tme_fb_connection_height);
+	if(display->tme_screen_resize)
+	  display->tme_screen_resize(screen);
 	break;
       case TME_SCREEN_UPDATE_NONE:
 	break;
@@ -80,6 +78,8 @@ _tme_screen_th_update(void *disp) {
 	if(display->tme_screen_update)
 	  display->tme_screen_update(screen);
       }
+      screen->tme_screen_update = TME_SCREEN_UPDATE_NONE;  
+    }
     tme_mutex_unlock(&display->tme_display_mutex);
   }
   
@@ -104,7 +104,7 @@ _tme_display_update(struct tme_display *display)
     /* skip this screen if it's unconnected: */
     if (screen->tme_screen_update != TME_SCREEN_UPDATE_NONE ||
 	!(conn_fb = screen->tme_screen_fb) ||
-	!conn_fb->tme_fb_connection_buffer ||
+	!conn_fb->tme_fb_connection_buffsz ||
 	!(conn_fb_other = (struct tme_fb_connection *)conn_fb->tme_fb_connection.tme_connection_other)) return rc;
   
     /* unlock the mutex: */
@@ -500,10 +500,11 @@ _tme_screen_configure(struct tme_screen *screen)
   /* set the size & translation function */
   screen->tme_screen_fb_xlat = NULL;  
   if(conn_fb->tme_fb_connection_width != width ||
-     conn_fb->tme_fb_connection_height != height)
+     conn_fb->tme_fb_connection_height != height) {
     screen->tme_screen_update = TME_SCREEN_UPDATE_RESIZE;
     conn_fb->tme_fb_connection_width = width;
     conn_fb->tme_fb_connection_height = height;
+    conn_fb->tme_fb_connection_buffsz = 0;
   }
 }
 
@@ -720,7 +721,7 @@ int tme_display_init(struct tme_element *element,
 
   /* setup the thread loop function: */
 #ifdef TME_THREADS_SJLJ
-  tme_thread_create(&display->tme_display_thread, tme_sjlj_threads_main, NULL);
+  //  tme_thread_create(&display->tme_display_thread, tme_sjlj_threads_main, NULL);
   tme_sjlj_thread_create(&display->tme_display_sjlj_thread, _tme_display_th_update, display);
 #else
   tme_thread_create(&display->tme_display_sjlj_thread, _tme_display_th_update, display);

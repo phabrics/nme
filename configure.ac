@@ -1030,7 +1030,8 @@ if test "x$have_gtk" = xyes; then
    if test "x${enable_gtk}" = xyes; then
       TME_HOSTS="gtk display ${TME_HOSTS}"
    fi
-   TME_FB_XLAT_DST="d32b32s0p32olml_r0xffff0000_g0xff00ff00_b0xff0000ff d24b32s0p32olml_r0xff0000_g0xff00_b0xff d16b16s0p32olml_r0xf800_g0x07e0_b0x001f d8b8s0p32olml_r0xff_g0xff_b0xff d1b1s0p32olml_r0x1_g0x1_b0x1"
+   TME_FB_XLAT_DST="d32b32s0p32olml_r0xffff0000_g0xff00ff00_b0xff0000ff d24b32s0p32olml_r0xff0000_g0xff00_b0xff"
+#   TME_FB_XLAT_DST="d32b32s0p32olml_r0xffff0000_g0xff00ff00_b0xff0000ff d24b32s0p32olml_r0xff0000_g0xff00_b0xff d16b16s0p32olml_r0xf800_g0x07e0_b0x001f d8b8s0p32olml_r0xff_g0xff_b0xff d1b1s0p32olml_r0x1_g0x1_b0x1"
 fi
 
 # if --with-tme-host-displays is given, characterize those given displays:
