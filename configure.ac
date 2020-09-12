@@ -765,14 +765,14 @@ AC_CHECK_DECLS(
 )
 CFLAGS="${old_CFLAGS}"
 
-tme_host_types="tun bsd openvpn posix gtk"
+tme_host_types="tun bsd openvpn posix gtk rfb"
 
 for tme_host_type in ${tme_host_types}; do
     eval enable_${tme_host_type}=no
 done
 
 AC_ARG_ENABLE(hosts,
-[  --enable-hosts=hosttypes         enable hosts (default="tun bsd openvpn posix gtk" if host supports)],
+[  --enable-hosts=hosttypes         enable hosts (default="tun bsd openvpn posix gtk rfb" if host supports)],
    [tme_host_types=${enableval}], [enable_hosts=yes])
 
 if test "x${enable_hosts}" = xno; then
@@ -782,6 +782,11 @@ fi
 for tme_host_type in ${tme_host_types}; do
     eval enable_${tme_host_type}=yes
 done
+
+AS_IF([test "x${enable_rfb}" = xyes], [
+   TME_HOSTS="rfb ${TME_HOSTS}"
+   PKG_CHECK_MODULES([RFB], [libvncserver])		   
+])
 
 AM_CONDITIONAL([USING_OPENVPN], [test "x${enable_openvpn}" = xyes && test "x${have_tap_header}" = xyes])
 if test "x${enable_openvpn}" = xyes && test "x${have_tap_header}" = xyes; then
@@ -815,12 +820,13 @@ found_BPFVERSION
  fi])
 
 if test "x${TME_HOSTS}" != x; then
-   TME_HOSTS="eth ${TME_HOSTS}"
+   TME_HOSTS="${TME_HOSTS}"
 fi
 
 if test "x${enable_posix}" = xyes; then
    TME_HOSTS="posix ${TME_HOSTS}"
 fi
+
 AC_MSG_RESULT($TME_HOSTS)
 
 AC_SYS_POSIX_TERMIOS
@@ -1028,7 +1034,7 @@ dnl Checks for GTK.
 AM_PATH_GTK_3_0([], have_gtk=yes, have_gtk=no)
 if test "x$have_gtk" = xyes; then
    if test "x${enable_gtk}" = xyes; then
-      TME_HOSTS="gtk display ${TME_HOSTS}"
+      TME_HOSTS="gtk ${TME_HOSTS}"
    fi
    TME_FB_XLAT_DST="d32b32s0p32olml_r0xffff0000_g0xff00ff00_b0xff0000ff d24b32s0p32olml_r0xff0000_g0xff00_b0xff"
 #   TME_FB_XLAT_DST="d32b32s0p32olml_r0xffff0000_g0xff00ff00_b0xff0000ff d24b32s0p32olml_r0xff0000_g0xff00_b0xff d16b16s0p32olml_r0xf800_g0x07e0_b0x001f d8b8s0p32olml_r0xff_g0xff_b0xff d1b1s0p32olml_r0x1_g0x1_b0x1"
@@ -1602,10 +1608,9 @@ AC_CONFIG_FILES([Makefile
           host/Makefile
           host/openvpn/Makefile
           host/posix/Makefile
-          host/eth/Makefile
+          host/rfb/Makefile
           host/bsd/Makefile
           host/tun/Makefile
-          host/display/Makefile
           host/gtk/Makefile
           bus/Makefile
           bus/multibus/Makefile

@@ -463,7 +463,7 @@ _tme_keyboard_ctrl(struct tme_keyboard_connection *conn_keyboard,
 
   /* ring the bell: */
   if (ctrl & TME_KEYBOARD_CTRL_BELL) {
-    gdk_beep();
+    display->tme_display_bell(display);
   }
 
   return (TME_OK);

@@ -40,13 +40,9 @@ _TME_RCSID("$Id: gtk-screen.c,v 1.11 2009/08/30 21:39:03 fredette Exp $");
 #include "gtk-display.h"
 #include <stdlib.h>
 
-/* this is called before the screen's display is updated: */
 static void
-_tme_gtk_screen_redraw(struct tme_gtk_screen *screen)
-{
-  cairo_surface_flush(screen->tme_gtk_screen_surface);
-  cairo_surface_mark_dirty(screen->tme_gtk_screen_surface);
-  gtk_widget_queue_draw(screen->tme_gtk_screen_gtkframe);
+_tme_gtk_display_bell(struct tme_gdk_display *display) {
+  gdk_display_bell(display->tme_gdk_display);
 }
 
 static int
@@ -319,6 +315,15 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
   return TRUE;
 }
 
+/* this is called before the screen's display is updated: */
+static void
+_tme_gtk_screen_redraw(struct tme_gtk_screen *screen)
+{
+  cairo_surface_flush(screen->tme_gtk_screen_surface);
+  cairo_surface_mark_dirty(screen->tme_gtk_screen_surface);
+  gtk_widget_queue_draw(screen->tme_gtk_screen_gtkframe);
+}
+
 /* Redraw the screen from the surface. Note that the ::draw
  * signal receives a ready-to-be-used cairo_t that is already
  * clipped to only draw the exposed areas of the widget
@@ -356,7 +361,6 @@ _tme_gtk_screen_new(struct tme_gdk_display *display,
   struct tme_gtk_screen *screen;
   GdkDisplay *gdkdisplay;
   GdkDeviceManager *devices;
-  GdkRectangle workarea;
   GtkWidget *menu_bar;
   GtkWidget *menu;
   GtkWidget *submenu;
@@ -368,19 +372,6 @@ _tme_gtk_screen_new(struct tme_gdk_display *display,
 
   screen = tme_screen_new(display, struct tme_gtk_screen, conn);
 
-  display->tme_gdk_display = gdk_display_get_default();
-
-  display->tme_gdk_display_cursor
-    = gdk_cursor_new_for_display(display->tme_gdk_display, GDK_BLANK_CURSOR);
-
-  display->tme_gdk_display_seat = gdk_display_get_default_seat(display->tme_gdk_display);
-
-  display->tme_gdk_display_monitor = gdk_display_get_primary_monitor(display->tme_gdk_display);
-
-  gdk_monitor_get_workarea(display->tme_gdk_display_monitor, &workarea);
-
-  display->display.tme_screen_width = workarea.width;
-  display->display.tme_screen_height = workarea.height;
   screen->screen.tme_screen_scale = gdk_monitor_get_scale_factor(display->tme_gdk_display_monitor);
   
   /* create the top-level window, and allow it to shrink, grow,
@@ -547,7 +538,8 @@ _tme_display_menu_radio(struct tme_gtk_screen *screen,
 
 /* the new GTK display function: */
 TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
-  struct tme_display *display;
+  struct tme_gdk_display *display;
+  GdkRectangle workarea;
 
   /* start our data structure: */
   display = tme_new0(struct tme_gdk_display, 1);
@@ -558,11 +550,26 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
 
   _tme_gtk_init();
   
+  display->tme_gdk_display = gdk_display_get_default();
+
+  display->tme_gdk_display_cursor
+    = gdk_cursor_new_for_display(display->tme_gdk_display, GDK_BLANK_CURSOR);
+
+  display->tme_gdk_display_seat = gdk_display_get_default_seat(display->tme_gdk_display);
+
+  display->tme_gdk_display_monitor = gdk_display_get_primary_monitor(display->tme_gdk_display);
+
+  gdk_monitor_get_workarea(display->tme_gdk_display_monitor, &workarea);
+
+  display->display.tme_screen_width = workarea.width;
+  display->display.tme_screen_height = workarea.height;
+
   /* set the display-specific functions: */
-  display->tme_screen_add = _tme_gtk_screen_new;
-  display->tme_screen_resize = _tme_gtk_screen_resize;
-  display->tme_screen_redraw = _tme_gtk_screen_redraw;
-  display->tme_display_update = _tme_gtk_display_update;
+  display->display.tme_display_bell = _tme_gtk_display_bell;
+  display->display.tme_display_update = _tme_gtk_display_update;
+  display->display.tme_screen_add = _tme_gtk_screen_new;
+  display->display.tme_screen_resize = _tme_gtk_screen_resize;
+  display->display.tme_screen_redraw = _tme_gtk_screen_redraw;
 
   /* setup the thread loop function: */
   //tme_threads_init(NULL, gtk_main);

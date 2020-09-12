@@ -36,14 +36,26 @@
 #include <tme/common.h>
 
 /* includes: */
-#include "rfb-display.h"
+#include "display.h"
+#include <rfb/rfb.h>
 #include <stdlib.h>
+
+static const int bpp=4;
+static int maxx=800, maxy=600;
+/* TODO: odd maxx doesn't work (vncviewer bug) */
 
 typedef struct tme_rfb_screen {
   int tme_rfb_screen_mouse_buttons_last,
     tme_rfb_screen_mouse_warp_x,
     tme_rfb_screen_mouse_warp_y;
 } tme_rfb_screen;
+
+typedef struct tme_rfb_display {
+  /* the generic display structure */
+  struct tme_display display;
+
+  rfbScreenInfoPtr server;
+} tme_rfb_display;
 
 static void _tme_rfb_clientgone(rfbClientPtr cl)
 {
@@ -56,6 +68,11 @@ static enum rfbNewClientAction _tme_rfb_newclient(rfbClientPtr cl)
   cl->clientData = tme_new0(struct tme_rfb_screen, 1);
   cl->clientGoneHook = _tme_rfb_clientgone;
   return RFB_CLIENT_ACCEPT;
+}
+
+static void
+_tme_rfb_display_bell(struct tme_rfb_display *display) {
+  rfbSendBell(display->server);
 }
 
 static int
@@ -77,83 +94,66 @@ _tme_rfb_screen_redraw(struct tme_screen *screen)
   struct tme_fb_connection *conn_fb = screen->tme_screen_fb;
   rfbScreenInfoPtr server = ((tme_rfb_display *)screen->tme_screen_display)->server;
   
-  if(conn_fb->tme_fb_connection_buffer == server->frameBuffer)
+  if((char *)conn_fb->tme_fb_connection_buffer == server->frameBuffer)
     rfbMarkRectAsModified(server, 0, 0,
 			  conn_fb->tme_fb_connection_width,
 			  conn_fb->tme_fb_connection_height);
 }
 
 /* switch to new framebuffer contents */
-static void _tme_rfb_screen_resize(struct tme_screen *screen, int width, int height)
+static void _tme_rfb_screen_resize(struct tme_screen *screen)
 {
   unsigned char *oldfb, *newfb;
   struct tme_fb_connection *conn_fb = screen->tme_screen_fb;
+  int width = conn_fb->tme_fb_connection_width;
+  int height = conn_fb->tme_fb_connection_height;
   rfbScreenInfoPtr server = ((tme_rfb_display *)screen->tme_screen_display)->server;
   
   newfb = (unsigned char*)tme_malloc(width * height * bpp);
-  if(!conn_fb->tme_fb_connection_buffer ||
-     conn_fb->tme_fb_connection_buffer == server->frameBuffer) {
-    oldfb = (unsigned char*)server->frameBuffer;
+  if((char *)conn_fb->tme_fb_connection_buffer == server->frameBuffer) {
     rfbNewFramebuffer(server, (char*)newfb, width, height, 8, 3, bpp);
-    free(oldfb);
-  } else
-    free(conn_fb->tme_fb_connection_buffer);
+  }
+  free(conn_fb->tme_fb_connection_buffer);
   conn_fb->tme_fb_connection_buffer = newfb;  
   /*** FIXME: Re-install cursor. ***/
 }
 
-/* Create a new surface of the appropriate size to store our scribbles */
-static gboolean
-_tme_rfb_screen_configure(RfbWidget         *widget,
-			  GdkEventConfigure *event,
-			  gpointer          _screen)
+/* this makes a new screen: */
+struct tme_screen *
+_tme_rfb_screen_new(struct tme_rfb_display *display,
+		    struct tme_connection *conn)
 {
-  struct tme_rfb_screen *screen;
-  struct tme_display *display;
-  GdkWindow *window;
-  int scale;
-  
-  screen = (struct tme_rfb_screen *) _screen;
-
-  /* get the display: */
-  display = screen->screen.tme_screen_display;
+  struct tme_screen *screen;
+  struct tme_fb_connection *conn_fb;
 
   /* lock our mutex: */
-  tme_mutex_lock(&display->tme_display_mutex);
+  tme_mutex_lock(&display->display.tme_display_mutex);
 
-  cairo_surface_destroy(screen->tme_rfb_screen_surface);
+  screen = tme_screen_new(display, struct tme_screen, conn);
 
-  window = rfb_widget_get_window(screen->tme_rfb_screen_rfbframe);
+  screen->tme_screen_scale = 1;
   
-  screen->screen.tme_screen_scale = gdk_window_get_scale_factor(window);
-  
-  screen->tme_rfb_screen_surface
-    = gdk_window_create_similar_image_surface(window,
-					      screen->tme_rfb_screen_format,
-					      gdk_window_get_width(window) * screen->screen.tme_screen_scale,
-					      gdk_window_get_height(window) * screen->screen.tme_screen_scale,
-					      screen->screen.tme_screen_scale);
-
-  conn_fb = screen->screen.tme_screen_fb;
+  conn_fb = screen->tme_screen_fb;
 
   /* update our framebuffer connection: */
   conn_fb->tme_fb_connection_skipx = 0;
-  conn_fb->tme_fb_connection_scanline_pad = _tme_rfb_scanline_pad(cairo_image_surface_get_stride(screen->tme_rfb_screen_surface));
+  conn_fb->tme_fb_connection_scanline_pad = bpp;
   conn_fb->tme_fb_connection_order = TME_ENDIAN_NATIVE;
-  conn_fb->tme_fb_connection_buffer = cairo_image_surface_get_data(screen->tme_rfb_screen_surface);
-  conn_fb->tme_fb_connection_buffsz = cairo_image_surface_get_stride(screen->tme_rfb_screen_surface) * conn_fb->tme_fb_connection_height;
-  conn_fb->tme_fb_connection_bits_per_pixel = 16;
-  conn_fb->tme_fb_connection_depth = 16;
+  conn_fb->tme_fb_connection_bits_per_pixel = bpp * 8;
+  conn_fb->tme_fb_connection_depth = 24;
   conn_fb->tme_fb_connection_class = TME_FB_XLAT_CLASS_COLOR;
-  conn_fb->tme_fb_connection_mask_g = 0x0007e0;
-  conn_fb->tme_fb_connection_mask_b = 0x00001f;
-  conn_fb->tme_fb_connection_mask_r = 0x00f800;
+  conn_fb->tme_fb_connection_mask_g = 0x00ff00;
+  conn_fb->tme_fb_connection_mask_b = 0x0000ff;
+  conn_fb->tme_fb_connection_mask_r = 0xff0000;
+  display->server->frameBuffer = conn_fb->tme_fb_connection_buffer;
   
+  _tme_screen_configure(screen);
+
   /* unlock our mutex: */
-  tme_mutex_unlock(&display->tme_display_mutex);
+  tme_mutex_unlock(&display->display.tme_display_mutex);
 
   /* We've handled the configure event, no need for further processing. */
-  return TRUE;
+  return (screen);
 }
 
 /* this is a VNC callback for a key press or release event: */
@@ -181,8 +181,6 @@ _tme_rfb_key_event(rfbBool down, rfbKeySym key, rfbClientPtr cl)
   /* unlock the mutex: */
   tme_mutex_unlock(&display->tme_display_mutex);
 
-  /* don't process this event any further: */
-  return (TRUE);
 }
 
 /* this is a VNC callback for a mouse event: */
@@ -259,7 +257,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_rfb,display) {
   display = element->tme_element_private;
 
   /* allocate initial screen structure of the given size: */
-  server=rfbGetScreen(args, arg_i,maxx,maxy,8,3,4);
+  server=rfbGetScreen(&arg_i,args,maxx,maxy,8,3,bpp);
   if(!server)
     return 1;
   server->desktopName = "The Machine Emulator";
@@ -273,11 +271,15 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_rfb,display) {
   rfbInitServer(server);
   
   display->server = server;
+  display->display.tme_screen_width = maxx;
+  display->display.tme_screen_height = maxy;
+
   /* set the display-specific functions: */
-  // display->tme_screen_add = _tme_rfb_screen_new;
-  display->tme_screen_resize = _tme_rfb_screen_resize;
-  display->tme_screen_redraw = _tme_rfb_screen_redraw;
-  display->tme_display_update = _tme_rfb_display_update;
+  display->display.tme_display_bell = _tme_rfb_display_bell;
+  display->display.tme_display_update = _tme_rfb_display_update;
+  display->display.tme_screen_add = _tme_rfb_screen_new;
+  display->display.tme_screen_resize = _tme_rfb_screen_resize;
+  display->display.tme_screen_redraw = _tme_rfb_screen_redraw;
 
   return (TME_OK);
 }

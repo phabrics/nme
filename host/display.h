@@ -40,7 +40,7 @@
 #include <tme/generic/fb.h>
 #include <tme/generic/keyboard.h>
 #include <tme/generic/mouse.h>
-#define TME_THREADS_GLIB
+#define TME_THREADS_POSIX
 #include <tme/threads.h>
 #include <tme/hash.h>
 
@@ -160,8 +160,9 @@ struct tme_display {
   int tme_screen_height;
   
   /* implementation-specific callback functions: */
-  struct tme_screen *(*tme_screen_add) _TME_P((struct tme_display *, struct tme_connection *));
+  int (*tme_display_bell) _TME_P((struct tme_display *));
   int (*tme_display_update) _TME_P((struct tme_display *));
+  struct tme_screen *(*tme_screen_add) _TME_P((struct tme_display *, struct tme_connection *));
   int (*tme_screen_resize) _TME_P((struct tme_screen *));
   int (*tme_screen_redraw) _TME_P((struct tme_screen *));
   int (*tme_screen_update) _TME_P((struct tme_screen *));
