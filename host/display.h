@@ -41,6 +41,7 @@
 #include <tme/generic/keyboard.h>
 #include <tme/generic/mouse.h>
 #define TME_THREADS_POSIX
+#undef HAVE_PTHREAD_SETSCHEDPARAM
 #include <tme/threads.h>
 #include <tme/hash.h>
 

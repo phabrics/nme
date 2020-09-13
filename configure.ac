@@ -765,6 +765,23 @@ AC_CHECK_DECLS(
 )
 CFLAGS="${old_CFLAGS}"
 
+dnl Checks for GLIB.
+AM_PATH_GLIB_2_0([], have_glib=yes, have_glib=no)
+if test "x$have_glib" = xyes; then
+  AC_DEFINE(HAVE_GLIB, [], [Define if you are compiling with GLIB.])
+fi
+
+TME_FB_XLAT_DST=
+dnl Checks for GTK.
+AM_PATH_GTK_3_0([], have_gtk=yes, have_gtk=no)
+
+# if --with-tme-host-displays is given, characterize those given displays:
+AC_ARG_WITH(tme-host-displays,
+[  --with-tme-host-displays=DISPLAYS  support host displays with these display formats],
+[ TME_FB_XLAT_DST=$withval $TME_FB_XLAT_DST], [])
+
+AC_SUBST(TME_FB_XLAT_DST)
+
 tme_host_types="tun bsd openvpn posix gtk rfb"
 
 for tme_host_type in ${tme_host_types}; do
@@ -772,7 +789,7 @@ for tme_host_type in ${tme_host_types}; do
 done
 
 AC_ARG_ENABLE(hosts,
-[  --enable-hosts=hosttypes         enable hosts (default="tun bsd openvpn posix gtk rfb" if host supports)],
+[  --enable-hosts=hosttypes         enable hosts (default="${tme_host_types}")],
    [tme_host_types=${enableval}], [enable_hosts=yes])
 
 if test "x${enable_hosts}" = xno; then
@@ -783,9 +800,16 @@ for tme_host_type in ${tme_host_types}; do
     eval enable_${tme_host_type}=yes
 done
 
+if test "x$have_gtk" = xyes; then
+   if test "x${enable_gtk}" = xyes; then
+      TME_HOSTS="gtk ${TME_HOSTS}"
+   fi
+   TME_FB_XLAT_DST="d32b32s0p32olml_r0xffff0000_g0xff00ff00_b0xff0000ff d24b32s0p32olml_r0xff0000_g0xff00_b0xff"
+#   TME_FB_XLAT_DST="d32b32s0p32olml_r0xffff0000_g0xff00ff00_b0xff0000ff d24b32s0p32olml_r0xff0000_g0xff00_b0xff d16b16s0p32olml_r0xf800_g0x07e0_b0x001f d8b8s0p32olml_r0xff_g0xff_b0xff d1b1s0p32olml_r0x1_g0x1_b0x1"
+fi
+
 AS_IF([test "x${enable_rfb}" = xyes], [
-   TME_HOSTS="rfb ${TME_HOSTS}"
-   PKG_CHECK_MODULES([RFB], [libvncserver])		   
+   PKG_CHECK_MODULES([RFB], [libvncserver], [TME_HOSTS="rfb ${TME_HOSTS}"])
 ])
 
 AM_CONDITIONAL([USING_OPENVPN], [test "x${enable_openvpn}" = xyes && test "x${have_tap_header}" = xyes])
@@ -827,6 +851,9 @@ if test "x${enable_posix}" = xyes; then
    TME_HOSTS="posix ${TME_HOSTS}"
 fi
 
+dnl The list of host support is finished.
+AC_SUBST(TME_HOSTS)
+
 AC_MSG_RESULT($TME_HOSTS)
 
 AC_SYS_POSIX_TERMIOS
@@ -861,12 +888,6 @@ done
 AC_MSG_RESULT($tme_nat_types)
 
 AC_SUBST(NATINC)
-
-dnl Checks for GLIB.
-AM_PATH_GLIB_2_0([], have_glib=yes, have_glib=no)
-if test "x$have_glib" = xyes; then
-  AC_DEFINE(HAVE_GLIB, [], [Define if you are compiling with GLIB.])
-fi
 
 AC_MSG_CHECKING([for available threading models])
 
@@ -1028,27 +1049,6 @@ dnl Checks for X11.
 AC_PATH_XTRA
 AC_PERL_MODULE_VERSION(X11::Protocol 0.56, [], no_x=yes)
 AM_CONDITIONAL([USING_X], [test "x${no_x}" = x])
-
-TME_FB_XLAT_DST=
-dnl Checks for GTK.
-AM_PATH_GTK_3_0([], have_gtk=yes, have_gtk=no)
-if test "x$have_gtk" = xyes; then
-   if test "x${enable_gtk}" = xyes; then
-      TME_HOSTS="gtk ${TME_HOSTS}"
-   fi
-   TME_FB_XLAT_DST="d32b32s0p32olml_r0xffff0000_g0xff00ff00_b0xff0000ff d24b32s0p32olml_r0xff0000_g0xff00_b0xff"
-#   TME_FB_XLAT_DST="d32b32s0p32olml_r0xffff0000_g0xff00ff00_b0xff0000ff d24b32s0p32olml_r0xff0000_g0xff00_b0xff d16b16s0p32olml_r0xf800_g0x07e0_b0x001f d8b8s0p32olml_r0xff_g0xff_b0xff d1b1s0p32olml_r0x1_g0x1_b0x1"
-fi
-
-# if --with-tme-host-displays is given, characterize those given displays:
-AC_ARG_WITH(tme-host-displays,
-[  --with-tme-host-displays=DISPLAYS  support host displays with these display formats],
-[ TME_FB_XLAT_DST=$withval $TME_FB_XLAT_DST], [])
-
-AC_SUBST(TME_FB_XLAT_DST)
-
-dnl The list of host support is finished.
-AC_SUBST(TME_HOSTS)
 
 dnl Configure recode.
 dnl Make brackets safe to use.

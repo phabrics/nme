@@ -42,6 +42,7 @@
 
 static const int bpp=4;
 static int maxx=800, maxy=600;
+static struct tme_display *_display;
 /* TODO: odd maxx doesn't work (vncviewer bug) */
 
 typedef struct tme_rfb_screen {
@@ -110,7 +111,8 @@ static void _tme_rfb_screen_resize(struct tme_screen *screen)
   rfbScreenInfoPtr server = ((tme_rfb_display *)screen->tme_screen_display)->server;
   
   newfb = (unsigned char*)tme_malloc(width * height * bpp);
-  if((char *)conn_fb->tme_fb_connection_buffer == server->frameBuffer) {
+  if(!conn_fb->tme_fb_connection_buffer ||
+     (char *)conn_fb->tme_fb_connection_buffer == server->frameBuffer) {
     rfbNewFramebuffer(server, (char*)newfb, width, height, 8, 3, bpp);
   }
   free(conn_fb->tme_fb_connection_buffer);
@@ -145,7 +147,6 @@ _tme_rfb_screen_new(struct tme_rfb_display *display,
   conn_fb->tme_fb_connection_mask_g = 0x00ff00;
   conn_fb->tme_fb_connection_mask_b = 0x0000ff;
   conn_fb->tme_fb_connection_mask_r = 0xff0000;
-  display->server->frameBuffer = conn_fb->tme_fb_connection_buffer;
   
   _tme_screen_configure(screen);
 
@@ -174,12 +175,12 @@ _tme_rfb_key_event(rfbBool down, rfbKeySym key, rfbClientPtr cl)
   tme_get_time(&tme_event.tme_keyboard_event_time);
 
   /* lock the mutex: */
-  tme_mutex_lock(&display->tme_display_mutex);
+  tme_mutex_lock(&_display->tme_display_mutex);
 
-  _tme_keyboard_key_event(&tme_event, display);
+  _tme_keyboard_key_event(&tme_event, _display);
   
   /* unlock the mutex: */
-  tme_mutex_unlock(&display->tme_display_mutex);
+  tme_mutex_unlock(&_display->tme_display_mutex);
 
 }
 
@@ -195,7 +196,7 @@ _tme_rfb_mouse_event(int buttonMask, int x, int y, rfbClientPtr cl)
     = TME_MOUSE_UNITS_UNKNOWN;
 
   /* lock the mutex: */
-  tme_mutex_lock(&display->tme_display_mutex);
+  tme_mutex_lock(&_display->tme_display_mutex);
 
   /* set the event time: */
   tme_get_time(&tme_event.tme_mouse_event_time);
@@ -209,7 +210,7 @@ _tme_rfb_mouse_event(int buttonMask, int x, int y, rfbClientPtr cl)
       && y == screen->tme_rfb_screen_mouse_warp_y) {
     
     /* unlock the mutex: */
-    tme_mutex_unlock(&display->tme_display_mutex);
+    tme_mutex_unlock(&_display->tme_display_mutex);
     
     /* stop propagating this event: */
     return (TRUE);
@@ -230,10 +231,10 @@ _tme_rfb_mouse_event(int buttonMask, int x, int y, rfbClientPtr cl)
   screen->tme_rfb_screen_mouse_warp_x = x;
   screen->tme_rfb_screen_mouse_warp_y = y;
   
-  _tme_mouse_mouse_event(&tme_event, display);
+  _tme_mouse_mouse_event(&tme_event, _display);
   
   /* unlock the mutex: */
-  tme_mutex_unlock(&display->tme_display_mutex);
+  tme_mutex_unlock(&_display->tme_display_mutex);
 
   rfbDefaultPtrAddEvent(buttonMask, x, y, cl);
  
@@ -281,5 +282,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_rfb,display) {
   display->display.tme_screen_resize = _tme_rfb_screen_resize;
   display->display.tme_screen_redraw = _tme_rfb_screen_redraw;
 
+  _display = display;
   return (TME_OK);
 }
