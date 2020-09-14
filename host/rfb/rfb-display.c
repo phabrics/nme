@@ -41,7 +41,7 @@
 #include <stdlib.h>
 
 static const int bpp=4;
-static int maxx=800, maxy=600;
+static int maxx=1920, maxy=1080;
 static struct tme_display *_display;
 /* TODO: odd maxx doesn't work (vncviewer bug) */
 
@@ -109,8 +109,9 @@ static void _tme_rfb_screen_resize(struct tme_screen *screen)
   int width = conn_fb->tme_fb_connection_width;
   int height = conn_fb->tme_fb_connection_height;
   rfbScreenInfoPtr server = ((tme_rfb_display *)screen->tme_screen_display)->server;
-  
-  newfb = (unsigned char*)tme_malloc(width * height * bpp);
+
+  conn_fb->tme_fb_connection_buffsz = width * height * bpp;   
+  newfb = (unsigned char*)tme_malloc(conn_fb->tme_fb_connection_buffsz);
   if(!conn_fb->tme_fb_connection_buffer ||
      (char *)conn_fb->tme_fb_connection_buffer == server->frameBuffer) {
     rfbNewFramebuffer(server, (char*)newfb, width, height, 8, 3, bpp);
@@ -127,6 +128,7 @@ _tme_rfb_screen_new(struct tme_rfb_display *display,
 {
   struct tme_screen *screen;
   struct tme_fb_connection *conn_fb;
+  rfbPixelFormat* format=&display->server->serverFormat;
 
   /* lock our mutex: */
   tme_mutex_lock(&display->display.tme_display_mutex);
@@ -139,14 +141,14 @@ _tme_rfb_screen_new(struct tme_rfb_display *display,
 
   /* update our framebuffer connection: */
   conn_fb->tme_fb_connection_skipx = 0;
-  conn_fb->tme_fb_connection_scanline_pad = bpp;
-  conn_fb->tme_fb_connection_order = TME_ENDIAN_NATIVE;
-  conn_fb->tme_fb_connection_bits_per_pixel = bpp * 8;
-  conn_fb->tme_fb_connection_depth = 24;
+  conn_fb->tme_fb_connection_scanline_pad = 4 * bpp;
+  conn_fb->tme_fb_connection_order = (format->bigEndian) ? (TME_ENDIAN_BIG) : (TME_ENDIAN_LITTLE);
+  conn_fb->tme_fb_connection_bits_per_pixel = format->bitsPerPixel;
+  conn_fb->tme_fb_connection_depth = format->depth;
   conn_fb->tme_fb_connection_class = TME_FB_XLAT_CLASS_COLOR;
-  conn_fb->tme_fb_connection_mask_g = 0x00ff00;
-  conn_fb->tme_fb_connection_mask_b = 0x0000ff;
-  conn_fb->tme_fb_connection_mask_r = 0xff0000;
+  conn_fb->tme_fb_connection_mask_g = format->greenMax << format->greenShift;
+  conn_fb->tme_fb_connection_mask_b = format->blueMax << format->blueShift;
+  conn_fb->tme_fb_connection_mask_r = format->redMax << format->redShift;
   
   _tme_screen_configure(screen);
 
@@ -258,6 +260,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_rfb,display) {
   display = element->tme_element_private;
 
   /* allocate initial screen structure of the given size: */
+  //  rfbProcessSizeArguments(&maxx, &maxy, &bpp, &arg_i, args);
   server=rfbGetScreen(&arg_i,args,maxx,maxy,8,3,bpp);
   if(!server)
     return 1;
