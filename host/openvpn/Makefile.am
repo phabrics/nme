@@ -13,8 +13,3 @@ tme_host_openvpn_la_LIBADD = ../libtme-host.la
 tme_host_openvpn_la_LDFLAGS = -module -version-info 0:0:0
 
 include $(top_srcdir)/modules
-
-$(pkglib_LTLIBRARIES): ../libtme-host.la
-../libtme-host.la: force
-	cd `dirname $@` && $(MAKE) `basename $@`
-force: ;

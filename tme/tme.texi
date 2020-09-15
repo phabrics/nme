@@ -301,6 +301,9 @@ Glib2 (if using glib or sjlj threading, or automatically if GTK used)
 @item
 GTK+3 (for a GUI, but will work without if serial support available)
 
+@item
+libvncserver (for a GUI, but will work without if serial support available)
+
 @end itemize
 
 @node Optional
@@ -477,9 +480,27 @@ point. In the meantime, the patches can be viewed with
 @uref{http://gnats.netbsd.org/cgi-bin/query-pr-single.pl?number=49639,
 NetBSD bug report #49639}.
 
+The cgthree patch has been incoporated into NetBSD as of version 8.0.
+The bwtwo patch was incoporated into NetBSD 9.0.
+
 @menu
+* GTK::
+* VNC::
 * Screenshots::
 @end menu
+
+@node GTK
+@subsection GTK
+TME supports version 3 of GTK+. You can create a frontend with a GTK
+interface by invoking the appropriate line in the configuration file.
+See examples in the machines directory for details.
+
+@node VNC
+@subsection VNC
+TME supports the VNC protocol for displaying a framebuffer remotely.
+This is done by libvncserver version 0.9. You can create a remote
+framebuffer through the appropriate line in the configuration file.
+See examples in the machines directory for details.
 
 @node Screenshots
 @subsection Screenshots

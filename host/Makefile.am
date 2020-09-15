@@ -16,8 +16,8 @@ display-keyboard.lo:  keymap.h
 BUILT_SOURCES = keymap.h
 CLEANFILES = keymap.h
 if USING_X
-keymap.h: keymap-make.pl
-	  $(PERL) $< > $@
+keymap.h: keymap-make.pl keymap-def.h
+	  $(PERL) $< > $@ || cp $(srcdir)/keymap-def.h $@
 else
 keymap.h: keymap-def.h
 	  cp $< $@

@@ -59,7 +59,7 @@ bwtwo0 at obmem0 addr 0xff000000: tme/machine/sun3/bwtwo type old-onboard
 
 ## ttya:
 ##
-# uncomment the following line if you aren't using the GTK-based
+# uncomment the following line if you aren't using the graphics-based
 # display console.  this will connect ttya to the master side of
 # a pseudo-tty (in this case, /dev/ttyr0), which you can connect to
 # using tip or some other serial communications program on the slave
@@ -93,12 +93,16 @@ scsibus0 at ncr0: tme/scsi/bus
 ##
 cgthree0 at vme0 addr 0xff400000 ipl 4: tme/machine/sun3/cgtwo type sun3
 
-## the GTK-based display console:
+## the graphics-based display console:
 ##
 # comment out these lines, and the bwtwo0 and cgthree0 declarations
-# above, if you don't have GTK or you don't want a display console:
-#
-display0: tme/host/gtk/display
+# above, if you don't have graphics or you don't want a display console:
+# You can have only one graphics-based display at a time:
+# uncomment which display you want
+# uncomment this line for a GTK-based graphics display
+#display0: tme/host/gtk/display
+# uncomment this line for a VNC-based graphics display
+#display0: tme/host/rfb/display
 display0 at bwtwo0
 display0 at cgthree0
 display0 at kbd0

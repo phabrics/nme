@@ -42,7 +42,7 @@ _TME_RCSID("$Id: gtk-screen.c,v 1.11 2009/08/30 21:39:03 fredette Exp $");
 
 static void
 _tme_gtk_display_bell(struct tme_gdk_display *display) {
-  gdk_display_bell(display->tme_gdk_display);
+  gdk_display_beep(display->tme_gdk_display);
 }
 
 static int

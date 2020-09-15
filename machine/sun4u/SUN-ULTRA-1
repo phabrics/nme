@@ -48,7 +48,7 @@ ms0 at zs1 channel B: tme/serial/mouse type mousesystems-5
 ## ttya:
 ##
 # comment the first line, and uncomment the following line if you
-# aren't using the GTK-based display console.  this will connect ttya
+# aren't using the graphics-based display console.  this will connect ttya
 # to the master side of a pseudo-tty (in this case, /dev/ttyr0), which
 # you can connect to using tip or some other serial communications
 # program on the slave side (in this case, /dev/ptyr0):
@@ -115,12 +115,16 @@ cgsixrom0 at sbus0 slot 0 offset 0x0: tme/host/posix/memory rom "SUNW,501-2325.b
 #bwtwo0 at sbus0 slot 1 offset 0x0: tme/bus/sbus/bwtwo
 #bwtworom0 at sbus0 slot 1 offset 0x0: tme/host/posix/memory rom "SUNW,501-1561.bin"
 
-## the GTK-based display console:
+## the graphics-based display console:
 ##
 # comment out these lines, and the SBus framebuffer declarations
-# above, if you don't have GTK or you don't want a display console:
-#
+# above, if you don't have graphics or you don't want a display console:
+# You can have only one graphics-based display at a time:
+# uncomment which display you want
+# uncomment this line for a GTK-based graphics display
 display0: tme/host/gtk/display
+# uncomment this line for a VNC-based graphics display
+#display0: tme/host/rfb/display
 display0 at cgsix0
 #display0 at cgthree0
 #display0 at bwtwo0

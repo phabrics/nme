@@ -41,7 +41,7 @@
 #include <stdlib.h>
 
 static const int bpp=4;
-static int maxx=1920, maxy=1080;
+static int maxx=800, maxy=600;
 static struct tme_display *_display;
 /* TODO: odd maxx doesn't work (vncviewer bug) */
 

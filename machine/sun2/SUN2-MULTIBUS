@@ -72,23 +72,29 @@ scsibus0 at sc0: tme/scsi/bus
 #bpf1 at ie0: tme/host/bsd/bpf interface tap0
 
 ## the Sun bwtwo Multibus board, Sun type-2 keyboard and mouse, and
-## the GTK-based display to drive them all:
+## the graphics-based display to drive them all:
 ##
-# comment out these eight lines if you don't have GTK or you don't
+# comment out these eight lines if you don't have graphics or you don't
 # want a display console:
 #
 bwtwo0 at obmem0 addr 0x700000 ipl 4: tme/machine/sun2/bwtwo type multibus
 zs1 at obmem0 addr 0x780000 ipl 6: tme/machine/sun2/zs
 kbd0 at zs1 channel A: tme/serial/keyboard type sun-type-2 macros my-sun-macros.txt map sun-keyboards.txt rate 20
 ms0 at zs1 channel B: tme/serial/mouse type mousesystems-5
+
+# You can have only one graphics-based display at a time:
+# uncomment which display you want
+# uncomment this line for a GTK-based graphics display
 display0: tme/host/gtk/display
+# uncomment this line for a VNC-based graphics display
+#display0: tme/host/rfb/display
 display0 at bwtwo0
 display0 at kbd0
 display0 at ms0
 
 ## ttya:
 ##
-# uncomment the following line if you aren't using the GTK-based
+# uncomment the following line if you aren't using the graphics-based
 # display console above.  this will connect ttya to the master side of
 # a pseudo-tty (in this case, /dev/ttyr0), which you can connect to
 # using tip or some other serial communications program on the slave

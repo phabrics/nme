@@ -50,7 +50,8 @@ fb-xlat-auto.c: %.c: %.sh %.in
 	cat $*.in | xargs $(SHELL) $< > $@
 
 fb-xlat-auto.in: %.in: %.pl
-	$(PERL) $< src $(TME_FB_XLAT_SRC) dst $(TME_FB_XLAT_DST) > $@
+	$(PERL) $< src $(TME_FB_XLAT_SRC) dst $(TME_FB_XLAT_DST) > $@ || \
+	echo "src $(TME_FB_XLAT_SRC) dst $(TME_FB_XLAT_DST)" > $@
 else
 fb-xlat-auto.c: %.c: %.sh
 	$(SHELL) $< src $(TME_FB_XLAT_SRC) dst $(TME_FB_XLAT_DST) > $@
