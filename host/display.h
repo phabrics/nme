@@ -40,8 +40,6 @@
 #include <tme/generic/fb.h>
 #include <tme/generic/keyboard.h>
 #include <tme/generic/mouse.h>
-#define TME_THREADS_POSIX
-#undef HAVE_PTHREAD_SETSCHEDPARAM
 #include <tme/threads.h>
 #include <tme/hash.h>
 
@@ -120,12 +118,6 @@ struct tme_display {
   /* our thread: */
   tme_threadid_t tme_display_thread;
 
-#ifdef TME_THREADS_SJLJ
-  struct tme_sjlj_thread *tme_display_sjlj_thread;
-#else
-  tme_threadid_t tme_display_sjlj_thread;
-#endif
-  
   /* our keyboard connection: */
   struct tme_keyboard_connection *tme_display_keyboard_connection;
 
@@ -184,9 +176,6 @@ void _tme_mouse_new _TME_P((struct tme_display *));
 void _tme_mouse_mode_off _TME_P((struct tme_screen *, tme_uint32_t));
 int _tme_mouse_connections_new _TME_P((struct tme_display *,
 				       struct tme_connection **));
-void _tme_display_callout _TME_P((struct tme_display *,
-				  int));
-int tme_sjlj_threads_main _TME_P((void *unused));
 
 #endif /* _HOST_DISPLAY_H */
 

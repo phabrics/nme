@@ -34,7 +34,7 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.68])
 m4_include(version.m4)
-AC_INIT([tme], [0.12beta39])
+AC_INIT([tme], [0.12beta40])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
@@ -1054,22 +1054,12 @@ dnl Configure recode.
 dnl Make brackets safe to use.
 changequote(<<, >>)dnl
 
-# set the default recode option
-case "${host_cpu}" in
-i[3456789]86)
-recode=yes
-;;
-*) 
-recode=no
-;;
-esac
-
 dnl Make brackets the quote characters again.
 changequote([, ])dnl
 
 AC_ARG_ENABLE(recode,
 [  --enable-recode         enable recode (dynamic binary translation) (default=if host supports)],
-[ ], [enable_recode=$recode])
+[ ], [enable_recode=yes])
 if test "${recode_size_guest_max}" = 0; then
     enable_recode=no
     recode_size_guest_max=1

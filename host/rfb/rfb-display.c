@@ -270,8 +270,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_rfb,display) {
   server->ptrAddEvent = _tme_rfb_mouse_event;
   server->kbdAddEvent = _tme_rfb_key_event;
   server->newClientHook = _tme_rfb_newclient;
-  //  server->httpDir = "../webclients";
-  // server->httpEnableProxyConnect = TRUE;
+  server->httpDir = "../webclients";
+  server->httpEnableProxyConnect = TRUE;
   rfbInitServer(server);
   
   display->server = server;
