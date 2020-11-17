@@ -405,7 +405,7 @@ tme_bswap_u128(tme_uint128_t x)
 #define _TME_TIME_SUB(a,x,y,sec,frac) (a).sec = (x).sec - (y).sec; (a).frac = (x).frac - (y).frac;
 #define _TME_TIME_DEC(a,x,sec,frac) (a).sec -= (x).sec; (a).frac -= (x).frac;
 
-#if defined(WIN32) && !defined(USE_GETTIMEOFDAY) || defined(USE_GLIB_TIME) && defined(_TME_HAVE_GLIB)
+#if defined(WIN32) || defined(USE_GLIB_TIME) && defined(_TME_HAVE_GLIB)
 #ifdef USE_GLIB_TIME
 #define tme_get_time(x) (*(x) = g_get_real_time(), TME_OK)
 #else

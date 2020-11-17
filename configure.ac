@@ -809,11 +809,12 @@ if test "x$have_gtk" = xyes; then
 fi
 
 AS_IF([test "x${enable_rfb}" = xyes], [
-   PKG_CHECK_MODULES([RFB], [libvncserver], [TME_HOSTS="rfb ${TME_HOSTS}"])
+   PKG_CHECK_MODULES([RFB], [libvncserver], [TME_HOSTS="rfb ${TME_HOSTS}"], AC_DEFINE([HAVE_RFB], [0], [No RFB]))
 ])
 
-AM_CONDITIONAL([USING_OPENVPN], [test "x${enable_openvpn}" = xyes && test "x${have_tap_header}" = xyes])
-if test "x${enable_openvpn}" = xyes && test "x${have_tap_header}" = xyes; then
+AM_CONDITIONAL([USE_TAP_WINDOWS], [test "x${enable_openvpn}" = xyes && test "x${have_tap_header}" = x && test "x${WIN32}" != x])
+AM_CONDITIONAL([USING_OPENVPN], [test "x${enable_openvpn}" = xyes && test "x${have_tap_header}" = xyes || test "x${WIN32}" != x])
+if test "x${enable_openvpn}" = xyes && test "x${have_tap_header}" = xyes || test "x${WIN32}" != x; then
    TME_HOSTS="openvpn ${TME_HOSTS}"
    AC_DEFINE([OPENVPN_VERSION_RESOURCE], [PRODUCT_VERSION_RESOURCE], [Version in windows resource format])
 fi
@@ -1374,7 +1375,7 @@ TMEEOF
   echo '#include <glib.h>' >> ${outfile}-tmp
   echo 'typedef gint64 tme_time_t;' >> ${outfile}-tmp
   echo '#define TME_FRAC_PER_SEC G_USEC_PER_SEC' >> ${outfile}-tmp
-  echo '#elif defined(WIN32) && !defined(USE_GETTIMEOFDAY)' >> ${outfile}-tmp
+  echo '#elif defined(WIN32)' >> ${outfile}-tmp
   echo '#include <windows.h>' >> ${outfile}-tmp
   echo 'typedef tme_uint64_t tme_time_t;' >> ${outfile}-tmp
   echo '#define TME_FRAC_PER_SEC 10000000' >> ${outfile}-tmp
