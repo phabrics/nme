@@ -1050,16 +1050,13 @@ _tme_ncr53c9x_cs_timeout(struct tme_ncr53c9x *ncr53c9x, unsigned int msec, unsig
 {
 
   /* save the timeout length: */
-  TME_TIME_SETV(ncr53c9x->tme_ncr53c9x_timeout_length, (msec / 1000), (msec % 1000) * 1000);
+  ncr53c9x->tme_ncr53c9x_timeout_length = TME_TIME_SET_MSEC(msec);
 
   /* get the current time: */
-  tme_get_time(&ncr53c9x->tme_ncr53c9x_timeout_time);
+  ncr53c9x->tme_ncr53c9x_timeout_time = tme_thread_get_time();
 
   /* add the timeout length to get the timeout time: */
-  TME_TIME_INC(ncr53c9x->tme_ncr53c9x_timeout_time, ncr53c9x->tme_ncr53c9x_timeout_length);
-  if (TME_TIME_GET_FRAC(ncr53c9x->tme_ncr53c9x_timeout_time) >= 1000000) {
-    TME_TIME_ADDV(ncr53c9x->tme_ncr53c9x_timeout_time, 1, -1000000);
-  }
+  ncr53c9x->tme_ncr53c9x_timeout_time += ncr53c9x->tme_ncr53c9x_timeout_length;
 
   /* set the timeout label: */
   ncr53c9x->tme_ncr53c9x_cmd_sequence_timeout = label;
@@ -1394,10 +1391,10 @@ _tme_ncr53c9x_update(struct tme_ncr53c9x *ncr53c9x)
       if (ncr53c9x->tme_ncr53c9x_cmd_sequence_timeout != TME_NCR53C9X_CMD_SEQUENCE_UNDEF) {
 
 	/* get the current time: */
-	tme_get_time(&now);
+	now = tme_thread_get_time();
 
 	/* if the timeout has expired: */
-	if (TME_TIME_GT(now, ncr53c9x->tme_ncr53c9x_timeout_time)) {
+	if (now > ncr53c9x->tme_ncr53c9x_timeout_time) {
 	  /* goto the timeout label for the command sequence, and
              cancel the timeout: */
 	  cmd_sequence = ncr53c9x->tme_ncr53c9x_cmd_sequence_timeout;
@@ -2916,7 +2913,7 @@ _tme_ncr53c9x_timeout_th(struct tme_ncr53c9x *ncr53c9x)
       /* sleep, but wake up if we get another timeout: */
       tme_cond_sleep_yield(&ncr53c9x->tme_ncr53c9x_timeout_cond,
 			   &ncr53c9x->tme_ncr53c9x_mutex,
-			   &ncr53c9x->tme_ncr53c9x_timeout_length);
+			   ncr53c9x->tme_ncr53c9x_timeout_length);
     }
     
     /* otherwise, there is no timeout pending: */

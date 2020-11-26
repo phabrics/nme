@@ -419,19 +419,15 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
 		    TME_BPF_TIME_SEC(the_bpf_header.bh_tstamp), 
 		    TME_BPF_TIME_GET_FRAC(the_bpf_header.bh_tstamp));
       /* if the current release time is before this packet's time: */
-      if (TME_TIME_GT(tstamp, bpf->tme_eth_delay_release)) {
+      if (tstamp > bpf->tme_eth_delay_release) {
 	/* update the current release time, by taking the current time
 	   and subtracting the delay time: */
-	tme_get_time(&bpf->tme_eth_delay_release);
-	if (TME_TIME_GET_FRAC(bpf->tme_eth_delay_release) < delay_time) {
-	  TME_TIME_ADDV(bpf->tme_eth_delay_release, -1, 1000000UL);
-	}
-	TME_TIME_INC_FRAC(bpf->tme_eth_delay_release, -delay_time);
+	bpf->tme_eth_delay_release = tme_thread_get_time() - delay_time;
       }
 
       /* if the current release time is still before this packet's
          time: */
-      if (TME_TIME_GT(tstamp, bpf->tme_eth_delay_release)) {
+      if (tstamp > bpf->tme_eth_delay_release) {
 	/* set the sleep time: */
 	assert (TME_TIME_GET_SEC(bpf->tme_eth_delay_release) - TME_TIME_GET_SEC(tstamp) <= 1);
 	bpf->tme_eth_delay_sleep
@@ -439,8 +435,8 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
 	      == TME_TIME_GET_SEC(tstamp))
 	      ? 0
 	     : 1000000UL)
-	  + TME_TIME_GET_FRAC(tstamp) - 
-	  TME_TIME_GET_FRAC(bpf->tme_eth_delay_release);
+	  + TME_TIME_GET_USEC(tstamp) - 
+	  TME_TIME_GET_USEC(bpf->tme_eth_delay_release);
 
 	/* rewind the buffer pointer: */
 	bpf->tme_eth_buffer_offset -= the_bpf_header.bh_hdrlen;

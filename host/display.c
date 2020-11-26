@@ -250,7 +250,7 @@ _tme_display_th_update(void *disp)
     /* unlock the mutex: */
     tme_mutex_unlock(&display->tme_display_mutex);
 
-    tme_thread_sleep_yield(0, 50000, NULL);
+    tme_thread_sleep_yield(TME_TIME_SET_USEC(50000), NULL);
 
   }
   /* NOTREACHED */

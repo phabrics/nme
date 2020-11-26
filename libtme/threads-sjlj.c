@@ -170,22 +170,22 @@ tme_sjlj_threads_init()
   tme_sjlj_thread_blocked.tme_sjlj_thread_func = NULL;
   tme_sjlj_thread_blocked.tme_sjlj_thread_cond = NULL;
   tme_sjlj_thread_blocked.tme_sjlj_thread_events = NULL;
-  TME_TIME_SETV(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep, 0, 0);
+  tme_sjlj_thread_blocked.tme_sjlj_thread_sleep = 0;
 }
 
 /* this returns a reasonably current time: */
-void
-tme_sjlj_gettimeofday(tme_time_t *now)
+tme_time_t
+tme_sjlj_get_time()
 {
 
-  /* if we need to, call tme_get_time(): */
+  /* if we need to, call tme_thread_get_time(): */
   if (__tme_predict_false(!tme_sjlj_thread_short)) {
-    tme_get_time(&_tme_sjlj_now);
+    _tme_sjlj_now = tme_get_time();
     tme_sjlj_thread_short = TRUE;
   }
 
   /* return the reasonably current time: */
-  *now = _tme_sjlj_now;
+  return _tme_sjlj_now;
 }
 
 /* this changes a thread's state: */
@@ -293,7 +293,7 @@ _tme_sjlj_threads_dispatching_timeout(void)
   struct tme_sjlj_thread *thread_timeout;
 
   /* get the current time: */
-  tme_gettimeofday(&now);
+  now = tme_thread_get_time();
 
   /* loop over the timeout list: */
   for (thread_timeout = tme_sjlj_threads_timeout;
@@ -301,7 +301,7 @@ _tme_sjlj_threads_dispatching_timeout(void)
        thread_timeout = thread_timeout->timeout_next) {
 
     /* if this timeout has not expired: */
-    if (TME_TIME_GT(thread_timeout->tme_sjlj_thread_timeout, now)) {
+    if (thread_timeout->tme_sjlj_thread_timeout > now) {
       break;
     }
 
@@ -326,55 +326,6 @@ _tme_sjlj_threads_dispatching_event(struct tme_sjlj_event_arg *event_arg,
   }
 }
 
-/* this makes the timeout time: */
-static void
-_tme_sjlj_timeout_time(struct timeval *timeout)
-{
-  tme_time_t now;
-  struct tme_sjlj_thread *thread_timeout;
-  tme_int32_t usecs;
-  unsigned long secs;
-  unsigned long secs_other;
-
-  /* get the current time: */
-  tme_gettimeofday(&now);
-
-  /* the timeout list must not be empty: */
-  thread_timeout = tme_sjlj_threads_timeout;
-  assert (thread_timeout != NULL);
-
-  /* subtract the now microseconds from the timeout microseconds: */
-  assert (TME_TIME_GET_FRAC(thread_timeout->tme_sjlj_thread_timeout) < 1000000);
-  usecs = TME_TIME_GET_FRAC(thread_timeout->tme_sjlj_thread_timeout);
-  assert (TME_TIME_GET_FRAC(now) < 1000000);
-  usecs -= TME_TIME_GET_FRAC(now);
-
-  /* make any seconds carry: */
-  secs_other = (usecs < 0);
-  if (usecs < 0) {
-    usecs += 1000000;
-  }
-
-  /* if the earliest timeout has already timed out: */
-  secs_other += TME_TIME_GET_SEC(now);
-  secs = TME_TIME_GET_SEC(thread_timeout->tme_sjlj_thread_timeout);
-  if (__tme_predict_false(secs_other > secs
-			  || ((secs -= secs_other) == 0
-			      && usecs == 0))) {
-
-    /* this thread is runnable: */
-    _tme_sjlj_change_state(thread_timeout, TME_SJLJ_THREAD_STATE_RUNNABLE);
-
-    /* make this a poll: */
-    secs = 0;
-    usecs = 0;
-  }
-
-  /* return the timeout time: */
-  timeout->tv_sec = secs;
-  timeout->tv_usec = usecs;
-}
-
 /* this dispatches all dispatching threads: */
 static void
 tme_sjlj_dispatch(volatile int passes)
@@ -394,7 +345,7 @@ tme_sjlj_dispatch(volatile int passes)
       /* if this thread is on the timeout list: */
       _thread_timeout_prev = thread->timeout_prev;
       assert ((_thread_timeout_prev != NULL)
-	      == (!TME_TIME_EQV(thread->tme_sjlj_thread_sleep, 0, 0)));
+	      == (thread->tme_sjlj_thread_sleep != 0));
       if (_thread_timeout_prev != NULL) {
 
 	/* remove this thread from the timeout list: */
@@ -502,8 +453,11 @@ tme_sjlj_threads_main_iter(void *unused)
   }
 
   /* otherwise, the timeout list is not empty: */
-  else {
-    _tme_sjlj_timeout_time(&timeout);
+  else if(tme_sjlj_threads_timeout->tme_sjlj_thread_timeout <=
+	  (now = tme_thread_get_time())) {
+    /* set the timeout time: */
+    timeout.tv_sec = TME_TIME_GET_SEC(now);
+    timeout.tv_usec = TME_TIME_GET_USEC(now);
   }
 
   /* if there are runnable threads, make this a poll: */
@@ -567,7 +521,7 @@ tme_sjlj_thread_create(tme_threadid_t *thr, tme_thread_t func, void *func_privat
   thread->tme_sjlj_thread_func = func;
   thread->tme_sjlj_thread_cond = NULL;
   thread->tme_sjlj_thread_events = NULL;
-  TME_TIME_SETV(thread->tme_sjlj_thread_sleep, 0, 0);
+  thread->tme_sjlj_thread_sleep = 0;
   thread->timeout_prev = NULL;
 
   /* make this thread runnable: */
@@ -599,14 +553,14 @@ tme_sjlj_cond_wait_yield(tme_cond_t *cond, tme_mutex_t *mutex)
 
 /* this makes a thread sleep on a condition: */
 void
-tme_sjlj_cond_sleep_yield(tme_cond_t *cond, tme_mutex_t *mutex, const tme_time_t *sleep)
+tme_sjlj_cond_sleep_yield(tme_cond_t *cond, tme_mutex_t *mutex, const tme_time_t sleep)
 {
 
   /* remember that this thread is waiting on this condition: */
   tme_sjlj_thread_blocked.tme_sjlj_thread_cond = cond;
 
   /* sleep and yield: */
-  tme_sjlj_sleep_yield(TME_TIME_GET_SEC(*sleep), TME_TIME_GET_FRAC(*sleep), mutex);
+  tme_thread_sleep_yield(sleep, mutex);
 }
 
 /* this notifies one or more threads waiting on a condition: */
@@ -632,72 +586,16 @@ tme_sjlj_cond_notify(tme_cond_t *cond, int broadcast)
     }
   }
 }
-#if 0
-/* this sleeps: */
-void
-tme_sjlj_sleep(unsigned long sec, unsigned long usec)
-{
-  tme_time_t then, now, timeout;
-  int rc;
-  
-  /* the thread ran for an unknown amount of time: */
-  tme_thread_long();
 
-  /* get the wakeup time for the thread: */
-  tme_gettimeofday(&then);
-  for (; usec >= 1000000; sec++, usec -= 1000000);
-  if (TME_TIME_INC_FRAC(then, usec) >= 1000000) {
-    sec++;
-    TME_TIME_INC_FRAC(then, -1000000);
-  }
-  TME_TIME_INC_SEC(then, sec);
-  
-  /* select for the sleep period: */
-  for (;;) {
-
-    /* calculate the current timeout: */
-    tme_gettimeofday(&now);
-    if (TME_TIME_GT(now, then)) {
-      break;
-    }
-    timeout = then;
-    if (TME_TIME_FRAC_LT(timeout, now)) {
-      TME_TIME_ADDV(timeout, -1, 1000000);
-    }
-    TME_TIME_DEC(timeout, now);
-
-    /* do the select.  select returns 0 iff the timeout expires, so we
-       can skip another gettimeofday and loop: */
-    rc = tme_select(-1, NULL, NULL, NULL, &timeout);
-    tme_thread_long();
-    if (rc == 0) {
-      break;
-    }
-
-    /* loop to see if the timeout really expired: */
-  }
-}
-#endif
 /* this sleeps and yields: */
 void
-tme_sjlj_sleep_yield(unsigned long sec, unsigned long usec, tme_mutex_t *mutex)
+tme_sjlj_sleep_yield(tme_time_t time)
 {
+  tme_sjlj_thread_blocked.tme_sjlj_thread_sleep = time;
 
-  /* set the sleep interval: */
-  for (; usec >= 1000000; ) {
-    sec++;
-    usec -= 1000000;
-  }
-  TME_TIME_SETV(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep, sec, usec);
-
-  /* unlock the mutex: */
-  if(mutex) tme_mutex_unlock(mutex);
-  
   /* yield: */
   tme_thread_yield();
 
-  /* lock the mutex: */
-  if(mutex) tme_mutex_lock(mutex);
 }
 
 struct tme_sjlj_event_set *tme_sjlj_event_set_init(int *maxevents, unsigned int flags) {
@@ -790,15 +688,11 @@ tme_sjlj_event_wait_yield(struct tme_sjlj_event_set *es, const struct timeval *t
   if(mutex) tme_mutex_unlock(mutex);
   tme_sjlj_thread_blocked.tme_sjlj_thread_events = es;
 
-  if (timeout_in != NULL) {
-    TME_TIME_SETV(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep, timeout_in->tv_sec, timeout_in->tv_usec);
-    for (; TME_TIME_GET_FRAC(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep) >= 1000000; ) {
-      TME_TIME_ADDV(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep, 1, -1000000);
-    }
-  } else {
-    TME_TIME_SETV(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep, BIG_TIMEOUT, 0);
-  }
-
+  tme_sjlj_thread_blocked.tme_sjlj_thread_sleep =
+    (timeout_in != NULL) ?
+    TME_TIME_SET_SEC(timeout_in->tv_sec) + TME_TIME_SET_USEC(timeout_in->tv_usec) :
+    TME_TIME_SET_SEC(BIG_TIMEOUT);
+  
   /* yield: */
   tme_thread_yield();
 
@@ -931,25 +825,22 @@ tme_sjlj_yield(void)
   tme_sjlj_thread_blocked.tme_sjlj_thread_events = NULL;
   
   /* see if this thread is blocked for some amount of time: */
-  if (!TME_TIME_EQV(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep, 0, 0)) {
+  if (tme_sjlj_thread_blocked.tme_sjlj_thread_sleep != 0) {
 
-    assert(TME_TIME_GET_FRAC(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep) < 1000000);
+    //    assert(TME_TIME_GET_FRAC(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep) < 1000000);
     blocked = TRUE;
 
     /* set the timeout for this thread: */
-    tme_gettimeofday(&thread->tme_sjlj_thread_timeout);
-    TME_TIME_INC(thread->tme_sjlj_thread_timeout, tme_sjlj_thread_blocked.tme_sjlj_thread_sleep);
-    if (TME_TIME_GET_FRAC(thread->tme_sjlj_thread_timeout) >= 1000000) {
-      TME_TIME_ADDV(thread->tme_sjlj_thread_timeout, 1, -1000000);
-    }
-
+    thread->tme_sjlj_thread_timeout = tme_thread_get_time()
+      + tme_sjlj_thread_blocked.tme_sjlj_thread_sleep;
+    
     /* insert this thread into the timeout list: */
     assert (thread->timeout_prev == NULL);
     for (_thread_prev = &tme_sjlj_threads_timeout;
 	 (thread_other = *_thread_prev) != NULL;
 	 _thread_prev = &thread_other->timeout_next) {
-      if (TME_TIME_GT(thread_other->tme_sjlj_thread_timeout,
-		      thread->tme_sjlj_thread_timeout)) {
+      if (thread_other->tme_sjlj_thread_timeout >
+	  thread->tme_sjlj_thread_timeout) {
 	break;
       }
     }
@@ -961,7 +852,7 @@ tme_sjlj_yield(void)
     }
   }
   thread->tme_sjlj_thread_sleep = tme_sjlj_thread_blocked.tme_sjlj_thread_sleep;
-  TME_TIME_SETV(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep, 0, 0);
+  tme_sjlj_thread_blocked.tme_sjlj_thread_sleep = 0;
 
   /* if this thread is actually exiting, it must appear to be
      runnable, and it only isn't because it's exiting: */

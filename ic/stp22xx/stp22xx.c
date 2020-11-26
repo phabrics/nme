@@ -304,7 +304,7 @@ tme_stp22xx_cond_sleep_yield(struct tme_stp22xx *stp22xx,
   if (sleep != NULL) {
     tme_cond_sleep_yield(&cond->tme_stp22xx_cond_cond,
 			 &stp22xx->tme_stp22xx_mutex,
-			 sleep);
+			 *sleep);
   }
   else {
     tme_cond_wait_yield(&cond->tme_stp22xx_cond_cond,

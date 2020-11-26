@@ -1469,7 +1469,7 @@ _tme_am7990_poll_th(struct tme_am7990 *am7990)
 
     /* "[T]he C-LANCE will automatically poll the transmit ring in the
        memory once it has started ..  every 1.6ms" */
-    tme_thread_sleep_yield(0, 16000, &am7990->tme_am7990_mutex);
+    tme_thread_sleep_yield(TME_TIME_SET_USEC(16000), &am7990->tme_am7990_mutex);
     
   }
   /* NOTREACHED */

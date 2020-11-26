@@ -682,7 +682,7 @@ _tme_sparc_timing_loop_start(struct tme_sparc *ic,
 	usec = cycles_scaled_max / ic->tme_sparc_cycles_scaled_per_usec;
 
 	/* set the sleep time: */
-	TME_TIME_ADDV(sleep_buffer, (usec / 1000000), (usec % 1000000));
+	sleep_buffer += TME_TIME_SET_USEC(usec);
       }
 
       /* otherwise, the number of cycles to loop fits in 32 bits: */
@@ -690,22 +690,8 @@ _tme_sparc_timing_loop_start(struct tme_sparc *ic,
 
 	/* convert cycles into microseconds: */
 	usec32 = ((tme_uint32_t) cycles_scaled_max) / ic->tme_sparc_cycles_scaled_per_usec;
-
-	/* assume that we will sleep for less than one second: */
-	TME_TIME_SET_SEC(sleep_buffer, 0);
-
-	/* if the sleep time is one second or more: */
-	if (__tme_predict_false(usec32 >= 1000000)) {
-
-	  /* set the sleep time seconds: */
-	  TME_TIME_SET_SEC(sleep_buffer, (usec32 / 1000000));
-
-	  /* get the microseconds: */
-	  usec32 = (usec32 % 1000000);
-	}
-
 	/* set the sleep time microseconds: */
-	TME_TIME_SET_FRAC(sleep_buffer, usec32);
+	sleep_buffer = TME_TIME_SET_USEC(usec32);
       }
 
       /* we won't block forever: */
@@ -743,7 +729,7 @@ _tme_sparc_timing_loop_start(struct tme_sparc *ic,
     if (sleep != NULL) {
       tme_cond_sleep_yield(&ic->tme_sparc_external_cond,
 			   &ic->tme_sparc_external_mutex,
-			   sleep);
+			   *sleep);
     }
     else {
       tme_cond_wait_yield(&ic->tme_sparc_external_cond,

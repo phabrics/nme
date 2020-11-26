@@ -359,18 +359,15 @@ _tme_am9513_th_timer(struct tme_am9513 *am9513)
   for (;;) {
 
     /* figure out how much time has elapsed since our last run: */
-    tme_get_time(&elapsed);
+    elapsed = tme_thread_get_time();
     then = am9513->tme_am9513_conn_last;
     am9513->tme_am9513_conn_last = elapsed;
-    if (TME_TIME_FRAC_LT(elapsed, then)) {
-      TME_TIME_ADDV(elapsed, -1, 1000000);
-    }
-    TME_TIME_DEC(elapsed, then);
+    elapsed -= then;
 
     /* calculate the number of basic ticks that have elapsed: */
     basic_elapsed = am9513->tme_am9513_basic_clock;
     basic_elapsed *= TME_TIME_GET_SEC(elapsed);
-    basic_elapsed += (am9513->tme_am9513_basic_clock_msec * TME_TIME_GET_FRAC(elapsed)) / 1000;
+    basic_elapsed += am9513->tme_am9513_basic_clock_msec * TME_TIME_GET_MSEC(elapsed);
 
     /* assume that we will sleep for one second: */
     basic_sleep = am9513->tme_am9513_basic_clock;
@@ -468,12 +465,7 @@ _tme_am9513_th_timer(struct tme_am9513 *am9513)
 #ifdef TME_AM9513_TRACK_INT_RATE
 
       /* update the sample time: */
-      for (TME_TIME_INC_FRAC(counter->tme_am9513_counter_int_sample_time, TME_TIME_GET_FRAC(elapsed));
-	   TME_TIME_GET_FRAC(counter->tme_am9513_counter_int_sample_time) >= 1000000;
-	   TME_TIME_INC_FRAC(counter->tme_am9513_counter_int_sample_time, -1000000)) {
-	TME_TIME_INC_SEC(counter->tme_am9513_counter_int_sample_time, 1);
-      }
-      TME_TIME_INC_SEC(counter->tme_am9513_counter_int_sample_time, TME_TIME_GET_SEC(elapsed));
+      counter->tme_am9513_counter_int_sample_time += elapsed;
 
       /* if the sample time has finished, report on the interrupt
          rate: */
@@ -485,12 +477,12 @@ _tme_am9513_th_timer(struct tme_am9513 *am9513)
 		  (TME_AM9513_LOG_HANDLE(am9513),
 		   "timer %d interrupt rate: %ld/sec",
 		   counter_i,
-		   (counter->tme_am9513_counter_int_sample
-		    / (unsigned long) TME_TIME_GET_SEC(counter->tme_am9513_counter_int_sample_time))));
+		   (TME_TIME_SET_SEC(counter->tme_am9513_counter_int_sample)
+		    / counter->tme_am9513_counter_int_sample_time)));
 	}
 
 	/* reset the sample: */
-	TME_TIME_SETV(counter->tme_am9513_counter_int_sample_time, 0, 0);
+	counter->tme_am9513_counter_int_sample_time = 0;
 	counter->tme_am9513_counter_int_sample = 0;
       }
 #endif /* TME_AM9513_TRACK_INT_RATE */
@@ -503,7 +495,7 @@ _tme_am9513_th_timer(struct tme_am9513 *am9513)
     }
 
     /* sleep: */
-    tme_thread_sleep_yield(0, (basic_sleep * 1000) / am9513->tme_am9513_basic_clock_msec, &am9513->tme_am9513_mutex);
+    tme_thread_sleep_yield(TME_TIME_SET_USEC((basic_sleep * 1000) / am9513->tme_am9513_basic_clock_msec), &am9513->tme_am9513_mutex);
   }
   /* NOTREACHED */
   tme_thread_exit();

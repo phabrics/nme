@@ -351,7 +351,7 @@ dnl Checks for library functions and prototypes.
 #AC_FUNC_MALLOC
 #AC_FUNC_MMAP
 #AC_FUNC_REALLOC
-AC_CHECK_FUNCS([clock_gettime memmove memset munmap pow ptsname ptsname_r sqrt strchr strerror strrchr strstr strtoul devname fdevname kldfind isinff])
+AC_CHECK_FUNCS([gmtime_r clock_gettime memmove memset munmap pow ptsname ptsname_r sqrt strchr strerror strrchr strstr strtoul devname fdevname kldfind isinff])
 
 SOCKET_INCLUDES="
 #ifdef HAVE_STDLIB_H
@@ -1371,19 +1371,6 @@ TMEEOF
   echo 'typedef unsigned char tme_uint8_t;' >> ${outfile}-tmp
   echo 'typedef tme_int'`expr $ac_cv_sizeof_void_p \* 8`'_t tme_intptr_t;' >> ${outfile}-tmp
   echo 'typedef tme_uint'`expr $ac_cv_sizeof_void_p \* 8`'_t tme_uintptr_t;' >> ${outfile}-tmp
-  echo '#if defined(USE_GLIB_TIME) && defined(_TME_HAVE_GLIB)' >> ${outfile}-tmp
-  echo '#include <glib.h>' >> ${outfile}-tmp
-  echo 'typedef gint64 tme_time_t;' >> ${outfile}-tmp
-  echo '#define TME_FRAC_PER_SEC G_USEC_PER_SEC' >> ${outfile}-tmp
-  echo '#elif defined(WIN32)' >> ${outfile}-tmp
-  echo '#include <windows.h>' >> ${outfile}-tmp
-  echo 'typedef tme_uint64_t tme_time_t;' >> ${outfile}-tmp
-  echo '#define TME_FRAC_PER_SEC 10000000' >> ${outfile}-tmp
-  echo '#elif defined(USE_GETTIMEOFDAY) || !defined(_TME_HAVE_CLOCK_GETTIME)' >> ${outfile}-tmp
-  echo 'typedef struct timeval tme_time_t;' >> ${outfile}-tmp
-  echo '#else' >> ${outfile}-tmp
-  echo 'typedef struct timespec tme_time_t;' >> ${outfile}-tmp
-  echo '#endif' >> ${outfile}-tmp
   cat <<TMEEOF >> ${outfile}-tmp
 
 /* features that aren't currently controlled by a configure option: */

@@ -346,7 +346,7 @@ _tme_serial_kb_th_rate(struct tme_serial_kb *serial_kb)
 	serial_kb->tme_serial_kb_rate_sleeping = TRUE;
 
 	/* sleep for the rate-limiting time: */
-	tme_thread_sleep_yield(0, serial_kb->tme_serial_kb_rate_sleep, &serial_kb->tme_serial_kb_mutex);
+	tme_thread_sleep_yield(TME_TIME_SET_USEC(serial_kb->tme_serial_kb_rate_sleep), &serial_kb->tme_serial_kb_mutex);
 	
       }
     }

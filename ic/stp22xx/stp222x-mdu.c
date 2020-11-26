@@ -560,7 +560,7 @@ _tme_stp222x_mdu_retry_set(struct tme_stp222x *stp222x)
 #error "TME_STP222X_MDU_RETRY_TIMER_LIMIT changed"
 #endif
   sleep_usec = (sleep_usec + TME_STP222X_MDU_RETRY_TIMER_LIMIT) / (TME_STP222X_MDU_RETRY_TIMER_LIMIT + 1);
-  TME_TIME_SETV(stp222x->tme_stp222x_mdu_retry_sleep, 0, sleep_usec);
+  stp222x->tme_stp222x_mdu_retry_sleep = TME_TIME_SET_USEC(sleep_usec);
 }
 
 /* the MDU IMR and retry register handler: */

@@ -37,6 +37,7 @@
 _TME_RCSID("$Id: misc.c,v 1.8 2010/06/05 19:02:38 fredette Exp $");
 
 /* includes: */
+#include <tme/threads.h>
 #include <tme/misc.h>
 #include <ctype.h>
 #include <errno.h>
@@ -381,21 +382,17 @@ tme_misc_cycles_per_ms(void)
 
   /* sample the cycle counter and the current time: */
   cycles_start = tme_misc_cycles();
-  tme_get_time(&timeval_start);
+  timeval_start = tme_thread_get_time();
 
   /* spin until at least a second has passed: */
   do {
     tme_misc_cycles_per_ms_spin++;
     cycles_finish = tme_misc_cycles();
-    tme_get_time(&timeval_finish);
-  } while ((TME_TIME_GET_SEC(timeval_finish) == TME_TIME_GET_SEC(timeval_start))
-	   || (TME_TIME_GET_SEC(timeval_finish) == (TME_TIME_GET_SEC(timeval_start) + 1)
-	       && TME_TIME_FRAC_LT(timeval_finish, timeval_start)));
+    timeval_finish = tme_thread_get_time();
+  } while (TME_TIME_GET_SEC(timeval_finish - timeval_start) < 1);
 
   /* return the approximate cycle counter rate per millisecond: */
-  TME_TIME_ADDV(timeval_finish, -1, 1000000);
-  ms_elapsed = (TME_TIME_GET_SEC(timeval_finish) - TME_TIME_GET_SEC(timeval_start)) * 1000;
-  ms_elapsed += (TME_TIME_GET_FRAC(timeval_finish) - TME_TIME_GET_FRAC(timeval_start)) / 1000;
+  ms_elapsed = TME_TIME_GET_MSEC(timeval_finish - timeval_start);
   (void) tme_value64_sub(&cycles_finish, &cycles_start);
   cycles_elapsed = cycles_finish.tme_value64_uint32_hi;
   cycles_elapsed *= 65536;
@@ -414,14 +411,10 @@ tme_misc_cycles(void)
 {
 #ifdef TME_HAVE_INT64_T
   tme_time_t now;
-  tme_uint64_t cycles;
   union tme_value64 value;
 
-  tme_get_time(&now);
-  cycles = TME_TIME_GET_SEC(now);
-  cycles *= 1000000;
-  cycles += TME_TIME_GET_FRAC(now);
-  value.tme_value64_uint = cycles;
+  now = tme_thread_get_time();
+  value.tme_value64_uint = now;
   return (value);
 #else  /* !TME_HAVE_INT64_T */
   tme_time_t now;
@@ -432,7 +425,7 @@ tme_misc_cycles(void)
   union tme_value64 value;
 
   /* get the current time: */
-  tme_get_time(&now);
+  now = tme_thread_get_time();
 
   /* make 2^32: */
   two_to_the_thirtysecond = 65536;
@@ -444,7 +437,7 @@ tme_misc_cycles(void)
 
   /* return the cycles: */
   cycles_lo = (cycles_sec % two_to_the_thirtysecond);
-  usec = TME_TIME_GET_FRAC(now);
+  usec = TME_TIME_GET_USEC(now);
   value.tme_value64_uint32_hi
     = (((tme_uint32_t) (cycles / two_to_the_thirtysecond))
        + (usec > ~cycles_lo));

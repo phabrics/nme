@@ -59,19 +59,18 @@ _TME_RCSID("$Id: stp222x-timer.c,v 1.3 2010/06/05 14:38:00 fredette Exp $");
 #endif
 
 /* this updates a timer: */
-static void
-_tme_stp222x_timer_update(struct tme_stp222x_timer *timer,
-			  tme_time_t *now,
-			  tme_time_t *sleep)
+static tme_time_t
+_tme_stp222x_timer_update(struct tme_stp222x_timer *timer)
 {
+  tme_time_t now;
 
   /* get the current time: */
-  tme_get_time(now);
+  now = tme_thread_get_time();
 
 #ifdef TME_STP222X_TIMER_TRACK_INT_RATE
 
   /* if the sample time has finished: */
-  if (TME_TIME_GT(*now, timer->tme_stp222x_timer_track_sample)) {
+  if (now > timer->tme_stp222x_timer_track_sample) {
     /* if the timer has made any interrupts during the sample time: */
     if (timer->tme_stp222x_timer_track_ints > 0) {
 
@@ -81,42 +80,35 @@ _tme_stp222x_timer_update(struct tme_stp222x_timer *timer,
 	      (TME_STP222X_LOG_HANDLE(timer->tme_stp222x_timer_stp222x),
 	       "timer %d timer interrupt rate: %ld/sec",
 	       (timer == &timer->tme_stp222x_timer_stp222x->tme_stp222x_timers[1]),
-	       (timer->tme_stp222x_timer_track_ints
-		/ (unsigned long) (TME_TIME_GET_SEC(*now)
-				   - (TME_TIME_GET_SEC(timer->tme_stp222x_timer_track_sample)
-				      - TME_STP222X_TIMER_TRACK_INT_RATE)))));
+	       (TME_TIME_SET_SEC(timer->tme_stp222x_timer_track_ints)
+		/ (now - (timer->tme_stp222x_timer_track_sample - TME_STP222X_TIMER_TRACK_INT_RATE)))));
     }
-
+    
     /* reset the sampling: */
     timer->tme_stp222x_timer_track_ints = 0;
-    timer->tme_stp222x_timer_track_sample = *now;
-    TME_TIME_INC_SEC(timer->tme_stp222x_timer_track_sample, TME_STP222X_TIMER_TRACK_INT_RATE);
+    timer->tme_stp222x_timer_track_sample = now;
+    timer->tme_stp222x_timer_track_sample += TME_TIME_SET_SEC(TME_STP222X_TIMER_TRACK_INT_RATE);
   }
-
+  
 #endif /* TME_STP222X_TIMER_TRACK_INT_RATE */
-
+  
   /* if this timer has reached its next limit: */
-  if (__tme_predict_true(TME_TIME_GT(*now, timer->tme_stp222x_timer_limit_next))) {
+  if (__tme_predict_true(now > timer->tme_stp222x_timer_limit_next)) {
     /* if this timer is not in periodic mode: */
     if ((timer->tme_stp222x_timer_limit & TME_STP222X_TIMER_LIMIT_PERIODIC) == 0) {
-
+      
       /* this timer's period is now the maximum: */
-      TME_TIME_SETV(timer->tme_stp222x_timer_period, 
-		    (TME_STP222X_TIMER_COUNT_COUNT + 1) / 1000000, 
-		    (TME_STP222X_TIMER_COUNT_COUNT + 1) % 1000000);
+      timer->tme_stp222x_timer_period = TME_TIME_SET_USEC(TME_STP222X_TIMER_COUNT_COUNT + 1);
     }
-
+    
     /* set this timer's next limit time: */
     do {
-      TME_TIME_INC(timer->tme_stp222x_timer_limit_next, timer->tme_stp222x_timer_period);
-      if (__tme_predict_false(TME_TIME_GET_FRAC(timer->tme_stp222x_timer_limit_next) >= 1000000)) {
-	TME_TIME_ADDV(timer->tme_stp222x_timer_limit_next, 1, -1000000);
-      }
-    } while (TME_TIME_GT(*now, timer->tme_stp222x_timer_limit_next));
-
+      timer->tme_stp222x_timer_limit_next += timer->tme_stp222x_timer_period;
+    } while (now > timer->tme_stp222x_timer_limit_next);
+    
     /* if this timer's interrupt is enabled: */
     if (timer->tme_stp222x_timer_limit & TME_STP222X_TIMER_LIMIT_INT_EN) {
-
+      
       /* receive an interrupt: */
 #ifdef TME_STP222X_TIMER_TRACK_INT_RATE
       timer->tme_stp222x_timer_track_ints++;
@@ -125,12 +117,9 @@ _tme_stp222x_timer_update(struct tme_stp222x_timer *timer,
 			      timer->tme_stp222x_timer_idi);
     }
   }
-
+  
   /* sleep until this timer reaches its next limit: */
-  TME_TIME_SUB(*sleep, timer->tme_stp222x_timer_limit_next, *now);
-  if (TME_TIME_FRAC_LT(timer->tme_stp222x_timer_limit_next, *now)) {
-    TME_TIME_ADDV(*sleep, -1, 1000000);
-  }
+  return timer->tme_stp222x_timer_limit_next - now;
 }
 
 /* the stp222x timer thread: */
@@ -139,7 +128,6 @@ _tme_stp222x_timer_th(void *_timer)
 {
   struct tme_stp222x_timer *timer;
   struct tme_stp222x *stp222x;
-  tme_time_t now;
   tme_time_t sleep;
 
   /* recover our data structures: */
@@ -155,8 +143,8 @@ _tme_stp222x_timer_th(void *_timer)
   for (;;) {
 
     /* update this timer: */
-    _tme_stp222x_timer_update(timer, &now, &sleep);
-
+    sleep = _tme_stp222x_timer_update(timer);
+    
     /* sleep, but wake up if our timer configuration changes: */
     tme_stp22xx_cond_sleep_yield(&stp222x->tme_stp222x,
 				 &timer->tme_stp222x_timer_cond,
@@ -182,36 +170,25 @@ _tme_stp222x_timer_reset(struct tme_stp222x_timer *timer,
   period = ((limit - (count + 1)) & TME_STP222X_TIMER_COUNT_COUNT) + 1;
 
   /* save this timer's initial period: */
-  TME_TIME_SET_SEC(timer->tme_stp222x_timer_period, 0);
-  if (__tme_predict_false(period >= 1000000)) {
-    TME_TIME_SET_SEC(timer->tme_stp222x_timer_period, period / 1000000);
-    period %= 1000000;
-  }
-  TME_TIME_SET_FRAC(timer->tme_stp222x_timer_period, period);
+  timer->tme_stp222x_timer_period = TME_TIME_SET_USEC(period);
 
   /* set the next limit time for this timer: */
-  tme_get_time(&timer->tme_stp222x_timer_limit_next);
-  TME_TIME_INC(timer->tme_stp222x_timer_limit_next, timer->tme_stp222x_timer_period);
-  if (TME_TIME_GET_FRAC(timer->tme_stp222x_timer_limit_next) >= 1000000) {
-    TME_TIME_ADDV(timer->tme_stp222x_timer_limit_next, 1, -1000000);
-  }
+  timer->tme_stp222x_timer_limit_next = tme_thread_get_time();
+  timer->tme_stp222x_timer_limit_next += timer->tme_stp222x_timer_period;
 }
 
 /* this reads a timer's count register: */
 static tme_uint32_t
 _tme_stp222x_timer_count(struct tme_stp222x_timer *timer)
 {
-  tme_time_t now;
   tme_time_t sleep;
   tme_uint32_t count;
 
   /* update the timers: */
-  _tme_stp222x_timer_update(timer, &now, &sleep);
+  sleep = _tme_stp222x_timer_update(timer);
 
   /* get the absolute count until the next limit: */
-  count = TME_TIME_GET_SEC(sleep);
-  count *= 1000000;
-  count += TME_TIME_GET_FRAC(sleep);
+  count = sleep;
 
   /* the count register value is that distance to the limit
      register: */

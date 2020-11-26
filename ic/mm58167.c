@@ -78,11 +78,11 @@ struct tme_mm58167 {
 
   /* the last time sampled.  the tv_usec field is actually a value in
      milliseconds, since we divide it by 1000 right after
-     tme_get_time() returns: */
+     tme_thread_get_time() returns: */
   tme_time_t tme_mm58167_sampled_time;
 
-  /* the struct tm for the last time sampled: */
-  struct tm tme_mm58167_sampled_tm;
+  /* the date for the last time sampled: */
+  tme_date_t tme_mm58167_sampled_date;
 
   /* the status register: */
   tme_uint8_t tme_mm58167_status;
@@ -106,8 +106,7 @@ _tme_mm58167_bus_cycle(void *_mm58167, struct tme_bus_cycle *cycle_init)
   struct tme_bus_cycle cycle_resp;
   unsigned int reg;
   tme_time_t now;
-  time_t _now;
-  struct tm *now_tm;
+  tme_date_t *now_date;
   int reg_is_bcd;
 
   /* recover our data structure: */
@@ -128,25 +127,24 @@ _tme_mm58167_bus_cycle(void *_mm58167, struct tme_bus_cycle *cycle_init)
 
   /* sample the time, and drop from microsecond accuracy to
      millisecond accuracy: */
-  tme_get_time(&now);
-  TME_TIME_SET_FRAC(now, TME_TIME_GET_FRAC(now)/1000);
+  now = tme_thread_get_time();
+  //  TME_TIME_SET_MSEC(now, TME_TIME_GET_MSEC(now));
 
   /* if the seconds value has changed, convert it, and an update is
      rippling through the system: */
   if (TME_TIME_GET_SEC(now)
       != TME_TIME_GET_SEC(mm58167->tme_mm58167_sampled_time)) {
     mm58167->tme_mm58167_status |= TME_MM58167_STATUS_RIPPLING;
-    _now = TME_TIME_GET_SEC(now);
-    now_tm = gmtime_r(&_now, &mm58167->tme_mm58167_sampled_tm);
-    if (now_tm != &mm58167->tme_mm58167_sampled_tm) {
-      mm58167->tme_mm58167_sampled_tm = *now_tm;
+    now_date = tme_time_get_date(now, &mm58167->tme_mm58167_sampled_date);
+    if (now_date != &mm58167->tme_mm58167_sampled_date) {
+      mm58167->tme_mm58167_sampled_date = *now_date;
     }
   }
 
   /* otherwise, if the centiseconds value has changed, an update
      is also rippling through the system: */
-  else if ((TME_TIME_GET_FRAC(now) / 10)
-	   != (TME_TIME_GET_FRAC(mm58167->tme_mm58167_sampled_time) / 10)) {
+  else if ((TME_TIME_GET_MSEC(now) / 10)
+	   != (TME_TIME_GET_MSEC(mm58167->tme_mm58167_sampled_time) / 10)) {
     mm58167->tme_mm58167_status |= TME_MM58167_STATUS_RIPPLING;
   }
 
@@ -154,7 +152,7 @@ _tme_mm58167_bus_cycle(void *_mm58167, struct tme_bus_cycle *cycle_init)
   mm58167->tme_mm58167_sampled_time = now;
 
   /* get the converted time: */
-  now_tm = &mm58167->tme_mm58167_sampled_tm;
+  now_date = &mm58167->tme_mm58167_sampled_date;
     
   /* if this is a write: */
   if (cycle_init->tme_bus_cycle_type == TME_BUS_CYCLE_WRITE) {
@@ -189,28 +187,28 @@ _tme_mm58167_bus_cycle(void *_mm58167, struct tme_bus_cycle *cycle_init)
     /* dispatch on the register: */
     switch (reg) {
     case TME_MM58167_REG_MSEC_XXX:
-      value = (TME_TIME_GET_FRAC(now) % 10) * 10;
+      value = (TME_TIME_GET_MSEC(now) % 10) * 10;
       break;
     case TME_MM58167_REG_CSEC:
-      value = (TME_TIME_GET_FRAC(now) / 10);
+      value = (TME_TIME_GET_MSEC(now) / 10);
       break;
     case TME_MM58167_REG_SEC:
-      value = now_tm->tm_sec;
+      value = TME_DATE_SEC(now_date);
       break;
     case TME_MM58167_REG_MIN:
-      value = now_tm->tm_min;
+      value = TME_DATE_MIN(now_date);
       break;
     case TME_MM58167_REG_HOUR:
-      value = now_tm->tm_hour;
+      value = TME_DATE_HOUR(now_date);
       break;
     case TME_MM58167_REG_WDAY:
-      value = now_tm->tm_wday;
+      value = TME_DATE_WDAY(now_date);
       break;
     case TME_MM58167_REG_DAY:
-      value = now_tm->tm_mday;
+      value = TME_DATE_MDAY(now_date);
       break;
     case TME_MM58167_REG_MON:
-      value = now_tm->tm_mon + 1;
+      value = TME_DATE_MONTH(now_date);
       break;
     case TME_MM58167_REG_STATUS:
       value = mm58167->tme_mm58167_status;

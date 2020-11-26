@@ -112,6 +112,7 @@ int tme_sjlj_rwlock_unlock _TME_P((struct tme_sjlj_rwlock *, _tme_const char *, 
 #define tme_mutex_lock tme_rwlock_wrlock
 #define tme_mutex_trylock tme_rwlock_trywrlock
 #define tme_mutex_timedlock(t, usec) tme_mutex_trylock(t)
+#define _tme_mutex_unlock tme_rwlock_rdunlock
 #define tme_mutex_unlock tme_rwlock_rdunlock
 #define tme_mutex_init tme_rwlock_init
 
@@ -119,7 +120,7 @@ int tme_sjlj_rwlock_unlock _TME_P((struct tme_sjlj_rwlock *, _tme_const char *, 
 typedef int tme_cond_t;
 #define tme_cond_init(x) do { } while (/* CONSTCOND */ 0)
 void tme_sjlj_cond_wait_yield _TME_P((tme_cond_t *, tme_mutex_t *));
-void tme_sjlj_cond_sleep_yield _TME_P((tme_cond_t *, tme_mutex_t *, const tme_time_t *));
+void tme_sjlj_cond_sleep_yield _TME_P((tme_cond_t *, tme_mutex_t *, const tme_time_t));
 void tme_sjlj_cond_notify _TME_P((tme_cond_t *, int));
 #define tme_cond_wait_yield tme_sjlj_cond_wait_yield
 #define tme_cond_sleep_yield tme_sjlj_cond_sleep_yield
@@ -145,8 +146,8 @@ void tme_sjlj_exit _TME_P((void));
 #define tme_thread_exit tme_sjlj_exit
 
 /* sleeping: */
-void tme_sjlj_sleep_yield _TME_P((unsigned long, unsigned long, tme_mutex_t *));
-#define tme_thread_sleep_yield tme_sjlj_sleep_yield
+void tme_sjlj_sleep_yield _TME_P((tme_time_t));
+#define tme_thread_sleep tme_sjlj_sleep_yield
 
 /* Events: */
 typedef struct tme_sjlj_event_set tme_event_set_t;
@@ -167,8 +168,8 @@ int tme_sjlj_event_wait_yield _TME_P((tme_event_set_t *es, const struct timeval 
 #define tme_event_wait(es, tv, out, outlen) tme_event_wait_yield(es, tv, out, outlen, NULL)
 
 /* time: */
-void tme_sjlj_gettimeofday _TME_P((tme_time_t *));
-#define tme_gettimeofday tme_sjlj_gettimeofday
+tme_time_t tme_sjlj_get_time _TME_P((void));
+#define tme_thread_get_time() tme_sjlj_get_time()
 extern int tme_sjlj_thread_short;
 #define tme_thread_long() do { tme_sjlj_thread_short = FALSE; } while (/* CONSTCOND */ 0)
 

@@ -279,7 +279,7 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
       eth->tme_eth_delay_sleeping = TRUE;
 
       /* sleep for the delay sleep time: */
-      tme_thread_sleep_yield(0, sleep_usec, &eth->tme_eth_mutex);
+      tme_thread_sleep_yield(TME_TIME_SET_USEC(sleep_usec), &eth->tme_eth_mutex);
       
       continue;
     }

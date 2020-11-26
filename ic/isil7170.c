@@ -329,21 +329,20 @@ _tme_isil7170_th_timer(struct tme_isil7170 *isil7170)
       }
 
       /* if the sample time has finished, report on the interrupt rate: */
-      tme_get_time(&now);
-      if (TME_TIME_GT(now, isil7170->tme_isil7170_int_sample_time)) {
+      now = tme_thread_get_time();
+      if (now > isil7170->tme_isil7170_int_sample_time) {
 	if (isil7170->tme_isil7170_int_sample > 0) {
 	  tme_log(TME_ISIL7170_LOG_HANDLE(isil7170),
 		  0, TME_OK,
 		  (TME_ISIL7170_LOG_HANDLE(isil7170),
 		   "timer interrupt rate: %ld/sec",
-		   (isil7170->tme_isil7170_int_sample
+		   (TME_TIME_SET_SEC(isil7170->tme_isil7170_int_sample)
 		    / (TME_ISIL7170_TRACK_INT_RATE
-		       + (unsigned long) (TME_TIME_GET_SEC(now)
-					  - TME_TIME_GET_SEC(isil7170->tme_isil7170_int_sample_time))))));
+		       + (now - isil7170->tme_isil7170_int_sample_time)))));
 	}
 
 	/* reset the sample: */
-        TME_TIME_INC_SEC(now, TME_ISIL7170_TRACK_INT_RATE);
+        now += TME_TIME_SET_SEC(TME_ISIL7170_TRACK_INT_RATE);
 	isil7170->tme_isil7170_int_sample_time = now;
 	isil7170->tme_isil7170_int_sample = 0;
       }
@@ -384,7 +383,7 @@ _tme_isil7170_th_timer(struct tme_isil7170 *isil7170)
     isil7170->tme_isil7170_timer_sleeping = int_mask;
 
     /* sleep: */
-    tme_thread_sleep_yield(0, sleep_usec, &isil7170->tme_isil7170_mutex);
+    tme_thread_sleep_yield(TME_TIME_SET_USEC(sleep_usec), &isil7170->tme_isil7170_mutex);
     
   }
   /* NOTREACHED */
@@ -401,8 +400,7 @@ _tme_isil7170_bus_cycle(void *_isil7170, struct tme_bus_cycle *cycle_init)
   struct tme_bus_cycle cycle_resp;
   unsigned int reg;
   tme_time_t now;
-  time_t _now;
-  struct tm *now_tm, now_tm_buffer;
+  tme_date_t *now_date, now_date_buffer;
 
   /* recover our data structure: */
   isil7170 = (struct tme_isil7170 *) _isil7170;
@@ -427,19 +425,18 @@ _tme_isil7170_bus_cycle(void *_isil7170, struct tme_bus_cycle *cycle_init)
 	  && reg == TME_ISIL7170_REG_CMD)) {
 
     /* sample the time of day: */
-    tme_get_time(&now);
-    _now = TME_TIME_GET_SEC(now);
-    now_tm = gmtime_r(&_now, &now_tm_buffer);
+    now = tme_thread_get_time();
+    now_date = tme_time_get_date(now, &now_date_buffer);
 
     /* put the time-of-day into the registers: */
-    isil7170->tme_isil7170_regs[TME_ISIL7170_REG_CSEC] = TME_TIME_GET_FRAC(now) / 10000;
-    isil7170->tme_isil7170_regs[TME_ISIL7170_REG_HOUR] = now_tm->tm_hour;
-    isil7170->tme_isil7170_regs[TME_ISIL7170_REG_MIN] = now_tm->tm_min;
-    isil7170->tme_isil7170_regs[TME_ISIL7170_REG_SEC] = now_tm->tm_sec;
-    isil7170->tme_isil7170_regs[TME_ISIL7170_REG_MON] = now_tm->tm_mon + 1;
-    isil7170->tme_isil7170_regs[TME_ISIL7170_REG_DAY] = now_tm->tm_mday;
-    isil7170->tme_isil7170_regs[TME_ISIL7170_REG_YEAR] = (1900 + now_tm->tm_year) - TME_ISIL7170_REG_YEAR_0;
-    isil7170->tme_isil7170_regs[TME_ISIL7170_REG_DOW] = now_tm->tm_wday;
+    isil7170->tme_isil7170_regs[TME_ISIL7170_REG_CSEC] = TME_TIME_GET_USEC(now) / 10000;
+    isil7170->tme_isil7170_regs[TME_ISIL7170_REG_HOUR] = TME_DATE_HOUR(now_date);
+    isil7170->tme_isil7170_regs[TME_ISIL7170_REG_MIN] = TME_DATE_MIN(now_date);
+    isil7170->tme_isil7170_regs[TME_ISIL7170_REG_SEC] = TME_DATE_SEC(now_date);
+    isil7170->tme_isil7170_regs[TME_ISIL7170_REG_MON] = TME_DATE_MONTH(now_date);
+    isil7170->tme_isil7170_regs[TME_ISIL7170_REG_DAY] = TME_DATE_MDAY(now_date);
+    isil7170->tme_isil7170_regs[TME_ISIL7170_REG_YEAR] = TME_DATE_YEAR(now_date);
+    isil7170->tme_isil7170_regs[TME_ISIL7170_REG_DOW] = TME_DATE_WDAY(now_date);
   }
 
   /* if this is a write: */

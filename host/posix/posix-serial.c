@@ -303,7 +303,7 @@ _tme_posix_serial_th_ctrl(struct tme_posix_serial *serial)
     }
     
     /* check the controls again in .5 seconds: */
-    tme_thread_sleep_yield(0, 500000, &serial->tme_posix_serial_mutex);
+    tme_thread_sleep_yield(TME_TIME_SET_USEC(500000), &serial->tme_posix_serial_mutex);
   }
   /* NOTREACHED */
   tme_thread_exit();

@@ -142,17 +142,13 @@ tme_cond_wait_yield _TME_P((tme_cond_t *cond, tme_mutex_t *mutex)) {
 
 static _tme_inline int
 tme_cond_sleep_yield _TME_P((tme_cond_t *cond, tme_mutex_t *mutex,
-			     const tme_time_t *timeout)) {
-  gint64 end_time;
+			     tme_time_t timeout)) {
   int rc;
 
-  end_time =  TME_TIME_GET_FRAC(*timeout)
-    + TME_TIME_GET_SEC(*timeout) * G_USEC_PER_SEC
-    + g_get_monotonic_time();
-  
   _tme_thread_suspended();
 
-  rc = g_cond_wait_until(cond, mutex, end_time);
+  rc = g_cond_wait_until(cond, mutex, TME_TIME_GET_USEC(timeout)
+			 + g_get_monotonic_time());
 
   _tme_thread_resumed();
 
@@ -178,18 +174,8 @@ static _tme_inline void tme_thread_create _TME_P((tme_threadid_t *t, tme_thread_
 #define tme_thread_exit() _tme_thread_suspended();return NULL
 
 /* sleeping: */
-static _tme_inline int tme_thread_sleep_yield _TME_P((unsigned long sec, unsigned long usec, tme_mutex_t *mutex)) { 
-  if(mutex) g_mutex_unlock(mutex);
-  
-  _tme_thread_suspended();
-
-  g_usleep(usec + sec * G_USEC_PER_SEC);
-  
-  if(mutex) g_mutex_lock(mutex);
-
-  _tme_thread_resumed();
-
-  return 0;
+static _tme_inline int tme_thread_sleep _TME_P((tme_time_t sleep)) { 
+  g_usleep(TME_TIME_GET_USEC(sleep));
 }
 
 /* A default main iterator for use in the main thread loop */
@@ -199,3 +185,4 @@ static _tme_inline int tme_threads_main_iter _TME_P((void *usec)) {
 }
 
 #define _tme_threads_main_iter(fn) if(fn) fn()
+#define tme_thread_get_time() tme_get_time()

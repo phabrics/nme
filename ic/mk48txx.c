@@ -158,7 +158,7 @@ _tme_mk48txx_bus_cycle(void *_mk48txx, struct tme_bus_cycle *cycle_init)
   struct tme_bus_cycle cycle_resp;
   unsigned int reg;
   tme_time_t now;
-  time_t _now;
+  tme_date_t *now_date, now_date_buffer;
   struct tm *now_tm, now_tm_buffer;
 
   /* recover our data structure: */
@@ -182,19 +182,18 @@ _tme_mk48txx_bus_cycle(void *_mk48txx, struct tme_bus_cycle *cycle_init)
 	  | TME_MK48TXX_CSR_WRITE)) == 0) {
 
     /* sample the time of day: */
-    tme_get_time(&now);
-    _now = TME_TIME_GET_SEC(now);
-    now_tm = gmtime_r(&_now, &now_tm_buffer);
+    now = tme_thread_get_time();
+    now_date = tme_time_get_date(now, &now_date_buffer);
 
     /* put the time-of-day into the registers: */
-    mk48txx->tme_mk48txx_regs[TME_MK48TXX_REG_HOUR] = _tme_mk48txx_bcd_out(now_tm->tm_hour);
-    mk48txx->tme_mk48txx_regs[TME_MK48TXX_REG_MIN] = _tme_mk48txx_bcd_out(now_tm->tm_min);
-    mk48txx->tme_mk48txx_regs[TME_MK48TXX_REG_SEC] = _tme_mk48txx_bcd_out(now_tm->tm_sec);
-    mk48txx->tme_mk48txx_regs[TME_MK48TXX_REG_MON] = _tme_mk48txx_bcd_out(now_tm->tm_mon + 1);
-    mk48txx->tme_mk48txx_regs[TME_MK48TXX_REG_DAY] = _tme_mk48txx_bcd_out(now_tm->tm_mday);
+    mk48txx->tme_mk48txx_regs[TME_MK48TXX_REG_HOUR] = _tme_mk48txx_bcd_out(TME_DATE_HOUR(now_date));
+    mk48txx->tme_mk48txx_regs[TME_MK48TXX_REG_MIN] = _tme_mk48txx_bcd_out(TME_DATE_MIN(now_date));
+    mk48txx->tme_mk48txx_regs[TME_MK48TXX_REG_SEC] = _tme_mk48txx_bcd_out(TME_DATE_SEC(now_date));
+    mk48txx->tme_mk48txx_regs[TME_MK48TXX_REG_MON] = _tme_mk48txx_bcd_out(TME_DATE_MONTH(now_date));
+    mk48txx->tme_mk48txx_regs[TME_MK48TXX_REG_DAY] = _tme_mk48txx_bcd_out(TME_DATE_MDAY(now_date));
     mk48txx->tme_mk48txx_regs[TME_MK48TXX_REG_YEAR]
-      = _tme_mk48txx_bcd_out((1900 + now_tm->tm_year) - mk48txx->tme_mk48txx_year_zero);
-    mk48txx->tme_mk48txx_regs[TME_MK48TXX_REG_WDAY] = now_tm->tm_wday;
+      = _tme_mk48txx_bcd_out((1900 + TME_DATE_YEAR(now_date)) - mk48txx->tme_mk48txx_year_zero);
+    mk48txx->tme_mk48txx_regs[TME_MK48TXX_REG_WDAY] = TME_DATE_WDAY(now_date);
   }
 
   /* if this is a write: */

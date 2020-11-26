@@ -405,81 +405,69 @@ tme_bswap_u128(tme_uint128_t x)
 #define _TME_TIME_SUB(a,x,y,sec,frac) (a).sec = (x).sec - (y).sec; (a).frac = (x).frac - (y).frac;
 #define _TME_TIME_DEC(a,x,sec,frac) (a).sec -= (x).sec; (a).frac -= (x).frac;
 
+#define TME_NSEC_PER_TICK (1000000000 / TME_FRAC_PER_SEC)
+#define TME_FRAC_PER_MSEC (TME_FRAC_PER_SEC / 1000)
+#define TME_FRAC_PER_USEC (TME_FRAC_PER_SEC / 1000000)
+
+#define TME_TIME_GET_SEC(a) ((a) / TME_FRAC_PER_SEC)
+#define TME_TIME_GET_MSEC(a) (((a) % TME_FRAC_PER_SEC) / TME_FRAC_PER_MSEC)
+#define TME_TIME_GET_USEC(a) (((a) % TME_FRAC_PER_SEC) / TME_FRAC_PER_USEC)
+#define TME_TIME_GET_NSEC(a) (((a) % TME_FRAC_PER_SEC) * TME_NSEC_PER_TICK)
+#define TME_TIME_SET_SEC(a) ((tme_time_t)(a) * TME_FRAC_PER_SEC)
+#define TME_TIME_SET_MSEC(a) ((tme_time_t)(a) * TME_FRAC_PER_MSEC)
+#define TME_TIME_SET_USEC(a) ((tme_time_t)(a) * TME_FRAC_PER_USEC)
+#define TME_TIME_SET_NSEC(a) ((tme_time_t)(a) / TME_NSEC_PER_TICK)
+
+typedef tme_uint64_t tme_time_t;
+
+static _tme_inline tme_time_t tme_get_time _TME_P((void)) {
 #if defined(WIN32) || defined(USE_GLIB_TIME) && defined(_TME_HAVE_GLIB)
 #ifdef USE_GLIB_TIME
-#define tme_get_time(x) (*(x) = g_get_real_time(), TME_OK)
+#define TME_FRAC_PER_SEC G_USEC_PER_SEC
+  return g_get_real_time();
 #else
-static _tme_inline int tme_get_time _TME_P((tme_time_t *time)) {
+  #define TME_FRAC_PER_SEC 10000000
   FILETIME filetime;
   ULARGE_INTEGER _time;
   GetSystemTimeAsFileTime(&filetime);
   _time.u.HighPart = filetime.dwHighDateTime;
   _time.u.LowPart = filetime.dwLowDateTime;
 #ifdef TME_HAVE_INT64_T
-  *time = _time.QuadPart;
+  return _time.QuadPart;
 #else
-  *time = (_time.u.LowPart) | (_time.u.HighPart << 32);
+  return (_time.u.LowPart) | (_time.u.HighPart << 32);
 #endif
-  return TME_OK;
-}
 #endif
-#define TME_TIME_T(x) typeof(x)
-#define TME_TIME_GET_SEC(a) ((a) / TME_FRAC_PER_SEC)
-#define TME_TIME_SET_SEC(a,x) TME_TIME_SETV(a,x,TME_TIME_GET_FRAC(a))
-#define TME_TIME_EQ(x,y) (x == y)
-#define TME_TIME_EQV(a,s,u) ((a) == (u) + (s) * TME_FRAC_PER_SEC)
-#define TME_TIME_GT(x,y) (x > y)
-#define TME_TIME_SETV(a,s,u) ((a) = (u) + (s) * TME_FRAC_PER_SEC)
-#define TME_TIME_ADDV(a,s,u) TME_TIME_SETV(a, TME_TIME_GET_SEC(a) + s, TME_TIME_GET_FRAC(a) + u)
-#define TME_TIME_INC_SEC(a,x) TME_TIME_ADDV(a,x,0)
-#define TME_TIME_GET_FRAC(a) ((a) % TME_FRAC_PER_SEC)
-#define TME_TIME_SET_FRAC(a,x) TME_TIME_SETV(a,TME_TIME_GET_SEC(a), x)
-#define TME_TIME_INC_FRAC(a,x) TME_TIME_ADDV(a,0,x)
-#define TME_TIME_FRAC_LT(x,y) (TME_TIME_GET_FRAC(x) < TME_TIME_GET_FRAC(y))
-#define TME_TIME_ADD(a,x,y) TME_TIME_SETV(a, TME_TIME_GET_SEC(x) + TME_TIME_GET_SEC(y), TME_TIME_GET_FRAC(x) + TME_TIME_GET_FRAC(y))
-#define TME_TIME_INC(a,x) TME_TIME_ADDV(a,TME_TIME_GET_SEC(x),TME_TIME_GET_FRAC(x))
-#define TME_TIME_SUB(a,x,y) TME_TIME_SETV(a, TME_TIME_GET_SEC(x) - TME_TIME_GET_SEC(y), TME_TIME_GET_FRAC(x) - TME_TIME_GET_FRAC(y))
-#define TME_TIME_SUBV(a,s,u) TME_TIME_SETV(a, TME_TIME_GET_SEC(a) - s, TME_TIME_GET_FRAC(a) - u)
-#define TME_TIME_DEC(a,x) TME_TIME_SUBV(a,TME_TIME_GET_SEC(x),TME_TIME_GET_FRAC(x))
 #elif defined(USE_GETTIMEOFDAY) || !defined(_TME_HAVE_CLOCK_GETTIME)
-#define tme_get_time(x) gettimeofday(x, NULL)
-#define TME_TIME_T(x) typeof((x).tv_sec)
-#define TME_TIME_GET_SEC(a) _TME_TIME_GET_FRAC(a,tv_sec)
-#define TME_TIME_SET_SEC(a,x) _TME_TIME_SET_FRAC(a,x,tv_sec)
-#define TME_TIME_INC_SEC(a,x) _TME_TIME_INC_FRAC(a,x,tv_sec)
-#define TME_TIME_EQ(x,y) _TME_TIME_EQ(x,y,tv_sec,tv_usec)
-#define TME_TIME_EQV(a,x,y) _TME_TIME_EQV(a,x,y,tv_sec,tv_usec)
-#define TME_TIME_GT(x,y) _TME_TIME_GT(x,y,tv_sec,tv_usec)
-#define TME_TIME_GET_FRAC(a) _TME_TIME_GET_FRAC(a,tv_usec)
-#define TME_TIME_SET_FRAC(a,x) _TME_TIME_SET_FRAC(a,x,tv_usec)
-#define TME_TIME_INC_FRAC(a,x) _TME_TIME_INC_FRAC(a,x,tv_usec)
-#define TME_TIME_FRAC_LT(x,y) _TME_TIME_FRAC_LT(x,y,tv_usec)
-#define TME_TIME_SETV(a,s,u) _TME_TIME_SETV(a,s,u,tv_sec,tv_usec)
-#define TME_TIME_ADD(a,x,y) _TME_TIME_ADD(a,x,y,tv_sec,tv_usec)
-#define TME_TIME_ADDV(a,s,u) _TME_TIME_ADDV(a,s,u,tv_sec,tv_usec)
-#define TME_TIME_INC(a,x) _TME_TIME_INC(a,x,tv_sec,tv_usec)
-#define TME_TIME_SUB(a,x,y) _TME_TIME_SUB(a,x,y,tv_sec,tv_usec)
-#define TME_TIME_DEC(a,x) _TME_TIME_DEC(a,x,tv_sec,tv_usec)
+#define TME_FRAC_PER_SEC 1000000
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  return TME_TIME_SET_SEC(tv.tv_sec)
+    +TME_TIME_SET_USEC(tv.tv_usec);
 #else
-#define tme_get_time(x) clock_gettime(CLOCK_REALTIME, x)
-#define TME_TIME_T(x) typeof((x).tv_sec)
-#define TME_TIME_GET_SEC(a) _TME_TIME_GET_FRAC(a,tv_sec)
-#define TME_TIME_SET_SEC(a,x) _TME_TIME_SET_FRAC(a,x,tv_sec)
-#define TME_TIME_INC_SEC(a,x) _TME_TIME_INC_FRAC(a,x,tv_sec)
-#define TME_TIME_EQ(x,y) _TME_TIME_EQ(x,y,tv_sec,tv_nsec)
-#define TME_TIME_EQV(a,x,y) _TME_TIME_EQV(a,x,y,tv_sec,tv_nsec)
-#define TME_TIME_GT(x,y) _TME_TIME_GT(x,y,tv_sec,tv_nsec)
-#define TME_TIME_GET_FRAC(a) (_TME_TIME_GET_FRAC(a,tv_nsec) / 1000)
-#define TME_TIME_SET_FRAC(a,x) _TME_TIME_SET_FRAC(a,(x) * 1000,tv_nsec)
-#define TME_TIME_INC_FRAC(a,x) _TME_TIME_INC_FRAC(a,(x) * 1000,tv_nsec)
-#define TME_TIME_FRAC_LT(x,y) _TME_TIME_FRAC_LT(x,y,tv_nsec)
-#define TME_TIME_SETV(a,s,u) _TME_TIME_SETV(a,s,(u) * 1000,tv_sec,tv_nsec)
-#define TME_TIME_ADD(a,x,y) _TME_TIME_ADD(a,x,y,tv_sec,tv_nsec)
-#define TME_TIME_ADDV(a,s,u) _TME_TIME_ADDV(a,s,(u) * 1000,tv_sec,tv_nsec)
-#define TME_TIME_INC(a,x) _TME_TIME_INC(a,x,tv_sec,tv_nsec)
-#define TME_TIME_SUB(a,x,y) _TME_TIME_SUB(a,x,y,tv_sec,tv_nsec)
-#define TME_TIME_DEC(a,x) _TME_TIME_DEC(a,x,tv_sec,tv_nsec)
+#define TME_FRAC_PER_SEC 1000000000
+  struct timespec ts;
+  clock_gettime(CLOCK_REALTIME, &ts)
+  return TME_TIME_SET_SEC(ts.tv_sec)
+    +TME_TIME_SET_NSEC(ts.tv_usec);
 #endif
+}
+
+#ifdef _TME_HAVE_GMTIME_R
+typedef struct tm tme_date_t;
+static _tme_inline tme_date_t *tme_time_get_date _TME_P((tme_time_t time, tme_date_t *date)) {
+  time_t sec = TME_TIME_GET_SEC(time);
+  return gmtime_r(&sec, date);
+}
+#define TME_DATE_SEC(date) ((date)->tm_sec)
+#define TME_DATE_MIN(date) ((date)->tm_min)
+#define TME_DATE_HOUR(date) ((date)->tm_hour)
+#define TME_DATE_WDAY(date) ((date)->tm_wday)
+#define TME_DATE_MDAY(date) ((date)->tm_mday)
+#define TME_DATE_MONTH(date) ((date)->tm_mon + 1)
+#define TME_DATE_YEAR(date) ((date)->tm_year)
+#endif
+
 /* prototypes: */
 void *tme_malloc _TME_P((unsigned int));
 void *tme_malloc0 _TME_P((unsigned int));

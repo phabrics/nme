@@ -109,13 +109,15 @@ static _tme_inline int tme_rwlock_lock _TME_P((tme_rwlock_t *l, int write)) {
 #ifdef HAVE_PTHREAD_RWLOCK_TIMEDRDLOCK
 
 static _tme_inline int tme_rwlock_timedlock _TME_P((tme_rwlock_t *l, unsigned long sec, int write)) { 
-  struct timespec now, timeout;
+  tme_time_t sleep;
+  struct timespec timeout;
   int rc;
-  
-  _TME_TIME_SETV(timeout, sec, 0, tv_sec, tv_nsec);
-  clock_gettime(CLOCK_REALTIME, &now);
-  _TME_TIME_INC(timeout, now, tv_sec, tv_nsec);
 
+  sleep = TME_TIME_SET_SEC(sec) + tme_thread_get_time();
+
+  timeout.tv_sec = TME_TIME_GET_SEC(sleep);
+  timeout.tv_nsec = TME_TIME_GET_NSEC(sleep);
+  
   _tme_thread_suspended();
   
   if (write)
@@ -156,14 +158,16 @@ static _tme_inline int tme_mutex_lock _TME_P((tme_mutex_t *m)) {
 #define tme_mutex_unlock pthread_mutex_unlock
 
 #ifdef HAVE_PTHREAD_MUTEX_TIMEDLOCK
-static _tme_inline int tme_mutex_timedlock _TME_P((tme_mutex_t *m, unsigned long sec)) { 
-  struct timespec now, timeout;
+static _tme_inline int tme_mutex_timedlock _TME_P((tme_mutex_t *m, unsigned long sec)) {
+  tme_time_t sleep;
+  struct timespec timeout;
   int rc;
-  
-  _TME_TIME_SETV(timeout, sec, 0, tv_sec, tv_nsec);
-  clock_gettime(CLOCK_REALTIME, &now);
-  _TME_TIME_INC(timeout, now, tv_sec, tv_nsec);
 
+  sleep = TME_TIME_SET_SEC(sec) + tme_thread_get_time();
+
+  timeout.tv_sec = TME_TIME_GET_SEC(sleep);
+  timeout.tv_nsec = TME_TIME_GET_NSEC(sleep);
+  
   _tme_thread_suspended();
   
   rc = pthread_mutex_timedlock(m, &timeout);
@@ -196,21 +200,17 @@ tme_cond_wait_yield _TME_P((tme_cond_t *cond, tme_mutex_t *mutex)) {
 
 static _tme_inline int
 tme_cond_sleep_yield _TME_P((tme_cond_t *cond, tme_mutex_t *mutex,
-			     const tme_time_t *timeout)) {
-  struct timespec abstime;
-  struct timespec t;
+			     tme_time_t sleep)) {
+  struct timespec timeout;
   int rc;
-  
-  _TME_TIME_SETV(t, TME_TIME_GET_SEC(*timeout), TME_TIME_GET_FRAC(*timeout) * 1000, tv_sec, tv_nsec);
-  clock_gettime(CLOCK_REALTIME, &abstime);
-  _TME_TIME_INC(abstime, t, tv_sec, tv_nsec);
-  if ((_TME_TIME_GET_FRAC(abstime,tv_nsec)/1000) >= 1000000) {
-    _TME_TIME_ADDV(abstime, 1, -1000000 * 1000, tv_sec, tv_nsec);
-  }
 
+  sleep += tme_get_time();
+  timeout.tv_sec = TME_TIME_GET_SEC(sleep);
+  timeout.tv_nsec = TME_TIME_GET_NSEC(sleep);
+  
   _tme_thread_suspended();
 
-  rc = pthread_cond_timedwait(cond, mutex, &abstime);
+  rc = pthread_cond_timedwait(cond, mutex, &timeout);
 
   _tme_thread_resumed();
 
@@ -252,25 +252,13 @@ static _tme_inline void tme_thread_yield _TME_P((void)) {
 #define tme_thread_exit() _tme_thread_suspended();return NULL
 
 /* sleeping: */
-static _tme_inline int tme_thread_sleep_yield _TME_P((unsigned long sec, unsigned long usec, tme_mutex_t *mutex)) { 
+static _tme_inline void tme_thread_sleep _TME_P((tme_time_t sleep)) {
   struct timespec timeout;
-  int rc;
   
-  for (; usec >= 1000000; sec++, usec -= 1000000);
+  timeout.tv_sec = TME_TIME_GET_SEC(sleep);
+  timeout.tv_nsec = TME_TIME_GET_NSEC(sleep);
 
-  _TME_TIME_SETV(timeout,sec, usec * 1000,tv_sec,tv_nsec);
-
-  if(mutex) pthread_mutex_unlock(mutex);
-  
-  _tme_thread_suspended();
-
-  rc = nanosleep(&timeout, NULL);
-
-  if(mutex) pthread_mutex_lock(mutex);
-  
-  _tme_thread_resumed();
-
-  return rc;
+  nanosleep(&timeout, NULL);
 }
 
 /* A default main iterator for use in the main thread loop */
@@ -279,6 +267,7 @@ static _tme_inline int tme_threads_main_iter _TME_P((void *usec)) {
 }
 
 #define _tme_threads_main_iter(fn) if(fn) fn()
+#define tme_thread_get_time() tme_get_time()
 
 #ifdef HAVE_CPUSET_CREATE
 typedef cpuset_t *tme_cpuset_t;

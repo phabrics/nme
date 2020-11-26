@@ -174,7 +174,7 @@ _tme_rfb_key_event(rfbBool down, rfbKeySym key, rfbClientPtr cl)
     = TME_KEYBOARD_MODIFIER_NONE;
   tme_event.tme_keyboard_event_keyval
     = key;
-  tme_get_time(&tme_event.tme_keyboard_event_time);
+  tme_event.tme_keyboard_event_time = tme_thread_get_time();
 
   /* lock the mutex: */
   tme_mutex_lock(&_display->tme_display_mutex);
@@ -201,7 +201,7 @@ _tme_rfb_mouse_event(int buttonMask, int x, int y, rfbClientPtr cl)
   tme_mutex_lock(&_display->tme_display_mutex);
 
   /* set the event time: */
-  tme_get_time(&tme_event.tme_mouse_event_time);
+  tme_event.tme_mouse_event_time = tme_thread_get_time();
 
   /* if the button mask and pointer position haven't changed, return now.
      every time we warp the pointer we will get a motion event, and
