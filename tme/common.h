@@ -58,6 +58,11 @@
 #ifdef HAVE_TIME_H
 #include <time.h>
 #endif
+#if defined(USE_GLIB_TIME) && defined(_TME_HAVE_GLIB)
+#include <glib.h>
+#elif defined(WIN32)
+#include <windows.h>
+#endif
 
 #ifdef _TME_HAVE_BYTESWAP_H
 /* byteswap.h is needed for the bswap functions: */
@@ -447,17 +452,24 @@ static _tme_inline tme_time_t tme_get_time _TME_P((void)) {
 #else
 #define TME_FRAC_PER_SEC 1000000000
   struct timespec ts;
-  clock_gettime(CLOCK_REALTIME, &ts)
+  clock_gettime(CLOCK_REALTIME, &ts);
   return TME_TIME_SET_SEC(ts.tv_sec)
-    +TME_TIME_SET_NSEC(ts.tv_usec);
+    +TME_TIME_SET_NSEC(ts.tv_nsec);
 #endif
 }
 
-#ifdef _TME_HAVE_GMTIME_R
+#if defined(_TME_HAVE_GMTIME_R) || defined(_TME_HAVE_GMTIME_S) || defined(_TME_HAVE_GMTIME)
 typedef struct tm tme_date_t;
 static _tme_inline tme_date_t *tme_time_get_date _TME_P((tme_time_t time, tme_date_t *date)) {
   time_t sec = TME_TIME_GET_SEC(time);
+#ifdef _TME_HAVE_GMTIME_S
+  gmtime_s(date, &sec);
+  return date;
+#elif defined(_TME_HAVE_GMTIME_R)
   return gmtime_r(&sec, date);
+#else
+  return date = gmtime(&sec);
+#endif
 }
 #define TME_DATE_SEC(date) ((date)->tm_sec)
 #define TME_DATE_MIN(date) ((date)->tm_min)

@@ -351,7 +351,7 @@ dnl Checks for library functions and prototypes.
 #AC_FUNC_MALLOC
 #AC_FUNC_MMAP
 #AC_FUNC_REALLOC
-AC_CHECK_FUNCS([gmtime_r clock_gettime memmove memset munmap pow ptsname ptsname_r sqrt strchr strerror strrchr strstr strtoul devname fdevname kldfind isinff])
+AC_CHECK_FUNCS([gmtime_r gmtime_s gmtime clock_gettime memmove memset munmap pow ptsname ptsname_r sqrt strchr strerror strrchr strstr strtoul devname fdevname kldfind isinff])
 
 SOCKET_INCLUDES="
 #ifdef HAVE_STDLIB_H
