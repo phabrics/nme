@@ -415,9 +415,9 @@ tme_bswap_u128(tme_uint128_t x)
 #define TME_FRAC_PER_USEC (TME_FRAC_PER_SEC / 1000000)
 
 #define TME_TIME_GET_SEC(a) ((a) / TME_FRAC_PER_SEC)
-#define TME_TIME_GET_MSEC(a) (((a) % TME_FRAC_PER_SEC) / TME_FRAC_PER_MSEC)
-#define TME_TIME_GET_USEC(a) (((a) % TME_FRAC_PER_SEC) / TME_FRAC_PER_USEC)
-#define TME_TIME_GET_NSEC(a) (((a) % TME_FRAC_PER_SEC) * TME_NSEC_PER_TICK)
+#define TME_TIME_GET_MSEC(a) ((a) / TME_FRAC_PER_MSEC)
+#define TME_TIME_GET_USEC(a) ((a) / TME_FRAC_PER_USEC)
+#define TME_TIME_GET_NSEC(a) ((a) * TME_NSEC_PER_TICK)
 #define TME_TIME_SET_SEC(a) ((tme_time_t)(a) * TME_FRAC_PER_SEC)
 #define TME_TIME_SET_MSEC(a) ((tme_time_t)(a) * TME_FRAC_PER_MSEC)
 #define TME_TIME_SET_USEC(a) ((tme_time_t)(a) * TME_FRAC_PER_USEC)
@@ -425,7 +425,7 @@ tme_bswap_u128(tme_uint128_t x)
 
 typedef tme_uint64_t tme_time_t;
 
-static _tme_inline tme_time_t tme_get_time _TME_P((void)) {
+static _tme_inline tme_time_t tme_thread_get_time _TME_P((void)) {
 #if defined(WIN32) || defined(USE_GLIB_TIME) && defined(_TME_HAVE_GLIB)
 #ifdef USE_GLIB_TIME
 #define TME_FRAC_PER_SEC G_USEC_PER_SEC

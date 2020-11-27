@@ -437,7 +437,7 @@ tme_misc_cycles(void)
 
   /* return the cycles: */
   cycles_lo = (cycles_sec % two_to_the_thirtysecond);
-  usec = TME_TIME_GET_USEC(now);
+  usec = TME_TIME_GET_USEC(now % TME_FRAC_PER_SEC);
   value.tme_value64_uint32_hi
     = (((tme_uint32_t) (cycles / two_to_the_thirtysecond))
        + (usec > ~cycles_lo));

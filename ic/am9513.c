@@ -367,7 +367,7 @@ _tme_am9513_th_timer(struct tme_am9513 *am9513)
     /* calculate the number of basic ticks that have elapsed: */
     basic_elapsed = am9513->tme_am9513_basic_clock;
     basic_elapsed *= TME_TIME_GET_SEC(elapsed);
-    basic_elapsed += am9513->tme_am9513_basic_clock_msec * TME_TIME_GET_MSEC(elapsed);
+    basic_elapsed += am9513->tme_am9513_basic_clock_msec * TME_TIME_GET_MSEC(elapsed % TME_FRAC_PER_SEC);
 
     /* assume that we will sleep for one second: */
     basic_sleep = am9513->tme_am9513_basic_clock;

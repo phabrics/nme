@@ -1072,7 +1072,7 @@ TME_SPARC_FORMAT3(_tme_stp103x_wrasr, tme_uint64_t)
 	    }
 			 
 	    /* add in the microseconds: */
-	    usec32 += TME_TIME_GET_USEC(tick_compare_time) % 1000000;
+	    usec32 += TME_TIME_GET_USEC(tick_compare_time % TME_FRAC_PER_SEC);
 	    tick_compare_time += TME_TIME_SET_USEC(usec32);
 	  }
 

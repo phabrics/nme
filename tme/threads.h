@@ -60,8 +60,16 @@ void tme_threads_init _TME_P((tme_threads_fn1 run, void *arg));
 void tme_threads_run _TME_P((void));
 void tme_thread_enter _TME_P((tme_mutex_t *mutex));
 
+static _tme_inline void tme_mutex_lock _TME_P((tme_mutex_t *mutex)) { 
+  _tme_thread_suspended();
+  
+  _tme_mutex_lock(mutex);
+
+  _tme_thread_resumed();
+}
+
 static _tme_inline int tme_thread_sleep_yield _TME_P((tme_time_t time, tme_mutex_t *mutex)) { 
-  if(mutex) _tme_mutex_unlock(mutex);
+  if(mutex) tme_mutex_unlock(mutex);
   
   _tme_thread_suspended();
 

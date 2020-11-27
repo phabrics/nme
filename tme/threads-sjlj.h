@@ -109,10 +109,8 @@ int tme_sjlj_rwlock_unlock _TME_P((struct tme_sjlj_rwlock *, _tme_const char *, 
    lock it for writing.  we do *not* allow recursive locking: */
 #define tme_mutex_t tme_rwlock_t
 #define _tme_mutex_lock tme_rwlock_wrlock
-#define tme_mutex_lock tme_rwlock_wrlock
 #define tme_mutex_trylock tme_rwlock_trywrlock
 #define tme_mutex_timedlock(t, usec) tme_mutex_trylock(t)
-#define _tme_mutex_unlock tme_rwlock_rdunlock
 #define tme_mutex_unlock tme_rwlock_rdunlock
 #define tme_mutex_init tme_rwlock_init
 
@@ -169,7 +167,7 @@ int tme_sjlj_event_wait_yield _TME_P((tme_event_set_t *es, const struct timeval 
 
 /* time: */
 tme_time_t tme_sjlj_get_time _TME_P((void));
-#define tme_thread_get_time() tme_sjlj_get_time()
+//#define tme_thread_get_time() tme_sjlj_get_time()
 extern int tme_sjlj_thread_short;
 #define tme_thread_long() do { tme_sjlj_thread_short = FALSE; } while (/* CONSTCOND */ 0)
 

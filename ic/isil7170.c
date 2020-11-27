@@ -91,7 +91,7 @@ _TME_RCSID("$Id: isil7170.c,v 1.6 2010/06/05 14:37:27 fredette Exp $");
 /* define this to track interrupt rates, reporting once every N
    seconds: */
 #if 1
-#define TME_ISIL7170_TRACK_INT_RATE		(10)
+#define TME_ISIL7170_TRACK_INT_RATE		TME_TIME_SET_SEC(10)
 #endif
 
 #define TME_ISIL7170_LOG_HANDLE(am) (&(am)->tme_isil7170_element->tme_element_log_handle)
@@ -342,7 +342,7 @@ _tme_isil7170_th_timer(struct tme_isil7170 *isil7170)
 	}
 
 	/* reset the sample: */
-        now += TME_TIME_SET_SEC(TME_ISIL7170_TRACK_INT_RATE);
+        now += TME_ISIL7170_TRACK_INT_RATE;
 	isil7170->tme_isil7170_int_sample_time = now;
 	isil7170->tme_isil7170_int_sample = 0;
       }
@@ -429,7 +429,7 @@ _tme_isil7170_bus_cycle(void *_isil7170, struct tme_bus_cycle *cycle_init)
     now_date = tme_time_get_date(now, &now_date_buffer);
 
     /* put the time-of-day into the registers: */
-    isil7170->tme_isil7170_regs[TME_ISIL7170_REG_CSEC] = TME_TIME_GET_USEC(now) / 10000;
+    isil7170->tme_isil7170_regs[TME_ISIL7170_REG_CSEC] = TME_TIME_GET_MSEC(now % TME_FRAC_PER_SEC) / 10;
     isil7170->tme_isil7170_regs[TME_ISIL7170_REG_HOUR] = TME_DATE_HOUR(now_date);
     isil7170->tme_isil7170_regs[TME_ISIL7170_REG_MIN] = TME_DATE_MIN(now_date);
     isil7170->tme_isil7170_regs[TME_ISIL7170_REG_SEC] = TME_DATE_SEC(now_date);

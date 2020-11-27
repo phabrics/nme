@@ -116,7 +116,7 @@ static _tme_inline int tme_rwlock_timedlock _TME_P((tme_rwlock_t *l, unsigned lo
   sleep = TME_TIME_SET_SEC(sec) + tme_thread_get_time();
 
   timeout.tv_sec = TME_TIME_GET_SEC(sleep);
-  timeout.tv_nsec = TME_TIME_GET_NSEC(sleep);
+  timeout.tv_nsec = TME_TIME_GET_NSEC(sleep % TME_FRAC_PER_SEC);
   
   _tme_thread_suspended();
   
@@ -142,17 +142,6 @@ typedef pthread_mutex_t tme_mutex_t;
 #define tme_mutex_init(m) pthread_mutex_init(m,NULL)
 #define tme_mutex_destroy pthread_mutex_destroy
 #define _tme_mutex_lock pthread_mutex_lock
-static _tme_inline int tme_mutex_lock _TME_P((tme_mutex_t *m)) { 
-  int rc;
-
-  _tme_thread_suspended();
-  
-  rc = pthread_mutex_lock(m);
-
-  _tme_thread_resumed();
-
-  return rc;
-}
 
 #define tme_mutex_trylock pthread_mutex_trylock
 #define tme_mutex_unlock pthread_mutex_unlock
@@ -166,7 +155,7 @@ static _tme_inline int tme_mutex_timedlock _TME_P((tme_mutex_t *m, unsigned long
   sleep = TME_TIME_SET_SEC(sec) + tme_thread_get_time();
 
   timeout.tv_sec = TME_TIME_GET_SEC(sleep);
-  timeout.tv_nsec = TME_TIME_GET_NSEC(sleep);
+  timeout.tv_nsec = TME_TIME_GET_NSEC(sleep % TME_FRAC_PER_SEC);
   
   _tme_thread_suspended();
   
@@ -204,9 +193,9 @@ tme_cond_sleep_yield _TME_P((tme_cond_t *cond, tme_mutex_t *mutex,
   struct timespec timeout;
   int rc;
 
-  sleep += tme_get_time();
+  sleep += tme_thread_get_time();
   timeout.tv_sec = TME_TIME_GET_SEC(sleep);
-  timeout.tv_nsec = TME_TIME_GET_NSEC(sleep);
+  timeout.tv_nsec = TME_TIME_GET_NSEC(sleep % TME_FRAC_PER_SEC);
   
   _tme_thread_suspended();
 
@@ -256,7 +245,7 @@ static _tme_inline void tme_thread_sleep _TME_P((tme_time_t sleep)) {
   struct timespec timeout;
   
   timeout.tv_sec = TME_TIME_GET_SEC(sleep);
-  timeout.tv_nsec = TME_TIME_GET_NSEC(sleep);
+  timeout.tv_nsec = TME_TIME_GET_NSEC(sleep % TME_FRAC_PER_SEC);
 
   nanosleep(&timeout, NULL);
 }
@@ -267,7 +256,7 @@ static _tme_inline int tme_threads_main_iter _TME_P((void *usec)) {
 }
 
 #define _tme_threads_main_iter(fn) if(fn) fn()
-#define tme_thread_get_time() tme_get_time()
+//#define tme_thread_get_time() tme_get_time()
 
 #ifdef HAVE_CPUSET_CREATE
 typedef cpuset_t *tme_cpuset_t;

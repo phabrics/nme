@@ -187,10 +187,10 @@ _tme_mm58167_bus_cycle(void *_mm58167, struct tme_bus_cycle *cycle_init)
     /* dispatch on the register: */
     switch (reg) {
     case TME_MM58167_REG_MSEC_XXX:
-      value = (TME_TIME_GET_MSEC(now) % 10) * 10;
+      value = TME_TIME_GET_MSEC(now % TME_FRAC_PER_SEC);
       break;
     case TME_MM58167_REG_CSEC:
-      value = (TME_TIME_GET_MSEC(now) / 10);
+      value = TME_TIME_GET_MSEC(now % TME_FRAC_PER_SEC) / 10;
       break;
     case TME_MM58167_REG_SEC:
       value = TME_DATE_SEC(now_date);

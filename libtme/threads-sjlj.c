@@ -180,7 +180,7 @@ tme_sjlj_get_time()
 
   /* if we need to, call tme_thread_get_time(): */
   if (__tme_predict_false(!tme_sjlj_thread_short)) {
-    _tme_sjlj_now = tme_get_time();
+    _tme_sjlj_now = tme_thread_get_time();
     tme_sjlj_thread_short = TRUE;
   }
 
@@ -457,7 +457,7 @@ tme_sjlj_threads_main_iter(void *unused)
 	  (now = tme_thread_get_time())) {
     /* set the timeout time: */
     timeout.tv_sec = TME_TIME_GET_SEC(now);
-    timeout.tv_usec = TME_TIME_GET_USEC(now);
+    timeout.tv_usec = TME_TIME_GET_USEC(now % TME_FRAC_PER_SEC);
   }
 
   /* if there are runnable threads, make this a poll: */

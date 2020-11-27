@@ -114,13 +114,6 @@ typedef GMutex tme_mutex_t;
 #define tme_mutex_init g_mutex_init
 #define tme_mutex_destroy g_mutex_clear
 #define _tme_mutex_lock g_mutex_lock
-static _tme_inline void tme_mutex_lock _TME_P((tme_mutex_t *m)) { 
-  _tme_thread_suspended();
-  
-  g_mutex_lock(m);
-
-  _tme_thread_resumed();
-}
 
 #define tme_mutex_trylock(m) (g_mutex_trylock(m) ? (TME_OK) : (TME_EBUSY))
 /* for now, define as trylock (same as timedlock with 0 wait) */
@@ -185,4 +178,4 @@ static _tme_inline int tme_threads_main_iter _TME_P((void *usec)) {
 }
 
 #define _tme_threads_main_iter(fn) if(fn) fn()
-#define tme_thread_get_time() tme_get_time()
+//#define tme_thread_get_time() tme_get_time()

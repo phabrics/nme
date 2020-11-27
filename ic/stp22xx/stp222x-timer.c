@@ -55,7 +55,7 @@ _TME_RCSID("$Id: stp222x-timer.c,v 1.3 2010/06/05 14:38:00 fredette Exp $");
 /* define this to track interrupt rates, reporting once every N
    seconds: */
 #if 1
-#define TME_STP222X_TIMER_TRACK_INT_RATE		(10)
+#define TME_STP222X_TIMER_TRACK_INT_RATE		TME_TIME_SET_SEC(10)
 #endif
 
 /* this updates a timer: */
@@ -87,7 +87,7 @@ _tme_stp222x_timer_update(struct tme_stp222x_timer *timer)
     /* reset the sampling: */
     timer->tme_stp222x_timer_track_ints = 0;
     timer->tme_stp222x_timer_track_sample = now;
-    timer->tme_stp222x_timer_track_sample += TME_TIME_SET_SEC(TME_STP222X_TIMER_TRACK_INT_RATE);
+    timer->tme_stp222x_timer_track_sample += TME_STP222X_TIMER_TRACK_INT_RATE;
   }
   
 #endif /* TME_STP222X_TIMER_TRACK_INT_RATE */

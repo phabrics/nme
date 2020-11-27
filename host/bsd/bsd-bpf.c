@@ -430,13 +430,7 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
       if (tstamp > bpf->tme_eth_delay_release) {
 	/* set the sleep time: */
 	assert (TME_TIME_GET_SEC(bpf->tme_eth_delay_release) - TME_TIME_GET_SEC(tstamp) <= 1);
-	bpf->tme_eth_delay_sleep
-	  = ((TME_TIME_GET_SEC(bpf->tme_eth_delay_release)
-	      == TME_TIME_GET_SEC(tstamp))
-	      ? 0
-	     : 1000000UL)
-	  + TME_TIME_GET_USEC(tstamp) - 
-	  TME_TIME_GET_USEC(bpf->tme_eth_delay_release);
+	bpf->tme_eth_delay_sleep = TME_TIME_GET_USEC(tstamp - bpf->tme_eth_delay_release);
 
 	/* rewind the buffer pointer: */
 	bpf->tme_eth_buffer_offset -= the_bpf_header.bh_hdrlen;

@@ -50,7 +50,7 @@ _TME_RCSID("$Id: sun4-timer.c,v 1.3 2010/06/05 14:38:23 fredette Exp $");
 /* define this to track interrupt rates, reporting once every N
    seconds: */
 #if 1
-#define TME_SUN4_TIMER_TRACK_INT_RATE		(10)
+#define TME_SUN4_TIMER_TRACK_INT_RATE		TME_TIME_SET_SEC(10)
 #endif
 
 /* this makes timer callouts.  it must be called with the mutex held: */
@@ -176,7 +176,7 @@ _tme_sun4_timer_update(struct tme_sun4_timer *timer, tme_time_t *now)
     /* reset the sampling: */
     timer->tme_sun4_timer_track_ints = 0;
     timer->tme_sun4_timer_track_sample = *now;
-    timer->tme_sun4_timer_track_sample += TME_TIME_SET_SEC(TME_SUN4_TIMER_TRACK_INT_RATE);
+    timer->tme_sun4_timer_track_sample += TME_SUN4_TIMER_TRACK_INT_RATE;
   }
 
 #endif /* TME_SUN4_TIMER_TRACK_INT_RATE */
