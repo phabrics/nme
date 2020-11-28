@@ -132,7 +132,6 @@ void tme_sjlj_cond_notify _TME_P((tme_cond_t *, int));
 struct tme_sjlj_thread;
 typedef void _tme_thret;
 typedef _tme_thret (*tme_thread_t) _TME_P((void *));
-int tme_sjlj_threads_main _TME_P((void *unused));
 int tme_sjlj_threads_main_iter _TME_P((void *unused));
 typedef struct tme_sjlj_thread *tme_threadid_t;
 void tme_sjlj_thread_create _TME_P((tme_threadid_t *, tme_thread_t, void *));

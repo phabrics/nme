@@ -198,61 +198,67 @@ _tme_display_callout(struct tme_display *display,
 
 }
 
-/* the display main thread: */
-static _tme_thret
-_tme_display_th_update(void *disp)
-{
+/* this is the display main loop iteration function: */
+int
+tme_display_update(void *disp) {
   struct tme_display *display;
   struct tme_screen *screen;
   int rc;
   
   display = (struct tme_display *)disp;
   
+  /* if the display has an update function, call it: */
+  rc = (display->tme_display_update) ?
+    (*display->tme_display_update)(display) :
+    (TME_OK);
+
+  if(rc != TME_OK) return rc;
+
+  /* lock the mutex: */
+  tme_mutex_lock(&display->tme_display_mutex);
+    
+  _tme_display_callout(display, 0);
+
+  /* loop over all screens: */
+  for (screen = display->tme_display_screens;
+       screen != NULL;
+       screen = screen->tme_screen_next) {
+    _tme_screen_update(screen);
+    switch(screen->tme_screen_update) {
+    case TME_SCREEN_UPDATE_REDRAW:
+      if(display->tme_screen_redraw)
+	display->tme_screen_redraw(screen);
+      break;
+    case TME_SCREEN_UPDATE_RESIZE:
+      if(display->tme_screen_resize)
+	display->tme_screen_resize(screen);
+      break;
+    case TME_SCREEN_UPDATE_NONE:
+      break;
+    default:
+      // custom update conditions here
+      if(display->tme_screen_update)
+	display->tme_screen_update(screen);
+    }
+    screen->tme_screen_update = TME_SCREEN_UPDATE_NONE;  
+  }
+
+  /* unlock the mutex: */
+  tme_mutex_unlock(&display->tme_display_mutex);
+
+  tme_thread_sleep_yield(TME_TIME_SET_USEC(50000), NULL);
+
+  return rc;
+}
+
+/* the display main thread: */
+static _tme_thret
+tme_display_th_update(void *disp)
+{
   tme_thread_enter(NULL);
 
-  for(;;) {
-    /* if the display has an update function, call it: */
-    rc = (display->tme_display_update) ?
-      (*display->tme_display_update)(display) :
-      (TME_OK);
+  for(;;) tme_display_update(disp);
 
-    if(rc != TME_OK) continue;
-
-    /* lock the mutex: */
-    tme_mutex_lock(&display->tme_display_mutex);
-    
-    _tme_display_callout(display, 0);
-
-    /* loop over all screens: */
-    for (screen = display->tme_display_screens;
-	 screen != NULL;
-	 screen = screen->tme_screen_next) {
-      _tme_screen_update(screen);
-      switch(screen->tme_screen_update) {
-      case TME_SCREEN_UPDATE_REDRAW:
-	if(display->tme_screen_redraw)
-	  display->tme_screen_redraw(screen);
-	break;
-      case TME_SCREEN_UPDATE_RESIZE:
-	if(display->tme_screen_resize)
-	  display->tme_screen_resize(screen);
-	break;
-      case TME_SCREEN_UPDATE_NONE:
-	break;
-      default:
-	// custom update conditions here
-	if(display->tme_screen_update)
-	  display->tme_screen_update(screen);
-      }
-      screen->tme_screen_update = TME_SCREEN_UPDATE_NONE;  
-    }
-
-    /* unlock the mutex: */
-    tme_mutex_unlock(&display->tme_display_mutex);
-
-    tme_thread_sleep_yield(TME_TIME_SET_USEC(50000), NULL);
-
-  }
   /* NOTREACHED */
   tme_thread_exit();
 }
@@ -677,9 +683,9 @@ int tme_display_init(struct tme_element *element,
 
   /* setup the thread loop function: */
 #ifdef TME_THREADS_SJLJ
-  tme_thread_create(&display->tme_display_thread, _tme_display_th_update, display);
+  tme_thread_create(&display->tme_display_thread, tme_display_th_update, display);
 #else
-  tme_threads_init(_tme_display_th_update, display);
+  tme_threads_init(tme_display_update, display);
 #endif
   
   /* fill the element: */

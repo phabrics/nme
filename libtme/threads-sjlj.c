@@ -168,6 +168,9 @@ tme_sjlj_threads_init()
   
   /* initialize the thread-blocked structure: */
   tme_sjlj_thread_blocked.tme_sjlj_thread_func = NULL;
+#ifdef WIN32
+  tme_sjlj_thread_blocked.tme_sjlj_thread_func = ConvertThreadToFiber(NULL);
+#endif
   tme_sjlj_thread_blocked.tme_sjlj_thread_cond = NULL;
   tme_sjlj_thread_blocked.tme_sjlj_thread_events = NULL;
   tme_sjlj_thread_blocked.tme_sjlj_thread_sleep = 0;
@@ -406,30 +409,6 @@ tme_sjlj_dispatch(volatile int passes)
 
 /* this is the main loop iteration function: */
 int
-tme_sjlj_threads_main(void *unused)
-{
-  struct tme_sjlj_thread *thread;
-  
-  tme_thread_enter(NULL);
-
-#ifdef WIN32
-  tme_sjlj_thread_blocked.tme_sjlj_thread_func = ConvertThreadToFiber(NULL);
-  for (thread = tme_sjlj_threads_all;
-       thread != NULL;
-       thread = thread->next)
-    thread->tme_sjlj_thread_func = CreateFiber(0,
-					       thread->tme_sjlj_thread_func,
-					       thread->tme_sjlj_thread_func_private);
-#endif
-  
-  if(tme_sjlj_threads_all)
-    for(;tme_sjlj_threads_main_iter(NULL););
-  
-    /* NOTREACHED */
-  tme_thread_exit();
-}
-
-int
 tme_sjlj_threads_main_iter(void *unused)
 {
   int fd;
@@ -497,7 +476,7 @@ tme_sjlj_threads_main_iter(void *unused)
   /* dispatch: */
   tme_sjlj_dispatch(1);
 
-  return TRUE;
+  return TME_OK;
 }
 
 /* this creates a new thread: */
@@ -519,6 +498,11 @@ tme_sjlj_thread_create(tme_threadid_t *thr, tme_thread_t func, void *func_privat
   /* initialize the thread: */
   thread->tme_sjlj_thread_func_private = func_private;
   thread->tme_sjlj_thread_func = func;
+#ifdef WIN32
+    thread->tme_sjlj_thread_func = CreateFiber(0,
+					       thread->tme_sjlj_thread_func,
+					       thread->tme_sjlj_thread_func_private);
+#endif
   thread->tme_sjlj_thread_cond = NULL;
   thread->tme_sjlj_thread_events = NULL;
   thread->tme_sjlj_thread_sleep = 0;

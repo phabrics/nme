@@ -442,7 +442,8 @@ _tmesh_th(void *_passes)
     input = io->tmesh_io_private;
 
     /* If return to console & running interactive, then put up the next prompt, else exit thread: */
-    if((yield || (passes && !num_passes))
+    if(yield && num_passes ||
+       (yield || passes && !num_passes)
        && (input->_tmesh_input_handle == TME_STD_HANDLE(stdin))
        && isatty(fileno(stdin))
        && isatty(fileno(stdout)))
