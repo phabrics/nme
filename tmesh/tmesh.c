@@ -368,19 +368,76 @@ _tmesh_log_close(struct tmesh_support *support,
   tme_free(handle->tme_log_handle_private);
 }
 
-static int *passes;
-/* our thread: */
-static _tme_thret
-_tmesh_th(void *_passes)
-{
-  int yield, rc;
+/* the tmesh evaluation loop */
+int _tmesh_eval() {
+  int rc;
   struct tmesh_io *io;
   struct _tmesh_input *input;
   char *output;
   unsigned int consumed;
-  int i, num_passes = *(int *)_passes;
+  int yield;
+
+  /* this command may have changed the current io, so reload: */
+  io = _tmesh_io;
+  input = io->tmesh_io_private;
+
+  /* run commands until we have to yield: */
+  for (;;) {
+    
+    /* all characters already read have been consumed: */
+    consumed = input->_tmesh_input_buffer_tail;
+    
+    /* run a command: */
+    rc = tmesh_eval(_tmesh, &output, &yield);
+    
+    /* if we're yielding: */
+    if (yield) {
+      
+      /* if the current io has not changed, mark how many
+	 characters were consumed by successful commands: */
+      if (io == _tmesh_io) {
+	input->_tmesh_input_buffer_tail = consumed;
+      }
+
+      break;
+    }
+
+    /* this command may have changed the current io, so reload: */
+    io = _tmesh_io;
+    input = io->tmesh_io_private;
+
+    /* display this command's output: */
+    if (rc == TME_OK) {
+      if (output != NULL
+	  && *output != '\0') {
+	printf("%s\n", output);
+      }
+    }
+    else {
+      fprintf(stderr, "%s:%lu: ",
+	      io->tmesh_io_name,
+	      io->tmesh_io_input_line);
+      if (output != NULL
+	  && *output != '\0') {
+	fprintf(stderr, "%s: ", output);
+      }
+      fprintf(stderr, "%s\n", strerror(rc));
+    }
+    if (output != NULL) {
+      tme_free(output);
+    }
+  }
+}
+
+/* our thread: */
+static _tme_thret
+_tmesh_th(void *junk)
+{
+  int rc;
+  struct tmesh_io *io;
+  struct _tmesh_input *input;
   
-  if(!num_passes) tme_thread_enter(NULL);
+  tme_thread_enter(NULL);
 
   /* this command may have changed the current io, so reload: */
   io = _tmesh_io;
@@ -389,100 +446,13 @@ _tmesh_th(void *_passes)
   /* loop while we have a current input buffer: */
   for (;;) {
 
-    yield = FALSE;
-    
-    /* run commands until we have to yield: */
-    for (i=0; !_passes || (i<num_passes);i++) {
-
-      /* all characters already read have been consumed: */
-      consumed = input->_tmesh_input_buffer_tail;
-
-      /* run a command: */
-      rc = tmesh_eval(_tmesh, &output, &yield);
-
-      /* if we're yielding: */
-      if (yield) {
-
-	/* if the current io has not changed, mark how many
-	   characters were consumed by successful commands: */
-	if (io == _tmesh_io) {
-	  input->_tmesh_input_buffer_tail = consumed;
-	}
-
-	break;
-      }
-
-      /* this command may have changed the current io, so reload: */
-      io = _tmesh_io;
-      input = io->tmesh_io_private;
-
-      /* display this command's output: */
-      if (rc == TME_OK) {
-	if (output != NULL
-	    && *output != '\0') {
-	  printf("%s\n", output);
-	}
-      }
-      else {
-	fprintf(stderr, "%s:%lu: ",
-		io->tmesh_io_name,
-		io->tmesh_io_input_line);
-	if (output != NULL
-	    && *output != '\0') {
-	  fprintf(stderr, "%s: ", output);
-	}
-	fprintf(stderr, "%s\n", strerror(rc));
-      }
-      if (output != NULL) {
-	tme_free(output);
-      }
-    }
-    /* this command may have changed the current io, so reload: */
-    io = _tmesh_io;
-    input = io->tmesh_io_private;
-
-    /* If return to console & running interactive, then put up the next prompt, else exit thread: */
-    if(yield && num_passes ||
-       (yield || passes && !num_passes)
-       && (input->_tmesh_input_handle == TME_STD_HANDLE(stdin))
-       && isatty(fileno(stdin))
-       && isatty(fileno(stdout)))
-      if(num_passes) {
-	if(yield) break;
-      } else {
-	printf("%s> ", argv0);
-	fflush(stdout);
-      }
-    
-    /* Reset number of passes for interactive operation */
-    _passes = passes = NULL;
-    
-    /* remove all consumed characters: */
-    _tmesh_remove_consumed(input);
-
-    /* if the current input buffer is full, a command is too long: */
-    if (input->_tmesh_input_buffer_head
-	== sizeof(input->_tmesh_input_buffer)) {
-      fprintf(stderr, "%s: command too long\n", argv0);
-      input->_tmesh_input_buffer_head = 0;
-    }
-
     /* try to read more input: */
-    rc = (num_passes) ?
-      (tme_thread_read_yield(
-			     input->_tmesh_input_handle,
-			     input->_tmesh_input_buffer
-			     + input->_tmesh_input_buffer_head,
-			     sizeof(input->_tmesh_input_buffer)
-			     - input->_tmesh_input_buffer_head,
-			     NULL)) : 
-      (tme_thread_read(
-		       input->_tmesh_input_handle,
-		       input->_tmesh_input_buffer
-		       + input->_tmesh_input_buffer_head,
-		       sizeof(input->_tmesh_input_buffer)
-		       - input->_tmesh_input_buffer_head));
-    
+    rc = tme_thread_read(input->_tmesh_input_handle,
+			 input->_tmesh_input_buffer
+			 + input->_tmesh_input_buffer_head,
+			 sizeof(input->_tmesh_input_buffer)
+			 - input->_tmesh_input_buffer_head);
+
     /* if the read failed: */
     if (rc < 0) {
       fprintf(stderr, "%s: %s\n",
@@ -498,9 +468,34 @@ _tmesh_th(void *_passes)
     else {
       input->_tmesh_input_buffer_eof = TRUE;
     }
+
+    /* evaluate commands as they come in */
+    _tmesh_eval();
+    
+    /* this command may have changed the current io, so reload: */
+    io = _tmesh_io;
+    input = io->tmesh_io_private;
+
+    /* If return to console & running interactive, then put up the next prompt, else exit thread: */
+    if((input->_tmesh_input_handle == TME_STD_HANDLE(stdin))
+       && isatty(fileno(stdin))
+       && isatty(fileno(stdout))) {
+      printf("%s> ", argv0);
+      fflush(stdout);
+    }
+    
+    /* remove all consumed characters: */
+    _tmesh_remove_consumed(input);
+
+    /* if the current input buffer is full, a command is too long: */
+    if (input->_tmesh_input_buffer_head
+	== sizeof(input->_tmesh_input_buffer)) {
+      fprintf(stderr, "%s: command too long\n", argv0);
+      input->_tmesh_input_buffer_head = 0;
+    }
   }
   
-  if(!num_passes) tme_thread_exit();
+  tme_thread_exit();
 }
 
 static void
@@ -586,7 +581,7 @@ main(int argc, char **argv)
   int arg_i;
   const char *pre_threads_filename;
   const char *log_filename;
-  int interactive, _passes;
+  int interactive;
   struct tmesh_io io;
   struct tmesh_support support;
   struct _tmesh_input *input_stdin;
@@ -879,13 +874,14 @@ main(int argc, char **argv)
   _tmesh = tmesh_new(&support, &io);
 
   /* evaluate pre-threads once (to avoid synchronization problems with init code): */
-  _passes = 1;
-  _tmesh_th(passes = &_passes);
-  
+  _tmesh_eval();
+
+  /* remove all consumed characters: */
+  _tmesh_remove_consumed(input_stdin);
+
   /* create our thread: */
   if(interactive) {
-    _passes = 0;
-    tme_thread_create(&tmesh_thread, (tme_thread_t) _tmesh_th, passes = &_passes);
+    tme_thread_create(&tmesh_thread, (tme_thread_t) _tmesh_th, NULL);
   }
 
   /* run the threads: */
