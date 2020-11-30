@@ -513,10 +513,10 @@ do_usage(const char *prog_name, char *msg)
 {
   if (msg != NULL)
     fputs(msg, stderr);
-  fprintf(stderr, "usage: %s [OPTIONS] [INITIAL-CONFIG] \
+  fprintf(stderr, "usage: %s [OPTIONS] <INITIAL-CONFIG> \
                    \nwhere OPTIONS are:			   \
                    \n--log LOGFILE          log to LOGFILE		\
-                   \n-c, --noninteractive   read no commands from standard input (INITIAL-CONFIG required)\n", prog_name);
+                   \n-c, --noninteractive   read no commands from standard input (<INITIAL-CONFIG> required here)\n", prog_name);
   
 #ifdef TME_THREADS_POSIX
 #define fpe(msg) fprintf(stderr, "\t%s", msg);          /* Shorter */
@@ -709,11 +709,7 @@ main(int argc, char **argv)
   if (arg_i < argc) {
     initial_config_filename = argv[arg_i++];
   } else {
-#ifdef TME_THREADS_SJLJ
     usage = !interactive;
-#else
-    usage = TRUE;
-#endif
   }
 
   if (usage) do_usage(argv0, NULL);
@@ -896,12 +892,15 @@ main(int argc, char **argv)
     _tmesh_remove_consumed(input_stdin);
   }
   
-#ifndef TME_THREADS_SJLJ
-  _tmesh_th(NULL);
-  if(interactive)
-#endif
-    /* create our thread: */
-    tme_thread_create(&tmesh_thread, (tme_thread_t) _tmesh_th, &interactive);
+  if(interactive
+     && isatty(fileno(stdin))
+     && isatty(fileno(stdout))) {
+    printf("%s> %s", argv0, input_stdin->_tmesh_input_buffer);
+    fflush(stdout);
+  }
+  
+  /* create our thread: */
+  tme_thread_create(&tmesh_thread, (tme_thread_t) _tmesh_th, &interactive);
   
   /* run the threads: */
   tme_threads_run();

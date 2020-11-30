@@ -296,7 +296,7 @@ _tme_keyboard_lookup(struct tme_keyboard_connection *conn_keyboard,
 	= display->tme_display_keyboard_keysyms_bad;
 
       /* log the complaint: */
-      tme_log(&display->tme_display_element->tme_element_log_handle, 0, ENOENT,
+      tme_log(&display->tme_display_element->tme_element_log_handle, 10, ENOENT,
 	      (&display->tme_display_element->tme_element_log_handle,
 	       _("cannot generate keysym '%s' directly%s"),
 	       keysym_bad->tme_keysym_bad_string,
