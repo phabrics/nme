@@ -231,7 +231,7 @@ _tme_sun4_timer_reset(struct tme_sun4_timer *timer)
   /* convert the timer's period from 500ns ticks to a tme_time_t
      and save it: */
   
-  timer->tme_sun4_timer_period = ticks / 2;
+  timer->tme_sun4_timer_period = TME_TIME_SET_USEC(ticks / 2);
 
   /* set the next limit time for this timer: */
   timer->tme_sun4_timer_limit_next = tme_thread_get_time();

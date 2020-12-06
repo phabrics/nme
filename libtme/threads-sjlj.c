@@ -174,6 +174,7 @@ tme_sjlj_threads_init()
   tme_sjlj_thread_blocked.tme_sjlj_thread_cond = NULL;
   tme_sjlj_thread_blocked.tme_sjlj_thread_events = NULL;
   tme_sjlj_thread_blocked.tme_sjlj_thread_sleep = 0;
+  tme_sjlj_thread_blocked.tme_sjlj_thread_timeout = 0;
 }
 
 /* this returns a reasonably current time: */
@@ -298,18 +299,24 @@ _tme_sjlj_threads_dispatching_timeout(void)
   /* get the current time: */
   now = tme_thread_get_time();
 
+  /* reset the minimum timeout to wait: */
+  tme_sjlj_thread_blocked.tme_sjlj_thread_timeout = 0;
+  
   /* loop over the timeout list: */
   for (thread_timeout = tme_sjlj_threads_timeout;
        thread_timeout != NULL;
        thread_timeout = thread_timeout->timeout_next) {
 
     /* if this timeout has not expired: */
-    if (thread_timeout->tme_sjlj_thread_timeout > now) {
-      break;
-    }
-
-    /* move this thread to the dispatching list: */
-    _tme_sjlj_change_state(thread_timeout, TME_SJLJ_THREAD_STATE_DISPATCHING);
+    if (thread_timeout->tme_sjlj_thread_timeout <= now)
+      /* move this thread to the dispatching list: */
+      _tme_sjlj_change_state(thread_timeout, TME_SJLJ_THREAD_STATE_DISPATCHING);
+    else if(!tme_sjlj_thread_blocked.tme_sjlj_thread_timeout ||
+	    thread_timeout->tme_sjlj_thread_timeout <
+	    tme_sjlj_thread_blocked.tme_sjlj_thread_timeout)
+      /* set the minimum timeout to wait: */
+      tme_sjlj_thread_blocked.tme_sjlj_thread_timeout =
+	thread_timeout->tme_sjlj_thread_timeout;
   }
 }
 
@@ -432,8 +439,9 @@ tme_sjlj_threads_main_iter(void *unused)
   }
 
   /* otherwise, the timeout list is not empty: */
-  else if(tme_sjlj_threads_timeout->tme_sjlj_thread_timeout <=
+  else if(tme_sjlj_thread_blocked.tme_sjlj_thread_timeout >
 	  (now = tme_thread_get_time())) {
+    now = tme_sjlj_thread_blocked.tme_sjlj_thread_timeout - now;
     /* set the timeout time: */
     timeout.tv_sec = TME_TIME_GET_SEC(now);
     timeout.tv_usec = TME_TIME_GET_USEC(now % TME_FRAC_PER_SEC);

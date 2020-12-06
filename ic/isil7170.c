@@ -91,7 +91,7 @@ _TME_RCSID("$Id: isil7170.c,v 1.6 2010/06/05 14:37:27 fredette Exp $");
 /* define this to track interrupt rates, reporting once every N
    seconds: */
 #if 1
-#define TME_ISIL7170_TRACK_INT_RATE		TME_TIME_SET_SEC(10)
+#define TME_ISIL7170_TRACK_INT_RATE		(10)
 #endif
 
 #define TME_ISIL7170_LOG_HANDLE(am) (&(am)->tme_isil7170_element->tme_element_log_handle)
@@ -336,13 +336,13 @@ _tme_isil7170_th_timer(struct tme_isil7170 *isil7170)
 		  0, TME_OK,
 		  (TME_ISIL7170_LOG_HANDLE(isil7170),
 		   "timer interrupt rate: %ld/sec",
-		   (TME_TIME_SET_SEC(isil7170->tme_isil7170_int_sample)
+		   (isil7170->tme_isil7170_int_sample
 		    / (TME_ISIL7170_TRACK_INT_RATE
-		       + (now - isil7170->tme_isil7170_int_sample_time)))));
+		       + TME_TIME_GET_SEC(now - isil7170->tme_isil7170_int_sample_time)))));
 	}
 
 	/* reset the sample: */
-        now += TME_ISIL7170_TRACK_INT_RATE;
+        now += TME_TIME_GET_SEC(TME_ISIL7170_TRACK_INT_RATE);
 	isil7170->tme_isil7170_int_sample_time = now;
 	isil7170->tme_isil7170_int_sample = 0;
       }

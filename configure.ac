@@ -903,7 +903,7 @@ if test "x${enable_threads}" = xyes; then
    dnl set the default threads based on platform
    case "${host_os}" in
    mingw* | msys* | cygwin*) 
-	tme_thread_types=sjlj
+	tme_thread_types=glib
    	;;
    *) 
 	tme_thread_types=pthreads
@@ -921,13 +921,17 @@ fi
 
 for tme_thread_type in ${tme_thread_types}; do
 case "x${tme_thread_type}" in
-xpthreads | xposix)  CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_POSIX"
-#	  	     CFLAGS="${CFLAGS-} -pthread"
+xpthreads| xposix)  CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_POSIX"
+#	  	    CFLAGS="${CFLAGS-} -pthread"
+		    recode=no
 		     ;;
 xglib)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_GLIB -DUSE_GLIB_TIME ${GLIB_CFLAGS}"
 #	 LDFLAGS="${LDFLAGS-} ${GLIB_LIBS}"
+	 recode=no
 	 ;;
-xsjlj)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_SJLJ -DUSE_GETTIMEOFDAY" ;;
+xsjlj)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_SJLJ"
+	 recode=yes
+	 ;;
 esac
 done
 
@@ -1060,7 +1064,7 @@ changequote([, ])dnl
 
 AC_ARG_ENABLE(recode,
 [  --enable-recode         enable recode (dynamic binary translation) (default=if host supports)],
-[ ], [enable_recode=yes])
+[ ], [enable_recode=${recode}])
 if test "${recode_size_guest_max}" = 0; then
     enable_recode=no
     recode_size_guest_max=1
