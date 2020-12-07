@@ -299,9 +299,6 @@ _tme_sjlj_threads_dispatching_timeout(void)
   /* get the current time: */
   now = tme_thread_get_time();
 
-  /* reset the minimum timeout to wait: */
-  tme_sjlj_thread_blocked.tme_sjlj_thread_timeout = 0;
-  
   /* loop over the timeout list: */
   for (thread_timeout = tme_sjlj_threads_timeout;
        thread_timeout != NULL;
@@ -311,7 +308,7 @@ _tme_sjlj_threads_dispatching_timeout(void)
     if (thread_timeout->tme_sjlj_thread_timeout <= now)
       /* move this thread to the dispatching list: */
       _tme_sjlj_change_state(thread_timeout, TME_SJLJ_THREAD_STATE_DISPATCHING);
-    else if(!tme_sjlj_thread_blocked.tme_sjlj_thread_timeout ||
+    else if(tme_sjlj_thread_blocked.tme_sjlj_thread_timeout <= now ||
 	    thread_timeout->tme_sjlj_thread_timeout <
 	    tme_sjlj_thread_blocked.tme_sjlj_thread_timeout)
       /* set the minimum timeout to wait: */

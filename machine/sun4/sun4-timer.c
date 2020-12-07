@@ -323,7 +323,7 @@ _tme_sun4_timer_cycle_control(void *_sun4, struct tme_bus_cycle *cycle_init)
 	- timer->tme_sun4_timer_period;
 
       /* get the number of microseconds since the last reset: */
-      usecs = now - last_reset;
+      usecs = TME_TIME_GET_USEC(now - last_reset);
 
       /* to keep things simpler, we always use the sun4m 500ns tick: */
       counter_one = TME_SUN4_IS_SUN44C(sun4) ? 2 : 1;
