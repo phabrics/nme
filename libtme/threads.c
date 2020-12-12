@@ -89,12 +89,15 @@ void tme_threads_init(tme_threads_fn1 run, void *arg) {
     win32_stdin = tme_new0(struct tme_win32_handle, 1);
     win32_stdout = tme_new0(struct tme_win32_handle, 1);
     win32_stderr = tme_new0(struct tme_win32_handle, 1);
-    win32_stdin->rw_handle.read = win32_stdin->reads.overlapped.hEvent =
+    win32_stdin->rw_handle.read =
       win32_stdin->handle = GetStdHandle(STD_INPUT_HANDLE);
-    win32_stdout->rw_handle.write = win32_stdout->writes.overlapped.hEvent =
+    win32_stdout->rw_handle.write =
       win32_stdout->handle = GetStdHandle(STD_OUTPUT_HANDLE);
-    win32_stderr->rw_handle.read = win32_stderr->reads.overlapped.hEvent =
+    win32_stderr->rw_handle.write =
       win32_stderr->handle = GetStdHandle(STD_ERROR_HANDLE);
+    win32_stdin->reads.overlapped.hEvent =
+      win32_stdout->writes.overlapped.hEvent =
+      win32_stderr->reads.overlapped.hEvent = NULL;
 #endif
     _tme_thread_resumed();  
     inited=TRUE;
@@ -466,20 +469,26 @@ tme_off_t tme_thread_seek (tme_thread_handle_t hand, tme_off_t off, int where) {
 static _tme_inline int
 tme_event_read (tme_event_t hand, void *data, int len)
 {
-  return tme_finalize (hand->handle, &hand->reads, NULL);
+  return (hand == TME_STD_HANDLE(stdin)) ?
+    (tme_read(hand->handle, data, len)) :
+    (tme_finalize (hand->handle, &hand->reads, NULL));
 }
 
 static _tme_inline int
 tme_event_write (tme_event_t hand, void *data, int len)
 {
-  struct buffer buf;
+  if(hand == TME_STD_HANDLE(stdout) || hand == TME_STD_HANDLE(stderr))
+    tme_write(hand->handle, data, len);
+  else {
+    struct buffer buf;
+  
+    CLEAR(buf);
 
-  CLEAR(buf);
+    buf.data = data;
+    buf.len = len;
 
-  buf.data = data;
-  buf.len = len;
-
-  return tme_write_win32 (hand, &buf);
+    return tme_write_win32 (hand, &buf);
+  }
 }
 
 #else // WIN32
@@ -509,7 +518,8 @@ tme_event_yield(tme_event_t hand, void *data, size_t len, unsigned int rwflags, 
   tme_event_ctl(tme_events, tme_event_handle(hand), rwflags, 0);
 
 #ifdef WIN32
-  if (rwflags & EVENT_READ) {
+  if (hand != TME_STD_HANDLE(stdin) &&
+      rwflags & EVENT_READ) {
     if(!hand->writes.buf_init.data) {
       hand->reads.buf_init.data = data;
       hand->reads.buf_init.len = len;
@@ -523,7 +533,7 @@ tme_event_yield(tme_event_t hand, void *data, size_t len, unsigned int rwflags, 
   
   /* do the i/o: */
   if(esr.rwflags & EVENT_WRITE)
-    rc = tme_event_write(hand, data, len);  
+    rc = tme_event_write(hand, data, len);
   if(esr.rwflags & EVENT_READ) {
     rc = tme_event_read(hand, data, len);
 #ifdef WIN32

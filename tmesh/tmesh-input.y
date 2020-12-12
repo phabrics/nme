@@ -468,8 +468,8 @@ yylex(void)
       scanner->tmesh_scanner_in_quotes = FALSE;
       scanner->tmesh_scanner_in_comment = FALSE;
 
-      if (stack->tmesh_io_stack_next == NULL)
-        _exit(0);
+      /*      if (stack->tmesh_io_stack_next == NULL)
+	      _exit(0); */
 
       /* close the now-finished source: */
       (*source->tmesh_io_close)(source, 

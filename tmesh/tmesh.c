@@ -151,7 +151,7 @@ _tmesh_close(struct tmesh_io *io_old, struct tmesh_io *io_new)
 
   /* set the new, emerging input: */
   _tmesh_io = io_new;
-  _tmesh_remove_consumed(io_new->tmesh_io_private);
+  if(io_new) _tmesh_remove_consumed(io_new->tmesh_io_private);
 }
 
 /* our open function: */
@@ -391,7 +391,7 @@ int _tmesh_eval() {
     rc = tmesh_eval(_tmesh, &output, &yield);
     
     /* if we're yielding: */
-    if (yield) {
+    if (yield || _tmesh_io == NULL) {
       
       /* if the current io has not changed, mark how many
 	 characters were consumed by successful commands: */
@@ -479,6 +479,8 @@ _tmesh_th(int *interactive)
 
     /* evaluate commands as they come in */
     _tmesh_eval();
+    
+    if(_tmesh_io==NULL) break;
     
     /* this command may have changed the current io, so reload: */
     io = _tmesh_io;
@@ -582,6 +584,10 @@ display_thread_sched_attr(char *msg)
 }
 #endif // HAVE_PTHREAD_SETSCHEDPARAM  
 #endif // TME_THREADS_POSIX
+
+static void tmesh_finish() {
+  printf("Goodbye\n");
+}
 
 int
 main(int argc, char **argv)
@@ -706,12 +712,11 @@ main(int argc, char **argv)
       break;
     }
   }
-  if (arg_i < argc) {
+  if (arg_i < argc)
     initial_config_filename = argv[arg_i++];
-  } else {
+  else
     usage = !interactive;
-  }
-
+  
   if (usage) do_usage(argv0, NULL);
 
 #ifdef TME_OPENVPN
@@ -854,54 +859,65 @@ main(int argc, char **argv)
   /* initialize libtmesh: */
   (void) tmesh_init();
 
-  /* create our stdin input buffer */
-  input_stdin = tme_new0(struct _tmesh_input, 1);
-  input_stdin->_tmesh_input_handle = TME_STD_HANDLE(stdin);
-
-  input_stdin->_tmesh_input_buffer[sizeof(input_stdin->_tmesh_input_buffer) - 1] = '\0';
-
-  /* create our stdin io: */
-  io.tmesh_io_name = "*stdin*";
-  io.tmesh_io_private = input_stdin;
-  io.tmesh_io_input_line = 0;
-  io.tmesh_io_getc = _tmesh_getc;
-  io.tmesh_io_close = _tmesh_close;
-  io.tmesh_io_open = _tmesh_open;
-  _tmesh_io = &io;
-
+  /* Register a finalizer: */
+  atexit(tmesh_finish);
+  
   /* create our support: */
   tme_mutex_init(&_tmesh_log_mutex);
   support.tmesh_support_log_open = _tmesh_log_open;
   support.tmesh_support_log_close = _tmesh_log_close;
 
-  /* create our shell: */
-  _tmesh = tmesh_new(&support, &io);
+  if(!interactive) {
+    io.tmesh_io_name = strdup(initial_config_filename);
+    _tmesh_open(&io,NULL,NULL);
+    /* create our shell: */
+    _tmesh = tmesh_new(&support, _tmesh_io);
+    /* run eval loop once in-thread for non-interactive mode: */
+    _tmesh_th(NULL);
+  } else {
+    /* create our stdin input buffer */
+    input_stdin = tme_new0(struct _tmesh_input, 1);
+    input_stdin->_tmesh_input_handle = TME_STD_HANDLE(stdin);
 
-  /* evaluate pre-threads once (to avoid synchronization problems with init code): */
-  if(initial_config_filename != NULL) {
-    /* stuff console with the command to source the initial config file: */
-    snprintf(input_stdin->_tmesh_input_buffer,
-	     sizeof(input_stdin->_tmesh_input_buffer) - 1,
-	     "source %s\n",
-	     initial_config_filename);
-    input_stdin->_tmesh_input_buffer_head = strlen(input_stdin->_tmesh_input_buffer);
+    input_stdin->_tmesh_input_buffer[sizeof(input_stdin->_tmesh_input_buffer) - 1] = '\0';
 
-    _tmesh_eval();
+    /* create our stdin io: */
+    io.tmesh_io_name = "*stdin*";
+    io.tmesh_io_private = input_stdin;
+    io.tmesh_io_input_line = 0;
+    io.tmesh_io_getc = _tmesh_getc;
+    io.tmesh_io_close = _tmesh_close;
+    io.tmesh_io_open = _tmesh_open;
+    _tmesh_io = &io;
 
-    /* remove all consumed characters: */
-    _tmesh_remove_consumed(input_stdin);
+    /* create our shell: */
+    _tmesh = tmesh_new(&support, _tmesh_io);
+
+    /* evaluate pre-threads once (to avoid synchronization problems with init code): */
+    if(initial_config_filename != NULL) {
+      /* stuff console with the command to source the initial config file: */
+      snprintf(input_stdin->_tmesh_input_buffer,
+	       sizeof(input_stdin->_tmesh_input_buffer) - 1,
+	       "source %s\n",
+	       initial_config_filename);
+      input_stdin->_tmesh_input_buffer_head = strlen(input_stdin->_tmesh_input_buffer);
+
+      _tmesh_eval();
+
+      /* remove all consumed characters: */
+      _tmesh_remove_consumed(input_stdin);
+    }
+  
+    if(isatty(fileno(stdin)) && isatty(fileno(stdout))) {
+      printf("%s> %s", argv0, input_stdin->_tmesh_input_buffer);
+      fflush(stdout);
+    }
+
+    /* create our eval loop thread for interactive mode: */
+    tme_thread_create(&tmesh_thread, (tme_thread_t) _tmesh_th, &interactive);
+  
   }
-  
-  if(interactive
-     && isatty(fileno(stdin))
-     && isatty(fileno(stdout))) {
-    printf("%s> %s", argv0, input_stdin->_tmesh_input_buffer);
-    fflush(stdout);
-  }
-  
-  /* create our thread: */
-  tme_thread_create(&tmesh_thread, (tme_thread_t) _tmesh_th, &interactive);
-  
+
   /* run the threads: */
   tme_threads_run();
 
