@@ -166,7 +166,7 @@ _tmesh_open(struct tmesh_io *io_new, struct tmesh_io *io_old, char **_output)
 
   /* try to open the file: */
   input->_tmesh_input_handle =
-    tme_open(io_new->tmesh_io_name, TME_FILE_RO);
+    tme_thread_open(io_new->tmesh_io_name, TME_FILE_RO);
   
   /* if the open failed: */
   if (input->_tmesh_input_handle == TME_INVALID_HANDLE) {
@@ -452,14 +452,13 @@ _tmesh_th(int *interactive)
 		       input->_tmesh_input_buffer
 		       + input->_tmesh_input_buffer_head,
 		       sizeof(input->_tmesh_input_buffer)
-		       - input->_tmesh_input_buffer_head)) :
-      (tme_thread_read_yield(
-			     input->_tmesh_input_handle,
-			     input->_tmesh_input_buffer
-			     + input->_tmesh_input_buffer_head,
-			     sizeof(input->_tmesh_input_buffer)
-			     - input->_tmesh_input_buffer_head,
-			     NULL));
+		       - input->_tmesh_input_buffer_head,
+		       NULL)) :
+      (tme_read(TME_THREAD_HANDLE(input->_tmesh_input_handle),
+		input->_tmesh_input_buffer
+		+ input->_tmesh_input_buffer_head,
+		sizeof(input->_tmesh_input_buffer)
+		- input->_tmesh_input_buffer_head));
     
     /* if the read failed: */
     if (rc < 0) {
@@ -487,7 +486,7 @@ _tmesh_th(int *interactive)
     input = io->tmesh_io_private;
 
     /* If return to console & running interactive, then put up the next prompt, else exit thread: */
-    if((input->_tmesh_input_handle == TME_STD_HANDLE(stdin))
+    if((input->_tmesh_input_handle == TME_STD_THREAD_HANDLE(stdin))
        && isatty(fileno(stdin))
        && isatty(fileno(stdout))) {
       if(interactive && *interactive) {
@@ -877,7 +876,7 @@ main(int argc, char **argv)
   } else {
     /* create our stdin input buffer */
     input_stdin = tme_new0(struct _tmesh_input, 1);
-    input_stdin->_tmesh_input_handle = TME_STD_HANDLE(stdin);
+    input_stdin->_tmesh_input_handle = TME_STD_THREAD_HANDLE(stdin);
 
     input_stdin->_tmesh_input_buffer[sizeof(input_stdin->_tmesh_input_buffer) - 1] = '\0';
 

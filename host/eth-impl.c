@@ -224,7 +224,7 @@ _tme_eth_callout(struct tme_ethernet *eth, int new_callouts)
 	/* do the write: */
 	status =
 	  (eth->tme_eth_handle != TME_INVALID_HANDLE) ?
-	  (tme_thread_write_yield(eth->tme_eth_handle, eth->tme_eth_out, rc, &eth->tme_eth_mutex)) :
+	  (tme_thread_write(eth->tme_eth_handle, eth->tme_eth_out, rc, &eth->tme_eth_mutex)) :
 	  (eth->tme_ethernet_write(eth->tme_eth_data));
       
 	/* writes must succeed: */
@@ -300,10 +300,10 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
 
     buffer_end =
       (eth->tme_eth_handle != TME_INVALID_HANDLE) ?
-      (tme_thread_read_yield(eth->tme_eth_handle,
-			     eth->tme_eth_buffer,
-			     eth->tme_eth_buffer_size,
-			     &eth->tme_eth_mutex)) :
+      (tme_thread_read(eth->tme_eth_handle,
+		       eth->tme_eth_buffer,
+		       eth->tme_eth_buffer_size,
+		       &eth->tme_eth_mutex)) :
       (eth->tme_ethernet_read(eth->tme_eth_data));
     
     /* if the read failed: */

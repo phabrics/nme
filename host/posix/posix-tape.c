@@ -534,10 +534,10 @@ _tme_posix_tape_xfer1(struct tme_posix_tape *posix_tape,
     else {
 
       /* do the read: */
-      rc = tme_thread_read_yield(segment->tme_posix_tape_segment_handle,
-				 posix_tape->tme_posix_tape_buffer_data,
-				 count_bytes_user,
-				 &posix_tape->tme_posix_tape_mutex);				 
+      rc = tme_thread_read(segment->tme_posix_tape_segment_handle,
+			   posix_tape->tme_posix_tape_buffer_data,
+			   count_bytes_user,
+			   &posix_tape->tme_posix_tape_mutex);				 
 
       tme_log(&posix_tape->tme_posix_tape_element->tme_element_log_handle,
 	      1, TME_OK,
@@ -564,10 +564,10 @@ _tme_posix_tape_xfer1(struct tme_posix_tape *posix_tape,
 	    && segment->tme_posix_tape_segment_real_tape);
 
     /* do the write: */
-    rc = tme_thread_write_yield(segment->tme_posix_tape_segment_handle,
-				posix_tape->tme_posix_tape_buffer_data,
-				count_bytes_user,
-				&posix_tape->tme_posix_tape_mutex);
+    rc = tme_thread_write(segment->tme_posix_tape_segment_handle,
+			  posix_tape->tme_posix_tape_buffer_data,
+			  count_bytes_user,
+			  &posix_tape->tme_posix_tape_mutex);
   }
 
   /* if the transfer got an error: */

@@ -70,7 +70,7 @@ static int _tme_openvpn_sock_write(void *data) {
     
   tme_event_ctl(event_set, socket_event_handle(sock->ls), flags, 0);
     
-  status = tme_event_wait_yield(event_set, NULL, &esr, 1, &sock->eth->tme_eth_mutex);
+  status = tme_event_wait(event_set, NULL, &esr, 1, &sock->eth->tme_eth_mutex);
   tme_event_free(event_set);
   if(status<0) return status;
 
@@ -115,7 +115,7 @@ static int _tme_openvpn_sock_read(void *data) {
       tme_event_ctl(event_set, socket_event_handle(sock->ls), flags, 0);
       tme_event_set(event_set) = es;
     }
-    status = tme_event_wait_yield(event_set, NULL, &esr, 1, &sock->eth->tme_eth_mutex);
+    status = tme_event_wait(event_set, NULL, &esr, 1, &sock->eth->tme_eth_mutex);
     tme_event_free(event_set);
     if(status<0) return status;
   }

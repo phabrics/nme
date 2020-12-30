@@ -212,10 +212,10 @@ _tme_posix_disk_buffer_free(struct tme_posix_disk *posix_disk,
       assert (rc == 0);
 	    
       /* write out the buffer: */
-      ssize = tme_thread_write_yield(posix_disk->tme_posix_disk_handle,
-				     buffer->tme_posix_disk_buffer_data,
-				     buffer->tme_posix_disk_buffer_size,
-				     &posix_disk->tme_posix_disk_mutex);
+      ssize = tme_thread_write(posix_disk->tme_posix_disk_handle,
+			       buffer->tme_posix_disk_buffer_data,
+			       buffer->tme_posix_disk_buffer_size,
+			       &posix_disk->tme_posix_disk_mutex);
       
       assert (ssize == buffer->tme_posix_disk_buffer_size);
     }
@@ -481,10 +481,10 @@ _tme_posix_disk_buffer_get(struct tme_posix_disk *posix_disk,
 	     read-ahead than is needed to meet the block size, try the
 	     read one more time with just that needed read-ahead: */
 	  for (;;) {
-	    ssize = tme_thread_read_yield(posix_disk->tme_posix_disk_handle,
-					  data,
-					  size_agg,
-					  &posix_disk->tme_posix_disk_mutex);
+	    ssize = tme_thread_read(posix_disk->tme_posix_disk_handle,
+				    data,
+				    size_agg,
+				    &posix_disk->tme_posix_disk_mutex);
 	    if (ssize == size_agg) {
 	      break;
 	    }
@@ -700,7 +700,7 @@ _tme_posix_disk_open(struct tme_posix_disk *posix_disk,
     for (; block_size <= TME_POSIX_DISK_BLOCK_SIZE_MAX; ) {
       
       /* do the read: */
-      if (tme_thread_read_yield(handle, block, block_size, mutex) >= 0) {
+      if (tme_thread_read(handle, block, block_size, mutex) >= 0) {
 	break;
       }
       

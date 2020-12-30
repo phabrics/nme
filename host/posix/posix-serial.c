@@ -90,10 +90,10 @@ struct tme_posix_serial {
   int tme_posix_serial_callouts_running;
 
   /* our input file descriptor: */
-  tme_event_t tme_posix_serial_hand_in;
+  tme_thread_handle_t tme_posix_serial_hand_in;
 
   /* our output file descriptor: */
-  tme_event_t tme_posix_serial_hand_out;
+  tme_thread_handle_t tme_posix_serial_hand_out;
 
   /* if we have a timeout: */
   int tme_posix_serial_timeouts[TME_TIMEOUTS_TOTAL];
@@ -239,7 +239,7 @@ _tme_posix_serial_th_ctrl(struct tme_posix_serial *serial)
 		| TME_SERIAL_CTRL_BREAK));
 #ifdef WIN32
     /* get the modem state of the input device: */
-    if (GetCommModemStatus(TME_WIN32_HANDLE(serial->tme_posix_serial_hand_in), &modem_state) == 0) {
+    if (GetCommModemStatus(TME_THREAD_HANDLE(serial->tme_posix_serial_hand_in), &modem_state) == 0) {
       modem_state = 0;
     }
 
@@ -247,7 +247,7 @@ _tme_posix_serial_th_ctrl(struct tme_posix_serial *serial)
        output device and merge it in: */
     if (serial->tme_posix_serial_hand_out
 	!= serial->tme_posix_serial_hand_in) {
-      if (GetCommModemStatus(TME_WIN32_HANDLE(serial->tme_posix_serial_hand_out), &modem_state_out) == 0) {
+      if (GetCommModemStatus(TME_THREAD_HANDLE(serial->tme_posix_serial_hand_out), &modem_state_out) == 0) {
 	modem_state_out = 0;
       }
       modem_state &= ~(MS_CTS_ON);
@@ -339,12 +339,10 @@ _tme_posix_serial_th_writer(struct tme_posix_serial *serial)
     assert(buffer_output_size > 0);
 
     /* try to write the device: */
-    rc = tme_event_yield(serial->tme_posix_serial_hand_out,
-			 buffer_output,
-			 buffer_output_size,
-			 EVENT_WRITE,
-			 &serial->tme_posix_serial_mutex,
-			 NULL);
+    rc = tme_thread_write(serial->tme_posix_serial_hand_out,
+			  buffer_output,
+			  buffer_output_size,
+			  &serial->tme_posix_serial_mutex);
 
     /* if the write was successful: */
     if (rc > 0) {
@@ -384,12 +382,10 @@ _tme_posix_serial_th_reader(struct tme_posix_serial *serial)
   for (;;) {
 
     /* try to read the device: */
-    rc = tme_event_yield(serial->tme_posix_serial_hand_in,
+    rc = tme_thread_read(serial->tme_posix_serial_hand_in,
 			 buffer_input,
 			 sizeof(buffer_input),
-			 EVENT_READ,
-			 &serial->tme_posix_serial_mutex,
-			 &byte_head);
+			 &serial->tme_posix_serial_mutex);
     
     /* if the read failed: */
     if (rc < 0) {
@@ -410,6 +406,7 @@ _tme_posix_serial_th_reader(struct tme_posix_serial *serial)
       tme_serial_buffer_is_empty(&serial->tme_posix_serial_buffer_in);
 
     /* scan the input: */
+    byte_head = buffer_input;
     scanner_state = serial->tme_posix_serial_input_scanner_state;
     for (; rc > 0; ) {
 	  
@@ -622,12 +619,12 @@ _tme_posix_serial_config(struct tme_serial_connection *conn_serial, struct tme_s
   tme_mutex_lock(&serial->tme_posix_serial_mutex);
 
   /* loop over the input and output devices: */
-  for (is_input = 2; is_input-- > 0; ) {
+  for (is_input = 1; is_input >= 0; is_input--) {
     
     /* get the current configuration of the device: */
 #ifdef WIN32
     /* update the configuration: */
-    hand = TME_WIN32_HANDLE(is_input
+    hand = TME_THREAD_HANDLE(is_input
 			    ? serial->tme_posix_serial_hand_in
 			    : serial->tme_posix_serial_hand_out);
 
@@ -688,6 +685,7 @@ _tme_posix_serial_config(struct tme_serial_connection *conn_serial, struct tme_s
 	       "SetCommState failed with error %d.", GetLastError()));
       return (3);
     }
+    /*
     rc = GetCommTimeouts(hand, &timeouts);
     
     if(rc) {
@@ -717,7 +715,7 @@ _tme_posix_serial_config(struct tme_serial_connection *conn_serial, struct tme_s
 	       timeouts.WriteTotalTimeoutMultiplier,
 	       timeouts.WriteTotalTimeoutConstant));
     }
-    
+    */    
 #else
     rc = tcgetattr((is_input
 		    ? serial->tme_posix_serial_hand_in
@@ -817,7 +815,7 @@ _tme_posix_serial_ctrl(struct tme_serial_connection *conn_serial, unsigned int c
   tme_mutex_lock(&serial->tme_posix_serial_mutex);
 
 #ifdef WIN32
-  HANDLE hand = TME_WIN32_HANDLE(serial->tme_posix_serial_hand_out);
+  HANDLE hand = TME_THREAD_HANDLE(serial->tme_posix_serial_hand_out);
   /* update the modem state: */
   if (control & TME_SERIAL_CTRL_DTR) {
     EscapeCommFunction(hand, SETDTR);
@@ -1014,13 +1012,13 @@ _tme_posix_serial_connections_new(struct tme_element *element,
 }
 
 /* this opens a serial device: */
-static tme_event_t
+static tme_thread_handle_t
 _tme_posix_serial_new(struct tme_element *element,
 		      const char * const *filename,
 		      char **_output,
 		      int flags)
 {
-  tme_event_t hand = TME_INVALID_HANDLE;
+  tme_thread_handle_t hand = TME_INVALID_HANDLE;
   
 #ifdef HAVE_PTSNAME
   if (strstr(filename, PTMDEV) != NULL) {
@@ -1050,7 +1048,7 @@ _tme_posix_serial_new(struct tme_element *element,
     return hand;
   }
 #endif
-  hand = tme_event_open(filename, flags, 1024);
+  hand = tme_thread_open(filename, flags);
   
   if(hand != TME_INVALID_HANDLE)
     tme_log(&element->tme_element_log_handle, 0, TME_OK,
@@ -1064,7 +1062,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
   struct tme_posix_serial *serial;
   const char *filename_in;
   const char *filename_out;
-  tme_event_t hand_in, hand_out;
+  tme_thread_handle_t hand_in, hand_out;
   int usage;
   int arg_i;
   int saved_errno;
@@ -1161,7 +1159,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
   flags = (strcmp(filename_in, filename_out)) ? (TME_FILE_RO) : (TME_FILE_RW);
   hand_in = (strcmp(filename_in, "-")) ?
     (_tme_posix_serial_new(element, filename_in, _output, flags | TME_FILE_NB)) :
-    (TME_STD_HANDLE(stdin));
+    (TME_STD_THREAD_HANDLE(stdin));
 
   if (hand_in == TME_INVALID_HANDLE) {
     tme_output_append_error(_output, "%s", filename_in);
@@ -1172,11 +1170,11 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
     ((flags == TME_FILE_RO) ?
      (_tme_posix_serial_new(element, filename_out, _output, TME_FILE_WO)) :
      (hand_in)) :
-    (TME_STD_HANDLE(stdout));
+    (TME_STD_THREAD_HANDLE(stdout));
   
   if (hand_out == TME_INVALID_HANDLE) {
     saved_errno = errno;
-    tme_event_close(hand_in);
+    tme_thread_close(hand_in);
     tme_output_append_error(_output, "%s", filename_out);
     return (saved_errno);
   }

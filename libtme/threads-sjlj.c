@@ -656,7 +656,7 @@ int tme_sjlj_event_ctl(struct tme_sjlj_event_set *es, event_t event, unsigned in
 
 /* this selects and yields: */
 int
-tme_sjlj_event_wait_yield(struct tme_sjlj_event_set *es, const struct timeval *timeout_in, struct event_set_return *out, int outlen, tme_mutex_t *mutex)
+tme_sjlj_event_wait(struct tme_sjlj_event_set *es, const struct timeval *timeout_in, struct event_set_return *out, int outlen, tme_mutex_t *mutex)
 {
   struct timeval timeout_out;
   int rc;

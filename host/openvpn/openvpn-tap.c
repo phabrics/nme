@@ -64,7 +64,7 @@ static int _tme_openvpn_tun_write(void *data) {
 
   tme_event_ctl(event_set, tun_event_handle(tun->tt), flags, 0);
     
-  status = tme_event_wait_yield(event_set, NULL, &esr, 1, &tun->eth->tme_eth_mutex);
+  status = tme_event_wait(event_set, NULL, &esr, 1, &tun->eth->tme_eth_mutex);
   tme_event_free(event_set);
 
   check_status (status, "event_wait", NULL, NULL);
@@ -110,7 +110,7 @@ static int _tme_openvpn_tun_read(void *data) {
     tme_event_set(event_set) = es;
   }
     
-  status = tme_event_wait_yield(event_set, NULL, &esr, 1, &tun->eth->tme_eth_mutex);
+  status = tme_event_wait(event_set, NULL, &esr, 1, &tun->eth->tme_eth_mutex);
   tme_event_free(event_set);
 
   check_status (status, "event_wait", NULL, NULL);
