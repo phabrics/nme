@@ -215,7 +215,7 @@ _tme_sparc_th(struct tme_sparc *ic)
     abort();
   }
   /* NOTREACHED */
-  tme_thread_exit();
+  tme_thread_exit(&ic->tme_sparc_external_mutex);
 }
 
 /* the TLB filler for when we are on a generic bus: */

@@ -383,7 +383,7 @@ tme_sjlj_dispatch(volatile int passes)
       /* run this thread.  if it happens to return, just call
          tme_sjlj_exit(): */
       (*thread->tme_sjlj_thread_func)(thread->tme_sjlj_thread_func_private);
-      tme_sjlj_exit();
+      //      tme_sjlj_exit();
 #endif
     }
   }
@@ -692,11 +692,14 @@ tme_sjlj_event_wait(struct tme_sjlj_event_set *es, const struct timeval *timeout
 
 /* this exits a thread: */
 void
-tme_sjlj_exit(void)
+tme_sjlj_exit(tme_mutex_t *mutex)
 {
   
   /* mark that this thread is exiting: */
   tme_sjlj_thread_exiting = TRUE;
+
+  if(mutex)
+    tme_mutex_unlock(mutex);
 
   /* yield: */
   tme_thread_yield();

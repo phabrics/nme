@@ -238,7 +238,6 @@ static _tme_inline void tme_thread_yield _TME_P((void)) {
 #endif
 #define tme_thread_create(t,f,a) pthread_create(t,tme_thread_defattr(),f,a)
 #define tme_thread_join(id) pthread_join(id,NULL)
-#define tme_thread_exit() _tme_thread_suspended();return NULL
 
 /* sleeping: */
 static _tme_inline void tme_thread_sleep _TME_P((tme_time_t sleep)) {

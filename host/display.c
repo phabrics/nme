@@ -260,7 +260,7 @@ tme_display_th_update(void *disp)
   for(;;) tme_display_update(disp);
 
   /* NOTREACHED */
-  tme_thread_exit();
+  tme_thread_exit(NULL);
 }
 
 /* set the translation function to use for this screen */

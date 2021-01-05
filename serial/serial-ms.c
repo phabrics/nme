@@ -368,7 +368,7 @@ _tme_serial_ms_th_rate(void *_serial_ms)
     }
   }
   /* NOTREACHED */
-  tme_thread_exit();
+  tme_thread_exit(&serial_ms->tme_serial_ms_mutex);
 }
 
 /* the mouse control function: */

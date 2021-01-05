@@ -58,8 +58,6 @@ _TME_RCSID("$Id: posix-serial.c,v 1.11 2007/08/24 00:57:01 fredette Exp $");
 #define TME_TIMEOUTS_WRITEMUL 3
 #define TME_TIMEOUTS_WRITECONST 4
 #define TME_TIMEOUTS_TOTAL 5
-#else
-#define TME_TIMEOUTS_TOTAL 1
 #endif
 
 /* structures: */
@@ -94,9 +92,6 @@ struct tme_posix_serial {
 
   /* our output file descriptor: */
   tme_thread_handle_t tme_posix_serial_hand_out;
-
-  /* if we have a timeout: */
-  int tme_posix_serial_timeouts[TME_TIMEOUTS_TOTAL];
 
   /* if we're emulating break: */
   int tme_posix_serial_emulate_break;
@@ -306,7 +301,7 @@ _tme_posix_serial_th_ctrl(struct tme_posix_serial *serial)
     tme_thread_sleep_yield(TME_TIME_SET_USEC(500000), &serial->tme_posix_serial_mutex);
   }
   /* NOTREACHED */
-  tme_thread_exit();
+  tme_thread_exit(&serial->tme_posix_serial_mutex);
 }
 
 /* the serial writer thread: */
@@ -359,7 +354,7 @@ _tme_posix_serial_th_writer(struct tme_posix_serial *serial)
     }
   }
   /* NOTREACHED */
-  tme_thread_exit();
+  tme_thread_exit(&serial->tme_posix_serial_mutex);
 }
     
 /* the serial reader thread: */
@@ -591,7 +586,7 @@ _tme_posix_serial_th_reader(struct tme_posix_serial *serial)
   }
 
   /* NOTREACHED */
-  tme_thread_exit();
+  tme_thread_exit(&serial->tme_posix_serial_mutex);
 }
 
 /* the serial configuration callin function: */
@@ -602,7 +597,6 @@ _tme_posix_serial_config(struct tme_serial_connection *conn_serial, struct tme_s
 #ifdef WIN32
   HANDLE hand;
   DCB dcb;
-  COMMTIMEOUTS timeouts;
 #else
   struct termios serial_termios;
   tme_uint32_t config_baud;
@@ -685,37 +679,7 @@ _tme_posix_serial_config(struct tme_serial_connection *conn_serial, struct tme_s
 	       "SetCommState failed with error %d.", GetLastError()));
       return (3);
     }
-    /*
-    rc = GetCommTimeouts(hand, &timeouts);
-    
-    if(rc) {
-      tme_log(&element->tme_element_log_handle, 0, TME_OK,
-	      (&element->tme_element_log_handle,
-	       "Old Timeouts: %d %d %d %d %d",
-	       timeouts.ReadIntervalTimeout,
-	       timeouts.ReadTotalTimeoutMultiplier,
-	       timeouts.ReadTotalTimeoutConstant,
-	       timeouts.WriteTotalTimeoutMultiplier,
-	       timeouts.WriteTotalTimeoutConstant));
-    }
-    timeouts.ReadIntervalTimeout = serial->tme_posix_serial_timeouts[TME_TIMEOUTS_READINT];
-    timeouts.ReadTotalTimeoutMultiplier = serial->tme_posix_serial_timeouts[TME_TIMEOUTS_READMUL];
-    timeouts.ReadTotalTimeoutConstant = serial->tme_posix_serial_timeouts[TME_TIMEOUTS_READCONST];
-    timeouts.WriteTotalTimeoutMultiplier = serial->tme_posix_serial_timeouts[TME_TIMEOUTS_WRITEMUL];
-    timeouts.WriteTotalTimeoutConstant = serial->tme_posix_serial_timeouts[TME_TIMEOUTS_WRITECONST];
 
-    rc = SetCommTimeouts(hand, &timeouts);
-    if(rc) {
-      tme_log(&element->tme_element_log_handle, 0, TME_OK,
-	      (&element->tme_element_log_handle,
-	       "New Timeouts: %d %d %d %d %d",
-	       timeouts.ReadIntervalTimeout,
-	       timeouts.ReadTotalTimeoutMultiplier,
-	       timeouts.ReadTotalTimeoutConstant,
-	       timeouts.WriteTotalTimeoutMultiplier,
-	       timeouts.WriteTotalTimeoutConstant));
-    }
-    */    
 #else
     rc = tcgetattr((is_input
 		    ? serial->tme_posix_serial_hand_in
@@ -1072,7 +1036,11 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
   /* initialize: */
   filename_in = NULL;
   filename_out = NULL;
-  int i, timeouts[TME_TIMEOUTS_TOTAL];
+#ifdef WIN32
+  int rc, i, config_timeouts[TME_TIMEOUTS_TOTAL];
+  HANDLE hand;
+  COMMTIMEOUTS timeouts;
+#endif
   emulate_break = FALSE;
   arg_i = 1;
   usage = FALSE;
@@ -1105,16 +1073,20 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
       arg_i += 2;
     }
 
+#ifdef WIN32
     /* the device timeouts for input and output: */
     else if (TME_ARG_IS(args[arg_i + 0], "timeouts")) {
       arg_i++;
-      for(i=0;i<=TME_TIMEOUTS_TOTAL;i++)
-	if((args[arg_i] != NULL) &&
-	   ((timeouts[i] = atoi(args[arg_i])) > 0))
-	  arg_i++;
+      for(i=0;i<TME_TIMEOUTS_TOTAL;i++)
+	if(args[arg_i + i] != NULL)
+	  config_timeouts[i] = (strcmp(args[arg_i + i],"-")) ?
+	    (atoi(args[arg_i + i])) :
+	    (MAXDWORD);
 	else
 	  break;
+      arg_i+=i;
     }
+#endif
 
     /* if we're supposed to emulate break: */
     else if (TME_ARG_IS(args[arg_i + 0], "break-carats")) {
@@ -1184,8 +1156,43 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
   serial->tme_posix_serial_element = element;
   serial->tme_posix_serial_hand_in = hand_in;
   serial->tme_posix_serial_hand_out = hand_out;
-  for(i=0;i<TME_TIMEOUTS_TOTAL;i++)
-    serial->tme_posix_serial_timeouts[i] = timeouts[i];
+#ifdef WIN32
+  hand = TME_THREAD_HANDLE(hand_in);
+  rc = GetCommTimeouts(hand, &timeouts);
+    
+  tme_log(&element->tme_element_log_handle, 0, TME_OK,
+	  (&element->tme_element_log_handle,
+	   "Old Timeouts: %d %d %d %d %d",
+	   timeouts.ReadIntervalTimeout,
+	   timeouts.ReadTotalTimeoutMultiplier,
+	   timeouts.ReadTotalTimeoutConstant,
+	   timeouts.WriteTotalTimeoutMultiplier,
+	   timeouts.WriteTotalTimeoutConstant));
+
+  if(rc) {
+    timeouts.ReadIntervalTimeout = config_timeouts[TME_TIMEOUTS_READINT];
+    timeouts.ReadTotalTimeoutMultiplier = config_timeouts[TME_TIMEOUTS_READMUL];
+    timeouts.ReadTotalTimeoutConstant = config_timeouts[TME_TIMEOUTS_READCONST];
+    timeouts.WriteTotalTimeoutMultiplier = config_timeouts[TME_TIMEOUTS_WRITEMUL];
+    timeouts.WriteTotalTimeoutConstant = config_timeouts[TME_TIMEOUTS_WRITECONST];
+
+    rc = SetCommTimeouts(hand, &timeouts);
+    tme_log(&element->tme_element_log_handle, 0, TME_OK,
+	    (&element->tme_element_log_handle,
+	     "New Timeouts: %d %d %d %d %d",
+	     timeouts.ReadIntervalTimeout,
+	     timeouts.ReadTotalTimeoutMultiplier,
+	     timeouts.ReadTotalTimeoutConstant,
+	     timeouts.WriteTotalTimeoutMultiplier,
+	     timeouts.WriteTotalTimeoutConstant));
+  } else {
+      //  Handle the error.
+      tme_log(&element->tme_element_log_handle, 0, TME_OK,
+	      (&element->tme_element_log_handle,
+	       "GetCommTimeout failed with error %d.", GetLastError()));
+      return (2);
+  }    
+#endif
   serial->tme_posix_serial_emulate_break = emulate_break;
   serial->tme_posix_serial_ctrl_callout = 0;
   serial->tme_posix_serial_ctrl_callout_last = 0;

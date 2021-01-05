@@ -151,7 +151,7 @@ _tme_stp222x_timer_th(void *_timer)
 				 &sleep);
   }
   /* NOTREACHED */
-  tme_thread_exit();
+  tme_thread_exit(&timer->tme_stp222x_timer_mutex);
 }
 
 /* this resets a timer: */

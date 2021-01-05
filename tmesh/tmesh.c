@@ -506,7 +506,7 @@ _tmesh_th(int *interactive)
     }
   }
   
-  if(interactive) tme_thread_exit();
+  if(interactive) tme_thread_exit(NULL);
 }
 
 static void

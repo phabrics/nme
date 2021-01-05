@@ -359,7 +359,7 @@ _tme_serial_kb_th_rate(struct tme_serial_kb *serial_kb)
     }
   }
   /* NOTREACHED */
-  tme_thread_exit();
+  tme_thread_exit(&serial_kb->tme_serial_kb_mutex);
 }
 
 /* the keyboard control function: */

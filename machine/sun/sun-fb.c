@@ -413,7 +413,7 @@ _tme_sunfb_callout_th(void *_sunfb)
 			&sunfb->tme_sunfb_mutex);
   }
   /* NOTREACHED */
-  tme_thread_exit();
+  tme_thread_exit(&sunfb->tme_sunfb_mutex);
 }
 
 /* this is called before the framebuffer's display is updated: */

@@ -498,7 +498,7 @@ _tme_am9513_th_timer(struct tme_am9513 *am9513)
     tme_thread_sleep_yield(TME_TIME_SET_USEC((basic_sleep * 1000) / am9513->tme_am9513_basic_clock_msec), &am9513->tme_am9513_mutex);
   }
   /* NOTREACHED */
-  tme_thread_exit();
+  tme_thread_exit(&am9513->tme_am9513_mutex);
 }
 
 /* the am9513 bus cycle handler: */

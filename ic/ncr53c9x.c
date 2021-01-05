@@ -2925,7 +2925,7 @@ _tme_ncr53c9x_timeout_th(struct tme_ncr53c9x *ncr53c9x)
     }
   }
   /* NOTREACHED */
-  tme_thread_exit();
+  tme_thread_exit(&ncr53c9x->tme_ncr53c9x_mutex);
 }
 
 /* the ncr53c9x bus signal handler: */

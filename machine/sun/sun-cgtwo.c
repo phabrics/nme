@@ -824,7 +824,7 @@ _tme_suncg2_callout_th(void *_suncg2)
   /* unlock the mutex: */
   tme_mutex_unlock(&suncg2->tme_suncg2_mutex);
 
-  tme_thread_exit();
+  tme_thread_exit(&suncg2->tme_suncg2_mutex);
 }
 
 /* this is called before the framebuffer's display is updated: */

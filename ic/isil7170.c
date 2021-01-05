@@ -387,7 +387,7 @@ _tme_isil7170_th_timer(struct tme_isil7170 *isil7170)
     
   }
   /* NOTREACHED */
-  tme_thread_exit();
+  tme_thread_exit(&isil7170->tme_isil7170_mutex);
 }
 
 /* the isil7170 bus cycle handler: */

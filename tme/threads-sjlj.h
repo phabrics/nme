@@ -139,7 +139,7 @@ void tme_sjlj_thread_create _TME_P((tme_threadid_t *, tme_thread_t, void *));
 void tme_sjlj_yield _TME_P((void));
 #define tme_thread_yield tme_sjlj_yield
 #define tme_thread_join(id) do { } while (/* CONSTCOND */ 0)
-void tme_sjlj_exit _TME_P((void));
+void tme_sjlj_exit _TME_P((tme_mutex_t *mutex));
 #define tme_thread_exit tme_sjlj_exit
 
 /* sleeping: */

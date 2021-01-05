@@ -3765,7 +3765,7 @@ _tme_stp103x_tick_compare_th(void *_ic)
     }
   }
   /* NOTREACHED */
-  tme_thread_exit();
+  tme_thread_exit(&ic->tme_sparc_external_mutex);
 }
 
 /* this checks for external signals: */

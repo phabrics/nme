@@ -1473,7 +1473,7 @@ _tme_am7990_poll_th(struct tme_am7990 *am7990)
     
   }
   /* NOTREACHED */
-  tme_thread_exit();
+  tme_thread_exit(&am7990->tme_am7990_mutex);
 }
 
 /* the am7990 bus cycle handler: */

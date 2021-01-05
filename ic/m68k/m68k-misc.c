@@ -311,7 +311,7 @@ _tme_m68k_th(struct tme_m68k *ic)
     abort();
   }
   /* NOTREACHED */
-  tme_thread_exit();
+  tme_thread_exit(&ic->tme_m68k_external_mutex);
 }
 
 /* the TLB filler for when we are on a generic bus: */

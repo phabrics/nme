@@ -337,7 +337,7 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
     }
   }
   /* NOTREACHED */
-  tme_thread_exit();
+  tme_thread_exit(&eth->tme_eth_mutex);
 }
 
 /* this makes a new Ethernet connection: */

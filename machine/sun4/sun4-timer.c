@@ -266,7 +266,7 @@ _tme_sun4_timer_th(struct tme_sun4_timer *timer)
 			 sleep);
   }
   /* NOTREACHED */
-  tme_thread_exit();
+  tme_thread_exit(&sun4->tme_sun4_mutex);
 }
 
 /* the sun4 timer control bus cycle handler: */

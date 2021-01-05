@@ -139,7 +139,8 @@ tme_off_t tme_thread_seek _TME_P((tme_thread_handle_t hand, tme_off_t off, int w
 #define TME_THREAD_HANDLE(hand) hand
 #define TME_INVALID_HANDLE INVALID_HANDLE_VALUE
 typedef HANDLE tme_thread_handle_t;
-#define tme_thread_open(path,flags) \
+
+#define tme_thread_open(path,flags)		\
   CreateFile(path, \
 	     flags, \
 	     0, /* was: FILE_SHARE_READ */ \
@@ -148,6 +149,7 @@ typedef HANDLE tme_thread_handle_t;
 	     FILE_ATTRIBUTE_NORMAL, \
 	     0)
 #define tme_thread_close CloseHandle
+
 static _tme_inline tme_off_t tme_thread_seek _TME_P((tme_thread_handle_t hand, tme_off_t off, int where)) {
   LARGE_INTEGER ret;
 
@@ -221,6 +223,12 @@ static _tme_inline ssize_t tme_thread_write _TME_P((tme_thread_handle_t hand, co
   if(mutex) tme_mutex_lock(mutex);
 
   return rc;
+}
+
+static _tme_inline void tme_thread_exit _TME_P((tme_mutex_t *mutex)) {
+  _tme_thread_suspended();  
+  if(mutex)
+    tme_mutex_unlock(mutex);
 }
 
 /* Events: */

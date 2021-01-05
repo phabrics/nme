@@ -205,7 +205,7 @@ _tme_stp222x_mdu_retry_th(void *_stp222x)
 				 sleep);
   }
   /* NOTREACHED */
-  tme_thread_exit();
+  tme_thread_exit(&stp222x->tme_stp222x_mdu_retry_mutex);
 }
 
 /* this decodes and arbitrates interrupts: */
