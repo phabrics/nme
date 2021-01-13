@@ -97,8 +97,10 @@ typedef tme_int64_t tme_off_t;
 #endif
 
 typedef struct tme_win32_handle *tme_event_t;
+#define TME_INVALID_EVENT NULL
 
 #define TME_WIN32_HANDLE(hand) (*(HANDLE *)(hand))
+
 extern tme_event_t win32_stdin;
 extern tme_event_t win32_stdout;
 extern tme_event_t win32_stderr;
@@ -125,17 +127,22 @@ static _tme_inline ssize_t tme_write _TME_P((HANDLE hand, const void *buf, size_
 #ifdef TME_THREADS_SJLJ
 
 #define TME_STD_THREAD_HANDLE TME_STD_HANDLE
+#define TME_STD_EVENT_HANDLE TME_STD_HANDLE
 #define TME_THREAD_HANDLE TME_WIN32_HANDLE
+#define TME_EVENT_HANDLE TME_THREAD_HANDLE
 #define TME_INVALID_HANDLE NULL
-typedef tme_event_t tme_thread_handle_t;
 #define tme_thread_open(path, flags) tme_win32_open(path, flags, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, 0)
+#define tme_event_open tme_win32_open(path, flags, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, 1024)
 #define tme_thread_close tme_win32_close
+#define tme_event_close tme_thread_close
 tme_off_t tme_thread_seek _TME_P((tme_thread_handle_t hand, tme_off_t off, int where));
 
 #else /* TME_THREADS_SJLJ */
 
 #define TME_THREADS_DIRECTIO
 #define TME_STD_THREAD_HANDLE(hand) TME_WIN32_HANDLE(win32_##hand)
+#define TME_STD_EVENT_HANDLE TME_STD_HANDLE
+#define TME_EVENT_HANDLE TME_WIN32_HANDLE
 #define TME_THREAD_HANDLE(hand) hand
 #define TME_INVALID_HANDLE INVALID_HANDLE_VALUE
 typedef HANDLE tme_thread_handle_t;
@@ -149,7 +156,8 @@ typedef HANDLE tme_thread_handle_t;
 	     FILE_ATTRIBUTE_NORMAL, \
 	     0)
 #define tme_thread_close CloseHandle
-
+#define tme_event_open(path, flags) tme_win32_open(path, flags, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, 1024)
+#define tme_event_close tme_win32_close
 static _tme_inline tme_off_t tme_thread_seek _TME_P((tme_thread_handle_t hand, tme_off_t off, int where)) {
   LARGE_INTEGER ret;
 
@@ -165,9 +173,12 @@ static _tme_inline tme_off_t tme_thread_seek _TME_P((tme_thread_handle_t hand, t
 #define TME_FILE_RW		O_RDWR
 #define TME_FILE_NB		O_NONBLOCK
 #define TME_THREAD_HANDLE(hand) hand
+#define TME_EVENT_HANDLE(hand) hand
 #define TME_INVALID_HANDLE -1
+#define TME_INVALID_EVENT -1
 #define TME_STD_HANDLE(hand) fileno(hand)
 #define TME_STD_THREAD_HANDLE(hand) fileno(hand)
+#define TME_STD_EVENT_HANDLE(hand) fileno(hand)
 typedef int tme_event_t;
 typedef tme_event_t tme_thread_handle_t;
 #define tme_fd(hand, flags) hand
@@ -180,6 +191,8 @@ typedef off_t tme_off_t;
 #define tme_thread_seek lseek
 #define tme_thread_open open
 #define tme_thread_close close
+#define tme_event_open open
+#define tme_event_close close
 #endif
 
 #define tme_thread_fd(hand,flags) tme_fd(TME_THREAD_HANDLE(hand), flags)
