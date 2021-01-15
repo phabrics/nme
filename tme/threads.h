@@ -126,13 +126,14 @@ static _tme_inline ssize_t tme_write _TME_P((HANDLE hand, const void *buf, size_
 
 #ifdef TME_THREADS_SJLJ
 
+typedef tme_event_t tme_thread_handle_t;
 #define TME_STD_THREAD_HANDLE TME_STD_HANDLE
 #define TME_STD_EVENT_HANDLE TME_STD_HANDLE
 #define TME_THREAD_HANDLE TME_WIN32_HANDLE
 #define TME_EVENT_HANDLE TME_THREAD_HANDLE
 #define TME_INVALID_HANDLE NULL
 #define tme_thread_open(path, flags) tme_win32_open(path, flags, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, 0)
-#define tme_event_open tme_win32_open(path, flags, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, 1024)
+#define tme_event_open(path, flags) tme_win32_open(path, flags, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, 1024)
 #define tme_thread_close tme_win32_close
 #define tme_event_close tme_thread_close
 tme_off_t tme_thread_seek _TME_P((tme_thread_handle_t hand, tme_off_t off, int where));
