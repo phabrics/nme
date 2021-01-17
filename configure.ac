@@ -34,7 +34,7 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.68])
 m4_include(version.m4)
-AC_INIT([tme], [0.12rc3])
+AC_INIT([tme], [0.12rc4])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
@@ -896,13 +896,7 @@ AC_MSG_CHECKING([for available threading models])
 
 AC_ARG_ENABLE(threads,
 [  --enable-threads=THRs  Enable preemptive thread support utilizing the given threading models (compiled-in order of usage by platform availability: 'pthreads (or posix)','glib').  Defaults to 'yes', any available.  Turn off threads with 'no' or --disable-threads; this will use setjmp/longjmp.], [tme_thread_types=${enableval}],
-[
-   if test "x${WIN32}" = xyes; then
-      tme_thread_types=glib
-   else
-      tme_thread_types=sjlj
-   fi
-])
+[tme_thread_types=sjlj])
 
 if test "x${enable_threads}" = xyes; then
    dnl Make brackets safe to use.
