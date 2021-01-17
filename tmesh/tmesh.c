@@ -166,7 +166,10 @@ _tmesh_open(struct tmesh_io *io_new, struct tmesh_io *io_old, char **_output)
 
   /* try to open the file: */
   input->_tmesh_input_handle =
-    tme_thread_open(io_new->tmesh_io_name, TME_FILE_RO);
+#ifdef WIN32
+    (io_old==NULL) ? (tme_win32_open(io_new->tmesh_io_name, TME_FILE_RO, FILE_ATTRIBUTE_NORMAL, 0)) :
+#endif
+    (tme_thread_open(io_new->tmesh_io_name, TME_FILE_RO));
   
   /* if the open failed: */
   if (input->_tmesh_input_handle == TME_INVALID_HANDLE) {

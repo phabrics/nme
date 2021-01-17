@@ -893,8 +893,16 @@ AC_SUBST(NATINC)
 AC_MSG_CHECKING([for available threading models])
 
 # specify whether preemptive thread support should be enabled & with what thread models
+
 AC_ARG_ENABLE(threads,
-[  --enable-threads=THRs  Enable preemptive thread support utilizing the given threading models (compiled-in order of usage by platform availability: 'pthreads (or posix)','glib').  Defaults to 'yes', any available.  Turn off threads with 'no' or --disable-threads; this will use setjmp/longjmp.], [tme_thread_types=${enableval}], [enable_threads=no])
+[  --enable-threads=THRs  Enable preemptive thread support utilizing the given threading models (compiled-in order of usage by platform availability: 'pthreads (or posix)','glib').  Defaults to 'yes', any available.  Turn off threads with 'no' or --disable-threads; this will use setjmp/longjmp.], [tme_thread_types=${enableval}],
+[
+   if test "x${WIN32}" = xyes; then
+      tme_thread_types=glib
+   else
+      tme_thread_types=sjlj
+   fi
+])
 
 if test "x${enable_threads}" = xyes; then
    dnl Make brackets safe to use.
@@ -914,23 +922,23 @@ if test "x${enable_threads}" = xyes; then
    changequote([, ])dnl
 fi
 
-# 128-bit integral type required to enable preemptive thread support
 if test "x${enable_threads}" = xno; then
    tme_thread_types=sjlj
 fi
 
+recode=no
 for tme_thread_type in ${tme_thread_types}; do
 case "x${tme_thread_type}" in
 xpthreads| xposix)  CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_POSIX"
 #	  	    CFLAGS="${CFLAGS-} -pthread"
-		    recode=no
 		     ;;
 xglib)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_GLIB -DUSE_GLIB_TIME ${GLIB_CFLAGS}"
 #	 LDFLAGS="${LDFLAGS-} ${GLIB_LIBS}"
-	 recode=no
 	 ;;
 xsjlj)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_SJLJ"
-	 recode=yes
+	 if test "x${WIN32}" != "xyes";
+	    then recode=yes
+	 fi
 	 ;;
 esac
 done
