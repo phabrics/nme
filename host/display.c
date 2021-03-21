@@ -678,6 +678,10 @@ int tme_display_init(struct tme_element *element,
   /* create the mouse: */
   _tme_mouse_new(display);
 
+  /* default display values: */
+  display->tme_screen_width = 1152;
+  display->tme_screen_height = 900;
+  
   /* start the threads: */
   tme_mutex_init(&display->tme_display_mutex);
 

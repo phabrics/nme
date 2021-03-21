@@ -561,8 +561,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
 
   gdk_monitor_get_workarea(display->tme_gdk_display_monitor, &workarea);
 
-  display->display.tme_screen_width = workarea.width;
-  display->display.tme_screen_height = workarea.height;
+  if(workarea.width) display->display.tme_screen_width = workarea.width;
+  if(workarea.height) display->display.tme_screen_height = workarea.height;
 
   /* set the display-specific functions: */
   display->display.tme_display_bell = _tme_gtk_display_bell;
