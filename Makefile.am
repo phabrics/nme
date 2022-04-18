@@ -25,3 +25,10 @@ pkgdata_DATA = tmeconfig.h tmememory.h
 dist-hook:
 	rm -f ${distdir}/libtme/recode-host.c
 	find $(distdir)/edist -name CVS -a -exec rm -r {} ';' -a -prune
+
+# The target to update the list of modules to preopen on platforms that don't support dlopen.
+# This will update this list to be automatically included by automake
+# so that future builds will track all module dependencies.
+# If new modules are added, "make modules" must be run to update this list in the source.
+modules-local:
+	echo -n LDADD = > $(top_srcdir)/tme-preopen.txt 

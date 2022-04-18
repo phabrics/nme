@@ -19,8 +19,9 @@ libtmesh_la_SOURCES = \
 libtmesh_la_LIBADD = $(top_builddir)/libtme/libtme.la
 
 bin_PROGRAMS = tmesh
-tmesh_LDADD = libtmesh.la
-tmesh_LDFLAGS = -dlpreopen force -dlopen self @TME_PREOPEN@
+tmesh_LDADD = libtmesh.la $(LDADD)
+tmesh_LDFLAGS = -dlpreopen force -dlopen self
+include $(top_srcdir)/tme-preopen.txt
 
 install-exec-hook:
 	$(SETCAP) $(DESTDIR)$(bindir)/$(TGTPFX)tmesh$(EXEEXT)

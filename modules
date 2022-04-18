@@ -35,7 +35,7 @@
 # build modules.  it updates the modules index that will be installed
 # along with all of the modules, and also handles some static building
 # details.  this is done with an all-local target:
-all-local:
+
 #
 # first, all source files in the current directory are searched for
 # element "new" function declarations.  these declarations provide
@@ -53,6 +53,7 @@ all-local:
 # this is abuse of the $(top_builddir)/tme directory, yes, since
 # this directory was originally just for include files and to make
 # #include <tme/FOO.h> work right when building:
+install-exec-local:
 	@echo updating tme modules list..
 	@grep TME_ELEMENT_NEW_DECL $(srcdir)/*.c |		\
 	sed -e 's%.*TME_ELEMENT_NEW_DECL(\(.*\)).*%\1%'		\
@@ -63,6 +64,7 @@ all-local:
 	@grep TME_ELEMENT_X_NEW_DECL $(srcdir)/*.c |		\
 	sed -e 's%.*TME_ELEMENT_X_NEW_DECL(\(.*\),\(.*\),\(.*\)).*%\1\3 \1\2 \3%' \
 	>> $(top_builddir)/tme/tme-plugins.txt
+
 #
 # next, when building statically, either for debugging purposes or
 # because we're on a weak platform, we have to use libtool's "preopen"
@@ -82,6 +84,16 @@ all-local:
 # else it will substitute the empty string.  when linking programs,
 # @TME_PREOPEN@ is then used on the program's link command line.
 # 
+# Note: this works differently now - please see comment in top Makefile for modules target
+modules-local:
+	@if test "x$(pkglib_LTLIBRARIES)" != x; then		\
+	    for module in $(pkglib_LTLIBRARIES); do		\
+		echo $$module ;					\
+		echo " \\" >> $(top_srcdir)/tme-preopen.txt ; \
+		echo -ne "\t-dlopen ../$(subdir)/$$module" >> $(top_srcdir)/tme-preopen.txt ; \
+	    done ;						\
+	fi
+
 # additionally, libtool, at least through version 1.5, has a
 # limitation in that the pseudo-library (the .la file) must be present
 # even for a preloaded module.  if we aren't debugging, everything is
@@ -95,10 +107,10 @@ all-local:
 # module.c can find the uninstalled tme-plugins.txt file, and libtool
 # will want to look in this directory for .la files, so we simply copy
 # all of the .la files into that same directory:
+all-local:
 	@if test "x$(pkglib_LTLIBRARIES)" != x; then		\
 	    for module in $(pkglib_LTLIBRARIES); do		\
 		echo $$module ;					\
-		echo -dlopen ../$(subdir)/$$module >> $(top_builddir)/tme-preopen.txt ; \
 		cp $$module $(top_builddir)/tme ;		\
 	    done ;						\
 	fi

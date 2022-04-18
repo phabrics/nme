@@ -42,6 +42,7 @@ AC_CANONICAL_TARGET
 #AC_CONFIG_MACRO_DIR([libltdl/m4])
 AC_CONFIG_LIBOBJ_DIR([lib])
 AM_INIT_AUTOMAKE([subdir-objects])
+AM_EXTRA_RECURSIVE_TARGETS([modules])
 AM_PROG_CC_C_O
 AC_PREFIX_PROGRAM([tmesh])
 
@@ -1163,11 +1164,7 @@ LT_INIT([dlopen,win32-dll])
 LT_LANG([Windows Resource])
 LTDL_INIT([recursive installable])
 CPPFLAGS="${CPPFLAGS-} ${LTDLINCL}"
-TME_PREOPEN=
-if test "x${enable_static}" = "xyes"; then
-  TME_PREOPEN='`sort -u $(top_builddir)/tme-preopen.txt`'
-fi
-AC_SUBST(TME_PREOPEN)
+AM_CONDITIONAL([USING_PREOPEN], [test "x${enable_static}" = "xyes"])
 
 AC_ARG_VAR([IFCONFIG], [full path to ipconfig utility])
 AC_ARG_VAR([ROUTE], [full path to route utility])
