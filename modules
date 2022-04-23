@@ -107,10 +107,3 @@ modules-local:
 # module.c can find the uninstalled tme-plugins.txt file, and libtool
 # will want to look in this directory for .la files, so we simply copy
 # all of the .la files into that same directory:
-all-local:
-	@if test "x$(pkglib_LTLIBRARIES)" != x; then		\
-	    for module in $(pkglib_LTLIBRARIES); do		\
-		echo $$module ;					\
-		cp $$module $(top_builddir)/tme ;		\
-	    done ;						\
-	fi

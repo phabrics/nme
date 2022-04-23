@@ -18,10 +18,10 @@ libtme_ieee754_la_LIBADD = $(top_builddir)/generic/libtme-generic.la
 AM_CFLAGS = @CFLAGS_NO_STRICT_ALIASING@
 
 noinst_SCRIPTS = ieee754-misc-auto.sh ieee754-ops-auto.sh ieee754-precision.sh 
-BUILT_SOURCES = $(noinst_SCRIPTS) ieee754-auto.h ieee754-ops-auto.h
-CLEANFILES = $(BUILT_SOURCES)
+BUILT_SOURCES = ieee754-auto.h ieee754-ops-auto.h ieee754-misc-auto.c
+CLEANFILES = $(noinst_SCRIPTS) $(BUILT_SOURCES) ieee754-ops-auto.c
 
-EXTRA_DIST = $(noinst_SCRIPTS) $(noinst_SCRIPTS:.sh=.m4) softfloat-tme.h
+EXTRA_DIST = $(CLEANFILES) $(noinst_SCRIPTS:.sh=.m4) softfloat-tme.h
 
 # default rule for regenerating the portable shell scripts from m4 descriptions
 $(noinst_SCRIPTS): %.sh: %.m4
@@ -43,5 +43,3 @@ ieee754-ops-auto.h: ieee754-ops-auto.sh ieee754-precision.sh
 ieee754-ops-auto.c: ieee754-ops-auto.sh ieee754-precision.sh
 	$(SHELL) $< > $@
 
-# ieee754-misc.lo depends on ieee754-misc-auto.c:
-ieee754-misc.lo: ieee754-misc-auto.c

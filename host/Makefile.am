@@ -11,8 +11,6 @@ libtme_host_la_LIBADD = $(top_builddir)/generic/libtme-generic.la $(GTK_LIBS)
 
 EXTRA_DIST = keymap-make.pl keymap-def.h
 
-display-keyboard.lo:  keymap.h
-
 BUILT_SOURCES = keymap.h
 CLEANFILES = keymap.h
 if USING_X

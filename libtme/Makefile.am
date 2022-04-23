@@ -47,12 +47,13 @@ endif
 
 noinst_SCRIPTS = memory-auto.sh
 
-BUILT_SOURCES = $(noinst_SCRIPTS)
-CLEANFILES = $(noinst_SCRIPTS)
+BUILT_SOURCES = shlibvar.h memory-auto.h memory-auto.c
+
+CLEANFILES = $(noinst_SCRIPTS) $(BUILT_SOURCES)
 
 EXTRA_DIST = log-prf.c \
 	misc.c \
-	$(noinst_SCRIPTS) \
+	$(CLEANFILES) \
 	$(noinst_SCRIPTS:.sh=.m4) 
 
 # default rule for regenerating the portable shell scripts from m4 descriptions
@@ -67,11 +68,8 @@ memory-auto.h: memory-auto.sh
 memory-auto.c: memory-auto.sh
 	$(SHELL) $< > $@
 
-memory-auto.lo: memory-auto.h
-
 # module.c needs to know the LTDL_SHLIBPATH_VAR that libltdl
 # is using:
-module.lo: shlibvar.h
 shlibvar.h: $(top_builddir)/config.h Makefile
 	grep LT_MODULE_PATH_VAR $(top_builddir)/config.h > $@
 	grep LT_DLSEARCH_PATH $(top_builddir)/config.h >> $@

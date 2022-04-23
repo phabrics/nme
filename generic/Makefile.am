@@ -22,19 +22,15 @@ libtme_generic_la_SOURCES = bus.c \
 libtme_generic_la_LDFLAGS = -version-info 0:0:0
 libtme_generic_la_LIBADD = $(top_builddir)/libtme/libtme.la
 
-noinst_SCRIPTS = fb-xlat-auto.sh \
-	 	float-auto.sh \
-		bus-device-auto.sh
+noinst_SCRIPTS = float-auto.sh \
+		bus-device-auto.sh \
+		fb-xlat-auto.sh
 
-CLEANFILES = $(noinst_SCRIPTS)
+BUILT_SOURCES =	$(noinst_SCRIPTS:.sh=.c)
 
-BUILT_SOURCES =	$(noinst_SCRIPTS)
+CLEANFILES = $(noinst_SCRIPTS) $(BUILT_SOURCES)
 
-EXTRA_DIST = $(noinst_SCRIPTS) \
-	$(noinst_SCRIPTS:.sh=.m4) \
-	float-auto.c \
-	bus-device-auto.c \
-	fb-xlat-auto.pl
+EXTRA_DIST = $(CLEANFILES) $(noinst_SCRIPTS:.sh=.m4)
 
 # default rule for regenerating the portable shell scripts from m4 descriptions
 $(noinst_SCRIPTS): %.sh: %.m4
@@ -56,15 +52,6 @@ else
 fb-xlat-auto.c: %.c: %.sh
 	$(SHELL) $< src $(TME_FB_XLAT_SRC) dst $(TME_FB_XLAT_DST) > $@
 endif
-
-# fb.lo depends on fb-xlat-auto.c:
-fb.lo: fb-xlat-auto.c
-
-# float.lo depends on float-auto.c:
-float.lo: float-auto.c
-
-# bus-device.lo depends on bus-device-auto.c:
-bus-device.lo: bus-device-auto.c
 
 pkglib_LTLIBRARIES = tme_generic.la
 tme_generic_la_SOURCES = bus-el.c
