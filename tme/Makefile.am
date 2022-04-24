@@ -26,8 +26,5 @@ pkginclude_HEADERS = memory.h \
 info_TEXINFOS = tme.texi
 tme_TEXINFOS = fdl.texi
 
-install-exec-local:
-	sort -u < tme-plugins.txt > tme-plugins.txt.final
-	mv tme-plugins.txt.final tme-plugins.txt
-	$(mkinstalldirs) $(DESTDIR)$(pkglibdir)
-	$(INSTALL_DATA) tme-plugins.txt $(DESTDIR)$(pkglibdir)
+tmedir = $(pkglibdir)
+tme_DATA = tme-plugins.txt

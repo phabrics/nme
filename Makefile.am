@@ -31,4 +31,5 @@ dist-hook:
 # so that future builds will track all module dependencies.
 # If new modules are added, "make modules" must be run to update this list in the source.
 modules-local:
+	rm -f ${top_srcdir}/tme/tme-plugins.txt
 	echo -n LDADD = > $(top_srcdir)/tme-preopen.txt 
