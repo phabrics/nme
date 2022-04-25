@@ -41,7 +41,6 @@
 #include <stdlib.h>
 
 static const int bpp=4;
-static int maxx=800, maxy=600;
 static struct tme_display *_display;
 /* TODO: odd maxx doesn't work (vncviewer bug) */
 
@@ -261,11 +260,16 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_rfb,display) {
 
   /* allocate initial screen structure of the given size: */
   //  rfbProcessSizeArguments(&maxx, &maxy, &bpp, &arg_i, args);
-  server=rfbGetScreen(&arg_i,args,maxx,maxy,8,3,bpp);
+  server=rfbGetScreen(&arg_i,args,
+		      display->display.tme_screen_width,
+		      display->display.tme_screen_height,
+		      8,3,bpp);
   if(!server)
     return 1;
   server->desktopName = "The Machine Emulator";
-  server->frameBuffer = (char*)tme_malloc(maxx*maxy*bpp);
+  server->frameBuffer = (char*)tme_malloc(display->display.tme_screen_width *
+					  display->display.tme_screen_height *
+					  bpp);
   server->alwaysShared = TRUE;
   server->ptrAddEvent = _tme_rfb_mouse_event;
   server->kbdAddEvent = _tme_rfb_key_event;
@@ -275,8 +279,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_rfb,display) {
   rfbInitServer(server);
   
   display->server = server;
-  display->display.tme_screen_width = maxx;
-  display->display.tme_screen_height = maxy;
 
   /* set the display-specific functions: */
   display->display.tme_display_bell = _tme_rfb_display_bell;

@@ -18,10 +18,10 @@ libtme_machine_sun_la_LIBADD = $(top_builddir)/generic/libtme-generic.la
 
 bin_SCRIPTS = tme-sun-idprom tme-sun-eeprom
 
-examplesdir = $(datadir)/examples/tme
-examples_DATA = sun-keyboards.txt my-sun-macros.txt
+examplesdir = $(pkgdatadir)/examples
+dist_examples_DATA = sun-keyboards.txt my-sun-macros.txt
 
-EXTRA_DIST = tme-sun-idprom.pl tme-sun-eeprom.pl $(examples_DATA)
+EXTRA_DIST = tme-sun-idprom.pl tme-sun-eeprom.pl
 
 # target to make tme-sun-idprom:
 tme-sun-idprom: tme-sun-idprom.pl

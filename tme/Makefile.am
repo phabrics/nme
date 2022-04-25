@@ -27,4 +27,4 @@ info_TEXINFOS = tme.texi
 tme_TEXINFOS = fdl.texi
 
 tmedir = $(pkglibdir)
-tme_DATA = tme-plugins.txt
+dist_tme_DATA = tme-plugins.txt

@@ -3,7 +3,5 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
-examplesdir = $(datadir)/examples/tme
-examples_DATA = SUN-ULTRA-1
-
-EXTRA_DIST = $(examples_DATA)
+examplesdir = $(pkgdatadir)/examples
+dist_examples_DATA = SUN-ULTRA-1
