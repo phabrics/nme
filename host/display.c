@@ -686,11 +686,7 @@ int tme_display_init(struct tme_element *element,
   tme_mutex_init(&display->tme_display_mutex);
 
   /* setup the thread loop function: */
-#ifdef TME_THREADS_SJLJ
   tme_thread_create(&display->tme_display_thread, tme_display_th_update, display);
-#else
-  tme_threads_init(tme_display_update, display);
-#endif
   
   /* fill the element: */
   element->tme_element_private = display;
