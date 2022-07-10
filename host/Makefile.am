@@ -1,27 +1,19 @@
 ## Process this file with automake to produce Makefile.in
-# Makefile.am for The Machine Emulator host/:
+# Makefile.am for The Machine Emulator host/posix:
 
 AUTOMAKE_OPTIONS = 1.4 gnu
-AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(top_srcdir)/lib -I. -D_TME_IMPL $(GTK_CFLAGS)
 
-lib_LTLIBRARIES = libtme-host.la
-libtme_host_la_SOURCES = eth-impl.c eth-if.h display-mouse.c display-keyboard.c display.c display.h
-libtme_host_la_LDFLAGS = -version-info 0:0:0
-libtme_host_la_LIBADD = $(top_builddir)/generic/libtme-generic.la $(GTK_LIBS)
+AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(top_srcdir)/lib -I. -D_TME_IMPL
 
-EXTRA_DIST = keymap-make.pl keymap-def.h
+pkglib_LTLIBRARIES = tme_host_posix.la
+tme_host_posix_la_SOURCES = posix-memory.c \
+	posix-disk.c \
+	posix-tape.c \
+	posix-serial.c
 
-BUILT_SOURCES = keymap.h
-CLEANFILES = keymap.h
-if USING_X
-keymap.h: keymap-make.pl keymap-def.h
-	  $(PERL) $< > $@ || cp $(srcdir)/keymap-def.h $@
-else
-keymap.h: keymap-def.h
-	  cp $< $@
-endif
+tme_host_posix_la_LDFLAGS = -module -version-info 0:0:0
+tme_host_posix_la_LIBADD = $(top_builddir)/generic/libtme-generic.la
 
 include $(top_srcdir)/modules
 
-SUBDIRS = . @TME_HOSTS@
-DIST_SUBDIRS = posix gtk bsd tun openvpn rfb
+SUBDIRS = display eth

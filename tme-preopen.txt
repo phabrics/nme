@@ -21,12 +21,12 @@ LDADD = \
 	-dlopen ../machine/sun2/tme_machine_sun2.la \
 	-dlopen ../machine/sun3/tme_machine_sun3.la \
 	-dlopen ../machine/sun4/tme_machine_sun4.la \
-	-dlopen ../host/posix/tme_host_posix.la \
-	-dlopen ../host/bsd/tme_host_bsd.la \
-	-dlopen ../host/tun/tme_host_tun.la \
-	-dlopen ../host/openvpn/tme_host_openvpn.la \
-	-dlopen ../host/rfb/tme_host_rfb.la \
-	-dlopen ../host/gtk/tme_host_gtk.la \
+	-dlopen ../host/display/rfb/tme_host_rfb.la \
+	-dlopen ../host/display/gtk/tme_host_gtk.la \
+	-dlopen ../host/eth/bsd/tme_host_bsd.la \
+	-dlopen ../host/eth/tun/tme_host_tun.la \
+	-dlopen ../host/eth/openvpn/tme_host_openvpn.la \
+	-dlopen ../host/tme_host_posix.la \
 	-dlopen ../bus/multibus/tme_bus_multibus.la \
 	-dlopen ../bus/sbus/tme_bus_sbus.la \
 	-dlopen ../serial/tme_serial_kb.la \

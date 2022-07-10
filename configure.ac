@@ -740,9 +740,6 @@ AC_DEFINE(HAVE_AF_PACKET, [], [Define if you have AF_PACKET.])
 AC_MSG_RESULT(no)
 ])
 
-dnl Start the list of host support.
-TME_HOSTS=
-
 AC_ARG_VAR([TAP_CFLAGS], [C compiler flags for tap])
 old_CFLAGS="${CFLAGS}"
 CFLAGS="${CFLAGS} ${TAP_CFLAGS}"
@@ -783,7 +780,7 @@ AC_ARG_WITH(tme-host-displays,
 
 AC_SUBST(TME_FB_XLAT_DST)
 
-tme_host_types="tun bsd openvpn posix gtk rfb"
+tme_host_types="gtk rfb tun bsd openvpn"
 
 for tme_host_type in ${tme_host_types}; do
     eval enable_${tme_host_type}=no
@@ -801,28 +798,43 @@ for tme_host_type in ${tme_host_types}; do
     eval enable_${tme_host_type}=yes
 done
 
+dnl Start the list of display host support.
+TME_DISPLAY_HOSTS=
+
 if test "x$have_gtk" = xyes; then
    if test "x${enable_gtk}" = xyes; then
-      TME_HOSTS="gtk ${TME_HOSTS}"
+      TME_DISPLAY_HOSTS="gtk ${TME_DISPLAY_HOSTS}"
    fi
    TME_FB_XLAT_DST="d32b32s0p32olml_r0xffff0000_g0xff00ff00_b0xff0000ff d24b32s0p32olml_r0xff0000_g0xff00_b0xff"
 #   TME_FB_XLAT_DST="d32b32s0p32olml_r0xffff0000_g0xff00ff00_b0xff0000ff d24b32s0p32olml_r0xff0000_g0xff00_b0xff d16b16s0p32olml_r0xf800_g0x07e0_b0x001f d8b8s0p32olml_r0xff_g0xff_b0xff d1b1s0p32olml_r0x1_g0x1_b0x1"
 fi
 
 AS_IF([test "x${enable_rfb}" = xyes], [
-   PKG_CHECK_MODULES([RFB], [libvncserver], [TME_HOSTS="rfb ${TME_HOSTS}"], AC_DEFINE([HAVE_RFB], [0], [No RFB]))
+   PKG_CHECK_MODULES([RFB], [libvncserver], [TME_DISPLAY_HOSTS="rfb ${TME_DISPLAY_HOSTS}"], AC_DEFINE([HAVE_RFB], [0], [No RFB]))
 ])
+
+if test "x${TME_DISPLAY_HOSTS}" != x; then
+   TME_DISPLAY_HOSTS="${TME_DISPLAY_HOSTS}"
+fi
+
+dnl The list of display host support is finished.
+AC_SUBST(TME_DISPLAY_HOSTS)
+
+AC_MSG_RESULT($TME_DISPLAY_HOSTS)
+
+dnl Start the list of ethernet host support.
+TME_ETH_HOSTS=
 
 AM_CONDITIONAL([USE_TAP_WINDOWS], [test "x${enable_openvpn}" = xyes && test "x${have_tap_header}" = x && test "x${WIN32}" != x])
 AM_CONDITIONAL([USING_OPENVPN], [test "x${enable_openvpn}" = xyes && test "x${have_tap_header}" = xyes || test "x${WIN32}" != x])
 if test "x${enable_openvpn}" = xyes && test "x${have_tap_header}" = xyes || test "x${WIN32}" != x; then
-   TME_HOSTS="openvpn ${TME_HOSTS}"
+   TME_ETH_HOSTS="openvpn ${TME_ETH_HOSTS}"
    AC_DEFINE([OPENVPN_VERSION_RESOURCE], [PRODUCT_VERSION_RESOURCE], [Version in windows resource format])
 fi
 
 AC_CHECK_HEADERS([linux/if_tun.h net/if_tap.h net/tap/if_tap.h net/if_tun.h],
 		 [if test "x${enable_tun}" = xyes; then
-		     TME_HOSTS="tun ${TME_HOSTS}"
+		     TME_ETH_HOSTS="tun ${TME_ETH_HOSTS}"
 		  fi])
 
 AC_CHECK_HEADERS([linux/filter.h net/bpf.h])
@@ -842,21 +854,17 @@ found_BPFVERSION
 #endif
 ],
 [if test "x${enable_bsd}" = xyes; then
-    TME_HOSTS="bsd ${TME_HOSTS}"
+    TME_ETH_HOSTS="bsd ${TME_ETH_HOSTS}"
  fi])
 
-if test "x${TME_HOSTS}" != x; then
-   TME_HOSTS="${TME_HOSTS}"
+if test "x${TME_ETH_HOSTS}" != x; then
+   TME_ETH_HOSTS="${TME_ETH_HOSTS}"
 fi
 
-if test "x${enable_posix}" = xyes; then
-   TME_HOSTS="posix ${TME_HOSTS}"
-fi
+dnl The list of ethernet host support is finished.
+AC_SUBST(TME_ETH_HOSTS)
 
-dnl The list of host support is finished.
-AC_SUBST(TME_HOSTS)
-
-AC_MSG_RESULT($TME_HOSTS)
+AC_MSG_RESULT($TME_ETH_HOSTS)
 
 AC_SYS_POSIX_TERMIOS
 
@@ -1586,12 +1594,13 @@ AC_CONFIG_FILES([Makefile
 	  machine/sun4/Makefile
 	  machine/sun4u/Makefile
           host/Makefile
-          host/openvpn/Makefile
-          host/posix/Makefile
-          host/rfb/Makefile
-          host/bsd/Makefile
-          host/tun/Makefile
-          host/gtk/Makefile
+          host/display/Makefile
+          host/display/gtk/Makefile
+          host/display/rfb/Makefile
+          host/eth/Makefile
+          host/eth/openvpn/Makefile
+          host/eth/bsd/Makefile
+          host/eth/tun/Makefile
           bus/Makefile
           bus/multibus/Makefile
           bus/sbus/Makefile

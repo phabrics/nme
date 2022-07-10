@@ -8,6 +8,6 @@ AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(top_srcdir)/lib -I$(srcdir)/.. -I.
 pkglib_LTLIBRARIES = tme_host_bsd.la
 tme_host_bsd_la_SOURCES = bsd-bpf.c
 tme_host_bsd_la_LDFLAGS = -module -version-info 0:0:0
-tme_host_bsd_la_LIBADD = ../libtme-host.la
+tme_host_bsd_la_LIBADD = ../libtme-eth.la
 
 include $(top_srcdir)/modules
