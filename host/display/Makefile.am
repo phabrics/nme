@@ -24,4 +24,4 @@ endif
 include $(top_srcdir)/modules
 
 SUBDIRS = . @TME_DISPLAY_HOSTS@
-DIST_SUBDIRS = gtk rfb
+DIST_SUBDIRS = gtk rfb sdl

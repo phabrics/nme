@@ -772,6 +772,7 @@ fi
 TME_FB_XLAT_DST=
 dnl Checks for GTK.
 AM_PATH_GTK_3_0([], have_gtk=yes, have_gtk=no)
+AM_PATH_SDL2([], have_sdl=yes, have_sdl=no)
 
 # if --with-tme-host-displays is given, characterize those given displays:
 AC_ARG_WITH(tme-host-displays,
@@ -780,7 +781,7 @@ AC_ARG_WITH(tme-host-displays,
 
 AC_SUBST(TME_FB_XLAT_DST)
 
-tme_host_types="gtk rfb tun bsd openvpn"
+tme_host_types="gtk rfb sdl tun bsd openvpn"
 
 for tme_host_type in ${tme_host_types}; do
     eval enable_${tme_host_type}=no
@@ -800,22 +801,24 @@ done
 
 dnl Start the list of display host support.
 TME_DISPLAY_HOSTS=
+TME_FB_XLAT_DST="d32b32s0p32olml_r0xffff0000_g0xff00ff00_b0xff0000ff d24b32s0p32olml_r0xff0000_g0xff00_b0xff"
 
 if test "x$have_gtk" = xyes; then
    if test "x${enable_gtk}" = xyes; then
       TME_DISPLAY_HOSTS="gtk ${TME_DISPLAY_HOSTS}"
    fi
-   TME_FB_XLAT_DST="d32b32s0p32olml_r0xffff0000_g0xff00ff00_b0xff0000ff d24b32s0p32olml_r0xff0000_g0xff00_b0xff"
 #   TME_FB_XLAT_DST="d32b32s0p32olml_r0xffff0000_g0xff00ff00_b0xff0000ff d24b32s0p32olml_r0xff0000_g0xff00_b0xff d16b16s0p32olml_r0xf800_g0x07e0_b0x001f d8b8s0p32olml_r0xff_g0xff_b0xff d1b1s0p32olml_r0x1_g0x1_b0x1"
 fi
 
-AS_IF([test "x${enable_rfb}" = xyes], [
-   PKG_CHECK_MODULES([RFB], [libvncserver], [TME_DISPLAY_HOSTS="rfb ${TME_DISPLAY_HOSTS}"], AC_DEFINE([HAVE_RFB], [0], [No RFB]))
-])
-
-if test "x${TME_DISPLAY_HOSTS}" != x; then
-   TME_DISPLAY_HOSTS="${TME_DISPLAY_HOSTS}"
+if test "x$have_sdl" = xyes; then
+   if test "x${enable_sdl}" = xyes; then
+      TME_DISPLAY_HOSTS="sdl ${TME_DISPLAY_HOSTS}"
+   fi
 fi
+
+AS_IF([test "x${enable_rfb}" = xyes], [
+   PKG_CHECK_MODULES([RFB], [libvncclient libvncserver], [TME_DISPLAY_HOSTS="rfb ${TME_DISPLAY_HOSTS}"], AC_DEFINE([HAVE_RFB], [0], [No RFB]))
+])
 
 dnl The list of display host support is finished.
 AC_SUBST(TME_DISPLAY_HOSTS)
@@ -1597,6 +1600,7 @@ AC_CONFIG_FILES([Makefile
           host/display/Makefile
           host/display/gtk/Makefile
           host/display/rfb/Makefile
+          host/display/sdl/Makefile
           host/eth/Makefile
           host/eth/openvpn/Makefile
           host/eth/bsd/Makefile
