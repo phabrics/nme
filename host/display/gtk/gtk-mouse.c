@@ -40,6 +40,7 @@ _TME_RCSID("$Id: gtk-mouse.c,v 1.3 2007/03/03 15:33:22 fredette Exp $");
 #include "gtk-display.h"
 #include <gdk/gdkkeysyms.h>
 
+#if 0
 /* this warps the pointer to the middle of the Gtkframe: */
 void
 _tme_gtk_mouse_warp_pointer(struct tme_gtk_screen *screen)
@@ -51,133 +52,56 @@ _tme_gtk_mouse_warp_pointer(struct tme_gtk_screen *screen)
 
   gdk_device_warp(gdk_seat_get_pointer(display->tme_gdk_display_seat),
 		  gdk_screen_get_default(),
-		  screen->tme_gtk_screen_mouse_warp_x,
-		  screen->tme_gtk_screen_mouse_warp_y);
+		  screen->screen.tme_screen_mouse_warp_x,
+		  screen->screen.tme_screen_mouse_warp_y);
 }
-
+#endif
 /* this is a GTK callback for a mouse event in the framebuffer event box: */
 static int
 _tme_gtk_mouse_mouse_event(GtkWidget *widget,
 			   GdkEvent *gdk_event_raw,
-			   struct tme_gtk_screen *screen)
+			   struct tme_gtk_screen *display)
 {
-  struct tme_display *display;
-  struct tme_mouse_event tme_event;
   gint x;
   gint y;
-  guint state, button;
-  unsigned int buttons;
-  int was_empty;
-  int new_callouts;
-  int rc;
-
-  /* start the tme event: */
-  tme_event.tme_mouse_event_delta_units
-    = TME_MOUSE_UNITS_UNKNOWN;
-
-  /* recover our data structure: */
-  display = screen->screen.tme_screen_display;
-
-  /* lock the mutex: */
-  tme_mutex_lock(&display->tme_display_mutex);
+  int button=0;
 
   /* if this is motion: */
   if (gdk_event_raw->type == GDK_MOTION_NOTIFY) {
-
-    /* this event must have happened in the gtkframe: */
-    assert (gdk_event_raw->motion.window
-	    == gtk_widget_get_window(screen->tme_gtk_screen_gtkframe));
-
-    /* set the event time: */
-    tme_event.tme_mouse_event_time
-      = gdk_event_raw->motion.time;
-
-    /* the buttons haven't changed: */
-    tme_event.tme_mouse_event_buttons =
-      screen->tme_gtk_screen_mouse_buttons_last;
 
     /* if the pointer position hasn't changed either, return now.
        every time we warp the pointer we will get a motion event, and
        this should ignore those events: */
     x = gdk_event_raw->motion.x_root;
     y = gdk_event_raw->motion.y_root;
-    if (x == screen->tme_gtk_screen_mouse_warp_x
-	&& y == screen->tme_gtk_screen_mouse_warp_y) {
-      
-      /* unlock the mutex: */
-      tme_mutex_unlock(&display->tme_display_mutex);
 
-      /* stop propagating this event: */
-      return (TRUE);
-    }
-
-  }
-
-  /* otherwise, if this is a double- or triple-click: */
-  else if (gdk_event_raw->type == GDK_2BUTTON_PRESS
-	   || gdk_event_raw->type == GDK_3BUTTON_PRESS) {
-
-    /* we ignore double- and triple-click events, since normal button
-       press and release events are always generated also: */
-      
-    /* unlock the mutex: */
-    tme_mutex_unlock(&display->tme_display_mutex);
-
-    /* stop propagating this event: */
-    return (TRUE);
   }
 
   /* otherwise, this must be a button press or a release: */
   else {
-    assert (gdk_event_raw->type == GDK_BUTTON_PRESS
-	    || gdk_event_raw->type == GDK_BUTTON_RELEASE);
-
-    /* this event must have happened in the gtkframe: */
-    assert (gdk_event_raw->button.window
-	    == gtk_widget_get_window(screen->tme_gtk_screen_gtkframe));
-
-    /* set the event time: */
-    tme_event.tme_mouse_event_time
-      = gdk_event_raw->button.time;
 
     /* get the pointer position: */
     x = gdk_event_raw->button.x_root;
     y = gdk_event_raw->button.y_root;
 
     /* make the buttons mask: */
-    buttons = 0;
     button = gdk_event_raw->button.button;
-    state = gdk_event_raw->button.state;
-#define _TME_GTK_MOUSE_BUTTON(i, gdk, tme)		\
-  if ((button == i)					\
-      ? (gdk_event_raw->type == GDK_BUTTON_PRESS)	\
-      : (state & gdk))					\
-      buttons |= tme
-    _TME_GTK_MOUSE_BUTTON(1, GDK_BUTTON1_MASK, TME_MOUSE_BUTTON_0);
-    _TME_GTK_MOUSE_BUTTON(2, GDK_BUTTON2_MASK, TME_MOUSE_BUTTON_1);
-    _TME_GTK_MOUSE_BUTTON(3, GDK_BUTTON3_MASK, TME_MOUSE_BUTTON_2);
-    _TME_GTK_MOUSE_BUTTON(4, GDK_BUTTON4_MASK, TME_MOUSE_BUTTON_3);
-    _TME_GTK_MOUSE_BUTTON(5, GDK_BUTTON5_MASK, TME_MOUSE_BUTTON_4);
-#undef _TME_GTK_MOUSE_BUTTON
-    tme_event.tme_mouse_event_buttons = buttons;
-    screen->tme_gtk_screen_mouse_buttons_last = buttons;
+    if(gdk_event_raw->type == GDK_BUTTON_RELEASE)
+      button = -button;
   }
 
-  /* make the deltas: */
-  tme_event.tme_mouse_event_delta_x = 
-    (((int) x)
-     - ((int) screen->tme_gtk_screen_mouse_warp_x));
-  tme_event.tme_mouse_event_delta_y = 
-    (((int) y)
-     - ((int) screen->tme_gtk_screen_mouse_warp_y));
+  /* otherwise, if this is a double- or triple-click: */
+  if (gdk_event_raw->type != GDK_2BUTTON_PRESS
+      && gdk_event_raw->type != GDK_3BUTTON_PRESS) {
 
-  screen->tme_gtk_screen_mouse_warp_x = x;
-  screen->tme_gtk_screen_mouse_warp_y = y;
+    /* we ignore double- and triple-click events, since normal button
+       press and release events are always generated also: */
+    assert (gdk_event_raw->type == GDK_BUTTON_PRESS
+	    || gdk_event_raw->type == GDK_BUTTON_RELEASE);
+
+    _tme_mouse_button_press(button, x, y, display);
   
-  _tme_mouse_mouse_event(&tme_event, display);
-  
-  /* unlock the mutex: */
-  tme_mutex_unlock(&display->tme_display_mutex);
+  }
 
   /* stop propagating this event: */
   return (TRUE);
@@ -267,8 +191,8 @@ _tme_gtk_mouse_ebox_event(GtkWidget *widget,
 
   gdk_device_get_position(gdk_seat_get_pointer(display->tme_gdk_display_seat),
 			  NULL,
-			  &screen->tme_gtk_screen_mouse_warp_x,
-			  &screen->tme_gtk_screen_mouse_warp_y);
+			  &display->display.tme_screen_mouse_warp_x,
+			  &display->display.tme_screen_mouse_warp_y);
   
   /* we are now in mouse mode: */
   screen->tme_gtk_screen_mouse_keyval
@@ -319,12 +243,8 @@ _tme_gtk_mouse_mode_off(struct tme_gtk_screen *screen,
 void
 _tme_gtk_mouse_attach(struct tme_gtk_screen *screen)
 {
-  struct tme_display *display;
   GtkWidget *hbox0;
   GtkWidget *ebox;
-
-  /* get the display: */
-  display = screen->screen.tme_screen_display;
 
   /* create the horizontal packing box for the mouse controls: */
   hbox0 = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
@@ -402,15 +322,15 @@ _tme_gtk_mouse_attach(struct tme_gtk_screen *screen)
   g_signal_connect(screen->tme_gtk_screen_gtkframe,
 		   "motion_notify_event",
 		   G_CALLBACK(_tme_gtk_mouse_mouse_event), 
-		   screen);
+		   screen->screen.tme_screen_display);
   g_signal_connect(screen->tme_gtk_screen_gtkframe,
 		   "button_press_event",
 		   G_CALLBACK(_tme_gtk_mouse_mouse_event), 
-		   screen);
+		   screen->screen.tme_screen_display);
   g_signal_connect(screen->tme_gtk_screen_gtkframe,
 		   "button_release_event",
 		   G_CALLBACK(_tme_gtk_mouse_mouse_event), 
-		   screen);
+		   screen->screen.tme_screen_display);
 
   /* mouse mode is off: */
   screen->tme_gtk_screen_mouse_keyval = GDK_KEY_VoidSymbol;

@@ -225,14 +225,36 @@ _tme_keyboard_keyval_name(tme_keyboard_keyval_t keyval)
 }
 #endif
 
-/* this is a callback for a key press or release event: */
+/* this is a generic callback for a key press or release event: */
 int
-_tme_keyboard_key_event(struct tme_keyboard_event *tme_event,
-			struct tme_display *display)
+_tme_keyboard_key_press(int down, tme_keyboard_keyval_t key, void *disp)
+{
+  struct tme_keyboard_event tme_event;
+  struct tme_display *display = (_tme_display_get) ? (_tme_display_get(disp)) : (disp);
+
+  /* make a tme event from this key event: */
+  tme_event.tme_keyboard_event_type
+    = (down
+       ? TME_KEYBOARD_EVENT_PRESS
+       : TME_KEYBOARD_EVENT_RELEASE);
+  tme_event.tme_keyboard_event_modifiers
+    = TME_KEYBOARD_MODIFIER_NONE;
+  tme_event.tme_keyboard_event_keyval
+    = key;
+  tme_event.tme_keyboard_event_time = tme_thread_get_time();
+
+  return _tme_keyboard_key_event(&tme_event, display);
+}
+
+int
+_tme_keyboard_key_event(struct tme_keyboard_event *tme_event, struct tme_display *display)
 {
   int was_empty;
   int new_callouts;
   int rc;
+
+  /* lock the mutex: */
+  tme_mutex_lock(&display->tme_display_mutex);
 
   /* assume that we won't need any new callouts: */
   new_callouts = 0;
@@ -263,6 +285,9 @@ _tme_keyboard_key_event(struct tme_keyboard_event *tme_event,
 
   /* run any callouts: */
   //_tme_display_callout(display, new_callouts);
+
+  /* unlock the mutex: */
+  tme_mutex_unlock(&display->tme_display_mutex);
 
   /* don't process this event any further: */
   return (TRUE);

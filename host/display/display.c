@@ -203,6 +203,8 @@ int
 tme_display_update(void *disp) {
   struct tme_display *display;
   struct tme_screen *screen;
+  struct tme_fb_connection *conn_fb;
+  int width, height;
   int rc;
   
   display = (struct tme_display *)disp;
@@ -219,6 +221,9 @@ tme_display_update(void *disp) {
     
   _tme_display_callout(display, 0);
 
+  width = screen->tme_screen_fb->tme_fb_connection_width;
+  height = screen->tme_screen_fb->tme_fb_connection_height;
+  
   /* loop over all screens: */
   for (screen = display->tme_display_screens;
        screen != NULL;
@@ -227,7 +232,7 @@ tme_display_update(void *disp) {
     switch(screen->tme_screen_update) {
     case TME_SCREEN_UPDATE_REDRAW:
       if(display->tme_screen_redraw)
-	display->tme_screen_redraw(screen);
+	display->tme_screen_redraw(screen, 0, 0, width, height);
       break;
     case TME_SCREEN_UPDATE_RESIZE:
       if(display->tme_screen_resize)
@@ -555,6 +560,9 @@ _tme_screen_add(struct tme_display *display,
   /* save our connection: */
   screen->tme_screen_fb = conn;
 
+  /* default screen scale: */
+  screen->tme_screen_scale = 1;
+  
   /* the user hasn't specified a scaling yet: */
   screen->tme_screen_fb_scale
     = -TME_FB_XLAT_SCALE_NONE;
@@ -598,7 +606,7 @@ _tme_display_connection_make(struct tme_connection *conn,
   if (state == TME_CONNECTION_FULL) {
 
     /* lock our mutex: */
-    //tme_mutex_lock(&display->tme_display_mutex);
+    tme_mutex_lock(&display->tme_display_mutex);
 
     /* if our initial screen is already connected, make a new screen: */
     screen = (display->tme_screen_add) ?
@@ -606,10 +614,10 @@ _tme_display_connection_make(struct tme_connection *conn,
       tme_screen_new(display, struct tme_screen, conn);
 
     /* unlock our mutex: */
-    //tme_mutex_unlock(&display->tme_display_mutex);
+    tme_mutex_unlock(&display->tme_display_mutex);
 
     /* call our mode change function: */
-    //    _tme_screen_mode_change((struct tme_fb_connection *) conn);
+    _tme_screen_mode_change((struct tme_fb_connection *) conn);
   }
 
   return (TME_OK);
@@ -669,9 +677,14 @@ _tme_display_connections_new(struct tme_element *element,
 int tme_display_init(struct tme_element *element,
 		     struct tme_display *display) {
 
+  if(!display) display = tme_new0(struct tme_display, 1);
+  
   /* start our data structure: */
   display->tme_display_element = element;
 
+  /* default display: */
+  _tme_display_get = 0;
+  
   /* create the keyboard: */
   _tme_keyboard_new(display);
 

@@ -97,12 +97,6 @@ struct tme_gtk_screen {
      for the framebuffer event box: */
   GdkEventMask tme_gtk_screen_mouse_events_old;
 
-  /* when mouse mode is on, this is the warp center: */
-  gint tme_gtk_screen_mouse_warp_x;
-  gint tme_gtk_screen_mouse_warp_y;
-
-  /* when mouse mode is on, the last tme buttons state: */
-  unsigned int tme_gtk_screen_mouse_buttons_last;
 };
 
 /* a menu item: */

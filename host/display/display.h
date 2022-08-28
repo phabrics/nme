@@ -70,7 +70,7 @@ struct tme_screen {
   struct tme_display *tme_screen_display;
 
   /* the framebuffer connection.  unlike many other elements, this is
-     *our* side of the framebuffer connection, not the peer's side: */
+   *our* side of the framebuffer connection, not the peer's side: */
   struct tme_fb_connection *tme_screen_fb;
 
   /* the current scaling.  if this is < 0, the user has not forced a
@@ -152,16 +152,38 @@ struct tme_display {
   int tme_screen_width;
   int tme_screen_height;
   
+  /* screen mouse data: */
+  int tme_screen_mouse_buttons_last,
+    tme_screen_mouse_warp_x,
+    tme_screen_mouse_warp_y;
+
+  /* a convenience pointer for any platform-specific host data: */
+  void *tme_screen_data;
+  
   /* implementation-specific callback functions: */
   int (*tme_display_bell) _TME_P((struct tme_display *));
   int (*tme_display_update) _TME_P((struct tme_display *));
   struct tme_screen *(*tme_screen_add) _TME_P((struct tme_display *, struct tme_connection *));
   int (*tme_screen_resize) _TME_P((struct tme_screen *));
-  int (*tme_screen_redraw) _TME_P((struct tme_screen *));
+  int (*tme_screen_redraw) _TME_P((struct tme_screen *, int x, int y, int w, int h));
   int (*tme_screen_update) _TME_P((struct tme_screen *));
 };
 
 /* prototypes: */
+/* this recovers the scanline-pad value for an image buffer: */
+inline unsigned int
+_tme_scanline_pad(int bpl)
+{
+  if ((bpl % sizeof(tme_uint32_t)) == 0) {
+    return (32);
+  }
+  if ((bpl % sizeof(tme_uint16_t)) == 0) {
+    return (16);
+  }
+  return (8);
+}
+
+struct tme_display *(*_tme_display_get) _TME_P((void *));
 struct tme_screen *_tme_screen_add _TME_P((struct tme_display *,
 					   size_t,
 					   struct tme_connection *));
@@ -172,10 +194,12 @@ void _tme_screen_xlat_set _TME_P((struct tme_screen *screen));
 void _tme_keyboard_new _TME_P((struct tme_display *));
 int _tme_keyboard_connections_new _TME_P((struct tme_display *,
 					  struct tme_connection **));
+int _tme_keyboard_key_press _TME_P((int down, tme_keyboard_keyval_t key, void *disp));
 void _tme_mouse_new _TME_P((struct tme_display *));
 void _tme_mouse_mode_off _TME_P((struct tme_screen *, tme_uint32_t));
 int _tme_mouse_connections_new _TME_P((struct tme_display *,
 				       struct tme_connection **));
+int _tme_mouse_buttons_event _TME_P((int buttons, int x, int y, void *disp));
 
 #endif /* _HOST_DISPLAY_H */
 

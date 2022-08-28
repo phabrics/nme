@@ -52,15 +52,71 @@ _tme_mouse_debug(const struct tme_mouse_event *event)
 #define _tme_mouse_debug(e) do { } while (/* CONSTCOND */ 0)
 #endif
 
-/* this is a callback for a mouse event in the framebuffer event box: */
+/* this is a generic callback for a mouse event: */
 int
-_tme_mouse_mouse_event(struct tme_keyboard_event *tme_event,
-		       struct tme_display *display)
+_tme_mouse_button_press(int button, int x, int y, struct tme_display *display)
 {
-  int was_empty;
-  int new_callouts;
-  int rc;
+  int state;
+    
+  /* make the buttons mask: */
+  state = display->tme_screen_mouse_buttons_last;
 
+  if(button>0)
+    state |= TME_BIT(button-1);
+  else if(button) {
+    button = -button;
+    state &= ~TME_BIT(button-1);
+  }
+
+  return _tme_mouse_buttons_event(state, x, y, display);  
+}
+
+int _tme_mouse_buttons_event(int buttons, int x, int y, void *disp)
+{
+  struct tme_mouse_event tme_event;
+  int was_empty;
+  int new_callouts, rc;
+  struct tme_display *display = (_tme_display_get) ? (_tme_display_get(disp)) : (disp);
+  
+  /* start the tme event: */
+  tme_event.tme_mouse_event_delta_units
+    = TME_MOUSE_UNITS_UNKNOWN;
+
+  /* lock the mutex: */
+  tme_mutex_lock(&display->tme_display_mutex);
+
+  /* set the event time: */
+  tme_event.tme_mouse_event_time = tme_thread_get_time();
+
+  /* if the button mask and pointer position haven't changed, return now.
+     every time we warp the pointer we will get a motion event, and
+     this should ignore those events: */
+
+  if (buttons == display->tme_screen_mouse_buttons_last
+      && x == display->tme_screen_mouse_warp_x
+      && y == display->tme_screen_mouse_warp_y) {
+    
+    /* unlock the mutex: */
+    tme_mutex_unlock(&display->tme_display_mutex);
+    
+    /* stop propagating this event: */
+    return (TRUE);
+  }
+  
+  tme_event.tme_mouse_event_buttons =
+    display->tme_screen_mouse_buttons_last = buttons;
+  
+  /* make the deltas: */
+  tme_event.tme_mouse_event_delta_x = 
+    (((int) x)
+     - ((int) display->tme_screen_mouse_warp_x));
+  tme_event.tme_mouse_event_delta_y = 
+    (((int) y)
+     - ((int) display->tme_screen_mouse_warp_y));
+
+  display->tme_screen_mouse_warp_x = x;
+  display->tme_screen_mouse_warp_y = y;
+  
   /* assume that we won't need any new callouts: */
   new_callouts = 0;
   
@@ -69,9 +125,9 @@ _tme_mouse_mouse_event(struct tme_keyboard_event *tme_event,
     = tme_mouse_buffer_is_empty(display->tme_display_mouse_buffer);
 
   /* add this tme event to the mouse buffer: */
-  _tme_mouse_debug(tme_event);
+  _tme_mouse_debug(&tme_event);
   rc = tme_mouse_buffer_copyin(display->tme_display_mouse_buffer,
-			       tme_event);
+			       &tme_event);
   assert (rc == TME_OK);
 
   /* if the mouse buffer was empty and now it isn't,
@@ -86,6 +142,9 @@ _tme_mouse_mouse_event(struct tme_keyboard_event *tme_event,
 
   /* run any callouts: */
   //_tme_display_callout(display, new_callouts);
+
+  /* unlock the mutex: */
+  tme_mutex_unlock(&display->tme_display_mutex);
 
   /* don't process this event any further: */
   return (TRUE);
@@ -111,8 +170,8 @@ _tme_mouse_ctrl(struct tme_mouse_connection *conn_mouse,
 /* this is called to read the mouse: */
 static int
 _tme_mouse_read(struct tme_mouse_connection *conn_mouse, 
-		    struct tme_mouse_event *event,
-		    unsigned int count)
+		struct tme_mouse_event *event,
+		unsigned int count)
 {
   struct tme_display *display;
   int rc;

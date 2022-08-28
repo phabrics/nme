@@ -52,19 +52,6 @@ _tme_gtk_display_update(struct tme_display *display) {
   return TME_OK;
 }
 
-/* this recovers the scanline-pad value for an image buffer: */
-static unsigned int
-_tme_gtk_scanline_pad(int bpl)
-{
-  if ((bpl % sizeof(tme_uint32_t)) == 0) {
-    return (32);
-  }
-  if ((bpl % sizeof(tme_uint16_t)) == 0) {
-    return (16);
-  }
-  return (8);
-}
-
 /* this sets the screen scaling to that indicated by the Scale menu: */
 static void
 _tme_gtk_screen_scale_default(GtkWidget *widget,
@@ -297,7 +284,7 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
   conn_fb->tme_fb_connection_width = cairo_image_surface_get_width(screen->tme_gtk_screen_surface);
   conn_fb->tme_fb_connection_height = cairo_image_surface_get_height(screen->tme_gtk_screen_surface);
   conn_fb->tme_fb_connection_skipx = 0;
-  conn_fb->tme_fb_connection_scanline_pad = _tme_gtk_scanline_pad(cairo_image_surface_get_stride(screen->tme_gtk_screen_surface));
+  conn_fb->tme_fb_connection_scanline_pad = _tme_scanline_pad(cairo_image_surface_get_stride(screen->tme_gtk_screen_surface));
   conn_fb->tme_fb_connection_order = TME_ENDIAN_NATIVE;
   conn_fb->tme_fb_connection_buffer = cairo_image_surface_get_data(screen->tme_gtk_screen_surface);
   conn_fb->tme_fb_connection_buffsz = cairo_image_surface_get_stride(screen->tme_gtk_screen_surface) * conn_fb->tme_fb_connection_height;
@@ -317,7 +304,7 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
 
 /* this is called before the screen's display is updated: */
 static void
-_tme_gtk_screen_redraw(struct tme_gtk_screen *screen)
+_tme_gtk_screen_redraw(struct tme_gtk_screen *screen, int x, int y, int w, int h)
 {
   cairo_surface_flush(screen->tme_gtk_screen_surface);
   cairo_surface_mark_dirty(screen->tme_gtk_screen_surface);
@@ -366,9 +353,6 @@ _tme_gtk_screen_new(struct tme_gdk_display *display,
   GtkWidget *submenu;
   GtkWidget *menu_item;
   char title[sizeof(PACKAGE_STRING) + 16];
-
-  /* lock our mutex: */
-  tme_mutex_lock(&display->display.tme_display_mutex);
 
   screen = tme_screen_new(display, struct tme_gtk_screen, conn);
 
@@ -455,13 +439,14 @@ _tme_gtk_screen_new(struct tme_gdk_display *display,
   snprintf(title, sizeof(title), "%s (%s)", PACKAGE_STRING, conn->tme_connection_other->tme_connection_element->tme_element_args[0]);
   gtk_window_set_title(GTK_WINDOW(screen->tme_gtk_screen_window), title);
 
-  _tme_gtk_screen_resize(screen);
-  
   /* unlock our mutex: */
   tme_mutex_unlock(&display->display.tme_display_mutex);
 
   /* show the top-level window: */
   gtk_widget_show_all(screen->tme_gtk_screen_window);
+
+  /* lock our mutex: */
+  tme_mutex_lock(&display->display.tme_display_mutex);
 
   return (screen);
 }
