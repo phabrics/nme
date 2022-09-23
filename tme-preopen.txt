@@ -22,6 +22,7 @@ LDADD = \
 	-dlopen ../machine/sun3/tme_machine_sun3.la \
 	-dlopen ../machine/sun4/tme_machine_sun4.la \
 	-dlopen ../host/display/rfb/tme_host_rfb.la \
+	-dlopen ../host/display/sdl/tme_host_sdl.la \
 	-dlopen ../host/display/gtk/tme_host_gtk.la \
 	-dlopen ../host/eth/bsd/tme_host_bsd.la \
 	-dlopen ../host/eth/tun/tme_host_tun.la \

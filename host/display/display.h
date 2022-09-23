@@ -55,7 +55,7 @@
 #define TME_SCREEN_UPDATE_NONE                  (0)
 #define TME_SCREEN_UPDATE_REDRAW                (1)
 #define TME_SCREEN_UPDATE_RESIZE                (2)
-
+#define TME_SCREEN_MAXSIZE                   (1024)
 /* types: */
 
 struct tme_display;
@@ -141,6 +141,9 @@ struct tme_display {
 
   /* our mouse buffer: */
   struct tme_mouse_buffer *tme_display_mouse_buffer;
+
+  /* the title to be displayed by the front-end: */
+  char tme_display_title[sizeof(PACKAGE_STRING) + 16];
 
   /* our screens: */
   struct tme_screen *tme_display_screens;

@@ -352,7 +352,6 @@ _tme_gtk_screen_new(struct tme_gdk_display *display,
   GtkWidget *menu;
   GtkWidget *submenu;
   GtkWidget *menu_item;
-  char title[sizeof(PACKAGE_STRING) + 16];
 
   screen = tme_screen_new(display, struct tme_gtk_screen, conn);
 
@@ -436,8 +435,7 @@ _tme_gtk_screen_new(struct tme_gdk_display *display,
   /* attach the keyboard to this screen: */
   _tme_gtk_keyboard_attach(screen);
 
-  snprintf(title, sizeof(title), "%s (%s)", PACKAGE_STRING, conn->tme_connection_other->tme_connection_element->tme_element_args[0]);
-  gtk_window_set_title(GTK_WINDOW(screen->tme_gtk_screen_window), title);
+  gtk_window_set_title(GTK_WINDOW(screen->tme_gtk_screen_window), display->display.tme_display_title);
 
   /* unlock our mutex: */
   tme_mutex_unlock(&display->display.tme_display_mutex);

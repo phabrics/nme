@@ -99,7 +99,10 @@ _tme_rfb_screen_new(struct tme_display *display,
 {
   struct tme_screen *screen;
   struct tme_fb_connection *conn_fb;
-  rfbPixelFormat* format=&((rfbScreenInfoPtr)display->tme_screen_data)->serverFormat;
+  rfbScreenInfoPtr server = screen->tme_screen_display->tme_screen_data;
+  rfbPixelFormat* format=&server->serverFormat;
+
+  server->desktopName = display->tme_display_title;
 
   screen = tme_screen_new(display, struct tme_screen, conn);
 
@@ -158,7 +161,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_rfb,display) {
 		      8,3,bpp);
   if(!server)
     return 1;
-  server->desktopName = "The Machine Emulator";
   server->frameBuffer = (char*)tme_malloc(display->tme_screen_width *
 					  display->tme_screen_height *
 					  bpp);

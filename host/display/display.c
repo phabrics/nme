@@ -221,14 +221,13 @@ tme_display_update(void *disp) {
     
   _tme_display_callout(display, 0);
 
-  width = screen->tme_screen_fb->tme_fb_connection_width;
-  height = screen->tme_screen_fb->tme_fb_connection_height;
-  
   /* loop over all screens: */
   for (screen = display->tme_display_screens;
        screen != NULL;
        screen = screen->tme_screen_next) {
     _tme_screen_update(screen);
+    width = screen->tme_screen_fb->tme_fb_connection_width;
+    height = screen->tme_screen_fb->tme_fb_connection_height;
     switch(screen->tme_screen_update) {
     case TME_SCREEN_UPDATE_REDRAW:
       if(display->tme_screen_redraw)
@@ -608,10 +607,16 @@ _tme_display_connection_make(struct tme_connection *conn,
     /* lock our mutex: */
     tme_mutex_lock(&display->tme_display_mutex);
 
+    /* set the default title to be displayed by front-end: */
+    snprintf(display->tme_display_title, sizeof(display->tme_display_title),
+	     "%s (%s)",
+	     PACKAGE_STRING,
+	     conn->tme_connection_other->tme_connection_element->tme_element_args[0]);
+
     /* if our initial screen is already connected, make a new screen: */
-    screen = (display->tme_screen_add) ?
+    screen = ((uintptr_t)display->tme_screen_add>TME_SCREEN_MAXSIZE) ?
       display->tme_screen_add(display, conn) :
-      tme_screen_new(display, struct tme_screen, conn);
+      _tme_screen_add(display, (uintptr_t)display->tme_screen_add, conn);
 
     /* unlock our mutex: */
     tme_mutex_unlock(&display->tme_display_mutex);
@@ -694,6 +699,7 @@ int tme_display_init(struct tme_element *element,
   /* default display values: */
   display->tme_screen_width = 1920;
   display->tme_screen_height = 1080;
+  display->tme_screen_add = (void *)sizeof(struct tme_screen);
   
   /* start the threads: */
   tme_mutex_init(&display->tme_display_mutex);

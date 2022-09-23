@@ -8,4 +8,9 @@ AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(top_srcdir)/lib -I$(srcdir)/.. -I.
 bin_PROGRAMS = SDLvncviewer
 LDADD = ../libtme-display.la $(RFB_LIBS) $(SDL_LIBS)
 
+pkglib_LTLIBRARIES = tme_host_sdl.la
+tme_host_sdl_la_SOURCES = sdl-display.c
+tme_host_sdl_la_LDFLAGS = -module -version-info 0:0:0
+tme_host_sdl_la_LIBADD = ../libtme-display.la $(SDL_LIBS)
+
 include $(top_srcdir)/modules
