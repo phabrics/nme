@@ -37,6 +37,13 @@
 #include "display.h"
 #include <SDL.h>
 #include <signal.h>
+#ifdef HAVE_X11_KEYSYM_H
+#include <X11/keysym.h>
+#elif HAVE_RFB_KEYSYM_H
+#include <rfb/keysym.h>
+#else
+#error "No keysym header file on system."
+#endif
 
 struct { char mask; int bits_stored; } utf8Mapping[]= {
         {0b00111111, 6},
@@ -100,9 +107,9 @@ static int _tme_sdl_screen_resize(struct tme_sdl_screen *screen)
   conn_fb->tme_fb_connection_bits_per_pixel = depth;
   conn_fb->tme_fb_connection_depth = 24;
   conn_fb->tme_fb_connection_class = TME_FB_XLAT_CLASS_COLOR;
-  conn_fb->tme_fb_connection_mask_g = screen->sdl->format->Gmask >> screen->sdl->format->Gshift;
-  conn_fb->tme_fb_connection_mask_b = screen->sdl->format->Bmask >> screen->sdl->format->Bshift;
-  conn_fb->tme_fb_connection_mask_r = screen->sdl->format->Rmask >> screen->sdl->format->Rshift;
+  conn_fb->tme_fb_connection_mask_g = screen->sdl->format->Gmask;
+  conn_fb->tme_fb_connection_mask_b = screen->sdl->format->Bmask;
+  conn_fb->tme_fb_connection_mask_r = screen->sdl->format->Rmask;
   /* create or resize the window */
   if(!screen->sdlWindow) {
     screen->sdlWindow = SDL_CreateWindow(display->tme_display_title,
@@ -141,7 +148,7 @@ static int _tme_sdl_screen_resize(struct tme_sdl_screen *screen)
 	     _("resize: error creating texture: %s\n"), SDL_GetError()));
   return TRUE;
 }
-#if 0
+
 static tme_keyboard_keyval_t SDL_key2rfbKeySym(SDL_KeyboardEvent* e) {
         tme_keyboard_keyval_t k = 0;
         SDL_Keycode sym = e->keysym.sym;
@@ -219,7 +226,7 @@ static tme_keyboard_keyval_t SDL_key2rfbKeySym(SDL_KeyboardEvent* e) {
                k = sym;
         return k;
 }
-#endif
+
 /* UTF-8 decoding is from https://rosettacode.org/wiki/UTF-8_encode_and_decode which is under GFDL 1.2 */
 static tme_keyboard_keyval_t utf8char2rfbKeySym(const char chr[4]) {
         int bytes = strlen(chr);
@@ -335,19 +342,22 @@ _tme_sdl_display_update(struct tme_display *display) {
     case SDL_KEYDOWN:
       if (viewOnly)
 	break;
+      tme_keyboard_keyval_t sym = SDL_key2rfbKeySym(&e.key);
       _tme_keyboard_key_press(e.type == SDL_KEYDOWN ? TRUE : FALSE,
-			      e.key.keysym.sym, display);
+			      (sym) ? (sym) : (e.key.keysym.sym), display);
       if (e.key.keysym.sym == SDLK_RALT)
 	rightAltKeyDown = e.type == SDL_KEYDOWN;
       if (e.key.keysym.sym == SDLK_LALT)
 	leftAltKeyDown = e.type == SDL_KEYDOWN;
       break;
     case SDL_TEXTINPUT:
+#if 0
       if (viewOnly)
 	break;
       tme_keyboard_keyval_t sym = utf8char2rfbKeySym(e.text.text);
       _tme_keyboard_key_press(TRUE, sym, display);
       _tme_keyboard_key_press(FALSE, sym, display);
+#endif
       break;
     default:
       tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,

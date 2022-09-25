@@ -173,6 +173,7 @@ AC_CHECK_HEADERS([io.h direct.h \
 		  signal.h unistd.h dlfcn.h])
 AC_CHECK_HEADERS([linux/netfilter/nf_tables.h libmnl/libmnl.h libnftnl/table.h libnftnl/chain.h libnftnl/rule.h libnftnl/expr.h])
 AC_CHECK_HEADERS([pthread_np.h sched.h])
+AC_CHECK_HEADERS([X11/keysym.h rfb/keysym.h])
 AC_CHECK_HEADERS([sys/param.h sys/linker.h sys/sysctl.h sys/module.h npf.h net/npf_ncode.h pcap/pcap.h], [], [],
 [#ifdef HAVE_SYS_PARAM_H
  # include <sys/param.h>

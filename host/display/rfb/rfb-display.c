@@ -99,7 +99,7 @@ _tme_rfb_screen_new(struct tme_display *display,
 {
   struct tme_screen *screen;
   struct tme_fb_connection *conn_fb;
-  rfbScreenInfoPtr server = screen->tme_screen_display->tme_screen_data;
+  rfbScreenInfoPtr server = display->tme_screen_data;
   rfbPixelFormat* format=&server->serverFormat;
 
   server->desktopName = display->tme_display_title;
