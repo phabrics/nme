@@ -124,7 +124,7 @@ _tme_scsi_bus_callout(struct tme_scsi_bus *scsi_bus, int new_callouts)
   tme_scsi_data_t data;
   tme_uint32_t events_triggered;
   tme_uint32_t actions_taken;
-  struct tme_scsi_dma dma_buffer;
+  char dma_buffer[sizeof(struct tme_scsi_dma)+16];
   const struct tme_scsi_dma *dma;
   int rc;
   
@@ -192,10 +192,9 @@ _tme_scsi_bus_callout(struct tme_scsi_bus *scsi_bus, int new_callouts)
            DMA structure: */
 	events_triggered = conn_int->tme_scsi_connection_int_events_triggered;
 	actions_taken = conn_int->tme_scsi_connection_int_actions_taken;
-	dma = conn_int->tme_scsi_connection_int_dma;
-	if (dma != NULL) {
-	  dma_buffer = *dma;
-	  dma = &dma_buffer;
+	if (conn_int->tme_scsi_connection_int_dma != NULL) {
+	  dma = TME_ALIGN((uintptr_t)dma_buffer,16);
+	  memcpy(dma, conn_int->tme_scsi_connection_int_dma, sizeof(struct tme_scsi_dma));
 	}
 	conn_int->tme_scsi_connection_int_events_triggered = 0;
 	conn_int->tme_scsi_connection_int_actions_taken = 0;

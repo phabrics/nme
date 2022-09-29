@@ -60,8 +60,9 @@ _tme_scsi_device_callout(struct tme_scsi_device *scsi_device,
   tme_uint32_t events;
   tme_uint32_t actions;
   const struct tme_scsi_dma *dma;
-  struct tme_scsi_dma dma_buffer;
-  
+  //  struct tme_scsi_dma dma_buffer __attribute__((aligned(16)));
+  char dma_buffer[sizeof(struct tme_scsi_dma)+16];
+		  
   /* add in any new callouts: */
   scsi_device->tme_scsi_device_callout_flags |= new_callouts;
 
@@ -104,8 +105,8 @@ _tme_scsi_device_callout(struct tme_scsi_device *scsi_device,
 	/* run a target information transfer phase DMA sequence: */
 	events = TME_SCSI_EVENT_NONE;
 	actions = TME_SCSI_ACTION_DMA_TARGET;
-	dma_buffer = scsi_device->tme_scsi_device_dma;
-	dma = &dma_buffer;
+	dma = TME_ALIGN((uintptr_t)dma_buffer,16);
+	memcpy(dma, &scsi_device->tme_scsi_device_dma, sizeof(struct tme_scsi_dma));
       }
 
       /* otherwise, the bus is not busy: */

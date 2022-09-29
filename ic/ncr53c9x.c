@@ -1864,8 +1864,8 @@ _tme_ncr53c9x_callout(struct tme_ncr53c9x *ncr53c9x)
 {
   struct tme_scsi_connection *conn_scsi;
   struct tme_bus_connection *conn_bus;
-  struct tme_bus_tlb *tlb;
-  struct tme_bus_tlb tlb_local;
+  struct tme_bus_tlb *tlb, *tlb_local;
+  char tlb_buffer[sizeof(struct tme_bus_tlb)+16];
   tme_scsi_control_t scsi_control;
   tme_scsi_data_t scsi_data;
   tme_uint32_t scsi_events;
@@ -1874,7 +1874,7 @@ _tme_ncr53c9x_callout(struct tme_ncr53c9x *ncr53c9x)
   tme_scsi_data_t last_active_scsi_data;
   tme_uint32_t last_active_scsi_events;
   tme_uint32_t last_active_scsi_actions;
-  struct tme_scsi_dma scsi_dma_buffer;
+  char scsi_dma_buffer[sizeof(struct tme_scsi_dma)+16];
   struct tme_scsi_dma *scsi_dma;
   unsigned int fifo_head;
   unsigned int fifo_tail;
@@ -1892,6 +1892,7 @@ _tme_ncr53c9x_callout(struct tme_ncr53c9x *ncr53c9x)
     return;
   }
 
+  tlb_local = TME_ALIGN((uintptr_t)tlb_buffer,16);
   /* callouts are now running: */
   ncr53c9x->tme_ncr53c9x_callout_flags |= TME_NCR53C9X_CALLOUTS_RUNNING;
 
@@ -2213,7 +2214,7 @@ _tme_ncr53c9x_callout(struct tme_ncr53c9x *ncr53c9x)
 	    tme_bus_tlb_unbusy_fill(tlb);
 
 	    /* pass this TLB's token: */
-	    tlb_local.tme_bus_tlb_token = tlb->tme_bus_tlb_token;
+	    tlb_local->tme_bus_tlb_token = tlb->tme_bus_tlb_token;
 
 	    /* get our bus connection: */
 	    conn_bus = tme_memory_atomic_pointer_read(struct tme_bus_connection *,
@@ -2227,7 +2228,7 @@ _tme_ncr53c9x_callout(struct tme_ncr53c9x *ncr53c9x)
 	    rc = (conn_bus != NULL
 		  ? ((*conn_bus->tme_bus_tlb_fill)
 		     (conn_bus,
-		      &tlb_local,
+		      tlb_local,
 		      address,
 		      cycle_type))
 		  : EAGAIN);
@@ -2262,16 +2263,16 @@ _tme_ncr53c9x_callout(struct tme_ncr53c9x *ncr53c9x)
 	    }
 	  
 	    /* copy the local TLB entry into the global TLB entry: */
-	    *tlb = tlb_local;
+	    tlb = tlb_local;
 	  }
 	}
 
 	/* start the SCSI DMA structure: */
 	/* XXX parity? */
-	scsi_dma = &scsi_dma_buffer;
-	scsi_dma_buffer.tme_scsi_dma_flags = TME_SCSI_DMA_8BIT;
-	scsi_dma_buffer.tme_scsi_dma_sync_offset = 0;
-	scsi_dma_buffer.tme_scsi_dma_sync_period = 0;
+	scsi_dma = TME_ALIGN((uintptr_t)scsi_dma_buffer,16);
+	scsi_dma->tme_scsi_dma_flags = TME_SCSI_DMA_8BIT;
+	scsi_dma->tme_scsi_dma_sync_offset = 0;
+	scsi_dma->tme_scsi_dma_sync_period = 0;
 
 	/* get the head and the tail of the data FIFO: */
 	fifo_head = ncr53c9x->tme_ncr53c9x_fifo_data_head;
@@ -2282,7 +2283,7 @@ _tme_ncr53c9x_callout(struct tme_ncr53c9x *ncr53c9x)
 	   will transfer data into the data FIFO starting at the head,
 	   until the tail, or until the right end of the data FIFO,
 	   whichever comes first: */
-	scsi_dma_buffer.tme_scsi_dma_resid
+	scsi_dma->tme_scsi_dma_resid
 	  = (((fifo_head < fifo_tail)
 	      ? fifo_tail
 	      : TME_ARRAY_ELS(ncr53c9x->tme_ncr53c9x_fifo_data))
@@ -2291,19 +2292,19 @@ _tme_ncr53c9x_callout(struct tme_ncr53c9x *ncr53c9x)
 	/* note that we can't fill all positions of the data FIFO,
 	   because we identify an empty data FIFO when the head and
 	   the tail are equal: */
-	if (((fifo_head + scsi_dma_buffer.tme_scsi_dma_resid)
+	if (((fifo_head + scsi_dma->tme_scsi_dma_resid)
 	     % TME_ARRAY_ELS(ncr53c9x->tme_ncr53c9x_fifo_data))
 	    == fifo_tail) {
-	  scsi_dma_buffer.tme_scsi_dma_resid--;
+	  scsi_dma->tme_scsi_dma_resid--;
 	}
 
 	/* if the SCSI DMA cycle will transfer in from the SCSI bus: */
 	if (cycle_type == TME_BUS_CYCLE_WRITE) {
 
 	  /* assume that we're transferring into the data FIFO: */
-	  scsi_dma_buffer.tme_scsi_dma_in = &ncr53c9x->tme_ncr53c9x_fifo_data[fifo_head];
+	  scsi_dma->tme_scsi_dma_in = &ncr53c9x->tme_ncr53c9x_fifo_data[fifo_head];
 #ifndef NDEBUG
-	  scsi_dma_buffer.tme_scsi_dma_out = NULL;
+	  scsi_dma->tme_scsi_dma_out = NULL;
 #endif /* NDEBUG */
 
 	  /* if DMA is running: */
@@ -2320,7 +2321,7 @@ _tme_ncr53c9x_callout(struct tme_ncr53c9x *ncr53c9x)
 		 instead we assume that if we let the data in the FIFO
 		 flush to DMA now, after we advance the DMA address we
 		 may be able to start doing truly direct DMAs: */
-	      scsi_dma_buffer.tme_scsi_dma_resid = 0;
+	      scsi_dma->tme_scsi_dma_resid = 0;
 	      ncr53c9x->tme_ncr53c9x_callout_flags |= TME_NCR53C9X_CALLOUT_FLUSH_FIFO_DMA;
 	    }
 
@@ -2336,8 +2337,8 @@ _tme_ncr53c9x_callout(struct tme_ncr53c9x *ncr53c9x)
 		/* transfer starting from the fast writing address,
 		   stopping at least at the end of this TLB entry: */
 		/* XXX FIXME - this breaks volatile: */
-		scsi_dma_buffer.tme_scsi_dma_in = (tme_uint8_t *) (tlb->tme_bus_tlb_emulator_off_write + address);
-		scsi_dma_buffer.tme_scsi_dma_resid = (((tme_bus_addr32_t) tlb->tme_bus_tlb_addr_last) - address) + 1;
+		scsi_dma->tme_scsi_dma_in = (tme_uint8_t *) (tlb->tme_bus_tlb_emulator_off_write + address);
+		scsi_dma->tme_scsi_dma_resid = (((tme_bus_addr32_t) tlb->tme_bus_tlb_addr_last) - address) + 1;
 	      }
 
 	      /* otherwise, this TLB entry doesn't support fast writing: */
@@ -2348,8 +2349,8 @@ _tme_ncr53c9x_callout(struct tme_ncr53c9x *ncr53c9x)
 
 	      /* don't transfer more than CTC bytes: */
 	      reg_ctc = _tme_ncr53c9x_ctc_read(ncr53c9x);
-	      if (reg_ctc < scsi_dma_buffer.tme_scsi_dma_resid) {
-		scsi_dma_buffer.tme_scsi_dma_resid = reg_ctc;
+	      if (reg_ctc < scsi_dma->tme_scsi_dma_resid) {
+		scsi_dma->tme_scsi_dma_resid = reg_ctc;
 	      }
 	    }
 	  }
@@ -2359,7 +2360,7 @@ _tme_ncr53c9x_callout(struct tme_ncr53c9x *ncr53c9x)
 
 	    /* if we're not transferring any data now, the data FIFO
                is full: */
-	    if (scsi_dma_buffer.tme_scsi_dma_resid == 0) {
+	    if (scsi_dma->tme_scsi_dma_resid == 0) {
 
 	      /* XXX FIXME - what happens here?  for now, we assume
 		 that we do nothing, and just wait for software to
@@ -2374,7 +2375,7 @@ _tme_ncr53c9x_callout(struct tme_ncr53c9x *ncr53c9x)
 
 #ifndef NDEBUG
 	  /* we're not transferring in from the SCSI bus: */
-	  scsi_dma_buffer.tme_scsi_dma_in = NULL;
+	  scsi_dma->tme_scsi_dma_in = NULL;
 #endif /* NDEBUG */
 
 	  /* if DMA is not running: */
@@ -2382,8 +2383,8 @@ _tme_ncr53c9x_callout(struct tme_ncr53c9x *ncr53c9x)
 
 	    /* unless the FIFO is not empty, which we check below, we
 	       don't have any data to transfer now: */
-	    scsi_dma_buffer.tme_scsi_dma_out = NULL;
-	    scsi_dma_buffer.tme_scsi_dma_resid = 0;
+	    scsi_dma->tme_scsi_dma_out = NULL;
+	    scsi_dma->tme_scsi_dma_resid = 0;
 	  }
 
 	  /* otherwise, DMA is running.  if there isn't any data in
@@ -2400,12 +2401,12 @@ _tme_ncr53c9x_callout(struct tme_ncr53c9x *ncr53c9x)
 	      /* transfer starting from the fast reading address, stopping
 		 at least at the end of this TLB entry: */
 	      /* XXX FIXME - this breaks volatile: */
-	      scsi_dma_buffer.tme_scsi_dma_out = (const tme_uint8_t *) (tlb->tme_bus_tlb_emulator_off_read + address);
-	      scsi_dma_buffer.tme_scsi_dma_resid = (((tme_bus_addr32_t) tlb->tme_bus_tlb_addr_last) - address) + 1;
+	      scsi_dma->tme_scsi_dma_out = (const tme_uint8_t *) (tlb->tme_bus_tlb_emulator_off_read + address);
+	      scsi_dma->tme_scsi_dma_resid = (((tme_bus_addr32_t) tlb->tme_bus_tlb_addr_last) - address) + 1;
 
 	      /* don't transfer more than CTC bytes: */
-	      if (reg_ctc < scsi_dma_buffer.tme_scsi_dma_resid) {
-		scsi_dma_buffer.tme_scsi_dma_resid = reg_ctc;
+	      if (reg_ctc < scsi_dma->tme_scsi_dma_resid) {
+		scsi_dma->tme_scsi_dma_resid = reg_ctc;
 	      }
 	    }
 
@@ -2416,7 +2417,7 @@ _tme_ncr53c9x_callout(struct tme_ncr53c9x *ncr53c9x)
 		 until the tail, or the right end of the data FIFO, or
 		 after CTC bytes, or after the SCSI bus transfer
 		 residual, whichever comes first: */
-	      resid = TME_MIN(scsi_dma_buffer.tme_scsi_dma_resid, reg_ctc);
+	      resid = TME_MIN(scsi_dma->tme_scsi_dma_resid, reg_ctc);
 	      resid = TME_MIN(resid, ncr53c9x->tme_ncr53c9x_transfer_resid);
 
 	      /* if we need to detect the actual SCSI bus transfer
@@ -2485,8 +2486,8 @@ _tme_ncr53c9x_callout(struct tme_ncr53c9x *ncr53c9x)
 	    /* transfer out of the data FIFO starting at the tail,
 	       until the head, or the right end of the data FIFO,
 	       whichever comes first: */
-	    scsi_dma_buffer.tme_scsi_dma_out = &ncr53c9x->tme_ncr53c9x_fifo_data[fifo_tail];
-	    scsi_dma_buffer.tme_scsi_dma_resid = ((fifo_head < fifo_tail
+	    scsi_dma->tme_scsi_dma_out = &ncr53c9x->tme_ncr53c9x_fifo_data[fifo_tail];
+	    scsi_dma->tme_scsi_dma_resid = ((fifo_head < fifo_tail
 						   ? TME_ARRAY_ELS(ncr53c9x->tme_ncr53c9x_fifo_data)
 						   : fifo_head)
 						  - fifo_tail);
@@ -2503,8 +2504,8 @@ _tme_ncr53c9x_callout(struct tme_ncr53c9x *ncr53c9x)
 				      ? ncr53c9x->tme_ncr53c9x_latched_phase
 				      : ncr53c9x->tme_ncr53c9x_out_scsi_control),
 				     &ncr53c9x->tme_ncr53c9x_transfer_resid_detect_state,
-				     scsi_dma_buffer.tme_scsi_dma_out,
-				     scsi_dma_buffer.tme_scsi_dma_resid);
+				     scsi_dma->tme_scsi_dma_out,
+				     scsi_dma->tme_scsi_dma_resid);
 	    if (resid != 0) {
 	      ncr53c9x->tme_ncr53c9x_transfer_resid
 		= TME_MIN(ncr53c9x->tme_ncr53c9x_transfer_resid, resid);
@@ -2514,8 +2515,8 @@ _tme_ncr53c9x_callout(struct tme_ncr53c9x *ncr53c9x)
 
 	/* don't transfer more bytes over the SCSI bus than requested
            by the command sequence: */
-	scsi_dma_buffer.tme_scsi_dma_resid
-	  = TME_MIN(scsi_dma_buffer.tme_scsi_dma_resid,
+	scsi_dma->tme_scsi_dma_resid
+	  = TME_MIN(scsi_dma->tme_scsi_dma_resid,
 		    ncr53c9x->tme_ncr53c9x_transfer_resid);
 
 	/* if we're the initiator and we want to hold ACK on the last
@@ -2525,7 +2526,7 @@ _tme_ncr53c9x_callout(struct tme_ncr53c9x *ncr53c9x)
 	if (((scsi_actions & TME_SCSI_ACTION_DMA_INITIATOR_HOLD_ACK)
 	     == TME_SCSI_ACTION_DMA_INITIATOR_HOLD_ACK)
 	    && (ncr53c9x->tme_ncr53c9x_transfer_resid_detect_state != 0
-		|| scsi_dma_buffer.tme_scsi_dma_resid < ncr53c9x->tme_ncr53c9x_transfer_resid)) {
+		|| scsi_dma->tme_scsi_dma_resid < ncr53c9x->tme_ncr53c9x_transfer_resid)) {
 	  scsi_actions
 	    = ((scsi_actions & ~TME_SCSI_ACTION_DMA_INITIATOR_HOLD_ACK)
 	       | TME_SCSI_ACTION_DMA_INITIATOR);
@@ -2536,7 +2537,7 @@ _tme_ncr53c9x_callout(struct tme_ncr53c9x *ncr53c9x)
 	   cycle: */
 
 	/* if we don't have a SCSI DMA buffer: */
-	if (scsi_dma_buffer.tme_scsi_dma_resid == 0) {
+	if (scsi_dma->tme_scsi_dma_resid == 0) {
 
 	  /* call out a SCSI cycle that just waits for a bus change: */
 	  scsi_events = TME_SCSI_EVENT_BUS_CHANGE;
