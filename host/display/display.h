@@ -186,7 +186,7 @@ _tme_scanline_pad(int bpl)
   return (8);
 }
 
-struct tme_display *(*_tme_display_get) _TME_P((void *));
+extern struct tme_display *(*_tme_display_get) _TME_P((void *));
 struct tme_screen *_tme_screen_add _TME_P((struct tme_display *,
 					   size_t,
 					   struct tme_connection *));

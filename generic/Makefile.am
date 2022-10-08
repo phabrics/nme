@@ -30,7 +30,7 @@ BUILT_SOURCES =	$(noinst_SCRIPTS:.sh=.c)
 
 CLEANFILES = $(noinst_SCRIPTS) $(BUILT_SOURCES)
 
-EXTRA_DIST = $(CLEANFILES) $(noinst_SCRIPTS:.sh=.m4)
+EXTRA_DIST = $(CLEANFILES) $(noinst_SCRIPTS:.sh=.m4) fb-xlat-auto.pl
 
 # default rule for regenerating the portable shell scripts from m4 descriptions
 $(noinst_SCRIPTS): %.sh: %.m4

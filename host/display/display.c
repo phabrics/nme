@@ -36,6 +36,8 @@
 /* includes: */
 #include "display.h"
 
+struct tme_display *(*_tme_display_get) _TME_P((void *));
+
 static int
 _tme_screen_update(struct tme_screen *screen) {
   struct tme_fb_connection *conn_fb;
