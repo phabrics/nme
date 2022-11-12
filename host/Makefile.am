@@ -11,8 +11,7 @@ tme_host_posix_la_SOURCES = posix-memory.c \
 	posix-tape.c \
 	posix-serial.c
 
-tme_host_posix_la_LDFLAGS = -module -version-info 0:0:0
-tme_host_posix_la_LIBADD = $(top_builddir)/generic/libtme-generic.la
+tme_host_posix_la_LIBADD = $(TME_LIBS)
 
 include $(top_srcdir)/modules
 

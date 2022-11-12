@@ -1,0 +1,6 @@
+tme_host_gtk=../host/display/gtk
+tme_host_rfb=../host/display/rfb
+tme_host_sdl=../host/display/sdl
+tme_host_tun=../host/eth/tun
+tme_host_bsd=../host/eth/bsd
+tme_host_openvpn=../host/eth/openvpn

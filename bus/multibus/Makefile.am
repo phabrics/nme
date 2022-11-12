@@ -9,7 +9,6 @@ pkglib_LTLIBRARIES = tme_bus_multibus.la
 tme_bus_multibus_la_SOURCES = 3c400.c \
 	sun-mie.c \
 	sun-sc.c
-tme_bus_multibus_la_LDFLAGS = -module -version-info 0:0:0
-tme_bus_multibus_la_LIBADD = $(top_builddir)/generic/libtme-generic.la
+tme_bus_multibus_la_LIBADD = $(TME_LIBS)
 
 include $(top_srcdir)/modules

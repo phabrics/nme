@@ -53,9 +53,4 @@ fb-xlat-auto.c: %.c: %.sh
 	$(SHELL) $< src $(TME_FB_XLAT_SRC) dst $(TME_FB_XLAT_DST) > $@
 endif
 
-pkglib_LTLIBRARIES = tme_generic.la
-tme_generic_la_SOURCES = bus-el.c
-tme_generic_la_LDFLAGS = -module -version-info 0:0:0
-tme_generic_la_LIBADD = libtme-generic.la
-
-include $(top_srcdir)/modules
+SUBDIRS = . bus

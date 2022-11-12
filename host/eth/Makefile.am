@@ -7,9 +7,8 @@ AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(top_srcdir)/lib -I. -D_TME_IMPL
 lib_LTLIBRARIES = libtme-eth.la
 libtme_eth_la_SOURCES = eth-impl.c eth-if.h
 libtme_eth_la_LDFLAGS = -version-info 0:0:0
-libtme_eth_la_LIBADD = $(top_builddir)/generic/libtme-generic.la
+libtme_eth_la_LIBADD = $(TME_LIBS)
 
 include $(top_srcdir)/modules
 
-SUBDIRS = . @TME_ETH_HOSTS@
-DIST_SUBDIRS = bsd tun openvpn
+DIST_SUBDIRS=bsd openvpn tun

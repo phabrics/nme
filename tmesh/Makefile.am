@@ -5,7 +5,7 @@ AUTOMAKE_OPTIONS = 1.4 gnu
 
 AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(top_srcdir)/lib -I. -D_TME_IMPL
 
-if USING_OPENVPN
+if HAVE_OPENVPN
 AM_CPPFLAGS += -DTME_OPENVPN
 endif
 
@@ -19,9 +19,13 @@ libtmesh_la_SOURCES = \
 libtmesh_la_LIBADD = $(top_builddir)/libtme/libtme.la
 
 bin_PROGRAMS = tmesh
-tmesh_LDADD = libtmesh.la $(LDADD)
+tmesh_LDADD = libtmesh.la $(tme_preopen) @TME_HOSTS@
 tmesh_LDFLAGS = -dlpreopen force -dlopen self
-include $(top_srcdir)/tme-preopen.txt
 
 install-exec-hook:
 	$(SETCAP) $(DESTDIR)$(bindir)/$(TGTPFX)tmesh$(EXEEXT)
+
+include $(top_srcdir)/tme-hosts.txt
+include $(top_srcdir)/tme-preopen.txt
+
+SUBDIRS = @TME_HOSTS_DIRS@

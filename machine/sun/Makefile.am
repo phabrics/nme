@@ -14,7 +14,7 @@ libtme_machine_sun_la_SOURCES = sun-mmu.c \
 	sun-si.c \
 	sun-obie.c
 libtme_machine_sun_la_LDFLAGS = -version-info 0:0:0
-libtme_machine_sun_la_LIBADD = $(top_builddir)/generic/libtme-generic.la
+libtme_machine_sun_la_LIBADD = $(TME_LIBS)
 
 bin_SCRIPTS = tme-sun-idprom tme-sun-eeprom
 
@@ -31,3 +31,4 @@ tme-sun-idprom: tme-sun-idprom.pl
 tme-sun-eeprom: tme-sun-eeprom.pl $(top_srcdir)/tools/tme-binary-struct.pl.in
 	cat $(top_srcdir)/tools/tme-binary-struct.pl.in $(srcdir)/tme-sun-eeprom.pl | \
 	sed -e s%/usr/pkg/bin/perl%$(PERL)% > $@
+include $(top_srcdir)/modules

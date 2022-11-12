@@ -34,7 +34,7 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.68])
 m4_include(version.m4)
-AC_INIT([tme], [0.12rc7])
+AC_INIT([tme], [0.12rc8])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
@@ -764,16 +764,7 @@ AC_CHECK_DECLS(
 )
 CFLAGS="${old_CFLAGS}"
 
-dnl Checks for GLIB.
-AM_PATH_GLIB_2_0([], have_glib=yes, have_glib=no)
-if test "x$have_glib" = xyes; then
-  AC_DEFINE(HAVE_GLIB, [], [Define if you are compiling with GLIB.])
-fi
-
 TME_FB_XLAT_DST=
-dnl Checks for GTK.
-AM_PATH_GTK_3_0([], have_gtk=yes, have_gtk=no)
-AM_PATH_SDL2([], have_sdl=yes, have_sdl=no)
 
 # if --with-tme-host-displays is given, characterize those given displays:
 AC_ARG_WITH(tme-host-displays,
@@ -782,69 +773,45 @@ AC_ARG_WITH(tme-host-displays,
 
 AC_SUBST(TME_FB_XLAT_DST)
 
-tme_host_types="gtk rfb sdl tun bsd openvpn"
-
-for tme_host_type in ${tme_host_types}; do
-    eval enable_${tme_host_type}=no
-done
+TME_HOST_TYPES="gtk rfb sdl tun bsd openvpn"
+AC_SUBST(TME_HOST_TYPES)
 
 AC_ARG_ENABLE(hosts,
-[  --enable-hosts=hosttypes         enable hosts (default="${tme_host_types}")],
-   [tme_host_types=${enableval}], [enable_hosts=yes])
+[  --enable-hosts=hosttypes         enable hosts (default="$TME_HOST_TYPES")],
+   [tme_enable_hosts=${enableval}], [enable_hosts=yes])
 
-if test "x${enable_hosts}" = xno; then
-   tme_host_types=
+if test "x${enable_hosts}" = xyes; then
+   tme_enable_hosts=$TME_HOST_TYPES
 fi
 
-for tme_host_type in ${tme_host_types}; do
+for tme_host_type in ${tme_enable_hosts}; do
     eval enable_${tme_host_type}=yes
 done
 
 dnl Start the list of display host support.
-TME_DISPLAY_HOSTS=
 TME_FB_XLAT_DST="d32b32s0p32olml_r0xffff0000_g0xff00ff00_b0xff0000ff d24b32s0p32olml_r0xff0000_g0xff00_b0xff"
 
-if test "x$have_gtk" = xyes; then
-   if test "x${enable_gtk}" = xyes; then
-      TME_DISPLAY_HOSTS="gtk ${TME_DISPLAY_HOSTS}"
-   fi
-#   TME_FB_XLAT_DST="d32b32s0p32olml_r0xffff0000_g0xff00ff00_b0xff0000ff d24b32s0p32olml_r0xff0000_g0xff00_b0xff d16b16s0p32olml_r0xf800_g0x07e0_b0x001f d8b8s0p32olml_r0xff_g0xff_b0xff d1b1s0p32olml_r0x1_g0x1_b0x1"
-fi
+dnl Checks for GLIB.
+AM_PATH_GLIB_2_0([], [have_glib=$enable_glib], [])
 
-if test "x$have_sdl" = xyes; then
-   if test "x${enable_sdl}" = xyes; then
-      TME_DISPLAY_HOSTS="sdl ${TME_DISPLAY_HOSTS}"
-   fi
-fi
-
-AS_IF([test "x${enable_rfb}" = xyes], [
-   PKG_CHECK_MODULES([RFB], [libvncclient libvncserver], [TME_DISPLAY_HOSTS="rfb ${TME_DISPLAY_HOSTS}"], AC_DEFINE([HAVE_RFB], [0], [No RFB]))
-])
-
-dnl The list of display host support is finished.
-AC_SUBST(TME_DISPLAY_HOSTS)
-
-AC_MSG_RESULT($TME_DISPLAY_HOSTS)
+dnl Checks for display type support
+AM_PATH_GTK_3_0([], [have_gtk=$enable_gtk], [])
+AM_PATH_SDL2([], [have_sdl=$enable_sdl], [])
+PKG_CHECK_MODULES([RFB], [libvncclient libvncserver], [have_rfb=$enable_rfb], [])
 
 dnl Start the list of ethernet host support.
-TME_ETH_HOSTS=
-
 AM_CONDITIONAL([USE_TAP_WINDOWS], [test "x${enable_openvpn}" = xyes && test "x${have_tap_header}" = x && test "x${WIN32}" != x])
-AM_CONDITIONAL([USING_OPENVPN], [test "x${enable_openvpn}" = xyes && test "x${have_tap_header}" = xyes || test "x${WIN32}" != x])
+
 if test "x${enable_openvpn}" = xyes && test "x${have_tap_header}" = xyes || test "x${WIN32}" != x; then
-   TME_ETH_HOSTS="openvpn ${TME_ETH_HOSTS}"
+   have_openvpn=yes
    AC_DEFINE([OPENVPN_VERSION_RESOURCE], [PRODUCT_VERSION_RESOURCE], [Version in windows resource format])
 fi
+AM_CONDITIONAL([HAVE_OPENVPN], [test "x${have_openvpn}" = xyes])
 
 AC_CHECK_HEADERS([linux/if_tun.h net/if_tap.h net/tap/if_tap.h net/if_tun.h],
-		 [if test "x${enable_tun}" = xyes; then
-		     TME_ETH_HOSTS="tun ${TME_ETH_HOSTS}"
-		  fi])
+		 [have_tun=$enable_tun])
 
 AC_CHECK_HEADERS([linux/filter.h net/bpf.h])
-
-dnl Checks for host support.
-AC_MSG_CHECKING([for host support types])
 
 AC_EGREP_CPP(found_BPFVERSION,
 [
@@ -857,18 +824,23 @@ AC_EGREP_CPP(found_BPFVERSION,
 found_BPFVERSION
 #endif
 ],
-[if test "x${enable_bsd}" = xyes; then
-    TME_ETH_HOSTS="bsd ${TME_ETH_HOSTS}"
- fi])
+[have_bsd=$enable_bsd])
 
-if test "x${TME_ETH_HOSTS}" != x; then
-   TME_ETH_HOSTS="${TME_ETH_HOSTS}"
-fi
+for tme_host in $TME_HOST_TYPES; do
+    if eval test "x\$have_${tme_host}" = xyes; then
+       TME_HOSTS="-dlopen \$(tme_host_${tme_host})/tme_host_${tme_host}.la ${TME_HOSTS}"
+       TME_HOSTS_DIRS="\$(tme_host_${tme_host}) ${TME_HOSTS_DIRS}"
+    fi
+done
+
+dnl Checks for host support.
+AC_MSG_CHECKING([for host support types])
 
 dnl The list of ethernet host support is finished.
-AC_SUBST(TME_ETH_HOSTS)
+AC_SUBST(TME_HOSTS)
+AC_SUBST(TME_HOSTS_DIRS)
 
-AC_MSG_RESULT($TME_ETH_HOSTS)
+AC_MSG_RESULT($TME_HOSTS)
 
 AC_SYS_POSIX_TERMIOS
 
@@ -958,111 +930,10 @@ AM_CONDITIONAL([THREADS_SJLJ], [test "x${tme_thread_types}" = xsjlj])
 AC_MSG_RESULT($tme_thread_types)
 
 dnl Configures for the system(s) to emulate.
-systems=all
-if echo " ${systems} " | grep ' all ' > /dev/null 2>&1; then
-  systems="sun2 sun3 sun4 sunultra1"
-  bus_size_max=64
-  recode_size_guest_max=64
-fi
-TME_MACHINE_SUBDIRS=
-TME_IC_SUBDIRS=ieee754
-TME_ICS=
-TME_SERIAL_SUBDIRS=
-TME_SERIALS=
-TME_BUS_SUBDIRS=
-TME_FB_XLAT_SRC=
-for system in $systems; do
+bus_size_max=64
+recode_size_guest_max=64
 
-    # dispatch on the machine type to get more machines, ICs, and
-    # buses to compile:
-    case ${system} in
-
-    # the sun2:
-    sun2)
-	machines="sun sun2"
-	ics="m68k am9513 mm58167 z8530 i825x6"
-	buses="multibus"
-	fb_xlats="1152x900d1b1s0p32om"
-	;;
-
-    # the sun3:
-    sun3)
-	machines="sun sun3"
-	ics="m68k isil7170 z8530 i825x6 ieee754 ncr5380"
-	buses="multibus"
-	fb_xlats="1152x900d1b1s0p32om 1152x900d8b8s0p32ommi8 1152x900d1b1s0p32omccmi8"
-	;;
-
-    # the sun4:
-    sun4)
-	machines="sun sun4"
-	ics="sparc isil7170 z8530 am7930 am7990 ieee754 ncr53c9x mk48txx lsi64854 nec765"
-	buses="sbus"
-	fb_xlats="1152x900d1b1s0p32om 1152x900d8b8s0p32ommi8 1152x900d1b1s0p32omccmi8"
-	;;
-
-    # the sun Ultra-1:
-    sunultra1)
-	machines="sun sun4u"
-	ics="sparc stp22xx z8530 am7990 ieee754 ncr53c9x ncr89c105 mk48txx lsi64854 nec765 stp2024 ad184x"
-	buses="sbus"
-	fb_xlats="1152x900d1b1s0p32om 1152x900d8b8s0p32ommi8 1152x900d1b1s0p32omccmi8"
-	;;
-
-    *)
-	AC_MSG_ERROR([don't know how to emulate ${machine}])
-	;;
-    esac
-
-    # add in the new machines, ICs, serials, and buses to compile:
-    for machine in $machines; do
-	if echo " ${TME_MACHINE_SUBDIRS} " | grep " ${machine} " > /dev/null 2>&1; then :; else
-	    TME_MACHINE_SUBDIRS="${TME_MACHINE_SUBDIRS} ${machine}"
-	fi
-    done
-    for ic in $ics; do
-	if test -d $srcdir/ic/$ic; then
-	    if echo " ${TME_IC_SUBDIRS} " | grep " ${ic} " > /dev/null 2>&1; then :; else
-		TME_IC_SUBDIRS="${TME_IC_SUBDIRS} ${ic}"
-	    fi
-	else
-	    ic="tme_ic_${ic}.la"
-	    if echo " ${TME_ICS} " | grep " ${ic} " > /dev/null 2>&1; then :; else
-		TME_ICS="${TME_ICS} ${ic}"
-	    fi
-	fi
-    done
-    for serial in $serials; do
-	if test -d $srcdir/serial/$serial; then
-	    if echo " ${TME_SERIAL_SUBDIRS} " | grep " ${serial} " > /dev/null 2>&1; then :; else
-		TME_SERIAL_SUBDIRS="${TME_SERIAL_SUBDIRS} ${serial}"
-	    fi
-	else
-	    serial="tme_serial_${serial}.la"
-	    if echo " ${TME_SERIALS} " | grep " ${serial} " > /dev/null 2>&1; then :; else
-		TME_SERIALS="${TME_SERIALS} ${serial}"
-	    fi
-	fi
-    done
-    for bus in $buses; do
-	if echo " ${TME_BUS_SUBDIRS} " | grep " ${bus} " > /dev/null 2>&1; then :; else
-	    TME_BUS_SUBDIRS="${TME_BUS_SUBDIRS} ${bus}"
-	fi
-    done
-	
-    # add in the new frame buffer translations to compile:
-    for fb_xlat in $fb_xlats; do
- 	if echo " ${TME_FB_XLAT_SRC} " | grep " ${fb_xlat} " > /dev/null 2>&1; then :; else
-	    TME_FB_XLAT_SRC="${TME_FB_XLAT_SRC} ${fb_xlat}"
-	fi
-    done
-done
-AC_SUBST(TME_MACHINE_SUBDIRS)
-AC_SUBST(TME_IC_SUBDIRS)
-AC_SUBST(TME_ICS)
-AC_SUBST(TME_SERIAL_SUBDIRS)
-AC_SUBST(TME_SERIALS)
-AC_SUBST(TME_BUS_SUBDIRS)
+TME_FB_XLAT_SRC="1152x900d1b1s0p32om 1152x900d8b8s0p32ommi8 1152x900d1b1s0p32omccmi8"
 AC_SUBST(TME_FB_XLAT_SRC)
 
 dnl Checks for X11.
@@ -1572,6 +1443,7 @@ bus_size_max="$bus_size_max"
 
 dnl Writes files.
 AC_CONFIG_FILES([Makefile
+	  tme-modules.sh
 	  tme/Makefile
 	  tme/ic/Makefile
 	  tme/machine/Makefile
@@ -1612,6 +1484,7 @@ AC_CONFIG_FILES([Makefile
           serial/Makefile
           scsi/Makefile
           generic/Makefile
+          generic/bus/Makefile
 	  tmesh/Makefile
 	  tools/Makefile])
 AC_OUTPUT

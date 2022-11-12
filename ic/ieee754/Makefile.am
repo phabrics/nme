@@ -13,7 +13,7 @@ tmeicinclude_HEADERS = ieee754-auto.h ieee754-ops-auto.h
 lib_LTLIBRARIES = libtme-ieee754.la
 libtme_ieee754_la_SOURCES = ieee754-ops-auto.c ieee754-misc.c softfloat-tme.c
 libtme_ieee754_la_LDFLAGS = -lm -version-info 0:0:0
-libtme_ieee754_la_LIBADD = $(top_builddir)/generic/libtme-generic.la
+libtme_ieee754_la_LIBADD = $(TME_LIBS)
 
 AM_CFLAGS = @CFLAGS_NO_STRICT_ALIASING@
 
@@ -43,3 +43,4 @@ ieee754-ops-auto.h: ieee754-ops-auto.sh ieee754-precision.sh
 ieee754-ops-auto.c: ieee754-ops-auto.sh ieee754-precision.sh
 	$(SHELL) $< > $@
 
+include $(top_srcdir)/modules

@@ -11,8 +11,8 @@ tme_machine_sun2_la_SOURCES =	\
 	sun2-mmu.c		\
 	sun2-control.c		\
 	sun2-impl.h
-tme_machine_sun2_la_LDFLAGS = -module -version-info 0:0:0
-tme_machine_sun2_la_LIBADD = ../sun/libtme-machine-sun.la
+
+tme_machine_sun2_la_LIBADD = ../sun/libtme-machine-sun.la $(TME_LIBS)
 
 examplesdir = $(pkgdatadir)/examples
 dist_examples_DATA = SUN2-MULTIBUS

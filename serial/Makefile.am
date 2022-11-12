@@ -18,7 +18,6 @@ tme_serial_kb_la_SOURCES = \
 	serial-ms.h \
 	serial-ms.c \
 	ms-mssystems.c
-tme_serial_kb_la_LDFLAGS = -rpath $(pkglibdir) -module -version-info 0:0:0
-tme_serial_kb_la_LIBADD = $(top_builddir)/generic/libtme-generic.la 
+tme_serial_kb_la_LIBADD = $(TME_LIBS)
 
 include $(top_srcdir)/modules

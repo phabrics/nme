@@ -1,0 +1,39 @@
+#!/bin/sh
+
+subdir=$1
+topdir=$2
+srcdir=$2/$1
+
+if test -e .modules; then exit; fi
+touch .modules
+
+echo updating tme modules list..
+grep TME_ELEMENT_NEW_DECL $srcdir/*.c |	
+    sed -e 's%.*TME_ELEMENT_NEW_DECL(\(.*\)).*%\1%' >> $topdir/tme/tme-plugins.txt
+grep TME_ELEMENT_SUB_NEW_DECL $srcdir/*.c |		
+    sed -e 's%.*TME_ELEMENT_SUB_NEW_DECL(\(.*\),\(.*\)).*%\1_\2 \1 \2%' >> $topdir/tme/tme-plugins.txt
+grep TME_ELEMENT_X_NEW_DECL $srcdir/*.c |		
+    sed -e 's%.*TME_ELEMENT_X_NEW_DECL(\(.*\),\(.*\),\(.*\)).*%\1\3 \1\2 \3%' >> $topdir/tme/tme-plugins.txt
+
+for num; do
+    if test $num = $1; then continue; fi
+    host=
+    for tme_host in @TME_HOST_TYPES@; do
+	if test $num = $2; then
+	    if test -d $tme_host; then 
+		cd $tme_host && make modules
+		cd -
+	    fi
+	else
+	    if test $num = "tme_host_${tme_host}.la"; then
+	    	echo "tme_host_${tme_host}=../${subdir}" >> $topdir/tme-hosts.txt 
+		host=yes
+		break
+	    fi
+	fi
+    done
+    if test $num = $2; then continue; fi
+    if test "x${host}" = x; then
+	echo -n "-dlopen ../${subdir}/$num " >> $topdir/tme-preopen.txt 
+    fi 
+done

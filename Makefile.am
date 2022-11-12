@@ -11,7 +11,7 @@ endif
 tap-windows.h: tap-windows-def.h
 	cp $< $@
 
-if USING_OPENVPN
+if HAVE_OPENVPN
 SUBDIRS = . libopenvpn
 else
 SUBDIRS = 
@@ -31,5 +31,9 @@ dist-hook:
 # so that future builds will track all module dependencies.
 # If new modules are added, "make modules" must be run to update this list in the source.
 modules-local:
-	rm -f ${top_srcdir}/tme/tme-plugins.txt
-	echo -n LDADD = > $(top_srcdir)/tme-preopen.txt 
+	@if test ! -e .modules; then \
+		rm -f ${top_srcdir}/tme/tme-plugins.txt ${top_srcdir}/tme-hosts.txt ; \
+		echo -n tme_preopen=> $(top_srcdir)/tme-preopen.txt ; \
+		chmod +x tme-modules.sh ; \
+		touch .modules ; \
+	fi

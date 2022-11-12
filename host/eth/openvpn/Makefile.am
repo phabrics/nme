@@ -9,7 +9,10 @@ pkglib_LTLIBRARIES = tme_host_openvpn.la
 tme_host_openvpn_la_SOURCES = \
 	openvpn-link.c \
 	openvpn-tap.c
-tme_host_openvpn_la_LIBADD = ../libtme-eth.la
-tme_host_openvpn_la_LDFLAGS = -module -version-info 0:0:0
+tme_host_openvpn_la_LIBADD = ../libtme-eth.la $(TME_LIBS)
+
+if WIN32
+tme_host_openvpn_la_LIBADD += -lgdi32 -lws2_32 -lwininet -lcrypt32 -liphlpapi -lwinmm
+endif
 
 include $(top_srcdir)/modules

@@ -17,8 +17,7 @@ tme_ic_sparc_la_SOURCES = \
 	stp103x.c \
 	cy7c601.c \
 	mb86900.c
-tme_ic_sparc_la_LDFLAGS = -module -version-info 0:0:0
-tme_ic_sparc_la_LIBADD = ../ieee754/libtme-ieee754.la
+tme_ic_sparc_la_LIBADD = ../ieee754/libtme-ieee754.la $(TME_LIBS)
 noinst_SCRIPTS = sparc-misc-auto.sh \
 	sparc-insns-auto.sh \
 	sparc-fpu-auto.sh \

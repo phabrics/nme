@@ -54,16 +54,6 @@
 # this directory was originally just for include files and to make
 # #include <tme/FOO.h> work right when building:
 modules-local:
-	@echo updating tme modules list..
-	@grep TME_ELEMENT_NEW_DECL $(srcdir)/*.c |		\
-	sed -e 's%.*TME_ELEMENT_NEW_DECL(\(.*\)).*%\1%'		\
-	>> $(top_srcdir)/tme/tme-plugins.txt
-	@grep TME_ELEMENT_SUB_NEW_DECL $(srcdir)/*.c |		\
-	sed -e 's%.*TME_ELEMENT_SUB_NEW_DECL(\(.*\),\(.*\)).*%\1_\2 \1 \2%' \
-	>> $(top_srcdir)/tme/tme-plugins.txt
-	@grep TME_ELEMENT_X_NEW_DECL $(srcdir)/*.c |		\
-	sed -e 's%.*TME_ELEMENT_X_NEW_DECL(\(.*\),\(.*\),\(.*\)).*%\1\3 \1\2 \3%' \
-	>> $(top_srcdir)/tme/tme-plugins.txt
 
 #
 # next, when building statically, either for debugging purposes or
@@ -85,14 +75,8 @@ modules-local:
 # @TME_PREOPEN@ is then used on the program's link command line.
 # 
 # Note: this works differently now - please see comment in top Makefile for modules target
-	@if test "x$(pkglib_LTLIBRARIES)" != x; then		\
-	    for module in $(pkglib_LTLIBRARIES); do		\
-		echo $$module ;					\
-		echo " \\" >> $(top_srcdir)/tme-preopen.txt ; \
-		echo -ne "\t-dlopen ../$(subdir)/$$module" >> $(top_srcdir)/tme-preopen.txt ; \
-	    done ;						\
-	fi
-
+	$(top_builddir)/tme-modules.sh $(subdir) $(top_srcdir) $(pkglib_LTLIBRARIES)
+	
 # additionally, libtool, at least through version 1.5, has a
 # limitation in that the pseudo-library (the .la file) must be present
 # even for a preloaded module.  if we aren't debugging, everything is
@@ -106,3 +90,5 @@ modules-local:
 # module.c can find the uninstalled tme-plugins.txt file, and libtool
 # will want to look in this directory for .la files, so we simply copy
 # all of the .la files into that same directory:
+AM_LDFLAGS = -module -version-info 0:0:0
+TME_LIBS = $(top_builddir)/generic/libtme-generic.la $(top_builddir)/libtme/libtme.la

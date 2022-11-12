@@ -7,7 +7,6 @@ AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(srcdir)/.. -I$(top_srcdir)/lib -I.
 
 pkglib_LTLIBRARIES = tme_host_tun.la
 tme_host_tun_la_SOURCES = tun-tap.c
-tme_host_tun_la_LDFLAGS = -module -version-info 0:0:0
-tme_host_tun_la_LIBADD = ../libtme-eth.la $(NATLIBS)
+tme_host_tun_la_LIBADD = ../libtme-eth.la $(NATLIBS) $(TME_LIBS)
 
 include $(top_srcdir)/modules
