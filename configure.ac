@@ -34,7 +34,7 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.68])
 m4_include(version.m4)
-AC_INIT([tme], [0.12rc8])
+AC_INIT([tme], [0.12rc9])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
@@ -797,13 +797,14 @@ AM_PATH_GLIB_2_0([], [have_glib=$enable_glib], [])
 dnl Checks for display type support
 AM_PATH_GTK_3_0([], [have_gtk=$enable_gtk], [])
 AM_PATH_SDL2([], [have_sdl=$enable_sdl], [])
+AM_CONDITIONAL([HAVE_SDL], [test "x${have_sdl}" = xyes])
 PKG_CHECK_MODULES([RFB], [libvncclient libvncserver], [have_rfb=$enable_rfb], [])
 
 dnl Start the list of ethernet host support.
 AM_CONDITIONAL([USE_TAP_WINDOWS], [test "x${enable_openvpn}" = xyes && test "x${have_tap_header}" = x && test "x${WIN32}" != x])
 
-if test "x${enable_openvpn}" = xyes && test "x${have_tap_header}" = xyes || test "x${WIN32}" != x; then
-   have_openvpn=yes
+if test "x${have_tap_header}" = xyes || test "x${WIN32}" != x; then
+   have_openvpn=$enable_openvpn
    AC_DEFINE([OPENVPN_VERSION_RESOURCE], [PRODUCT_VERSION_RESOURCE], [Version in windows resource format])
 fi
 AM_CONDITIONAL([HAVE_OPENVPN], [test "x${have_openvpn}" = xyes])
@@ -828,19 +829,21 @@ found_BPFVERSION
 
 for tme_host in $TME_HOST_TYPES; do
     if eval test "x\$have_${tme_host}" = xyes; then
-       TME_HOSTS="-dlopen \$(tme_host_${tme_host})/tme_host_${tme_host}.la ${TME_HOSTS}"
-       TME_HOSTS_DIRS="\$(tme_host_${tme_host}) ${TME_HOSTS_DIRS}"
+       TME_HOST_CFLAGS="\$(${tme_host^^}_CFLAGS) ${TME_HOST_CFLAGS}"
+       TME_HOST_LIBS="-dlopen \$(tme_host_${tme_host})/tme_host_${tme_host}.la ${TME_HOST_LIBS}"
+       TME_HOST_DIRS="\$(tme_host_${tme_host}) ${TME_HOST_DIRS}"
     fi
 done
 
 dnl Checks for host support.
-AC_MSG_CHECKING([for host support types])
+AC_MSG_CHECKING([for enabled host types])
 
 dnl The list of ethernet host support is finished.
-AC_SUBST(TME_HOSTS)
-AC_SUBST(TME_HOSTS_DIRS)
+AC_SUBST(TME_HOST_CFLAGS)
+AC_SUBST(TME_HOST_LIBS)
+AC_SUBST(TME_HOST_DIRS)
 
-AC_MSG_RESULT($TME_HOSTS)
+AC_MSG_RESULT($TME_HOST_DIRS)
 
 AC_SYS_POSIX_TERMIOS
 
@@ -880,8 +883,7 @@ AC_MSG_CHECKING([for available threading models])
 # specify whether preemptive thread support should be enabled & with what thread models
 
 AC_ARG_ENABLE(threads,
-[  --enable-threads=THRs  Enable preemptive thread support utilizing the given threading models (compiled-in order of usage by platform availability: 'pthreads (or posix)','glib').  Defaults to 'yes', any available.  Turn off threads with 'no' or --disable-threads; this will use setjmp/longjmp.], [tme_thread_types=${enableval}],
-[tme_thread_types=sjlj])
+[  --enable-threads=THRs  Enable preemptive thread support utilizing the given threading models (compiled-in order of usage by platform availability: 'pthreads (or posix)','glib').  Defaults to 'no'; this will use a singled thread with setjmp/longjmp or fibers on platforms that support them.  Turn on threads with --enable-threads=<thr>; no value given is 'yes' which defaults to best threading model for platform.], [tme_thread_types=${enableval}], [enable_threads=no])
 
 if test "x${enable_threads}" = xyes; then
    dnl Make brackets safe to use.
@@ -899,13 +901,28 @@ if test "x${enable_threads}" = xyes; then
 
    dnl Make brackets the quote characters again.
    changequote([, ])dnl
+   recode=no
 fi
 
 if test "x${enable_threads}" = xno; then
+   dnl Make brackets safe to use.
+   changequote(<<, >>)dnl
+
+   dnl set the default threads based on platform
+   case "${host_os}" in
+   mingw* | msys* | cygwin*) 
+   	recode=i686
+   	;;
+   *) 
+   	recode=yes
+   	;;
+   esac
+
+   dnl Make brackets the quote characters again.
+   changequote([, ])dnl
    tme_thread_types=sjlj
 fi
 
-recode=no
 for tme_thread_type in ${tme_thread_types}; do
 case "x${tme_thread_type}" in
 xpthreads| xposix)  CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_POSIX"
@@ -915,9 +932,6 @@ xglib)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_GLIB -DUSE_GLIB_TIME ${GLIB_CFLAGS
 #	 LDFLAGS="${LDFLAGS-} ${GLIB_LIBS}"
 	 ;;
 xsjlj)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_SJLJ"
-	 if test "x${WIN32}" != "xyes";
-	    then recode=yes
-	 fi
 	 ;;
 esac
 done
@@ -950,16 +964,7 @@ changequote([, ])dnl
 
 AC_ARG_ENABLE(recode,
 [  --enable-recode         enable recode (dynamic binary translation) (default=if host supports)],
-[ ], [enable_recode=${recode}])
-if test "${recode_size_guest_max}" = 0; then
-    enable_recode=no
-    recode_size_guest_max=1
-fi
-if test "x${enable_recode}" = xno; then
-    recode_hosts=
-else
-    recode_hosts="mmap x86"
-fi
+[ ], [enable_recode=$recode])
 
 AC_MSG_CHECKING([for host recode support])
 
@@ -968,19 +973,35 @@ changequote(<<, >>)dnl
 
 # get the host maximum guest size:
 case "${host_cpu}" in
-     i[3456789]86)
+i[3456789]86)
+     recode_hosts="mmap x86"
      recode_size_guest_max_host=64
      ;;
 x86_64)
+     recode_hosts="mmap x86"
      recode_size_guest_max_host=128
      ;;
 *) 
      recode_hosts=
-     recode_size_guest_max_host= ;;
+     recode_size_guest_max_host=1 ;;
 esac
 
 dnl Make brackets the quote characters again.
 changequote([, ])dnl
+
+keep_recode=$enable_recode
+
+for tme_recode_type in ${enable_recode}; do
+    if test "x${host_cpu}" = "x${tme_recode_type}"; then
+       keep_recode=yes
+       break
+    fi
+done
+
+if test "x${keep_recode}" != xyes; then
+   recode_hosts=
+   recode_size_guest_max=1
+fi
 
 if test "x${recode_hosts}" = x; then
    AC_MSG_RESULT([no])
