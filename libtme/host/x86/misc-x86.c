@@ -38,23 +38,34 @@ _TME_RCSID("$Id: misc-x86.c,v 1.2 2009/11/08 17:21:18 fredette Exp $");
 
 /* includes: */
 #include <tme/misc.h>
+#ifdef _TME_HAVE___RDTSC
+#ifdef _MSC_VER
+#include <intrin.h>
+#else
+#include <x86intrin.h>
+#endif
+#endif
 
-#if defined(__GNUC__) && !defined(__EMSCRIPTEN__)
+#if defined(_TME_HAVE___RDTSC) || defined(__GNUC__) && !defined(__EMSCRIPTEN__)
 
 /* this returns the cycle counter: */
 inline union tme_value64
 tme_misc_cycles(void)
 {
+  union tme_value64 value;
+
+#ifdef _TME_HAVE___RDTSC
+  value.tme_value64_uint = __rdtsc();
+#else
   unsigned long reg_a;
   unsigned long reg_d;
-  union tme_value64 value;
 
   asm("	rdtsc	\n"
       : "=a" (reg_a), "=d" (reg_d));
   value.tme_value64_uint32_lo = reg_a;
   value.tme_value64_uint32_hi = reg_d;
+#endif /* !defined(__GNUC__) */
   return (value);
 }
 #define TME_HAVE_MISC_CYCLES
-
-#endif /* !defined(__GNUC__) */
+#endif /* def _TME_HAVE___RDTSC */

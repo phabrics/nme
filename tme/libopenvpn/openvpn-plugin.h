@@ -228,7 +228,7 @@ typedef enum
 
 
 #ifdef __GNUC__
-#if __USE_MINGW_ANSI_STDIO
+#if __USE_MINGW_ANSI_STDIO && !defined(__clang__)
 #  define _ovpn_chk_fmt(a, b) __attribute__ ((format(gnu_printf, (a), (b))))
 #else
 #  define _ovpn_chk_fmt(a, b) __attribute__ ((format(__printf__, (a), (b))))

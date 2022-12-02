@@ -356,6 +356,11 @@ tme_bswap_u128(tme_uint128_t x)
 }
 #endif /* TME_HAVE_INT128_T */
 
+/* misc: */
+#ifdef __clang__
+#define ffs __builtin_ffs
+#endif
+
 /* versions: */
 #define TME_X_VERSION(current, age)	(((current) << 10) | (age))
 #define TME_X_VERSION_CURRENT(version)	((version) >> 10)

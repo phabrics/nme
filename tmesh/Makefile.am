@@ -25,10 +25,10 @@ if WIN32
 if HAVE_SDL
 tmesh_LDFLAGS += -mwindows
 endif
-endif
-
+else
 install-exec-hook:
 	$(SETCAP) $(DESTDIR)$(bindir)/$(TGTPFX)tmesh$(EXEEXT)
+endif
 
 include $(top_srcdir)/tme-hosts.txt
 include $(top_srcdir)/tme-preopen.txt

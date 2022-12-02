@@ -77,7 +77,7 @@ void status_flush (struct status_output *so);
 bool status_close (struct status_output *so);
 void status_printf (struct status_output *so, const char *format, ...)
 #ifdef __GNUC__
-#if __USE_MINGW_ANSI_STDIO
+#if __USE_MINGW_ANSI_STDIO && !defined(__clang__)
 	__attribute__ ((format (gnu_printf, 2, 3)))
 #else
 	__attribute__ ((format (__printf__, 2, 3)))
