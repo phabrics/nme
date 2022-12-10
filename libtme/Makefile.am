@@ -74,3 +74,9 @@ shlibvar.h: $(top_builddir)/config.h Makefile
 	grep LT_MODULE_PATH_VAR $(top_builddir)/config.h > $@
 	grep LT_DLSEARCH_PATH $(top_builddir)/config.h >> $@
 	echo "#define TME_PACKAGE_PATH \"$(libdir)\"" >> $@
+	echo -n "#define TME_PREFIX_PATH \"" >> $@
+	echo / | tr -d "\n\r\f" >> $@
+	echo \" >> $@
+	echo -n "#define TME_WINDOWS_PATH \"" >> $@
+	$(CYGPATH_W) / | tr -d "\n\r\f" >> $@
+	echo \" >> $@

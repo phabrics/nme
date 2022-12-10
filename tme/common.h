@@ -431,11 +431,10 @@ tme_bswap_u128(tme_uint128_t x)
 typedef tme_uint64_t tme_time_t;
 
 static _tme_inline tme_time_t tme_thread_get_time _TME_P((void)) {
-#if defined(WIN32) || defined(USE_GLIB_TIME) && defined(_TME_HAVE_GLIB)
-#ifdef USE_GLIB_TIME
+#if defined(USE_GLIB_TIME) && defined(_TME_HAVE_GLIB)
 #define TME_FRAC_PER_SEC G_USEC_PER_SEC
   return g_get_real_time();
-#else
+#elif defined(WIN32)
   #define TME_FRAC_PER_SEC 10000000
   FILETIME filetime;
   ULARGE_INTEGER _time;
@@ -446,7 +445,6 @@ static _tme_inline tme_time_t tme_thread_get_time _TME_P((void)) {
   return _time.QuadPart;
 #else
   return (_time.u.LowPart) | (_time.u.HighPart << 32);
-#endif
 #endif
 #elif defined(USE_GETTIMEOFDAY) || !defined(_TME_HAVE_CLOCK_GETTIME)
 #define TME_FRAC_PER_SEC 1000000

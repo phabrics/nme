@@ -129,6 +129,7 @@ darwin*)
 esac
 
 AM_CONDITIONAL([WIN32], [test "${WIN32}" = "yes"])
+AC_CHECK_PROG([CYGPATH_M], [cygpath], [cygpath -m], [echo])
 
 AC_SUBST(DEV_TAP_FILENAME)
 AC_SUBST(SETCAP)
@@ -792,7 +793,7 @@ dnl Start the list of display host support.
 TME_FB_XLAT_DST="d32b32s0p32olml_r0xffff0000_g0xff00ff00_b0xff0000ff d24b32s0p32olml_r0xff0000_g0xff00_b0xff"
 
 dnl Checks for GLIB.
-AM_PATH_GLIB_2_0([], [have_glib=$enable_glib], [])
+AM_PATH_GLIB_2_0([], [AC_DEFINE([HAVE_GLIB], [], [Defined if GLIB 2.0 is found.])], [])
 
 dnl Checks for display type support
 AM_PATH_GTK_3_0([], [have_gtk=$enable_gtk], [])
