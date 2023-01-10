@@ -1,0 +1,121 @@
+#!/bin/bash
+# machine/sun/tme-make-machs - downloads firmware & OS setup files and makes Sun machines:
+
+# Copyright (c) 2023 Ruben Agin
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+# 3. All advertising materials mentioning features or use of this software
+#    must display the following acknowledgement:
+#      This product includes software developed by Matt Fredette.
+# 4. The name of the author may not be used to endorse or promote products
+#    derived from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+# STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
+# Firmware downloads for various machines
+firmware_site=https://people.csail.mit.edu/~fredette/tme
+firmwares="sun2-multi-rev-R sun3-carrera-rev-3.0 sun4-75-rev-2.9 SUNW,501-1415 SUNW,501-1561 SUNW,501-2325 SUNW,501-3082-update7"
+
+# NetBSD location/release to download
+netbsd_site=https://cdn.netbsd.org
+netbsd_rel=9.3
+
+# Download the firmware for each machine type, if needed
+if [ ! -d "sun-fw" ]; then
+    mkdir sun-fw
+    cd sun-fw
+    for fw in $firmwares; do
+	wget $firmware_site/$fw.bin
+    done
+    cd ..
+fi
+
+# Mirror arch-specific NetBSD install files
+for arch in {sun2,sun3}; do
+    netbsd_path=NetBSD/NetBSD-$netbsd_rel/$arch
+    # Only download if necessary
+    if [ ! -d "$netbsd_path" ]; then
+	wget -R "*.html" -np -r -nH --cut-dirs=1 $netbsd_site/pub/$netbsd_path
+    fi
+done
+
+for arch in {sparc,sparc64}; do
+    netbsd_path=NetBSD/images/$netbsd_rel/NetBSD-$netbsd_rel-$arch.iso
+    # Only download if necessary
+    if [ ! -f "$netbsd_path" ]; then
+	wget -np -r -nH --cut-dirs=1 $netbsd_site/pub/$netbsd_path
+    fi
+done
+
+# First, try to find installed location of tme
+if [ -z ${MINGW_PREFIX+set} ]; then
+   prefix=$(dirname `which tmesh`)/..
+else
+   prefix=${MINGW_PREFIX}
+fi
+
+loc=`realpath $prefix/share/tme/examples`
+
+# Next, key off of the machine descriptions in the examples dir to create config dirs
+for mach in `ls $loc/SUN*`; do
+    mach=`basename $mach`
+    machd=${mach,,}
+    # Only create config if corresponding dir doesn't already exist
+    if [ ! -d "$machd" ]; then
+       echo $mach
+       mkdir $machd
+       cp $loc/$mach $machd/MY-$mach 2>/dev/null
+       cp $loc/{my-sun-macros.txt,sun-keyboards.txt,$machd*} $machd 2>/dev/null
+       # if there is a site- or mach-specific config, copy those files
+       [ -d "$loc/$machd" ] && cp $loc/$machd/* $machd 2>/dev/null
+    fi
+done
+
+# Finally, set up the links to the NetBSD installation files and device configuration
+for arch in {sun2,sun3,sun4,sun-ultra}; do
+    netbsd_path=NetBSD/NetBSD-$netbsd_rel/$arch
+    netbsd_iso=NetBSD/images/$netbsd_rel/NetBSD-$netbsd_rel-sparc
+    netbsd=netbsd-$arch
+    for machd in `ls -d $arch-*/`; do
+	cd $machd
+	if [ $arch = "sun4" ]; then
+	    [ -d ../sun-fw ] && ln -sf ../sun-fw/$arch* .
+	    [ -d ../sun-fw ] && ln -sf ../sun-fw/SUNW,501-1* .
+	    [ -f "../${netbsd_iso}.iso" ] && ln -sf "../${netbsd_iso}.iso" $netbsd.iso
+	elif [ $arch = "sun-ultra" ]; then
+	    [ -d ../sun-fw ] && ln -sf ../sun-fw/SUNW* .
+	    [ -f "../${netbsd_iso}64.iso" ] && ln -sf "../${netbsd_iso}64.iso" $netbsd.iso
+	elif [ -d "../$netbsd_path" ] && [ ! -d "$netbsd.tape" ]; then
+	    [ -d ../sun-fw ] && ln -sf ../sun-fw/$arch* .
+	    mkdir $netbsd.tape
+	    cd $netbsd.tape
+	    ln -s ../../$netbsd_path/installation/tapeimage/tapeboot 01
+	    touch 02 03
+	    gzip -c -d ../../$netbsd_path/installation/miniroot/miniroot.fs.gz > 04
+	    gzip -c -d ../../$netbsd_path/binary/kernel/netbsd-RAMDISK.gz > 05
+	    if [ $arch = "sun3" ]; then
+		mv 05 02
+	    fi
+	    cd ..
+	fi
+	cd ..
+    done
+done

@@ -304,6 +304,9 @@ GTK+3 (for a GUI, but will work without if serial support available)
 @item
 libvncserver (for a GUI, but will work without if serial support available)
 
+@item
+SDL2 (for a GUI, but will work without if serial support available)
+
 @end itemize
 
 @node Optional
