@@ -89,33 +89,75 @@ for mach in `ls $loc/SUN*`; do
     fi
 done
 
+# Remember, skip "etc" for an upgrade.
+sets="etc base comp games man misc rescue text"
+
 # Finally, set up the links to the NetBSD installation files and device configuration
 for arch in {sun2,sun3,sun4,sun-ultra}; do
     netbsd_path=NetBSD/NetBSD-$netbsd_rel/$arch
     netbsd_iso=NetBSD/images/$netbsd_rel/NetBSD-$netbsd_rel-sparc
     netbsd=netbsd-$arch
+    prom=my-$arch-eeprom.bin
     for machd in `ls -d $arch-*/`; do
 	cd $machd
+	echo "Making $machd"
 	if [ $arch = "sun4" ]; then
 	    [ -d ../sun-fw ] && ln -sf ../sun-fw/$arch* .
 	    [ -d ../sun-fw ] && ln -sf ../sun-fw/SUNW,501-1* .
 	    [ -f "../${netbsd_iso}.iso" ] && ln -sf "../${netbsd_iso}.iso" $netbsd.iso
+	    macht="SS2"
+	    cnt=2008
+	    arch+=c
+	    prom=my-$arch-nvram.bin
+	    sz=10G
 	elif [ $arch = "sun-ultra" ]; then
 	    [ -d ../sun-fw ] && ln -sf ../sun-fw/SUNW* .
 	    [ -f "../${netbsd_iso}64.iso" ] && ln -sf "../${netbsd_iso}64.iso" $netbsd.iso
-	elif [ -d "../$netbsd_path" ] && [ ! -d "$netbsd.tape" ]; then
-	    [ -d ../sun-fw ] && ln -sf ../sun-fw/$arch* .
-	    mkdir $netbsd.tape
-	    cd $netbsd.tape
-	    ln -s ../../$netbsd_path/installation/tapeimage/tapeboot 01
-	    touch 02 03
-	    gzip -c -d ../../$netbsd_path/installation/miniroot/miniroot.fs.gz > 04
-	    gzip -c -d ../../$netbsd_path/binary/kernel/netbsd-RAMDISK.gz > 05
-	    if [ $arch = "sun3" ]; then
-		mv 05 02
+	    cnt=8176
+	    arch=sun4u
+	    prom=my-$arch-nvram.bin
+	    sz=10G
+	else
+	    if [ -d "../$netbsd_path" ] && [ ! -d "$netbsd.tape" ]; then
+		[ -d ../sun-fw ] && ln -sf ../sun-fw/$arch* .
+		mkdir $netbsd.tape
+		cd $netbsd.tape
+		ln -s ../../$netbsd_path/installation/tapeimage/tapeboot 01
+		touch 02 03
+		gzip -c -d ../../$netbsd_path/installation/miniroot/miniroot.fs.gz > 04
+		gzip -c -d ../../$netbsd_path/binary/kernel/netbsd-RAMDISK.gz > 05
+		if [ $arch = "sun3" ]; then
+		    mv 05 02
+		    i=5
+		else
+		    i=6
+		fi
+		for f in $sets; do
+		    j=`printf %02d $i`
+		    gzip -c -d ../../$netbsd_path/binary/sets/${f}.tgz > $j
+		    ((i+=1))
+		done
+		cd ..
 	    fi
-	    cd ..
+	    if [ $arch = "sun3" ]; then
+		macht="3/150"
+		[ -f $prom ] || tme-sun-eeprom < $(basename $machd)-eeprom.txt > $prom
+	    else
+		macht="2/120"
+	    fi
+	    cnt=0
+	    prom=my-$arch-idprom.bin
+	    sz=3G
 	fi
+	if [ ! -f $prom ]; then
+	    dd if=/dev/zero bs=1 count=$cnt of=$prom
+	    if [ $arch != "sun4u" ]; then
+		macaddr=`printf 8:0:20:%02X:%02X:%02X $[RANDOM%256] $[RANDOM%256] $[RANDOM%256]`
+		echo "$macht $macaddr"
+		tme-sun-idprom $macht $macaddr >> $prom
+	    fi
+	fi
+	[ -f my-$arch-disk.img ] || dd if=/dev/zero of=my-$arch-disk.img bs=1 count=1 seek=$sz
 	cd ..
     done
 done
