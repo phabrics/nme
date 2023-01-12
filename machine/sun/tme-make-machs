@@ -30,40 +30,55 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+# Default values of various locations to download from/to. 
+
 # Firmware downloads for various machines
+firmware_root=./sun-fw
 firmware_site=https://people.csail.mit.edu/~fredette/tme
 firmwares="sun2-multi-rev-R sun3-carrera-rev-3.0 sun4-75-rev-2.9 SUNW,501-1415 SUNW,501-1561 SUNW,501-2325 SUNW,501-3082-update7"
 
 # NetBSD location/release to download
-netbsd_site=https://cdn.netbsd.org
+netbsd_root=./NetBSD
+netbsd_site=https://cdn.netbsd.org/pub/NetBSD
 netbsd_rel=9.3
 
-# Download the firmware for each machine type, if needed
-if [ ! -d "sun-fw" ]; then
-    mkdir sun-fw
-    cd sun-fw
-    for fw in $firmwares; do
-	wget $firmware_site/$fw.bin
-    done
-    cd ..
-fi
+# NetBSD binary sets to install via tape
+# Remember, skip "etc" for an upgrade.
+netbsd_sets="etc base comp games man misc rescue text kern-GENERIC"
 
-# Mirror arch-specific NetBSD install files
+# The command to use for downloading files
+download_cmd() {
+    [ -f $2 ] || wget -np -r -nH --cut-dirs=2 $1/$2
+}
+
+# Download the firmware for each machine type, if needed
+mkdir -p $firmware_root
+cd $firmware_root
+for fw in $firmwares; do
+    download_cmd $firmware_site $fw.bin
+done
+cd -
+
+mkdir -p $netbsd_root
+cd $netbsd_root
+# Download arch-specific NetBSD install files
 for arch in {sun2,sun3}; do
-    netbsd_path=NetBSD/NetBSD-$netbsd_rel/$arch
+    netbsd_path=NetBSD-$netbsd_rel/$arch
     # Only download if necessary
-    if [ ! -d "$netbsd_path" ]; then
-	wget -R "*.html" -np -r -nH --cut-dirs=1 $netbsd_site/pub/$netbsd_path
-    fi
+    download_cmd $netbsd_site $netbsd_path/installation/tapeimage/tapeboot
+    download_cmd $netbsd_site $netbsd_path/installation/miniroot/miniroot.fs.gz
+    download_cmd $netbsd_site $netbsd_path/binary/kernel/netbsd-RAMDISK.gz
+    for f in $netbsd_sets; do
+	download_cmd $netbsd_site $netbsd_path/binary/sets/${f}.tgz
+    done
+    [ $arch = "sun2" ] && download_cmd $netbsd_site $netbsd_path/binary/sets/kern-FOURMEG.tgz
 done
 
 for arch in {sparc,sparc64}; do
-    netbsd_path=NetBSD/images/$netbsd_rel/NetBSD-$netbsd_rel-$arch.iso
     # Only download if necessary
-    if [ ! -f "$netbsd_path" ]; then
-	wget -np -r -nH --cut-dirs=1 $netbsd_site/pub/$netbsd_path
-    fi
+    download_cmd $netbsd_site images/$netbsd_rel/NetBSD-$netbsd_rel-$arch.iso
 done
+cd -
 
 # First, try to find installed location of tme
 if [ -z ${MINGW_PREFIX+set} ]; then
@@ -89,59 +104,61 @@ for mach in `ls $loc/SUN*`; do
     fi
 done
 
-# Remember, skip "etc" for an upgrade.
-sets="etc base comp games man misc rescue text"
+# Replace with absolute pathnames to avoid symlink issues
+firmware_root=$(realpath $firmware_root)
+netbsd_root=$(realpath $netbsd_root)
 
 # Finally, set up the links to the NetBSD installation files and device configuration
 for arch in {sun2,sun3,sun4,sun-ultra}; do
-    netbsd_path=NetBSD/NetBSD-$netbsd_rel/$arch
-    netbsd_iso=NetBSD/images/$netbsd_rel/NetBSD-$netbsd_rel-sparc
+    netbsd_path=$netbsd_root/NetBSD-$netbsd_rel/$arch
+    netbsd_iso=$netbsd_root/images/$netbsd_rel/NetBSD-$netbsd_rel-sparc
     netbsd=netbsd-$arch
     prom=my-$arch-eeprom.bin
     for machd in `ls -d $arch-*/`; do
 	cd $machd
 	echo "Making $machd"
 	if [ $arch = "sun4" ]; then
-	    [ -d ../sun-fw ] && ln -sf ../sun-fw/$arch* .
-	    [ -d ../sun-fw ] && ln -sf ../sun-fw/SUNW,501-1* .
-	    [ -f "../${netbsd_iso}.iso" ] && ln -sf "../${netbsd_iso}.iso" $netbsd.iso
+	    [ -d $firmware_root ] && ln -sf $firmware_root/$arch* .
+	    [ -d $firmware_root ] && ln -sf $firmware_root/SUNW,501-1* .
+	    [ -f "${netbsd_iso}.iso" ] && ln -sf "${netbsd_iso}.iso" $netbsd.iso
 	    macht="SS2"
 	    cnt=2008
 	    arch+=c
 	    prom=my-$arch-nvram.bin
 	    sz=10G
 	elif [ $arch = "sun-ultra" ]; then
-	    [ -d ../sun-fw ] && ln -sf ../sun-fw/SUNW* .
-	    [ -f "../${netbsd_iso}64.iso" ] && ln -sf "../${netbsd_iso}64.iso" $netbsd.iso
+	    [ -d $firmware_root ] && ln -sf $firmware_root/SUNW* .
+	    [ -f "${netbsd_iso}64.iso" ] && ln -sf "${netbsd_iso}64.iso" $netbsd.iso
 	    cnt=8176
 	    arch=sun4u
 	    prom=my-$arch-nvram.bin
 	    sz=10G
 	else
-	    if [ -d "../$netbsd_path" ] && [ ! -d "$netbsd.tape" ]; then
-		[ -d ../sun-fw ] && ln -sf ../sun-fw/$arch* .
+	    if [ -d "$netbsd_path" ] && [ ! -d "$netbsd.tape" ]; then
+		[ -d $firmware_root ] && ln -sf $firmware_root/$arch* .
 		mkdir $netbsd.tape
 		cd $netbsd.tape
-		ln -s ../../$netbsd_path/installation/tapeimage/tapeboot 01
+		ln -s $netbsd_path/installation/tapeimage/tapeboot 01
 		touch 02 03
-		gzip -c -d ../../$netbsd_path/installation/miniroot/miniroot.fs.gz > 04
-		gzip -c -d ../../$netbsd_path/binary/kernel/netbsd-RAMDISK.gz > 05
+		gzip -c -d $netbsd_path/installation/miniroot/miniroot.fs.gz > 04
+		gzip -c -d $netbsd_path/binary/kernel/netbsd-RAMDISK.gz > 05
 		if [ $arch = "sun3" ]; then
 		    mv 05 02
 		    i=5
 		else
 		    i=6
 		fi
-		for f in $sets; do
+		for f in $netbsd_sets; do
 		    j=`printf %02d $i`
-		    gzip -c -d ../../$netbsd_path/binary/sets/${f}.tgz > $j
+		    gzip -c -d $netbsd_path/binary/sets/${f}.tgz > $j
 		    ((i+=1))
 		done
+		[ $arch = "sun2" ] && gzip -c -d $netbsd_path/binary/sets/kern-FOURMEG.tgz > $j
 		cd ..
 	    fi
 	    if [ $arch = "sun3" ]; then
 		macht="3/150"
-		[ -f $prom ] || tme-sun-eeprom < $(basename $machd)-eeprom.txt > $prom
+		[ -f $prom ] || ${MINGW_CHOST}${MINGW_CHOST+-}tme-sun-eeprom < $(basename $machd)-eeprom.txt > $prom
 	    else
 		macht="2/120"
 	    fi
@@ -154,7 +171,7 @@ for arch in {sun2,sun3,sun4,sun-ultra}; do
 	    if [ $arch != "sun4u" ]; then
 		macaddr=`printf 8:0:20:%02X:%02X:%02X $[RANDOM%256] $[RANDOM%256] $[RANDOM%256]`
 		echo "$macht $macaddr"
-		tme-sun-idprom $macht $macaddr >> $prom
+		${MINGW_CHOST}${MINGW_CHOST+-}tme-sun-idprom $macht $macaddr >> $prom
 	    fi
 	fi
 	[ -f my-$arch-disk.img ] || dd if=/dev/zero of=my-$arch-disk.img bs=1 count=1 seek=$sz
