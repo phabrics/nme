@@ -32,6 +32,13 @@
 
 # Default values of various locations to download from/to. 
 
+# Machines to build in machine_root. Templates come from machine_dir and are
+# put in directories named after the template files. If unset, default template
+# directory is <tme_install_prefix>/share/tme/examples. 
+machine_root=./machine
+machine_dir=
+machines=
+
 # Firmware downloads for various machines
 firmware_root=./sun-fw
 firmware_site=https://people.csail.mit.edu/~fredette/tme

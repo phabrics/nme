@@ -475,10 +475,10 @@ _tme_am9513_th_timer(struct tme_am9513 *am9513)
 	  tme_log(TME_AM9513_LOG_HANDLE(am9513),
 		  0, TME_OK,
 		  (TME_AM9513_LOG_HANDLE(am9513),
-		   "timer %d interrupt rate: %ld/sec",
+		   "timer %d interrupt rate: %ld %ld/sec",
 		   counter_i,
-		   (TME_TIME_SET_SEC(counter->tme_am9513_counter_int_sample)
-		    / counter->tme_am9513_counter_int_sample_time)));
+		   counter->tme_am9513_counter_int_sample,
+		   TME_TIME_GET_SEC(counter->tme_am9513_counter_int_sample_time)));
 	}
 
 	/* reset the sample: */
