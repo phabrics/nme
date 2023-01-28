@@ -41,25 +41,25 @@ $(noinst_SCRIPTS): %.sh: %.m4
 
 # target to make sparc-auto.h:
 sparc-auto.h: sparc-misc-auto.sh sparc-insns-auto.sh
-	$(SHELL) sparc-misc-auto.sh --header > $@
-	$(SHELL) sparc-insns-auto.sh --header >> $@
+	$(SHELL) $< --header > $@
+	$(SHELL) $(srcdir)/sparc-insns-auto.sh --header >> $@
 
 # target to make sparc-insns-auto.c:
 sparc-insns-auto.c: sparc-insns-auto.sh sparc-misc-auto.sh
-	$(SHELL) sparc-insns-auto.sh > $@
-	$(SHELL) sparc-misc-auto.sh >> $@
+	$(SHELL) $< > $@
+	$(SHELL) $(srcdir)/sparc-misc-auto.sh >> $@
 
 # target to make sparc-bus-auto.c:
 sparc-bus-auto.c: sparc-bus-auto.sh
-	$(SHELL) sparc-bus-auto.sh > $@
+	$(SHELL) $< > $@
 
 # target to make sparc-fpu-auto.c:
 sparc-fpu-auto.c: sparc-fpu-auto.sh
-	$(SHELL) sparc-fpu-auto.sh > $@
+	$(SHELL) $< > $@
 
 # target to make sparc-vis-auto.c:
 sparc-vis-auto.c: sparc-vis-auto.sh
-	$(SHELL) sparc-vis-auto.sh > $@
+	$(SHELL) $< > $@
 
 # dependencies on automatically-generated IEEE 754 sources:
 $(tme_ic_sparc_la_OBJECTS): ../ieee754/ieee754-auto.h ../ieee754/ieee754-ops-auto.h

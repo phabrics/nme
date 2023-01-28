@@ -38,8 +38,8 @@ $(noinst_SCRIPTS): %.sh: %.m4
 
 # target to make m68k-auto.h:
 m68k-auto.h: m68k-misc-auto.sh m68k-insns-auto.sh
-	$(SHELL) m68k-misc-auto.sh --header > $@
-	$(SHELL) m68k-insns-auto.sh --header >> $@
+	$(SHELL) $< --header > $@
+	$(SHELL) $(srcdir)/m68k-insns-auto.sh --header >> $@
 
 # target to make m68k-opmap.c:
 m68k-opmap.c: m68k-iset.txt m68k-iset-expand.pl m68k-opmap-make.pl
@@ -50,16 +50,16 @@ m68k-opmap.c: m68k-iset.txt m68k-iset-expand.pl m68k-opmap-make.pl
 
 # target to make m68k-insns-auto.c:
 m68k-insns-auto.c: m68k-insns-auto.sh m68k-misc-auto.sh
-	$(SHELL) m68k-insns-auto.sh > $@
-	$(SHELL) m68k-misc-auto.sh >> $@
+	$(SHELL) $< > $@
+	$(SHELL) $(srcdir)/m68k-misc-auto.sh >> $@
 
 # target to make m68k-bus-auto.c:
 m68k-bus-auto.c: m68k-bus-auto.sh
-	$(SHELL) m68k-bus-auto.sh > $@
+	$(SHELL) $< > $@
 
 # target to make m6888x-auto.c:
 m6888x-auto.c: m6888x-auto.sh
-	$(SHELL) m6888x-auto.sh > $@
+	$(SHELL) $< > $@
 
 # dependencies on automatically-generated IEEE 754 sources:
 $(tme_ic_m68k_la_OBJECTS): ../ieee754/ieee754-auto.h ../ieee754/ieee754-ops-auto.h
