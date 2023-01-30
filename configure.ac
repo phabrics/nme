@@ -32,7 +32,7 @@ dnl ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Checks that we are given a good source directory.
-AC_PREREQ([2.69])
+AC_PREREQ([2.71])
 m4_include(version.m4)
 AC_INIT([tme],[0.12rc10])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
@@ -56,6 +56,7 @@ AC_PROG_CPP
 AC_PROG_YACC
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
+AC_PROG_EGREP
 
 AC_DEFINE_UNQUOTED([TARGET_ALIAS], ["${host}"], [A string representing our host])
 case "${host_os}" in
@@ -164,7 +165,6 @@ LIBS=$OLDLIBS
 AC_SUBST(NATLIBS)
 
 dnl Checks for header files.
-AC_HEADER_STDC
 AC_CHECK_HEADERS([unistd.h stdio.h memory.h stdarg.h stdbool.h limits.h float.h])
 AC_CHECK_HEADERS([sys/ioctl.h sys/sockio.h sys/socketio.h net/if_dl.h ioctls.h netpacket/packet.h ifaddrs.h])
 AC_CHECK_HEADERS([byteswap.h sys/endian.h])
@@ -793,11 +793,11 @@ dnl Start the list of display host support.
 TME_FB_XLAT_DST="d32b32s0p32olml_r0xffff0000_g0xff00ff00_b0xff0000ff d24b32s0p32olml_r0xff0000_g0xff00_b0xff"
 
 dnl Checks for GLIB.
-AM_PATH_GLIB_2_0([], [AC_DEFINE([HAVE_GLIB], [], [Defined if GLIB 2.0 is found.])], [])
+PKG_CHECK_MODULES([GLIB], [glib-2.0], [AC_DEFINE([HAVE_GLIB], [], [Defined if GLIB 2.0 is found.])], [])
 
 dnl Checks for display type support
-AM_PATH_GTK_3_0([], [have_gtk=$enable_gtk], [])
-AM_PATH_SDL2([], [have_sdl=$enable_sdl], [])
+PKG_CHECK_MODULES([GTK], [gtk+-3.0], [have_gtk=$enable_gtk], [])
+PKG_CHECK_MODULES([SDL], [sdl2], [have_sdl=$enable_sdl], [])
 AM_CONDITIONAL([HAVE_SDL], [test "x${have_sdl}" = xyes])
 PKG_CHECK_MODULES([RFB], [libvncclient libvncserver], [have_rfb=$enable_rfb], [])
 
@@ -953,7 +953,7 @@ AC_SUBST(TME_FB_XLAT_SRC)
 
 dnl Checks for X11.
 AC_PATH_XTRA
-AC_PERL_MODULE_VERSION(X11::Protocol 0.56, [], no_x=yes)
+AX_PERL_MODULE_VERSION([X11::Protocol 0.56],[],[no_x=yes])
 AM_CONDITIONAL([USING_X], [test "x${no_x}" = x])
 
 dnl Configure recode.
@@ -1073,11 +1073,13 @@ fi
 
 
 dnl Configure for libtool.
-#AC_LIBLTDL_INSTALLABLE
+#_LT_CONFIG_LTDL_DIR([m4_default([], [libltdl])])
+_LTDL_INSTALLABLE
 #AC_SUBST(INCLTDL)
 #AC_SUBST(LIBLTDL)
-#AC_LIBTOOL_DLOPEN
-#AM_PROG_LIBTOOL
+#_LT_SET_OPTION([LT_INIT],[dlopen])
+
+LT_INIT([dlopen])
 #AC_SUBST(LTLIBOBJS)
 #AC_CONFIG_SUBDIRS(libltdl)
 LT_PREREQ([2.4])
