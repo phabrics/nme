@@ -66,14 +66,19 @@ _tme_gtk_mouse_mouse_event(GtkWidget *widget,
   gint y;
   int button=0;
 
+#if GTK_MAJOR_VERSION == 4
+  gdk_event_get_position(gdk_event_raw, &x, &y);
+  button = gdk_button_event_get_button(gdk_event_raw);
+
+#elif GTK_MAJOR_VERSION == 3
   /* if this is motion: */
   if (gdk_event_raw->type == GDK_MOTION_NOTIFY) {
 
     /* if the pointer position hasn't changed either, return now.
        every time we warp the pointer we will get a motion event, and
        this should ignore those events: */
-    x = gdk_event_raw->motion.x_root;
-    y = gdk_event_raw->motion.y_root;
+    x = gdk_event_raw->motion.x;
+    y = gdk_event_raw->motion.y;
 
   }
 
@@ -81,8 +86,8 @@ _tme_gtk_mouse_mouse_event(GtkWidget *widget,
   else {
 
     /* get the pointer position: */
-    x = gdk_event_raw->button.x_root;
-    y = gdk_event_raw->button.y_root;
+    x = gdk_event_raw->button.x;
+    y = gdk_event_raw->button.y;
 
     /* make the buttons mask: */
     button = gdk_event_raw->button.button;
@@ -92,12 +97,12 @@ _tme_gtk_mouse_mouse_event(GtkWidget *widget,
 
   /* otherwise, if this is a double- or triple-click: */
   if (gdk_event_raw->type != GDK_2BUTTON_PRESS
-      && gdk_event_raw->type != GDK_3BUTTON_PRESS) {
-
+      && gdk_event_raw->type != GDK_3BUTTON_PRESS)
+#endif
+  {    
     /* we ignore double- and triple-click events, since normal button
        press and release events are always generated also: */
-    assert (gdk_event_raw->type == GDK_BUTTON_PRESS
-	    || gdk_event_raw->type == GDK_BUTTON_RELEASE);
+   //    assert (gdk_event_raw->type == GDK_BUTTON_PRESS || gdk_event_raw->type == GDK_BUTTON_RELEASE);
 
     _tme_mouse_button_press(button, x, y, display);
   
@@ -121,13 +126,13 @@ _tme_gtk_mouse_ebox_event(GtkWidget *widget,
 
   /* if this is an enter notify event, grab the focus and continue
      propagating the event: */
-  if (gdk_event_raw->type == GDK_ENTER_NOTIFY) {
+  if (gdk_event_get_event_type(gdk_event_raw) == GDK_ENTER_NOTIFY) {
     gtk_widget_grab_focus(widget);
     return (FALSE);
   }
 
   /* if this is not a key press event, continue propagating it now: */
-  if (gdk_event_raw->type != GDK_KEY_PRESS) {
+  if (gdk_event_get_event_type(gdk_event_raw) != GDK_KEY_PRESS) {
     return (FALSE);
   }
 

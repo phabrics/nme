@@ -216,7 +216,7 @@ tme_display_update(void *disp) {
     (*display->tme_display_update)(display) :
     (TME_OK);
 
-  if(rc != TME_OK) return rc;
+  //  if(rc != TME_OK) return rc;
 
   /* lock the mutex: */
   tme_mutex_lock(&display->tme_display_mutex);

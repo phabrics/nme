@@ -796,7 +796,9 @@ dnl Checks for GLIB.
 PKG_CHECK_MODULES([GLIB], [glib-2.0], [AC_DEFINE([HAVE_GLIB], [], [Defined if GLIB 2.0 is found.])], [])
 
 dnl Checks for display type support
-PKG_CHECK_MODULES([GTK], [gtk+-3.0], [have_gtk=$enable_gtk], [])
+PKG_CHECK_MODULES([GTK], [gtk4], [have_gtk=$enable_gtk], [
+   PKG_CHECK_MODULES([GTK], [gtk+-3.0], [have_gtk=$enable_gtk], [])
+])
 PKG_CHECK_MODULES([SDL], [sdl2], [have_sdl=$enable_sdl], [])
 AM_CONDITIONAL([HAVE_SDL], [test "x${have_sdl}" = xyes])
 PKG_CHECK_MODULES([RFB], [libvncclient libvncserver], [have_rfb=$enable_rfb], [])

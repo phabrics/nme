@@ -95,7 +95,7 @@ struct tme_gtk_screen {
 
   /* when mouse mode is on, this is the previous events mask
      for the framebuffer event box: */
-  GdkEventMask tme_gtk_screen_mouse_events_old;
+  //GdkEventMask tme_gtk_screen_mouse_events_old;
 
 };
 

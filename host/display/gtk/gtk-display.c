@@ -39,6 +39,27 @@ _TME_RCSID("$Id: gtk-screen.c,v 1.11 2009/08/30 21:39:03 fredette Exp $");
 /* includes: */
 #include "gtk-display.h"
 #include <stdlib.h>
+#if GTK_MAJOR_VERSION == 4
+#define _tme_gtk_window_toplevels gtk_window_get_toplevels
+#define _tme_gtk_init gtk_init_check
+#else
+#define _tme_gtk_window_toplevels gtk_window_list_toplevels
+static void _tme_gtk_init(void) {
+  char **argv;
+  char *argv_buffer[3];
+  int argc;
+
+  /* conjure up an argv.  this is pretty bad: */
+  argv = argv_buffer;
+  argc = 0;
+  argv[argc++] = "tmesh";
+#if 1
+  argv[argc++] = "--gtk-debug=signals";
+#endif
+  argv[argc] = NULL;
+  gtk_init_check(&argc, &argv);
+}
+#endif
 
 static void
 _tme_gtk_display_bell(struct tme_gdk_display *display) {
@@ -47,9 +68,13 @@ _tme_gtk_display_bell(struct tme_gdk_display *display) {
 
 static int
 _tme_gtk_display_update(struct tme_display *display) {
-  while (gtk_events_pending ())
-    gtk_main_iteration ();
-  return TME_OK;
+  int rc;
+  
+  for(rc=TRUE;rc && g_main_context_pending(NULL);
+      rc = g_main_context_iteration(NULL, TRUE));
+  
+  if(rc) rc = g_list_model_get_n_items(_tme_gtk_window_toplevels());
+  return !rc;
 }
 
 /* this sets the screen scaling to that indicated by the Scale menu: */
@@ -196,7 +221,7 @@ _tme_gtk_screen_create_similar_image(GdkWindow *window,
 {
   cairo_surface_t *surface;
 
-#if GTK_MINOR_VERSION < 10
+#if GTK_MAJOR_VERSION == 3 && GTK_MINOR_VERSION < 10
   surface = 
     cairo_image_surface_create(format,
 			       width,
@@ -449,42 +474,6 @@ _tme_gtk_screen_new(struct tme_gdk_display *display,
   return (screen);
 }
 
-static void _tme_gtk_init(void) {
-  char **argv;
-  char *argv_buffer[3];
-  int argc;
-
-  /* GTK requires program to be running non-setuid */
-#ifdef HAVE_SETUID
-  setuid(getuid());
-#endif
-  
-  /* conjure up an argv.  this is pretty bad: */
-  argv = argv_buffer;
-  argc = 0;
-  argv[argc++] = "tmesh";
-#if 1
-  argv[argc++] = "--gtk-debug=signals";
-#endif
-  argv[argc] = NULL;
-  gtk_init(&argc, &argv);
-}
-
-/* this is a GTK callback for an enter notify event, that has the
-   widget grab focus and then continue normal event processing: */
-gint
-_tme_display_enter_focus(GtkWidget *widget,
-			 GdkEvent *gdk_event_raw,
-			 gpointer junk)
-{
-
-  /* grab the focus: */
-  gtk_widget_grab_focus(widget);
-
-  /* continue normal event processing: */
-  return (FALSE);
-}
-
 /* this creates a menu of radio buttons: */
 GtkWidget *
 _tme_display_menu_radio(struct tme_gtk_screen *screen,
@@ -523,7 +512,15 @@ _tme_display_menu_radio(struct tme_gtk_screen *screen,
 TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   struct tme_gdk_display *display;
   GdkRectangle workarea;
-
+  int rc;
+  
+  /* GTK requires program to be running non-setuid */
+#ifdef HAVE_SETUID
+  setuid(getuid());
+#endif
+  
+  if(!(rc = _tme_gtk_init())) return rc;
+  
   /* start our data structure: */
   display = tme_new0(struct tme_gdk_display, 1);
   tme_display_init(element, display);
@@ -531,8 +528,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   /* recover our data structure: */
   display = element->tme_element_private;
 
-  _tme_gtk_init();
-  
   display->tme_gdk_display = gdk_display_get_default();
 
   display->tme_gdk_display_cursor
