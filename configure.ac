@@ -32,7 +32,7 @@ dnl ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Checks that we are given a good source directory.
-AC_PREREQ([2.71])
+AC_PREREQ([2.69])
 m4_include(version.m4)
 AC_INIT([tme],[0.12rc10])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
@@ -1089,7 +1089,7 @@ LT_CONFIG_LTDL_DIR([libltdl])
 LT_INIT([dlopen,win32-dll])
 LT_LANG([Windows Resource])
 LTDL_INIT([recursive installable])
-CPPFLAGS="${CPPFLAGS-} ${LTDLINCL}"
+CPPFLAGS="${CPPFLAGS-} ${LTDLINCL} -DLT_DEBUG_LOADERS"
 
 AC_ARG_VAR([IFCONFIG], [full path to ipconfig utility])
 AC_ARG_VAR([ROUTE], [full path to route utility])

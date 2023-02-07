@@ -40,11 +40,9 @@ _TME_RCSID("$Id: gtk-screen.c,v 1.11 2009/08/30 21:39:03 fredette Exp $");
 #include "gtk-display.h"
 #include <stdlib.h>
 #if GTK_MAJOR_VERSION == 4
-#define _tme_gtk_window_toplevels gtk_window_get_toplevels
 #define _tme_gtk_init gtk_init_check
 #else
-#define _tme_gtk_window_toplevels gtk_window_list_toplevels
-static void _tme_gtk_init(void) {
+static gboolean _tme_gtk_init(void) {
   char **argv;
   char *argv_buffer[3];
   int argc;
@@ -53,11 +51,11 @@ static void _tme_gtk_init(void) {
   argv = argv_buffer;
   argc = 0;
   argv[argc++] = "tmesh";
-#if 1
+#if 0
   argv[argc++] = "--gtk-debug=signals";
 #endif
   argv[argc] = NULL;
-  gtk_init_check(&argc, &argv);
+  return gtk_init_check(&argc, &argv);
 }
 #endif
 
@@ -73,7 +71,7 @@ _tme_gtk_display_update(struct tme_display *display) {
   for(rc=TRUE;rc && g_main_context_pending(NULL);
       rc = g_main_context_iteration(NULL, TRUE));
   
-  if(rc) rc = g_list_model_get_n_items(_tme_gtk_window_toplevels());
+  if(rc) rc = (gtk_window_list_toplevels() != NULL);
   return !rc;
 }
 
@@ -508,6 +506,21 @@ _tme_display_menu_radio(struct tme_gtk_screen *screen,
   return (menu);
 }
 
+/* this is a GTK callback for an enter notify event, that has the
+   widget grab focus and then continue normal event processing: */
+gint
+_tme_display_enter_focus(GtkWidget *widget,
+			 GdkEvent *gdk_event_raw,
+			 gpointer junk)
+{
+
+  /* grab the focus: */
+  gtk_widget_grab_focus(widget);
+
+  /* continue normal event processing: */
+  return (FALSE);
+}
+
 /* the new GTK display function: */
 TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   struct tme_gdk_display *display;
@@ -519,7 +532,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   setuid(getuid());
 #endif
   
-  if(!(rc = _tme_gtk_init())) return rc;
+  if(rc = !_tme_gtk_init()) return rc;
   
   /* start our data structure: */
   display = tme_new0(struct tme_gdk_display, 1);
@@ -559,5 +572,5 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   /* unlock mutex once gtk main thread is running: */
   //  g_idle_add(_tme_gtk_screens_update, display);
 
-  return (TME_OK);
+  return rc;
 }
