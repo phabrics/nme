@@ -61,7 +61,9 @@ struct tme_gdk_display {
 
   GdkSeat *tme_gdk_display_seat;
 
+#if GTK_MAJOR_VERSION == 3
   GdkMonitor *tme_gdk_display_monitor;
+#endif
 };
   
 /* a screen: */
