@@ -50,8 +50,10 @@ _TME_RCSID("$Id: gtk-display.h,v 1.10 2009/08/28 01:29:47 fredette Exp $");
 /* types: */
 
 /* a display: */
-struct tme_gdk_display {
-
+typedef struct tme_gtk_display {
+  /* the GTK application structure */
+  GtkApplication *tme_gtk_application;
+  
   /* the generic display structure */
   struct tme_display display;
 
@@ -64,10 +66,10 @@ struct tme_gdk_display {
 #if GTK_MAJOR_VERSION == 3
   GdkMonitor *tme_gdk_display_monitor;
 #endif
-};
+} _tme_gtk_display, *tme_gtk_display;
   
 /* a screen: */
-struct tme_gtk_screen {
+typedef struct tme_gtk_screen {
 
   /* the generic screen structure */
   struct tme_screen screen;
@@ -99,7 +101,7 @@ struct tme_gtk_screen {
      for the framebuffer event box: */
   //GdkEventMask tme_gtk_screen_mouse_events_old;
 
-};
+} _tme_gtk_screen, *tme_gtk_screen;
 
 /* a menu item: */
 struct tme_display_menu_item {
@@ -112,7 +114,6 @@ struct tme_display_menu_item {
 /* prototypes: */
 void _tme_gtk_keyboard_attach _TME_P((struct tme_gtk_screen *));
 void _tme_gtk_mouse_attach _TME_P((struct tme_gtk_screen *));
-gint _tme_display_enter_focus _TME_P((GtkWidget *, GdkEvent *, gpointer));
 GtkWidget *_tme_display_menu_radio _TME_P((struct tme_gtk_screen *, struct tme_display_menu_item *, int num_items));
 
 #endif /* _HOST_GTK_DISPLAY_H */

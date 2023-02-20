@@ -227,10 +227,13 @@ _tme_keyboard_keyval_name(tme_keyboard_keyval_t keyval)
 
 /* this is a generic callback for a key press or release event: */
 int
-_tme_keyboard_key_press(int down, tme_keyboard_keyval_t key, void *disp)
+_tme_keyboard_key_event(int down, tme_keyboard_keyval_t key, void *disp)
 {
   struct tme_keyboard_event tme_event;
   struct tme_display *display = (_tme_display_get) ? (_tme_display_get(disp)) : (disp);
+  int was_empty;
+  int new_callouts;
+  int rc;
 
   /* make a tme event from this key event: */
   tme_event.tme_keyboard_event_type
@@ -243,16 +246,6 @@ _tme_keyboard_key_press(int down, tme_keyboard_keyval_t key, void *disp)
     = key;
   tme_event.tme_keyboard_event_time = tme_thread_get_time();
 
-  return _tme_keyboard_key_event(&tme_event, display);
-}
-
-int
-_tme_keyboard_key_event(struct tme_keyboard_event *tme_event, struct tme_display *display)
-{
-  int was_empty;
-  int new_callouts;
-  int rc;
-
   /* lock the mutex: */
   tme_mutex_lock(&display->tme_display_mutex);
 
@@ -260,9 +253,9 @@ _tme_keyboard_key_event(struct tme_keyboard_event *tme_event, struct tme_display
   new_callouts = 0;
   
   /* get any keycode associated with this keysym: */
-  tme_event->tme_keyboard_event_keycode
+  tme_event.tme_keyboard_event_keycode
     = tme_keyboard_hash_data_to_keyval(tme_hash_lookup(display->tme_display_keyboard_keysym_to_keycode,
-						       tme_keyboard_hash_data_from_keyval(tme_event->tme_keyboard_event_keyval)));
+						       tme_keyboard_hash_data_from_keyval(tme_event.tme_keyboard_event_keyval)));
 
   /* remember if the keyboard buffer was empty: */
   was_empty
@@ -270,7 +263,7 @@ _tme_keyboard_key_event(struct tme_keyboard_event *tme_event, struct tme_display
 
   /* add this tme event to the keyboard buffer: */
   rc = tme_keyboard_buffer_copyin(display->tme_display_keyboard_buffer,
-				  tme_event);
+				  &tme_event);
   assert (rc == TME_OK);
 
   /* if the keyboard buffer was empty and now it isn't,

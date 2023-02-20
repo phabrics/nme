@@ -119,7 +119,7 @@ _tme_gtk_mouse_ebox_event(GtkWidget *widget,
 			  GdkEvent *gdk_event_raw,
 			  struct tme_gtk_screen *screen)
 {
-  struct tme_gdk_display *display;
+  struct tme_gtk_display *display;
   int rc;
   char *status;
   GdkWindow *window;
@@ -215,7 +215,7 @@ void
 _tme_gtk_mouse_mode_off(struct tme_gtk_screen *screen,
 			guint32 time)
 {
-  struct tme_gdk_display *display;
+  struct tme_gtk_display *display;
 
   /* get the display: */
   display = screen->screen.tme_screen_display;

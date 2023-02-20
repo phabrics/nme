@@ -273,14 +273,14 @@ _tme_sdl_display_update(struct tme_display *display) {
       switch (e.window.event) {
       case SDL_WINDOWEVENT_FOCUS_LOST:
 	if (rightAltKeyDown) {
-	  _tme_keyboard_key_press(FALSE, SDLK_RALT, display);
+	  _tme_keyboard_key_event(FALSE, SDLK_RALT, display);
 	  rightAltKeyDown = FALSE;
 	  tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
 		  (&display->tme_display_element->tme_element_log_handle,
 		   _("released right Alt key\n")));
 	}
 	if (leftAltKeyDown) {
-	  _tme_keyboard_key_press(FALSE, SDLK_LALT, display);
+	  _tme_keyboard_key_event(FALSE, SDLK_LALT, display);
 	  leftAltKeyDown = FALSE;
 	  tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
 		  (&display->tme_display_element->tme_element_log_handle,
@@ -343,7 +343,7 @@ _tme_sdl_display_update(struct tme_display *display) {
       if (viewOnly)
 	break;
       tme_keyboard_keyval_t sym = SDL_key2rfbKeySym(&e.key);
-      _tme_keyboard_key_press(e.type == SDL_KEYDOWN ? TRUE : FALSE,
+      _tme_keyboard_key_event(e.type == SDL_KEYDOWN ? TRUE : FALSE,
 			      (sym) ? (sym) : (e.key.keysym.sym), display);
       if (e.key.keysym.sym == SDLK_RALT)
 	rightAltKeyDown = e.type == SDL_KEYDOWN;
@@ -355,8 +355,8 @@ _tme_sdl_display_update(struct tme_display *display) {
       if (viewOnly)
 	break;
       tme_keyboard_keyval_t sym = utf8char2rfbKeySym(e.text.text);
-      _tme_keyboard_key_press(TRUE, sym, display);
-      _tme_keyboard_key_press(FALSE, sym, display);
+      _tme_keyboard_key_event(TRUE, sym, display);
+      _tme_keyboard_key_event(FALSE, sym, display);
 #endif
       break;
     default:

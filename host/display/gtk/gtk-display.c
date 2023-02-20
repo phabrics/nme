@@ -60,7 +60,7 @@ static gboolean _tme_gtk_init(void) {
 #endif
 
 static void
-_tme_gtk_display_bell(struct tme_gdk_display *display) {
+_tme_gtk_display_bell(_tme_gtk_display *display) {
   gdk_display_beep(display->tme_gdk_display);
 }
 
@@ -78,7 +78,7 @@ _tme_gtk_display_update(struct tme_display *display) {
 /* this sets the screen scaling to that indicated by the Scale menu: */
 static void
 _tme_gtk_screen_scale_default(GtkWidget *widget,
-			      struct tme_gtk_screen *screen)
+			      _tme_gtk_screen *screen)
 {
   if (!gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(GTK_MENU_ITEM(widget))))
     return;
@@ -89,7 +89,7 @@ _tme_gtk_screen_scale_default(GtkWidget *widget,
 /* this sets the screen scaling to that indicated by the Scale menu: */
 static void
 _tme_gtk_screen_scale_half(GtkWidget *widget,
-			   struct tme_gtk_screen *screen)
+			   _tme_gtk_screen *screen)
 {
   if (!gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(GTK_MENU_ITEM(widget))))
     return;
@@ -100,7 +100,7 @@ _tme_gtk_screen_scale_half(GtkWidget *widget,
 /* this sets the screen scaling to that indicated by the Scale menu: */
 static void
 _tme_gtk_screen_scale_full(GtkWidget *widget,
-			   struct tme_gtk_screen *screen)
+			   _tme_gtk_screen *screen)
 {
   if (!gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(GTK_MENU_ITEM(widget))))
     return;
@@ -111,7 +111,7 @@ _tme_gtk_screen_scale_full(GtkWidget *widget,
 /* this sets the screen scaling to that indicated by the Scale menu: */
 static void
 _tme_gtk_screen_scale_double(GtkWidget *widget,
-			     struct tme_gtk_screen *screen)
+			     _tme_gtk_screen *screen)
 {
   if (!gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(GTK_MENU_ITEM(widget))))
     return;
@@ -122,7 +122,7 @@ _tme_gtk_screen_scale_double(GtkWidget *widget,
 #if GTK_MAJOR_VERSION == 3
 /* this sets the screen size: */
 static inline void
-_tme_screen_format_set(struct tme_gtk_screen *screen,
+_tme_screen_format_set(_tme_gtk_screen *screen,
 		       cairo_format_t format)
 {
   screen->tme_gtk_screen_format = format;
@@ -132,7 +132,7 @@ _tme_screen_format_set(struct tme_gtk_screen *screen,
 /* this sets the screen format to that indicated by the Format menu: */
 static void
 _tme_gtk_screen_format_argb32(GtkWidget *widget,
-			      struct tme_gtk_screen *screen)
+			      _tme_gtk_screen *screen)
 {
   if (!gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(GTK_MENU_ITEM(widget))))
     return;
@@ -143,7 +143,7 @@ _tme_gtk_screen_format_argb32(GtkWidget *widget,
 /* this sets the screen format to that indicated by the Format menu: */
 static void
 _tme_gtk_screen_format_rgb24(GtkWidget *widget,
-			     struct tme_gtk_screen *screen)
+			     _tme_gtk_screen *screen)
 {
   if (!gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(GTK_MENU_ITEM(widget))))
     return;
@@ -154,7 +154,7 @@ _tme_gtk_screen_format_rgb24(GtkWidget *widget,
 /* this sets the screen format to that indicated by the Format menu: */
 static void
 _tme_gtk_screen_format_a8(GtkWidget *widget,
-			  struct tme_gtk_screen *screen)
+			  _tme_gtk_screen *screen)
 {
   if (!gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(GTK_MENU_ITEM(widget))))
     return;
@@ -165,7 +165,7 @@ _tme_gtk_screen_format_a8(GtkWidget *widget,
 /* this sets the screen format to that indicated by the Format menu: */
 static void
 _tme_gtk_screen_format_a1(GtkWidget *widget,
-			  struct tme_gtk_screen *screen)
+			  _tme_gtk_screen *screen)
 {
   if (!gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(GTK_MENU_ITEM(widget))))
     return;
@@ -176,7 +176,7 @@ _tme_gtk_screen_format_a1(GtkWidget *widget,
 /* this sets the screen format to that indicated by the Format menu: */
 static void
 _tme_gtk_screen_format_rgb16_565(GtkWidget *widget,
-				 struct tme_gtk_screen *screen)
+				 _tme_gtk_screen *screen)
 {
   if (!gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(GTK_MENU_ITEM(widget))))
     return;
@@ -204,7 +204,7 @@ static struct tme_display_menu_item scale_items[] =
   };
 
 /* Screen-specific size request */
-static void _tme_gtk_screen_resize(struct tme_gtk_screen *screen) {
+static void _tme_gtk_screen_resize(_tme_gtk_screen *screen) {
   struct tme_fb_connection *conn_fb = screen->screen.tme_screen_fb;
   
   /* set a minimum size */
@@ -224,14 +224,17 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
 #endif
 			  gpointer          _screen)
 {
-  struct tme_gtk_screen *screen;
+  _tme_gtk_screen *screen;
   struct tme_display *display;
   struct tme_fb_connection *conn_fb;
-#if GTK_MAJOR_VERSION == 3
-  GdkWindow *window;
+#if GTK_MAJOR_VERSION == 4
+  GdkSurface
+#elif GTK_MAJOR_VERSION == 3
+  GdkWindow 
 #endif
+    *window;
   
-  screen = (struct tme_gtk_screen *) _screen;
+  screen = (_tme_gtk_screen *) _screen;
 
   /* get the display: */
   display = screen->screen.tme_screen_display;
@@ -245,15 +248,20 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
   }
 
 #if GTK_MAJOR_VERSION == 4
-  if (gtk_native_get_surface(gtk_widget_get_native(widget))) {
+  window = gtk_native_get_surface(gtk_widget_get_native(widget));
+
+  //  screen->screen.tme_screen_scale = gdk_surface_get_scale_factor(window);
+  
+  if(window) {
       screen->tme_gtk_screen_surface =
-	gdk_surface_create_similar_surface(gtk_native_get_surface(gtk_widget_get_native(widget)),
+	gdk_surface_create_similar_surface(window,
 					   CAIRO_CONTENT_COLOR,
-					   gtk_widget_get_width(widget),
-					   gtk_widget_get_height(widget));
+					   gtk_widget_get_width(widget) /* * screen->screen.tme_screen_scale */,
+					   gtk_widget_get_height(widget) // * screen->screen.tme_screen_scale
+					   );
   }
 #elif GTK_MAJOR_VERSION == 3
-  window = gtk_widget_get_window(screen->tme_gtk_screen_gtkframe);
+  window = gtk_widget_get_window(widget);
   
   screen->screen.tme_screen_scale = gdk_window_get_scale_factor(window);
   
@@ -291,7 +299,7 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
 
 /* this is called before the screen's display is updated: */
 static void
-_tme_gtk_screen_redraw(struct tme_gtk_screen *screen, int x, int y, int w, int h)
+_tme_gtk_screen_redraw(_tme_gtk_screen *screen, int x, int y, int w, int h)
 {
   cairo_surface_flush(screen->tme_gtk_screen_surface);
   cairo_surface_mark_dirty(screen->tme_gtk_screen_surface);
@@ -312,9 +320,9 @@ _tme_gtk_screen_draw(GtkWidget *widget,
 		     gpointer   _screen)
 {
   struct tme_display *display;
-  struct tme_gtk_screen *screen;
+  _tme_gtk_screen *screen;
 
-  screen = (struct tme_gtk_screen *) _screen;
+  screen = (_tme_gtk_screen *) _screen;
 
   /* get the display: */
   display = screen->screen.tme_screen_display;
@@ -331,18 +339,25 @@ _tme_gtk_screen_draw(GtkWidget *widget,
   return FALSE;
 }
 
+static void
+_tme_gtk_screen_close(_tme_gtk_screen *screen)
+{
+  if (screen->tme_gtk_screen_surface)
+    cairo_surface_destroy (screen->tme_gtk_screen_surface);
+}
+
 /* this makes a new screen: */
-struct tme_gtk_screen *
-_tme_gtk_screen_new(struct tme_gdk_display *display,
+_tme_gtk_screen *
+_tme_gtk_screen_new(_tme_gtk_display *display,
 		    struct tme_connection *conn)
 {
-  struct tme_gtk_screen *screen;
+  _tme_gtk_screen *screen;
   GtkWidget *menu_bar;
   GtkWidget *menu;
   GtkWidget *submenu;
   GtkWidget *menu_item;
 
-  screen = tme_screen_new(display, struct tme_gtk_screen, conn);
+  screen = tme_screen_new(display, _tme_gtk_screen, conn);
 
   /* create the top-level window, and allow it to shrink, grow,
      and auto-shrink: */
@@ -384,7 +399,7 @@ _tme_gtk_screen_new(struct tme_gdk_display *display,
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), submenu);
   gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
 
-#if GTK_MAJOR_VERSION == 4
+#if GTK_MAJOR_VERSION == 3
   /* create the Screen colormap submenu: */
   submenu = _tme_display_menu_radio(screen, format_items, TME_ARRAY_ELS(format_items));
 
@@ -393,6 +408,9 @@ _tme_gtk_screen_new(struct tme_gdk_display *display,
   //  gtk_widget_show(menu_item);
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), submenu);
   gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
+
+  _tme_screen_format_set(screen, CAIRO_FORMAT_RGB24);
+
 #endif
   
   /* create the Screen menu bar item, attach the menu to it, and 
@@ -410,19 +428,16 @@ _tme_gtk_screen_new(struct tme_gdk_display *display,
   //  _tme_gtk_screen_init(screen->tme_gtk_screen_gtkframe, screen);
 
   
-  _tme_screen_format_set(screen, CAIRO_FORMAT_RGB24);
-
   /* pack the Gtkframe into the outer vertical packing box: */
   gtk_box_pack_start(GTK_BOX(screen->tme_gtk_screen_vbox0), 
 		     screen->tme_gtk_screen_gtkframe,
 		     FALSE, FALSE, 0);
 
 #if GTK_MAJOR_VERSION == 4
-  gtk_drawing_area_set_draw_func (GTK_DRAWING_AREA (screen->tme_gtk_screen_gtkframe),
-				  _tme_gtk_screen_draw, screen, NULL);
+  gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(screen->tme_gtk_screen_gtkframe),
+				 _tme_gtk_screen_draw, screen, NULL);
   g_signal_connect_after(screen->tme_gtk_screen_gtkframe, "resize",
 			 G_CALLBACK(_tme_gtk_screen_configure), screen);
-
 #elif GTK_MAJOR_VERSION == 3
   g_signal_connect(screen->tme_gtk_screen_gtkframe, "draw",
 		   G_CALLBACK(_tme_gtk_screen_draw), screen);
@@ -436,8 +451,12 @@ _tme_gtk_screen_new(struct tme_gdk_display *display,
   /* attach the keyboard to this screen: */
   _tme_gtk_keyboard_attach(screen);
 
-  gtk_window_set_title(GTK_WINDOW(screen->tme_gtk_screen_window), display->display.tme_display_title);
+  gtk_window_set_title(GTK_WINDOW(screen->tme_gtk_screen_window),
+		       display->display.tme_display_title);
 
+  g_signal_connect(screen->tme_gtk_screen_window, "destroy",
+		   G_CALLBACK(_tme_gtk_screen_close), screen);
+  
   /* unlock our mutex: */
   tme_mutex_unlock(&display->display.tme_display_mutex);
 
@@ -452,7 +471,7 @@ _tme_gtk_screen_new(struct tme_gdk_display *display,
 
 /* this creates a menu of radio buttons: */
 GtkWidget *
-_tme_display_menu_radio(struct tme_gtk_screen *screen,
+_tme_display_menu_radio(_tme_gtk_screen *screen,
 			struct tme_display_menu_item menu_items[],
 			int num_items)
 {
@@ -484,25 +503,12 @@ _tme_display_menu_radio(struct tme_gtk_screen *screen,
   return (menu);
 }
 
-/* this is a GTK callback for an enter notify event, that has the
-   widget grab focus and then continue normal event processing: */
-gint
-_tme_display_enter_focus(GtkWidget *widget,
-			 GdkEvent *gdk_event_raw,
-			 gpointer junk)
-{
-
-  /* grab the focus: */
-  gtk_widget_grab_focus(widget);
-
-  /* continue normal event processing: */
-  return (FALSE);
-}
-
 /* the new GTK display function: */
 TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
-  struct tme_gdk_display *display;
+  _tme_gtk_display *display;
+#if GTK_MAJOR_VERSION == 3
   GdkRectangle workarea;
+#endif
   int rc;
   
   /* GTK requires program to be running non-setuid */
@@ -513,12 +519,14 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   if(rc = !_tme_gtk_init()) return rc;
   
   /* start our data structure: */
-  display = tme_new0(struct tme_gdk_display, 1);
+  display = tme_new0(_tme_gtk_display, 1);
   tme_display_init(element, display);
 
   /* recover our data structure: */
   display = element->tme_element_private;
 
+  //  display->tme_gtk_application = gtk_application_new("org.phabrics.tme", G_APPLICATION_DEFAULT_FLAGS);
+  
   display->tme_gdk_display = gdk_display_get_default();
 
   display->tme_gdk_display_seat = gdk_display_get_default_seat(display->tme_gdk_display);

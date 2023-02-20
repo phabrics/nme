@@ -166,7 +166,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_rfb,display) {
 					  bpp);
   server->alwaysShared = TRUE;
   server->ptrAddEvent = _tme_mouse_buttons_event;
-  server->kbdAddEvent = _tme_keyboard_key_press;
+  server->kbdAddEvent = _tme_keyboard_key_event;
   server->newClientHook = _tme_rfb_newclient;
   //  server->httpDir = "../webclients";
   //  server->httpEnableProxyConnect = TRUE;
