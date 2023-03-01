@@ -75,6 +75,8 @@ _tme_gtk_display_update(struct tme_display *display) {
   return !rc;
 }
 
+#if GTK_MAJOR_VERSION == 3
+
 /* this sets the screen scaling to that indicated by the Scale menu: */
 static void
 _tme_gtk_screen_scale_default(GtkWidget *widget,
@@ -119,7 +121,6 @@ _tme_gtk_screen_scale_double(GtkWidget *widget,
   _tme_screen_scale_set(screen, TME_FB_XLAT_SCALE_DOUBLE );
 }
 
-#if GTK_MAJOR_VERSION == 3
 /* this sets the screen size: */
 static inline void
 _tme_screen_format_set(_tme_gtk_screen *screen,
@@ -193,8 +194,6 @@ static struct tme_display_menu_item format_items[] =
    { _("RGB16_565"), G_CALLBACK(_tme_gtk_screen_format_rgb16_565) }
   };
 
-#endif
-
 static struct tme_display_menu_item scale_items[] =
   {
    { _("Default"), G_CALLBACK(_tme_gtk_screen_scale_default) },
@@ -203,12 +202,14 @@ static struct tme_display_menu_item scale_items[] =
    { _("Double"), G_CALLBACK(_tme_gtk_screen_scale_double) }
   };
 
+#endif
+
 /* Screen-specific size request */
 static void _tme_gtk_screen_resize(_tme_gtk_screen *screen) {
   struct tme_fb_connection *conn_fb = screen->screen.tme_screen_fb;
   
   /* set a minimum size */
-  gtk_widget_set_size_request(screen->tme_gtk_screen_gtkframe,
+  gtk_widget_set_size_request(screen->tme_gtk_screen_draw,
 			      conn_fb->tme_fb_connection_width,
 			      conn_fb->tme_fb_connection_height);
 }
@@ -303,7 +304,7 @@ _tme_gtk_screen_redraw(_tme_gtk_screen *screen, int x, int y, int w, int h)
 {
   cairo_surface_flush(screen->tme_gtk_screen_surface);
   cairo_surface_mark_dirty(screen->tme_gtk_screen_surface);
-  gtk_widget_queue_draw(screen->tme_gtk_screen_gtkframe);
+  gtk_widget_queue_draw(screen->tme_gtk_screen_draw);
 }
 
 /* Redraw the screen from the surface. Note that the ::draw
@@ -352,37 +353,56 @@ _tme_gtk_screen_new(_tme_gtk_display *display,
 		    struct tme_connection *conn)
 {
   _tme_gtk_screen *screen;
+  GtkWidget *vbox;
+#if GTK_MAJOR_VERSION == 3
   GtkWidget *menu_bar;
   GtkWidget *menu;
   GtkWidget *submenu;
   GtkWidget *menu_item;
-
+#endif
+  
   screen = tme_screen_new(display, _tme_gtk_screen, conn);
 
+  /* create the header bar: */
+  screen->tme_gtk_screen_header = gtk_header_bar_new();
+
+  /* create the outer vertical packing box: */
+  vbox
+    = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+
+  /* create the Draw for the framebuffer area: */
+  screen->tme_gtk_screen_draw = gtk_drawing_area_new();
+  
   /* create the top-level window, and allow it to shrink, grow,
      and auto-shrink: */
   screen->tme_gtk_screen_window = 
 #if GTK_MAJOR_VERSION == 4
      gtk_window_new();
+
+  gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(screen->tme_gtk_screen_draw),
+				 _tme_gtk_screen_draw, screen, NULL);
+  g_signal_connect_after(screen->tme_gtk_screen_draw, "resize",
+			 G_CALLBACK(_tme_gtk_screen_configure), screen);
+
+  /* add the outer vertical packing box to the window: */
+  gtk_window_set_child(GTK_WINDOW(screen->tme_gtk_screen_window), vbox);
+  
+  /* pack the Draw into the outer vertical packing box: */
+  gtk_box_prepend(GTK_BOX(vbox), 
+		  screen->tme_gtk_screen_draw);
+
 #elif GTK_MAJOR_VERSION == 3
   gtk_window_new(GTK_WINDOW_TOPLEVEL);
   screen->screen.tme_screen_scale = gdk_monitor_get_scale_factor(display->tme_gdk_display_monitor);
-#endif
-
-  gtk_window_set_resizable(GTK_WINDOW(screen->tme_gtk_screen_window), FALSE);
-
-  /* create the outer vertical packing box: */
-  screen->tme_gtk_screen_vbox0
-    = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
 
   /* add the outer vertical packing box to the window: */
   gtk_container_add(GTK_CONTAINER(screen->tme_gtk_screen_window),
-		    screen->tme_gtk_screen_vbox0);
+		    vbox);
 
   /* create the menu bar and pack it into the outer vertical packing
      box: */
   menu_bar = gtk_menu_bar_new ();
-  gtk_box_pack_start(GTK_BOX(screen->tme_gtk_screen_vbox0), 
+  gtk_box_pack_start(GTK_BOX(vbox), 
 		     menu_bar,
 		     FALSE, FALSE, 0);
   //  gtk_widget_show(menu_bar);
@@ -399,7 +419,6 @@ _tme_gtk_screen_new(_tme_gtk_display *display,
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), submenu);
   gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
 
-#if GTK_MAJOR_VERSION == 3
   /* create the Screen colormap submenu: */
   submenu = _tme_display_menu_radio(screen, format_items, TME_ARRAY_ELS(format_items));
 
@@ -411,8 +430,6 @@ _tme_gtk_screen_new(_tme_gtk_display *display,
 
   _tme_screen_format_set(screen, CAIRO_FORMAT_RGB24);
 
-#endif
-  
   /* create the Screen menu bar item, attach the menu to it, and 
      attach the menu bar item to the menu bar: */
   menu_item = gtk_menu_item_new_with_label("Screen");
@@ -420,30 +437,18 @@ _tme_gtk_screen_new(_tme_gtk_display *display,
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), menu);
   gtk_menu_shell_append(GTK_MENU_SHELL(menu_bar), menu_item);
 
-  /* create the Gtkframe for the framebuffer area: */
-  screen->tme_gtk_screen_gtkframe = gtk_drawing_area_new();
-  
-  /* new a minimum size */
-  //_tme_gtk_screen_set_size(screen, BLANK_SIDE, BLANK_SIDE);
-  //  _tme_gtk_screen_init(screen->tme_gtk_screen_gtkframe, screen);
-
-  
-  /* pack the Gtkframe into the outer vertical packing box: */
-  gtk_box_pack_start(GTK_BOX(screen->tme_gtk_screen_vbox0), 
-		     screen->tme_gtk_screen_gtkframe,
+  /* pack the Draw into the outer vertical packing box: */
+  gtk_box_pack_start(GTK_BOX(vbox), 
+		     screen->tme_gtk_screen_draw,
 		     FALSE, FALSE, 0);
 
-#if GTK_MAJOR_VERSION == 4
-  gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(screen->tme_gtk_screen_gtkframe),
-				 _tme_gtk_screen_draw, screen, NULL);
-  g_signal_connect_after(screen->tme_gtk_screen_gtkframe, "resize",
-			 G_CALLBACK(_tme_gtk_screen_configure), screen);
-#elif GTK_MAJOR_VERSION == 3
-  g_signal_connect(screen->tme_gtk_screen_gtkframe, "draw",
+  g_signal_connect(screen->tme_gtk_screen_draw, "draw",
 		   G_CALLBACK(_tme_gtk_screen_draw), screen);
-  g_signal_connect(screen->tme_gtk_screen_gtkframe, "configure-event",
+  g_signal_connect(screen->tme_gtk_screen_draw, "configure-event",
 		   G_CALLBACK(_tme_gtk_screen_configure), screen);
 #endif
+
+  gtk_window_set_resizable(GTK_WINDOW(screen->tme_gtk_screen_window), FALSE);
 
   /* attach the mouse to this screen: */
   _tme_gtk_mouse_attach(screen);
@@ -451,6 +456,9 @@ _tme_gtk_screen_new(_tme_gtk_display *display,
   /* attach the keyboard to this screen: */
   _tme_gtk_keyboard_attach(screen);
 
+  gtk_window_set_titlebar(GTK_WINDOW(screen->tme_gtk_screen_window),
+			  screen->tme_gtk_screen_header);
+  
   gtk_window_set_title(GTK_WINDOW(screen->tme_gtk_screen_window),
 		       display->display.tme_display_title);
 
@@ -469,6 +477,7 @@ _tme_gtk_screen_new(_tme_gtk_display *display,
   return (screen);
 }
 
+#if GTK_MAJOR_VERSION == 3
 /* this creates a menu of radio buttons: */
 GtkWidget *
 _tme_display_menu_radio(_tme_gtk_screen *screen,
@@ -502,6 +511,7 @@ _tme_display_menu_radio(_tme_gtk_screen *screen,
   /* return the menu: */
   return (menu);
 }
+#endif
 
 /* the new GTK display function: */
 TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {

@@ -41,7 +41,7 @@ _TME_RCSID("$Id: gtk-mouse.c,v 1.3 2007/03/03 15:33:22 fredette Exp $");
 #include <gdk/gdkkeysyms.h>
 
 #if 0
-/* this warps the pointer to the middle of the Gtkframe: */
+/* this warps the pointer to the middle of the Draw: */
 void
 _tme_gtk_mouse_warp_pointer(struct tme_gtk_screen *screen)
 {
@@ -164,22 +164,22 @@ _tme_gtk_mouse_ebox_event(GtkWidget *widget,
 		     status);
   tme_free(status);
   
-  window = gtk_widget_get_window(screen->tme_gtk_screen_gtkframe);
+  window = gtk_widget_get_window(screen->tme_gtk_screen_draw);
 
   /* if the original events mask on the framebuffer event box have
      never been saved, save them now, and add the mouse events: */
   /*  if (screen->tme_gtk_screen_mouse_events_old == 0) {
     screen->tme_gtk_screen_mouse_events_old
-      = gtk_widget_get_events(screen->tme_gtk_screen_gtkframe);
-    gtk_widget_add_events(screen->tme_gtk_screen_gtkframe,
+      = gtk_widget_get_events(screen->tme_gtk_screen_draw);
+    gtk_widget_add_events(screen->tme_gtk_screen_draw,
 			  GDK_POINTER_MOTION_MASK
 			  | GDK_BUTTON_PRESS_MASK
 			  | GDK_BUTTON_RELEASE_MASK);
   }
   */
   /* grab the pointer: */
-  gtk_grab_add(screen->tme_gtk_screen_gtkframe);
-    /*gtk_device_grab_add(screen->tme_gtk_screen_gtkframe,
+  gtk_grab_add(screen->tme_gtk_screen_draw);
+    /*gtk_device_grab_add(screen->tme_gtk_screen_draw,
 		      gdk_seat_get_pointer(display->tme_gdk_display_seat),
 		      FALSE);*/
 
@@ -226,11 +226,11 @@ _tme_gtk_mouse_mode_off(struct tme_gtk_screen *screen,
 
   /* ungrab the pointer: */
   gdk_seat_ungrab(display->tme_gdk_display_seat);
-  gtk_grab_remove(screen->tme_gtk_screen_gtkframe);
-  //gtk_device_grab_remove(screen->tme_gtk_screen_gtkframe, gdk_seat_get_pointer(display->tme_gdk_display_seat));
+  gtk_grab_remove(screen->tme_gtk_screen_draw);
+  //gtk_device_grab_remove(screen->tme_gtk_screen_draw, gdk_seat_get_pointer(display->tme_gdk_display_seat));
 
   /* restore the old events mask on the event box: */
-  //  gtk_widget_set_events(screen->tme_gtk_screen_gtkframe, screen->tme_gtk_screen_mouse_events_old);
+  //  gtk_widget_set_events(screen->tme_gtk_screen_draw, screen->tme_gtk_screen_mouse_events_old);
 
   /* pop our message off of the statusbar: */
   gtk_statusbar_pop(GTK_STATUSBAR(screen->tme_gtk_screen_mouse_statusbar),
@@ -248,27 +248,13 @@ _tme_gtk_mouse_mode_off(struct tme_gtk_screen *screen,
 void
 _tme_gtk_mouse_attach(struct tme_gtk_screen *screen)
 {
-  GtkWidget *hbox0;
   GtkWidget *ebox;
-
-  /* create the horizontal packing box for the mouse controls: */
-  hbox0 = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-
-  /* pack the horizontal packing box into the outer vertical packing box: */
-  gtk_box_pack_start(GTK_BOX(screen->tme_gtk_screen_vbox0), 
-		     hbox0,
-		     FALSE, FALSE, 0);
-
-  /* show the horizontal packing box: */
-  gtk_widget_show(hbox0);
 
   /* create the event box for the mouse on label: */
   ebox = gtk_event_box_new();
-
+  
   /* pack the event box into the horizontal packing box: */
-  gtk_box_pack_start(GTK_BOX(hbox0), 
-		     ebox,
-		     FALSE, FALSE, 0);
+  gtk_header_bar_pack_start(GTK_HEADER_BAR(screen->tme_gtk_screen_header), ebox);
 
   /* set the tip on the event box, which will eventually contain the mouse on label: */
   gtk_widget_set_tooltip_text(ebox,
@@ -288,9 +274,6 @@ _tme_gtk_mouse_attach(struct tme_gtk_screen *screen)
   /* the event box can focus: */
   gtk_widget_set_can_focus(ebox, TRUE);
 
-  /* show the event box: */
-  gtk_widget_show(ebox);
-
   /* create the mouse on label: */
   screen->tme_gtk_screen_mouse_label
     = gtk_label_new(_("Mouse is off"));
@@ -299,20 +282,13 @@ _tme_gtk_mouse_attach(struct tme_gtk_screen *screen)
   gtk_container_add(GTK_CONTAINER(ebox), 
 		    screen->tme_gtk_screen_mouse_label);
 
-  /* show the mouse on label: */
-  gtk_widget_show(screen->tme_gtk_screen_mouse_label);
-
   /* create the mouse statusbar: */
   screen->tme_gtk_screen_mouse_statusbar
     = gtk_statusbar_new();
 
   /* pack the mouse statusbar into the horizontal packing box: */
-  gtk_box_pack_start(GTK_BOX(hbox0), 
-		     screen->tme_gtk_screen_mouse_statusbar,
-		     TRUE, TRUE, 10);
-
-  /* show the mouse statusbar: */
-  gtk_widget_show(screen->tme_gtk_screen_mouse_statusbar);
+  gtk_header_bar_pack_start(GTK_HEADER_BAR(screen->tme_gtk_screen_header), 
+			    screen->tme_gtk_screen_mouse_statusbar);
 
   /* push an initial message onto the statusbar: */
   screen->tme_gtk_screen_mouse_statusbar_cid
@@ -321,18 +297,18 @@ _tme_gtk_mouse_attach(struct tme_gtk_screen *screen)
   gtk_statusbar_push(GTK_STATUSBAR(screen->tme_gtk_screen_mouse_statusbar),
 		     screen->tme_gtk_screen_mouse_statusbar_cid,
 		     _("The Machine Emulator"));
-
+  
   /* although the event mask doesn't include these events yet,
      set a signal handler for the mouse events: */
-  g_signal_connect(screen->tme_gtk_screen_gtkframe,
+  g_signal_connect(screen->tme_gtk_screen_draw,
 		   "motion_notify_event",
 		   G_CALLBACK(_tme_gtk_mouse_mouse_event), 
 		   screen->screen.tme_screen_display);
-  g_signal_connect(screen->tme_gtk_screen_gtkframe,
+  g_signal_connect(screen->tme_gtk_screen_draw,
 		   "button_press_event",
 		   G_CALLBACK(_tme_gtk_mouse_mouse_event), 
 		   screen->screen.tme_screen_display);
-  g_signal_connect(screen->tme_gtk_screen_gtkframe,
+  g_signal_connect(screen->tme_gtk_screen_draw,
 		   "button_release_event",
 		   G_CALLBACK(_tme_gtk_mouse_mouse_event), 
 		   screen->screen.tme_screen_display);

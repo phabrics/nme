@@ -73,19 +73,21 @@ _tme_gtk_keyboard_attach(struct tme_gtk_screen *screen)
   GtkEventControllerKey *key;
   GtkEventControllerMotion *motion;
 
-  motion=gtk_event_controller_motion_new(screen->tme_gtk_screen_gtkframe);
-  gtk_widget_add_controller(screen->tme_gtk_screen_gtkframe, GTK_EVENT_CONTROLLER(motion));
+#if GTK_MAJOR_VERSION == 4
+  motion=gtk_event_controller_motion_new();
+  key=gtk_event_controller_key_new();
+  gtk_widget_add_controller(screen->tme_gtk_screen_draw, GTK_EVENT_CONTROLLER(key));
+  gtk_widget_add_controller(screen->tme_gtk_screen_draw, GTK_EVENT_CONTROLLER(motion));
+#elif GTK_MAJOR_VERSION == 3
+  motion=screen->motion=gtk_event_controller_motion_new(screen->tme_gtk_screen_draw);
+  key=screen->key=gtk_event_controller_key_new(screen->tme_gtk_screen_draw);
+#endif
   
   /* on entering window, grab keyboard focus: */
   g_signal_connect_swapped(motion,
 			   "enter",
 			   G_CALLBACK(gtk_widget_grab_focus),
-			   screen->tme_gtk_screen_gtkframe);
-
-  /* set the signal handler for the key events: */
-  key=gtk_event_controller_key_new(screen->tme_gtk_screen_gtkframe);
-  
-  gtk_widget_add_controller(screen->tme_gtk_screen_gtkframe, GTK_EVENT_CONTROLLER(key));
+			   screen->tme_gtk_screen_draw);
 
   g_signal_connect_after(key,
 			 "key-pressed",
@@ -97,8 +99,8 @@ _tme_gtk_keyboard_attach(struct tme_gtk_screen *screen)
 			 screen->screen.tme_screen_display);
   
   /* the event box can focus, and have it grab the focus now: */
-  gtk_widget_set_can_focus(screen->tme_gtk_screen_gtkframe, TRUE);
-  gtk_widget_grab_focus(screen->tme_gtk_screen_gtkframe);
+  gtk_widget_set_can_focus(screen->tme_gtk_screen_draw, TRUE);
+  gtk_widget_grab_focus(screen->tme_gtk_screen_draw);
 
 }
 

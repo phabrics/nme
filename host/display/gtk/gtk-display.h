@@ -51,12 +51,12 @@ _TME_RCSID("$Id: gtk-display.h,v 1.10 2009/08/28 01:29:47 fredette Exp $");
 
 /* a display: */
 typedef struct tme_gtk_display {
-  /* the GTK application structure */
-  GtkApplication *tme_gtk_application;
-  
   /* the generic display structure */
   struct tme_display display;
 
+  /* the GTK application structure */
+  GtkApplication *tme_gtk_application;
+  
   GdkDisplay *tme_gdk_display;
   
   GdkCursor *tme_gdk_display_cursor;
@@ -77,25 +77,29 @@ typedef struct tme_gtk_screen {
   /* the top-level window: */
   GtkWidget *tme_gtk_screen_window;
   
-  /* the outer vertical packing box: */
-  GtkWidget *tme_gtk_screen_vbox0;
+  /* the header bar: */
+  GtkWidget *tme_gtk_screen_header;
 
-  /* the GtkWidget, GdkWindow & cairo_surface for the framebuffer: */
-  GtkWidget *tme_gtk_screen_gtkframe;
+  /* the drawing area & surface for the framebuffer: */
+  GtkWidget *tme_gtk_screen_draw;
   cairo_surface_t *tme_gtk_screen_surface;
-  cairo_format_t tme_gtk_screen_format;
 
   /* the mouse on label: */
   GtkWidget *tme_gtk_screen_mouse_label;
-
-  /* the status bar, and the context ID: */
-  GtkWidget *tme_gtk_screen_mouse_statusbar;
-  guint tme_gtk_screen_mouse_statusbar_cid;
 
   /* if GDK_VoidSymbol, mouse mode is off.  otherwise,
      mouse mode is on, and this is the keyval that will
      turn mouse mode off: */
   guint tme_gtk_screen_mouse_keyval;
+
+#if GTK_MAJOR_VERSION == 3
+  /* the status bar, and the context ID: */
+  GtkWidget *tme_gtk_screen_mouse_statusbar;
+  guint tme_gtk_screen_mouse_statusbar_cid;
+
+  cairo_format_t tme_gtk_screen_format;
+  GtkEventControllerKey *key;
+  GtkEventControllerMotion *motion;
 
   /* when mouse mode is on, this is the previous events mask
      for the framebuffer event box: */
@@ -112,9 +116,12 @@ struct tme_display_menu_item {
 };
 
 /* prototypes: */
+GtkWidget *_tme_display_menu_radio _TME_P((struct tme_gtk_screen *, struct tme_display_menu_item *, int num_items));
+#else
+} _tme_gtk_screen, *tme_gtk_screen;
+#endif
 void _tme_gtk_keyboard_attach _TME_P((struct tme_gtk_screen *));
 void _tme_gtk_mouse_attach _TME_P((struct tme_gtk_screen *));
-GtkWidget *_tme_display_menu_radio _TME_P((struct tme_gtk_screen *, struct tme_display_menu_item *, int num_items));
 
 #endif /* _HOST_GTK_DISPLAY_H */
 
