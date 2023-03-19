@@ -136,7 +136,17 @@ static enum rfbNewClientAction _tme_rfb_newclient(rfbClientPtr cl)
   return RFB_CLIENT_ACCEPT;
 }
 
-static struct tme_display *tme_rfb_display(rfbClientPtr cl) { return cl->clientData; }
+static void _tme_mouse_ev(int buttons, int x, int y, rfbClientPtr cl) { 
+  struct tme_display *display = cl->clientData;
+
+  /* make the buttons mask: */
+  display->tme_screen_mouse_buttons_last = buttons;
+  _tme_mouse_event(0,x,y,display);
+}
+
+static void _tme_keyboard_key_ev(int down, tme_keyboard_keyval_t key, rfbClientPtr cl) {
+  _tme_keyboard_key_event(down, key, cl->clientData);
+}
 
 /* the new RFB display function: */
 TME_ELEMENT_SUB_NEW_DECL(tme_host_rfb,display) {
@@ -148,8 +158,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_rfb,display) {
   /* start our data structure: */
   tme_display_init(element, 0);
 
-  _tme_display_get = tme_rfb_display;
-  
   /* recover our data structure: */
   display = element->tme_element_private;
 
@@ -165,8 +173,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_rfb,display) {
 					  display->tme_screen_height *
 					  bpp);
   server->alwaysShared = TRUE;
-  server->ptrAddEvent = _tme_mouse_buttons_event;
-  server->kbdAddEvent = _tme_keyboard_key_event;
+  server->ptrAddEvent = _tme_mouse_ev;
+  server->kbdAddEvent = _tme_keyboard_key_ev;
   server->newClientHook = _tme_rfb_newclient;
   //  server->httpDir = "../webclients";
   //  server->httpEnableProxyConnect = TRUE;

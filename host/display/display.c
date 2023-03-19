@@ -36,8 +36,6 @@
 /* includes: */
 #include "display.h"
 
-struct tme_display *(*_tme_display_get) _TME_P((void *));
-
 static int
 _tme_screen_update(struct tme_screen *screen) {
   struct tme_fb_connection *conn_fb;
@@ -689,9 +687,6 @@ int tme_display_init(struct tme_element *element,
   /* start our data structure: */
   display->tme_display_element = element;
 
-  /* default display: */
-  _tme_display_get = 0;
-  
   /* create the keyboard: */
   _tme_keyboard_new(display);
 

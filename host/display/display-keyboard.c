@@ -227,10 +227,9 @@ _tme_keyboard_keyval_name(tme_keyboard_keyval_t keyval)
 
 /* this is a generic callback for a key press or release event: */
 int
-_tme_keyboard_key_event(int down, tme_keyboard_keyval_t key, void *disp)
+_tme_keyboard_key_event(int down, tme_keyboard_keyval_t key, struct tme_display *display)
 {
   struct tme_keyboard_event tme_event;
-  struct tme_display *display = (_tme_display_get) ? (_tme_display_get(disp)) : (disp);
   int was_empty;
   int new_callouts;
   int rc;

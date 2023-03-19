@@ -53,31 +53,23 @@ _tme_mouse_debug(const struct tme_mouse_event *event)
 #endif
 
 /* this is a generic callback for a mouse event: */
-int
-_tme_mouse_button_press(int button, int x, int y, struct tme_display *display)
-{
-  int state;
-    
-  /* make the buttons mask: */
-  state = display->tme_screen_mouse_buttons_last;
-
-  if(button>0)
-    state |= TME_BIT(button-1);
-  else if(button) {
-    button = -button;
-    state &= ~TME_BIT(button-1);
-  }
-
-  return _tme_mouse_buttons_event(state, x, y, display);  
-}
-
-int _tme_mouse_buttons_event(int buttons, int x, int y, void *disp)
+void
+_tme_mouse_event(int button, int x, int y, struct tme_display *display)
 {
   struct tme_mouse_event tme_event;
   int was_empty;
   int new_callouts, rc;
-  struct tme_display *display = (_tme_display_get) ? (_tme_display_get(disp)) : (disp);
   
+  /* make the buttons mask: */
+  int buttons = display->tme_screen_mouse_buttons_last;
+
+  if(button>0)
+    buttons |= TME_BIT(button-1);
+  else if(button) {
+    button = -button;
+    buttons &= ~TME_BIT(button-1);
+  }
+
   /* start the tme event: */
   tme_event.tme_mouse_event_delta_units
     = TME_MOUSE_UNITS_UNKNOWN;
@@ -100,7 +92,7 @@ int _tme_mouse_buttons_event(int buttons, int x, int y, void *disp)
     tme_mutex_unlock(&display->tme_display_mutex);
     
     /* stop propagating this event: */
-    return (TRUE);
+    return;
   }
   
   tme_event.tme_mouse_event_buttons =
@@ -145,9 +137,6 @@ int _tme_mouse_buttons_event(int buttons, int x, int y, void *disp)
 
   /* unlock the mutex: */
   tme_mutex_unlock(&display->tme_display_mutex);
-
-  /* don't process this event any further: */
-  return (TRUE);
 }
 
 /* this is called when the mouse controls change: */

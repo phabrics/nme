@@ -98,8 +98,8 @@ typedef struct tme_gtk_screen {
   guint tme_gtk_screen_mouse_statusbar_cid;
 
   cairo_format_t tme_gtk_screen_format;
-  GtkEventControllerKey *key;
-  GtkEventControllerMotion *motion;
+  GtkEventController *key, *mouse, *motion, *event;
+  GtkGesture *press;
 
   /* when mouse mode is on, this is the previous events mask
      for the framebuffer event box: */

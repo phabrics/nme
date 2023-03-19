@@ -186,7 +186,6 @@ _tme_scanline_pad(int bpl)
   return (8);
 }
 
-extern struct tme_display *(*_tme_display_get) _TME_P((void *));
 struct tme_screen *_tme_screen_add _TME_P((struct tme_display *,
 					   size_t,
 					   struct tme_connection *));
@@ -197,12 +196,12 @@ void _tme_screen_xlat_set _TME_P((struct tme_screen *screen));
 void _tme_keyboard_new _TME_P((struct tme_display *));
 int _tme_keyboard_connections_new _TME_P((struct tme_display *,
 					  struct tme_connection **));
-int _tme_keyboard_key_event _TME_P((int down, tme_keyboard_keyval_t key, void *disp));
+int _tme_keyboard_key_event _TME_P((int down, tme_keyboard_keyval_t key, struct tme_display *disp));
 void _tme_mouse_new _TME_P((struct tme_display *));
 void _tme_mouse_mode_off _TME_P((struct tme_screen *, tme_uint32_t));
 int _tme_mouse_connections_new _TME_P((struct tme_display *,
 				       struct tme_connection **));
-int _tme_mouse_buttons_event _TME_P((int buttons, int x, int y, void *disp));
+void _tme_mouse_event _TME_P((int button, int x, int y, struct tme_display *disp));
 
 #endif /* _HOST_DISPLAY_H */
 
