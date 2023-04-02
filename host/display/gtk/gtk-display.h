@@ -84,8 +84,12 @@ typedef struct tme_gtk_screen {
   GtkWidget *tme_gtk_screen_draw;
   cairo_surface_t *tme_gtk_screen_surface;
 
-  /* the mouse on label: */
+  /* the mouse label: */
   GtkWidget *tme_gtk_screen_mouse_label;
+  /* the mouse toggle button: */
+  GtkWidget *tme_gtk_screen_mouse_button;
+  /* the name of the mouse toggle key: */
+  GtkWidget *tme_gtk_screen_mouse_key;
 
   /* if GDK_VoidSymbol, mouse mode is off.  otherwise,
      mouse mode is on, and this is the keyval that will
@@ -93,10 +97,6 @@ typedef struct tme_gtk_screen {
   guint tme_gtk_screen_mouse_keyval;
 
 #if GTK_MAJOR_VERSION == 3
-  /* the status bar, and the context ID: */
-  GtkWidget *tme_gtk_screen_mouse_statusbar;
-  guint tme_gtk_screen_mouse_statusbar_cid;
-
   cairo_format_t tme_gtk_screen_format;
   GtkEventController *key, *mouse, *motion, *event;
   GtkGesture *press;

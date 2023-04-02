@@ -65,8 +65,7 @@ _tme_gtk_mouse_motion_event(GtkEventControllerMotion* self,
 			    struct tme_gtk_screen *screen)
 
 {
-  if(screen->tme_gtk_screen_mouse_keyval
-     != GDK_KEY_VoidSymbol)
+  if(gtk_switch_get_state(GTK_SWITCH(screen->tme_gtk_screen_mouse_button)))
     _tme_mouse_event(0, x, y, screen->screen.tme_screen_display);
 }
 
@@ -78,8 +77,7 @@ _tme_gtk_mouse_button_down(GtkGesture* self,
 			   gdouble y,
 			   struct tme_gtk_screen *screen)
 {
-  if(screen->tme_gtk_screen_mouse_keyval
-     != GDK_KEY_VoidSymbol)
+  if(gtk_switch_get_state(GTK_SWITCH(screen->tme_gtk_screen_mouse_button)))
     _tme_mouse_event(gtk_gesture_single_get_current_button(self),
 		     x, y, screen->screen.tme_screen_display);
 }
@@ -92,8 +90,7 @@ _tme_gtk_mouse_button_up(GtkGesture* self,
 			 gdouble y,
 			 struct tme_gtk_screen *screen)
 {
-  if(screen->tme_gtk_screen_mouse_keyval
-     != GDK_KEY_VoidSymbol)
+  if(gtk_switch_get_state(GTK_SWITCH(screen->tme_gtk_screen_mouse_button)))
     _tme_mouse_event(-gtk_gesture_single_get_current_button(self),
 		     x, y, screen->screen.tme_screen_display);
 }
@@ -105,57 +102,35 @@ _tme_gtk_mouse_attach(struct tme_gtk_screen *screen)
   GtkEventController *motion, *event;
   GtkGesture *press;
 
-  /* create the event box for the mouse on label: */
-  /* create the mouse on label: */
-  screen->tme_gtk_screen_mouse_label
-    = gtk_frame_new(_("Mouse is off"));
+  /* create the mouse label, button, and key: */
+  screen->tme_gtk_screen_mouse_label = gtk_label_new(_("Mouse Mode"));
+  screen->tme_gtk_screen_mouse_button = gtk_switch_new();
+  //    = gtk_toggle_button_new_with_label(_("Mouse Mode"));
+  screen->tme_gtk_screen_mouse_key = gtk_entry_new();
   
-  /* pack the event box into the horizontal packing box: */
   gtk_header_bar_pack_start(GTK_HEADER_BAR(screen->tme_gtk_screen_header),
 			    screen->tme_gtk_screen_mouse_label);
+  gtk_header_bar_pack_start(GTK_HEADER_BAR(screen->tme_gtk_screen_header),
+			    screen->tme_gtk_screen_mouse_button);
+  gtk_header_bar_pack_start(GTK_HEADER_BAR(screen->tme_gtk_screen_header),
+			    screen->tme_gtk_screen_mouse_key);
 
 #if GTK_MAJOR_VERSION == 4
   motion=gtk_event_controller_motion_new();
   gtk_widget_add_controller(screen->tme_gtk_screen_draw, motion);
-  event=gtk_event_controller_motion_new();
-  gtk_widget_add_controller(screen->tme_gtk_screen_mouse_label, event);
   press = gtk_gesture_click_new();
   gtk_widget_add_controller(screen->tme_gtk_screen_draw, GTK_EVENT_CONTROLLER (press));
 #elif GTK_MAJOR_VERSION == 3
   motion=screen->motion=gtk_event_controller_motion_new(screen->tme_gtk_screen_draw);
-  event=screen->event=gtk_event_controller_motion_new(screen->tme_gtk_screen_mouse_label);
   press=screen->press=gtk_gesture_multi_press_new(screen->tme_gtk_screen_draw);
 #endif
   
   gtk_gesture_single_set_button(GTK_GESTURE_SINGLE (press), 0);
-  /* set the tip on the event box, which will eventually contain the mouse on label: */
-  gtk_widget_set_tooltip_text(screen->tme_gtk_screen_mouse_label,
+  /* set the tip on the entry box: */
+  gtk_widget_set_tooltip_text(screen->tme_gtk_screen_mouse_key,
 			      "Press a key here to turn the mouse on.  The same key " \
 			      "will turn the mouse off.");
 
-  /* set a signal handler for the event box events: */
-  /*  g_signal_connect(ebox,
-		   "event",
-		   G_CALLBACK(_tme_gtk_mouse_ebox_event),
-		   screen); */
-
-  /* create the mouse statusbar: */
-  screen->tme_gtk_screen_mouse_statusbar
-    = gtk_statusbar_new();
-
-  /* pack the mouse statusbar into the horizontal packing box: */
-  gtk_header_bar_pack_start(GTK_HEADER_BAR(screen->tme_gtk_screen_header), 
-			    screen->tme_gtk_screen_mouse_statusbar);
-
-  /* push an initial message onto the statusbar: */
-  screen->tme_gtk_screen_mouse_statusbar_cid
-    = gtk_statusbar_get_context_id(GTK_STATUSBAR(screen->tme_gtk_screen_mouse_statusbar),
-				   "mouse context");
-  gtk_statusbar_push(GTK_STATUSBAR(screen->tme_gtk_screen_mouse_statusbar),
-		     screen->tme_gtk_screen_mouse_statusbar_cid,
-		     _("The Machine Emulator"));
-  
-  /* on entering window, grab keyboard focus: */
   g_signal_connect_swapped(motion,
 			   "enter",
 			   G_CALLBACK(gtk_widget_grab_focus),
@@ -174,12 +149,6 @@ _tme_gtk_mouse_attach(struct tme_gtk_screen *screen)
   g_signal_connect(press, "pressed", G_CALLBACK(_tme_gtk_mouse_button_down),
 		   screen); 
   
-  /* on entering window, grab keyboard focus: */
-  g_signal_connect_swapped(event,
-			   "enter",
-			   G_CALLBACK(gtk_widget_grab_focus),
-			   screen->tme_gtk_screen_mouse_label);
-
   /* mouse mode is off: */
   screen->tme_gtk_screen_mouse_keyval = GDK_KEY_VoidSymbol;
 }

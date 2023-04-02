@@ -56,16 +56,7 @@ _tme_gtk_keyboard_key_down(
      != keyval)
     return _tme_keyboard_key_event(TRUE, keyval, screen->screen.tme_screen_display);
 
-  /* pop our message off of the statusbar: */
-  gtk_statusbar_pop(GTK_STATUSBAR(screen->tme_gtk_screen_mouse_statusbar),
-		    screen->tme_gtk_screen_mouse_statusbar_cid);
-    
-  /* restore the text on the mouse label: */
-  gtk_frame_set_label(GTK_FRAME(screen->tme_gtk_screen_mouse_label),
-		      _("Mouse is off"));
-    
-  /* the mouse is now off: */
-  screen->tme_gtk_screen_mouse_keyval = GDK_KEY_VoidSymbol;
+  gtk_switch_set_active(GTK_SWITCH(screen->tme_gtk_screen_mouse_button), FALSE);
 
   return (TRUE);
   
@@ -98,30 +89,11 @@ _tme_gtk_mouse_key_down(
   /* recover our data structure: */
   display = screen->screen.tme_screen_display;
 
-  if(screen->tme_gtk_screen_mouse_keyval
-     != GDK_KEY_VoidSymbol) return (FALSE);
-
   /* lock the mutex: */
   tme_mutex_lock(&display->display.tme_display_mutex);
 
-  /* this keyval must not be GDK_KEY_VoidSymbol: */
-  assert (keyval
-	  != GDK_KEY_VoidSymbol);
+  gtk_entry_set_text(GTK_ENTRY(screen->tme_gtk_screen_mouse_key), gdk_keyval_name(keyval));
   
-  /* set the text on the mouse label: */
-  gtk_frame_set_label(GTK_FRAME(screen->tme_gtk_screen_mouse_label),
-		      _("Mouse is on"));
-  
-  /* push the mouse status onto the statusbar: */
-  status = NULL;
-  tme_output_append(&status,
-		    _("Press the %s key to turn the mouse off"),
-		    gdk_keyval_name(keyval));
-  gtk_statusbar_push(GTK_STATUSBAR(screen->tme_gtk_screen_mouse_statusbar),
-		     screen->tme_gtk_screen_mouse_statusbar_cid,
-		     status);
-  tme_free(status);
-
   gdk_device_get_position(gdk_seat_get_pointer(display->tme_gdk_display_seat),
 			  NULL,
 			  &display->display.tme_screen_mouse_warp_x,
@@ -130,6 +102,8 @@ _tme_gtk_mouse_key_down(
   /* we are now in mouse mode: */
   screen->tme_gtk_screen_mouse_keyval
     = keyval;
+
+  gtk_widget_grab_focus(screen->tme_gtk_screen_draw);
 
   /* unlock the mutex: */
   tme_mutex_unlock(&display->display.tme_display_mutex);
@@ -146,15 +120,13 @@ _tme_gtk_keyboard_attach(struct tme_gtk_screen *screen)
 #if GTK_MAJOR_VERSION == 4
   key=gtk_event_controller_key_new();
   gtk_widget_add_controller(screen->tme_gtk_screen_draw, key);
-  gtk_widget_set_focussable(screen->tme_gtk_screen_draw, TRUE);
+  gtk_widget_set_focusable(screen->tme_gtk_screen_draw, TRUE);
   mouse=gtk_event_controller_key_new();
-  gtk_widget_add_controller(screen->tme_gtk_screen_mouse_label, mouse);
-  gtk_widget_set_focussable(screen->tme_gtk_screen_mouse_label, TRUE);
+  gtk_widget_add_controller(screen->tme_gtk_screen_mouse_key, mouse);
 #elif GTK_MAJOR_VERSION == 3
   key=screen->key=gtk_event_controller_key_new(screen->tme_gtk_screen_draw);
   gtk_widget_set_can_focus(screen->tme_gtk_screen_draw, TRUE);
-  mouse=screen->mouse=gtk_event_controller_key_new(screen->tme_gtk_screen_mouse_label);
-  gtk_widget_set_can_focus(screen->tme_gtk_screen_mouse_label, TRUE);
+  mouse=screen->mouse=gtk_event_controller_key_new(screen->tme_gtk_screen_mouse_key);
 #endif
   
   g_signal_connect_after(key,
@@ -167,10 +139,9 @@ _tme_gtk_keyboard_attach(struct tme_gtk_screen *screen)
 			 G_CALLBACK(_tme_gtk_keyboard_key_up), 
 			 screen); 
 
-  g_signal_connect_after(mouse,
-			 "key-pressed",
-			 G_CALLBACK(_tme_gtk_mouse_key_down), 
-			 screen);
+  g_signal_connect(mouse,
+		   "key-pressed",
+		   G_CALLBACK(_tme_gtk_mouse_key_down), 
+		   screen);
 
 }
-
