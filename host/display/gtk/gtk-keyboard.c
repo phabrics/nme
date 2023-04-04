@@ -92,13 +92,12 @@ _tme_gtk_mouse_key_down(
   /* lock the mutex: */
   tme_mutex_lock(&display->display.tme_display_mutex);
 
+#if GTK_MAJOR_VERSION == 4
+  gtk_editable_set_text(GTK_EDITABLE(screen->tme_gtk_screen_mouse_key), gdk_keyval_name(keyval));
+#elif GTK_MAJOR_VERSION == 3
   gtk_entry_set_text(GTK_ENTRY(screen->tme_gtk_screen_mouse_key), gdk_keyval_name(keyval));
-  
-  gdk_device_get_position(gdk_seat_get_pointer(display->tme_gdk_display_seat),
-			  NULL,
-			  &display->display.tme_screen_mouse_warp_x,
-			  &display->display.tme_screen_mouse_warp_y);
-  
+#endif  
+
   /* we are now in mouse mode: */
   screen->tme_gtk_screen_mouse_keyval
     = keyval;

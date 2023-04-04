@@ -468,9 +468,13 @@ _tme_gtk_screen_new(_tme_gtk_display *display,
   /* unlock our mutex: */
   tme_mutex_unlock(&display->display.tme_display_mutex);
 
+#if GTK_MAJOR_VERSION == 4
+  /* show the top-level window: */
+  gtk_widget_set_visible(screen->tme_gtk_screen_window, TRUE);
+#elif GTK_MAJOR_VERSION == 3
   /* show the top-level window: */
   gtk_widget_show_all(screen->tme_gtk_screen_window);
-
+#endif
   /* lock our mutex: */
   tme_mutex_lock(&display->display.tme_display_mutex);
 
@@ -543,8 +547,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
 
   display->tme_gdk_display_cursor =
 #if GTK_MAJOR_VERSION == 4
-    GDK_BLANK_CURSOR;
-    //    = gdk_cursor_new_from_name("none", NULL);
+    // GDK_BLANK_CURSOR;
+    gdk_cursor_new_from_name("none", NULL);
 #elif GTK_MAJOR_VERSION == 3
     gdk_cursor_new_for_display(display->tme_gdk_display, GDK_BLANK_CURSOR);
 
