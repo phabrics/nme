@@ -1089,7 +1089,7 @@ LT_CONFIG_LTDL_DIR([libltdl])
 LT_INIT([dlopen,win32-dll])
 LT_LANG([Windows Resource])
 LTDL_INIT([recursive installable])
-CPPFLAGS="${CPPFLAGS-} ${LTDLINCL} -DLT_DEBUG_LOADERS"
+CPPFLAGS="${CPPFLAGS-} ${LTDLINCL}" # -DLT_DEBUG_LOADERS"
 
 AC_ARG_VAR([IFCONFIG], [full path to ipconfig utility])
 AC_ARG_VAR([ROUTE], [full path to route utility])
@@ -1175,7 +1175,7 @@ else
   if test "x${have_clang}" = xyes; then
     CFLAGS="${CFLAGS-} -Wno-tautological-compare -Wno-sometimes-uninitialized \
     		       -Wno-sign-compare -Wno-incompatible-pointer-types \
-		       -Wno-implicit-function-declaration \
+		       -Wno-implicit-function-declaration -Wno-int-conversion \
 		       -fbracket-depth=1024"
   fi
   if test "x${have_Og}" = xyes; then
