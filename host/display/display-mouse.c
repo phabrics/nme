@@ -84,8 +84,7 @@ _tme_mouse_event(int button, int x, int y, struct tme_display *display)
      every time we warp the pointer we will get a motion event, and
      this should ignore those events: */
 
-  if (buttons == display->tme_screen_mouse_buttons_last
-      && x == display->tme_screen_mouse_warp_x
+  if (!button && x == display->tme_screen_mouse_warp_x
       && y == display->tme_screen_mouse_warp_y) {
     
     /* unlock the mutex: */

@@ -296,23 +296,23 @@ _tme_sdl_display_update(struct tme_display *display) {
 	  break;
 	if(e.wheel.y > 0)
 	  for(steps = 0; steps < e.wheel.y; ++steps) {
-	    _tme_mouse_button_press(4, x, y, display);
-	    _tme_mouse_button_press(-4, x, y, display);
+	    _tme_mouse_event(4, x, y, display);
+	    _tme_mouse_event(-4, x, y, display);
 	  }
 	if(e.wheel.y < 0)
 	  for(steps = 0; steps > e.wheel.y; --steps) {
-	    _tme_mouse_button_press(5, x, y, display);
-	    _tme_mouse_button_press(-5, x, y, display);
+	    _tme_mouse_event(5, x, y, display);
+	    _tme_mouse_event(-5, x, y, display);
 	  }
 	if(e.wheel.x > 0)
 	  for(steps = 0; steps < e.wheel.x; ++steps) {
-	    _tme_mouse_button_press(7, x, y, display);
-	    _tme_mouse_button_press(-7, x, y, display);
+	    _tme_mouse_event(7, x, y, display);
+	    _tme_mouse_event(-7, x, y, display);
 	  }
 	if(e.wheel.x < 0)
 	  for(steps = 0; steps > e.wheel.x; --steps) {
-	    _tme_mouse_button_press(6, x, y, display);
-	    _tme_mouse_button_press(-6, x, y, display);
+	    _tme_mouse_event(6, x, y, display);
+	    _tme_mouse_event(-6, x, y, display);
 	  }
 	break;
       }
@@ -335,7 +335,7 @@ _tme_sdl_display_update(struct tme_display *display) {
 	  if (e.type == SDL_MOUSEBUTTONUP)
 	    button = -button;
 	}
-	_tme_mouse_button_press(button, x, y, display);
+	_tme_mouse_event(button, x, y, display);
 	break;
       }
     case SDL_KEYUP:
