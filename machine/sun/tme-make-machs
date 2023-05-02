@@ -165,7 +165,7 @@ for arch in {sun2,sun3,sun4,sun-ultra}; do
 	    fi
 	    if [ $arch = "sun3" ]; then
 		macht="3/150"
-		[ -f $prom ] || ${MINGW_CHOST}${MINGW_CHOST+-}tme-sun-eeprom < $(basename $machd)-eeprom.txt > $prom
+		[ -f $prom ] || tme-sun-eeprom < $(basename $machd)-eeprom.txt > $prom
 	    else
 		macht="2/120"
 	    fi
@@ -178,7 +178,7 @@ for arch in {sun2,sun3,sun4,sun-ultra}; do
 	    if [ $arch != "sun4u" ]; then
 		macaddr=`printf 8:0:20:%02X:%02X:%02X $[RANDOM%256] $[RANDOM%256] $[RANDOM%256]`
 		echo "$macht $macaddr"
-		${MINGW_CHOST}${MINGW_CHOST+-}tme-sun-idprom $macht $macaddr >> $prom
+		tme-sun-idprom $macht $macaddr >> $prom
 	    fi
 	fi
 	[ -f my-$arch-disk.img ] || dd if=/dev/zero of=my-$arch-disk.img bs=1 count=1 seek=$sz

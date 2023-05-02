@@ -16,7 +16,7 @@ libtme_machine_sun_la_SOURCES = sun-mmu.c \
 libtme_machine_sun_la_LDFLAGS = -version-info 0:0:0
 libtme_machine_sun_la_LIBADD = $(TME_LIBS)
 
-bin_SCRIPTS = tme-sun-idprom tme-sun-eeprom
+bin_SCRIPTS = tme-sun-idprom tme-sun-eeprom tme-make-machs
 
 examplesdir = $(pkgdatadir)/examples
 dist_examples_DATA = sun-keyboards.txt my-sun-macros.txt

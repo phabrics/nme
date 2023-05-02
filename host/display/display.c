@@ -34,6 +34,7 @@
 #include <tme/common.h>
 
 /* includes: */
+unsigned int _tme_scanline_pad(int bpl);
 #include "display.h"
 
 static int
