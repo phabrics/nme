@@ -63,7 +63,7 @@ fi
 
 # the precision information helper script:
 #
-ieee754_precision_sh=`$as_echo $0 | sed -e "s/$PROG/ieee754-precision.sh/"`
+ieee754_precision_sh=`AS_ECHO([$0]) | sed -e "s/$PROG/ieee754-precision.sh/"`
 
 # the different compliance levels:
 #
@@ -85,20 +85,20 @@ for level in ${levels}; do
 	    # operations struct type:
 	    #
 	    if test "${level}-${what}" = strict-funcs; then
-		$as_echo "/* the IEEE 754 operations: */"
-		$as_echo "struct tme_ieee754_ops {"
-		$as_echo ""
-		$as_echo "  /* the version of this structure: */"
-		$as_echo "  tme_uint32_t tme_ieee754_ops_version;"
+		AS_ECHO(["/* the IEEE 754 operations: */"])
+		AS_ECHO(["struct tme_ieee754_ops {"])
+		AS_ECHO([""])
+		AS_ECHO(["  /* the version of this structure: */"])
+		AS_ECHO(["  tme_uint32_t tme_ieee754_ops_version;"])
 	      
 
 	    # otherwise, if we're doing a set, just declare the set
 	    # and continue:
 	    #
 	    elif test ${what} = set; then
-		$as_echo ""
-		$as_echo "/* the ${level} compliance operations: */"
-		$as_echo "extern _tme_const struct tme_ieee754_ops tme_ieee754_ops_${level};"
+		AS_ECHO([""])
+		AS_ECHO(["/* the ${level} compliance operations: */"])
+		AS_ECHO(["extern _tme_const struct tme_ieee754_ops tme_ieee754_ops_${level};"])
 		continue
 	    fi
 
@@ -108,12 +108,12 @@ for level in ${levels}; do
 
 	    # start the operations set for this level:
 	    #
-	    $as_echo ""
-	    $as_echo "/* the ${level} compliance operations: */"
-	    $as_echo "_tme_const struct tme_ieee754_ops tme_ieee754_ops_${level} = {"
-	    $as_echo ""
-	    $as_echo "  /* the version of this structure: */"
-	    $as_echo "  TME_X_VERSION(0, 0),"
+	    AS_ECHO([""])
+	    AS_ECHO(["/* the ${level} compliance operations: */"])
+	    AS_ECHO(["_tme_const struct tme_ieee754_ops tme_ieee754_ops_${level} = {"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* the version of this structure: */"])
+	    AS_ECHO(["  TME_X_VERSION(0, 0),"])
 	fi
 
 	# permute for the different precisions:
@@ -164,7 +164,7 @@ for level in ${levels}; do
 		from_precision=
 		case "${name}" in 
 		from_*)
-		    from_precision=`$as_echo ${name} | sed -e 's/^from_//'`
+		    from_precision=`AS_ECHO([${name}]) | sed -e 's/^from_//'`
 		    if test ${from_precision} = ${precision}; then
 			continue
 		    fi
@@ -179,13 +179,13 @@ for level in ${levels}; do
 		    # doing the strict level functions:
 		    #
 		    if test "${level}-${what}" = strict-funcs; then
-			$as_echo ""
-			$as_echo "  /* this does a ${precision}-precision "`$as_echo ${name} | tr _ -`": */"
-			$as_echo_n "  void (*tme_ieee754_ops_${precision}_${name}) _TME_P((struct tme_ieee754_ctl *, "
+			AS_ECHO([""])
+			AS_ECHO(["  /* this does a ${precision}-precision "`AS_ECHO([${name}]) | tr _ -`": */"])
+			AS_ECHO_N(["  void (*tme_ieee754_ops_${precision}_${name}) _TME_P((struct tme_ieee754_ctl *, "])
 			if $monadic; then :; else
-			    $as_echo_n "_tme_const struct tme_float *, "
+			    AS_ECHO_N(["_tme_const struct tme_float *, "])
 			fi
-			$as_echo "_tme_const ${src_type}, ${dst_type} *));"
+			AS_ECHO(["_tme_const ${src_type}, ${dst_type} *));"])
 		    fi
 			
 		    continue
@@ -321,7 +321,7 @@ for level in ${levels}; do
 		    if test "x${cond_builtin_match}" != x; then
 			cond="${cond} && (TME_FLOAT_FORMAT_IEEE754_${capprecision}_BUILTIN == TME_FLOAT_FORMAT_IEEE754_${capprecision})"
 		    fi
-		    eval "cond=\`$as_echo_n '${cond}' | sed -e 's%^1 && %%'\`"
+		    eval "cond=\`AS_ECHO_N(['${cond}']) | sed -e 's%^1 && %%'\`"
 		    case "${cond}" in 0*) cond=0 ;; esac
 
 		    # finish the operands:
@@ -411,146 +411,146 @@ for level in ${levels}; do
 			# start any conditional:
 			#
 			if test "${cond}" != 1; then
-			    $as_echo ""
-			    $as_echo "#if ${cond}"
+			    AS_ECHO([""])
+			    AS_ECHO(["#if ${cond}"])
 			fi
 			    
 			# start the function:
 			#
-			$as_echo ""
-			$as_echo "/* this does a ${level} compliance ${precision}-precision "`$as_echo ${name} | tr _ -`": */"
-			$as_echo "static void"
-			$as_echo_n "${func}(struct tme_ieee754_ctl *ieee754_ctl, const ${src_type}src0, "
+			AS_ECHO([""])
+			AS_ECHO(["/* this does a ${level} compliance ${precision}-precision "`AS_ECHO([${name}]) | tr _ -`": */"])
+			AS_ECHO(["static void"])
+			AS_ECHO_N(["${func}(struct tme_ieee754_ctl *ieee754_ctl, const ${src_type}src0, "])
 			if $monadic; then :; else
-			    $as_echo_n "const struct tme_float *src1, "
+			    AS_ECHO_N(["const struct tme_float *src1, "])
 			fi
-			$as_echo "${dst_type} *dst)"
-			$as_echo "{"
+			AS_ECHO(["${dst_type} *dst)"])
+			AS_ECHO(["{"])
 
 			# emit locals:
 			#
 			if ${src0_buffer}; then
-			    $as_echo "  ${op0_integral} src0_buffer;"
+			    AS_ECHO(["  ${op0_integral} src0_buffer;"])
 			fi
 			if ${src1_buffer}; then
-			    $as_echo "  ${op1_integral} src1_buffer;"
+			    AS_ECHO(["  ${op1_integral} src1_buffer;"])
 			fi
-			$as_echo "  int exceptions;"
+			AS_ECHO(["  int exceptions;"])
 
 			# check the operand(s):
 			#
 			if ${check_nan}; then
-			    $as_echo ""
-			    $as_echo "  /* check for a NaN operand: */"
+			    AS_ECHO([""])
+			    AS_ECHO(["  /* check for a NaN operand: */"])
 			    if $monadic; then nanf=monadic; src1= ; else nanf=dyadic; src1=", src1"; fi
-			    $as_echo "  if (__tme_predict_false(tme_ieee754_${src0_precision}_check_nan_${nanf}(ieee754_ctl, src0${src1}, dst))) {"
-			    $as_echo "    return;"
-			    $as_echo "  }"
+			    AS_ECHO(["  if (__tme_predict_false(tme_ieee754_${src0_precision}_check_nan_${nanf}(ieee754_ctl, src0${src1}, dst))) {"])
+			    AS_ECHO(["    return;"])
+			    AS_ECHO(["  }"])
 			fi
 			if test "x${check_inf_src0}" != x; then
-			    $as_echo ""
-			    $as_echo "  /* if the operand is an infinity: */"
-			    $as_echo "  if (tme_ieee754_${precision}_is_inf(src0)) {"
-			    $as_echo ""
+			    AS_ECHO([""])
+			    AS_ECHO(["  /* if the operand is an infinity: */"])
+			    AS_ECHO(["  if (tme_ieee754_${precision}_is_inf(src0)) {"])
+			    AS_ECHO([""])
 			    case "${check_inf_src0}" in
 			    return-nan)
-				$as_echo "    /* return a NaN: */"
-				$as_echo "    dst->tme_float_format = TME_FLOAT_FORMAT_IEEE754_${capprecision};"
-				$as_echo "    dst->tme_float_value_ieee754_${precision} = ieee754_ctl->tme_ieee754_ctl_default_nan_${precision};"
-				$as_echo "    return;"
+				AS_ECHO(["    /* return a NaN: */"])
+				AS_ECHO(["    dst->tme_float_format = TME_FLOAT_FORMAT_IEEE754_${capprecision};"])
+				AS_ECHO(["    dst->tme_float_value_ieee754_${precision} = ieee754_ctl->tme_ieee754_ctl_default_nan_${precision};"])
+				AS_ECHO(["    return;"])
 				;;
 			    esac
-			    $as_echo "  }"
+			    AS_ECHO(["  }"])
 			fi
 
 			# enter the operation mode:
 			#
 			if ${enter_softfloat}; then
-			    $as_echo ""
-			    $as_echo "  /* enter softfloat operation: */"
-			    $as_echo "  tme_mutex_lock(&tme_ieee754_global_mutex);"
-			    $as_echo "  tme_ieee754_global_ctl = ieee754_ctl;"
-			    $as_echo "  tme_ieee754_global_exceptions = 0;"
-			    $as_echo "  ieee754_ctl->tme_ieee754_ctl_lock_unlock = tme_ieee754_unlock_softfloat;"
+			    AS_ECHO([""])
+			    AS_ECHO(["  /* enter softfloat operation: */"])
+			    AS_ECHO(["  tme_mutex_lock(&tme_ieee754_global_mutex);"])
+			    AS_ECHO(["  tme_ieee754_global_ctl = ieee754_ctl;"])
+			    AS_ECHO(["  tme_ieee754_global_exceptions = 0;"])
+			    AS_ECHO(["  ieee754_ctl->tme_ieee754_ctl_lock_unlock = tme_ieee754_unlock_softfloat;"])
 			fi
 			if ${enter_native}; then
-			    $as_echo ""
-			    $as_echo "  /* enter native floating-point operation: */"
-			    $as_echo "  tme_float_enter(ieee754_ctl->tme_ieee754_ctl_rounding_mode, tme_ieee754_exception_float, ieee754_ctl);"
-			    $as_echo "  ieee754_ctl->tme_ieee754_ctl_lock_unlock = tme_float_leave;"
+			    AS_ECHO([""])
+			    AS_ECHO(["  /* enter native floating-point operation: */"])
+			    AS_ECHO(["  tme_float_enter(ieee754_ctl->tme_ieee754_ctl_rounding_mode, tme_ieee754_exception_float, ieee754_ctl);"])
+			    AS_ECHO(["  ieee754_ctl->tme_ieee754_ctl_lock_unlock = tme_float_leave;"])
 			fi
 
 			# assume that this operation raises no exceptions:
 			#
-			$as_echo ""
-			$as_echo "  /* assume that this operation raises no exceptions: */"
-			$as_echo "  exceptions = 0;"
+			AS_ECHO([""])
+			AS_ECHO(["  /* assume that this operation raises no exceptions: */"])
+			AS_ECHO(["  exceptions = 0;"])
 
 			# the operation:
 			#
-			$as_echo ""
-			$as_echo "  /* the operation: */"
+			AS_ECHO([""])
+			AS_ECHO(["  /* the operation: */"])
 			case "${type}" in
 
 			# a move operation:
 			#
 			*-move)
-			    $as_echo "  *dst = *src0;"
+			    AS_ECHO(["  *dst = *src0;"])
 			    ;;
 
 			# a getexp operation:
 			#
 			strict-getexp)
-			    $as_echo ""
-			    $as_echo "  /* if the operand is a zero, return a zero: */"
-			    $as_echo "  if (tme_ieee754_${precision}_is_zero(src0)) {"
-			    $as_echo "    tme_ieee754_${precision}_value_builtin_set(dst, TME_FLOAT_FORMAT_IEEE754_${capprecision}_BUILTIN, 0);"
-			    $as_echo "  }"
-			    $as_echo ""
-			    $as_echo "  /* otherwise, return the unbiased exponent: */"
-			    $as_echo "  else {"
-			    $as_echo "    tme_ieee754_${precision}_value_builtin_set(dst, TME_FLOAT_FORMAT_IEEE754_${capprecision}_BUILTIN, TME_FIELD_MASK_EXTRACTU(${op0}${sexp}, ${mask_exp}) - ${exp_bias});"
-			    $as_echo "  }"
+			    AS_ECHO([""])
+			    AS_ECHO(["  /* if the operand is a zero, return a zero: */"])
+			    AS_ECHO(["  if (tme_ieee754_${precision}_is_zero(src0)) {"])
+			    AS_ECHO(["    tme_ieee754_${precision}_value_builtin_set(dst, TME_FLOAT_FORMAT_IEEE754_${capprecision}_BUILTIN, 0);"])
+			    AS_ECHO(["  }"])
+			    AS_ECHO([""])
+			    AS_ECHO(["  /* otherwise, return the unbiased exponent: */"])
+			    AS_ECHO(["  else {"])
+			    AS_ECHO(["    tme_ieee754_${precision}_value_builtin_set(dst, TME_FLOAT_FORMAT_IEEE754_${capprecision}_BUILTIN, TME_FIELD_MASK_EXTRACTU(${op0}${sexp}, ${mask_exp}) - ${exp_bias});"])
+			    AS_ECHO(["  }"])
 			    ;;
 
 			# a getman operation:
 			#
 			strict-getman)
-			    $as_echo ""
-			    $as_echo "  /* if the operand is a zero, return it: */"
-			    $as_echo "  if (tme_ieee754_${precision}_is_zero(src0)) {"
-			    $as_echo "    *dst = *src0;"
-			    $as_echo "  }"
-			    $as_echo ""
-			    $as_echo "  /* otherwise, return the operand, with its exponent set to biased zero: */"
-			    $as_echo "  else {"
-			    $as_echo "    tme_ieee754_${precision}_value_set(dst, ${op0});"
-			    $as_echo "    TME_FIELD_MASK_DEPOSITU(dst->tme_float_value_ieee754_${precision}${sexp}, ${mask_exp}, ${exp_bias});"
-			    $as_echo "  }"
+			    AS_ECHO([""])
+			    AS_ECHO(["  /* if the operand is a zero, return it: */"])
+			    AS_ECHO(["  if (tme_ieee754_${precision}_is_zero(src0)) {"])
+			    AS_ECHO(["    *dst = *src0;"])
+			    AS_ECHO(["  }"])
+			    AS_ECHO([""])
+			    AS_ECHO(["  /* otherwise, return the operand, with its exponent set to biased zero: */"])
+			    AS_ECHO(["  else {"])
+			    AS_ECHO(["    tme_ieee754_${precision}_value_set(dst, ${op0});"])
+			    AS_ECHO(["    TME_FIELD_MASK_DEPOSITU(dst->tme_float_value_ieee754_${precision}${sexp}, ${mask_exp}, ${exp_bias});"])
+			    AS_ECHO(["  }"])
 			    ;;
 
 			# a strict to-integer conversion operation:
 			#
 			strict-to_int32 | strict-to_int64)
-			    $as_echo "  *dst = ${precision_sf}_${name}(${op0});"
+			    AS_ECHO(["  *dst = ${precision_sf}_${name}(${op0});"])
 			    ;;
 
 			# a softfloat operation:
 			#
 			softfloat)
-			    $as_echo "  _tme_ieee754_${precision}_value_set(dst, ${precision_sf},"
+			    AS_ECHO(["  _tme_ieee754_${precision}_value_set(dst, ${precision_sf},"])
 			    func_softfloat_raw="${func_softfloat}"
-			    func_softfloat=`$as_echo ${func_softfloat} | sed -e "s/OP0_PRECISION_SF/${op0_precision_sf}/g"`
-			    func_softfloat=`$as_echo ${func_softfloat} | sed -e "s/OP1_PRECISION_SF/${op1_precision_sf}/g"`
+			    func_softfloat=`AS_ECHO([${func_softfloat}]) | sed -e "s/OP0_PRECISION_SF/${op0_precision_sf}/g"`
+			    func_softfloat=`AS_ECHO([${func_softfloat}]) | sed -e "s/OP1_PRECISION_SF/${op1_precision_sf}/g"`
 			    if test "${func_softfloat}" = "${func_softfloat_raw}"; then
 				func_softfloat="${precision_sf}_${func_softfloat}"
 			    fi
-			    $as_echo_n "    ${func_softfloat}(${op0}"
+			    AS_ECHO_N(["    ${func_softfloat}(${op0}"])
 			    if test "x${op1}" != x; then
-				$as_echo ","
-				$as_echo_n "                ${op1}"
+				AS_ECHO([","])
+				AS_ECHO_N(["                ${op1}"])
 			    fi
-			    $as_echo "));"
+			    AS_ECHO(["));"])
 			    ;;
 
 			# a libm operation:
@@ -560,24 +560,24 @@ for level in ${levels}; do
 			    # if there is a float variant of this libm function:
 			    #
 			    if ${func_libm_has_f}; then
-				$as_echo "#if (TME_FLOAT_FORMAT_IEEE754_${capprecision}_BUILTIN == TME_FLOAT_FORMAT_FLOAT)"
-				$as_echo "  tme_ieee754_${precision}_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, ${func_libm}f(${ops}));"
-				$as_echo "#else  /* (TME_FLOAT_FORMAT_IEEE754_${capprecision}_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */"
+				AS_ECHO(["#if (TME_FLOAT_FORMAT_IEEE754_${capprecision}_BUILTIN == TME_FLOAT_FORMAT_FLOAT)"])
+				AS_ECHO(["  tme_ieee754_${precision}_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, ${func_libm}f(${ops}));"])
+				AS_ECHO(["#else  /* (TME_FLOAT_FORMAT_IEEE754_${capprecision}_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */"])
 			    fi
-			    $as_echo "  tme_ieee754_${precision}_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, ${func_libm}(${ops}));"
+			    AS_ECHO(["  tme_ieee754_${precision}_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, ${func_libm}(${ops}));"])
 			    if ${func_libm_has_f}; then
-				$as_echo "#endif /* (TME_FLOAT_FORMAT_IEEE754_${capprecision}_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */"
+				AS_ECHO(["#endif /* (TME_FLOAT_FORMAT_IEEE754_${capprecision}_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */"])
 			    fi
 			    ;;
 
 			# a builtin operation:
 			#
 			builtin)
-			    $as_echo "  tme_ieee754_${precision}_value_builtin_set(dst, TME_FLOAT_FORMAT_IEEE754_${capprecision}_BUILTIN, ${op0} ${op_builtin} ${op1});"
+			    AS_ECHO(["  tme_ieee754_${precision}_value_builtin_set(dst, TME_FLOAT_FORMAT_IEEE754_${capprecision}_BUILTIN, ${op0} ${op_builtin} ${op1});"])
 			    ;;
 
 			*)
-			    $as_echo "$PROG internal error: don't know how to generate a ${type} type operation" 1>&2
+			    AS_ECHO(["$PROG internal error: don't know how to generate a ${type} type operation" 1>&2])
 			    exit 1
 			    ;;
 			esac
@@ -585,36 +585,36 @@ for level in ${levels}; do
 			# leave the operation mode:
 			#
 			if ${enter_native}; then
-			    $as_echo ""
-			    $as_echo "  /* leave native floating-point operation: */"
-			    $as_echo "  exceptions |= tme_float_leave();"
+			    AS_ECHO([""])
+			    AS_ECHO(["  /* leave native floating-point operation: */"])
+			    AS_ECHO(["  exceptions |= tme_float_leave();"])
 			fi
 			if ${enter_softfloat}; then
-			    $as_echo ""
-			    $as_echo "  /* leave softfloat operation: */"
-			    $as_echo "  tme_ieee754_global_ctl = NULL;"
-			    $as_echo "  exceptions |= tme_ieee754_global_exceptions;"
-			    $as_echo "  tme_mutex_unlock(&tme_ieee754_global_mutex);"
+			    AS_ECHO([""])
+			    AS_ECHO(["  /* leave softfloat operation: */"])
+			    AS_ECHO(["  tme_ieee754_global_ctl = NULL;"])
+			    AS_ECHO(["  exceptions |= tme_ieee754_global_exceptions;"])
+			    AS_ECHO(["  tme_mutex_unlock(&tme_ieee754_global_mutex);"])
 			fi
-			$as_echo "  ieee754_ctl->tme_ieee754_ctl_lock_unlock = NULL;"
+			AS_ECHO(["  ieee754_ctl->tme_ieee754_ctl_lock_unlock = NULL;"])
 
 			# signal any exceptions:
 			#
-			$as_echo ""
-			$as_echo "  /* signal any exceptions: */"
-			$as_echo "  if (exceptions != 0) {"
-			$as_echo "    (*ieee754_ctl->tme_ieee754_ctl_exception)(ieee754_ctl, exceptions);"
-			$as_echo "  }"
+			AS_ECHO([""])
+			AS_ECHO(["  /* signal any exceptions: */"])
+			AS_ECHO(["  if (exceptions != 0) {"])
+			AS_ECHO(["    (*ieee754_ctl->tme_ieee754_ctl_exception)(ieee754_ctl, exceptions);"])
+			AS_ECHO(["  }"])
 
 			# end the function:
 			#
-			$as_echo "}"
+			AS_ECHO(["}"])
 
 			# close any conditional:
 			#
 			if test "${cond}" != 1; then
-			    $as_echo ""
-			    $as_echo "#endif /* ${cond} */"
+			    AS_ECHO([""])
+			    AS_ECHO(["#endif /* ${cond} */"])
 			fi
 		    fi
 
@@ -636,9 +636,9 @@ for level in ${levels}; do
 		# if we're making a set:
 		#
 		if test ${what} = set; then
-		    $as_echo ""
-		    $as_echo "  /* this does a ${level} compliance ${precision}-precision ${name}: */"
-		    $as_echo "${func_set}" | tr '@' '\n'
+		    AS_ECHO([""])
+		    AS_ECHO(["  /* this does a ${level} compliance ${precision}-precision ${name}: */"])
+		    AS_ECHO(["${func_set}" | tr '@' '\n'])
 		fi
 			
 	    done
@@ -652,7 +652,7 @@ for level in ${levels}; do
 	    # operations struct type:
 	    #
 	    if test "${level}-${what}" = strict-funcs; then
-		$as_echo "};"
+		AS_ECHO(["};"])
 	    fi
 
 	# otherwise, if we're doing a set:
@@ -661,7 +661,7 @@ for level in ${levels}; do
 
 	    # close the operations set for this level:
 	    #
-	    $as_echo "};"
+	    AS_ECHO(["};"])
 	fi
 
     done
@@ -672,29 +672,29 @@ done
 #
 if $header; then :; else
 
-    $as_echo ""
-    $as_echo "/* this looks up an operations structure: */"
-    $as_echo "const struct tme_ieee754_ops *"
-    $as_echo "tme_ieee754_ops_lookup(const char *compliance)"
-    $as_echo "{"
-    $as_echo ""
+    AS_ECHO([""])
+    AS_ECHO(["/* this looks up an operations structure: */"])
+    AS_ECHO(["const struct tme_ieee754_ops *"])
+    AS_ECHO(["tme_ieee754_ops_lookup(const char *compliance)"])
+    AS_ECHO(["{"])
+    AS_ECHO([""])
     for level in ${levels}; do
-	$as_echo "  if (TME_ARG_IS(compliance, \"${level}\")) { "
-	$as_echo "    return (&tme_ieee754_ops_${level});"
-	$as_echo "  }"
+	AS_ECHO(["  if (TME_ARG_IS(compliance, \"${level}\")) { "])
+	AS_ECHO(["    return (&tme_ieee754_ops_${level});"])
+	AS_ECHO(["  }"])
     done
-    $as_echo "  return (NULL);"
-    $as_echo "}"
+    AS_ECHO(["  return (NULL);"])
+    AS_ECHO(["}"])
 
-    $as_echo ""
-    $as_echo "/* this is a compliance options string: */"
-    $as_echo_n "const char * const tme_ieee754_compliance_options = \"{ ";
+    AS_ECHO([""])
+    AS_ECHO(["/* this is a compliance options string: */"])
+    AS_ECHO_N(["const char * const tme_ieee754_compliance_options = \"{ ";])
     sep=
     for level in ${levels}; do
-	$as_echo_n "${sep}${level}"
+	AS_ECHO_N(["${sep}${level}"])
 	sep=' | '
     done
-    $as_echo " }\";"
+    AS_ECHO([" }\";"])
 fi
 
 # done:

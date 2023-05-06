@@ -76,14 +76,14 @@ while test ${i_width} != 32; do
 
 	# start the array:
 	#
-	$as_echo ""
-	$as_echo "/* the ${i_width}-bit ${endian_what}-endian bus master bus router: */"
+	AS_ECHO([""])
+	AS_ECHO(["/* the ${i_width}-bit ${endian_what}-endian bus master bus router: */"])
 	what="const tme_bus_lane_t tme_bus_device_router_${i_width}e${endian}"
 	if $header; then
-	    $as_echo "extern ${what}[[]];"
+	    AS_ECHO(["extern ${what}[[]];"])
 	    continue
 	fi
-	$as_echo "${what}[[TME_BUS_ROUTER_INIT_SIZE(TME_BUS${i_width}_LOG2)]] = {"
+	AS_ECHO(["${what}[[TME_BUS_ROUTER_INIT_SIZE(TME_BUS${i_width}_LOG2)]] = {"])
 
 	# permute over initiator maximum cycle size:
 	#
@@ -127,17 +127,17 @@ while test ${i_width} != 32; do
 
 			# emit the initiator information:
 			#
-			$as_echo ""
-			$as_echo "  /* initiator maximum cycle size: ${i_size} bits"
-			$as_echo "     initiator address offset: ${i_offset} bits"
+			AS_ECHO([""])
+			AS_ECHO(["  /* initiator maximum cycle size: ${i_size} bits"])
+			AS_ECHO(["     initiator address offset: ${i_offset} bits"])
 			if $placeholder; then
-			    $as_echo "     (a ${i_width}-bit initiator cannot request ${i_size} bits at an ${i_offset}-bit offset - this is an array placeholder)"
+			    AS_ECHO(["     (a ${i_width}-bit initiator cannot request ${i_size} bits at an ${i_offset}-bit offset - this is an array placeholder)"])
 			fi
 
 			# emit the responder information:
 			#
-			$as_echo "     responder bus port size: ${r_width} bits"
-			$as_echo_n "     responder port least lane: D"`expr ${r_lane_least} + 7`"-D${r_lane_least}"
+			AS_ECHO(["     responder bus port size: ${r_width} bits"])
+			AS_ECHO_N(["     responder port least lane: D"`expr ${r_lane_least} + 7`"-D${r_lane_least}"])
 
 			# if the responder bus port greatest lane is
 			# greater than the initiator bus port width,
@@ -145,10 +145,10 @@ while test ${i_width} != 32; do
 			# the initiator's port:
 			#
 			if test `expr \( ${r_lane_greatest} \) \>= ${i_width}` = 1; then
-			    $as_echo ""
-			    $as_echo_n "     (responder port not correctly positioned for this initiator)"
+			    AS_ECHO([""])
+			    AS_ECHO_N(["     (responder port not correctly positioned for this initiator)"])
 			fi
-			$as_echo ": */"
+			AS_ECHO([": */"])
 
 			# permute over the lanes:
 			#
@@ -161,7 +161,7 @@ while test ${i_width} != 32; do
 			    route_increment=1
 			fi
 			while test `expr ${lane} \< ${i_width}` = 1; do
-			    $as_echo_n "  /* D"`expr ${lane} + 7`"-D${lane} */	"
+			    AS_ECHO_N(["  /* D"`expr ${lane} + 7`"-D${lane} */	"])
 
 			    # see if this lane is on in the responder:
 			    #
@@ -185,43 +185,43 @@ while test ${i_width} != 32; do
 			    # if this is a placeholder entry:
 			    #
 			    if $placeholder; then
-				$as_echo_n "TME_BUS_LANE_ABORT"
+				AS_ECHO_N(["TME_BUS_LANE_ABORT"])
 
 			    # otherwise, this is a real entry:
 			    #
 			    else
 				if $i_lane_on; then
-				    $as_echo_n "TME_BUS_LANE_ROUTE(${route})"
+				    AS_ECHO_N(["TME_BUS_LANE_ROUTE(${route})"])
 				    if $r_lane_on; then :; else
-					$as_echo_n " | TME_BUS_LANE_WARN"
+					AS_ECHO_N([" | TME_BUS_LANE_WARN"])
 				    fi
 				else
-				    $as_echo_n "TME_BUS_LANE_UNDEF"
+				    AS_ECHO_N(["TME_BUS_LANE_UNDEF"])
 				fi
 			    fi
 
-			    $as_echo ","
+			    AS_ECHO([","])
 			    lane=`expr ${lane} + 8`
 			done
 
 			r_lane_least=`expr ${r_lane_least} + 8`
 		    done
 		done
-		
+
 		i_offset=`expr ${i_offset} + 8`
 	    done
 	done
 
 	# finish the array:
 	#
-	$as_echo "};"
+	AS_ECHO(["};"])
     done
 
     # permute over read/write:
     #
     for name in read write; do
-	capname=`$as_echo $name | tr a-z A-Z`
-	if test $name = read; then 
+	capname=`AS_ECHO([$name | tr a-z A-Z`])
+	if test $name = read; then
 	    naming="reading"
 	    from="from"
 	    constbuffer=""
@@ -231,179 +231,179 @@ while test ${i_width} != 32; do
 	    constbuffer="const "
 	fi
 
-	$as_echo ""
-	$as_echo "/* the ${i_width}-bit bus master DMA ${name} function: */"
+	AS_ECHO([""])
+	AS_ECHO(["/* the ${i_width}-bit bus master DMA ${name} function: */"])
 	if $header; then
-	    $as_echo "int tme_bus_device_dma_${name}_${i_width} _TME_P((struct tme_bus_device *,"
-	    $as_echo "                                       tme_bus_addr_t,"
-	    $as_echo "                                       tme_bus_addr_t,"
-	    $as_echo "                                       ${constbuffer}tme_uint8_t *,"
-	    $as_echo "                                       unsigned int));"
+	    AS_ECHO(["int tme_bus_device_dma_${name}_${i_width} _TME_P((struct tme_bus_device *,"])
+	    AS_ECHO(["                                       tme_bus_addr_t,"])
+	    AS_ECHO(["                                       tme_bus_addr_t,"])
+	    AS_ECHO(["                                       ${constbuffer}tme_uint8_t *,"])
+	    AS_ECHO(["                                       unsigned int));"])
 	    continue
 	fi
-	$as_echo "int"
-	$as_echo "tme_bus_device_dma_${name}_${i_width}(struct tme_bus_device *bus_device,"
-	$as_echo "                           tme_bus_addr_t address_init,"
-	$as_echo "                           tme_bus_addr_t size,"
-	$as_echo "                           ${constbuffer}tme_uint8_t *buffer,"
-	$as_echo "                           unsigned int locks)"
-	$as_echo "{"
-	$as_echo "  struct tme_bus_tlb *tlb, tlb_local;"
-	$as_echo "  struct tme_bus_connection *conn_bus;"
-	$as_echo "  tme_bus_addr_t count_minus_one, count;"
-	$as_echo "  struct tme_bus_cycle cycle;"
-	$as_echo "  tme_bus_addr_t address_resp;"
-	$as_echo "  int shift;"
-	$as_echo "  int err;"
-	$as_echo ""
-	$as_echo "  /* assume no error: */"
-	$as_echo "  err = TME_OK;"
-	$as_echo ""
-	$as_echo "  /* loop while we have more bytes to ${name}: */"
-	$as_echo "  for (; err == TME_OK && size > 0; ) {"
-	$as_echo ""
-	$as_echo "    /* hash this address into a TLB entry: */"
-	$as_echo "    tlb = (*bus_device->tme_bus_device_tlb_hash)"
-	$as_echo "            (bus_device,"
-	$as_echo "             address_init,"
-	$as_echo "             TME_BUS_CYCLE_${capname});"
-	$as_echo ""
-	$as_echo "    /* busy this TLB entry: */"
-	$as_echo "    tme_bus_tlb_busy(tlb);"
-	$as_echo ""
-	$as_echo "    /* if this TLB entry is invalid, doesn't cover this address, or if it doesn't"
-	$as_echo "       allow ${naming}, reload it: */"
-	$as_echo "    if (tme_bus_tlb_is_invalid(tlb)"
-	$as_echo "        || address_init < tlb->tme_bus_tlb_addr_first"
-	$as_echo "        || address_init > tlb->tme_bus_tlb_addr_last"
-	$as_echo "        || (tlb->tme_bus_tlb_emulator_off_${name} == TME_EMULATOR_OFF_UNDEF"
-	$as_echo "            && !(tlb->tme_bus_tlb_cycles_ok & TME_BUS_CYCLE_${capname}))) {"
-	$as_echo ""
-	$as_echo "      /* unbusy this TLB entry for filling: */"
-	$as_echo "      tme_bus_tlb_unbusy_fill(tlb);"
-	$as_echo ""
-	$as_echo "      /* pass this TLB's token: */"
-	$as_echo "      tlb_local.tme_bus_tlb_token = tlb->tme_bus_tlb_token;"
-	$as_echo ""
-	$as_echo "      /* get our bus connection: */"
-	$as_echo "      conn_bus = tme_memory_atomic_pointer_read(struct tme_bus_connection *,"
-	$as_echo "                                                bus_device->tme_bus_device_connection,"
-	$as_echo "                                                &bus_device->tme_bus_device_connection_rwlock);"
-	$as_echo ""
-	$as_echo "      /* unlock the device: */"
-	$as_echo "      (*bus_device->tme_bus_device_unlock)(bus_device, locks);"
-	$as_echo ""
-	$as_echo "      /* reload the TLB entry: */"
-	$as_echo "      err = (*conn_bus->tme_bus_tlb_fill)"
-	$as_echo "              (conn_bus,"
-	$as_echo "               &tlb_local,"
-	$as_echo "               address_init,"
-	$as_echo "               TME_BUS_CYCLE_${capname});"
-	$as_echo ""
-	$as_echo "      /* lock the device: */"
-	$as_echo "      (*bus_device->tme_bus_device_lock)(bus_device, locks);"
-	$as_echo ""
-	$as_echo "      /* return if we couldn't fill the TLB entry: */"
-	$as_echo "      if (err != TME_OK) {"
-	$as_echo "        return (err);"
-	$as_echo "      }"
-	$as_echo ""
-	$as_echo "      /* store the TLB entry: */"
-	$as_echo "      *tlb = tlb_local;"
-	$as_echo ""
-	$as_echo "      /* loop to check the newly filled TLB entry: */"
-	$as_echo "      continue;"
-	$as_echo "    }"
-	$as_echo ""
-	$as_echo "    /* if this TLB entry allows fast ${naming}: */"
-	$as_echo "    if (tlb->tme_bus_tlb_emulator_off_${name} != TME_EMULATOR_OFF_UNDEF) {"
-	$as_echo ""
-	$as_echo "      /* see how many bytes we can fast ${name} ${from} this TLB entry,"
-	$as_echo "         starting at this address: */"
-	$as_echo "      count_minus_one = (tlb->tme_bus_tlb_addr_last - address_init);"
-	$as_echo ""
-	$as_echo "      /* ${name} that many bytes or size bytes, whichever is smaller: */"
-	$as_echo "      count_minus_one = TME_MIN(count_minus_one,"
-	$as_echo "                                (size - 1));"
-	$as_echo "      count = count_minus_one + 1;"
-	$as_echo "      assert (count != 0);"
-	$as_echo ""
-	$as_echo "      /* do the bus ${name}: */"
-	$as_echo "      tme_memory_bus_${name}_buffer((tlb->tme_bus_tlb_emulator_off_${name} + address_init), buffer, count, tlb->tme_bus_tlb_rwlock, sizeof(tme_uint8_t), sizeof(tme_uint${i_width}_t));"
-	$as_echo ""
-	$as_echo "      /* unbusy this TLB entry: */"
-	$as_echo "      tme_bus_tlb_unbusy(tlb);"
-	$as_echo "    }"
-	$as_echo ""
-	$as_echo "    /* otherwise, we have to do a slow ${name}: */"
-	$as_echo "    else {"
-	$as_echo ""
-	$as_echo "      /* get the size of this bus cycle: */"
-	$as_echo "      count = (1 << TME_BUS${i_width}_LOG2);"
-	$as_echo "      count -= (address_init & (count - 1));"
-	$as_echo "      count = TME_MIN(count, size);"
-	$as_echo ""
-	$as_echo "      /* fill the cycle structure: */"
-	$as_echo "      cycle.tme_bus_cycle_type = TME_BUS_CYCLE_${capname};"
-	$as_echo "      cycle.tme_bus_cycle_size = count;"
-	$as_echo "      cycle.tme_bus_cycle_buffer = (tme_uint8_t *) buffer; /* XXX this breaks const */"
-	$as_echo "      cycle.tme_bus_cycle_buffer_increment = 1;"
-	$as_echo "      cycle.tme_bus_cycle_lane_routing"
-	$as_echo "        = (bus_device->tme_bus_device_router"
-	$as_echo "           + TME_BUS_ROUTER_INIT_INDEX(TME_BUS${i_width}_LOG2, count, address_init));"
-	$as_echo ""
-	$as_echo "      /* XXX this should come from a socket configuration: */"
-	$as_echo "      cycle.tme_bus_cycle_port = TME_BUS_CYCLE_PORT(0, TME_BUS${i_width}_LOG2);"
-	$as_echo ""
-	$as_echo "      /* form the physical address for the bus cycle handler: */"
-	$as_echo "      address_resp = tlb->tme_bus_tlb_addr_offset + address_init;"
-	$as_echo "      shift = tlb->tme_bus_tlb_addr_shift;"
-	$as_echo "      if (shift < 0) {"
-	$as_echo "        address_resp <<= (0 - shift);"
-	$as_echo "      }"
-	$as_echo "      else if (shift > 0) {"
-	$as_echo "        address_resp >>= shift;"
-	$as_echo "      }"
-	$as_echo "      cycle.tme_bus_cycle_address = address_resp;"
-	$as_echo ""
-	$as_echo "      /* unbusy this TLB entry: */"
-	$as_echo "      tme_bus_tlb_unbusy(tlb);"
-	$as_echo ""
-	$as_echo "      /* unlock the device: */"
-	$as_echo "      (*bus_device->tme_bus_device_unlock)(bus_device, locks);"
-	$as_echo ""
-	$as_echo "      /* run the bus cycle: */"
-	$as_echo "      err = (*tlb->tme_bus_tlb_cycle)"
-	$as_echo "           (tlb->tme_bus_tlb_cycle_private, &cycle);"
-	$as_echo ""
-	$as_echo "      /* if the TLB entry was invalidated before the ${name}: */"
-	$as_echo "      if (err == EBADF"
-	$as_echo "          && tme_bus_tlb_is_invalid(tlb)) {"
-	$as_echo "        count = 0;"
-	$as_echo "      }"
-	$as_echo ""
-	$as_echo "      /* otherwise, any other error might be a bus error: */"
-	$as_echo "      else if (err != TME_OK) {"
-	$as_echo "        err = tme_bus_tlb_fault(tlb, &cycle, err);"
-	$as_echo "        assert (err != TME_OK);"
-	$as_echo "      }"
-	$as_echo ""
-	$as_echo "      /* lock the device: */"
-	$as_echo "      (*bus_device->tme_bus_device_lock)(bus_device, locks);"
-	$as_echo "    }"
-	$as_echo ""
-	$as_echo "    /* update the address, buffer, and size and continue: */"
-	$as_echo "    address_init += count;"
-	$as_echo "    buffer += count;"
-	$as_echo "    size -= count;"
-	$as_echo "  }"
-	$as_echo ""
-	$as_echo "  return (err);"
-	$as_echo "}"
+	AS_ECHO(["int"])
+	AS_ECHO(["tme_bus_device_dma_${name}_${i_width}(struct tme_bus_device *bus_device,"])
+	AS_ECHO(["                           tme_bus_addr_t address_init,"])
+	AS_ECHO(["                           tme_bus_addr_t size,"])
+	AS_ECHO(["                           ${constbuffer}tme_uint8_t *buffer,"])
+	AS_ECHO(["                           unsigned int locks)"])
+	AS_ECHO(["{"])
+	AS_ECHO(["  struct tme_bus_tlb *tlb, tlb_local;"])
+	AS_ECHO(["  struct tme_bus_connection *conn_bus;"])
+	AS_ECHO(["  tme_bus_addr_t count_minus_one, count;"])
+	AS_ECHO(["  struct tme_bus_cycle cycle;"])
+	AS_ECHO(["  tme_bus_addr_t address_resp;"])
+	AS_ECHO(["  int shift;"])
+	AS_ECHO(["  int err;"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* assume no error: */"])
+	AS_ECHO(["  err = TME_OK;"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* loop while we have more bytes to ${name}: */"])
+	AS_ECHO(["  for (; err == TME_OK && size > 0; ) {"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* hash this address into a TLB entry: */"])
+	AS_ECHO(["    tlb = (*bus_device->tme_bus_device_tlb_hash)"])
+	AS_ECHO(["            (bus_device,"])
+	AS_ECHO(["             address_init,"])
+	AS_ECHO(["             TME_BUS_CYCLE_${capname});"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* busy this TLB entry: */"])
+	AS_ECHO(["    tme_bus_tlb_busy(tlb);"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* if this TLB entry is invalid, doesn't cover this address, or if it doesn't"])
+	AS_ECHO(["       allow ${naming}, reload it: */"])
+	AS_ECHO(["    if (tme_bus_tlb_is_invalid(tlb)"])
+	AS_ECHO(["        || address_init < tlb->tme_bus_tlb_addr_first"])
+	AS_ECHO(["        || address_init > tlb->tme_bus_tlb_addr_last"])
+	AS_ECHO(["        || (tlb->tme_bus_tlb_emulator_off_${name} == TME_EMULATOR_OFF_UNDEF"])
+	AS_ECHO(["            && !(tlb->tme_bus_tlb_cycles_ok & TME_BUS_CYCLE_${capname}))) {"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* unbusy this TLB entry for filling: */"])
+	AS_ECHO(["      tme_bus_tlb_unbusy_fill(tlb);"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* pass this TLB's token: */"])
+	AS_ECHO(["      tlb_local.tme_bus_tlb_token = tlb->tme_bus_tlb_token;"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* get our bus connection: */"])
+	AS_ECHO(["      conn_bus = tme_memory_atomic_pointer_read(struct tme_bus_connection *,"])
+	AS_ECHO(["                                                bus_device->tme_bus_device_connection,"])
+	AS_ECHO(["                                                &bus_device->tme_bus_device_connection_rwlock);"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* unlock the device: */"])
+	AS_ECHO(["      (*bus_device->tme_bus_device_unlock)(bus_device, locks);"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* reload the TLB entry: */"])
+	AS_ECHO(["      err = (*conn_bus->tme_bus_tlb_fill)"])
+	AS_ECHO(["              (conn_bus,"])
+	AS_ECHO(["               &tlb_local,"])
+	AS_ECHO(["               address_init,"])
+	AS_ECHO(["               TME_BUS_CYCLE_${capname});"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* lock the device: */"])
+	AS_ECHO(["      (*bus_device->tme_bus_device_lock)(bus_device, locks);"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* return if we couldn't fill the TLB entry: */"])
+	AS_ECHO(["      if (err != TME_OK) {"])
+	AS_ECHO(["        return (err);"])
+	AS_ECHO(["      }"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* store the TLB entry: */"])
+	AS_ECHO(["      *tlb = tlb_local;"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* loop to check the newly filled TLB entry: */"])
+	AS_ECHO(["      continue;"])
+	AS_ECHO(["    }"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* if this TLB entry allows fast ${naming}: */"])
+	AS_ECHO(["    if (tlb->tme_bus_tlb_emulator_off_${name} != TME_EMULATOR_OFF_UNDEF) {"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* see how many bytes we can fast ${name} ${from} this TLB entry,"])
+	AS_ECHO(["         starting at this address: */"])
+	AS_ECHO(["      count_minus_one = (tlb->tme_bus_tlb_addr_last - address_init);"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* ${name} that many bytes or size bytes, whichever is smaller: */"])
+	AS_ECHO(["      count_minus_one = TME_MIN(count_minus_one,"])
+	AS_ECHO(["                                (size - 1));"])
+	AS_ECHO(["      count = count_minus_one + 1;"])
+	AS_ECHO(["      assert (count != 0);"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* do the bus ${name}: */"])
+	AS_ECHO(["      tme_memory_bus_${name}_buffer((tlb->tme_bus_tlb_emulator_off_${name} + address_init), buffer, count, tlb->tme_bus_tlb_rwlock, sizeof(tme_uint8_t), sizeof(tme_uint${i_width}_t));"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* unbusy this TLB entry: */"])
+	AS_ECHO(["      tme_bus_tlb_unbusy(tlb);"])
+	AS_ECHO(["    }"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* otherwise, we have to do a slow ${name}: */"])
+	AS_ECHO(["    else {"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* get the size of this bus cycle: */"])
+	AS_ECHO(["      count = (1 << TME_BUS${i_width}_LOG2);"])
+	AS_ECHO(["      count -= (address_init & (count - 1));"])
+	AS_ECHO(["      count = TME_MIN(count, size);"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* fill the cycle structure: */"])
+	AS_ECHO(["      cycle.tme_bus_cycle_type = TME_BUS_CYCLE_${capname};"])
+	AS_ECHO(["      cycle.tme_bus_cycle_size = count;"])
+	AS_ECHO(["      cycle.tme_bus_cycle_buffer = (tme_uint8_t *) buffer; /* XXX this breaks const */"])
+	AS_ECHO(["      cycle.tme_bus_cycle_buffer_increment = 1;"])
+	AS_ECHO(["      cycle.tme_bus_cycle_lane_routing"])
+	AS_ECHO(["        = (bus_device->tme_bus_device_router"])
+	AS_ECHO(["           + TME_BUS_ROUTER_INIT_INDEX(TME_BUS${i_width}_LOG2, count, address_init));"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* XXX this should come from a socket configuration: */"])
+	AS_ECHO(["      cycle.tme_bus_cycle_port = TME_BUS_CYCLE_PORT(0, TME_BUS${i_width}_LOG2);"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* form the physical address for the bus cycle handler: */"])
+	AS_ECHO(["      address_resp = tlb->tme_bus_tlb_addr_offset + address_init;"])
+	AS_ECHO(["      shift = tlb->tme_bus_tlb_addr_shift;"])
+	AS_ECHO(["      if (shift < 0) {"])
+	AS_ECHO(["        address_resp <<= (0 - shift);"])
+	AS_ECHO(["      }"])
+	AS_ECHO(["      else if (shift > 0) {"])
+	AS_ECHO(["        address_resp >>= shift;"])
+	AS_ECHO(["      }"])
+	AS_ECHO(["      cycle.tme_bus_cycle_address = address_resp;"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* unbusy this TLB entry: */"])
+	AS_ECHO(["      tme_bus_tlb_unbusy(tlb);"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* unlock the device: */"])
+	AS_ECHO(["      (*bus_device->tme_bus_device_unlock)(bus_device, locks);"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* run the bus cycle: */"])
+	AS_ECHO(["      err = (*tlb->tme_bus_tlb_cycle)"])
+	AS_ECHO(["           (tlb->tme_bus_tlb_cycle_private, &cycle);"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* if the TLB entry was invalidated before the ${name}: */"])
+	AS_ECHO(["      if (err == EBADF"])
+	AS_ECHO(["          && tme_bus_tlb_is_invalid(tlb)) {"])
+	AS_ECHO(["        count = 0;"])
+	AS_ECHO(["      }"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* otherwise, any other error might be a bus error: */"])
+	AS_ECHO(["      else if (err != TME_OK) {"])
+	AS_ECHO(["        err = tme_bus_tlb_fault(tlb, &cycle, err);"])
+	AS_ECHO(["        assert (err != TME_OK);"])
+	AS_ECHO(["      }"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* lock the device: */"])
+	AS_ECHO(["      (*bus_device->tme_bus_device_lock)(bus_device, locks);"])
+	AS_ECHO(["    }"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* update the address, buffer, and size and continue: */"])
+	AS_ECHO(["    address_init += count;"])
+	AS_ECHO(["    buffer += count;"])
+	AS_ECHO(["    size -= count;"])
+	AS_ECHO(["  }"])
+	AS_ECHO([""])
+	AS_ECHO(["  return (err);"])
+	AS_ECHO(["}"])
     done
 
 done
 
 # done:
 #
-exit 0		
+exit 0

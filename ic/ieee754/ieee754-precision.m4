@@ -118,23 +118,23 @@ esac
 # to avoid integer overflow warnings, make sure that the exponent
 # mask is always unsigned:
 #
-$as_echo ${prefix}'mask_exp="((tme_uint32_t) ${'${prefix}'mask_exp})" ;'
+AS_ECHO([${prefix}'mask_exp="((tme_uint32_t) ${'${prefix}'mask_exp})" ;'])
 
 # a mask for the sign bit can be derived from the exponent mask:
 #
-$as_echo ${prefix}'mask_sign="(${'${prefix}'mask_exp} + _TME_FIELD_MASK_FACTOR(${'${prefix}'mask_exp}))" ; '
+AS_ECHO([${prefix}'mask_sign="(${'${prefix}'mask_exp} + _TME_FIELD_MASK_FACTOR(${'${prefix}'mask_exp}))" ; '])
 
 # the maximum biased exponent can be derived from the exponent mask:
 #
-$as_echo ${prefix}'exp_biased_max="(${'${prefix}'mask_exp} / _TME_FIELD_MASK_FACTOR(${'${prefix}'mask_exp}))" ; '
+AS_ECHO([${prefix}'exp_biased_max="(${'${prefix}'mask_exp} / _TME_FIELD_MASK_FACTOR(${'${prefix}'mask_exp}))" ; '])
 
 # the exponent bias can be derived from the maximum biased exponent:
 #
-$as_echo ${prefix}'exp_bias="(${'${prefix}'exp_biased_max} >> 1)" ; '
+AS_ECHO([${prefix}'exp_bias="(${'${prefix}'exp_biased_max} >> 1)" ; '])
 
 # make a capitalized version of the precision name:
 #
-$as_echo ${prefix}'capprecision=`$as_echo ${precision} | tr a-z A-Z` ; '
+AS_ECHO([${prefix}'capprecision=`AS_ECHO([${precision}])]) | tr a-z A-Z` ; '
 
 # done:
 #

@@ -153,8 +153,8 @@ for size in ${sizes}; do
     if test ${size} = 8; then continue; fi
 
     if test `expr ${size} \>= ${size_ifdef}` = 1; then
-	$as_echo ""
-	$as_echo "#ifdef TME_HAVE_INT${size}_T"
+	AS_ECHO([""])
+	AS_ECHO(["#ifdef TME_HAVE_INT${size}_T"])
     fi
 
     # emit the bus read and write slow functions:
@@ -180,25 +180,25 @@ for size in ${sizes}; do
 	# if we're making the header, just emit a prototype:
 	#
 	if $header; then
-	    $as_echo ""
-	    $as_echo "/* the bus ${size}-bit ${op} slow function: */"
-	    $as_echo "${op_return_type} tme_memory_bus_${op}${size} _TME_P((${op_const}tme_shared tme_uint${size}_t *${op_proto_operand}, tme_rwlock_t *, unsigned int, unsigned int));"
+	    AS_ECHO([""])
+	    AS_ECHO(["/* the bus ${size}-bit ${op} slow function: */"])
+	    AS_ECHO(["${op_return_type} tme_memory_bus_${op}${size} _TME_P((${op_const}tme_shared tme_uint${size}_t *${op_proto_operand}, tme_rwlock_t *, unsigned int, unsigned int));"])
 	    continue
 	fi
 
-	$as_echo ""
-	$as_echo "/* undefine the macro version of tme_memory_bus_${op}${size}: */"
-	$as_echo "#undef tme_memory_bus_${op}${size}"
-	$as_echo ""
-	$as_echo "/* the bus ${size}-bit ${op} slow function: */"
-	$as_echo ${op_return_type}
-	$as_echo "tme_memory_bus_${op}${size}(${op_const}tme_shared tme_uint${size}_t *mem${op_operand}, tme_rwlock_t *rwlock, unsigned int align_min, unsigned int bus_boundary)"
-	$as_echo "{"
-	$as_echo "  const unsigned int host_boundary = TME_MEMORY_BUS_BOUNDARY;"
-	$as_echo "  unsigned int size_skip;"
-	$as_echo "  unsigned int size_done;"
+	AS_ECHO([""])
+	AS_ECHO(["/* undefine the macro version of tme_memory_bus_${op}${size}: */"])
+	AS_ECHO(["#undef tme_memory_bus_${op}${size}"])
+	AS_ECHO([""])
+	AS_ECHO(["/* the bus ${size}-bit ${op} slow function: */"])
+	AS_ECHO([${op_return_type}])
+	AS_ECHO(["tme_memory_bus_${op}${size}(${op_const}tme_shared tme_uint${size}_t *mem${op_operand}, tme_rwlock_t *rwlock, unsigned int align_min, unsigned int bus_boundary)"])
+	AS_ECHO(["{"])
+	AS_ECHO(["  const unsigned int host_boundary = TME_MEMORY_BUS_BOUNDARY;"])
+	AS_ECHO(["  unsigned int size_skip;"])
+	AS_ECHO(["  unsigned int size_done;"])
 	if test ${op} = read; then
-	    $as_echo "  tme_uint${size}_t x;"
+	    AS_ECHO(["  tme_uint${size}_t x;"])
 	fi
 
 	# emit the locals for the possible host boundaries:
@@ -206,20 +206,20 @@ for size in ${sizes}; do
 	host_boundary=${host_boundary_largest}
 	while test ${host_boundary} != 4; do
 	    if test `expr ${host_boundary} \>= ${size_ifdef}` = 1; then
-		$as_echo "#ifdef TME_HAVE_INT${host_boundary}_T"
+		AS_ECHO(["#ifdef TME_HAVE_INT${host_boundary}_T"])
 	    fi
-	    $as_echo "  ${op_const}tme_shared tme_uint${host_boundary}_t *parts${host_boundary};"
-	    $as_echo "  tme_uint${host_boundary}_t part${host_boundary};"
+	    AS_ECHO(["  ${op_const}tme_shared tme_uint${host_boundary}_t *parts${host_boundary};"])
+	    AS_ECHO(["  tme_uint${host_boundary}_t part${host_boundary};"])
 	    if test ${op} = write; then
-		$as_echo "  tme_uint${host_boundary}_t part${host_boundary}_cmp;"
+		AS_ECHO(["  tme_uint${host_boundary}_t part${host_boundary}_cmp;"])
 	    fi
 	    if test `expr ${host_boundary} \>= ${size_ifdef}` = 1; then
-		$as_echo "#endif /* TME_HAVE_INT${host_boundary}_T */"
+		AS_ECHO(["#endif /* TME_HAVE_INT${host_boundary}_T */"])
 	    fi
 	    host_boundary=`expr ${host_boundary} / 2`
 	done
-	$as_echo ""
-	$as_echo_n "  assert (bus_boundary != 0 && bus_boundary <= host_boundary);"
+	AS_ECHO([""])
+	AS_ECHO(["  assert (bus_boundary != 0 && bus_boundary <= host_boundary);"])
 
 	# loop over the possible host boundaries:
 	#
@@ -237,24 +237,24 @@ for size in ${sizes}; do
 	    #
 	    if test ${host_boundary} != 8; then
 		if test `expr ${host_boundary} \>= ${size_ifdef}` = 1; then
-		    $as_echo ""
-		    $as_echo ""
-		    $as_echo "#ifdef TME_HAVE_INT${host_boundary}_T"
-		    $as_echo ""
-		    $as_echo_n " "
+		    AS_ECHO([""])
+		    AS_ECHO([""])
+		    AS_ECHO(["#ifdef TME_HAVE_INT${host_boundary}_T"])
+		    AS_ECHO([""])
+		    AS_ECHO([" "])
 		fi
-		$as_echo_n " if (host_boundary == sizeof(tme_uint${host_boundary}_t))"
+		AS_ECHO([" if (host_boundary == sizeof(tme_uint${host_boundary}_t))"])
 	    fi
-	    $as_echo " {"
+	    AS_ECHO([" {"])
 
-	    $as_echo ""
-	    $as_echo "    /* prepare to ${op} the first ${host_boundary}-bit part of the memory: */"
-	    $as_echo "    parts${host_boundary} = (${op_const}tme_shared tme_uint${host_boundary}_t *) (((tme_uintptr_t) mem) & (((tme_uintptr_t) 0) - (${host_boundary} / 8)));"
-	    $as_echo "    size_skip = (((unsigned int) (tme_uintptr_t) mem) % (${host_boundary} / 8)) * 8;"
-	    $as_echo "    size_done = 0;"
+	    AS_ECHO([""])
+	    AS_ECHO(["    /* prepare to ${op} the first ${host_boundary}-bit part of the memory: */"])
+	    AS_ECHO(["    parts${host_boundary} = (${op_const}tme_shared tme_uint${host_boundary}_t *) (((tme_uintptr_t) mem) & (((tme_uintptr_t) 0) - (${host_boundary} / 8)));"])
+	    AS_ECHO(["    size_skip = (((unsigned int) (tme_uintptr_t) mem) % (${host_boundary} / 8)) * 8;"])
+	    AS_ECHO(["    size_done = 0;"])
 
-	    $as_echo ""
-	    $as_echo "    /* ${op} the first ${host_boundary}-bit part of the memory: */"
+	    AS_ECHO([""])
+	    AS_ECHO(["    /* ${op} the first ${host_boundary}-bit part of the memory: */"])
 
 	    # emit two accesses.  if the worst number of boundaries
 	    # that this access could cross is one, the second access
@@ -268,37 +268,37 @@ for size in ${sizes}; do
 
 		# read this memory part:
 		#
-		$as_echo "${indent0}    part${host_boundary} = tme_memory_atomic_read${host_boundary}(parts${host_boundary}, rwlock, sizeof(tme_uint${host_boundary}_t));"
+		AS_ECHO(["${indent0}    part${host_boundary} = tme_memory_atomic_read${host_boundary}(parts${host_boundary}, rwlock, sizeof(tme_uint${host_boundary}_t));"])
 
 		# if this is a read:
 		#
 		if test ${op} = read; then
 
-		    $as_echo ""
-		    $as_echo "${indent0}    /* on a little-endian host, we shift off the skip"
-		    $as_echo "${indent0}       data on the right, and shift the remaining data"
-		    $as_echo "${indent0}       up into position in the result: */"
-		    $as_echo "${indent0}    if (TME_ENDIAN_NATIVE == TME_ENDIAN_LITTLE) {"
-		    $as_echo "${indent0}      x ${access_or}= (((tme_uint${size}_t) (part${host_boundary} >> ${size_skip})) << ${size_done});"
-		    $as_echo "${indent0}    }"
-		    $as_echo ""
-		    $as_echo "${indent0}    /* on a big-endian host, we shift off the skip data"
-		    $as_echo "${indent0}       on the left, and shift the remaining data down"
-		    $as_echo "${indent0}       into position in the result: */"
+		    AS_ECHO([""])
+		    AS_ECHO(["${indent0}    /* on a little-endian host, we shift off the skip"])
+		    AS_ECHO(["${indent0}       data on the right, and shift the remaining data"])
+		    AS_ECHO(["${indent0}       up into position in the result: */"])
+		    AS_ECHO(["${indent0}    if (TME_ENDIAN_NATIVE == TME_ENDIAN_LITTLE) {"])
+		    AS_ECHO(["${indent0}      x ${access_or}= (((tme_uint${size}_t) (part${host_boundary} >> ${size_skip})) << ${size_done});"])
+		    AS_ECHO(["${indent0}    }"])
+		    AS_ECHO([""])
+		    AS_ECHO(["${indent0}    /* on a big-endian host, we shift off the skip data"])
+		    AS_ECHO(["${indent0}       on the left, and shift the remaining data down"])
+		    AS_ECHO(["${indent0}       into position in the result: */"])
 		    #
 		    # NB: on a big-endian host, because the skip data
 		    # is on the left, the type of what we shift
 		    # depends on how this host boundary size compares
 		    # to the access size:
 		    #
-		    $as_echo "${indent0}    else {"
-		    $as_echo_n "${indent0}      x ${access_or}= "
+		    AS_ECHO(["${indent0}    else {"])
+		    AS_ECHO(["${indent0}      x ${access_or}= "])
 		    if test `expr ${host_boundary} \> ${size}` = 1; then
-			$as_echo "((part${host_boundary} << ${size_skip}) >> ((${host_boundary} - ${size}) + ${size_done}));"
+			AS_ECHO(["((part${host_boundary} << ${size_skip}) >> ((${host_boundary} - ${size}) + ${size_done}));"])
 		    else
-			$as_echo "((((tme_uint${size}_t) part${host_boundary}) << ((${size} - ${host_boundary}) + ${size_skip})) >> ${size_done});"
+			AS_ECHO(["((((tme_uint${size}_t) part${host_boundary}) << ((${size} - ${host_boundary}) + ${size_skip})) >> ${size_done});"])
 		    fi
-		    $as_echo "${indent0}    }"
+		    AS_ECHO(["${indent0}    }"])
 
 		# otherwise, this is a write:
 		#
@@ -306,46 +306,46 @@ for size in ${sizes}; do
 
 		    # start the compare-and-exchange do loop:
 		    #
-		    $as_echo "${indent0}    do {"
-		    $as_echo "${indent0}      part${host_boundary}_cmp = part${host_boundary};"
-		    $as_echo ""
-		    $as_echo "${indent0}      /* on a little-endian host, we clear with zeroes"
-		    $as_echo "${indent0}         shifted up past the skip data, and then we"
-		    $as_echo "${indent0}         insert the data shifted up past the skip data: */"
-		    $as_echo "${indent0}      if (TME_ENDIAN_NATIVE == TME_ENDIAN_LITTLE) {"
-		    $as_echo "${indent0}        part${host_boundary} &= (_tme_memory_type_mask(tme_uint${host_boundary}_t, + 0) ^ (((tme_uint${host_boundary}_t) _tme_memory_type_mask(tme_uint${size}_t, << ${size_done})) << ${size_skip}));"
-		    $as_echo "${indent0}        part${host_boundary} |= (((tme_uint${host_boundary}_t) x) << ${size_skip});"
-		    $as_echo "${indent0}      }"
-		    $as_echo ""
-		    $as_echo "${indent0}      /* on a big-endian host, we clear with zeroes"
-		    $as_echo "${indent0}         shifted down past the skip data, and then we"
-		    $as_echo "${indent0}         insert the data shifted down past the skip data: */"
+		    AS_ECHO(["${indent0}    do {"])
+		    AS_ECHO(["${indent0}      part${host_boundary}_cmp = part${host_boundary};"])
+		    AS_ECHO([""])
+		    AS_ECHO(["${indent0}      /* on a little-endian host, we clear with zeroes"])
+		    AS_ECHO(["${indent0}         shifted up past the skip data, and then we"])
+		    AS_ECHO(["${indent0}         insert the data shifted up past the skip data: */"])
+		    AS_ECHO(["${indent0}      if (TME_ENDIAN_NATIVE == TME_ENDIAN_LITTLE) {"])
+		    AS_ECHO(["${indent0}        part${host_boundary} &= (_tme_memory_type_mask(tme_uint${host_boundary}_t, + 0) ^ (((tme_uint${host_boundary}_t) _tme_memory_type_mask(tme_uint${size}_t, << ${size_done})) << ${size_skip}));"])
+		    AS_ECHO(["${indent0}        part${host_boundary} |= (((tme_uint${host_boundary}_t) x) << ${size_skip});"])
+		    AS_ECHO(["${indent0}      }"])
+		    AS_ECHO([""])
+		    AS_ECHO(["${indent0}      /* on a big-endian host, we clear with zeroes"])
+		    AS_ECHO(["${indent0}         shifted down past the skip data, and then we"])
+		    AS_ECHO(["${indent0}         insert the data shifted down past the skip data: */"])
 		    #
 		    # NB: on a big-endian host, because the skip data
 		    # is on the left, exactly how we shift depends on
 		    # how this host boundary size compares to the
 		    # access size:
 		    #
-		    $as_echo "${indent0}      else {"
+		    AS_ECHO(["${indent0}      else {"])
 		    if test `expr ${host_boundary} \> ${size}` = 1; then
-			$as_echo "${indent0}        part${host_boundary} &= ~((((tme_uint${host_boundary}_t) _tme_memory_type_mask(tme_uint${size}_t, + 0)) << ((${host_boundary} - ${size}) + ${size_done})) >> ${size_skip});"
-			$as_echo "${indent0}        part${host_boundary} |= ((((tme_uint${host_boundary}_t) x) << (${host_boundary} - ${size})) >> ${size_skip});"
+			AS_ECHO(["${indent0}        part${host_boundary} &= ~((((tme_uint${host_boundary}_t) _tme_memory_type_mask(tme_uint${size}_t, + 0)) << ((${host_boundary} - ${size}) + ${size_done})) >> ${size_skip});"])
+			AS_ECHO(["${indent0}        part${host_boundary} |= ((((tme_uint${host_boundary}_t) x) << (${host_boundary} - ${size})) >> ${size_skip});"])
 		    else
-			$as_echo "${indent0}        part${host_boundary} &= ~(_tme_memory_type_mask(tme_uint${host_boundary}_t, << ${size_done}) >> ${size_skip});"
-			$as_echo "${indent0}        part${host_boundary} |= (x >> ((${size} - ${host_boundary}) + ${size_skip}));"
+			AS_ECHO(["${indent0}        part${host_boundary} &= ~(_tme_memory_type_mask(tme_uint${host_boundary}_t, << ${size_done}) >> ${size_skip});"])
+			AS_ECHO(["${indent0}        part${host_boundary} |= (x >> ((${size} - ${host_boundary}) + ${size_skip}));"])
 		    fi
-		    $as_echo "${indent0}      }"
-		    $as_echo ""
-		    $as_echo "${indent0}      /* loop until we can atomically update this part: */"
-		    $as_echo "${indent0}      part${host_boundary} = tme_memory_atomic_cx${host_boundary}(parts${host_boundary}, part${host_boundary}_cmp, part${host_boundary}, rwlock, sizeof(tme_uint${host_boundary}_t));"
-		    $as_echo "${indent0}    } while (part${host_boundary} != part${host_boundary}_cmp);"
+		    AS_ECHO(["${indent0}      }"])
+		    AS_ECHO([""])
+		    AS_ECHO(["${indent0}      /* loop until we can atomically update this part: */"])
+		    AS_ECHO(["${indent0}      part${host_boundary} = tme_memory_atomic_cx${host_boundary}(parts${host_boundary}, part${host_boundary}_cmp, part${host_boundary}, rwlock, sizeof(tme_uint${host_boundary}_t));"])
+		    AS_ECHO(["${indent0}    } while (part${host_boundary} != part${host_boundary}_cmp);"])
 		    if test ${host_boundaries_worst} != 1 || test ${size_skip} != 0; then
-			$as_echo "${indent0}    if (TME_ENDIAN_NATIVE == TME_ENDIAN_LITTLE) {"
-			$as_echo "${indent0}      x >>= (${host_boundary} - ${size_skip});"
-			$as_echo "${indent0}    }"
-			$as_echo "${indent0}    else {"
-			$as_echo "${indent0}      x <<= (${host_boundary} - ${size_skip});"
-			$as_echo "${indent0}    }"
+			AS_ECHO(["${indent0}    if (TME_ENDIAN_NATIVE == TME_ENDIAN_LITTLE) {"])
+			AS_ECHO(["${indent0}      x >>= (${host_boundary} - ${size_skip});"])
+			AS_ECHO(["${indent0}    }"])
+			AS_ECHO(["${indent0}    else {"])
+			AS_ECHO(["${indent0}      x <<= (${host_boundary} - ${size_skip});"])
+			AS_ECHO(["${indent0}    }"])
 		    fi
 		fi
 
@@ -353,7 +353,7 @@ for size in ${sizes}; do
 		#
 		if test ${size_done} = 0; then
 
-		    $as_echo "    size_done = ${host_boundary} - size_skip;"
+		    AS_ECHO(["    size_done = ${host_boundary} - size_skip;"])
 		    size_done=size_done
 		    size_skip=0
 		    access_or='|'
@@ -373,77 +373,77 @@ for size in ${sizes}; do
 			#
 			if test ${op} = write; then
 			    if test `expr ${host_boundary} \< ${size}` = 1; then
-				$as_echo ""
+				AS_ECHO([""])
 				if test ${host_boundaries_worst} = 2; then
-				    $as_echo "    /* try to write one full ${host_boundary}-bit part of memory: */"
-				    $as_echo_n "    if (__tme_predict_true(size_done <= (${size} - ${host_boundary})))"
+				    AS_ECHO(["    /* try to write one full ${host_boundary}-bit part of memory: */"])
+				    AS_ECHO_N(["    if (__tme_predict_true(size_done <= (${size} - ${host_boundary})))"])
 				else
-				    $as_echo "    /* write as many full ${host_boundary}-bit parts of the memory as we can: */"
-				    $as_echo_n "    for (; size_done <= (${size} - ${host_boundary}); )"
+				    AS_ECHO(["    /* write as many full ${host_boundary}-bit parts of the memory as we can: */"])
+				    AS_ECHO_N(["    for (; size_done <= (${size} - ${host_boundary}); )"])
 				fi
-				$as_echo " {"
-				$as_echo ""
-				$as_echo "      /* make a boundary: */"
-				$as_echo "      tme_memory_barrier(mem, (${size} / 8), TME_MEMORY_BARRIER_${op_cap}_BEFORE_${op_cap});"
-				$as_echo ""
-				$as_echo "      /* write a full ${host_boundary}-bit part of memory: */"
-				$as_echo "      part${host_boundary} = (x >> ((TME_ENDIAN_NATIVE == TME_ENDIAN_BIG) * (${size} - ${host_boundary})));"
-				$as_echo "      parts${host_boundary}++;"
-				$as_echo "      tme_memory_atomic_write${host_boundary}(parts${host_boundary}, part${host_boundary}, rwlock, sizeof(tme_uint${host_boundary}_t));"
-				$as_echo "      size_done += ${host_boundary};"
-				$as_echo "      if (TME_ENDIAN_NATIVE == TME_ENDIAN_LITTLE) {"
-				$as_echo "        x >>= ${host_boundary};"
-				$as_echo "      }"
-				$as_echo "      else {"
-				$as_echo "        x <<= ${host_boundary};"
-				$as_echo "      }"
-				$as_echo "    }"
+				AS_ECHO([" {"])
+				AS_ECHO([""])
+				AS_ECHO(["      /* make a boundary: */"])
+				AS_ECHO(["      tme_memory_barrier(mem, (${size} / 8), TME_MEMORY_BARRIER_${op_cap}_BEFORE_${op_cap});"])
+				AS_ECHO([""])
+				AS_ECHO(["      /* write a full ${host_boundary}-bit part of memory: */"])
+				AS_ECHO(["      part${host_boundary} = (x >> ((TME_ENDIAN_NATIVE == TME_ENDIAN_BIG) * (${size} - ${host_boundary})));"])
+				AS_ECHO(["      parts${host_boundary}++;"])
+				AS_ECHO(["      tme_memory_atomic_write${host_boundary}(parts${host_boundary}, part${host_boundary}, rwlock, sizeof(tme_uint${host_boundary}_t));"])
+				AS_ECHO(["      size_done += ${host_boundary};"])
+				AS_ECHO(["      if (TME_ENDIAN_NATIVE == TME_ENDIAN_LITTLE) {"])
+				AS_ECHO(["        x >>= ${host_boundary};"])
+				AS_ECHO(["      }"])
+				AS_ECHO(["      else {"])
+				AS_ECHO(["        x <<= ${host_boundary};"])
+				AS_ECHO(["      }"])
+				AS_ECHO(["    }"])
 				access_if=true
 			    fi
 			fi
 		    fi
-		    $as_echo ""
+		    AS_ECHO([""])
 		    if $access_if; then
-			$as_echo "    /* ${op} at most one remaining ${host_boundary}-bit part of the memory: */"
-			$as_echo_n "    if (__tme_predict_false(size_done < ${size}))"
+			AS_ECHO(["    /* ${op} at most one remaining ${host_boundary}-bit part of the memory: */"])
+			AS_ECHO_N(["    if (__tme_predict_false(size_done < ${size}))"])
 		    else
-			$as_echo "    /* ${op} any remaining ${host_boundary}-bit parts of the memory: */"
-			$as_echo_n "    for (; size_done < ${size}; size_done += ${host_boundary})"
+			AS_ECHO(["    /* ${op} any remaining ${host_boundary}-bit parts of the memory: */"])
+			AS_ECHO_N(["    for (; size_done < ${size}; size_done += ${host_boundary})"])
 		    fi
-		    $as_echo " {"
+		    AS_ECHO([" {"])
 
-		    $as_echo ""
-		    $as_echo "      /* make a boundary: */"
-		    $as_echo "      tme_memory_barrier(mem, (${size} / 8), TME_MEMORY_BARRIER_${op_cap}_BEFORE_${op_cap});"
-		    $as_echo ""
-		    $as_echo "      /* ${op} the next ${host_boundary}-bit part of the memory: */"
-		    $as_echo "      parts${host_boundary}++;"
+		    AS_ECHO([""])
+		    AS_ECHO(["      /* make a boundary: */"])
+		    AS_ECHO(["      tme_memory_barrier(mem, (${size} / 8), TME_MEMORY_BARRIER_${op_cap}_BEFORE_${op_cap});"])
+		    AS_ECHO([""])
+		    AS_ECHO(["      /* ${op} the next ${host_boundary}-bit part of the memory: */"])
+		    AS_ECHO(["      parts${host_boundary}++;"])
 		    indent0="  "
 
 		# otherwise, this was the loop or second access:
 		#
 		else
-		    $as_echo "    }"
+		    AS_ECHO(["    }"])
 		    break
 		fi
 
 	    done
 
-	    $as_echo "  }"
+	    AS_ECHO(["  }"])
 
 	    # close this host boundary:
 	    #
 	    if test ${host_boundary} != 8; then
-		$as_echo ""
-		$as_echo_n "  else"
+		AS_ECHO([""])
+		AS_ECHO_N(["  else"])
 		if test `expr ${host_boundary} \>= ${size_ifdef}` = 1; then
-		    $as_echo ""
-		    $as_echo ""
-		    $as_echo_n "#endif /* TME_HAVE_INT${host_boundary}_T */"
+		    AS_ECHO([""])
+		    AS_ECHO([""])
+		    AS_ECHO_N(["#endif /* TME_HAVE_INT${host_boundary}_T */"])
 		    if test ${host_boundary} = ${size_ifdef}; then
-			$as_echo ""
-			$as_echo ""
-			$as_echo_n " "
+			AS_ECHO([""])
+			AS_ECHO([""])
+			AS_ECHO_N([" "])
 		    fi
 		fi
 	    fi
@@ -453,16 +453,16 @@ for size in ${sizes}; do
 	    host_boundary=`expr ${host_boundary} / 2`
 	done
 	if test ${op} = read; then
-	    $as_echo ""
-	    $as_echo "  /* return the value read: */"
-	    $as_echo "  return (x);"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* return the value read: */"])
+	    AS_ECHO(["  return (x);"])
 	fi
-	$as_echo "}"
+	AS_ECHO(["}"])
     done
 
     if test `expr ${size} \>= ${size_ifdef}` = 1; then
-	$as_echo ""
-	$as_echo "#endif /* TME_HAVE_INT${size}_T */"
+	AS_ECHO([""])
+	AS_ECHO(["#endif /* TME_HAVE_INT${size}_T */"])
     fi
 
 done
@@ -497,86 +497,86 @@ for op in read write; do
     #
     if $header; then
 
-	$as_echo ""
-	$as_echo "/* the bus ${op} buffer function and default macro implementation: */"
+	AS_ECHO([""])
+	AS_ECHO(["/* the bus ${op} buffer function and default macro implementation: */"])
 
 	# emit the prototype:
 	#
-	$as_echo "void tme_memory_bus_${op}_buffer _TME_P((${op_const_mem}tme_shared tme_uint8_t *, ${op_const_buffer}tme_uint8_t *, unsigned long, tme_rwlock_t *, unsigned int, unsigned int));"
+	AS_ECHO(["void tme_memory_bus_${op}_buffer _TME_P((${op_const_mem}tme_shared tme_uint8_t *, ${op_const_buffer}tme_uint8_t *, unsigned long, tme_rwlock_t *, unsigned int, unsigned int));"])
 
 	# emit the default macro definition:
 	#
-	$as_echo "#define tme_memory_bus_${op}_buffer(mem, buffer, count, rwlock, align_min, bus_boundary) \\"
-	$as_echo "  do { \\"
-	$as_echo "    if (tme_thread_cooperative()) { \\"
-	$as_echo "      memcpy(${op_memcpy}, (count)); \\"
-	$as_echo "    } \\"
-	$as_echo "    else { \\"
-	$as_echo "      tme_memory_bus_${op}_buffer(((${op_const_mem}tme_shared tme_uint8_t *) ${op_audit_mem}(mem)), ((${op_const_buffer}tme_uint8_t *) ${op_audit_buffer}(buffer)), (count), (rwlock), (align_min), (bus_boundary)); \\"
-	$as_echo "    } \\"
-	$as_echo "  } while (/* CONSTCOND */ 0)"
+	AS_ECHO(["#define tme_memory_bus_${op}_buffer(mem, buffer, count, rwlock, align_min, bus_boundary) \\"])
+	AS_ECHO(["  do { \\"])
+	AS_ECHO(["    if (tme_thread_cooperative()) { \\"])
+	AS_ECHO(["      memcpy(${op_memcpy}, (count)); \\"])
+	AS_ECHO(["    } \\"])
+	AS_ECHO(["    else { \\"])
+	AS_ECHO(["      tme_memory_bus_${op}_buffer(((${op_const_mem}tme_shared tme_uint8_t *) ${op_audit_mem}(mem)), ((${op_const_buffer}tme_uint8_t *) ${op_audit_buffer}(buffer)), (count), (rwlock), (align_min), (bus_boundary)); \\"])
+	AS_ECHO(["    } \\"])
+	AS_ECHO(["  } while (/* CONSTCOND */ 0)"])
 
 	continue
     fi
 
     # start the function:
     #
-    $as_echo ""
-    $as_echo "/* undefine the macro version of tme_memory_bus_${op}_buffer: */"
-    $as_echo "#undef tme_memory_bus_${op}_buffer"
-    $as_echo ""
-    $as_echo "/* the bus ${op} buffer function: */"
-    $as_echo "void"
-    $as_echo "tme_memory_bus_${op}_buffer(${op_const_mem}tme_shared tme_uint8_t *mem, ${op_const_buffer}tme_uint8_t *buffer, unsigned long count, tme_rwlock_t *rwlock, unsigned int align_min, unsigned int bus_boundary)"
-    $as_echo "{"
-    $as_echo "  const unsigned int host_boundary = TME_MEMORY_BUS_BOUNDARY;"
-    $as_echo "  ${op_const_mem}tme_uint8_t *part_buffer;"
-    $as_echo "  unsigned int count_done;"
-    $as_echo "  unsigned int count_misaligned;"
-    $as_echo "  unsigned int bits_misaligned;"
+    AS_ECHO([""])
+    AS_ECHO(["/* undefine the macro version of tme_memory_bus_${op}_buffer: */"])
+    AS_ECHO(["#undef tme_memory_bus_${op}_buffer"])
+    AS_ECHO([""])
+    AS_ECHO(["/* the bus ${op} buffer function: */"])
+    AS_ECHO(["void"])
+    AS_ECHO(["tme_memory_bus_${op}_buffer(${op_const_mem}tme_shared tme_uint8_t *mem, ${op_const_buffer}tme_uint8_t *buffer, unsigned long count, tme_rwlock_t *rwlock, unsigned int align_min, unsigned int bus_boundary)"])
+    AS_ECHO(["{"])
+    AS_ECHO(["  const unsigned int host_boundary = TME_MEMORY_BUS_BOUNDARY;"])
+    AS_ECHO(["  ${op_const_mem}tme_uint8_t *part_buffer;"])
+    AS_ECHO(["  unsigned int count_done;"])
+    AS_ECHO(["  unsigned int count_misaligned;"])
+    AS_ECHO(["  unsigned int bits_misaligned;"])
 
     # emit the locals for the possible host boundaries:
     #
     host_boundary=${host_boundary_largest}
     while test ${host_boundary} != 4; do
 	if test `expr ${host_boundary} \>= ${size_ifdef}` = 1; then
-	    $as_echo "#ifdef TME_HAVE_INT${host_boundary}_T"
+	    AS_ECHO(["#ifdef TME_HAVE_INT${host_boundary}_T"])
 	fi
-	$as_echo "  ${op_const_mem}tme_shared tme_uint${host_boundary}_t *parts${host_boundary};"
-	$as_echo "  tme_uint${host_boundary}_t part${host_boundary}_buffer;"
-	$as_echo "  tme_uint${host_boundary}_t part${host_boundary};"
-	$as_echo "  tme_uint${host_boundary}_t part${host_boundary}_next;"
+	AS_ECHO(["  ${op_const_mem}tme_shared tme_uint${host_boundary}_t *parts${host_boundary};"])
+	AS_ECHO(["  tme_uint${host_boundary}_t part${host_boundary}_buffer;"])
+	AS_ECHO(["  tme_uint${host_boundary}_t part${host_boundary};"])
+	AS_ECHO(["  tme_uint${host_boundary}_t part${host_boundary}_next;"])
 	if test ${op} = write; then
-	    $as_echo "  tme_uint${host_boundary}_t part${host_boundary}_mask;"
-	    $as_echo "  tme_uint${host_boundary}_t part${host_boundary}_cmp;"
+	    AS_ECHO(["  tme_uint${host_boundary}_t part${host_boundary}_mask;"])
+	    AS_ECHO(["  tme_uint${host_boundary}_t part${host_boundary}_cmp;"])
 	fi
 	if test `expr ${host_boundary} \>= ${size_ifdef}` = 1; then
-	    $as_echo "#endif /* TME_HAVE_INT${host_boundary}_T */"
+	    AS_ECHO(["#endif /* TME_HAVE_INT${host_boundary}_T */"])
 	fi
 	host_boundary=`expr ${host_boundary} / 2`
     done
-    $as_echo ""
-    $as_echo "  assert (count != 0);"
-    $as_echo "  assert (bus_boundary != 0);"
+    AS_ECHO([""])
+    AS_ECHO(["  assert (count != 0);"])
+    AS_ECHO(["  assert (bus_boundary != 0);"])
     
-    $as_echo ""
-    $as_echo "  /* if we are locking for all memory accesses, lock memory"
-    $as_echo "     around a memcpy: */"
-    $as_echo "  if (TME_MEMORY_ALIGNMENT_ATOMIC(TME_MEMORY_TYPE_COMMON) == 0) {"
-    $as_echo "    tme_rwlock_${op_rwlock}lock(rwlock);"
-    $as_echo "    memcpy(${op_memcpy}, (count));"
-    $as_echo "    tme_rwlock_${op_rwlock}unlock(rwlock);"
-    $as_echo "  }"
-    $as_echo ""
-    $as_echo "  /* otherwise, if the emulated bus boundary is greater than the"
-    $as_echo "     host's bus boundary, we are forced to stop all other threads"
-    $as_echo "     around a memcpy: */"
-    $as_echo "  else if (__tme_predict_false(bus_boundary == 0"
-    $as_echo "                               || bus_boundary > host_boundary)) {"
-    $as_echo "    tme_thread_suspend_others();"
-    $as_echo "    memcpy(${op_memcpy}, (count) + (0 && align_min));"
-    $as_echo "    tme_thread_resume_others();"
-    $as_echo "  }"
+    AS_ECHO([""])
+    AS_ECHO(["  /* if we are locking for all memory accesses, lock memory"])
+    AS_ECHO(["     around a memcpy: */"])
+    AS_ECHO(["  if (TME_MEMORY_ALIGNMENT_ATOMIC(TME_MEMORY_TYPE_COMMON) == 0) {"])
+    AS_ECHO(["    tme_rwlock_${op_rwlock}lock(rwlock);"])
+    AS_ECHO(["    memcpy(${op_memcpy}, (count));"])
+    AS_ECHO(["    tme_rwlock_${op_rwlock}unlock(rwlock);"])
+    AS_ECHO(["  }"])
+    AS_ECHO([""])
+    AS_ECHO(["  /* otherwise, if the emulated bus boundary is greater than the"])
+    AS_ECHO(["     host's bus boundary, we are forced to stop all other threads"])
+    AS_ECHO(["     around a memcpy: */"])
+    AS_ECHO(["  else if (__tme_predict_false(bus_boundary == 0"])
+    AS_ECHO(["                               || bus_boundary > host_boundary)) {"])
+    AS_ECHO(["    tme_thread_suspend_others();"])
+    AS_ECHO(["    memcpy(${op_memcpy}, (count) + (0 && align_min));"])
+    AS_ECHO(["    tme_thread_resume_others();"])
+    AS_ECHO(["  }"])
 
     # loop over the possible host boundaries:
     #
@@ -587,15 +587,15 @@ for op in read write; do
 	# open this host boundary:
 	#
 	if test `expr ${host_boundary} \>= ${size_ifdef}` = 1; then
-	    $as_echo ""
-	    $as_echo "#ifdef TME_HAVE_INT${host_boundary}_T"
+	    AS_ECHO([""])
+	    AS_ECHO(["#ifdef TME_HAVE_INT${host_boundary}_T"])
 	fi
-	$as_echo ""
-	$as_echo_n "  else"
+	AS_ECHO([""])
+	AS_ECHO_N(["  else"])
 	if test ${host_boundary} != 8; then
-	    $as_echo_n " if (host_boundary == sizeof(tme_uint${host_boundary}_t))"
+	    AS_ECHO_N([" if (host_boundary == sizeof(tme_uint${host_boundary}_t))"])
 	fi
-	$as_echo " {"
+	AS_ECHO([" {"])
 
 	if test ${op} = write; then
 	    op_part_read="tme_memory_read${host_boundary}((const tme_uint${host_boundary}_t *) buffer, sizeof(tme_uint${host_boundary}_t))"
@@ -605,249 +605,249 @@ for op in read write; do
 	    op_part_write="tme_memory_write${host_boundary}((tme_uint${host_boundary}_t *) buffer, part${host_boundary}, sizeof(tme_uint${host_boundary}_t))"
 	fi
 
-	$as_echo ""
-	$as_echo "    /* make a ${host_boundary}-bit pointer to the memory: */"
-	$as_echo "    parts${host_boundary} = (${op_const_mem}tme_shared tme_uint${host_boundary}_t *) mem;"
-	$as_echo ""
-	$as_echo "    /* if this pointer is not ${host_boundary}-bit aligned: */"
-	$as_echo "    if (__tme_predict_false((((tme_uintptr_t) parts${host_boundary}) % sizeof(tme_uint${host_boundary}_t)) != 0)) {"
-	$as_echo ""
-	$as_echo "      /* get the misalignment from the previous ${host_boundary}-bit boundary: */"
-	$as_echo "      count_misaligned = ((tme_uintptr_t) parts${host_boundary}) % sizeof(tme_uint${host_boundary}_t);"
-	$as_echo ""
-	$as_echo "      /* truncate this pointer to the previous ${host_boundary}-bit boundary: */"
-	$as_echo "      parts${host_boundary} = (${op_const_mem}tme_shared tme_uint${host_boundary}_t *) (((tme_uintptr_t) parts${host_boundary}) & (((tme_uintptr_t) 0) - sizeof(tme_uint${host_boundary}_t)));"
-	$as_echo ""
-	$as_echo "      /* get the number of bytes to ${op} in the first ${host_boundary}-bit memory part: */"
-	$as_echo "      count_done = sizeof(tme_uint${host_boundary}_t) - count_misaligned;"
-	$as_echo "      if (__tme_predict_false(count_done > count)) {"
-	$as_echo "        count_done = count;"
-	$as_echo "      }"
+	AS_ECHO([""])
+	AS_ECHO(["    /* make a ${host_boundary}-bit pointer to the memory: */"])
+	AS_ECHO(["    parts${host_boundary} = (${op_const_mem}tme_shared tme_uint${host_boundary}_t *) mem;"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* if this pointer is not ${host_boundary}-bit aligned: */"])
+	AS_ECHO(["    if (__tme_predict_false((((tme_uintptr_t) parts${host_boundary}) % sizeof(tme_uint${host_boundary}_t)) != 0)) {"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* get the misalignment from the previous ${host_boundary}-bit boundary: */"])
+	AS_ECHO(["      count_misaligned = ((tme_uintptr_t) parts${host_boundary}) % sizeof(tme_uint${host_boundary}_t);"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* truncate this pointer to the previous ${host_boundary}-bit boundary: */"])
+	AS_ECHO(["      parts${host_boundary} = (${op_const_mem}tme_shared tme_uint${host_boundary}_t *) (((tme_uintptr_t) parts${host_boundary}) & (((tme_uintptr_t) 0) - sizeof(tme_uint${host_boundary}_t)));"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* get the number of bytes to ${op} in the first ${host_boundary}-bit memory part: */"])
+	AS_ECHO(["      count_done = sizeof(tme_uint${host_boundary}_t) - count_misaligned;"])
+	AS_ECHO(["      if (__tme_predict_false(count_done > count)) {"])
+	AS_ECHO(["        count_done = count;"])
+	AS_ECHO(["      }"])
 
 	if test ${op} = write; then
-	    $as_echo ""
-	    $as_echo "      /* make a mask that clears for the data to write in the"
-	    $as_echo "         first ${host_boundary}-bit memory part: */"
-	    $as_echo "      part${host_boundary}_mask = 1;"
-	    $as_echo "      part${host_boundary}_mask = (part${host_boundary}_mask << (count_done * 8)) - 1;"
-	    $as_echo "      part${host_boundary}_mask"
-	    $as_echo "        <<= (TME_ENDIAN_NATIVE == TME_ENDIAN_LITTLE"
-	    $as_echo "             ? (count_misaligned * 8)"
-	    $as_echo "             : (${host_boundary} - ((count_misaligned + count_done) * 8)));"
-	    $as_echo "      part${host_boundary}_mask = ~part${host_boundary}_mask;"
-	    $as_echo ""
-	    $as_echo "      /* copy from the buffer the bytes to write in the first"
-	    $as_echo "         ${host_boundary}-bit memory part: */"
-	    $as_echo "      part${host_boundary}_buffer = 0;"
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* make a mask that clears for the data to write in the"])
+	    AS_ECHO(["         first ${host_boundary}-bit memory part: */"])
+	    AS_ECHO(["      part${host_boundary}_mask = 1;"])
+	    AS_ECHO(["      part${host_boundary}_mask = (part${host_boundary}_mask << (count_done * 8)) - 1;"])
+	    AS_ECHO(["      part${host_boundary}_mask"])
+	    AS_ECHO(["        <<= (TME_ENDIAN_NATIVE == TME_ENDIAN_LITTLE"])
+	    AS_ECHO(["             ? (count_misaligned * 8)"])
+	    AS_ECHO(["             : (${host_boundary} - ((count_misaligned + count_done) * 8)));"])
+	    AS_ECHO(["      part${host_boundary}_mask = ~part${host_boundary}_mask;"])
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* copy from the buffer the bytes to write in the first"])
+	    AS_ECHO(["         ${host_boundary}-bit memory part: */"])
+	    AS_ECHO(["      part${host_boundary}_buffer = 0;"])
 	else
-	    $as_echo ""
-	    $as_echo "      /* read the first ${host_boundary}-bit memory part: */"
-	    $as_echo "      part${host_boundary}_buffer = ${op_part_read};"
-	    $as_echo "      parts${host_boundary}++;"
-	    $as_echo ""
-	    $as_echo "      /* copy to the buffer the bytes to read in the first"
-	    $as_echo "         ${host_boundary}-bit memory part: */"
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* read the first ${host_boundary}-bit memory part: */"])
+	    AS_ECHO(["      part${host_boundary}_buffer = ${op_part_read};"])
+	    AS_ECHO(["      parts${host_boundary}++;"])
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* copy to the buffer the bytes to read in the first"])
+	    AS_ECHO(["         ${host_boundary}-bit memory part: */"])
 	fi
-	$as_echo "      part_buffer = ((tme_uint8_t *) &part${host_boundary}_buffer) + count_misaligned;"
-	$as_echo "      count -= count_done;"
-	$as_echo "      do {"
-	$as_echo "        ${op_copy};"
-	$as_echo "        part_buffer++;"
-	$as_echo "        buffer++;"
-	$as_echo "      } while (--count_done != 0);"
+	AS_ECHO(["      part_buffer = ((tme_uint8_t *) &part${host_boundary}_buffer) + count_misaligned;"])
+	AS_ECHO(["      count -= count_done;"])
+	AS_ECHO(["      do {"])
+	AS_ECHO(["        ${op_copy};"])
+	AS_ECHO(["        part_buffer++;"])
+	AS_ECHO(["        buffer++;"])
+	AS_ECHO(["      } while (--count_done != 0);"])
 
 	if test ${op} = write; then
-	    $as_echo ""
-	    $as_echo "      /* compare-and-exchange the first ${host_boundary}-bit memory part: */"
-	    $as_echo "      part${host_boundary} = ${op_part_read};"
-	    $as_echo "      do {"
-	    $as_echo "        part${host_boundary}_cmp = part${host_boundary};"
-	    $as_echo "        part${host_boundary} = (part${host_boundary} & part${host_boundary}_mask) | part${host_boundary}_buffer;"
-	    $as_echo "        part${host_boundary} = tme_memory_atomic_cx${host_boundary}(parts${host_boundary}, part${host_boundary}_cmp, part${host_boundary}, rwlock, sizeof(tme_uint${host_boundary}_t));"
-	    $as_echo "      } while (part${host_boundary} != part${host_boundary}_cmp);"
-	    $as_echo "      parts${host_boundary}++;"
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* compare-and-exchange the first ${host_boundary}-bit memory part: */"])
+	    AS_ECHO(["      part${host_boundary} = ${op_part_read};"])
+	    AS_ECHO(["      do {"])
+	    AS_ECHO(["        part${host_boundary}_cmp = part${host_boundary};"])
+	    AS_ECHO(["        part${host_boundary} = (part${host_boundary} & part${host_boundary}_mask) | part${host_boundary}_buffer;"])
+	    AS_ECHO(["        part${host_boundary} = tme_memory_atomic_cx${host_boundary}(parts${host_boundary}, part${host_boundary}_cmp, part${host_boundary}, rwlock, sizeof(tme_uint${host_boundary}_t));"])
+	    AS_ECHO(["      } while (part${host_boundary} != part${host_boundary}_cmp);"])
+	    AS_ECHO(["      parts${host_boundary}++;"])
 	fi
-	$as_echo "    }"
+	AS_ECHO(["    }"])
 
-	$as_echo ""
-	$as_echo "    /* if we have full ${host_boundary}-bit parts to ${op}: */"
-	$as_echo "    if (__tme_predict_true(count >= sizeof(tme_uint${host_boundary}_t))) {"
-	$as_echo ""
-	$as_echo "      /* if the buffer is ${host_boundary}-bit aligned: */"
-	$as_echo "      if (__tme_predict_true((((tme_uintptr_t) buffer) % sizeof(tme_uint${host_boundary}_t)) == 0)) {"
-	$as_echo ""
-	$as_echo "        /* ${op} full ${host_boundary}-bit parts without shifting: */"
-	$as_echo "        do {"
-	$as_echo "          part${host_boundary} = ${op_part_read};"
-	$as_echo "          ${op_part_write};"
-	$as_echo ""
-	$as_echo "          /* advance: */"
-	$as_echo "          parts${host_boundary}++;"
-	$as_echo "          buffer += sizeof(tme_uint${host_boundary}_t);"
-	$as_echo "          count -= sizeof(tme_uint${host_boundary}_t);"
-	$as_echo "        } while (count >= sizeof(tme_uint${host_boundary}_t));"
-	$as_echo "      }"
-	$as_echo ""
-	$as_echo "      /* otherwise, the buffer is not ${host_boundary}-bit aligned: */"
-	$as_echo "      else {"
-	$as_echo ""
-	$as_echo "        /* get the misalignment to the next ${host_boundary}-bit boundary: */"
-	$as_echo "        count_misaligned = (sizeof(tme_uint${host_boundary}_t) - ((unsigned int) (tme_uintptr_t) buffer)) % sizeof(tme_uint${host_boundary}_t);"
+	AS_ECHO([""])
+	AS_ECHO(["    /* if we have full ${host_boundary}-bit parts to ${op}: */"])
+	AS_ECHO(["    if (__tme_predict_true(count >= sizeof(tme_uint${host_boundary}_t))) {"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* if the buffer is ${host_boundary}-bit aligned: */"])
+	AS_ECHO(["      if (__tme_predict_true((((tme_uintptr_t) buffer) % sizeof(tme_uint${host_boundary}_t)) == 0)) {"])
+	AS_ECHO([""])
+	AS_ECHO(["        /* ${op} full ${host_boundary}-bit parts without shifting: */"])
+	AS_ECHO(["        do {"])
+	AS_ECHO(["          part${host_boundary} = ${op_part_read};"])
+	AS_ECHO(["          ${op_part_write};"])
+	AS_ECHO([""])
+	AS_ECHO(["          /* advance: */"])
+	AS_ECHO(["          parts${host_boundary}++;"])
+	AS_ECHO(["          buffer += sizeof(tme_uint${host_boundary}_t);"])
+	AS_ECHO(["          count -= sizeof(tme_uint${host_boundary}_t);"])
+	AS_ECHO(["        } while (count >= sizeof(tme_uint${host_boundary}_t));"])
+	AS_ECHO(["      }"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* otherwise, the buffer is not ${host_boundary}-bit aligned: */"])
+	AS_ECHO(["      else {"])
+	AS_ECHO([""])
+	AS_ECHO(["        /* get the misalignment to the next ${host_boundary}-bit boundary: */"])
+	AS_ECHO(["        count_misaligned = (sizeof(tme_uint${host_boundary}_t) - ((unsigned int) (tme_uintptr_t) buffer)) % sizeof(tme_uint${host_boundary}_t);"])
 	if test ${op} = write; then
-	    $as_echo ""
-	    $as_echo "        /* copy from the buffer until it is aligned: */"
-	    $as_echo "        part${host_boundary}_buffer = 0;"
+	    AS_ECHO([""])
+	    AS_ECHO(["        /* copy from the buffer until it is aligned: */"])
+	    AS_ECHO(["        part${host_boundary}_buffer = 0;"])
 	else
-	    $as_echo ""
-	    $as_echo "        /* read the next ${host_boundary}-bit memory part: */"
-	    $as_echo "        part${host_boundary}_buffer = ${op_part_read};"
-	    $as_echo "        parts${host_boundary}++;"
-	    $as_echo ""
-	    $as_echo "        /* copy to the buffer until it is aligned: */"
+	    AS_ECHO([""])
+	    AS_ECHO(["        /* read the next ${host_boundary}-bit memory part: */"])
+	    AS_ECHO(["        part${host_boundary}_buffer = ${op_part_read};"])
+	    AS_ECHO(["        parts${host_boundary}++;"])
+	    AS_ECHO([""])
+	    AS_ECHO(["        /* copy to the buffer until it is aligned: */"])
 	fi
-	$as_echo "        part_buffer = ((${op_const_mem}tme_uint8_t *) &part${host_boundary}_buffer);"
-	$as_echo "        count_done = count_misaligned;"
-	$as_echo "        count -= count_misaligned;"
-	$as_echo "        do {"
-	$as_echo "          ${op_copy};"
-	$as_echo "          part_buffer++;"
-	$as_echo "          buffer++;"
-	$as_echo "        } while (--count_done != 0);"
+	AS_ECHO(["        part_buffer = ((${op_const_mem}tme_uint8_t *) &part${host_boundary}_buffer);"])
+	AS_ECHO(["        count_done = count_misaligned;"])
+	AS_ECHO(["        count -= count_misaligned;"])
+	AS_ECHO(["        do {"])
+	AS_ECHO(["          ${op_copy};"])
+	AS_ECHO(["          part_buffer++;"])
+	AS_ECHO(["          buffer++;"])
+	AS_ECHO(["        } while (--count_done != 0);"])
 
-	$as_echo ""
-	$as_echo "        /* ${op} full ${host_boundary}-bit words with shifting: */"
-	$as_echo "        bits_misaligned = count_misaligned * 8;"
+	AS_ECHO([""])
+	AS_ECHO(["        /* ${op} full ${host_boundary}-bit words with shifting: */"])
+	AS_ECHO(["        bits_misaligned = count_misaligned * 8;"])
 	if test ${op} = write; then
 	    op_shift=bits_misaligned
 	    op_shift_next="(${host_boundary} - bits_misaligned)"
-	    $as_echo "        part${host_boundary} = part${host_boundary}_buffer;"
+	    AS_ECHO(["        part${host_boundary} = part${host_boundary}_buffer;"])
 	else
 	    op_shift="(${host_boundary} - bits_misaligned)"
 	    op_shift_next=bits_misaligned
-	    $as_echo "        part${host_boundary}"
-	    $as_echo "          = (TME_ENDIAN_NATIVE == TME_ENDIAN_LITTLE"
-	    $as_echo "             ? (part${host_boundary}_buffer >> ${op_shift_next})"
-	    $as_echo "             : (part${host_boundary}_buffer << ${op_shift_next}));"
+	    AS_ECHO(["        part${host_boundary}"])
+	    AS_ECHO(["          = (TME_ENDIAN_NATIVE == TME_ENDIAN_LITTLE"])
+	    AS_ECHO(["             ? (part${host_boundary}_buffer >> ${op_shift_next})"])
+	    AS_ECHO(["             : (part${host_boundary}_buffer << ${op_shift_next}));"])
 	fi
-	$as_echo "        for (; count >= sizeof(tme_uint${host_boundary}_t); ) {"
-	$as_echo "          part${host_boundary}_next = ${op_part_read};"
-	$as_echo "          if (TME_ENDIAN_NATIVE == TME_ENDIAN_LITTLE) {"
-	$as_echo "            part${host_boundary} |= (part${host_boundary}_next << ${op_shift});"
-	$as_echo "            ${op_part_write};"
-	$as_echo "            part${host_boundary} = (part${host_boundary}_next >> ${op_shift_next});"
-	$as_echo "          }"
-	$as_echo "          else {"
-	$as_echo "            part${host_boundary} |= (part${host_boundary}_next >> ${op_shift});"
-	$as_echo "            ${op_part_write};"
-	$as_echo "            part${host_boundary} = (part${host_boundary}_next << ${op_shift_next});"
-	$as_echo "          }"
-	$as_echo ""
-	$as_echo "          /* advance: */"
-	$as_echo "          parts${host_boundary}++;"
-	$as_echo "          buffer += sizeof(tme_uint${host_boundary}_t);"
-	$as_echo "          count -= sizeof(tme_uint${host_boundary}_t);"
-	$as_echo "        }"
+	AS_ECHO(["        for (; count >= sizeof(tme_uint${host_boundary}_t); ) {"])
+	AS_ECHO(["          part${host_boundary}_next = ${op_part_read};"])
+	AS_ECHO(["          if (TME_ENDIAN_NATIVE == TME_ENDIAN_LITTLE) {"])
+	AS_ECHO(["            part${host_boundary} |= (part${host_boundary}_next << ${op_shift});"])
+	AS_ECHO(["            ${op_part_write};"])
+	AS_ECHO(["            part${host_boundary} = (part${host_boundary}_next >> ${op_shift_next});"])
+	AS_ECHO(["          }"])
+	AS_ECHO(["          else {"])
+	AS_ECHO(["            part${host_boundary} |= (part${host_boundary}_next >> ${op_shift});"])
+	AS_ECHO(["            ${op_part_write};"])
+	AS_ECHO(["            part${host_boundary} = (part${host_boundary}_next << ${op_shift_next});"])
+	AS_ECHO(["          }"])
+	AS_ECHO([""])
+	AS_ECHO(["          /* advance: */"])
+	AS_ECHO(["          parts${host_boundary}++;"])
+	AS_ECHO(["          buffer += sizeof(tme_uint${host_boundary}_t);"])
+	AS_ECHO(["          count -= sizeof(tme_uint${host_boundary}_t);"])
+	AS_ECHO(["        }"])
 
-	$as_echo ""
-	$as_echo "        /* calculate how many more bytes there are to ${op} in this"
-	$as_echo "           ${host_boundary}-bit memory part: */"
-	$as_echo "        count_done = sizeof(tme_uint${host_boundary}_t) - count_misaligned;"
-	$as_echo "        part${host_boundary}_buffer = part${host_boundary};"
+	AS_ECHO([""])
+	AS_ECHO(["        /* calculate how many more bytes there are to ${op} in this"])
+	AS_ECHO(["           ${host_boundary}-bit memory part: */"])
+	AS_ECHO(["        count_done = sizeof(tme_uint${host_boundary}_t) - count_misaligned;"])
+	AS_ECHO(["        part${host_boundary}_buffer = part${host_boundary};"])
 	if test ${op} = write; then
-	    $as_echo ""
-	    $as_echo "        /* if we can't write one more full ${host_boundary}-bit memory part: */"
-	    $as_echo "        if (count_done > count) {"
-	    $as_echo ""
-	    $as_echo "          /* we will reread this data to write below: */"
-	    $as_echo "          buffer -= count_misaligned;"
-	    $as_echo "          count += count_misaligned;"
-	    $as_echo "        }"
-	    $as_echo ""
-	    $as_echo "        /* otherwise, we can write one more full ${host_boundary}-bit memory part: */"
-	    $as_echo "        else {"
-	    $as_echo ""
-	    $as_echo "          /* copy from the buffer until we have the full ${host_boundary}-bit part: */"
-	    $as_echo "          part_buffer = ((${op_const_mem}tme_uint8_t *) &part${host_boundary}_buffer) + count_misaligned;"
-	    $as_echo "          count -= count_done;"
-	    $as_echo "          do {"
-	    $as_echo "            ${op_copy};"
-	    $as_echo "            part_buffer++;"
-	    $as_echo "            buffer++;"
-	    $as_echo "          } while (--count_done != 0);"
-	    $as_echo ""
-	    $as_echo "          /* write the last full ${host_boundary}-bit memory part: */"
-	    $as_echo "          part${host_boundary} = part${host_boundary}_buffer;"
-	    $as_echo "          ${op_part_write};"
-	    $as_echo "        }"
+	    AS_ECHO([""])
+	    AS_ECHO(["        /* if we can't write one more full ${host_boundary}-bit memory part: */"])
+	    AS_ECHO(["        if (count_done > count) {"])
+	    AS_ECHO([""])
+	    AS_ECHO(["          /* we will reread this data to write below: */"])
+	    AS_ECHO(["          buffer -= count_misaligned;"])
+	    AS_ECHO(["          count += count_misaligned;"])
+	    AS_ECHO(["        }"])
+	    AS_ECHO([""])
+	    AS_ECHO(["        /* otherwise, we can write one more full ${host_boundary}-bit memory part: */"])
+	    AS_ECHO(["        else {"])
+	    AS_ECHO([""])
+	    AS_ECHO(["          /* copy from the buffer until we have the full ${host_boundary}-bit part: */"])
+	    AS_ECHO(["          part_buffer = ((${op_const_mem}tme_uint8_t *) &part${host_boundary}_buffer) + count_misaligned;"])
+	    AS_ECHO(["          count -= count_done;"])
+	    AS_ECHO(["          do {"])
+	    AS_ECHO(["            ${op_copy};"])
+	    AS_ECHO(["            part_buffer++;"])
+	    AS_ECHO(["            buffer++;"])
+	    AS_ECHO(["          } while (--count_done != 0);"])
+	    AS_ECHO([""])
+	    AS_ECHO(["          /* write the last full ${host_boundary}-bit memory part: */"])
+	    AS_ECHO(["          part${host_boundary} = part${host_boundary}_buffer;"])
+	    AS_ECHO(["          ${op_part_write};"])
+	    AS_ECHO(["        }"])
 	else
-	    $as_echo ""
-	    $as_echo "        /* copy to the buffer the remaining bytes in this ${host_boundary}-bit part: */"
-	    $as_echo "        if (count_done > count) {"
-	    $as_echo "          count_done = count;"
-	    $as_echo "        }"
-	    $as_echo "        part_buffer = ((${op_const_mem}tme_uint8_t *) &part${host_boundary}_buffer);"
-	    $as_echo "        count -= count_done;"
-	    $as_echo "        do {"
-	    $as_echo "          ${op_copy};"
-	    $as_echo "          part_buffer++;"
-	    $as_echo "          buffer++;"
-	    $as_echo "        } while (--count_done != 0);"
+	    AS_ECHO([""])
+	    AS_ECHO(["        /* copy to the buffer the remaining bytes in this ${host_boundary}-bit part: */"])
+	    AS_ECHO(["        if (count_done > count) {"])
+	    AS_ECHO(["          count_done = count;"])
+	    AS_ECHO(["        }"])
+	    AS_ECHO(["        part_buffer = ((${op_const_mem}tme_uint8_t *) &part${host_boundary}_buffer);"])
+	    AS_ECHO(["        count -= count_done;"])
+	    AS_ECHO(["        do {"])
+	    AS_ECHO(["          ${op_copy};"])
+	    AS_ECHO(["          part_buffer++;"])
+	    AS_ECHO(["          buffer++;"])
+	    AS_ECHO(["        } while (--count_done != 0);"])
 	fi
-	$as_echo "      }"
-	$as_echo "    }"
+	AS_ECHO(["      }"])
+	AS_ECHO(["    }"])
 
-	$as_echo ""
-	$as_echo "    /* if we still have bytes to ${op}: */"
-	$as_echo "    if (__tme_predict_false(count > 0)) {"
-	$as_echo ""
-	$as_echo "      /* we must have less than a full ${host_boundary}-bit part to ${op}: */"
-	$as_echo "      assert (count < sizeof(tme_uint${host_boundary}_t));"
+	AS_ECHO([""])
+	AS_ECHO(["    /* if we still have bytes to ${op}: */"])
+	AS_ECHO(["    if (__tme_predict_false(count > 0)) {"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* we must have less than a full ${host_boundary}-bit part to ${op}: */"])
+	AS_ECHO(["      assert (count < sizeof(tme_uint${host_boundary}_t));"])
 	if test ${op} = write; then
-	    $as_echo ""
-	    $as_echo "      /* make a mask that clears for the data to write in the last"
-	    $as_echo "         ${host_boundary}-bit memory part: */"
-	    $as_echo "      part${host_boundary}_mask"
-	    $as_echo "        = (TME_ENDIAN_NATIVE == TME_ENDIAN_LITTLE"
-	    $as_echo "           ? _tme_memory_type_mask(tme_uint${host_boundary}_t, << (count * 8))"
-	    $as_echo "           : _tme_memory_type_mask(tme_uint${host_boundary}_t, >> (count * 8)));"
-	    $as_echo ""
-	    $as_echo "      /* copy from the buffer the bytes to write in the last"
-	    $as_echo "         ${host_boundary}-bit memory part: */"
-	    $as_echo "      part${host_boundary}_buffer = 0;"
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* make a mask that clears for the data to write in the last"])
+	    AS_ECHO(["         ${host_boundary}-bit memory part: */"])
+	    AS_ECHO(["      part${host_boundary}_mask"])
+	    AS_ECHO(["        = (TME_ENDIAN_NATIVE == TME_ENDIAN_LITTLE"])
+	    AS_ECHO(["           ? _tme_memory_type_mask(tme_uint${host_boundary}_t, << (count * 8))"])
+	    AS_ECHO(["           : _tme_memory_type_mask(tme_uint${host_boundary}_t, >> (count * 8)));"])
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* copy from the buffer the bytes to write in the last"])
+	    AS_ECHO(["         ${host_boundary}-bit memory part: */"])
+	    AS_ECHO(["      part${host_boundary}_buffer = 0;"])
 	else
-	    $as_echo ""
-	    $as_echo "      /* read the last ${host_boundary}-bit memory part: */"
-	    $as_echo "      part${host_boundary}_buffer = ${op_part_read};"
-	    $as_echo ""
-	    $as_echo "      /* copy to the buffer the bytes to read in the first"
-	    $as_echo "         ${host_boundary}-bit memory part: */"
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* read the last ${host_boundary}-bit memory part: */"])
+	    AS_ECHO(["      part${host_boundary}_buffer = ${op_part_read};"])
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* copy to the buffer the bytes to read in the first"])
+	    AS_ECHO(["         ${host_boundary}-bit memory part: */"])
 	fi
-	$as_echo "      part_buffer = ((${op_const_mem}tme_uint8_t *) &part${host_boundary}_buffer);"
-	$as_echo "      count_done = count;"
-	$as_echo "      do {"
-	$as_echo "        ${op_copy};"
-	$as_echo "        part_buffer++;"
-	$as_echo "        buffer++;"
-	$as_echo "      } while (--count_done != 0);"
+	AS_ECHO(["      part_buffer = ((${op_const_mem}tme_uint8_t *) &part${host_boundary}_buffer);"])
+	AS_ECHO(["      count_done = count;"])
+	AS_ECHO(["      do {"])
+	AS_ECHO(["        ${op_copy};"])
+	AS_ECHO(["        part_buffer++;"])
+	AS_ECHO(["        buffer++;"])
+	AS_ECHO(["      } while (--count_done != 0);"])
 	if test ${op} = write; then
-	    $as_echo ""
-	    $as_echo "      /* compare-and-exchange the last ${host_boundary}-bit memory part: */"
-	    $as_echo "      part${host_boundary} = ${op_part_read};"
-	    $as_echo "      do {"
-	    $as_echo "        part${host_boundary}_cmp = part${host_boundary};"
-	    $as_echo "        part${host_boundary} = (part${host_boundary} & part${host_boundary}_mask) | part${host_boundary}_buffer;"
-	    $as_echo "        part${host_boundary} = tme_memory_atomic_cx${host_boundary}(parts${host_boundary}, part${host_boundary}_cmp, part${host_boundary}, rwlock, sizeof(tme_uint${host_boundary}_t));"
-	    $as_echo "      } while (part${host_boundary} != part${host_boundary}_cmp);"
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* compare-and-exchange the last ${host_boundary}-bit memory part: */"])
+	    AS_ECHO(["      part${host_boundary} = ${op_part_read};"])
+	    AS_ECHO(["      do {"])
+	    AS_ECHO(["        part${host_boundary}_cmp = part${host_boundary};"])
+	    AS_ECHO(["        part${host_boundary} = (part${host_boundary} & part${host_boundary}_mask) | part${host_boundary}_buffer;"])
+	    AS_ECHO(["        part${host_boundary} = tme_memory_atomic_cx${host_boundary}(parts${host_boundary}, part${host_boundary}_cmp, part${host_boundary}, rwlock, sizeof(tme_uint${host_boundary}_t));"])
+	    AS_ECHO(["      } while (part${host_boundary} != part${host_boundary}_cmp);"])
 	fi
-	$as_echo "    }"
+	AS_ECHO(["    }"])
 	
 	# close this host boundary:
 	#
-	$as_echo ""
-	$as_echo "  }"
+	AS_ECHO([""])
+	AS_ECHO(["  }"])
 	if test `expr ${host_boundary} \>= ${size_ifdef}` = 1; then
-	    $as_echo ""
-	    $as_echo "#endif /* TME_HAVE_INT${host_boundary}_T */"
+	    AS_ECHO([""])
+	    AS_ECHO(["#endif /* TME_HAVE_INT${host_boundary}_T */"])
 	fi
 
 	# advance:
@@ -855,7 +855,7 @@ for op in read write; do
 	host_boundary=`expr ${host_boundary} / 2`
     done
 
-    $as_echo "}"
+    AS_ECHO(["}"])
 done
 
 # permute for the different sizes:
@@ -863,8 +863,8 @@ done
 for size in ${sizes}; do
 
     if test `expr ${size} \>= ${size_ifdef}` = 1; then
-	$as_echo ""
-	$as_echo "#ifdef TME_HAVE_INT${size}_T"
+	AS_ECHO([""])
+	AS_ECHO(["#ifdef TME_HAVE_INT${size}_T"])
     fi
 
     # permute for the different types of memory read and write macros.
@@ -936,29 +936,29 @@ for size in ${sizes}; do
 
 	    # start the macro:
 	    #
-	    $as_echo ""
-	    $as_echo "/* the default ${size}-bit memory ${type_user} ${op} macro: */"
-	    $as_echo "#define tme_memory${type}_${op}${size}(mem${op_x}${type_lock}, align_min${type_bus_boundary}) \\"
-	    $as_echo "${op_open}" | tr '@' '\n'
+	    AS_ECHO([""])
+	    AS_ECHO(["/* the default ${size}-bit memory ${type_user} ${op} macro: */"])
+	    AS_ECHO(["#define tme_memory${type}_${op}${size}(mem${op_x}${type_lock}, align_min${type_bus_boundary}) \\"])
+	    AS_ECHO(["${op_open}" | tr '@' '\n'])
 
 	    # dispatch on the macro type:
 	    #
 	    case ${type_user} in
 
 	    plain)
-		$as_echo "${op_indent0}/* if we know at compile time that the memory is aligned \\"
-		$as_echo "${op_indent0}   enough to ${op} directly, do the single direct ${op}. \\"
-		$as_echo "${op_indent0}\\"
-		$as_echo "${op_indent0}   otherwise, if we know at compile time that the memory \\"
-		$as_echo "${op_indent0}   is less aligned than the smallest acceptable parts size, \\"
-		$as_echo "${op_indent0}   test if the memory is aligned enough to ${op} directly, \\"
-		$as_echo "${op_indent0}   and do the single direct ${op} if it is: */ \\"
-		$as_echo "${op_indent0}(__tme_predict_true((_TME_ALIGNOF_INT${size}_T == 1 \\"
-		$as_echo "${op_indent0}                     || (align_min) >= _TME_ALIGNOF_INT${size}_T) \\"
-		$as_echo "${op_indent0}                    || ((align_min) < TME_MEMORY_ALIGNMENT_ACCEPT(tme_uint${size}_t) \\"
-		$as_echo "${op_indent0}                        && _tme_memory_address_test(mem, _TME_ALIGNOF_INT${size}_T - 1, align_min) == 0))) \\"
-		$as_echo "${op_then}"
-		$as_echo "${op_indent2}_tme_memory_${op}(tme_uint${size}_t, tme_uint${size}_t, mem, 0${op_x})${op_semi} \\"
+		AS_ECHO(["${op_indent0}/* if we know at compile time that the memory is aligned \\"])
+		AS_ECHO(["${op_indent0}   enough to ${op} directly, do the single direct ${op}. \\"])
+		AS_ECHO(["${op_indent0}\\"])
+		AS_ECHO(["${op_indent0}   otherwise, if we know at compile time that the memory \\"])
+		AS_ECHO(["${op_indent0}   is less aligned than the smallest acceptable parts size, \\"])
+		AS_ECHO(["${op_indent0}   test if the memory is aligned enough to ${op} directly, \\"])
+		AS_ECHO(["${op_indent0}   and do the single direct ${op} if it is: */ \\"])
+		AS_ECHO(["${op_indent0}(__tme_predict_true((_TME_ALIGNOF_INT${size}_T == 1 \\"])
+		AS_ECHO(["${op_indent0}                     || (align_min) >= _TME_ALIGNOF_INT${size}_T) \\"])
+		AS_ECHO(["${op_indent0}                    || ((align_min) < TME_MEMORY_ALIGNMENT_ACCEPT(tme_uint${size}_t) \\"])
+		AS_ECHO(["${op_indent0}                        && _tme_memory_address_test(mem, _TME_ALIGNOF_INT${size}_T - 1, align_min) == 0))) \\"])
+		AS_ECHO(["${op_then}"])
+		AS_ECHO(["${op_indent2}_tme_memory_${op}(tme_uint${size}_t, tme_uint${size}_t, mem, 0${op_x})${op_semi} \\"])
 
 		# loop over the possible part sizes:
 		#
@@ -975,7 +975,7 @@ for size in ${sizes}; do
 
 			# we will just access all parts of this size:
 			#
-			$as_echo "${op_else}" | tr '@' '\n'
+			AS_ECHO(["${op_else}" | tr '@' '\n'])
 
 		    # otherwise, this is not the last possible part
 		    # size:
@@ -989,10 +989,10 @@ for size in ${sizes}; do
 			# size, we will just access all parts of this
 			# size:
 			#
-			$as_echo "${op_else_if}" | tr '@' '\n'
-			$as_echo "${op_indent1}((TME_MEMORY_ALIGNMENT_ACCEPT(tme_uint${size}_t) <= sizeof(tme_uint${size_part}_t)) \\"
-			$as_echo "${op_indent1} && ((align_min) <= sizeof(tme_uint${size_part}_t))) \\"
-			$as_echo "${op_then}"
+			AS_ECHO(["${op_else_if}" | tr '@' '\n'])
+			AS_ECHO(["${op_indent1}((TME_MEMORY_ALIGNMENT_ACCEPT(tme_uint${size}_t) <= sizeof(tme_uint${size_part}_t)) \\"])
+			AS_ECHO(["${op_indent1} && ((align_min) <= sizeof(tme_uint${size_part}_t))) \\"])
+			AS_ECHO(["${op_then}"])
 		    fi
 
 		    # we always emit one set of partial accesses, all
@@ -1013,13 +1013,13 @@ for size in ${sizes}; do
 
 			    # emit one partial transfer:
 			    #
-			    $as_echo_n "${op_indent2}"
+			    AS_ECHO_N(["${op_indent2}"])
 			    op_delim=${op_semi}
 			    if test ${op} = read; then
-				if test ${size_done} = 0; then $as_echo_n '('; else $as_echo_n ' | '; fi
+				if test ${size_done} = 0; then AS_ECHO_N(["("]); else AS_ECHO_N([" | "]); fi
 				if test `expr ${size_done} + ${size_now}` = ${size}; then op_delim=')'; fi
 			    fi
-			    $as_echo "_tme_memory${type}_${op}(tme_uint${size}_t, tme_uint${size_now}_t, mem, (${size_done} / 8)${op_x})${op_delim} \\"
+			    AS_ECHO(["_tme_memory${type}_${op}(tme_uint${size}_t, tme_uint${size_now}_t, mem, (${size_done} / 8)${op_x})${op_delim} \\"])
 
 			    # advance:
 			    #
@@ -1045,112 +1045,112 @@ for size in ${sizes}; do
 			if test ${size_part} = ${size}; then
 			    break
 			fi
-			$as_echo "${op_else_if}" | tr '@' '\n'
-			$as_echo "${op_indent1}(_tme_memory_address_test(mem, sizeof(tme_uint${size_now}_t), align_min) != 0) \\"
-			$as_echo "${op_then}"
+			AS_ECHO(["${op_else_if}" | tr '@' '\n'])
+			AS_ECHO(["${op_indent1}(_tme_memory_address_test(mem, sizeof(tme_uint${size_now}_t), align_min) != 0) \\"])
+			AS_ECHO(["${op_then}"])
 		    done
 		done
 		;;
 
 	    atomic)
-		$as_echo "${op_indent0}/* if threads are cooperative, do a plain ${op}: */ \\"
-		$as_echo "${op_indent0}(tme_thread_cooperative()) \\"
-		$as_echo "${op_then}"
-		$as_echo_n "${op_indent2}tme_memory_${op}${size}("
+		AS_ECHO(["${op_indent0}/* if threads are cooperative, do a plain ${op}: */ \\"])
+		AS_ECHO(["${op_indent0}(tme_thread_cooperative()) \\"])
+		AS_ECHO(["${op_then}"])
+		AS_ECHO_N(["${op_indent2}tme_memory_${op}${size}("])
 		# this strips off the tme_shared qualifier:
 		#
 		if test ${op} = read; then
-		    $as_echo_n "(_tme_const tme_uint${size}_t *) _tme_audit_type(mem, tme_uint${size}_t *)"
+		    AS_ECHO_N(["(_tme_const tme_uint${size}_t *) _tme_audit_type(mem, tme_uint${size}_t *)"])
 		else
-		    $as_echo_n "(tme_uint${size}_t *) _tme_cast_pointer_shared(tme_uint${size}_t *, tme_uint${size}_t *, mem)"
+		    AS_ECHO_N(["(tme_uint${size}_t *) _tme_cast_pointer_shared(tme_uint${size}_t *, tme_uint${size}_t *, mem)"])
 		fi
-		$as_echo "${op_x}, align_min)${op_semi} \\"
+		AS_ECHO(["${op_x}, align_min)${op_semi} \\"])
 
-		$as_echo "${op_indent1}/* otherwise, if we aren't locking for all memory accesses, and we can \\"
-		$as_echo "${op_indent1}   make direct ${size}-bit accesses, and this memory is aligned \\"
-		$as_echo "${op_indent1}   enough to make a single direct atomic access, do the single \\"
-		$as_echo "${op_indent1}   direct atomic ${op}: */ \\"
-		$as_echo "${op_else_if}" | tr '@' '\n'
-		$as_echo "${op_indent1}(__tme_predict_true(TME_MEMORY_ALIGNMENT_ATOMIC(TME_MEMORY_TYPE_COMMON) != 0 \\"
-		$as_echo "${op_indent1}                    && TME_MEMORY_ALIGNMENT_ATOMIC(tme_uint${size}_t) != 0 \\"
-		$as_echo "${op_indent1}                    && _tme_memory_address_test(mem, TME_MEMORY_ALIGNMENT_ATOMIC(tme_uint${size}_t) - 1, align_min) == 0)) \\"
-		$as_echo "${op_then}"
-		$as_echo "${op_indent2}(*_tme_audit_type(mem, tme_uint${size}_t *)) \\"
+		AS_ECHO(["${op_indent1}/* otherwise, if we aren't locking for all memory accesses, and we can \\"])
+		AS_ECHO(["${op_indent1}   make direct ${size}-bit accesses, and this memory is aligned \\"])
+		AS_ECHO(["${op_indent1}   enough to make a single direct atomic access, do the single \\"])
+		AS_ECHO(["${op_indent1}   direct atomic ${op}: */ \\"])
+		AS_ECHO(["${op_else_if}" | tr '@' '\n'])
+		AS_ECHO(["${op_indent1}(__tme_predict_true(TME_MEMORY_ALIGNMENT_ATOMIC(TME_MEMORY_TYPE_COMMON) != 0 \\"])
+		AS_ECHO(["${op_indent1}                    && TME_MEMORY_ALIGNMENT_ATOMIC(tme_uint${size}_t) != 0 \\"])
+		AS_ECHO(["${op_indent1}                    && _tme_memory_address_test(mem, TME_MEMORY_ALIGNMENT_ATOMIC(tme_uint${size}_t) - 1, align_min) == 0)) \\"])
+		AS_ECHO(["${op_then}"])
+		AS_ECHO(["${op_indent2}(*_tme_audit_type(mem, tme_uint${size}_t *)) \\"])
 		if test ${op} = write; then
-		    $as_echo "${op_indent2}  = (x); \\"
+		    AS_ECHO(["${op_indent2}  = (x); \\"])
 		fi
-		$as_echo "${op_indent1}/* otherwise, we must do a slow indirect atomic ${op}: */ \\"
-		$as_echo "${op_else}" | tr '@' '\n'
-		$as_echo "${op_indent2}tme_memory${type}_${op}${size}(mem${op_x}${type_lock}, align_min)${op_semi} \\"
+		AS_ECHO(["${op_indent1}/* otherwise, we must do a slow indirect atomic ${op}: */ \\"])
+		AS_ECHO(["${op_else}" | tr '@' '\n'])
+		AS_ECHO(["${op_indent2}tme_memory${type}_${op}${size}(mem${op_x}${type_lock}, align_min)${op_semi} \\"])
 		;;
 
 	    bus)
-		$as_echo "${op_indent0}/* if threads are cooperative, do a plain ${op}: */ \\"
-		$as_echo "${op_indent0}(tme_thread_cooperative()) \\"
-		$as_echo "${op_then}"
-		$as_echo_n "${op_indent2}tme_memory_${op}${size}("
+		AS_ECHO(["${op_indent0}/* if threads are cooperative, do a plain ${op}: */ \\"])
+		AS_ECHO(["${op_indent0}(tme_thread_cooperative()) \\"])
+		AS_ECHO(["${op_then}"])
+		AS_ECHO_N(["${op_indent2}tme_memory_${op}${size}("])
 		# this strips off the tme_shared qualifier:
 		#
 		if test ${op} = read; then
-		    $as_echo_n "(_tme_const tme_uint${size}_t *) _tme_audit_type(mem, tme_uint${size}_t *)"
+		    AS_ECHO_N(["(_tme_const tme_uint${size}_t *) _tme_audit_type(mem, tme_uint${size}_t *)"])
 		else
-		    $as_echo_n "(tme_uint${size}_t *) _tme_cast_pointer_shared(tme_uint${size}_t *, tme_uint${size}_t *, mem)"
+		    AS_ECHO_N(["(tme_uint${size}_t *) _tme_cast_pointer_shared(tme_uint${size}_t *, tme_uint${size}_t *, mem)"])
 		fi
-		$as_echo "${op_x}, align_min)${op_semi} \\"
+		AS_ECHO(["${op_x}, align_min)${op_semi} \\"])
 
-		$as_echo "${op_indent1}/* otherwise, if we aren't locking for all memory accesses, the \\"
-		$as_echo "${op_indent1}   host supports misaligned ${size}-bit accesses, the host's bus \\"
-		$as_echo "${op_indent1}   boundary is greater than or equal to the emulated bus \\"
-		$as_echo "${op_indent1}   boundary, and this memory is aligned enough, do a single \\"
-		$as_echo "${op_indent1}   direct bus ${op}: */ \\"
-		$as_echo "${op_else_if}" | tr '@' '\n'
-		$as_echo "${op_indent1}(__tme_predict_true(TME_MEMORY_ALIGNMENT_ATOMIC(TME_MEMORY_TYPE_COMMON) != 0 \\"
-		$as_echo "${op_indent1}                    && _TME_ALIGNOF_INT${size}_T < sizeof(tme_uint${size}_t) \\"
-		$as_echo "${op_indent1}                    && TME_MEMORY_BUS_BOUNDARY >= (bus_boundary) \\"
-		$as_echo "${op_indent1}                    && _tme_memory_address_test(mem, _TME_ALIGNOF_INT${size}_T - 1, align_min) == 0)) \\"
-		$as_echo "${op_then}"
-		$as_echo "${op_indent2}(*_tme_audit_type(mem, tme_uint${size}_t *)) \\"
+		AS_ECHO(["${op_indent1}/* otherwise, if we aren't locking for all memory accesses, the \\"])
+		AS_ECHO(["${op_indent1}   host supports misaligned ${size}-bit accesses, the host's bus \\"])
+		AS_ECHO(["${op_indent1}   boundary is greater than or equal to the emulated bus \\"])
+		AS_ECHO(["${op_indent1}   boundary, and this memory is aligned enough, do a single \\"])
+		AS_ECHO(["${op_indent1}   direct bus ${op}: */ \\"])
+		AS_ECHO(["${op_else_if}" | tr '@' '\n'])
+		AS_ECHO(["${op_indent1}(__tme_predict_true(TME_MEMORY_ALIGNMENT_ATOMIC(TME_MEMORY_TYPE_COMMON) != 0 \\"])
+		AS_ECHO(["${op_indent1}                    && _TME_ALIGNOF_INT${size}_T < sizeof(tme_uint${size}_t) \\"])
+		AS_ECHO(["${op_indent1}                    && TME_MEMORY_BUS_BOUNDARY >= (bus_boundary) \\"])
+		AS_ECHO(["${op_indent1}                    && _tme_memory_address_test(mem, _TME_ALIGNOF_INT${size}_T - 1, align_min) == 0)) \\"])
+		AS_ECHO(["${op_then}"])
+		AS_ECHO(["${op_indent2}(*_tme_audit_type(mem, tme_uint${size}_t *)) \\"])
 		if test ${op} = write; then
-		    $as_echo "${op_indent2}  = (x); \\"
+		    AS_ECHO(["${op_indent2}  = (x); \\"])
 		fi
 
-		$as_echo "${op_indent1}/* otherwise, if we're locking for all memory accesses, or \\"
-		$as_echo "${op_indent1}   if this memory must cross at least one host bus boundary \\"
-		$as_echo "${op_indent1}   and the host bus boundary is less than the emulated bus \\"
-		$as_echo "${op_indent1}   boundary, do a slow indirect atomic ${op}: */ \\"
-		$as_echo "${op_else_if}" | tr '@' '\n'
-		$as_echo "${op_indent1}(__tme_predict_false(TME_MEMORY_ALIGNMENT_ATOMIC(TME_MEMORY_TYPE_COMMON) == 0 \\"
-		$as_echo "${op_indent1}                     || (sizeof(tme_uint${size}_t) > TME_MEMORY_BUS_BOUNDARY \\"
-		$as_echo "${op_indent1}                         && TME_MEMORY_BUS_BOUNDARY < (bus_boundary)))) \\"
-		$as_echo "${op_then}"
-		$as_echo "${op_indent2}tme_memory_atomic_${op}${size}(mem${op_x}, lock, align_min)${op_semi} \\"
+		AS_ECHO(["${op_indent1}/* otherwise, if we're locking for all memory accesses, or \\"])
+		AS_ECHO(["${op_indent1}   if this memory must cross at least one host bus boundary \\"])
+		AS_ECHO(["${op_indent1}   and the host bus boundary is less than the emulated bus \\"])
+		AS_ECHO(["${op_indent1}   boundary, do a slow indirect atomic ${op}: */ \\"])
+		AS_ECHO(["${op_else_if}" | tr '@' '\n'])
+		AS_ECHO(["${op_indent1}(__tme_predict_false(TME_MEMORY_ALIGNMENT_ATOMIC(TME_MEMORY_TYPE_COMMON) == 0 \\"])
+		AS_ECHO(["${op_indent1}                     || (sizeof(tme_uint${size}_t) > TME_MEMORY_BUS_BOUNDARY \\"])
+		AS_ECHO(["${op_indent1}                         && TME_MEMORY_BUS_BOUNDARY < (bus_boundary)))) \\"])
+		AS_ECHO(["${op_then}"])
+		AS_ECHO(["${op_indent2}tme_memory_atomic_${op}${size}(mem${op_x}, lock, align_min)${op_semi} \\"])
 
-		$as_echo "${op_indent1}/* otherwise, if the memory is not larger than the emulated \\"
-		$as_echo "${op_indent1}   bus boundary, or if size-alignment would mean an atomic \\"
-		$as_echo "${op_indent1}   host access and it is size-aligned, do a single atomic \\"
-		$as_echo "${op_indent1}   ${op}, which may be direct or slow: */ \\"
-		$as_echo "${op_else_if}" | tr '@' '\n'
-		$as_echo "${op_indent1}(__tme_predict_true((sizeof(tme_uint${size}_t) <= (bus_boundary) \\"
-		$as_echo "${op_indent1}                     || (TME_MEMORY_ALIGNMENT_ATOMIC(tme_uint${size}_t) != 0 \\"
-		$as_echo "${op_indent1}                         && TME_MEMORY_ALIGNMENT_ATOMIC(tme_uint${size}_t) <= sizeof(tme_uint${size}_t))) \\"
-		$as_echo "${op_indent1}                    && _tme_memory_address_test(mem, sizeof(tme_uint${size}_t) - 1, align_min) == 0)) \\"
-		$as_echo "${op_then}"
-		$as_echo "${op_indent2}tme_memory_atomic_${op}${size}(mem${op_x}, lock, sizeof(tme_uint${size}_t))${op_semi} \\"
-		$as_echo "${op_indent1}/* otherwise, we must do a slow bus ${op}: */ \\"
-		$as_echo "${op_else}" | tr '@' '\n'
-		$as_echo "${op_indent2}tme_memory${type}_${op}${size}(mem${op_x}${type_lock}, align_min, bus_boundary)${op_semi} \\"
+		AS_ECHO(["${op_indent1}/* otherwise, if the memory is not larger than the emulated \\"])
+		AS_ECHO(["${op_indent1}   bus boundary, or if size-alignment would mean an atomic \\"])
+		AS_ECHO(["${op_indent1}   host access and it is size-aligned, do a single atomic \\"])
+		AS_ECHO(["${op_indent1}   ${op}, which may be direct or slow: */ \\"])
+		AS_ECHO(["${op_else_if}" | tr '@' '\n'])
+		AS_ECHO(["${op_indent1}(__tme_predict_true((sizeof(tme_uint${size}_t) <= (bus_boundary) \\"])
+		AS_ECHO(["${op_indent1}                     || (TME_MEMORY_ALIGNMENT_ATOMIC(tme_uint${size}_t) != 0 \\"])
+		AS_ECHO(["${op_indent1}                         && TME_MEMORY_ALIGNMENT_ATOMIC(tme_uint${size}_t) <= sizeof(tme_uint${size}_t))) \\"])
+		AS_ECHO(["${op_indent1}                    && _tme_memory_address_test(mem, sizeof(tme_uint${size}_t) - 1, align_min) == 0)) \\"])
+		AS_ECHO(["${op_then}"])
+		AS_ECHO(["${op_indent2}tme_memory_atomic_${op}${size}(mem${op_x}, lock, sizeof(tme_uint${size}_t))${op_semi} \\"])
+		AS_ECHO(["${op_indent1}/* otherwise, we must do a slow bus ${op}: */ \\"])
+		AS_ECHO(["${op_else}" | tr '@' '\n'])
+		AS_ECHO(["${op_indent2}tme_memory${type}_${op}${size}(mem${op_x}${type_lock}, align_min, bus_boundary)${op_semi} \\"])
 		;;
 
 	    esac
 
 	    # close this macro:
 	    #
-	    $as_echo "${op_close}" | tr '@' '\n'
+	    AS_ECHO(["${op_close}" | tr '@' '\n'])
 	done
     done
 
-    $as_echo ""
-    $as_echo "/* the ${size}-bit atomic operations: */"
+    AS_ECHO([""])
+    AS_ECHO(["/* the ${size}-bit atomic operations: */"])
 
     # the atomic operations.  NB that cx, read, and write are
     # deliberately at the end and in that order, to allow all earlier
@@ -1205,142 +1205,142 @@ for size in ${sizes}; do
 	# if we're making the header, just emit a prototype:
 	#
 	if $header; then
-	    $as_echo "${op_rval} tme_memory_atomic_${op}${size} _TME_P((${op_const}tme_shared tme_uint${size}_t *${op_proto_operand}, tme_rwlock_t *, unsigned int));"
+	    AS_ECHO(["${op_rval} tme_memory_atomic_${op}${size} _TME_P((${op_const}tme_shared tme_uint${size}_t *${op_proto_operand}, tme_rwlock_t *, unsigned int));"])
 	    continue
 	fi
 
-	$as_echo ""
-	$as_echo "/* undefine any macro version of tme_memory_atomic_${op}${size}: */"
-	$as_echo "#undef tme_memory_atomic_${op}${size}"
-	$as_echo ""
-	$as_echo "/* the ${size}-bit atomic ${op} function: */"
-	$as_echo "${op_rval}"
-	$as_echo "tme_memory_atomic_${op}${size}(${op_const}tme_shared tme_uint${size}_t *memory,"
+	AS_ECHO([""])
+	AS_ECHO(["/* undefine any macro version of tme_memory_atomic_${op}${size}: */"])
+	AS_ECHO(["#undef tme_memory_atomic_${op}${size}"])
+	AS_ECHO([""])
+	AS_ECHO(["/* the ${size}-bit atomic ${op} function: */"])
+	AS_ECHO(["${op_rval}"])
+	AS_ECHO(["tme_memory_atomic_${op}${size}(${op_const}tme_shared tme_uint${size}_t *memory,"])
 	if test ${op} = cx; then
-	    $as_echo "                        tme_uint${size}_t value_cmp,"
+	    AS_ECHO(["                        tme_uint${size}_t value_cmp,"])
 	fi
 	if test "x${op_proto_operand}" != x; then
-	    $as_echo "                        tme_uint${size}_t ${op_operand},"
+	    AS_ECHO(["                        tme_uint${size}_t ${op_operand},"])
 	fi
-	$as_echo "                        tme_rwlock_t *rwlock,"
-	$as_echo "                        unsigned int align_min)"
-	$as_echo "{"
+	AS_ECHO(["                        tme_rwlock_t *rwlock,"])
+	AS_ECHO(["                        unsigned int align_min)"])
+	AS_ECHO(["{"])
 	if test ${op} != write; then
-	    $as_echo "  tme_uint${size}_t value_read;"
+	    AS_ECHO(["  tme_uint${size}_t value_read;"])
 	fi
 	if test "x${op_operation}" != x; then
-	    $as_echo "  tme_uint${size}_t value_written;"
+	    AS_ECHO(["  tme_uint${size}_t value_written;"])
 	fi
 	if test ${op} = read || test ${op} = write || test ${op} = cx; then :; else
-	    $as_echo "  tme_uint${size}_t value_read_verify;"
+	    AS_ECHO(["  tme_uint${size}_t value_read_verify;"])
 	fi
-	$as_echo ""
-	$as_echo "  /* if we can't make direct accesses at all, all atomic"
-	$as_echo "     accesses must be done under lock.  (when threads are"
-	$as_echo "     cooperative the actual locking isn't needed): */"
-	$as_echo "  if (TME_MEMORY_ALIGNMENT_ATOMIC(TME_MEMORY_TYPE_COMMON) == 0) {"
-	$as_echo "    if (!tme_thread_cooperative()) {"
+	AS_ECHO([""])
+	AS_ECHO(["  /* if we can't make direct accesses at all, all atomic"])
+	AS_ECHO(["     accesses must be done under lock.  (when threads are"])
+	AS_ECHO(["     cooperative the actual locking isn't needed): */"])
+	AS_ECHO(["  if (TME_MEMORY_ALIGNMENT_ATOMIC(TME_MEMORY_TYPE_COMMON) == 0) {"])
+	AS_ECHO(["    if (!tme_thread_cooperative()) {"])
 	if test ${op} = read; then
-	    $as_echo "      tme_rwlock_rdlock(rwlock);"
+	    AS_ECHO(["      tme_rwlock_rdlock(rwlock);"])
 	else
-	    $as_echo "      tme_rwlock_wrlock(rwlock);"
+	    AS_ECHO(["      tme_rwlock_wrlock(rwlock);"])
 	fi
-	$as_echo "    }"
+	AS_ECHO(["    }"])
 	if test ${op} != write; then
-	    $as_echo "    value_read = tme_memory_read${size}((_tme_const tme_uint${size}_t *) memory, align_min);"
+	    AS_ECHO(["    value_read = tme_memory_read${size}((_tme_const tme_uint${size}_t *) memory, align_min);"])
 	fi
 	if test ${op} = cx; then
-	    $as_echo "    if (value_read == value_cmp) {"
+	    AS_ECHO(["    if (value_read == value_cmp) {"])
 	fi
 	if test "x${op_operation}" != x; then
-	    $as_echo "    value_written = ${op_operation};"
+	    AS_ECHO(["    value_written = ${op_operation};"])
 	fi
 	if test ${op} != read; then
-	    $as_echo "${op_indent}    tme_memory_write${size}((tme_uint${size}_t *) memory, value_written, align_min);"
+	    AS_ECHO(["${op_indent}    tme_memory_write${size}((tme_uint${size}_t *) memory, value_written, align_min);"])
 	fi
 	if test "x${op_indent}" != x; then
-	    $as_echo "    }"
+	    AS_ECHO(["    }"])
 	fi
-	$as_echo "    if (!tme_thread_cooperative()) {"
+	AS_ECHO(["    if (!tme_thread_cooperative()) {"])
 	if test ${op} = read; then
-	    $as_echo "      tme_rwlock_rdunlock(rwlock);"
+	    AS_ECHO(["      tme_rwlock_rdunlock(rwlock);"])
 	else
-	    $as_echo "      tme_rwlock_wrunlock(rwlock);"
+	    AS_ECHO(["      tme_rwlock_wrunlock(rwlock);"])
 	fi
-	$as_echo "    }"
-	$as_echo "  }"
-	$as_echo ""
-	$as_echo "  /* otherwise, threads are not cooperative and this host CPU"
-	$as_echo "     can make atomic accesses to at least the most common memory"
-	$as_echo "     size."
-	$as_echo ""
-	$as_echo "     in that case, the only reason this function should get"
-	$as_echo "     called is if the host CPU can't do an atomic ${size}-bit"
-	$as_echo "     ${op} at all, or if it can't do it at this alignment."
+	AS_ECHO(["    }"])
+	AS_ECHO(["  }"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* otherwise, threads are not cooperative and this host CPU"])
+	AS_ECHO(["     can make atomic accesses to at least the most common memory"])
+	AS_ECHO(["     size."])
+	AS_ECHO([""])
+	AS_ECHO(["     in that case, the only reason this function should get"])
+	AS_ECHO(["     called is if the host CPU can't do an atomic ${size}-bit"])
+	AS_ECHO(["     ${op} at all, or if it can't do it at this alignment."])
 	if test ${op} = read || test ${op} = write || test ${op} = cx; then
-	    $as_echo ""
-	    $as_echo "     we assume that these problematic atomic ${op}s are rare,"
-	    $as_echo "     and to emulate them we simply stop all other threads while"
-	    $as_echo "     doing the ${op}: */"
-	    $as_echo "  else {"
-	    $as_echo "    tme_thread_suspend_others();"
+	    AS_ECHO([""])
+	    AS_ECHO(["     we assume that these problematic atomic ${op}s are rare,"])
+	    AS_ECHO(["     and to emulate them we simply stop all other threads while"])
+	    AS_ECHO(["     doing the ${op}: */"])
+	    AS_ECHO(["  else {"])
+	    AS_ECHO(["    tme_thread_suspend_others();"])
 	    if test ${op} != write; then
-		$as_echo "    value_read = tme_memory_read${size}((_tme_const tme_uint${size}_t *) memory, align_min);"
+		AS_ECHO(["    value_read = tme_memory_read${size}((_tme_const tme_uint${size}_t *) memory, align_min);"])
 	    fi
 	    if test ${op} = cx; then
-		$as_echo "    if (value_read == value_cmp) {"
+		AS_ECHO(["    if (value_read == value_cmp) {"])
 	    fi
 	    if test ${op} != read; then
-		$as_echo "${op_indent}    tme_memory_write${size}((tme_uint${size}_t *) memory, value_written, align_min);"
+		AS_ECHO(["${op_indent}    tme_memory_write${size}((tme_uint${size}_t *) memory, value_written, align_min);"])
 	    fi
 	    if test "x${op_indent}" != x; then
-		$as_echo "    }"
+		AS_ECHO(["    }"])
 	    fi
-	    $as_echo "    tme_thread_resume_others();"
-	    $as_echo "  }"
+	    AS_ECHO(["    tme_thread_resume_others();"])
+	    AS_ECHO(["  }"])
 	else
-	    $as_echo ""
-	    $as_echo "     we emulate the atomic ${size}-bit ${op} with a compare-and-exchange: */"
-	    $as_echo "  else {"
-	    $as_echo ""
-	    $as_echo "    /* do an atomic read of the memory: */"
-	    $as_echo "    value_read = tme_memory_atomic_read${size}(memory, rwlock, align_min);"
-	    $as_echo ""
-	    $as_echo "    /* spin the ${op} in a compare-and-exchange loop: */"
-	    $as_echo "    for (;;) {"
+	    AS_ECHO([""])
+	    AS_ECHO(["     we emulate the atomic ${size}-bit ${op} with a compare-and-exchange: */"])
+	    AS_ECHO(["  else {"])
+	    AS_ECHO([""])
+	    AS_ECHO(["    /* do an atomic read of the memory: */"])
+	    AS_ECHO(["    value_read = tme_memory_atomic_read${size}(memory, rwlock, align_min);"])
+	    AS_ECHO([""])
+	    AS_ECHO(["    /* spin the ${op} in a compare-and-exchange loop: */"])
+	    AS_ECHO(["    for (;;) {"])
 	    if test "x${op_operation}" != x; then
-		$as_echo ""
-		$as_echo "      /* make the value to write: */"
-		$as_echo "      value_written = ${op_operation};"
+		AS_ECHO([""])
+		AS_ECHO(["      /* make the value to write: */"])
+		AS_ECHO(["      value_written = ${op_operation};"])
 	    fi
-	    $as_echo ""
-	    $as_echo "      /* try the compare-and-exchange: */"
-	    $as_echo "      value_read_verify = tme_memory_atomic_cx${size}(memory, value_read, value_written, rwlock, align_min);"
-	    $as_echo ""
-	    $as_echo "      /* if the compare-and-exchange failed: */"
-	    $as_echo "      if (__tme_predict_false(value_read_verify != value_read)) {"
-	    $as_echo ""
-	    $as_echo "        /* loop with the new value read from the memory: */"
-	    $as_echo "        value_read = value_read_verify;"
-	    $as_echo "        continue;"
-	    $as_echo "      }"
-	    $as_echo ""
-	    $as_echo "      /* stop now: */"
-	    $as_echo "      break;"
-	    $as_echo "    }"
-	    $as_echo "  }"
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* try the compare-and-exchange: */"])
+	    AS_ECHO(["      value_read_verify = tme_memory_atomic_cx${size}(memory, value_read, value_written, rwlock, align_min);"])
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* if the compare-and-exchange failed: */"])
+	    AS_ECHO(["      if (__tme_predict_false(value_read_verify != value_read)) {"])
+	    AS_ECHO([""])
+	    AS_ECHO(["        /* loop with the new value read from the memory: */"])
+	    AS_ECHO(["        value_read = value_read_verify;"])
+	    AS_ECHO(["        continue;"])
+	    AS_ECHO(["      }"])
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* stop now: */"])
+	    AS_ECHO(["      break;"])
+	    AS_ECHO(["    }"])
+	    AS_ECHO(["  }"])
 	fi
 	if test ${op} != write; then
-	    $as_echo ""
-	    $as_echo "  /* return the value read: */"
-	    $as_echo "  return (value_read);"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* return the value read: */"])
+	    AS_ECHO(["  return (value_read);"])
 	fi
-	$as_echo "}"
+	AS_ECHO(["}"])
     done
 
     if test `expr ${size} \>= ${size_ifdef}` = 1; then
-	$as_echo ""
-	$as_echo "#endif /* TME_HAVE_INT${size}_T */"
+	AS_ECHO([""])
+	AS_ECHO(["#endif /* TME_HAVE_INT${size}_T */"])
     fi
 
 done

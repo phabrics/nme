@@ -81,7 +81,7 @@ EOF
 	#
 	opmode_bitmap=0
 	opmode_bit=1
-	$as_echo_n "  "
+	AS_ECHO_N(["  "])
 	;;
 
 	table)
@@ -104,7 +104,7 @@ EOF
 	    # this byte:
 	    #
 	    if test ${what} = bitmap && test ${opmode_bit} = 256; then
-		$as_echo_n "${opmode_bitmap}, "
+		AS_ECHO_N(["${opmode_bitmap}, "])
 		opmode_bitmap=0
 		opmode_bit=1
 	    fi
@@ -225,42 +225,42 @@ EOF
 
 	    table)
 	    
-		$as_echo ""
-		$as_echo "  /* opmode ${opmode}: */"
-		$as_echo_n "  { "
+		AS_ECHO([""])
+		AS_ECHO(["  /* opmode ${opmode}: */"])
+		AS_ECHO_N(["  { "])
 
 		# the function:
 		#
 		if test "x${name}" = x; then
-		    $as_echo_n "NULL"
-		    $as_echo_n ", 0"
+		    AS_ECHO_N(["NULL"])
+		    AS_ECHO_N([", 0"])
 		    fpu_types=TME_M68K_FPU_NONE
 		elif test "x${name_ieee754}" != x; then
-		    $as_echo_n "NULL"
-		    $as_echo_n ", TME_M6888X_IEEE754_OP(tme_ieee754_ops_extended80_${name_ieee754})"
+		    AS_ECHO_N(["NULL"])
+		    AS_ECHO_N([", TME_M6888X_IEEE754_OP(tme_ieee754_ops_extended80_${name_ieee754})"])
 		else
-		    $as_echo_n "_tme_m6888x_f${name}"
-		    $as_echo_n ", 0"
+		    AS_ECHO_N(["_tme_m6888x_f${name}"])
+		    AS_ECHO_N([", 0"])
 		fi
 
 		# the m6888x types:
 		#
-		$as_echo_n ", ${fpu_types}"
+		AS_ECHO_N([", ${fpu_types}"])
 
 		# the operation type:
 		#
 		if test ${optype} != MONADIC; then optype="DYADIC_${optype}"; fi
-		$as_echo_n ", TME_M6888X_OPTYPE_${optype}"
+		AS_ECHO_N([", TME_M6888X_OPTYPE_${optype}"])
 
 		# the rounding mode:
 		#
-		$as_echo_n ", TME_FLOAT_ROUND_${rounding_mode}"
+		AS_ECHO_N([", TME_FLOAT_ROUND_${rounding_mode}"])
 	
 		# the rounding precision:
 		#
-		$as_echo_n ", TME_M6888X_ROUNDING_PRECISION_${rounding_precision}"
+		AS_ECHO_N([", TME_M6888X_ROUNDING_PRECISION_${rounding_precision}"])
 
-		$as_echo " },"
+		AS_ECHO([" },"])
 		;;
 	    esac
 	done
@@ -270,12 +270,12 @@ EOF
 	case ${what} in
 
 	bitmap)
-	    $as_echo "${opmode_bitmap}"
-	    $as_echo "};"
+	    AS_ECHO(["${opmode_bitmap}"])
+	    AS_ECHO(["};"])
 	    ;;
 
 	table)
-	    $as_echo "};"
+	    AS_ECHO(["};"])
 	    ;;
 	esac
 

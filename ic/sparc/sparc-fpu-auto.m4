@@ -53,7 +53,7 @@ EOF
 
 # the precision information helper script:
 #
-ieee754_precision_sh=`$as_echo $0 | sed -e "s%$PROG%../ieee754/ieee754-precision.sh%"`
+ieee754_precision_sh=`AS_ECHO([$0]) | sed -e "s%$PROG%../ieee754/ieee754-precision.sh%"`
 
 # permute for the different precisions:
 #
@@ -154,8 +154,8 @@ EOF
 done
 
 if $header; then :; else
-    $as_echo "#define _TME_SPARC_FPU_UNIMPL tme_sparc_fpu_exception(ic, TME_SPARC_FSR_FTT_unimplemented_FPop)"
-    $as_echo "#define _TME_SPARC_FPU_UNIMPL_IF(flags) do { if ((ic->tme_sparc_fpu_flags & (flags)) != 0) { _TME_SPARC_FPU_UNIMPL; } } while (/* CONSTCOND */ 0)"
+    AS_ECHO(["#define _TME_SPARC_FPU_UNIMPL tme_sparc_fpu_exception(ic, TME_SPARC_FSR_FTT_unimplemented_FPop)"])
+    AS_ECHO(["#define _TME_SPARC_FPU_UNIMPL_IF(flags) do { if ((ic->tme_sparc_fpu_flags & (flags)) != 0) { _TME_SPARC_FPU_UNIMPL; } } while (/* CONSTCOND */ 0)"])
 fi
 quad="_TME_SPARC_FPU_UNIMPL_IF(TME_SPARC_FPU_FLAG_NO_QUAD);"
 
@@ -169,123 +169,123 @@ for fpop in fpop1 fpop2; do
 	
 	# open the function:
 	#
-	$as_echo ""
-	$as_echo "void"
-	$as_echo "tme_sparc_fpu_${fpop}(struct tme_sparc *ic)"
-	$as_echo "{"
-	$as_echo "  tme_uint8_t rounding_mode;"
-	$as_echo "  unsigned int opf;"
-	$as_echo "  unsigned int fpreg_rd_number_encoded;"
-	$as_echo "  unsigned int fpreg_rd_number;"
-	$as_echo "  const struct tme_float *fpreg_rs1;"
-	$as_echo "  const struct tme_float *fpreg_rs2;"
+	AS_ECHO([""])
+	AS_ECHO(["void"])
+	AS_ECHO(["tme_sparc_fpu_${fpop}(struct tme_sparc *ic)"])
+	AS_ECHO(["{"])
+	AS_ECHO(["  tme_uint8_t rounding_mode;"])
+	AS_ECHO(["  unsigned int opf;"])
+	AS_ECHO(["  unsigned int fpreg_rd_number_encoded;"])
+	AS_ECHO(["  unsigned int fpreg_rd_number;"])
+	AS_ECHO(["  const struct tme_float *fpreg_rs1;"])
+	AS_ECHO(["  const struct tme_float *fpreg_rs2;"])
 	if test ${fpop} = fpop1; then
-	    $as_echo "  struct tme_float fpreg_rs1_buffer;"
-	    $as_echo "  struct tme_float fpreg_rs2_buffer;"
+	    AS_ECHO(["  struct tme_float fpreg_rs1_buffer;"])
+	    AS_ECHO(["  struct tme_float fpreg_rs2_buffer;"])
 	else
-	    $as_echo "  unsigned int cc;"
-	    $as_echo "  tme_uint32_t conds_mask;"
-	    $as_echo "  unsigned int cc_i;"
-	    $as_echo "  tme_uint32_t cond;"
+	    AS_ECHO(["  unsigned int cc;"])
+	    AS_ECHO(["  tme_uint32_t conds_mask;"])
+	    AS_ECHO(["  unsigned int cc_i;"])
+	    AS_ECHO(["  tme_uint32_t cond;"])
 	fi
-	$as_echo "  struct tme_float fpreg_rd;"
-	$as_echo "  unsigned int fpreg_rd_format;"
+	AS_ECHO(["  struct tme_float fpreg_rd;"])
+	AS_ECHO(["  unsigned int fpreg_rd_format;"])
 
-	$as_echo ""
-	$as_echo "  /* set the rounding mode: */"
-	$as_echo "  switch (ic->tme_sparc_fpu_fsr & TME_SPARC_FSR_RND) {"
-	$as_echo "  default: assert(FALSE);"
-	$as_echo "  case TME_SPARC_FSR_RND_RN: rounding_mode = TME_FLOAT_ROUND_NEAREST_EVEN; break;"
-	$as_echo "  case TME_SPARC_FSR_RND_RZ: rounding_mode = TME_FLOAT_ROUND_TO_ZERO; break;"
-	$as_echo "  case TME_SPARC_FSR_RND_RM: rounding_mode = TME_FLOAT_ROUND_DOWN; break;"
-	$as_echo "  case TME_SPARC_FSR_RND_RP: rounding_mode = TME_FLOAT_ROUND_UP; break;"
-	$as_echo "  }"
-	$as_echo "  ic->tme_sparc_fpu_ieee754_ctl.tme_ieee754_ctl_rounding_mode = rounding_mode;"
+	AS_ECHO([""])
+	AS_ECHO(["  /* set the rounding mode: */"])
+	AS_ECHO(["  switch (ic->tme_sparc_fpu_fsr & TME_SPARC_FSR_RND) {"])
+	AS_ECHO(["  default: assert(FALSE);"])
+	AS_ECHO(["  case TME_SPARC_FSR_RND_RN: rounding_mode = TME_FLOAT_ROUND_NEAREST_EVEN; break;"])
+	AS_ECHO(["  case TME_SPARC_FSR_RND_RZ: rounding_mode = TME_FLOAT_ROUND_TO_ZERO; break;"])
+	AS_ECHO(["  case TME_SPARC_FSR_RND_RM: rounding_mode = TME_FLOAT_ROUND_DOWN; break;"])
+	AS_ECHO(["  case TME_SPARC_FSR_RND_RP: rounding_mode = TME_FLOAT_ROUND_UP; break;"])
+	AS_ECHO(["  }"])
+	AS_ECHO(["  ic->tme_sparc_fpu_ieee754_ctl.tme_ieee754_ctl_rounding_mode = rounding_mode;"])
 
-	$as_echo ""
-	$as_echo "  /* decode the rd and opf fields: */"
-	$as_echo "  fpreg_rd_number_encoded = TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, TME_SPARC_FORMAT3_MASK_RD);"
-	$as_echo "  opf = TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, (0x1ff << 5));"
+	AS_ECHO([""])
+	AS_ECHO(["  /* decode the rd and opf fields: */"])
+	AS_ECHO(["  fpreg_rd_number_encoded = TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, TME_SPARC_FORMAT3_MASK_RD);"])
+	AS_ECHO(["  opf = TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, (0x1ff << 5));"])
 
-	$as_echo ""
-	$as_echo "  /* silence uninitialized variable warnings: */"
-	$as_echo "  fpreg_rd_number = 0;"
+	AS_ECHO([""])
+	AS_ECHO(["  /* silence uninitialized variable warnings: */"])
+	AS_ECHO(["  fpreg_rd_number = 0;"])
 
-	$as_echo ""
-	$as_echo "#ifdef _TME_SPARC_RECODE_VERIFY"
-	$as_echo "  /* clear the rd buffer: */"
-	$as_echo "  memset(&fpreg_rd, 0, sizeof(fpreg_rd));"
-	$as_echo "#endif /* _TME_SPARC_RECODE_VERIFY */"
+	AS_ECHO([""])
+	AS_ECHO(["#ifdef _TME_SPARC_RECODE_VERIFY"])
+	AS_ECHO(["  /* clear the rd buffer: */"])
+	AS_ECHO(["  memset(&fpreg_rd, 0, sizeof(fpreg_rd));"])
+	AS_ECHO(["#endif /* _TME_SPARC_RECODE_VERIFY */"])
 
 	fmovcc=
 	if test ${fpop} = fpop2; then
 	    fmovcc=cc
-	    $as_echo ""
-	    $as_echo "  /* if this is an FMOVcc: */"
-	    $as_echo "  if (((opf - 1) & 0x3f) < 3) {"
-	    $as_echo ""
-	    $as_echo "    /* if opf bit eight is set, this uses integer condition codes: */"
-	    $as_echo "    if (opf & TME_BIT(8)) {"
-	    $as_echo ""
-	    $as_echo "      /* if opf bit six is set, this is unimplemented: */"
-	    $as_echo "      if (__tme_predict_false(opf & TME_BIT(6))) {"
-	    $as_echo "        _TME_SPARC_FPU_UNIMPL;"
-	    $as_echo "      }"
-	    $as_echo ""
-	    $as_echo "      /* get %icc or %xcc, depending on opf bit seven: */"
-	    $as_echo "      cc = ic->tme_sparc64_ireg_ccr;"
-	    $as_echo "      if (opf & TME_BIT(7)) {"
-	    $as_echo "        cc /= (TME_SPARC64_CCR_XCC / TME_SPARC64_CCR_ICC);"
-	    $as_echo "      }"
-	    $as_echo "      cc = TME_FIELD_MASK_EXTRACTU(cc, TME_SPARC64_CCR_ICC);"
-	    $as_echo ""
-	    $as_echo "      /* get the conditions mask: */"
-	    $as_echo "      conds_mask = _tme_sparc_conds_icc[[cc]];"
-	    $as_echo "    }"
-	    $as_echo ""
-	    $as_echo "    /* otherwise, this uses floating-point condition codes: */"
-	    $as_echo "    else {"
-	    $as_echo ""
-	    $as_echo "      /* get the right %fcc: */"
-	    $as_echo "      cc_i = TME_FIELD_MASK_EXTRACTU(opf, (0x3 << 6));"
-	    $as_echo "      if (cc_i == 0) {"
-	    $as_echo "        cc = TME_FIELD_MASK_EXTRACTU(ic->tme_sparc_fpu_fsr, TME_SPARC_FSR_FCC);"
-	    $as_echo "      }"
-	    $as_echo "      else {"
-	    $as_echo "        cc = (ic->tme_sparc_fpu_xfsr >> (2 * (cc_i - 1))) & 0x3;"
-	    $as_echo "      }"
-	    $as_echo ""
-	    $as_echo "      /* get the conditions mask: */"
-	    $as_echo "      conds_mask = _tme_sparc_conds_fcc[[cc]];"
-	    $as_echo "    }"
-	    $as_echo ""
-	    $as_echo "    /* add the not-conditions to the conditions mask: */"
-	    $as_echo "    conds_mask += ((~conds_mask) << 8);"
-	    $as_echo ""
-	    $as_echo "    /* get the cond field: */"
-	    $as_echo "    cond = TME_BIT(TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, (0xf << 14)));"
-  	    $as_echo ""
-	    $as_echo "    /* if the condition is not true: */"
-	    $as_echo "    if (!(conds_mask & cond)) {"
-	    $as_echo ""
-	    $as_echo "      /* return now: */"
-	    $as_echo "      /* NB that this may expose us to guests, since we do not check"
-	    $as_echo "         that the floating-point register numbers are valid: */"
-	    $as_echo "      return;"
-	    $as_echo "    }"
-	    $as_echo ""
-	    $as_echo "    /* clear bits six, seven, and eight in opf: */"
-	    $as_echo "    opf &= 0x3f;"
-	    $as_echo "  }"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* if this is an FMOVcc: */"])
+	    AS_ECHO(["  if (((opf - 1) & 0x3f) < 3) {"])
+	    AS_ECHO([""])
+	    AS_ECHO(["    /* if opf bit eight is set, this uses integer condition codes: */"])
+	    AS_ECHO(["    if (opf & TME_BIT(8)) {"])
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* if opf bit six is set, this is unimplemented: */"])
+	    AS_ECHO(["      if (__tme_predict_false(opf & TME_BIT(6))) {"])
+	    AS_ECHO(["        _TME_SPARC_FPU_UNIMPL;"])
+	    AS_ECHO(["      }"])
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* get %icc or %xcc, depending on opf bit seven: */"])
+	    AS_ECHO(["      cc = ic->tme_sparc64_ireg_ccr;"])
+	    AS_ECHO(["      if (opf & TME_BIT(7)) {"])
+	    AS_ECHO(["        cc /= (TME_SPARC64_CCR_XCC / TME_SPARC64_CCR_ICC);"])
+	    AS_ECHO(["      }"])
+	    AS_ECHO(["      cc = TME_FIELD_MASK_EXTRACTU(cc, TME_SPARC64_CCR_ICC);"])
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* get the conditions mask: */"])
+	    AS_ECHO(["      conds_mask = _tme_sparc_conds_icc[[cc]];"])
+	    AS_ECHO(["    }"])
+	    AS_ECHO([""])
+	    AS_ECHO(["    /* otherwise, this uses floating-point condition codes: */"])
+	    AS_ECHO(["    else {"])
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* get the right %fcc: */"])
+	    AS_ECHO(["      cc_i = TME_FIELD_MASK_EXTRACTU(opf, (0x3 << 6));"])
+	    AS_ECHO(["      if (cc_i == 0) {"])
+	    AS_ECHO(["        cc = TME_FIELD_MASK_EXTRACTU(ic->tme_sparc_fpu_fsr, TME_SPARC_FSR_FCC);"])
+	    AS_ECHO(["      }"])
+	    AS_ECHO(["      else {"])
+	    AS_ECHO(["        cc = (ic->tme_sparc_fpu_xfsr >> (2 * (cc_i - 1))) & 0x3;"])
+	    AS_ECHO(["      }"])
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* get the conditions mask: */"])
+	    AS_ECHO(["      conds_mask = _tme_sparc_conds_fcc[[cc]];"])
+	    AS_ECHO(["    }"])
+	    AS_ECHO([""])
+	    AS_ECHO(["    /* add the not-conditions to the conditions mask: */"])
+	    AS_ECHO(["    conds_mask += ((~conds_mask) << 8);"])
+	    AS_ECHO([""])
+	    AS_ECHO(["    /* get the cond field: */"])
+	    AS_ECHO(["    cond = TME_BIT(TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, (0xf << 14)));"])
+  	    AS_ECHO([""])
+	    AS_ECHO(["    /* if the condition is not true: */"])
+	    AS_ECHO(["    if (!(conds_mask & cond)) {"])
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* return now: */"])
+	    AS_ECHO(["      /* NB that this may expose us to guests, since we do not check"])
+	    AS_ECHO(["         that the floating-point register numbers are valid: */"])
+	    AS_ECHO(["      return;"])
+	    AS_ECHO(["    }"])
+	    AS_ECHO([""])
+	    AS_ECHO(["    /* clear bits six, seven, and eight in opf: */"])
+	    AS_ECHO(["    opf &= 0x3f;"])
+	    AS_ECHO(["  }"])
 	fi
 
-	$as_echo ""
-	$as_echo "  /* dispatch on the opf field: */"
-	$as_echo "  switch (opf) {"
-	$as_echo "#define _TME_SPARC_FPU_FORMAT_RS1(format) fpreg_rs1 = tme_sparc_fpu_fpreg_read(ic, TME_SPARC_FORMAT3_MASK_RS1, (format))"
-	$as_echo "#define _TME_SPARC_FPU_FORMAT_RS2(format) fpreg_rs2 = tme_sparc_fpu_fpreg_read(ic, TME_SPARC_FORMAT3_MASK_RS2, (format))"
-	$as_echo "#define _TME_SPARC_FPU_FORMAT_RD(format) do { fpreg_rd_format = (format) | TME_IEEE754_FPREG_FORMAT_BUILTIN; fpreg_rd_number = tme_sparc_fpu_fpreg_decode(ic, fpreg_rd_number_encoded, fpreg_rd_format); } while (/* CONSTCOND */ 0)"
-	$as_echo ""
+	AS_ECHO([""])
+	AS_ECHO(["  /* dispatch on the opf field: */"])
+	AS_ECHO(["  switch (opf) {"])
+	AS_ECHO(["#define _TME_SPARC_FPU_FORMAT_RS1(format) fpreg_rs1 = tme_sparc_fpu_fpreg_read(ic, TME_SPARC_FORMAT3_MASK_RS1, (format))"])
+	AS_ECHO(["#define _TME_SPARC_FPU_FORMAT_RS2(format) fpreg_rs2 = tme_sparc_fpu_fpreg_read(ic, TME_SPARC_FORMAT3_MASK_RS2, (format))"])
+	AS_ECHO(["#define _TME_SPARC_FPU_FORMAT_RD(format) do { fpreg_rd_format = (format) | TME_IEEE754_FPREG_FORMAT_BUILTIN; fpreg_rd_number = tme_sparc_fpu_fpreg_decode(ic, fpreg_rd_number_encoded, fpreg_rd_format); } while (/* CONSTCOND */ 0)"])
+	AS_ECHO([""])
 
 	# permute over the opf field:
 	#
@@ -315,480 +315,480 @@ for fpop in fpop1 fpop2; do
 	    default=false
 	    case "${fpop}:${opf}" in
 	    fpop1:011000100)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FiTOs: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_BEGIN;"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_single_from_int32,"
-		$as_echo "                              fpreg_rs2->tme_float_value_ieee754_single, &fpreg_rd);"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FiTOs: */"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"])
+		AS_ECHO(["    _TME_SPARC_FPU_BEGIN;"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_single_from_int32,"])
+		AS_ECHO(["                              fpreg_rs2->tme_float_value_ieee754_single, &fpreg_rd);"])
 		;;
 	    fpop1:011001000)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FiTOd: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "    _TME_SPARC_FPU_BEGIN;"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_from_int32,"
-		$as_echo "                              fpreg_rs2->tme_float_value_ieee754_single, &fpreg_rd);"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FiTOd: */"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"])
+		AS_ECHO(["    _TME_SPARC_FPU_BEGIN;"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_from_int32,"])
+		AS_ECHO(["                              fpreg_rs2->tme_float_value_ieee754_single, &fpreg_rd);"])
 		;;
 	    fpop1:011001100)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FiTOq: */"
-		$as_echo "    ${quad}"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"
-		$as_echo "    _TME_SPARC_FPU_BEGIN;"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_from_int32,"
-		$as_echo "                              fpreg_rs2->tme_float_value_ieee754_single, &fpreg_rd);"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FiTOq: */"])
+		AS_ECHO(["    ${quad}"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"])
+		AS_ECHO(["    _TME_SPARC_FPU_BEGIN;"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_from_int32,"])
+		AS_ECHO(["                              fpreg_rs2->tme_float_value_ieee754_single, &fpreg_rd);"])
 		;;
 	    fpop1:010000100)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FxTOs: */"
-		$as_echo "#ifdef TME_HAVE_INT64_T"
-		$as_echo "    if (__tme_predict_true(TME_SPARC_VERSION(ic) >= 9)) {"
-		$as_echo "      _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "      _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "      _TME_SPARC_FPU_BEGIN;"
-		$as_echo "      _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_single_from_int64,"
-		$as_echo "                                fpreg_rs2->tme_float_value_ieee754_double.tme_value64_int, &fpreg_rd);"
-		$as_echo "      break;"
-		$as_echo "    }"
-		$as_echo "#endif /* TME_HAVE_INT64_T */"
-		$as_echo "    _TME_SPARC_FPU_UNIMPL;"
-		$as_echo "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FxTOs: */"])
+		AS_ECHO(["#ifdef TME_HAVE_INT64_T"])
+		AS_ECHO(["    if (__tme_predict_true(TME_SPARC_VERSION(ic) >= 9)) {"])
+		AS_ECHO(["      _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE);"])
+		AS_ECHO(["      _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"])
+		AS_ECHO(["      _TME_SPARC_FPU_BEGIN;"])
+		AS_ECHO(["      _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_single_from_int64,"])
+		AS_ECHO(["                                fpreg_rs2->tme_float_value_ieee754_double.tme_value64_int, &fpreg_rd);"])
+		AS_ECHO(["      break;"])
+		AS_ECHO(["    }"])
+		AS_ECHO(["#endif /* TME_HAVE_INT64_T */"])
+		AS_ECHO(["    _TME_SPARC_FPU_UNIMPL;"])
+		AS_ECHO(["    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"])
 		;;
 	    fpop1:010001000)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FxTOd: */"
-		$as_echo "#ifdef TME_HAVE_INT64_T"
-		$as_echo "    if (__tme_predict_true(TME_SPARC_VERSION(ic) >= 9)) {"
-		$as_echo "      _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "      _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "      _TME_SPARC_FPU_BEGIN;"
-		$as_echo "      _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_from_int64,"
-		$as_echo "                                fpreg_rs2->tme_float_value_ieee754_double.tme_value64_int, &fpreg_rd);"
-		$as_echo "      break;"
-		$as_echo "    }"
-		$as_echo "#endif /* TME_HAVE_INT64_T */"
-		$as_echo "    _TME_SPARC_FPU_UNIMPL;"
-		$as_echo "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FxTOd: */"])
+		AS_ECHO(["#ifdef TME_HAVE_INT64_T"])
+		AS_ECHO(["    if (__tme_predict_true(TME_SPARC_VERSION(ic) >= 9)) {"])
+		AS_ECHO(["      _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE);"])
+		AS_ECHO(["      _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"])
+		AS_ECHO(["      _TME_SPARC_FPU_BEGIN;"])
+		AS_ECHO(["      _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_from_int64,"])
+		AS_ECHO(["                                fpreg_rs2->tme_float_value_ieee754_double.tme_value64_int, &fpreg_rd);"])
+		AS_ECHO(["      break;"])
+		AS_ECHO(["    }"])
+		AS_ECHO(["#endif /* TME_HAVE_INT64_T */"])
+		AS_ECHO(["    _TME_SPARC_FPU_UNIMPL;"])
+		AS_ECHO(["    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"])
 		;;
 	    fpop1:010001100)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FxTOq: */"
-		$as_echo "#ifdef TME_HAVE_INT64_T"
-		$as_echo "    if (__tme_predict_true(TME_SPARC_VERSION(ic) >= 9)) {"
-		$as_echo "      ${quad}"
-		$as_echo "      _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "      _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"
-		$as_echo "      _TME_SPARC_FPU_BEGIN;"
-		$as_echo "      _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_from_int64,"
-		$as_echo "                                fpreg_rs2->tme_float_value_ieee754_double.tme_value64_int, &fpreg_rd);"
-		$as_echo "      break;"
-		$as_echo "    }"
-		$as_echo "#endif /* TME_HAVE_INT64_T */"
-		$as_echo "    _TME_SPARC_FPU_UNIMPL;"
-		$as_echo "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FxTOq: */"])
+		AS_ECHO(["#ifdef TME_HAVE_INT64_T"])
+		AS_ECHO(["    if (__tme_predict_true(TME_SPARC_VERSION(ic) >= 9)) {"])
+		AS_ECHO(["      ${quad}"])
+		AS_ECHO(["      _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE);"])
+		AS_ECHO(["      _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"])
+		AS_ECHO(["      _TME_SPARC_FPU_BEGIN;"])
+		AS_ECHO(["      _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_from_int64,"])
+		AS_ECHO(["                                fpreg_rs2->tme_float_value_ieee754_double.tme_value64_int, &fpreg_rd);"])
+		AS_ECHO(["      break;"])
+		AS_ECHO(["    }"])
+		AS_ECHO(["#endif /* TME_HAVE_INT64_T */"])
+		AS_ECHO(["    _TME_SPARC_FPU_UNIMPL;"])
+		AS_ECHO(["    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"])
 		;;
 	    fpop1:011010001)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FsTOi: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_BEGIN;"
-		$as_echo "    fpreg_rd.tme_float_format = TME_FLOAT_FORMAT_IEEE754_SINGLE;"
-		$as_echo "    ic->tme_sparc_fpu_ieee754_ctl.tme_ieee754_ctl_rounding_mode = TME_FLOAT_ROUND_TO_ZERO;"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_single_to_int32,"
-		$as_echo "                              fpreg_rs2, (tme_int32_t *) &fpreg_rd.tme_float_value_ieee754_single);"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FsTOi: */"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"])
+		AS_ECHO(["    _TME_SPARC_FPU_BEGIN;"])
+		AS_ECHO(["    fpreg_rd.tme_float_format = TME_FLOAT_FORMAT_IEEE754_SINGLE;"])
+		AS_ECHO(["    ic->tme_sparc_fpu_ieee754_ctl.tme_ieee754_ctl_rounding_mode = TME_FLOAT_ROUND_TO_ZERO;"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_single_to_int32,"])
+		AS_ECHO(["                              fpreg_rs2, (tme_int32_t *) &fpreg_rd.tme_float_value_ieee754_single);"])
 		;;
 	    fpop1:011010010)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FdTOi: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_BEGIN;"
-		$as_echo "    fpreg_rd.tme_float_format = TME_FLOAT_FORMAT_IEEE754_SINGLE;"
-		$as_echo "    ic->tme_sparc_fpu_ieee754_ctl.tme_ieee754_ctl_rounding_mode = TME_FLOAT_ROUND_TO_ZERO;"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_to_int32,"
-		$as_echo "                              fpreg_rs2, (tme_int32_t *) &fpreg_rd.tme_float_value_ieee754_single);"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FdTOi: */"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"])
+		AS_ECHO(["    _TME_SPARC_FPU_BEGIN;"])
+		AS_ECHO(["    fpreg_rd.tme_float_format = TME_FLOAT_FORMAT_IEEE754_SINGLE;"])
+		AS_ECHO(["    ic->tme_sparc_fpu_ieee754_ctl.tme_ieee754_ctl_rounding_mode = TME_FLOAT_ROUND_TO_ZERO;"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_to_int32,"])
+		AS_ECHO(["                              fpreg_rs2, (tme_int32_t *) &fpreg_rd.tme_float_value_ieee754_single);"])
 		;;
 	    fpop1:011010011)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FqTOi: */"
-		$as_echo "    ${quad}"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_BEGIN;"
-		$as_echo "    fpreg_rd.tme_float_format = TME_FLOAT_FORMAT_IEEE754_SINGLE;"
-		$as_echo "    ic->tme_sparc_fpu_ieee754_ctl.tme_ieee754_ctl_rounding_mode = TME_FLOAT_ROUND_TO_ZERO;"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_to_int32,"
-		$as_echo "                              fpreg_rs2, (tme_int32_t *) &fpreg_rd.tme_float_value_ieee754_single);"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FqTOi: */"])
+		AS_ECHO(["    ${quad}"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"])
+		AS_ECHO(["    _TME_SPARC_FPU_BEGIN;"])
+		AS_ECHO(["    fpreg_rd.tme_float_format = TME_FLOAT_FORMAT_IEEE754_SINGLE;"])
+		AS_ECHO(["    ic->tme_sparc_fpu_ieee754_ctl.tme_ieee754_ctl_rounding_mode = TME_FLOAT_ROUND_TO_ZERO;"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_to_int32,"])
+		AS_ECHO(["                              fpreg_rs2, (tme_int32_t *) &fpreg_rd.tme_float_value_ieee754_single);"])
 		;;
 	    fpop1:010000001)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FsTOx: */"
-		$as_echo "#ifdef TME_HAVE_INT64_T"
-		$as_echo "    if (__tme_predict_true(TME_SPARC_VERSION(ic) >= 9)) {"
-		$as_echo "      _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "      _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "      _TME_SPARC_FPU_BEGIN;"
-		$as_echo "      fpreg_rd.tme_float_format = TME_FLOAT_FORMAT_IEEE754_DOUBLE;"
-		$as_echo "      ic->tme_sparc_fpu_ieee754_ctl.tme_ieee754_ctl_rounding_mode = TME_FLOAT_ROUND_TO_ZERO;"
-		$as_echo "      _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_single_to_int64,"
-		$as_echo "                                fpreg_rs2, &fpreg_rd.tme_float_value_ieee754_double.tme_value64_int);"
-		$as_echo "      break;"
-		$as_echo "    }"
-		$as_echo "#endif /* TME_HAVE_INT64_T */"
-		$as_echo "    _TME_SPARC_FPU_UNIMPL;"
-		$as_echo "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FsTOx: */"])
+		AS_ECHO(["#ifdef TME_HAVE_INT64_T"])
+		AS_ECHO(["    if (__tme_predict_true(TME_SPARC_VERSION(ic) >= 9)) {"])
+		AS_ECHO(["      _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["      _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"])
+		AS_ECHO(["      _TME_SPARC_FPU_BEGIN;"])
+		AS_ECHO(["      fpreg_rd.tme_float_format = TME_FLOAT_FORMAT_IEEE754_DOUBLE;"])
+		AS_ECHO(["      ic->tme_sparc_fpu_ieee754_ctl.tme_ieee754_ctl_rounding_mode = TME_FLOAT_ROUND_TO_ZERO;"])
+		AS_ECHO(["      _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_single_to_int64,"])
+		AS_ECHO(["                                fpreg_rs2, &fpreg_rd.tme_float_value_ieee754_double.tme_value64_int);"])
+		AS_ECHO(["      break;"])
+		AS_ECHO(["    }"])
+		AS_ECHO(["#endif /* TME_HAVE_INT64_T */"])
+		AS_ECHO(["    _TME_SPARC_FPU_UNIMPL;"])
+		AS_ECHO(["    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"])
 		;;
 	    fpop1:010000010)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FdTOx: */"
-		$as_echo "#ifdef TME_HAVE_INT64_T"
-		$as_echo "    if (__tme_predict_true(TME_SPARC_VERSION(ic) >= 9)) {"
-		$as_echo "      _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "      _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "      _TME_SPARC_FPU_BEGIN;"
-		$as_echo "      fpreg_rd.tme_float_format = TME_FLOAT_FORMAT_IEEE754_DOUBLE;"
-		$as_echo "      ic->tme_sparc_fpu_ieee754_ctl.tme_ieee754_ctl_rounding_mode = TME_FLOAT_ROUND_TO_ZERO;"
-		$as_echo "      _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_to_int64,"
-		$as_echo "                                fpreg_rs2, &fpreg_rd.tme_float_value_ieee754_double.tme_value64_int);"
-		$as_echo "      break;"
-		$as_echo "    }"
-		$as_echo "#endif /* TME_HAVE_INT64_T */"
-		$as_echo "    _TME_SPARC_FPU_UNIMPL;"
-		$as_echo "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FdTOx: */"])
+		AS_ECHO(["#ifdef TME_HAVE_INT64_T"])
+		AS_ECHO(["    if (__tme_predict_true(TME_SPARC_VERSION(ic) >= 9)) {"])
+		AS_ECHO(["      _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["      _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"])
+		AS_ECHO(["      _TME_SPARC_FPU_BEGIN;"])
+		AS_ECHO(["      fpreg_rd.tme_float_format = TME_FLOAT_FORMAT_IEEE754_DOUBLE;"])
+		AS_ECHO(["      ic->tme_sparc_fpu_ieee754_ctl.tme_ieee754_ctl_rounding_mode = TME_FLOAT_ROUND_TO_ZERO;"])
+		AS_ECHO(["      _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_to_int64,"])
+		AS_ECHO(["                                fpreg_rs2, &fpreg_rd.tme_float_value_ieee754_double.tme_value64_int);"])
+		AS_ECHO(["      break;"])
+		AS_ECHO(["    }"])
+		AS_ECHO(["#endif /* TME_HAVE_INT64_T */"])
+		AS_ECHO(["    _TME_SPARC_FPU_UNIMPL;"])
+		AS_ECHO(["    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"])
 		;;
 	    fpop1:010000011)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FqTOx: */"
-		$as_echo "#ifdef TME_HAVE_INT64_T"
-		$as_echo "    if (__tme_predict_true(TME_SPARC_VERSION(ic) >= 9)) {"
-		$as_echo "      ${quad}"
-		$as_echo "      _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "      _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "      _TME_SPARC_FPU_BEGIN;"
-		$as_echo "      fpreg_rd.tme_float_format = TME_FLOAT_FORMAT_IEEE754_DOUBLE;"
-		$as_echo "      ic->tme_sparc_fpu_ieee754_ctl.tme_ieee754_ctl_rounding_mode = TME_FLOAT_ROUND_TO_ZERO;"
-		$as_echo "      _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_to_int64,"
-		$as_echo "                                fpreg_rs2, &fpreg_rd.tme_float_value_ieee754_double.tme_value64_int);"
-		$as_echo "      break;"
-		$as_echo "    }"
-		$as_echo "#endif /* TME_HAVE_INT64_T */"
-		$as_echo "    _TME_SPARC_FPU_UNIMPL;"
-		$as_echo "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FqTOx: */"])
+		AS_ECHO(["#ifdef TME_HAVE_INT64_T"])
+		AS_ECHO(["    if (__tme_predict_true(TME_SPARC_VERSION(ic) >= 9)) {"])
+		AS_ECHO(["      ${quad}"])
+		AS_ECHO(["      _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["      _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"])
+		AS_ECHO(["      _TME_SPARC_FPU_BEGIN;"])
+		AS_ECHO(["      fpreg_rd.tme_float_format = TME_FLOAT_FORMAT_IEEE754_DOUBLE;"])
+		AS_ECHO(["      ic->tme_sparc_fpu_ieee754_ctl.tme_ieee754_ctl_rounding_mode = TME_FLOAT_ROUND_TO_ZERO;"])
+		AS_ECHO(["      _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_to_int64,"])
+		AS_ECHO(["                                fpreg_rs2, &fpreg_rd.tme_float_value_ieee754_double.tme_value64_int);"])
+		AS_ECHO(["      break;"])
+		AS_ECHO(["    }"])
+		AS_ECHO(["#endif /* TME_HAVE_INT64_T */"])
+		AS_ECHO(["    _TME_SPARC_FPU_UNIMPL;"])
+		AS_ECHO(["    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"])
 		;;
 	    fpop1:011001001)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FsTOd: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_from_single,"
-		$as_echo "                              fpreg_rs2, &fpreg_rd);"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FsTOd: */"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_from_single,"])
+		AS_ECHO(["                              fpreg_rs2, &fpreg_rd);"])
 		;;
 	    fpop1:011001101)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FsTOq: */"
-		$as_echo "    ${quad}"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_from_single,"
-		$as_echo "                              fpreg_rs2, &fpreg_rd);"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FsTOq: */"])
+		AS_ECHO(["    ${quad}"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_from_single,"])
+		AS_ECHO(["                              fpreg_rs2, &fpreg_rd);"])
 		;;
 	    fpop1:011000110)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FdTOs: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_single_from_double,"
-		$as_echo "                              fpreg_rs2, &fpreg_rd);"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FdTOs: */"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_single_from_double,"])
+		AS_ECHO(["                              fpreg_rs2, &fpreg_rd);"])
 		;;
 	    fpop1:011001110)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FdTOq: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_from_double,"
-		$as_echo "                              fpreg_rs2, &fpreg_rd);"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FdTOq: */"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_from_double,"])
+		AS_ECHO(["                              fpreg_rs2, &fpreg_rd);"])
 		;;
 	    fpop1:011000111)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FqTOs: */"
-		$as_echo "    ${quad}"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_single_from_quad,"
-		$as_echo "                              fpreg_rs2, &fpreg_rd);"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FqTOs: */"])
+		AS_ECHO(["    ${quad}"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_single_from_quad,"])
+		AS_ECHO(["                              fpreg_rs2, &fpreg_rd);"])
 		;;
 	    fpop1:011001011)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FqTOd: */"
-		$as_echo "    ${quad}"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_from_quad,"
-		$as_echo "                              fpreg_rs2, &fpreg_rd);"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FqTOd: */"])
+		AS_ECHO(["    ${quad}"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_from_quad,"])
+		AS_ECHO(["                              fpreg_rs2, &fpreg_rd);"])
 		;;
 	    fpop1:000000001 | fpop2:000000001)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FMOVs${fmovcc}: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_BEGIN;"
-		$as_echo "    fpreg_rd = *fpreg_rs2;"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FMOVs${fmovcc}: */"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"])
+		AS_ECHO(["    _TME_SPARC_FPU_BEGIN;"])
+		AS_ECHO(["    fpreg_rd = *fpreg_rs2;"])
 		;;
 	    fpop1:000000010 | fpop2:000000010)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FMOVd${fmovcc}: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "    _TME_SPARC_FPU_BEGIN;"
-		$as_echo "    fpreg_rd = *fpreg_rs2;"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FMOVd${fmovcc}: */"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"])
+		AS_ECHO(["    _TME_SPARC_FPU_BEGIN;"])
+		AS_ECHO(["    fpreg_rd = *fpreg_rs2;"])
 		;;
 	    fpop1:000000101)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FNEGs: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_BEGIN;"
-		$as_echo "    fpreg_rd = *fpreg_rs2;"
-		$as_echo "    fpreg_rd.tme_float_value_ieee754_single ^= 0x80000000;"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FNEGs: */"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"])
+		AS_ECHO(["    _TME_SPARC_FPU_BEGIN;"])
+		AS_ECHO(["    fpreg_rd = *fpreg_rs2;"])
+		AS_ECHO(["    fpreg_rd.tme_float_value_ieee754_single ^= 0x80000000;"])
 		;;
 	    fpop1:000000110)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FNEGd: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "    _TME_SPARC_FPU_BEGIN;"
-		$as_echo "    fpreg_rd = *fpreg_rs2;"
-		$as_echo "    fpreg_rd.tme_float_value_ieee754_double.tme_value64_uint32_hi ^= 0x80000000;"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FNEGd: */"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"])
+		AS_ECHO(["    _TME_SPARC_FPU_BEGIN;"])
+		AS_ECHO(["    fpreg_rd = *fpreg_rs2;"])
+		AS_ECHO(["    fpreg_rd.tme_float_value_ieee754_double.tme_value64_uint32_hi ^= 0x80000000;"])
 		;;
 	    fpop1:000001001)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FABSs: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_BEGIN;"
-		$as_echo "    fpreg_rd = *fpreg_rs2;"
-		$as_echo "    fpreg_rd.tme_float_value_ieee754_single &= ~0x80000000;"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FABSs: */"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"])
+		AS_ECHO(["    _TME_SPARC_FPU_BEGIN;"])
+		AS_ECHO(["    fpreg_rd = *fpreg_rs2;"])
+		AS_ECHO(["    fpreg_rd.tme_float_value_ieee754_single &= ~0x80000000;"])
 		;;
 	    fpop1:000001010)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FABSd: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "    _TME_SPARC_FPU_BEGIN;"
-		$as_echo "    fpreg_rd = *fpreg_rs2;"
-		$as_echo "    fpreg_rd.tme_float_value_ieee754_double.tme_value64_uint32_hi &= ~0x80000000;"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FABSd: */"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"])
+		AS_ECHO(["    _TME_SPARC_FPU_BEGIN;"])
+		AS_ECHO(["    fpreg_rd = *fpreg_rs2;"])
+		AS_ECHO(["    fpreg_rd.tme_float_value_ieee754_double.tme_value64_uint32_hi &= ~0x80000000;"])
 		;;
 	    fpop1:000101001)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FSQRTs: */"
-		$as_echo "    _TME_SPARC_FPU_UNIMPL_IF(TME_SPARC_FPU_FLAG_NO_FSQRT);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_single_sqrt,"
-		$as_echo "                              fpreg_rs2, &fpreg_rd);"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FSQRTs: */"])
+		AS_ECHO(["    _TME_SPARC_FPU_UNIMPL_IF(TME_SPARC_FPU_FLAG_NO_FSQRT);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_single_sqrt,"])
+		AS_ECHO(["                              fpreg_rs2, &fpreg_rd);"])
 		;;
 	    fpop1:000101010)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FSQRTd: */"
-		$as_echo "    _TME_SPARC_FPU_UNIMPL_IF(TME_SPARC_FPU_FLAG_NO_FSQRT);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_sqrt,"
-		$as_echo "                              fpreg_rs2, &fpreg_rd);"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FSQRTd: */"])
+		AS_ECHO(["    _TME_SPARC_FPU_UNIMPL_IF(TME_SPARC_FPU_FLAG_NO_FSQRT);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_sqrt,"])
+		AS_ECHO(["                              fpreg_rs2, &fpreg_rd);"])
 		;;
 	    fpop1:000101011)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FSQRTq: */"
-		$as_echo "    _TME_SPARC_FPU_UNIMPL_IF(TME_SPARC_FPU_FLAG_NO_FSQRT | TME_SPARC_FPU_FLAG_NO_QUAD);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_sqrt,"
-		$as_echo "                              fpreg_rs2, &fpreg_rd);"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FSQRTq: */"])
+		AS_ECHO(["    _TME_SPARC_FPU_UNIMPL_IF(TME_SPARC_FPU_FLAG_NO_FSQRT | TME_SPARC_FPU_FLAG_NO_QUAD);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_sqrt,"])
+		AS_ECHO(["                              fpreg_rs2, &fpreg_rd);"])
 		;;
 	    fpop1:001000001)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FADDs: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_single_add,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FADDs: */"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_single_add,"])
+		AS_ECHO(["                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"])
 		;;
 	    fpop1:001000010)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FADDd: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_double_add,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FADDd: */"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_double_add,"])
+		AS_ECHO(["                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"])
 		;;
 	    fpop1:001000011)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FADDq: */"
-		$as_echo "    ${quad}"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_quad_add,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FADDq: */"])
+		AS_ECHO(["    ${quad}"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_quad_add,"])
+		AS_ECHO(["                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"])
 		;;
 	    fpop1:001000101)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FSUBs: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_single_sub,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FSUBs: */"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_single_sub,"])
+		AS_ECHO(["                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"])
 		;;
 	    fpop1:001000110)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FSUBd: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_double_sub,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FSUBd: */"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_double_sub,"])
+		AS_ECHO(["                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"])
 		;;
 	    fpop1:001000111)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FSUBq: */"
-		$as_echo "    ${quad}"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_quad_sub,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FSUBq: */"])
+		AS_ECHO(["    ${quad}"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_quad_sub,"])
+		AS_ECHO(["                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"])
 		;;
 	    fpop1:001001001)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FMULs: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_single_mul,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FMULs: */"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_single_mul,"])
+		AS_ECHO(["                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"])
 		;;
 	    fpop1:001001010)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FMULd: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_double_mul,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FMULd: */"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_double_mul,"])
+		AS_ECHO(["                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"])
 		;;
 	    fpop1:001001011)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FMULq: */"
-		$as_echo "    ${quad}"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_quad_mul,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FMULq: */"])
+		AS_ECHO(["    ${quad}"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_quad_mul,"])
+		AS_ECHO(["                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"])
 		;;
 	    fpop1:001101001)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FsMULd: */"
-		$as_echo "    _TME_SPARC_FPU_UNIMPL_IF(TME_SPARC_FPU_FLAG_NO_FMUL_WIDER);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_from_single,"
-		$as_echo "                              fpreg_rs1, &fpreg_rs1_buffer);"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_from_single,"
-		$as_echo "                              fpreg_rs2, &fpreg_rs2_buffer);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_double_mul,"
-		$as_echo "                             &fpreg_rs1_buffer, &fpreg_rs2_buffer, &fpreg_rd);"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FsMULd: */"])
+		AS_ECHO(["    _TME_SPARC_FPU_UNIMPL_IF(TME_SPARC_FPU_FLAG_NO_FMUL_WIDER);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_from_single,"])
+		AS_ECHO(["                              fpreg_rs1, &fpreg_rs1_buffer);"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_from_single,"])
+		AS_ECHO(["                              fpreg_rs2, &fpreg_rs2_buffer);"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_double_mul,"])
+		AS_ECHO(["                             &fpreg_rs1_buffer, &fpreg_rs2_buffer, &fpreg_rd);"])
 		;;
 	    fpop1:001101110)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FdMULq: */"
-		$as_echo "    _TME_SPARC_FPU_UNIMPL_IF(TME_SPARC_FPU_FLAG_NO_FMUL_WIDER | TME_SPARC_FPU_FLAG_NO_QUAD);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_from_double,"
-		$as_echo "                              fpreg_rs1, &fpreg_rs1_buffer);"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_from_double,"
-		$as_echo "                              fpreg_rs2, &fpreg_rs2_buffer);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_quad_mul,"
-		$as_echo "                             &fpreg_rs1_buffer, &fpreg_rs2_buffer, &fpreg_rd);"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FdMULq: */"])
+		AS_ECHO(["    _TME_SPARC_FPU_UNIMPL_IF(TME_SPARC_FPU_FLAG_NO_FMUL_WIDER | TME_SPARC_FPU_FLAG_NO_QUAD);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_from_double,"])
+		AS_ECHO(["                              fpreg_rs1, &fpreg_rs1_buffer);"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_from_double,"])
+		AS_ECHO(["                              fpreg_rs2, &fpreg_rs2_buffer);"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_quad_mul,"])
+		AS_ECHO(["                             &fpreg_rs1_buffer, &fpreg_rs2_buffer, &fpreg_rd);"])
 		;;
 	    fpop1:001001101)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FDIVs: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_single_div,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FDIVs: */"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_single_div,"])
+		AS_ECHO(["                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"])
 		;;
 	    fpop1:001001110)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FDIVd: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_double_div,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FDIVd: */"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_double_div,"])
+		AS_ECHO(["                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"])
 		;;
 	    fpop1:001001111)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FDIVq: */"
-		$as_echo "    ${quad}"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_quad_div,"
-		$as_echo "                              fpreg_rs1, fpreg_rs2, &fpreg_rd);"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FDIVq: */"])
+		AS_ECHO(["    ${quad}"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_quad_div,"])
+		AS_ECHO(["                              fpreg_rs1, fpreg_rs2, &fpreg_rd);"])
 		;;
 	    fpop2:001010001)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FCMPs: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_single_sub,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
-		$as_echo "    _tme_sparc_fpu_fcc_single(ic, &fpreg_rd, FALSE);"
-		$as_echo "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FCMPs: */"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_single_sub,"])
+		AS_ECHO(["                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"])
+		AS_ECHO(["    _tme_sparc_fpu_fcc_single(ic, &fpreg_rd, FALSE);"])
+		AS_ECHO(["    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"])
 		;;
 	    fpop2:001010010)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FCMPd: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_double_sub,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
-		$as_echo "    _tme_sparc_fpu_fcc_double(ic, &fpreg_rd, FALSE);"
-		$as_echo "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FCMPd: */"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_double_sub,"])
+		AS_ECHO(["                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"])
+		AS_ECHO(["    _tme_sparc_fpu_fcc_double(ic, &fpreg_rd, FALSE);"])
+		AS_ECHO(["    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"])
 		;;
 	    fpop2:001010011)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FCMPq: */"
-		$as_echo "    ${quad}"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_quad_sub,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
-		$as_echo "    _tme_sparc_fpu_fcc_quad(ic, &fpreg_rd, FALSE);"
-		$as_echo "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FCMPq: */"])
+		AS_ECHO(["    ${quad}"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_quad_sub,"])
+		AS_ECHO(["                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"])
+		AS_ECHO(["    _tme_sparc_fpu_fcc_quad(ic, &fpreg_rd, FALSE);"])
+		AS_ECHO(["    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"])
 		;;
 	    fpop2:001010101)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FCMPEs: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_single_sub,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
-		$as_echo "    _tme_sparc_fpu_fcc_single(ic, &fpreg_rd, TRUE);"
-		$as_echo "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FCMPEs: */"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_single_sub,"])
+		AS_ECHO(["                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"])
+		AS_ECHO(["    _tme_sparc_fpu_fcc_single(ic, &fpreg_rd, TRUE);"])
+		AS_ECHO(["    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"])
 		;;
 	    fpop2:001010110)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FCMPEd: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_double_sub,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
-		$as_echo "    _tme_sparc_fpu_fcc_double(ic, &fpreg_rd, TRUE);"
-		$as_echo "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FCMPEd: */"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_double_sub,"])
+		AS_ECHO(["                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"])
+		AS_ECHO(["    _tme_sparc_fpu_fcc_double(ic, &fpreg_rd, TRUE);"])
+		AS_ECHO(["    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"])
 		;;
 	    fpop2:001010111)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FCMPEq: */"
-		$as_echo "    ${quad}"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_quad_sub,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
-		$as_echo "    _tme_sparc_fpu_fcc_quad(ic, &fpreg_rd, TRUE);"
-		$as_echo "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
+		AS_ECHO(["  case ${opf_decimal}:  /* ${opf} FCMPEq: */"])
+		AS_ECHO(["    ${quad}"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+		AS_ECHO(["    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_quad_sub,"])
+		AS_ECHO(["                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"])
+		AS_ECHO(["    _tme_sparc_fpu_fcc_quad(ic, &fpreg_rd, TRUE);"])
+		AS_ECHO(["    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"])
 		;;
 	    *) default=true ;;
 	    esac
-	    if $default; then :; else $as_echo "    break;"; $as_echo ""; fi
+	    if $default; then :; else AS_ECHO(["    break;"]); AS_ECHO([""]); fi
 	done
-	$as_echo "  default:"
-	$as_echo "    _TME_SPARC_FPU_UNIMPL;"
-	$as_echo "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
-	$as_echo "    break;"
-	$as_echo ""
-	$as_echo "#undef _TME_SPARC_FPU_FORMAT_RS1"
-	$as_echo "#undef _TME_SPARC_FPU_FORMAT_RS2"
-	$as_echo "#undef _TME_SPARC_FPU_FORMAT_RD"
-	$as_echo "  }"
+	AS_ECHO(["  default:"])
+	AS_ECHO(["    _TME_SPARC_FPU_UNIMPL;"])
+	AS_ECHO(["    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"])
+	AS_ECHO(["    break;"])
+	AS_ECHO([""])
+	AS_ECHO(["#undef _TME_SPARC_FPU_FORMAT_RS1"])
+	AS_ECHO(["#undef _TME_SPARC_FPU_FORMAT_RS2"])
+	AS_ECHO(["#undef _TME_SPARC_FPU_FORMAT_RD"])
+	AS_ECHO(["  }"])
 
-	$as_echo ""
-	$as_echo "  /* store any destination: */"
-	$as_echo "  if (fpreg_rd_format != TME_IEEE754_FPREG_FORMAT_NULL) {"
-	$as_echo "    tme_sparc_fpu_fpreg_format(ic, fpreg_rd_number, fpreg_rd_format);"
-	$as_echo "    ic->tme_sparc_fpu_fpregs[[fpreg_rd_number]] = fpreg_rd;"
-	$as_echo "    TME_SPARC_FPU_DIRTY(ic, fpreg_rd_number);"
-	$as_echo "  }"
+	AS_ECHO([""])
+	AS_ECHO(["  /* store any destination: */"])
+	AS_ECHO(["  if (fpreg_rd_format != TME_IEEE754_FPREG_FORMAT_NULL) {"])
+	AS_ECHO(["    tme_sparc_fpu_fpreg_format(ic, fpreg_rd_number, fpreg_rd_format);"])
+	AS_ECHO(["    ic->tme_sparc_fpu_fpregs[[fpreg_rd_number]] = fpreg_rd;"])
+	AS_ECHO(["    TME_SPARC_FPU_DIRTY(ic, fpreg_rd_number);"])
+	AS_ECHO(["  }"])
 
-	$as_echo ""
-	$as_echo "}"
+	AS_ECHO([""])
+	AS_ECHO(["}"])
    : 
 done
 

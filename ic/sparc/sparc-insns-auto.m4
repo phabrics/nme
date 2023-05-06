@@ -70,8 +70,8 @@ for arch in 32 64; do
     # the sparc64 support depends on a 64-bit integer type:
     #
     if test ${arch} = 64; then
-	$as_echo ""
-	$as_echo "#ifdef TME_HAVE_INT64_T"
+	AS_ECHO([""])
+	AS_ECHO(["#ifdef TME_HAVE_INT64_T"])
     fi
 
     # get the name of the register with the integer condition codes, a
@@ -92,213 +92,213 @@ for arch in 32 64; do
     # fix the architecture version:
     #
     if $header; then :; else
-	$as_echo ""
-	$as_echo "#undef TME_SPARC_VERSION"
-	$as_echo "#define TME_SPARC_VERSION(ic) (${version})"
+	AS_ECHO([""])
+	AS_ECHO(["#undef TME_SPARC_VERSION"])
+	AS_ECHO(["#define TME_SPARC_VERSION(ic) (${version})"])
     fi
 
     # the alternate ASI function:
     #
     if $header; then :; else
-	$as_echo ""
-	$as_echo "static tme_uint32_t"
-	$as_echo "_tme_sparc${arch}_alternate_asi_mask(struct tme_sparc *ic)"
-	$as_echo "{"
-	$as_echo "  unsigned int asi_data;"
-	$as_echo "  unsigned int asi_mask_flags;"
-	$as_echo "  tme_uint32_t asi_mask_data;"
-	$as_echo ""
-	$as_echo "  /* get the ASI, assuming that the i bit is zero: */"
-	$as_echo "  asi_data = TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, (0xff << 5));"
+	AS_ECHO([""])
+	AS_ECHO(["static tme_uint32_t"])
+	AS_ECHO(["_tme_sparc${arch}_alternate_asi_mask(struct tme_sparc *ic)"])
+	AS_ECHO(["{"])
+	AS_ECHO(["  unsigned int asi_data;"])
+	AS_ECHO(["  unsigned int asi_mask_flags;"])
+	AS_ECHO(["  tme_uint32_t asi_mask_data;"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* get the ASI, assuming that the i bit is zero: */"])
+	AS_ECHO(["  asi_data = TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, (0xff << 5));"])
 	if test ${arch} = 32; then
-	    $as_echo ""
-	    $as_echo "  /* this is a privileged instruction: */"
-	    $as_echo "  TME_SPARC_INSN_PRIV;"
-	    $as_echo ""
-	    $as_echo "  /* if the i bit is one, this is an illegal instruction: */"
-	    $as_echo "  if (__tme_predict_false(TME_SPARC_INSN & TME_BIT(13))) {"
-	    $as_echo "    TME_SPARC_INSN_ILL(ic);"
-	    $as_echo "  }"
-	    $as_echo ""
-	    $as_echo "  /* get the flags for this ASI: */"
-	    $as_echo "  asi_mask_flags = ic->tme_sparc_asis[[asi_data]].tme_sparc_asi_mask_flags;"
-	    $as_echo ""
-	    $as_echo "  /* make the ASI mask: */"
-	    $as_echo "  if (asi_mask_flags & TME_SPARC32_ASI_MASK_FLAG_SPECIAL) {"
-	    $as_echo "    asi_mask_data"
-	    $as_echo "      = TME_SPARC_ASI_MASK_SPECIAL(asi_data, TRUE);"
-	    $as_echo "  }"
-	    $as_echo "  else {"
-	    $as_echo "    asi_mask_data = TME_SPARC32_ASI_MASK(asi_data, asi_data);"
-	    $as_echo "  }"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* this is a privileged instruction: */"])
+	    AS_ECHO(["  TME_SPARC_INSN_PRIV;"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* if the i bit is one, this is an illegal instruction: */"])
+	    AS_ECHO(["  if (__tme_predict_false(TME_SPARC_INSN & TME_BIT(13))) {"])
+	    AS_ECHO(["    TME_SPARC_INSN_ILL(ic);"])
+	    AS_ECHO(["  }"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* get the flags for this ASI: */"])
+	    AS_ECHO(["  asi_mask_flags = ic->tme_sparc_asis[[asi_data]].tme_sparc_asi_mask_flags;"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* make the ASI mask: */"])
+	    AS_ECHO(["  if (asi_mask_flags & TME_SPARC32_ASI_MASK_FLAG_SPECIAL) {"])
+	    AS_ECHO(["    asi_mask_data"])
+	    AS_ECHO(["      = TME_SPARC_ASI_MASK_SPECIAL(asi_data, TRUE);"])
+	    AS_ECHO(["  }"])
+	    AS_ECHO(["  else {"])
+	    AS_ECHO(["    asi_mask_data = TME_SPARC32_ASI_MASK(asi_data, asi_data);"])
+	    AS_ECHO(["  }"])
 	else
-	    $as_echo ""
-	    $as_echo "  /* if the i bit is one, use the address space in the ASI register: */"
-	    $as_echo "  if (TME_SPARC_INSN & TME_BIT(13)) {"
-	    $as_echo "    asi_data = ic->tme_sparc64_ireg_asi;"
-	    $as_echo "  }"
-	    $as_echo ""
-	    $as_echo "  /* get the flags for this ASI: */"
-	    $as_echo "  asi_mask_flags = ic->tme_sparc_asis[[asi_data]].tme_sparc_asi_mask_flags;"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* if the i bit is one, use the address space in the ASI register: */"])
+	    AS_ECHO(["  if (TME_SPARC_INSN & TME_BIT(13)) {"])
+	    AS_ECHO(["    asi_data = ic->tme_sparc64_ireg_asi;"])
+	    AS_ECHO(["  }"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* get the flags for this ASI: */"])
+	    AS_ECHO(["  asi_mask_flags = ic->tme_sparc_asis[[asi_data]].tme_sparc_asi_mask_flags;"])
 	    
-	    $as_echo ""
-	    $as_echo "  /* if this is a nonprivileged access: */"
-	    $as_echo "  if (!TME_SPARC_PRIV(ic)) {"
-	    $as_echo ""
-	    $as_echo "    /* if this is a restricted ASI: */"
-	    $as_echo "    if (__tme_predict_false((asi_data & TME_SPARC64_ASI_FLAG_UNRESTRICTED) == 0)) {"
-	    $as_echo ""
-	    $as_echo "      /* force a slow load or store, which will generate the"
-	    $as_echo "         privileged_action trap: */"
-	    $as_echo "      asi_mask_flags |= TME_SPARC_ASI_MASK_FLAG_UNDEF;"
-	    $as_echo "    }"
-	    $as_echo ""
-	    $as_echo "    /* force a nonprivileged access with the ASI: */"
-	    $as_echo "    asi_mask_flags |= TME_SPARC64_ASI_MASK_FLAG_INSN_AS_IF_USER;"
-	    $as_echo "  }"
-	    $as_echo ""
-	    $as_echo "  /* make the ASI mask: */"
-	    $as_echo "  if (asi_mask_flags & TME_SPARC64_ASI_MASK_FLAG_SPECIAL) {"
-	    $as_echo "    asi_mask_data"
-	    $as_echo "      = (asi_mask_flags"
-	    $as_echo "         + TME_SPARC_ASI_MASK_SPECIAL(asi_data,"
-	    $as_echo "                                      ((asi_mask_flags & TME_SPARC64_ASI_MASK_FLAG_INSN_AS_IF_USER) == 0)));"
-	    $as_echo "  }"
-	    $as_echo "  else {"
-	    $as_echo "    asi_mask_data = TME_SPARC64_ASI_MASK(asi_data, asi_mask_flags);"
-	    $as_echo "  }"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* if this is a nonprivileged access: */"])
+	    AS_ECHO(["  if (!TME_SPARC_PRIV(ic)) {"])
+	    AS_ECHO([""])
+	    AS_ECHO(["    /* if this is a restricted ASI: */"])
+	    AS_ECHO(["    if (__tme_predict_false((asi_data & TME_SPARC64_ASI_FLAG_UNRESTRICTED) == 0)) {"])
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* force a slow load or store, which will generate the"])
+	    AS_ECHO(["         privileged_action trap: */"])
+	    AS_ECHO(["      asi_mask_flags |= TME_SPARC_ASI_MASK_FLAG_UNDEF;"])
+	    AS_ECHO(["    }"])
+	    AS_ECHO([""])
+	    AS_ECHO(["    /* force a nonprivileged access with the ASI: */"])
+	    AS_ECHO(["    asi_mask_flags |= TME_SPARC64_ASI_MASK_FLAG_INSN_AS_IF_USER;"])
+	    AS_ECHO(["  }"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* make the ASI mask: */"])
+	    AS_ECHO(["  if (asi_mask_flags & TME_SPARC64_ASI_MASK_FLAG_SPECIAL) {"])
+	    AS_ECHO(["    asi_mask_data"])
+	    AS_ECHO(["      = (asi_mask_flags"])
+	    AS_ECHO(["         + TME_SPARC_ASI_MASK_SPECIAL(asi_data,"])
+	    AS_ECHO(["                                      ((asi_mask_flags & TME_SPARC64_ASI_MASK_FLAG_INSN_AS_IF_USER) == 0)));"])
+	    AS_ECHO(["  }"])
+	    AS_ECHO(["  else {"])
+	    AS_ECHO(["    asi_mask_data = TME_SPARC64_ASI_MASK(asi_data, asi_mask_flags);"])
+	    AS_ECHO(["  }"])
 	fi
-	$as_echo ""
-	$as_echo "  /* if this ASI has a special handler: */"
-	$as_echo "  if (__tme_predict_false(ic->tme_sparc_asis[[TME_SPARC_ASI_MASK_WHICH(asi_mask_data)]].tme_sparc_asi_handler != 0)) {"
-	$as_echo ""
-	$as_echo "    /* force a slow load or store, which will call the special handler: */"
-	$as_echo "    asi_mask_data |= TME_SPARC_ASI_MASK_FLAG_UNDEF;"
-	$as_echo "  }"
-	$as_echo ""
-	$as_echo "  return (asi_mask_data);"
-	$as_echo "}"
+	AS_ECHO([""])
+	AS_ECHO(["  /* if this ASI has a special handler: */"])
+	AS_ECHO(["  if (__tme_predict_false(ic->tme_sparc_asis[[TME_SPARC_ASI_MASK_WHICH(asi_mask_data)]].tme_sparc_asi_handler != 0)) {"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* force a slow load or store, which will call the special handler: */"])
+	AS_ECHO(["    asi_mask_data |= TME_SPARC_ASI_MASK_FLAG_UNDEF;"])
+	AS_ECHO(["  }"])
+	AS_ECHO([""])
+	AS_ECHO(["  return (asi_mask_data);"])
+	AS_ECHO(["}"])
     fi
 
     # the FPU load and store common function:
     #
     if $header; then :; else
-	$as_echo ""
-	$as_echo "static struct tme_float *"
-	$as_echo "_tme_sparc${arch}_fpu_mem_fpreg(struct tme_sparc *ic,"
-	$as_echo "                           tme_uint32_t misaligned,"
-	$as_echo "                           struct tme_float *float_buffer)"
-	$as_echo "{"
-	$as_echo "  unsigned int float_format;"
-	$as_echo "  unsigned int fpreg_format;"
-	$as_echo "  tme_uint32_t fp_store;"
-	$as_echo "  unsigned int fpu_mode;"
-	$as_echo "  unsigned int fpreg_number;"
-	$as_echo ""
-	$as_echo "  /* NB: this checks for various traps by their priority order: */"
-	$as_echo ""
-	$as_echo "  TME_SPARC_INSN_FPU_ENABLED;"
-	$as_echo ""
-	$as_echo "  /* get the floating-point format: */"
-	$as_echo "  float_format = float_buffer->tme_float_format;"
-	$as_echo ""
-	$as_echo "  /* convert the floating-point format into the ieee754"
-	$as_echo "     floating-point register file format: */"
-	$as_echo "#if (TME_FLOAT_FORMAT_NULL | TME_IEEE754_FPREG_FORMAT_NULL) != 0"
-	$as_echo "#error \"TME_FLOAT_FORMAT_ or TME_IEEE754_FPREG_FORMAT_ values changed\""
-	$as_echo "#endif"
-	$as_echo "#if TME_FLOAT_FORMAT_IEEE754_SINGLE < TME_IEEE754_FPREG_FORMAT_SINGLE"
-	$as_echo "#error \"TME_FLOAT_FORMAT_ or TME_IEEE754_FPREG_FORMAT_ values changed\""
-	$as_echo "#endif"
-	$as_echo "#if (TME_FLOAT_FORMAT_IEEE754_SINGLE / TME_IEEE754_FPREG_FORMAT_SINGLE) != (TME_FLOAT_FORMAT_IEEE754_DOUBLE / TME_IEEE754_FPREG_FORMAT_DOUBLE)"
-	$as_echo "#error \"TME_FLOAT_FORMAT_ or TME_IEEE754_FPREG_FORMAT_ values changed\""
-	$as_echo "#endif"
-	$as_echo "  assert (float_format == TME_FLOAT_FORMAT_NULL"
-	$as_echo "          || float_format == TME_FLOAT_FORMAT_IEEE754_SINGLE"
-	$as_echo "          || float_format == TME_FLOAT_FORMAT_IEEE754_DOUBLE);"
-	$as_echo "  fpreg_format = float_format / (TME_FLOAT_FORMAT_IEEE754_SINGLE / TME_IEEE754_FPREG_FORMAT_SINGLE);"
-	$as_echo ""
-	$as_echo "  /* if the memory address is misaligned, return the"
-	$as_echo "     float buffer now.  the eventual load or store will"
-	$as_echo "     cause the mem_address_not_aligned trap: */"
-	$as_echo ""
-	$as_echo "  /* if the memory address is misaligned: */"
-	$as_echo "#if TME_IEEE754_FPREG_FORMAT_NULL != 0 || TME_IEEE754_FPREG_FORMAT_SINGLE != 1 || TME_IEEE754_FPREG_FORMAT_DOUBLE != 2 || TME_IEEE754_FPREG_FORMAT_QUAD != 4"
-	$as_echo "#error \"TME_IEEE754_FPREG_FORMAT_ values changed\""
-	$as_echo "#endif"
-	$as_echo "  assert (fpreg_format == TME_IEEE754_FPREG_FORMAT_NULL"
-	$as_echo "          || fpreg_format == TME_IEEE754_FPREG_FORMAT_SINGLE"
-	$as_echo "          || fpreg_format == TME_IEEE754_FPREG_FORMAT_DOUBLE"
-	$as_echo "          || fpreg_format == TME_IEEE754_FPREG_FORMAT_QUAD);"
-	$as_echo "  misaligned &= ((sizeof(tme_uint32_t) * fpreg_format) - 1);"
-	$as_echo "  if (__tme_predict_false(misaligned)) {"
-	$as_echo ""
+	AS_ECHO([""])
+	AS_ECHO(["static struct tme_float *"])
+	AS_ECHO(["_tme_sparc${arch}_fpu_mem_fpreg(struct tme_sparc *ic,"])
+	AS_ECHO(["                           tme_uint32_t misaligned,"])
+	AS_ECHO(["                           struct tme_float *float_buffer)"])
+	AS_ECHO(["{"])
+	AS_ECHO(["  unsigned int float_format;"])
+	AS_ECHO(["  unsigned int fpreg_format;"])
+	AS_ECHO(["  tme_uint32_t fp_store;"])
+	AS_ECHO(["  unsigned int fpu_mode;"])
+	AS_ECHO(["  unsigned int fpreg_number;"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* NB: this checks for various traps by their priority order: */"])
+	AS_ECHO([""])
+	AS_ECHO(["  TME_SPARC_INSN_FPU_ENABLED;"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* get the floating-point format: */"])
+	AS_ECHO(["  float_format = float_buffer->tme_float_format;"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* convert the floating-point format into the ieee754"])
+	AS_ECHO(["     floating-point register file format: */"])
+	AS_ECHO(["#if (TME_FLOAT_FORMAT_NULL | TME_IEEE754_FPREG_FORMAT_NULL) != 0"])
+	AS_ECHO(["#error \"TME_FLOAT_FORMAT_ or TME_IEEE754_FPREG_FORMAT_ values changed\""])
+	AS_ECHO(["#endif"])
+	AS_ECHO(["#if TME_FLOAT_FORMAT_IEEE754_SINGLE < TME_IEEE754_FPREG_FORMAT_SINGLE"])
+	AS_ECHO(["#error \"TME_FLOAT_FORMAT_ or TME_IEEE754_FPREG_FORMAT_ values changed\""])
+	AS_ECHO(["#endif"])
+	AS_ECHO(["#if (TME_FLOAT_FORMAT_IEEE754_SINGLE / TME_IEEE754_FPREG_FORMAT_SINGLE) != (TME_FLOAT_FORMAT_IEEE754_DOUBLE / TME_IEEE754_FPREG_FORMAT_DOUBLE)"])
+	AS_ECHO(["#error \"TME_FLOAT_FORMAT_ or TME_IEEE754_FPREG_FORMAT_ values changed\""])
+	AS_ECHO(["#endif"])
+	AS_ECHO(["  assert (float_format == TME_FLOAT_FORMAT_NULL"])
+	AS_ECHO(["          || float_format == TME_FLOAT_FORMAT_IEEE754_SINGLE"])
+	AS_ECHO(["          || float_format == TME_FLOAT_FORMAT_IEEE754_DOUBLE);"])
+	AS_ECHO(["  fpreg_format = float_format / (TME_FLOAT_FORMAT_IEEE754_SINGLE / TME_IEEE754_FPREG_FORMAT_SINGLE);"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* if the memory address is misaligned, return the"])
+	AS_ECHO(["     float buffer now.  the eventual load or store will"])
+	AS_ECHO(["     cause the mem_address_not_aligned trap: */"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* if the memory address is misaligned: */"])
+	AS_ECHO(["#if TME_IEEE754_FPREG_FORMAT_NULL != 0 || TME_IEEE754_FPREG_FORMAT_SINGLE != 1 || TME_IEEE754_FPREG_FORMAT_DOUBLE != 2 || TME_IEEE754_FPREG_FORMAT_QUAD != 4"])
+	AS_ECHO(["#error \"TME_IEEE754_FPREG_FORMAT_ values changed\""])
+	AS_ECHO(["#endif"])
+	AS_ECHO(["  assert (fpreg_format == TME_IEEE754_FPREG_FORMAT_NULL"])
+	AS_ECHO(["          || fpreg_format == TME_IEEE754_FPREG_FORMAT_SINGLE"])
+	AS_ECHO(["          || fpreg_format == TME_IEEE754_FPREG_FORMAT_DOUBLE"])
+	AS_ECHO(["          || fpreg_format == TME_IEEE754_FPREG_FORMAT_QUAD);"])
+	AS_ECHO(["  misaligned &= ((sizeof(tme_uint32_t) * fpreg_format) - 1);"])
+	AS_ECHO(["  if (__tme_predict_false(misaligned)) {"])
+	AS_ECHO([""])
 	if test ${arch} = 32; then
-	    $as_echo "    return (float_buffer);"
+	    AS_ECHO(["    return (float_buffer);"])
 	else
-	    $as_echo "    /* if the memory address is not even 32-bit aligned, or"
-	    $as_echo "       if this SPARC doesn't support loads and stores of this"
-	    $as_echo "       size at 32-bit alignment: */"
-	    $as_echo "    if (misaligned != sizeof(tme_uint32_t)"
-	    $as_echo "#if TME_IEEE754_FPREG_FORMAT_SINGLE != 1 || (TME_SPARC_MEMORY_FLAG_HAS_LDDF_STDF_32 * TME_IEEE754_FPREG_FORMAT_DOUBLE) != TME_SPARC_MEMORY_FLAG_HAS_LDQF_STQF_32"
-	    $as_echo "#error \"TME_IEEE754_FPREG_FORMAT_ or TME_SPARC_MEMORY_FLAG_ values changed\""
-	    $as_echo "#endif"
-	    $as_echo "        || (TME_SPARC_MEMORY_FLAGS(ic)"
-	    $as_echo "            & (TME_SPARC_MEMORY_FLAG_HAS_LDDF_STDF_32 * fpreg_format)) == 0) {"
-	    $as_echo ""
-	    $as_echo "      return (float_buffer);"
-	    $as_echo "    }"
+	    AS_ECHO(["    /* if the memory address is not even 32-bit aligned, or"])
+	    AS_ECHO(["       if this SPARC doesn't support loads and stores of this"])
+	    AS_ECHO(["       size at 32-bit alignment: */"])
+	    AS_ECHO(["    if (misaligned != sizeof(tme_uint32_t)"])
+	    AS_ECHO(["#if TME_IEEE754_FPREG_FORMAT_SINGLE != 1 || (TME_SPARC_MEMORY_FLAG_HAS_LDDF_STDF_32 * TME_IEEE754_FPREG_FORMAT_DOUBLE) != TME_SPARC_MEMORY_FLAG_HAS_LDQF_STQF_32"])
+	    AS_ECHO(["#error \"TME_IEEE754_FPREG_FORMAT_ or TME_SPARC_MEMORY_FLAG_ values changed\""])
+	    AS_ECHO(["#endif"])
+	    AS_ECHO(["        || (TME_SPARC_MEMORY_FLAGS(ic)"])
+	    AS_ECHO(["            & (TME_SPARC_MEMORY_FLAG_HAS_LDDF_STDF_32 * fpreg_format)) == 0) {"])
+	    AS_ECHO([""])
+	    AS_ECHO(["      return (float_buffer);"])
+	    AS_ECHO(["    }"])
 	fi
-        $as_echo "  }"
-	$as_echo ""
-	$as_echo "  /* see if this is a floating-point load or store: */"
-	$as_echo "  /* NB: all of the floating-point instructions that use"
-	$as_echo "     this preamble have bit two of op3 clear for a load,"
-	$as_echo "     and set for a store: */"
-	$as_echo "  fp_store = (TME_SPARC_INSN & TME_BIT(19 + 2));"
-	$as_echo ""
-	$as_echo "  /* if the FPU isn't in execute mode: */"
-	$as_echo "  fpu_mode = ic->tme_sparc_fpu_mode;"
-	$as_echo "  if (__tme_predict_false(fpu_mode != TME_SPARC_FPU_MODE_EXECUTE)) {"
-	$as_echo ""
-	$as_echo "    /* if this is a floating-point load, or if this is a"
-	$as_echo "       floating-point store and a floating-point exception"
-	$as_echo "       is pending: */"
-	$as_echo "    if (!fp_store"
-	$as_echo "        || fpu_mode == TME_SPARC_FPU_MODE_EXCEPTION_PENDING) {"
-	$as_echo ""
-	$as_echo "      /* do an FPU exception check: */"
-	$as_echo "      tme_sparc_fpu_exception_check(ic);"
-	$as_echo "    }"
-	$as_echo "  }"
-	$as_echo ""
-	$as_echo "  /* if this is not a load or store of a floating-point register: */"
-	$as_echo "  if (fpreg_format == TME_IEEE754_FPREG_FORMAT_NULL) {"
-	$as_echo "    return (float_buffer);"
-	$as_echo "  }"
-	$as_echo ""
-	$as_echo "  /* decode rd: */"
-	$as_echo "  fpreg_number"
-	$as_echo "    = tme_sparc_fpu_fpreg_decode(ic,"
-	$as_echo "                                 TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN,"
-	$as_echo "                                                         TME_SPARC_FORMAT3_MASK_RD),"
-	$as_echo "                                 fpreg_format);"
-	$as_echo ""
-	$as_echo "  /* make sure this floating-point register has the right precision: */"
-	$as_echo "  tme_sparc_fpu_fpreg_format(ic, fpreg_number, fpreg_format | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-	$as_echo ""
-	$as_echo "  /* if this is a floating-point load: */"
-	$as_echo "  if (!fp_store) {"
-	$as_echo ""
-	$as_echo "    /* mark rd as dirty: */"
-	$as_echo "    TME_SPARC_FPU_DIRTY(ic, fpreg_number);"
-	$as_echo "  }"
-	$as_echo ""
-	$as_echo "  /* return the floating-point register: */"
-	$as_echo "  return (&ic->tme_sparc_fpu_fpregs[[fpreg_number]]);"
-	$as_echo "}"
-	$as_echo "#define _tme_sparc${arch}_fpu_mem(ic) \\"
-	$as_echo "  do { _tme_sparc${arch}_fpu_mem_fpreg(ic, 0, &_tme_sparc_float_null); } while (/* CONSTCOND */ 0)"
+        AS_ECHO(["  }"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* see if this is a floating-point load or store: */"])
+	AS_ECHO(["  /* NB: all of the floating-point instructions that use"])
+	AS_ECHO(["     this preamble have bit two of op3 clear for a load,"])
+	AS_ECHO(["     and set for a store: */"])
+	AS_ECHO(["  fp_store = (TME_SPARC_INSN & TME_BIT(19 + 2));"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* if the FPU isn't in execute mode: */"])
+	AS_ECHO(["  fpu_mode = ic->tme_sparc_fpu_mode;"])
+	AS_ECHO(["  if (__tme_predict_false(fpu_mode != TME_SPARC_FPU_MODE_EXECUTE)) {"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* if this is a floating-point load, or if this is a"])
+	AS_ECHO(["       floating-point store and a floating-point exception"])
+	AS_ECHO(["       is pending: */"])
+	AS_ECHO(["    if (!fp_store"])
+	AS_ECHO(["        || fpu_mode == TME_SPARC_FPU_MODE_EXCEPTION_PENDING) {"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* do an FPU exception check: */"])
+	AS_ECHO(["      tme_sparc_fpu_exception_check(ic);"])
+	AS_ECHO(["    }"])
+	AS_ECHO(["  }"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* if this is not a load or store of a floating-point register: */"])
+	AS_ECHO(["  if (fpreg_format == TME_IEEE754_FPREG_FORMAT_NULL) {"])
+	AS_ECHO(["    return (float_buffer);"])
+	AS_ECHO(["  }"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* decode rd: */"])
+	AS_ECHO(["  fpreg_number"])
+	AS_ECHO(["    = tme_sparc_fpu_fpreg_decode(ic,"])
+	AS_ECHO(["                                 TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN,"])
+	AS_ECHO(["                                                         TME_SPARC_FORMAT3_MASK_RD),"])
+	AS_ECHO(["                                 fpreg_format);"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* make sure this floating-point register has the right precision: */"])
+	AS_ECHO(["  tme_sparc_fpu_fpreg_format(ic, fpreg_number, fpreg_format | TME_IEEE754_FPREG_FORMAT_BUILTIN);"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* if this is a floating-point load: */"])
+	AS_ECHO(["  if (!fp_store) {"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* mark rd as dirty: */"])
+	AS_ECHO(["    TME_SPARC_FPU_DIRTY(ic, fpreg_number);"])
+	AS_ECHO(["  }"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* return the floating-point register: */"])
+	AS_ECHO(["  return (&ic->tme_sparc_fpu_fpregs[[fpreg_number]]);"])
+	AS_ECHO(["}"])
+	AS_ECHO(["#define _tme_sparc${arch}_fpu_mem(ic) \\"])
+	AS_ECHO(["  do { _tme_sparc${arch}_fpu_mem_fpreg(ic, 0, &_tme_sparc_float_null); } while (/* CONSTCOND */ 0)"])
     fi
 
     # permute over instruction:
@@ -355,7 +355,7 @@ for arch in 32 64; do
 	# if we're making the header, just emit declarations:
 	#
 	if $header; then
-	    $as_echo "TME_SPARC_FORMAT3_DECL(tme_sparc${arch}_${insn}, tme_uint${arch}_t);"
+	    AS_ECHO(["TME_SPARC_FORMAT3_DECL(tme_sparc${arch}_${insn}, tme_uint${arch}_t);"])
 	    continue
 	fi
 
@@ -401,130 +401,130 @@ for arch in 32 64; do
 	    udiv | udivcc)  arith=udiv ; size_src=32 ; size_dst=32 ;;
 	    sdiv | sdivcc)  arith=sdiv ; size_src=32 ; sign= ;;
 	    mulscc)	    arith=add ; size_src=32 ; size_dst=32 ;;
-	    *) $as_echo "$0 internal error: unknown ALU function ${insn}" 1>&2 ; exit 1 ;;
+	    *) AS_ECHO(["$0 internal error: unknown ALU function ${insn}"]) 1>&2 ; exit 1 ;;
 	    esac
 
 	    # open the function:
 	    #
-	    $as_echo ""
-	    $as_echo "/* this does a sparc${arch} \"${insn} SRC1, SRC2, DST\": */"
-	    $as_echo "TME_SPARC_FORMAT3(tme_sparc${arch}_${insn}, tme_uint${arch}_t)"
-	    $as_echo "{"
+	    AS_ECHO([""])
+	    AS_ECHO(["/* this does a sparc${arch} \"${insn} SRC1, SRC2, DST\": */"])
+	    AS_ECHO(["TME_SPARC_FORMAT3(tme_sparc${arch}_${insn}, tme_uint${arch}_t)"])
+	    AS_ECHO(["{"])
 
 	    # declare our locals:
 	    #
-	    $as_echo "  tme_${sign}int${size_src}_t src1;"
-	    $as_echo "  tme_${sign}int${size_src}_t src2;"
-	    $as_echo "  tme_${sign}int${size_dst}_t dst;"
+	    AS_ECHO(["  tme_${sign}int${size_src}_t src1;"])
+	    AS_ECHO(["  tme_${sign}int${size_src}_t src2;"])
+	    AS_ECHO(["  tme_${sign}int${size_dst}_t dst;"])
 	    case "${insn}" in
 	    umul* | smul* | udiv* | sdiv*)
-		$as_echo "  tme_${sign}int64_t val64;"
+		AS_ECHO(["  tme_${sign}int64_t val64;"])
 		;;
 	    mulscc)
-		$as_echo "  tme_uint32_t y;"
+		AS_ECHO(["  tme_uint32_t y;"])
 		;;
 	    esac
 	    if ${cc}; then
-		$as_echo "  tme_uint32_t cc;"
+		AS_ECHO(["  tme_uint32_t cc;"])
 	    fi
 	    cc_plus=
 
-	    $as_echo ""
-	    $as_echo "  /* get the operands: */"
-	    $as_echo "  src1 = (tme_${sign}int${arch}_t) TME_SPARC_FORMAT3_RS1;"
-	    $as_echo "  src2 = (tme_${sign}int${arch}_t) TME_SPARC_FORMAT3_RS2;"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* get the operands: */"])
+	    AS_ECHO(["  src1 = (tme_${sign}int${arch}_t) TME_SPARC_FORMAT3_RS1;"])
+	    AS_ECHO(["  src2 = (tme_${sign}int${arch}_t) TME_SPARC_FORMAT3_RS2;"])
 
-	    $as_echo ""
-	    $as_echo "  /* perform the operation: */"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* perform the operation: */"])
 	    case "${insn}" in
 	    umul | umulcc | smul | smulcc)
-		$as_echo "  val64 = (((tme_${sign}int64_t) src1) * src2);"
-		$as_echo "  ic->tme_sparc_ireg_uint32(TME_SPARC_IREG_Y${reg32_shift}) = (((tme_uint64_t) val64) >> 32);"
-		$as_echo "  dst = ((tme_${sign}int64_t) val64);"
+		AS_ECHO(["  val64 = (((tme_${sign}int64_t) src1) * src2);"])
+		AS_ECHO(["  ic->tme_sparc_ireg_uint32(TME_SPARC_IREG_Y${reg32_shift}) = (((tme_uint64_t) val64) >> 32);"])
+		AS_ECHO(["  dst = ((tme_${sign}int64_t) val64);"])
 		;;
 	    udiv | udivcc | sdiv | sdivcc)
-		$as_echo "  val64 = ic->tme_sparc_ireg_uint32(TME_SPARC_IREG_Y${reg32_shift});"
-		$as_echo "  val64 = (val64 << 32) + (tme_uint32_t) src1;"
-	        $as_echo "  if (__tme_predict_false(src2 == 0)) {"
-		$as_echo "    tme_sparc${arch}_trap(ic, TME_SPARC${arch}_TRAP_division_by_zero);"
-		$as_echo "  }"
-		$as_echo "  val64 /= src2;"
-		$as_echo "  dst = (tme_${sign}int32_t) val64;"
-		$as_echo ""
-		$as_echo "  /* if the division overflowed: */"
-		$as_echo "  if (dst != val64) {"
-		$as_echo ""
-		$as_echo "    /* return the largest appropriate value: */"
+		AS_ECHO(["  val64 = ic->tme_sparc_ireg_uint32(TME_SPARC_IREG_Y${reg32_shift});"])
+		AS_ECHO(["  val64 = (val64 << 32) + (tme_uint32_t) src1;"])
+	        AS_ECHO(["  if (__tme_predict_false(src2 == 0)) {"])
+		AS_ECHO(["    tme_sparc${arch}_trap(ic, TME_SPARC${arch}_TRAP_division_by_zero);"])
+		AS_ECHO(["  }"])
+		AS_ECHO(["  val64 /= src2;"])
+		AS_ECHO(["  dst = (tme_${sign}int32_t) val64;"])
+		AS_ECHO([""])
+		AS_ECHO(["  /* if the division overflowed: */"])
+		AS_ECHO(["  if (dst != val64) {"])
+		AS_ECHO([""])
+		AS_ECHO(["    /* return the largest appropriate value: */"])
 		if test "x${sign}" = xu; then
-		    $as_echo "    dst = 0xffffffff;"
+		    AS_ECHO(["    dst = 0xffffffff;"])
 		else
-		    $as_echo "    dst = (tme_int32_t) ((val64 < 0) + (tme_uint32_t) 0x7fffffff);"
+		    AS_ECHO(["    dst = (tme_int32_t) ((val64 < 0) + (tme_uint32_t) 0x7fffffff);"])
 		fi
 		if ${cc}; then
-		    $as_echo ""
-		    $as_echo "    /* set V: */"
-		    $as_echo "    cc = TME_SPARC${ccr}_ICC_V;"
+		    AS_ECHO([""])
+		    AS_ECHO(["    /* set V: */"])
+		    AS_ECHO(["    cc = TME_SPARC${ccr}_ICC_V;"])
 		fi
-		$as_echo "  }"
+		AS_ECHO(["  }"])
 		if ${cc}; then
-		    $as_echo ""
-		    $as_echo "  /* otherwise, the division didn't overflow: */"
-		    $as_echo "  else {"
-		    $as_echo ""
-		    $as_echo "    /* clear V: */"
-		    $as_echo "    cc = !TME_SPARC${ccr}_ICC_V;"
-		    $as_echo "  }"
+		    AS_ECHO([""])
+		    AS_ECHO(["  /* otherwise, the division didn't overflow: */"])
+		    AS_ECHO(["  else {"])
+		    AS_ECHO([""])
+		    AS_ECHO(["    /* clear V: */"])
+		    AS_ECHO(["    cc = !TME_SPARC${ccr}_ICC_V;"])
+		    AS_ECHO(["  }"])
 		    cc_plus='+'
 		fi
 		;;
 	    mulscc)
-		$as_echo ""
-		$as_echo "  /* \"(1) The multiplier is established as r[[rs2]] if the i field is zero, or "
-		$as_echo "     sign_ext(simm13) if the i field is one.\""
-		$as_echo ""
-		$as_echo "     \"(3) If the least significant bit of the Y register = 1, the shifted"
-		$as_echo "     value from step (2) is added to the multiplier. If the LSB of the"
-		$as_echo "     Y register = 0, then 0 is added to the shifted value from step (2).\" */"
-		$as_echo "  y = ic->tme_sparc_ireg_uint32(TME_SPARC_IREG_Y${reg32_shift});"
-		$as_echo "  if ((y & 1) == 0) {"
-		$as_echo "    src2 = 0;"
-		$as_echo "  }"
-		$as_echo ""
-		$as_echo "  /* \"(6) The Y register is shifted right by one bit, with the LSB of the"
-		$as_echo "     unshifted r[[rs1]] replacing the MSB of Y.\" */"
-		$as_echo "  y >>= 1;"
-		$as_echo "  if (src1 & 1) {"
-		$as_echo "    y += 0x80000000;"
-		$as_echo "  }"
-		$as_echo "  ic->tme_sparc_ireg_uint32(TME_SPARC_IREG_Y${reg32_shift}) = y;"
-		$as_echo ""
-		$as_echo "  /* \"(2) A 32-bit value is computed by shifting r[[rs1]] right by one"
-		$as_echo "     bit with (N xor V) from the PSR replacing the high-order bit."
-		$as_echo "     (This is the proper sign for the previous partial product.)\" */"
-		$as_echo "  src1 >>= 1;"
-		$as_echo "  if (((ic->${ccr_ireg} ^ (ic->${ccr_ireg} * (TME_SPARC${ccr}_ICC_N / TME_SPARC${ccr}_ICC_V))) & TME_SPARC${ccr}_ICC_N) != 0) {"
-		$as_echo "    src1 += 0x80000000;"
-		$as_echo "  }"
-		$as_echo ""
-		$as_echo "  /* \"(4) The sum from step (3) is written into r[[rd]].\" */"
-		$as_echo "  dst = src1 + src2;"
-		$as_echo ""
-		$as_echo "  /* \"(5) The integer condition codes, icc, are updated according to the"
-		$as_echo "     addition performed in step (3).\" */"
+		AS_ECHO([""])
+		AS_ECHO(["  /* \"(1) The multiplier is established as r[[rs2]] if the i field is zero, or "])
+		AS_ECHO(["     sign_ext(simm13) if the i field is one.\""])
+		AS_ECHO([""])
+		AS_ECHO(["     \"(3) If the least significant bit of the Y register = 1, the shifted"])
+		AS_ECHO(["     value from step (2) is added to the multiplier. If the LSB of the"])
+		AS_ECHO(["     Y register = 0, then 0 is added to the shifted value from step (2).\" */"])
+		AS_ECHO(["  y = ic->tme_sparc_ireg_uint32(TME_SPARC_IREG_Y${reg32_shift});"])
+		AS_ECHO(["  if ((y & 1) == 0) {"])
+		AS_ECHO(["    src2 = 0;"])
+		AS_ECHO(["  }"])
+		AS_ECHO([""])
+		AS_ECHO(["  /* \"(6) The Y register is shifted right by one bit, with the LSB of the"])
+		AS_ECHO(["     unshifted r[[rs1]] replacing the MSB of Y.\" */"])
+		AS_ECHO(["  y >>= 1;"])
+		AS_ECHO(["  if (src1 & 1) {"])
+		AS_ECHO(["    y += 0x80000000;"])
+		AS_ECHO(["  }"])
+		AS_ECHO(["  ic->tme_sparc_ireg_uint32(TME_SPARC_IREG_Y${reg32_shift}) = y;"])
+		AS_ECHO([""])
+		AS_ECHO(["  /* \"(2) A 32-bit value is computed by shifting r[[rs1]] right by one"])
+		AS_ECHO(["     bit with (N xor V) from the PSR replacing the high-order bit."])
+		AS_ECHO(["     (This is the proper sign for the previous partial product.)\" */"])
+		AS_ECHO(["  src1 >>= 1;"])
+		AS_ECHO(["  if (((ic->${ccr_ireg} ^ (ic->${ccr_ireg} * (TME_SPARC${ccr}_ICC_N / TME_SPARC${ccr}_ICC_V))) & TME_SPARC${ccr}_ICC_N) != 0) {"])
+		AS_ECHO(["    src1 += 0x80000000;"])
+		AS_ECHO(["  }"])
+		AS_ECHO([""])
+		AS_ECHO(["  /* \"(4) The sum from step (3) is written into r[[rd]].\" */"])
+		AS_ECHO(["  dst = src1 + src2;"])
+		AS_ECHO([""])
+		AS_ECHO(["  /* \"(5) The integer condition codes, icc, are updated according to the"])
+		AS_ECHO(["     addition performed in step (3).\" */"])
 		;;
 	    *)
-		$as_echo "  dst = ${op};"
+		AS_ECHO(["  dst = ${op};"])
 		if test "x${with_c}" != x; then
-		    $as_echo "  dst ${with_c}= ((ic->${ccr_ireg} & TME_SPARC${ccr}_ICC_C) != 0);"
+		    AS_ECHO(["  dst ${with_c}= ((ic->${ccr_ireg} & TME_SPARC${ccr}_ICC_C) != 0);"])
 		fi
 	    esac
 
 	    # unless this is a tagged-and-trap-on-overflow operation:
 	    #
 	    if test "x${tagged}" != xtv; then
-		$as_echo ""
-		$as_echo "  /* store the destination: */"
-		$as_echo "  TME_SPARC_FORMAT3_RD = (tme_${sign}int${arch}_t) dst;"
+		AS_ECHO([""])
+		AS_ECHO(["  /* store the destination: */"])
+		AS_ECHO(["  TME_SPARC_FORMAT3_RD = (tme_${sign}int${arch}_t) dst;"])
 	    fi
 
 	    # if this instruction modifies the condition codes:
@@ -542,52 +542,52 @@ for arch in 32 64; do
 		    64) xcc=XCC ;;
 		    esac
 
-		    $as_echo ""
-		    $as_echo "  /* set Z if the destination is zero: */"
-		    $as_echo "  cc ${cc_plus}= ((((tme_int${arch_cc}_t) dst) == 0) * TME_SPARC${ccr}_${xcc}_Z);"
+		    AS_ECHO([""])
+		    AS_ECHO(["  /* set Z if the destination is zero: */"])
+		    AS_ECHO(["  cc ${cc_plus}= ((((tme_int${arch_cc}_t) dst) == 0) * TME_SPARC${ccr}_${xcc}_Z);"])
 		    cc_plus='+'
 
 		    if test `expr ${arch_cc} \<= ${size_dst}` = 1; then
-			$as_echo ""
-			$as_echo "  /* set N if the destination is negative: */"
-			$as_echo "  cc += ((((tme_int${arch_cc}_t) dst) < 0) * TME_SPARC${ccr}_${xcc}_N);"
+			AS_ECHO([""])
+			AS_ECHO(["  /* set N if the destination is negative: */"])
+			AS_ECHO(["  cc += ((((tme_int${arch_cc}_t) dst) < 0) * TME_SPARC${ccr}_${xcc}_N);"])
 		    fi
 
 		    case $arith in
 		    add)
 			ones="(((tme_${sign}int${arch_cc}_t) 0) - 1)"
 
-			$as_echo ""
-			$as_echo "  /* if the operands are the same sign, and the destination has"
-			$as_echo "     a different sign, set V: */"
-			$as_echo "  cc += ((((tme_int${arch_cc}_t) ((src2 ^ dst) & (src1 ^ (src2 ^ ${ones})))) < 0) * TME_SPARC${ccr}_${xcc}_V);"
+			AS_ECHO([""])
+			AS_ECHO(["  /* if the operands are the same sign, and the destination has"])
+			AS_ECHO(["     a different sign, set V: */"])
+			AS_ECHO(["  cc += ((((tme_int${arch_cc}_t) ((src2 ^ dst) & (src1 ^ (src2 ^ ${ones})))) < 0) * TME_SPARC${ccr}_${xcc}_V);"])
 
-			$as_echo ""
-			$as_echo "  /* if src1 and src2 both have the high bit set, or if dst does"
-			$as_echo "     not have the high bit set and either src1 or src2 does, set C: */"
-			$as_echo "  cc += (((tme_int${arch_cc}_t) (((tme_uint${arch_cc}_t) (src1 & src2)) | ((((tme_uint${arch_cc}_t) dst) ^ ${ones}) & ((tme_uint${arch_cc}_t) (src1 | src2))))) < 0) * TME_SPARC${ccr}_${xcc}_C;"
+			AS_ECHO([""])
+			AS_ECHO(["  /* if src1 and src2 both have the high bit set, or if dst does"])
+			AS_ECHO(["     not have the high bit set and either src1 or src2 does, set C: */"])
+			AS_ECHO(["  cc += (((tme_int${arch_cc}_t) (((tme_uint${arch_cc}_t) (src1 & src2)) | ((((tme_uint${arch_cc}_t) dst) ^ ${ones}) & ((tme_uint${arch_cc}_t) (src1 | src2))))) < 0) * TME_SPARC${ccr}_${xcc}_C;"])
 			;;
 		    sub) 
 
-			$as_echo ""
-			$as_echo "  /* if the operands are different signs, and the destination has"
-			$as_echo "     a different sign from the first operand, set V: */"
-			$as_echo "  cc += ((((tme_int${arch_cc}_t) ((src1 ^ src2) & (src1 ^ dst))) < 0) * TME_SPARC${ccr}_${xcc}_V);"
+			AS_ECHO([""])
+			AS_ECHO(["  /* if the operands are different signs, and the destination has"])
+			AS_ECHO(["     a different sign from the first operand, set V: */"])
+			AS_ECHO(["  cc += ((((tme_int${arch_cc}_t) ((src1 ^ src2) & (src1 ^ dst))) < 0) * TME_SPARC${ccr}_${xcc}_V);"])
 
-			$as_echo ""
-			$as_echo "  /* if src2 is greater than src1, set C: */"
-			$as_echo_n "  cc += ((((tme_uint${arch_cc}_t) src2) > ((tme_uint${arch_cc}_t) src1))"
+			AS_ECHO([""])
+			AS_ECHO(["  /* if src2 is greater than src1, set C: */"])
+			AS_ECHO_N(["  cc += ((((tme_uint${arch_cc}_t) src2) > ((tme_uint${arch_cc}_t) src1))"])
 			if test "x${with_c}" != x; then
-			    $as_echo_n " || (((tme_uint${arch_cc}_t) src2) == ((tme_uint${arch_cc}_t) src1) && (ic->${ccr_ireg} & TME_SPARC${ccr}_ICC_C))"
+			    AS_ECHO_N([" || (((tme_uint${arch_cc}_t) src2) == ((tme_uint${arch_cc}_t) src1) && (ic->${ccr_ireg} & TME_SPARC${ccr}_ICC_C))"])
 			fi
-			$as_echo ") * TME_SPARC${ccr}_${xcc}_C;"
+			AS_ECHO([") * TME_SPARC${ccr}_${xcc}_C;"])
 			;;
 		    logical | mul)
 			;;
 		    udiv | sdiv)
 		        # the udivcc and sdivcc V are handled in the operation code
 			;;
-		    *) $as_echo "$0 internal error: unknown arithmetic type ${arith}" 1>&2 ; exit 1 ;;
+		    *) AS_ECHO(["$0 internal error: unknown arithmetic type ${arith}"]) 1>&2 ; exit 1 ;;
 		    esac
 		done
 		
@@ -595,37 +595,37 @@ for arch in 32 64; do
 		#
 		if test "x${tagged}" != x; then
 
-		    $as_echo ""
-		    $as_echo "  /* set V if bits zero or one of src1 or src2 are set: */"
-		    $as_echo "  cc |= ((((src1 | src2) & 3) != 0) * TME_SPARC${ccr}_ICC_V);"
+		    AS_ECHO([""])
+		    AS_ECHO(["  /* set V if bits zero or one of src1 or src2 are set: */"])
+		    AS_ECHO(["  cc |= ((((src1 | src2) & 3) != 0) * TME_SPARC${ccr}_ICC_V);"])
 
 		    # if this is a tagged-and-trap-on-overflow operation:
 		    #
 		    if test "x${tagged}" = xtv; then
 
-			$as_echo ""
-			$as_echo "  /* trap on a tagged overflow: */"
-			$as_echo "  if (cc & TME_SPARC${ccr}_ICC_V) {"
-			$as_echo "    tme_sparc${arch}_trap(ic, TME_SPARC${arch}_TRAP_tag_overflow);"
-			$as_echo "  }"
+			AS_ECHO([""])
+			AS_ECHO(["  /* trap on a tagged overflow: */"])
+			AS_ECHO(["  if (cc & TME_SPARC${ccr}_ICC_V) {"])
+			AS_ECHO(["    tme_sparc${arch}_trap(ic, TME_SPARC${arch}_TRAP_tag_overflow);"])
+			AS_ECHO(["  }"])
 
-			$as_echo "  /* store the destination: */"
-			$as_echo "  TME_SPARC_FORMAT3_RD = (tme_${sign}int${arch}_t) dst;"
+			AS_ECHO(["  /* store the destination: */"])
+			AS_ECHO(["  TME_SPARC_FORMAT3_RD = (tme_${sign}int${arch}_t) dst;"])
 		    fi
 		fi
 
-		$as_echo ""
-		$as_echo "  /* set the condition codes: */"
-		$as_echo_n "  ic->${ccr_ireg} = "
+		AS_ECHO([""])
+		AS_ECHO(["  /* set the condition codes: */"])
+		AS_ECHO_N(["  ic->${ccr_ireg} = "])
 		if test ${arch} = 32; then
-		    $as_echo_n "(ic->${ccr_ireg} & ~TME_SPARC32_PSR_ICC) | "
+		    AS_ECHO_N(["(ic->${ccr_ireg} & ~TME_SPARC32_PSR_ICC) | "])
 		fi
-		$as_echo "cc;"
+		AS_ECHO(["cc;"])
 	    fi
 
-	    $as_echo ""
-	    $as_echo "  TME_SPARC_INSN_OK;"
-	    $as_echo "}"
+	    AS_ECHO([""])
+	    AS_ECHO(["  TME_SPARC_INSN_OK;"])
+	    AS_ECHO(["}"])
 	fi
 
 	# a shift instruction:
@@ -637,65 +637,65 @@ for arch in 32 64; do
 	    #
 	    if test ${insn} = sra; then sign= ; else sign=u; fi
 
-	    $as_echo ""
-	    $as_echo "/* the sparc${arch} ${insn} function: */"
-	    $as_echo "TME_SPARC_FORMAT3(tme_sparc${arch}_${insn}, tme_uint${arch}_t)"
-	    $as_echo "{"
-	    $as_echo "  tme_${sign}int${arch}_t dst;"
-	    $as_echo "  unsigned int count;"
-	    $as_echo ""
-	    $as_echo "  /* get the value and the shift count: */"
-	    $as_echo "  dst = TME_SPARC_FORMAT3_RS1;"
-	    $as_echo "  count = TME_SPARC_FORMAT3_RS2;"
+	    AS_ECHO([""])
+	    AS_ECHO(["/* the sparc${arch} ${insn} function: */"])
+	    AS_ECHO(["TME_SPARC_FORMAT3(tme_sparc${arch}_${insn}, tme_uint${arch}_t)"])
+	    AS_ECHO(["{"])
+	    AS_ECHO(["  tme_${sign}int${arch}_t dst;"])
+	    AS_ECHO(["  unsigned int count;"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* get the value and the shift count: */"])
+	    AS_ECHO(["  dst = TME_SPARC_FORMAT3_RS1;"])
+	    AS_ECHO(["  count = TME_SPARC_FORMAT3_RS2;"])
 
 	    # if we're on sparc64:
 	    #
 	    if test ${arch} = 64; then
 
-		$as_echo ""
-		$as_echo "  /* if the X bit is clear: */"
-		$as_echo "  if ((TME_SPARC_INSN & TME_BIT(12)) == 0) {"
-		$as_echo ""
-		$as_echo "    /* limit the count: */"
-		$as_echo "    count %= 32;"
+		AS_ECHO([""])
+		AS_ECHO(["  /* if the X bit is clear: */"])
+		AS_ECHO(["  if ((TME_SPARC_INSN & TME_BIT(12)) == 0) {"])
+		AS_ECHO([""])
+		AS_ECHO(["    /* limit the count: */"])
+		AS_ECHO(["    count %= 32;"])
 		if test ${insn} != sll; then
-		    $as_echo ""
-		    $as_echo "    /* clip the value to 32 bits: */"
-		    $as_echo "    dst = (tme_${sign}int32_t) dst;"
+		    AS_ECHO([""])
+		    AS_ECHO(["    /* clip the value to 32 bits: */"])
+		    AS_ECHO(["    dst = (tme_${sign}int32_t) dst;"])
 		fi
-		$as_echo "  }"
+		AS_ECHO(["  }"])
 	    fi
 
-	    $as_echo ""
-	    $as_echo "  /* limit the count: */"
-	    $as_echo "  count %= ${arch};"
-	    $as_echo ""
-	    $as_echo "  /* do the shift: */"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* limit the count: */"])
+	    AS_ECHO(["  count %= ${arch};"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* do the shift: */"])
 	    if test "${insn}" = sra; then
-		$as_echo "#ifdef SHIFTSIGNED_INT${arch}_T"
+		AS_ECHO(["#ifdef SHIFTSIGNED_INT${arch}_T"])
 	    fi
-	    $as_echo "#if defined(SHIFTMAX_INT${arch}_T) && (SHIFTMAX_INT${arch}_T < (${arch} - 1))"
-	    $as_echo "#error \"cannot do full shifts of a tme_int${arch}_t\""
-	    $as_echo "#endif /* (SHIFTMAX_INT${arch}_T < (${arch} - 1)) */"
+	    AS_ECHO(["#if defined(SHIFTMAX_INT${arch}_T) && (SHIFTMAX_INT${arch}_T < (${arch} - 1))"])
+	    AS_ECHO(["#error \"cannot do full shifts of a tme_int${arch}_t\""])
+	    AS_ECHO(["#endif /* (SHIFTMAX_INT${arch}_T < (${arch} - 1)) */"])
 	    if test ${insn} = sll; then
-		$as_echo "  dst <<= count;"
+		AS_ECHO(["  dst <<= count;"])
 	    else
-		$as_echo "  dst >>= count;"
+		AS_ECHO(["  dst >>= count;"])
 	    fi
 	    if test "${insn}" = sra; then
-		$as_echo "#else  /* !SHIFTSIGNED_INT${arch}_T */"
-		$as_echo "  for (; count-- > 0; ) {"
-		$as_echo "    dst = (dst & ~((tme_${sign}int${arch}_t) 1)) / 2;"
-		$as_echo "  }"
-		$as_echo "#endif /* !SHIFTSIGNED_INT${arch}_T */"
+		AS_ECHO(["#else  /* !SHIFTSIGNED_INT${arch}_T */"])
+		AS_ECHO(["  for (; count-- > 0; ) {"])
+		AS_ECHO(["    dst = (dst & ~((tme_${sign}int${arch}_t) 1)) / 2;"])
+		AS_ECHO(["  }"])
+		AS_ECHO(["#endif /* !SHIFTSIGNED_INT${arch}_T */"])
 	    fi
 	    
-	    $as_echo ""
-	    $as_echo "  /* store the destination: */"
-	    $as_echo "  TME_SPARC_FORMAT3_RD = dst;"
-	    $as_echo ""
-	    $as_echo "  TME_SPARC_INSN_OK;"
-	    $as_echo "}"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* store the destination: */"])
+	    AS_ECHO(["  TME_SPARC_FORMAT3_RD = dst;"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  TME_SPARC_INSN_OK;"])
+	    AS_ECHO(["}"])
 	    ;;
 	esac
 
@@ -707,35 +707,35 @@ for arch in 32 64; do
 	*) sign=x ;;
 	esac
 	if test "x${sign}" != xx; then
-	    $as_echo ""
-	    $as_echo "/* the sparc${arch} ${insn} function: */"
-	    $as_echo "TME_SPARC_FORMAT3(tme_sparc${arch}_${insn}, tme_uint${arch}_t)"
-	    $as_echo "{"
-	    $as_echo "  tme_${sign}int64_t src1;"
-	    $as_echo "  tme_${sign}int64_t src2;"
-	    $as_echo "  tme_${sign}int64_t dst;"
-	    $as_echo ""
-	    $as_echo "  /* get the operands: */"
-	    $as_echo "  src1 = TME_SPARC_FORMAT3_RS1;"
-	    $as_echo "  src2 = TME_SPARC_FORMAT3_RS2;"
-	    $as_echo ""
-	    $as_echo "  /* do the ${insn}: */"
+	    AS_ECHO([""])
+	    AS_ECHO(["/* the sparc${arch} ${insn} function: */"])
+	    AS_ECHO(["TME_SPARC_FORMAT3(tme_sparc${arch}_${insn}, tme_uint${arch}_t)"])
+	    AS_ECHO(["{"])
+	    AS_ECHO(["  tme_${sign}int64_t src1;"])
+	    AS_ECHO(["  tme_${sign}int64_t src2;"])
+	    AS_ECHO(["  tme_${sign}int64_t dst;"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* get the operands: */"])
+	    AS_ECHO(["  src1 = TME_SPARC_FORMAT3_RS1;"])
+	    AS_ECHO(["  src2 = TME_SPARC_FORMAT3_RS2;"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* do the ${insn}: */"])
 	    if test ${insn} = mulx; then
-		$as_echo "  dst = src1 * src2;"
+		AS_ECHO(["  dst = src1 * src2;"])
 	    else
-		$as_echo "  if (__tme_predict_false(src2 == 0)) {"
-		$as_echo "    tme_sparc${arch}_trap(ic, TME_SPARC${arch}_TRAP_division_by_zero);"
-		$as_echo "  }"
+		AS_ECHO(["  if (__tme_predict_false(src2 == 0)) {"])
+		AS_ECHO(["    tme_sparc${arch}_trap(ic, TME_SPARC${arch}_TRAP_division_by_zero);"])
+		AS_ECHO(["  }"])
 		if test ${insn} = sdivx; then
-		    $as_echo "  dst = (src2 == -1 && src1 == (((tme_int64_t) 1) << 63) ? src1 : src1 / src2);"
+		    AS_ECHO(["  dst = (src2 == -1 && src1 == (((tme_int64_t) 1) << 63) ? src1 : src1 / src2);"])
 		else
-		    $as_echo "  dst = src1 / src2;"
+		    AS_ECHO(["  dst = src1 / src2;"])
 		fi
 	    fi
-	    $as_echo ""
-	    $as_echo "  TME_SPARC_FORMAT3_RD = dst;"
-	    $as_echo "  TME_SPARC_INSN_OK;"
-	    $as_echo "}"
+	    AS_ECHO([""])
+	    AS_ECHO(["  TME_SPARC_FORMAT3_RD = dst;"])
+	    AS_ECHO(["  TME_SPARC_INSN_OK;"])
+	    AS_ECHO(["}"])
 	fi
 
 	# a load or store instruction:
@@ -783,77 +783,77 @@ for arch in 32 64; do
 
 	    # start the instruction:
 	    #
-	    $as_echo ""
-	    $as_echo "/* this does a sparc${arch} ${insn}: */"
-	    $as_echo "TME_SPARC_FORMAT3(tme_sparc${arch}_${insn}, tme_uint${arch}_t)"
-	    $as_echo "{"
+	    AS_ECHO([""])
+	    AS_ECHO(["/* this does a sparc${arch} ${insn}: */"])
+	    AS_ECHO(["TME_SPARC_FORMAT3(tme_sparc${arch}_${insn}, tme_uint${arch}_t)"])
+	    AS_ECHO(["{"])
 
 	    # our locals:
 	    #
 	    if ${alternate}; then
-		$as_echo "  tme_uint32_t asi_mask_data;"
+		AS_ECHO(["  tme_uint32_t asi_mask_data;"])
 		asi_mask_data=asi_mask_data
 	    else
 		asi_mask_data="ic->tme_sparc_asi_mask_data"
 	    fi
-	    $as_echo "  tme_uint${arch}_t address;"
+	    AS_ECHO(["  tme_uint${arch}_t address;"])
 	    if test ${arch} = 64 && ${alternate}; then
-		$as_echo "  tme_bus_context_t context;"
+		AS_ECHO(["  tme_bus_context_t context;"])
 		context=context
 	    else
 		context="ic->tme_sparc_memory_context_default"
 	    fi
-	    $as_echo "  tme_uint32_t asi_mask_flags_slow;"
-	    $as_echo "  struct tme_sparc_tlb *dtlb;"
-	    $as_echo_n "  "
-	    if test ${slow} = load; then $as_echo_n "const "; fi
-	    $as_echo "tme_shared tme_uint8_t *memory;"
-	    $as_echo "  tme_bus_context_t dtlb_context;"
-	    $as_echo "  tme_uint32_t endian_little;"
+	    AS_ECHO(["  tme_uint32_t asi_mask_flags_slow;"])
+	    AS_ECHO(["  struct tme_sparc_tlb *dtlb;"])
+	    AS_ECHO_N(["  "])
+	    if test ${slow} = load; then AS_ECHO_N(["const "]); fi
+	    AS_ECHO(["tme_shared tme_uint8_t *memory;"])
+	    AS_ECHO(["  tme_bus_context_t dtlb_context;"])
+	    AS_ECHO(["  tme_uint32_t endian_little;"])
 	    case "${insn}" in
-	    ldd* | std* | swap*) $as_echo "  tme_uint32_t value32;" ;;
+	    ldd* | std* | swap*) AS_ECHO(["  tme_uint32_t value32;"]) ;;
 	    ldstub*) ;;
 	    cas*a)
-	        $as_echo "  unsigned int reg_rs2;"
-	        $as_echo "  tme_uint${size}_t value_compare${size};"
-	        $as_echo "  tme_uint${size}_t value_swap${size};"
-	        $as_echo "  tme_uint${size}_t value_read${size};"
+	        AS_ECHO(["  unsigned int reg_rs2;"])
+	        AS_ECHO(["  tme_uint${size}_t value_compare${size};"])
+	        AS_ECHO(["  tme_uint${size}_t value_swap${size};"])
+	        AS_ECHO(["  tme_uint${size}_t value_read${size};"])
 		;;
 	    ld*)
-	        $as_echo "  tme_uint${size}_t value${size};"
+	        AS_ECHO(["  tme_uint${size}_t value${size};"])
 		size_extend=${arch}
 		if test `expr ${size} \< ${arch}` = 1; then
 		    if test `expr ${size} \< 32` = 1; then size_extend=32; fi
-		    $as_echo "  tme_uint${size_extend}_t value${size_extend};"
+		    AS_ECHO(["  tme_uint${size_extend}_t value${size_extend};"])
 		fi
 		;;
-	    st*) $as_echo "  tme_uint${size}_t value${size};" ;;
+	    st*) AS_ECHO(["  tme_uint${size}_t value${size};"]) ;;
 	    esac
 
 	    if ${alternate}; then
-		$as_echo ""
-		$as_echo "  /* get the alternate ASI mask: */"
-		$as_echo "  asi_mask_data = _tme_sparc${arch}_alternate_asi_mask(ic);"
+		AS_ECHO([""])
+		AS_ECHO(["  /* get the alternate ASI mask: */"])
+		AS_ECHO(["  asi_mask_data = _tme_sparc${arch}_alternate_asi_mask(ic);"])
 	    fi
 
-	    $as_echo ""
-	    $as_echo "  /* get the address: */"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* get the address: */"])
 	    case "${insn}" in
-	    cas*a) $as_echo "  address = TME_SPARC_FORMAT3_RS1;" ;;
-	    *) $as_echo "  address = TME_SPARC_FORMAT3_RS1 + TME_SPARC_FORMAT3_RS2;" ;;
+	    cas*a) AS_ECHO(["  address = TME_SPARC_FORMAT3_RS1;"]) ;;
+	    *) AS_ECHO(["  address = TME_SPARC_FORMAT3_RS1 + TME_SPARC_FORMAT3_RS2;"]) ;;
 	    esac
 	    if test ${arch} = 64; then
-		$as_echo "  address &= ic->tme_sparc_address_mask;"
+		AS_ECHO(["  address &= ic->tme_sparc_address_mask;"])
 	    fi
 		
-	    $as_echo ""
-	    $as_echo "#ifdef _TME_SPARC_STATS"
-	    $as_echo "  /* track statistics: */"
-	    $as_echo "  ic->tme_sparc_stats.tme_sparc_stats_memory_total++;"
-	    $as_echo "#endif /* _TME_SPARC_STATS */"
+	    AS_ECHO([""])
+	    AS_ECHO(["#ifdef _TME_SPARC_STATS"])
+	    AS_ECHO(["  /* track statistics: */"])
+	    AS_ECHO(["  ic->tme_sparc_stats.tme_sparc_stats_memory_total++;"])
+	    AS_ECHO(["#endif /* _TME_SPARC_STATS */"])
 
-	    $as_echo ""
-	    $as_echo "  /* verify and maybe replay this transfer: */"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* verify and maybe replay this transfer: */"])
 	    if ${double}; then verify_size=32; else verify_size=${size}; fi
 	    case "${insn}" in
 	    ld*) verify_flags=TME_SPARC_RECODE_VERIFY_MEM_LOAD ;;
@@ -861,411 +861,411 @@ for arch in 32 64; do
 	    st*) verify_flags=TME_SPARC_RECODE_VERIFY_MEM_STORE ;;
 	    *) verify_flags= ;;
 	    esac
-	    $as_echo "  tme_sparc_recode_verify_mem(ic, &TME_SPARC_FORMAT3_RD,"
-	    $as_echo "                              ${asi_mask_data}, address,"
-	    $as_echo "                              (TME_RECODE_SIZE_${verify_size}"
-	    $as_echo "                               | ${verify_flags}));"
+	    AS_ECHO(["  tme_sparc_recode_verify_mem(ic, &TME_SPARC_FORMAT3_RD,"])
+	    AS_ECHO(["                              ${asi_mask_data}, address,"])
+	    AS_ECHO(["                              (TME_RECODE_SIZE_${verify_size}"])
+	    AS_ECHO(["                               | ${verify_flags}));"])
 	    if ${double}; then
-		$as_echo "  tme_sparc_recode_verify_mem(ic, &TME_SPARC_FORMAT3_RD_ODD(tme_ic_ireg_uint${arch}),"
-		$as_echo "                              ${asi_mask_data}, address + sizeof(tme_uint32_t),"
-		$as_echo "                              (TME_RECODE_SIZE_${verify_size}"
-		$as_echo "                               | ${verify_flags}));"
+		AS_ECHO(["  tme_sparc_recode_verify_mem(ic, &TME_SPARC_FORMAT3_RD_ODD(tme_ic_ireg_uint${arch}),"])
+		AS_ECHO(["                              ${asi_mask_data}, address + sizeof(tme_uint32_t),"])
+		AS_ECHO(["                              (TME_RECODE_SIZE_${verify_size}"])
+		AS_ECHO(["                               | ${verify_flags}));"])
 	    fi
-	    $as_echo "  if (tme_sparc_recode_verify_replay_last_pc(ic) != 0) {"
-	    $as_echo "    TME_SPARC_INSN_OK;"
-	    $as_echo "  }"
+	    AS_ECHO(["  if (tme_sparc_recode_verify_replay_last_pc(ic) != 0) {"])
+	    AS_ECHO(["    TME_SPARC_INSN_OK;"])
+	    AS_ECHO(["  }"])
 
 	    # if this is some kind of a store, except for an ldstub:
 	    #
 	    case "${insn}" in
 	    std*)
-		$as_echo ""
-		$as_echo "  /* log the values stored: */"
-		$as_echo "  tme_sparc_log(ic, 1000, TME_OK, "
-		$as_echo "               (TME_SPARC_LOG_HANDLE(ic),"
-		$as_echo "                _(\"${insn}\t0x%02x:0x%0"`expr ${arch} / 4`"\" TME_PRIx${arch} \":\t0x%08\" TME_PRIx32 \" 0x%08\" TME_PRIx32),"
-		$as_echo "                TME_SPARC_ASI_MASK_WHICH(${asi_mask_data} & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),"
-		$as_echo "                address,"
-		$as_echo "                (tme_uint32_t) TME_SPARC_FORMAT3_RD,"
-		$as_echo "                (tme_uint32_t) TME_SPARC_FORMAT3_RD_ODD(tme_ic_ireg_uint${arch})));"
+		AS_ECHO([""])
+		AS_ECHO(["  /* log the values stored: */"])
+		AS_ECHO(["  tme_sparc_log(ic, 1000, TME_OK, "])
+		AS_ECHO(["               (TME_SPARC_LOG_HANDLE(ic),"])
+		AS_ECHO(["                _(\"${insn}\t0x%02x:0x%0"`expr ${arch} / 4`"\" TME_PRIx${arch} \":\t0x%08\" TME_PRIx32 \" 0x%08\" TME_PRIx32),"])
+		AS_ECHO(["                TME_SPARC_ASI_MASK_WHICH(${asi_mask_data} & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),"])
+		AS_ECHO(["                address,"])
+		AS_ECHO(["                (tme_uint32_t) TME_SPARC_FORMAT3_RD,"])
+		AS_ECHO(["                (tme_uint32_t) TME_SPARC_FORMAT3_RD_ODD(tme_ic_ireg_uint${arch})));"])
 		;;
 	    st* | swap* | cas*a)
-		$as_echo ""
-		$as_echo "  /* log the value stored: */"
-		$as_echo "  tme_sparc_log(ic, 1000, TME_OK, "
-		$as_echo "               (TME_SPARC_LOG_HANDLE(ic),"
-		$as_echo "                _(\"${insn}\t0x%02x:0x%0"`expr ${arch} / 4`"\" TME_PRIx${arch} \":\t0x%0"`expr ${size} / 4`"\" TME_PRIx${size}),"
-		$as_echo "                TME_SPARC_ASI_MASK_WHICH(${asi_mask_data} & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),"
-		$as_echo "                address,"
-		$as_echo "                (tme_uint${size}_t) TME_SPARC_FORMAT3_RD));"
+		AS_ECHO([""])
+		AS_ECHO(["  /* log the value stored: */"])
+		AS_ECHO(["  tme_sparc_log(ic, 1000, TME_OK, "])
+		AS_ECHO(["               (TME_SPARC_LOG_HANDLE(ic),"])
+		AS_ECHO(["                _(\"${insn}\t0x%02x:0x%0"`expr ${arch} / 4`"\" TME_PRIx${arch} \":\t0x%0"`expr ${size} / 4`"\" TME_PRIx${size}),"])
+		AS_ECHO(["                TME_SPARC_ASI_MASK_WHICH(${asi_mask_data} & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),"])
+		AS_ECHO(["                address,"])
+		AS_ECHO(["                (tme_uint${size}_t) TME_SPARC_FORMAT3_RD));"])
 		;;
 	    esac
 
 	    if test "${context}" = context; then
-		$as_echo ""
-		$as_echo "  /* get the context: */"
+		AS_ECHO([""])
+		AS_ECHO(["  /* get the context: */"])
 		if test ${arch} = 64; then
-		    $as_echo "  context = ic->tme_sparc_memory_context_primary;"
-		    $as_echo "  if (__tme_predict_false(${asi_mask_data}"
-		    $as_echo "                          & (TME_SPARC64_ASI_FLAG_SECONDARY"
-		    $as_echo "                             + TME_SPARC64_ASI_MASK_FLAG_INSN_NUCLEUS))) {"
-		    $as_echo "    if (${asi_mask_data} & TME_SPARC64_ASI_FLAG_SECONDARY) {"
-		    $as_echo "      context = ic->tme_sparc_memory_context_secondary;"
-		    $as_echo "    }"
-		    $as_echo "    else if (TME_SPARC_MEMORY_FLAGS(ic) & TME_SPARC_MEMORY_FLAG_HAS_NUCLEUS) {"
-		    $as_echo "      context = 0;"
-		    $as_echo "    }"
-		    $as_echo "  }"
+		    AS_ECHO(["  context = ic->tme_sparc_memory_context_primary;"])
+		    AS_ECHO(["  if (__tme_predict_false(${asi_mask_data}"])
+		    AS_ECHO(["                          & (TME_SPARC64_ASI_FLAG_SECONDARY"])
+		    AS_ECHO(["                             + TME_SPARC64_ASI_MASK_FLAG_INSN_NUCLEUS))) {"])
+		    AS_ECHO(["    if (${asi_mask_data} & TME_SPARC64_ASI_FLAG_SECONDARY) {"])
+		    AS_ECHO(["      context = ic->tme_sparc_memory_context_secondary;"])
+		    AS_ECHO(["    }"])
+		    AS_ECHO(["    else if (TME_SPARC_MEMORY_FLAGS(ic) & TME_SPARC_MEMORY_FLAG_HAS_NUCLEUS) {"])
+		    AS_ECHO(["      context = 0;"])
+		    AS_ECHO(["    }"])
+		    AS_ECHO(["  }"])
 		fi
 	    fi
 
-	    $as_echo ""
-	    $as_echo "  /* assume that no DTLB ASI mask flags will require a slow ${slow}: */"
-	    $as_echo "  asi_mask_flags_slow = 0;"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* assume that no DTLB ASI mask flags will require a slow ${slow}: */"])
+	    AS_ECHO(["  asi_mask_flags_slow = 0;"])
 	    if test ${arch} = 64; then
 
-		$as_echo ""
+		AS_ECHO([""])
 		if test ${slow} != load || ${atomic}; then
-		    $as_echo "  /* a ${insn} traps on no-fault addresses: */"
+		    AS_ECHO(["  /* a ${insn} traps on no-fault addresses: */"])
 		else
-		    $as_echo "  /* a ${insn} without a no-fault ASI traps on no-fault addresses: */"
+		    AS_ECHO(["  /* a ${insn} without a no-fault ASI traps on no-fault addresses: */"])
 		fi
-		$as_echo "  asi_mask_flags_slow |= TME_SPARC64_ASI_FLAG_NO_FAULT;"
+		AS_ECHO(["  asi_mask_flags_slow |= TME_SPARC64_ASI_FLAG_NO_FAULT;"])
 		if ${atomic}; then
-		    $as_echo ""
-		    $as_echo "  /* a ${insn} traps on uncacheable addresses with side-effects: */"
-		    $as_echo "  asi_mask_flags_slow |= TME_SPARC64_ASI_MASK_FLAG_TLB_UNCACHEABLE;"
+		    AS_ECHO([""])
+		    AS_ECHO(["  /* a ${insn} traps on uncacheable addresses with side-effects: */"])
+		    AS_ECHO(["  asi_mask_flags_slow |= TME_SPARC64_ASI_MASK_FLAG_TLB_UNCACHEABLE;"])
 		fi
 
 		if ${alternate}; then
-		    $as_echo ""
-		    $as_echo "  /* if this ${insn} is using a no-fault ASI: */"
-		    $as_echo "  if (__tme_predict_false(${asi_mask_data} & TME_SPARC64_ASI_FLAG_NO_FAULT)) {"
-		    $as_echo ""
+		    AS_ECHO([""])
+		    AS_ECHO(["  /* if this ${insn} is using a no-fault ASI: */"])
+		    AS_ECHO(["  if (__tme_predict_false(${asi_mask_data} & TME_SPARC64_ASI_FLAG_NO_FAULT)) {"])
+		    AS_ECHO([""])
 		    if test ${slow} != load || ${atomic}; then
-			$as_echo "    /* a ${insn} with a no-fault ASI traps: */"
-			$as_echo "    asi_mask_flags_slow = 0 - (tme_uint32_t) 1;"
+			AS_ECHO(["    /* a ${insn} with a no-fault ASI traps: */"])
+			AS_ECHO(["    asi_mask_flags_slow = 0 - (tme_uint32_t) 1;"])
 		    else
-			$as_echo "    /* a ${insn} with a no-fault ASI traps on addresses with side-effects: */"
-			$as_echo "    asi_mask_flags_slow = TME_SPARC64_ASI_MASK_FLAG_TLB_SIDE_EFFECTS;"
+			AS_ECHO(["    /* a ${insn} with a no-fault ASI traps on addresses with side-effects: */"])
+			AS_ECHO(["    asi_mask_flags_slow = TME_SPARC64_ASI_MASK_FLAG_TLB_SIDE_EFFECTS;"])
 		    fi
-		    $as_echo "  }"
+		    AS_ECHO(["  }"])
 		fi
 	    fi
 
-	    $as_echo ""
-	    $as_echo "  /* get and busy the DTLB entry: */"
-	    $as_echo "  dtlb = &ic->tme_sparc_tlbs[[TME_SPARC_DTLB_ENTRY(ic, TME_SPARC_TLB_HASH(ic, ${context}, address))]];"
-	    $as_echo "  tme_sparc_tlb_busy(dtlb);"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* get and busy the DTLB entry: */"])
+	    AS_ECHO(["  dtlb = &ic->tme_sparc_tlbs[[TME_SPARC_DTLB_ENTRY(ic, TME_SPARC_TLB_HASH(ic, ${context}, address))]];"])
+	    AS_ECHO(["  tme_sparc_tlb_busy(dtlb);"])
 
-	    $as_echo ""
-	    $as_echo "  /* assume that this DTLB applies and allows fast transfers: */"
-	    $as_echo "  memory = dtlb->tme_sparc_tlb_emulator_off_${cycle};"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* assume that this DTLB applies and allows fast transfers: */"])
+	    AS_ECHO(["  memory = dtlb->tme_sparc_tlb_emulator_off_${cycle};"])
 
-	    $as_echo ""
-	    $as_echo "  /* if this DTLB matches any context, it matches this context: */"
-	    $as_echo "  dtlb_context = dtlb->tme_sparc_tlb_context;"
-	    $as_echo "  if (dtlb_context > ic->tme_sparc_memory_context_max) {"
-	    $as_echo "    dtlb_context = ${context};"
-	    $as_echo "  }"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* if this DTLB matches any context, it matches this context: */"])
+	    AS_ECHO(["  dtlb_context = dtlb->tme_sparc_tlb_context;"])
+	    AS_ECHO(["  if (dtlb_context > ic->tme_sparc_memory_context_max) {"])
+	    AS_ECHO(["    dtlb_context = ${context};"])
+	    AS_ECHO(["  }"])
 
-	    $as_echo ""
-	    $as_echo "  /* we must call the slow ${slow} function if: */"
-	    $as_echo "  if (__tme_predict_false("
-	    $as_echo ""
-	    $as_echo "                          /* the DTLB entry is invalid: */"
-	    $as_echo "                          tme_bus_tlb_is_invalid(&dtlb->tme_sparc_tlb_bus_tlb)"
-	    $as_echo ""
-	    $as_echo "                          /* the DTLB entry does not match the context: */"
-	    $as_echo "                          || dtlb_context != ${context}"
-	    $as_echo ""
-	    $as_echo "                          /* the DTLB entry does not cover the needed addresses: */"
-	    $as_echo "                          || (address < (tme_bus_addr${arch}_t) dtlb->tme_sparc_tlb_addr_first)"
-	    $as_echo "                          || ((address + ((${size} / 8) - 1)) > (tme_bus_addr${arch}_t) dtlb->tme_sparc_tlb_addr_last)"
-	    $as_echo ""
-	    $as_echo "                          /* the DTLB entry does not cover the needed address space: */"
-	    $as_echo "                          || (!TME_SPARC_TLB_ASI_MASK_OK(dtlb, ${asi_mask_data}))"
-	    $as_echo ""
-	    $as_echo "                          /* the DTLB entry can't be used for a fast ${insn}: */"
-	    $as_echo "                          || (dtlb->tme_sparc_tlb_asi_mask & asi_mask_flags_slow) != 0"
-	    $as_echo ""
-	    $as_echo "                          /* the DTLB entry does not allow fast transfers: */"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* we must call the slow ${slow} function if: */"])
+	    AS_ECHO(["  if (__tme_predict_false("])
+	    AS_ECHO([""])
+	    AS_ECHO(["                          /* the DTLB entry is invalid: */"])
+	    AS_ECHO(["                          tme_bus_tlb_is_invalid(&dtlb->tme_sparc_tlb_bus_tlb)"])
+	    AS_ECHO([""])
+	    AS_ECHO(["                          /* the DTLB entry does not match the context: */"])
+	    AS_ECHO(["                          || dtlb_context != ${context}"])
+	    AS_ECHO([""])
+	    AS_ECHO(["                          /* the DTLB entry does not cover the needed addresses: */"])
+	    AS_ECHO(["                          || (address < (tme_bus_addr${arch}_t) dtlb->tme_sparc_tlb_addr_first)"])
+	    AS_ECHO(["                          || ((address + ((${size} / 8) - 1)) > (tme_bus_addr${arch}_t) dtlb->tme_sparc_tlb_addr_last)"])
+	    AS_ECHO([""])
+	    AS_ECHO(["                          /* the DTLB entry does not cover the needed address space: */"])
+	    AS_ECHO(["                          || (!TME_SPARC_TLB_ASI_MASK_OK(dtlb, ${asi_mask_data}))"])
+	    AS_ECHO([""])
+	    AS_ECHO(["                          /* the DTLB entry can't be used for a fast ${insn}: */"])
+	    AS_ECHO(["                          || (dtlb->tme_sparc_tlb_asi_mask & asi_mask_flags_slow) != 0"])
+	    AS_ECHO([""])
+	    AS_ECHO(["                          /* the DTLB entry does not allow fast transfers: */"])
 	    if $atomic; then
-		$as_echo "                          || (memory != dtlb->tme_sparc_tlb_emulator_off_read)"
+		AS_ECHO(["                          || (memory != dtlb->tme_sparc_tlb_emulator_off_read)"])
 	    fi
-	    $as_echo "                          || (memory == TME_EMULATOR_OFF_UNDEF)"
+	    AS_ECHO(["                          || (memory == TME_EMULATOR_OFF_UNDEF)"])
 	    if test ${size} != 8; then
-		$as_echo ""
-		$as_echo "                          /* the address is misaligned: */"
-		$as_echo "                          || ((address % (${size} / 8)) != 0)"
+		AS_ECHO([""])
+		AS_ECHO(["                          /* the address is misaligned: */"])
+		AS_ECHO(["                          || ((address % (${size} / 8)) != 0)"])
 	    fi
 	    if ${double}; then
-		$as_echo ""
-		$as_echo "                          /* the destination register number is odd: */"
-		$as_echo "                          || ((TME_SPARC_INSN & TME_BIT(25)) != 0)"
+		AS_ECHO([""])
+		AS_ECHO(["                          /* the destination register number is odd: */"])
+		AS_ECHO(["                          || ((TME_SPARC_INSN & TME_BIT(25)) != 0)"])
 	    fi
-	    $as_echo ""
-	    $as_echo "                          )) {"
+	    AS_ECHO([""])
+	    AS_ECHO(["                          )) {"])
 
-	    $as_echo ""
-	    $as_echo "    /* call the slow ${slow} function: */"
-	    $as_echo "    memory = tme_sparc${arch}_ls(ic,"
-	    $as_echo "                            address,"
-	    $as_echo "                            &TME_SPARC_FORMAT3_RD,"
-	    $as_echo_n "                            (TME_SPARC_LSINFO_OP_"
+	    AS_ECHO([""])
+	    AS_ECHO(["    /* call the slow ${slow} function: */"])
+	    AS_ECHO(["    memory = tme_sparc${arch}_ls(ic,"])
+	    AS_ECHO(["                            address,"])
+	    AS_ECHO(["                            &TME_SPARC_FORMAT3_RD,"])
+	    AS_ECHO_N(["                            (TME_SPARC_LSINFO_OP_"])
 	    if ${atomic}; then
-		$as_echo "ATOMIC"
+		AS_ECHO(["ATOMIC"])
 	    elif test ${slow} = store; then
-		$as_echo "ST"
+		AS_ECHO(["ST"])
 	    else
-		$as_echo "LD"
+		AS_ECHO(["LD"])
 	    fi
-	    $as_echo_n "                             | "
+	    AS_ECHO_N(["                             | "])
 	    case ${insn} in
 	    ldd* | std*)
-		$as_echo "TME_SPARC_LSINFO_LDD_STD"
-		$as_echo_n "                             | "
+		AS_ECHO(["TME_SPARC_LSINFO_LDD_STD"])
+		AS_ECHO_N(["                             | "])
 		;;
 	    esac
 	    if ${alternate}; then
-		$as_echo "TME_SPARC_LSINFO_ASI(TME_SPARC_ASI_MASK_WHICH(${asi_mask_data} & ~TME_SPARC_ASI_MASK_FLAG_UNDEF))"
-		$as_echo "                             | TME_SPARC_LSINFO_A"
-		$as_echo_n "                             | "
+		AS_ECHO(["TME_SPARC_LSINFO_ASI(TME_SPARC_ASI_MASK_WHICH(${asi_mask_data} & ~TME_SPARC_ASI_MASK_FLAG_UNDEF))"])
+		AS_ECHO(["                             | TME_SPARC_LSINFO_A"])
+		AS_ECHO_N(["                             | "])
 	    fi
-	    $as_echo "(${size} / 8)));"
+	    AS_ECHO(["(${size} / 8)));"])
 	    
 	    if test ${slow} = store || ${alternate}; then
-		$as_echo ""
-		$as_echo "    /* if the slow ${slow} function did the transfer: */"
-		$as_echo "    if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {"
-		$as_echo ""
-		$as_echo "      /* unbusy the TLB entry; */"
-		$as_echo "      tme_sparc_tlb_unbusy(dtlb);"
+		AS_ECHO([""])
+		AS_ECHO(["    /* if the slow ${slow} function did the transfer: */"])
+		AS_ECHO(["    if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {"])
+		AS_ECHO([""])
+		AS_ECHO(["      /* unbusy the TLB entry; */"])
+		AS_ECHO(["      tme_sparc_tlb_unbusy(dtlb);"])
 
 	    	# if this is some kind of a load, log the value loaded:
 	    	#
 		case ${insn} in
 		ldd*)
-		    $as_echo ""
-		    $as_echo "      /* log the value loaded: */"
-		    $as_echo "      tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);"
-		    $as_echo "      tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD_ODD(tme_ic_ireg_uint${arch}));"
-		    $as_echo "      tme_sparc_log(ic, 1000, TME_OK,"
-		    $as_echo "                   (TME_SPARC_LOG_HANDLE(ic),"
-		    $as_echo "                    _(\"${insn}\t0x%02x:0x%0"`expr ${arch} / 4`"\" TME_PRIx${arch} \":\t0x%0"`expr ${arch} / 4`"\" TME_PRIx${arch} \" 0x%0"`expr ${arch} / 4`"\" TME_PRIx${arch} \"\"),"
-		    $as_echo "                    TME_SPARC_ASI_MASK_WHICH(${asi_mask_data} & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),"
-		    $as_echo "                    address,"
-		    $as_echo "                    TME_SPARC_FORMAT3_RD,"
-		    $as_echo "                    TME_SPARC_FORMAT3_RD_ODD(tme_ic_ireg_uint${arch})));"
+		    AS_ECHO([""])
+		    AS_ECHO(["      /* log the value loaded: */"])
+		    AS_ECHO(["      tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);"])
+		    AS_ECHO(["      tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD_ODD(tme_ic_ireg_uint${arch}));"])
+		    AS_ECHO(["      tme_sparc_log(ic, 1000, TME_OK,"])
+		    AS_ECHO(["                   (TME_SPARC_LOG_HANDLE(ic),"])
+		    AS_ECHO(["                    _(\"${insn}\t0x%02x:0x%0"`expr ${arch} / 4`"\" TME_PRIx${arch} \":\t0x%0"`expr ${arch} / 4`"\" TME_PRIx${arch} \" 0x%0"`expr ${arch} / 4`"\" TME_PRIx${arch} \"\"),"])
+		    AS_ECHO(["                    TME_SPARC_ASI_MASK_WHICH(${asi_mask_data} & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),"])
+		    AS_ECHO(["                    address,"])
+		    AS_ECHO(["                    TME_SPARC_FORMAT3_RD,"])
+		    AS_ECHO(["                    TME_SPARC_FORMAT3_RD_ODD(tme_ic_ireg_uint${arch})));"])
 		    ;;
 		ld* | ldstub* | swap* | cas*a)
-		    $as_echo ""
-		    $as_echo "      /* log the value loaded: */"
-		    $as_echo "      tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);"
-		    $as_echo "      tme_sparc_log(ic, 1000, TME_OK,"
-		    $as_echo "                   (TME_SPARC_LOG_HANDLE(ic),"
-		    $as_echo "                    _(\"${insn}\t0x%02x:0x%0"`expr ${arch} / 4`"\" TME_PRIx${arch} \":\t0x%0"`expr ${size} / 4`"\" TME_PRIx${arch}),"
-		    $as_echo "                    TME_SPARC_ASI_MASK_WHICH(${asi_mask_data} & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),"
-		    $as_echo "                    address,"
-		    $as_echo "                    TME_SPARC_FORMAT3_RD));"
+		    AS_ECHO([""])
+		    AS_ECHO(["      /* log the value loaded: */"])
+		    AS_ECHO(["      tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);"])
+		    AS_ECHO(["      tme_sparc_log(ic, 1000, TME_OK,"])
+		    AS_ECHO(["                   (TME_SPARC_LOG_HANDLE(ic),"])
+		    AS_ECHO(["                    _(\"${insn}\t0x%02x:0x%0"`expr ${arch} / 4`"\" TME_PRIx${arch} \":\t0x%0"`expr ${size} / 4`"\" TME_PRIx${arch}),"])
+		    AS_ECHO(["                    TME_SPARC_ASI_MASK_WHICH(${asi_mask_data} & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),"])
+		    AS_ECHO(["                    address,"])
+		    AS_ECHO(["                    TME_SPARC_FORMAT3_RD));"])
 		    ;;
 		esac
-		$as_echo ""
-		$as_echo "      TME_SPARC_INSN_OK;"
-		$as_echo "    }"
+		AS_ECHO([""])
+		AS_ECHO(["      TME_SPARC_INSN_OK;"])
+		AS_ECHO(["    }"])
 	    fi
-	    $as_echo "  }"
+	    AS_ECHO(["  }"])
 
-	    $as_echo ""
-	    $as_echo "  /* get the byte order of this transfer: */"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* get the byte order of this transfer: */"])
 	    if test ${arch} = 32; then
-		$as_echo "  endian_little = FALSE;"
+		AS_ECHO(["  endian_little = FALSE;"])
 	    elif test ${arch} = 64; then
-		$as_echo "  endian_little = ${asi_mask_data} & TME_SPARC64_ASI_FLAG_LITTLE;"
-		$as_echo "  if (__tme_predict_false(dtlb->tme_sparc_tlb_asi_mask & TME_SPARC64_ASI_FLAG_LITTLE)) {"
-		$as_echo "    if (TME_SPARC_MEMORY_FLAGS(ic) & TME_SPARC_MEMORY_FLAG_HAS_INVERT_ENDIAN) {"
-		$as_echo "      endian_little ^= TME_SPARC64_ASI_FLAG_LITTLE;"
-		$as_echo "    }"
-		$as_echo "    else {"
-		$as_echo "      assert (FALSE);"
-		$as_echo "    }"
-		$as_echo "  }"
+		AS_ECHO(["  endian_little = ${asi_mask_data} & TME_SPARC64_ASI_FLAG_LITTLE;"])
+		AS_ECHO(["  if (__tme_predict_false(dtlb->tme_sparc_tlb_asi_mask & TME_SPARC64_ASI_FLAG_LITTLE)) {"])
+		AS_ECHO(["    if (TME_SPARC_MEMORY_FLAGS(ic) & TME_SPARC_MEMORY_FLAG_HAS_INVERT_ENDIAN) {"])
+		AS_ECHO(["      endian_little ^= TME_SPARC64_ASI_FLAG_LITTLE;"])
+		AS_ECHO(["    }"])
+		AS_ECHO(["    else {"])
+		AS_ECHO(["      assert (FALSE);"])
+		AS_ECHO(["    }"])
+		AS_ECHO(["  }"])
 	    fi
 
-	    $as_echo ""
-	    $as_echo "  /* do the fast transfer: */"
-	    $as_echo "  memory += address;"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* do the fast transfer: */"])
+	    AS_ECHO(["  memory += address;"])
 
 	    # dispatch on the instruction:
 	    #
 	    case "${insn}" in
 	    ldd*)
-		$as_echo "  value32 = tme_memory_bus_read32(((const tme_shared tme_uint32_t *) memory) + 0, dtlb->tme_sparc_tlb_bus_rwlock, sizeof(tme_uint32_t) * 2, sizeof(tme_uint${arch}_t));"
-		$as_echo "  value32 = (endian_little ? tme_letoh_u32(value32) : tme_betoh_u32(value32));"
-		$as_echo "  TME_SPARC_FORMAT3_RD = value32;"
-		$as_echo "  value32 = tme_memory_bus_read32(((const tme_shared tme_uint32_t *) memory) + 1, dtlb->tme_sparc_tlb_bus_rwlock, sizeof(tme_uint32_t) * 1, sizeof(tme_uint${arch}_t));"
-		$as_echo "  value32 = (endian_little ? tme_letoh_u32(value32) : tme_betoh_u32(value32));"
-		$as_echo "  TME_SPARC_FORMAT3_RD_ODD(tme_ic_ireg_uint${arch}) = value32;"
+		AS_ECHO(["  value32 = tme_memory_bus_read32(((const tme_shared tme_uint32_t *) memory) + 0, dtlb->tme_sparc_tlb_bus_rwlock, sizeof(tme_uint32_t) * 2, sizeof(tme_uint${arch}_t));"])
+		AS_ECHO(["  value32 = (endian_little ? tme_letoh_u32(value32) : tme_betoh_u32(value32));"])
+		AS_ECHO(["  TME_SPARC_FORMAT3_RD = value32;"])
+		AS_ECHO(["  value32 = tme_memory_bus_read32(((const tme_shared tme_uint32_t *) memory) + 1, dtlb->tme_sparc_tlb_bus_rwlock, sizeof(tme_uint32_t) * 1, sizeof(tme_uint${arch}_t));"])
+		AS_ECHO(["  value32 = (endian_little ? tme_letoh_u32(value32) : tme_betoh_u32(value32));"])
+		AS_ECHO(["  TME_SPARC_FORMAT3_RD_ODD(tme_ic_ireg_uint${arch}) = value32;"])
 		;;
 	    std*)
-	        $as_echo "  value32 = TME_SPARC_FORMAT3_RD;"
-		$as_echo "  value32 = (endian_little ? tme_htole_u32(value32) : tme_htobe_u32(value32));"
-		$as_echo "  tme_memory_bus_write32(((tme_shared tme_uint32_t *) memory) + 0, value32, dtlb->tme_sparc_tlb_bus_rwlock, sizeof(tme_uint32_t) * 2, sizeof(tme_uint${arch}_t));"
-		$as_echo "  value32 = TME_SPARC_FORMAT3_RD_ODD(tme_ic_ireg_uint${arch});"
-		$as_echo "  value32 = (endian_little ? tme_htole_u32(value32) : tme_htobe_u32(value32));"
-		$as_echo "  tme_memory_bus_write32(((tme_shared tme_uint32_t *) memory) + 1, value32, dtlb->tme_sparc_tlb_bus_rwlock, sizeof(tme_uint32_t) * 1, sizeof(tme_uint${arch}_t));"
+	        AS_ECHO(["  value32 = TME_SPARC_FORMAT3_RD;"])
+		AS_ECHO(["  value32 = (endian_little ? tme_htole_u32(value32) : tme_htobe_u32(value32));"])
+		AS_ECHO(["  tme_memory_bus_write32(((tme_shared tme_uint32_t *) memory) + 0, value32, dtlb->tme_sparc_tlb_bus_rwlock, sizeof(tme_uint32_t) * 2, sizeof(tme_uint${arch}_t));"])
+		AS_ECHO(["  value32 = TME_SPARC_FORMAT3_RD_ODD(tme_ic_ireg_uint${arch});"])
+		AS_ECHO(["  value32 = (endian_little ? tme_htole_u32(value32) : tme_htobe_u32(value32));"])
+		AS_ECHO(["  tme_memory_bus_write32(((tme_shared tme_uint32_t *) memory) + 1, value32, dtlb->tme_sparc_tlb_bus_rwlock, sizeof(tme_uint32_t) * 1, sizeof(tme_uint${arch}_t));"])
 		;;
 	    ldstub*)
-		$as_echo "  TME_SPARC_FORMAT3_RD = tme_memory_atomic_xchg8(memory, 0xff, dtlb->tme_sparc_tlb_bus_rwlock, sizeof(tme_uint8_t));"
+		AS_ECHO(["  TME_SPARC_FORMAT3_RD = tme_memory_atomic_xchg8(memory, 0xff, dtlb->tme_sparc_tlb_bus_rwlock, sizeof(tme_uint8_t));"])
 		;;
 	    swap*)
-		$as_echo "  value32 = TME_SPARC_FORMAT3_RD;"
-		$as_echo "  value32 = (endian_little ? tme_htole_u32(value32) : tme_htobe_u32(value32));"
-		$as_echo "  value32 = tme_memory_atomic_xchg32((tme_shared tme_uint${size}_t *) memory, value32, dtlb->tme_sparc_tlb_bus_rwlock, sizeof(tme_uint8_t));"
-		$as_echo "  value32 = (endian_little ? tme_letoh_u32(value32) : tme_betoh_u32(value32));"
-		$as_echo "  TME_SPARC_FORMAT3_RD = value32;"
+		AS_ECHO(["  value32 = TME_SPARC_FORMAT3_RD;"])
+		AS_ECHO(["  value32 = (endian_little ? tme_htole_u32(value32) : tme_htobe_u32(value32));"])
+		AS_ECHO(["  value32 = tme_memory_atomic_xchg32((tme_shared tme_uint${size}_t *) memory, value32, dtlb->tme_sparc_tlb_bus_rwlock, sizeof(tme_uint8_t));"])
+		AS_ECHO(["  value32 = (endian_little ? tme_letoh_u32(value32) : tme_betoh_u32(value32));"])
+		AS_ECHO(["  TME_SPARC_FORMAT3_RD = value32;"])
 		;;
 	    cas*a)
-	        $as_echo "  reg_rs2 = TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, TME_SPARC_FORMAT3_MASK_RS2);"
-		$as_echo "  TME_SPARC_REG_INDEX(ic, reg_rs2);"
-		$as_echo "  value_compare${size} = ic->tme_sparc_ireg_uint${arch}(reg_rs2);"
-		$as_echo "  value_compare${size} = (endian_little ? tme_htole_u${size}(value_compare${size}) : tme_htobe_u${size}(value_compare${size}));"
-		$as_echo "  value_swap${size} = TME_SPARC_FORMAT3_RD;"
-		$as_echo "  value_swap${size} = (endian_little ? tme_htole_u${size}(value_swap${size}) : tme_htobe_u${size}(value_swap${size}));"
-		$as_echo "  value_read${size} = tme_memory_atomic_cx${size}((tme_shared tme_uint${size}_t *) memory, value_compare${size}, value_swap${size}, dtlb->tme_sparc_tlb_bus_rwlock, sizeof(tme_uint${size}_t));"
-		$as_echo "  value_read${size} = (endian_little ? tme_letoh_u${size}(value_read${size}) : tme_betoh_u${size}(value_read${size}));"
-		$as_echo "  TME_SPARC_FORMAT3_RD = value_read${size};"
+	        AS_ECHO(["  reg_rs2 = TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, TME_SPARC_FORMAT3_MASK_RS2);"])
+		AS_ECHO(["  TME_SPARC_REG_INDEX(ic, reg_rs2);"])
+		AS_ECHO(["  value_compare${size} = ic->tme_sparc_ireg_uint${arch}(reg_rs2);"])
+		AS_ECHO(["  value_compare${size} = (endian_little ? tme_htole_u${size}(value_compare${size}) : tme_htobe_u${size}(value_compare${size}));"])
+		AS_ECHO(["  value_swap${size} = TME_SPARC_FORMAT3_RD;"])
+		AS_ECHO(["  value_swap${size} = (endian_little ? tme_htole_u${size}(value_swap${size}) : tme_htobe_u${size}(value_swap${size}));"])
+		AS_ECHO(["  value_read${size} = tme_memory_atomic_cx${size}((tme_shared tme_uint${size}_t *) memory, value_compare${size}, value_swap${size}, dtlb->tme_sparc_tlb_bus_rwlock, sizeof(tme_uint${size}_t));"])
+		AS_ECHO(["  value_read${size} = (endian_little ? tme_letoh_u${size}(value_read${size}) : tme_betoh_u${size}(value_read${size}));"])
+		AS_ECHO(["  TME_SPARC_FORMAT3_RD = value_read${size};"])
 		;;
 	    ld*)
-		$as_echo "  value${size} = tme_memory_bus_read${size}((const tme_shared tme_uint${size}_t *) memory, dtlb->tme_sparc_tlb_bus_rwlock, sizeof(tme_uint${size}_t), sizeof(tme_uint${arch}_t));"
+		AS_ECHO(["  value${size} = tme_memory_bus_read${size}((const tme_shared tme_uint${size}_t *) memory, dtlb->tme_sparc_tlb_bus_rwlock, sizeof(tme_uint${size}_t), sizeof(tme_uint${arch}_t));"])
 		if test ${size} != 8; then
-		    $as_echo "  value${size} = (endian_little ? tme_letoh_u${size}(value${size}) : tme_betoh_u${size}(value${size}));"
+		    AS_ECHO(["  value${size} = (endian_little ? tme_letoh_u${size}(value${size}) : tme_betoh_u${size}(value${size}));"])
 		fi
 		if test `expr ${size} \< ${arch}` = 1; then
-		    $as_echo ""
-		    $as_echo "  /* possibly sign-extend the loaded value: */"
-		    $as_echo "  value${size_extend} = value${size};"
-		    $as_echo "  if (TME_SPARC_INSN & TME_BIT(22)) {"
-		    $as_echo "    value${size_extend} = (tme_uint${size_extend}_t) (tme_int${size_extend}_t) (tme_int${size}_t) value${size_extend};"
-		    $as_echo "  }"
+		    AS_ECHO([""])
+		    AS_ECHO(["  /* possibly sign-extend the loaded value: */"])
+		    AS_ECHO(["  value${size_extend} = value${size};"])
+		    AS_ECHO(["  if (TME_SPARC_INSN & TME_BIT(22)) {"])
+		    AS_ECHO(["    value${size_extend} = (tme_uint${size_extend}_t) (tme_int${size_extend}_t) (tme_int${size}_t) value${size_extend};"])
+		    AS_ECHO(["  }"])
 		fi
-		$as_echo "  TME_SPARC_FORMAT3_RD = (tme_uint${arch}_t) (tme_int${arch}_t) (tme_int${size_extend}_t) value${size_extend};"
+		AS_ECHO(["  TME_SPARC_FORMAT3_RD = (tme_uint${arch}_t) (tme_int${arch}_t) (tme_int${size_extend}_t) value${size_extend};"])
 		;;
 	    st*)
-		$as_echo "  value${size} = TME_SPARC_FORMAT3_RD;"
+		AS_ECHO(["  value${size} = TME_SPARC_FORMAT3_RD;"])
 		if test ${size} != 8; then
-		    $as_echo "  value${size} = (endian_little ? tme_htole_u${size}(value${size}) : tme_htobe_u${size}(value${size}));"
+		    AS_ECHO(["  value${size} = (endian_little ? tme_htole_u${size}(value${size}) : tme_htobe_u${size}(value${size}));"])
 		fi
-		$as_echo "  tme_memory_bus_write${size}((tme_shared tme_uint${size}_t *) memory, value${size}, dtlb->tme_sparc_tlb_bus_rwlock, sizeof(tme_uint${size}_t), sizeof(tme_uint${arch}_t));"
+		AS_ECHO(["  tme_memory_bus_write${size}((tme_shared tme_uint${size}_t *) memory, value${size}, dtlb->tme_sparc_tlb_bus_rwlock, sizeof(tme_uint${size}_t), sizeof(tme_uint${arch}_t));"])
 		;;
-	    *) $as_echo "$PROG internal error: unknown memory insn ${insn}" 1>&2 ; exit 1 ;;
+	    *) AS_ECHO(["$PROG internal error: unknown memory insn ${insn}"]) 1>&2 ; exit 1 ;;
 	    esac
 
-	    $as_echo ""
-	    $as_echo "  /* unbusy the DTLB entry: */"
-	    $as_echo "  tme_sparc_tlb_unbusy(dtlb);"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* unbusy the DTLB entry: */"])
+	    AS_ECHO(["  tme_sparc_tlb_unbusy(dtlb);"])
 		
 	    # if this is some kind of a load, log the value loaded:
 	    #
 	    case ${insn} in
 	    ldd*)
-		$as_echo ""
-		$as_echo "  /* log the value loaded: */"
-		$as_echo "  tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);"
-		$as_echo "  tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD_ODD(tme_ic_ireg_uint${arch}));"
-		$as_echo "  tme_sparc_log(ic, 1000, TME_OK,"
-		$as_echo "               (TME_SPARC_LOG_HANDLE(ic),"
-		$as_echo "                _(\"${insn}\t0x%02x:0x%0"`expr ${arch} / 4`"\" TME_PRIx${arch} \":\t0x%0"`expr ${arch} / 4`"\" TME_PRIx${arch} \" 0x%0"`expr ${arch} / 4`"\" TME_PRIx${arch} \"\"),"
-		$as_echo "                TME_SPARC_ASI_MASK_WHICH(${asi_mask_data} & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),"
-		$as_echo "                address,"
-		$as_echo "                TME_SPARC_FORMAT3_RD,"
-		$as_echo "                TME_SPARC_FORMAT3_RD_ODD(tme_ic_ireg_uint${arch})));"
+		AS_ECHO([""])
+		AS_ECHO(["  /* log the value loaded: */"])
+		AS_ECHO(["  tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);"])
+		AS_ECHO(["  tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD_ODD(tme_ic_ireg_uint${arch}));"])
+		AS_ECHO(["  tme_sparc_log(ic, 1000, TME_OK,"])
+		AS_ECHO(["               (TME_SPARC_LOG_HANDLE(ic),"])
+		AS_ECHO(["                _(\"${insn}\t0x%02x:0x%0"`expr ${arch} / 4`"\" TME_PRIx${arch} \":\t0x%0"`expr ${arch} / 4`"\" TME_PRIx${arch} \" 0x%0"`expr ${arch} / 4`"\" TME_PRIx${arch} \"\"),"])
+		AS_ECHO(["                TME_SPARC_ASI_MASK_WHICH(${asi_mask_data} & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),"])
+		AS_ECHO(["                address,"])
+		AS_ECHO(["                TME_SPARC_FORMAT3_RD,"])
+		AS_ECHO(["                TME_SPARC_FORMAT3_RD_ODD(tme_ic_ireg_uint${arch})));"])
 		;;
 	    ld* | ldstub* | swap* | cas*a)
-		$as_echo ""
-		$as_echo "  /* log the value loaded: */"
-		$as_echo "  tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);"
-		$as_echo "  tme_sparc_log(ic, 1000, TME_OK,"
-		$as_echo "               (TME_SPARC_LOG_HANDLE(ic),"
-		$as_echo "                _(\"${insn}\t0x%02x:0x%0"`expr ${arch} / 4`"\" TME_PRIx${arch} \":\t0x%0"`expr ${size} / 4`"\" TME_PRIx${arch}),"
-		$as_echo "                TME_SPARC_ASI_MASK_WHICH(${asi_mask_data} & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),"
-		$as_echo "                address,"
-		$as_echo "                TME_SPARC_FORMAT3_RD));"
+		AS_ECHO([""])
+		AS_ECHO(["  /* log the value loaded: */"])
+		AS_ECHO(["  tme_sparc_recode_verify_mem_load(ic, &TME_SPARC_FORMAT3_RD);"])
+		AS_ECHO(["  tme_sparc_log(ic, 1000, TME_OK,"])
+		AS_ECHO(["               (TME_SPARC_LOG_HANDLE(ic),"])
+		AS_ECHO(["                _(\"${insn}\t0x%02x:0x%0"`expr ${arch} / 4`"\" TME_PRIx${arch} \":\t0x%0"`expr ${size} / 4`"\" TME_PRIx${arch}),"])
+		AS_ECHO(["                TME_SPARC_ASI_MASK_WHICH(${asi_mask_data} & ~TME_SPARC_ASI_MASK_FLAG_UNDEF),"])
+		AS_ECHO(["                address,"])
+		AS_ECHO(["                TME_SPARC_FORMAT3_RD));"])
 		;;
 	    esac
 
-	    $as_echo ""
-	    $as_echo "  TME_SPARC_INSN_OK;"
-	    $as_echo "}"
+	    AS_ECHO([""])
+	    AS_ECHO(["  TME_SPARC_INSN_OK;"])
+	    AS_ECHO(["}"])
 	fi
 
 	# the jmpl instruction:
 	#
 	if test ${insn} = jmpl; then
 
-	    $as_echo ""
-	    $as_echo "/* this does a sparc${arch} ${insn}: */"
-	    $as_echo "TME_SPARC_FORMAT3(tme_sparc${arch}_${insn}, tme_uint${arch}_t)"
-	    $as_echo "{"
-	    $as_echo "  tme_uint${arch}_t pc_next_next;"
-	    $as_echo "  tme_uint32_t ls_faults;"
-	    $as_echo ""
-	    $as_echo "  /* \"The JMPL instruction causes a register-indirect delayed control"
-	    $as_echo "     transfer to the address given by r[[rs1]] + r[[rs2]] if the i field is"
-	    $as_echo "     zero, or r[[rs1]] + sign_ext(simm13) if the i field is one. The JMPL"
-	    $as_echo "     instruction copies the PC, which contains the address of the JMPL"
-	    $as_echo "     instruction, into register r[[rd]]. If either of the low-order two"
-	    $as_echo "     bits of the jump address is nonzero, a mem_address_not_aligned"
-	    $as_echo "     trap occurs.\" */"
-	    $as_echo ""
-	    $as_echo "  /* get the target address: */"
-	    $as_echo "  pc_next_next = TME_SPARC_FORMAT3_RS1 + TME_SPARC_FORMAT3_RS2;"
+	    AS_ECHO([""])
+	    AS_ECHO(["/* this does a sparc${arch} ${insn}: */"])
+	    AS_ECHO(["TME_SPARC_FORMAT3(tme_sparc${arch}_${insn}, tme_uint${arch}_t)"])
+	    AS_ECHO(["{"])
+	    AS_ECHO(["  tme_uint${arch}_t pc_next_next;"])
+	    AS_ECHO(["  tme_uint32_t ls_faults;"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* \"The JMPL instruction causes a register-indirect delayed control"])
+	    AS_ECHO(["     transfer to the address given by r[[rs1]] + r[[rs2]] if the i field is"])
+	    AS_ECHO(["     zero, or r[[rs1]] + sign_ext(simm13) if the i field is one. The JMPL"])
+	    AS_ECHO(["     instruction copies the PC, which contains the address of the JMPL"])
+	    AS_ECHO(["     instruction, into register r[[rd]]. If either of the low-order two"])
+	    AS_ECHO(["     bits of the jump address is nonzero, a mem_address_not_aligned"])
+	    AS_ECHO(["     trap occurs.\" */"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* get the target address: */"])
+	    AS_ECHO(["  pc_next_next = TME_SPARC_FORMAT3_RS1 + TME_SPARC_FORMAT3_RS2;"])
 	    if test ${arch} = 64; then
-		$as_echo "  pc_next_next &= ic->tme_sparc_address_mask;"
+		AS_ECHO(["  pc_next_next &= ic->tme_sparc_address_mask;"])
 	    fi
-	    $as_echo ""
-	    $as_echo "  /* set the delayed control transfer: */"
-	    $as_echo "  ic->tme_sparc_ireg_uint${arch}(TME_SPARC_IREG_PC_NEXT_NEXT) = pc_next_next;"
-	    $as_echo ""
-	    $as_echo "  /* check the target address: */"
-	    $as_echo "  ls_faults = TME_SPARC_LS_FAULT_NONE;"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* set the delayed control transfer: */"])
+	    AS_ECHO(["  ic->tme_sparc_ireg_uint${arch}(TME_SPARC_IREG_PC_NEXT_NEXT) = pc_next_next;"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* check the target address: */"])
+	    AS_ECHO(["  ls_faults = TME_SPARC_LS_FAULT_NONE;"])
 	    if test ${arch} = 64; then
-		$as_echo "  if (__tme_predict_false((pc_next_next"
-		$as_echo "                           + ic->tme_sparc${arch}_ireg_va_hole_start)"
-		$as_echo "                          > ((ic->tme_sparc${arch}_ireg_va_hole_start * 2) - 1))) {"
-		$as_echo "    ls_faults += TME_SPARC64_LS_FAULT_VA_RANGE_NNPC;"
-		$as_echo "  }"
+		AS_ECHO(["  if (__tme_predict_false((pc_next_next"])
+		AS_ECHO(["                           + ic->tme_sparc${arch}_ireg_va_hole_start)"])
+		AS_ECHO(["                          > ((ic->tme_sparc${arch}_ireg_va_hole_start * 2) - 1))) {"])
+		AS_ECHO(["    ls_faults += TME_SPARC64_LS_FAULT_VA_RANGE_NNPC;"])
+		AS_ECHO(["  }"])
 	    fi
-	    $as_echo "  if (__tme_predict_false((pc_next_next % sizeof(tme_uint32_t)) != 0)) {"
-	    $as_echo "    ls_faults += TME_SPARC_LS_FAULT_ADDRESS_NOT_ALIGNED;"
-	    $as_echo "  }"
-	    $as_echo "  if (__tme_predict_false(ls_faults != TME_SPARC_LS_FAULT_NONE)) {"
-	    $as_echo "    tme_sparc_nnpc_trap(ic, ls_faults);"
-	    $as_echo "  }"
-	    $as_echo ""
-	    $as_echo "  /* write the PC of the jmpl into r[[rd]]: */"
-	    $as_echo "  TME_SPARC_FORMAT3_RD = ic->tme_sparc_ireg_uint${arch}(TME_SPARC_IREG_PC);"
-	    $as_echo ""
-	    $as_echo "  /* log an indirect call instruction, which has 15 (%o7) for rd: */"
-	    $as_echo "  if (TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, TME_SPARC_FORMAT3_MASK_RD) == 15) {"
-	    $as_echo "    tme_sparc_log(ic, 250, TME_OK,"
-	    $as_echo "                  (TME_SPARC_LOG_HANDLE(ic),"
-	    $as_echo "                   _(\"call 0x%0"`expr ${arch} / 4`"\" TME_PRIx${arch}),"
-	    $as_echo "                   pc_next_next));"
-	    $as_echo "  }"
-	    $as_echo ""
-	    $as_echo "  /* log a ret or retl instruction, which has 0 (%g0) for rd,"
-	    $as_echo "     either 31 (%i7) or 15 (%o7) for rs1, and 8 for simm13: */"
-	    $as_echo "  else if ((TME_SPARC_INSN | (16 << 14))"
-	    $as_echo "           == ((tme_uint32_t) (0x2 << 30) | (0 << 25) | (0x38 << 19) | (31 << 14) | (0x1 << 13) | 8)) {"
-	    $as_echo "    tme_sparc_log(ic, 250, TME_OK,"
-	    $as_echo "                  (TME_SPARC_LOG_HANDLE(ic),"
-	    $as_echo "                   _(\"retl 0x%0"`expr ${arch} / 4`"\" TME_PRIx${arch}),"
-	    $as_echo "                   pc_next_next));"
-	    $as_echo "  }"
-	    $as_echo ""
-	    $as_echo "  TME_SPARC_INSN_OK;"
-	    $as_echo "}"
+	    AS_ECHO(["  if (__tme_predict_false((pc_next_next % sizeof(tme_uint32_t)) != 0)) {"])
+	    AS_ECHO(["    ls_faults += TME_SPARC_LS_FAULT_ADDRESS_NOT_ALIGNED;"])
+	    AS_ECHO(["  }"])
+	    AS_ECHO(["  if (__tme_predict_false(ls_faults != TME_SPARC_LS_FAULT_NONE)) {"])
+	    AS_ECHO(["    tme_sparc_nnpc_trap(ic, ls_faults);"])
+	    AS_ECHO(["  }"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* write the PC of the jmpl into r[[rd]]: */"])
+	    AS_ECHO(["  TME_SPARC_FORMAT3_RD = ic->tme_sparc_ireg_uint${arch}(TME_SPARC_IREG_PC);"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* log an indirect call instruction, which has 15 (%o7) for rd: */"])
+	    AS_ECHO(["  if (TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, TME_SPARC_FORMAT3_MASK_RD) == 15) {"])
+	    AS_ECHO(["    tme_sparc_log(ic, 250, TME_OK,"])
+	    AS_ECHO(["                  (TME_SPARC_LOG_HANDLE(ic),"])
+	    AS_ECHO(["                   _(\"call 0x%0"`expr ${arch} / 4`"\" TME_PRIx${arch}),"])
+	    AS_ECHO(["                   pc_next_next));"])
+	    AS_ECHO(["  }"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* log a ret or retl instruction, which has 0 (%g0) for rd,"])
+	    AS_ECHO(["     either 31 (%i7) or 15 (%o7) for rs1, and 8 for simm13: */"])
+	    AS_ECHO(["  else if ((TME_SPARC_INSN | (16 << 14))"])
+	    AS_ECHO(["           == ((tme_uint32_t) (0x2 << 30) | (0 << 25) | (0x38 << 19) | (31 << 14) | (0x1 << 13) | 8)) {"])
+	    AS_ECHO(["    tme_sparc_log(ic, 250, TME_OK,"])
+	    AS_ECHO(["                  (TME_SPARC_LOG_HANDLE(ic),"])
+	    AS_ECHO(["                   _(\"retl 0x%0"`expr ${arch} / 4`"\" TME_PRIx${arch}),"])
+	    AS_ECHO(["                   pc_next_next));"])
+	    AS_ECHO(["  }"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  TME_SPARC_INSN_OK;"])
+	    AS_ECHO(["}"])
 	fi
 
 	# this may be an alternate-space version of a floating-point
@@ -1277,363 +1277,363 @@ for arch in 32 64; do
 	#
 	if test ${insn} = "ldf${alternate}"; then
 
-	    $as_echo ""
-	    $as_echo "/* this does a sparc${arch} ${insn}: */"
-	    $as_echo "TME_SPARC_FORMAT3(tme_sparc${arch}_${insn}, tme_uint${arch}_t)"
-	    $as_echo "{"
-	    $as_echo "  tme_uint32_t misaligned;"
-	    $as_echo "  struct tme_float float_buffer;"
-	    $as_echo "  struct tme_float *fpreg;"
-	    $as_echo ""
-	    $as_echo "  /* get the least significant 32 bits of the address: */"
-	    $as_echo "  misaligned = TME_SPARC_FORMAT3_RS1;"
-	    $as_echo "  misaligned += (tme_uint32_t) TME_SPARC_FORMAT3_RS2;"
+	    AS_ECHO([""])
+	    AS_ECHO(["/* this does a sparc${arch} ${insn}: */"])
+	    AS_ECHO(["TME_SPARC_FORMAT3(tme_sparc${arch}_${insn}, tme_uint${arch}_t)"])
+	    AS_ECHO(["{"])
+	    AS_ECHO(["  tme_uint32_t misaligned;"])
+	    AS_ECHO(["  struct tme_float float_buffer;"])
+	    AS_ECHO(["  struct tme_float *fpreg;"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* get the least significant 32 bits of the address: */"])
+	    AS_ECHO(["  misaligned = TME_SPARC_FORMAT3_RS1;"])
+	    AS_ECHO(["  misaligned += (tme_uint32_t) TME_SPARC_FORMAT3_RS2;"])
 	    if test "${arch}${alternate}" = 64a; then
-		$as_echo ""
-		$as_echo "  /* see if the address is misaligned for the ASI: */"
-		$as_echo "  misaligned = (*ic->_tme_sparc_ls_asi_misaligned)(ic, misaligned);"
+		AS_ECHO([""])
+		AS_ECHO(["  /* see if the address is misaligned for the ASI: */"])
+		AS_ECHO(["  misaligned = (*ic->_tme_sparc_ls_asi_misaligned)(ic, misaligned);"])
 	    fi
-	    $as_echo ""
-	    $as_echo "  /* decode rd: */"
-	    $as_echo "  float_buffer.tme_float_format = TME_FLOAT_FORMAT_IEEE754_SINGLE;"
-	    $as_echo "  fpreg"
-	    $as_echo "    = _tme_sparc${arch}_fpu_mem_fpreg(ic,"
-	    $as_echo "                                 misaligned,"
-	    $as_echo "                                 &float_buffer);"
-	    $as_echo ""
-	    $as_echo "  /* do the load: */"
-	    $as_echo "  tme_sparc${arch}_ld${alternate}(ic, _rs1, _rs2, &ic->tme_sparc_ireg_uint${arch}(TME_SPARC_IREG_FPX));"
-	    $as_echo ""
-	    $as_echo "  /* set the floating-point register value: */"
-	    $as_echo "  assert (fpreg != &float_buffer);"
-	    $as_echo "  fpreg->tme_float_format = TME_FLOAT_FORMAT_IEEE754_SINGLE;"
-	    $as_echo "  fpreg->tme_float_value_ieee754_single"
-	    $as_echo "    = ic->tme_sparc_ireg_uint32(TME_SPARC_IREG_FPX${reg32_shift});"
-	    $as_echo ""
-	    $as_echo "  TME_SPARC_INSN_OK;"
-	    $as_echo "}"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* decode rd: */"])
+	    AS_ECHO(["  float_buffer.tme_float_format = TME_FLOAT_FORMAT_IEEE754_SINGLE;"])
+	    AS_ECHO(["  fpreg"])
+	    AS_ECHO(["    = _tme_sparc${arch}_fpu_mem_fpreg(ic,"])
+	    AS_ECHO(["                                 misaligned,"])
+	    AS_ECHO(["                                 &float_buffer);"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* do the load: */"])
+	    AS_ECHO(["  tme_sparc${arch}_ld${alternate}(ic, _rs1, _rs2, &ic->tme_sparc_ireg_uint${arch}(TME_SPARC_IREG_FPX));"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* set the floating-point register value: */"])
+	    AS_ECHO(["  assert (fpreg != &float_buffer);"])
+	    AS_ECHO(["  fpreg->tme_float_format = TME_FLOAT_FORMAT_IEEE754_SINGLE;"])
+	    AS_ECHO(["  fpreg->tme_float_value_ieee754_single"])
+	    AS_ECHO(["    = ic->tme_sparc_ireg_uint32(TME_SPARC_IREG_FPX${reg32_shift});"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  TME_SPARC_INSN_OK;"])
+	    AS_ECHO(["}"])
 	fi
 
 	# the stf instruction:
 	#
 	if test ${insn} = "stf${alternate}"; then
 
-	    $as_echo ""
-	    $as_echo "/* this does a sparc${arch} ${insn}: */"
-	    $as_echo "TME_SPARC_FORMAT3(tme_sparc${arch}_${insn}, tme_uint${arch}_t)"
-	    $as_echo "{"
-	    $as_echo "  tme_uint32_t misaligned;"
-	    $as_echo "  struct tme_float float_buffer;"
-	    $as_echo "  const struct tme_float *fpreg;"
-	    $as_echo "  const tme_uint32_t *value_single;"
-	    $as_echo ""
-	    $as_echo "  /* get the least significant 32 bits of the address: */"
-	    $as_echo "  misaligned = TME_SPARC_FORMAT3_RS1;"
-	    $as_echo "  misaligned += (tme_uint32_t) TME_SPARC_FORMAT3_RS2;"
+	    AS_ECHO([""])
+	    AS_ECHO(["/* this does a sparc${arch} ${insn}: */"])
+	    AS_ECHO(["TME_SPARC_FORMAT3(tme_sparc${arch}_${insn}, tme_uint${arch}_t)"])
+	    AS_ECHO(["{"])
+	    AS_ECHO(["  tme_uint32_t misaligned;"])
+	    AS_ECHO(["  struct tme_float float_buffer;"])
+	    AS_ECHO(["  const struct tme_float *fpreg;"])
+	    AS_ECHO(["  const tme_uint32_t *value_single;"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* get the least significant 32 bits of the address: */"])
+	    AS_ECHO(["  misaligned = TME_SPARC_FORMAT3_RS1;"])
+	    AS_ECHO(["  misaligned += (tme_uint32_t) TME_SPARC_FORMAT3_RS2;"])
 	    if test "${arch}${alternate}" = 64a; then
-		$as_echo ""
-		$as_echo "  /* see if the address is misaligned for the ASI: */"
-		$as_echo "  misaligned = (*ic->_tme_sparc_ls_asi_misaligned)(ic, misaligned);"
+		AS_ECHO([""])
+		AS_ECHO(["  /* see if the address is misaligned for the ASI: */"])
+		AS_ECHO(["  misaligned = (*ic->_tme_sparc_ls_asi_misaligned)(ic, misaligned);"])
 	    fi
-	    $as_echo ""
-	    $as_echo "  /* decode rd: */"
-	    $as_echo "  float_buffer.tme_float_format = TME_FLOAT_FORMAT_IEEE754_SINGLE;"
-	    $as_echo "  fpreg"
-	    $as_echo "    = _tme_sparc${arch}_fpu_mem_fpreg(ic,"
-	    $as_echo "                                 misaligned,"
-	    $as_echo "                                 &float_buffer);"
-	    $as_echo ""
-	    $as_echo "  /* get this single floating-point register in IEEE754 single-precision format: */"
-	    $as_echo "  value_single = tme_ieee754_single_value_get(fpreg, &float_buffer.tme_float_value_ieee754_single);"
-	    $as_echo ""
-	    $as_echo "  /* set the floating-point register value: */"
-	    $as_echo "  ic->tme_sparc_ireg_uint32(TME_SPARC_IREG_FPX${reg32_shift}) = *value_single;"
-	    $as_echo ""
-	    $as_echo "  /* do the store: */"
-	    $as_echo "  tme_sparc${arch}_st${alternate}(ic, _rs1, _rs2, &ic->tme_sparc_ireg_uint${arch}(TME_SPARC_IREG_FPX));"
-	    $as_echo ""
-	    $as_echo "  assert (fpreg != &float_buffer);"
-	    $as_echo "  TME_SPARC_INSN_OK;"
-	    $as_echo "}"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* decode rd: */"])
+	    AS_ECHO(["  float_buffer.tme_float_format = TME_FLOAT_FORMAT_IEEE754_SINGLE;"])
+	    AS_ECHO(["  fpreg"])
+	    AS_ECHO(["    = _tme_sparc${arch}_fpu_mem_fpreg(ic,"])
+	    AS_ECHO(["                                 misaligned,"])
+	    AS_ECHO(["                                 &float_buffer);"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* get this single floating-point register in IEEE754 single-precision format: */"])
+	    AS_ECHO(["  value_single = tme_ieee754_single_value_get(fpreg, &float_buffer.tme_float_value_ieee754_single);"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* set the floating-point register value: */"])
+	    AS_ECHO(["  ic->tme_sparc_ireg_uint32(TME_SPARC_IREG_FPX${reg32_shift}) = *value_single;"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* do the store: */"])
+	    AS_ECHO(["  tme_sparc${arch}_st${alternate}(ic, _rs1, _rs2, &ic->tme_sparc_ireg_uint${arch}(TME_SPARC_IREG_FPX));"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  assert (fpreg != &float_buffer);"])
+	    AS_ECHO(["  TME_SPARC_INSN_OK;"])
+	    AS_ECHO(["}"])
 	fi
 
 	# the lddf instruction:
 	#
 	if test ${insn} = "lddf${alternate}"; then
 
-	    $as_echo ""
-	    $as_echo "/* this does a sparc${arch} ${insn}: */"
-	    $as_echo "TME_SPARC_FORMAT3(tme_sparc${arch}_${insn}, tme_uint${arch}_t)"
-	    $as_echo "{"
-	    $as_echo "  tme_uint${arch}_t address;"
-	    $as_echo "  tme_uint32_t misaligned;"
-	    $as_echo "  struct tme_float float_buffer;"
-	    $as_echo "  struct tme_float *fpreg;"
+	    AS_ECHO([""])
+	    AS_ECHO(["/* this does a sparc${arch} ${insn}: */"])
+	    AS_ECHO(["TME_SPARC_FORMAT3(tme_sparc${arch}_${insn}, tme_uint${arch}_t)"])
+	    AS_ECHO(["{"])
+	    AS_ECHO(["  tme_uint${arch}_t address;"])
+	    AS_ECHO(["  tme_uint32_t misaligned;"])
+	    AS_ECHO(["  struct tme_float float_buffer;"])
+	    AS_ECHO(["  struct tme_float *fpreg;"])
 	    if test ${arch} != 32; then
-		$as_echo "  tme_uint${arch}_t offset;"
+		AS_ECHO(["  tme_uint${arch}_t offset;"])
 	    fi
-	    $as_echo ""
-	    $as_echo "  /* get the address: */"
-	    $as_echo "  address = TME_SPARC_FORMAT3_RS1 + TME_SPARC_FORMAT3_RS2;"
-	    $as_echo ""
-	    $as_echo "  /* get the least significant 32 bits of the address: */"
-	    $as_echo "  misaligned = address;"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* get the address: */"])
+	    AS_ECHO(["  address = TME_SPARC_FORMAT3_RS1 + TME_SPARC_FORMAT3_RS2;"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* get the least significant 32 bits of the address: */"])
+	    AS_ECHO(["  misaligned = address;"])
 	    if test "${arch}${alternate}" = 64a; then
-		$as_echo ""
-		$as_echo "  /* see if the address is misaligned for the ASI: */"
-		$as_echo "  misaligned = (*ic->_tme_sparc_ls_asi_misaligned)(ic, misaligned);"
+		AS_ECHO([""])
+		AS_ECHO(["  /* see if the address is misaligned for the ASI: */"])
+		AS_ECHO(["  misaligned = (*ic->_tme_sparc_ls_asi_misaligned)(ic, misaligned);"])
 	    fi
-	    $as_echo ""
-	    $as_echo "  /* decode rd: */"
-	    $as_echo "  float_buffer.tme_float_format = TME_FLOAT_FORMAT_IEEE754_DOUBLE;"
-	    $as_echo "  fpreg"
-	    $as_echo "    = _tme_sparc${arch}_fpu_mem_fpreg(ic,"
-	    $as_echo "                                 misaligned,"
-	    $as_echo "                                 &float_buffer);"
-	    $as_echo ""
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* decode rd: */"])
+	    AS_ECHO(["  float_buffer.tme_float_format = TME_FLOAT_FORMAT_IEEE754_DOUBLE;"])
+	    AS_ECHO(["  fpreg"])
+	    AS_ECHO(["    = _tme_sparc${arch}_fpu_mem_fpreg(ic,"])
+	    AS_ECHO(["                                 misaligned,"])
+	    AS_ECHO(["                                 &float_buffer);"])
+	    AS_ECHO([""])
 	    if test ${arch} = 32; then
-		$as_echo "  /* do the load: */"
-		$as_echo "  tme_sparc${arch}_ldd(ic, _rs1, _rs2, &ic->tme_sparc_ireg_uint32(TME_SPARC_IREG_FPX${reg32_shift}));"
-		$as_echo ""
-		$as_echo "  /* set the double floating-point register value: */"
-		$as_echo "  assert (fpreg != &float_buffer);"
-		$as_echo "  fpreg->tme_float_format = TME_FLOAT_FORMAT_IEEE754_DOUBLE;"
-		$as_echo "  fpreg->tme_float_value_ieee754_double.tme_value64_uint32_hi"
-		$as_echo "    = ic->tme_sparc_ireg_uint32((TME_SPARC_IREG_FPX${reg32_shift}) + 0);"
-		$as_echo "  fpreg->tme_float_value_ieee754_double.tme_value64_uint32_lo"
-		$as_echo "    = ic->tme_sparc_ireg_uint32((TME_SPARC_IREG_FPX${reg32_shift}) + 1);"
+		AS_ECHO(["  /* do the load: */"])
+		AS_ECHO(["  tme_sparc${arch}_ldd(ic, _rs1, _rs2, &ic->tme_sparc_ireg_uint32(TME_SPARC_IREG_FPX${reg32_shift}));"])
+		AS_ECHO([""])
+		AS_ECHO(["  /* set the double floating-point register value: */"])
+		AS_ECHO(["  assert (fpreg != &float_buffer);"])
+		AS_ECHO(["  fpreg->tme_float_format = TME_FLOAT_FORMAT_IEEE754_DOUBLE;"])
+		AS_ECHO(["  fpreg->tme_float_value_ieee754_double.tme_value64_uint32_hi"])
+		AS_ECHO(["    = ic->tme_sparc_ireg_uint32((TME_SPARC_IREG_FPX${reg32_shift}) + 0);"])
+		AS_ECHO(["  fpreg->tme_float_value_ieee754_double.tme_value64_uint32_lo"])
+		AS_ECHO(["    = ic->tme_sparc_ireg_uint32((TME_SPARC_IREG_FPX${reg32_shift}) + 1);"])
 	    else
-		$as_echo "  /* if bit two of the address is set, and this SPARC supports"
-		$as_echo "     32-bit-aligned ${insn} instructions: */"
-		$as_echo "  if ((misaligned & sizeof(tme_uint32_t))"
-		$as_echo "      && fpreg != &float_buffer) {"
-		$as_echo ""
-		$as_echo "    /* do two 32-bit loads: */"
-		$as_echo "    offset = sizeof(tme_uint32_t) * 0;"
-		$as_echo "    tme_sparc${arch}_ld${alternate}(ic, &address, &offset, &ic->tme_sparc_ireg_uint${arch}(TME_SPARC_IREG_FPX + 0));"
-		$as_echo "    offset = sizeof(tme_uint32_t) * 1;"
-		$as_echo "    tme_sparc${arch}_ld${alternate}(ic, &address, &offset, &ic->tme_sparc_ireg_uint${arch}(TME_SPARC_IREG_FPX + 1));"
-		$as_echo ""
-		$as_echo "    /* set the double floating-point register value: */"
-		$as_echo "    fpreg->tme_float_format = TME_FLOAT_FORMAT_IEEE754_DOUBLE;"
-		$as_echo "    fpreg->tme_float_value_ieee754_double.tme_value64_uint32_hi"
-		$as_echo "      = ic->tme_sparc_ireg_uint64(TME_SPARC_IREG_FPX + 0);"
-		$as_echo "    fpreg->tme_float_value_ieee754_double.tme_value64_uint32_lo"
-		$as_echo "      = ic->tme_sparc_ireg_uint64(TME_SPARC_IREG_FPX + 1);"
-		$as_echo "  }"
-		$as_echo ""
-		$as_echo "  /* otherwise, bit two of the address is not set, or this SPARC"
-		$as_echo "     doesn't support 32-bit-aligned ${insn} instructions: */"
-		$as_echo "  else {"
-		$as_echo ""
-		$as_echo "    /* do an ldx${alternate}-style load: */"
-		$as_echo "    tme_sparc${arch}_ldx${alternate}(ic, _rs1, _rs2, &ic->tme_sparc_ireg_uint${arch}(TME_SPARC_IREG_FPX));"
-		$as_echo ""
-		$as_echo "    /* set the double floating-point register value: */"
-		$as_echo "    assert (fpreg != &float_buffer);"
-		$as_echo "    fpreg->tme_float_format = TME_FLOAT_FORMAT_IEEE754_DOUBLE;"
-		$as_echo "    fpreg->tme_float_value_ieee754_double.tme_value64_uint"
-		$as_echo "      = ic->tme_sparc_ireg_uint64(TME_SPARC_IREG_FPX);"
-		$as_echo "  }"
+		AS_ECHO(["  /* if bit two of the address is set, and this SPARC supports"])
+		AS_ECHO(["     32-bit-aligned ${insn} instructions: */"])
+		AS_ECHO(["  if ((misaligned & sizeof(tme_uint32_t))"])
+		AS_ECHO(["      && fpreg != &float_buffer) {"])
+		AS_ECHO([""])
+		AS_ECHO(["    /* do two 32-bit loads: */"])
+		AS_ECHO(["    offset = sizeof(tme_uint32_t) * 0;"])
+		AS_ECHO(["    tme_sparc${arch}_ld${alternate}(ic, &address, &offset, &ic->tme_sparc_ireg_uint${arch}(TME_SPARC_IREG_FPX + 0));"])
+		AS_ECHO(["    offset = sizeof(tme_uint32_t) * 1;"])
+		AS_ECHO(["    tme_sparc${arch}_ld${alternate}(ic, &address, &offset, &ic->tme_sparc_ireg_uint${arch}(TME_SPARC_IREG_FPX + 1));"])
+		AS_ECHO([""])
+		AS_ECHO(["    /* set the double floating-point register value: */"])
+		AS_ECHO(["    fpreg->tme_float_format = TME_FLOAT_FORMAT_IEEE754_DOUBLE;"])
+		AS_ECHO(["    fpreg->tme_float_value_ieee754_double.tme_value64_uint32_hi"])
+		AS_ECHO(["      = ic->tme_sparc_ireg_uint64(TME_SPARC_IREG_FPX + 0);"])
+		AS_ECHO(["    fpreg->tme_float_value_ieee754_double.tme_value64_uint32_lo"])
+		AS_ECHO(["      = ic->tme_sparc_ireg_uint64(TME_SPARC_IREG_FPX + 1);"])
+		AS_ECHO(["  }"])
+		AS_ECHO([""])
+		AS_ECHO(["  /* otherwise, bit two of the address is not set, or this SPARC"])
+		AS_ECHO(["     doesn't support 32-bit-aligned ${insn} instructions: */"])
+		AS_ECHO(["  else {"])
+		AS_ECHO([""])
+		AS_ECHO(["    /* do an ldx${alternate}-style load: */"])
+		AS_ECHO(["    tme_sparc${arch}_ldx${alternate}(ic, _rs1, _rs2, &ic->tme_sparc_ireg_uint${arch}(TME_SPARC_IREG_FPX));"])
+		AS_ECHO([""])
+		AS_ECHO(["    /* set the double floating-point register value: */"])
+		AS_ECHO(["    assert (fpreg != &float_buffer);"])
+		AS_ECHO(["    fpreg->tme_float_format = TME_FLOAT_FORMAT_IEEE754_DOUBLE;"])
+		AS_ECHO(["    fpreg->tme_float_value_ieee754_double.tme_value64_uint"])
+		AS_ECHO(["      = ic->tme_sparc_ireg_uint64(TME_SPARC_IREG_FPX);"])
+		AS_ECHO(["  }"])
 	    fi
-	    $as_echo ""
-	    $as_echo "  TME_SPARC_INSN_OK;"
-	    $as_echo "}"
+	    AS_ECHO([""])
+	    AS_ECHO(["  TME_SPARC_INSN_OK;"])
+	    AS_ECHO(["}"])
 	fi
 
 	# the stdf instruction:
 	#
 	if test ${insn} = "stdf${alternate}"; then
 
-	    $as_echo ""
-	    $as_echo "/* this does a sparc${arch} ${insn}: */"
-	    $as_echo "TME_SPARC_FORMAT3(tme_sparc${arch}_${insn}, tme_uint${arch}_t)"
-	    $as_echo "{"
-	    $as_echo "  tme_uint${arch}_t address;"
-	    $as_echo "  tme_uint32_t misaligned;"
-	    $as_echo "  struct tme_float float_buffer;"
-	    $as_echo "  struct tme_float *fpreg;"
-	    $as_echo "  const union tme_value64 *value_double;"
+	    AS_ECHO([""])
+	    AS_ECHO(["/* this does a sparc${arch} ${insn}: */"])
+	    AS_ECHO(["TME_SPARC_FORMAT3(tme_sparc${arch}_${insn}, tme_uint${arch}_t)"])
+	    AS_ECHO(["{"])
+	    AS_ECHO(["  tme_uint${arch}_t address;"])
+	    AS_ECHO(["  tme_uint32_t misaligned;"])
+	    AS_ECHO(["  struct tme_float float_buffer;"])
+	    AS_ECHO(["  struct tme_float *fpreg;"])
+	    AS_ECHO(["  const union tme_value64 *value_double;"])
 	    if test ${arch} != 32; then
-		$as_echo "  tme_uint${arch}_t offset;"
+		AS_ECHO(["  tme_uint${arch}_t offset;"])
 	    fi
-	    $as_echo ""
-	    $as_echo "  /* get the address: */"
-	    $as_echo "  address = TME_SPARC_FORMAT3_RS1 + TME_SPARC_FORMAT3_RS2;"
-	    $as_echo ""
-	    $as_echo "  /* get the least significant 32 bits of the address: */"
-	    $as_echo "  misaligned = address;"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* get the address: */"])
+	    AS_ECHO(["  address = TME_SPARC_FORMAT3_RS1 + TME_SPARC_FORMAT3_RS2;"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* get the least significant 32 bits of the address: */"])
+	    AS_ECHO(["  misaligned = address;"])
 	    if test "${arch}${alternate}" = 64a; then
-		$as_echo ""
-		$as_echo "  /* see if the address is misaligned for the ASI: */"
-		$as_echo "  misaligned = (*ic->_tme_sparc_ls_asi_misaligned)(ic, misaligned);"
+		AS_ECHO([""])
+		AS_ECHO(["  /* see if the address is misaligned for the ASI: */"])
+		AS_ECHO(["  misaligned = (*ic->_tme_sparc_ls_asi_misaligned)(ic, misaligned);"])
 	    fi
-	    $as_echo ""
-	    $as_echo "  /* decode rd: */"
-	    $as_echo "  float_buffer.tme_float_format = TME_FLOAT_FORMAT_IEEE754_DOUBLE;"
-	    $as_echo "  fpreg"
-	    $as_echo "    = _tme_sparc${arch}_fpu_mem_fpreg(ic,"
-	    $as_echo "                                 misaligned,"
-	    $as_echo "                                 &float_buffer);"
-	    $as_echo ""
-	    $as_echo "  /* get this double floating-point register in IEEE754 double-precision format: */"
-	    $as_echo "  value_double = tme_ieee754_double_value_get(fpreg, &float_buffer.tme_float_value_ieee754_double);"
-	    $as_echo ""
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* decode rd: */"])
+	    AS_ECHO(["  float_buffer.tme_float_format = TME_FLOAT_FORMAT_IEEE754_DOUBLE;"])
+	    AS_ECHO(["  fpreg"])
+	    AS_ECHO(["    = _tme_sparc${arch}_fpu_mem_fpreg(ic,"])
+	    AS_ECHO(["                                 misaligned,"])
+	    AS_ECHO(["                                 &float_buffer);"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* get this double floating-point register in IEEE754 double-precision format: */"])
+	    AS_ECHO(["  value_double = tme_ieee754_double_value_get(fpreg, &float_buffer.tme_float_value_ieee754_double);"])
+	    AS_ECHO([""])
 	    if test ${arch} = 32; then
-		$as_echo "  /* set the floating-point register value: */"
-		$as_echo "  ic->tme_sparc_ireg_uint32((TME_SPARC_IREG_FPX${reg32_shift}) + 0)"
-		$as_echo "    = value_double->tme_value64_uint32_hi;"
-		$as_echo "  ic->tme_sparc_ireg_uint32((TME_SPARC_IREG_FPX${reg32_shift}) + 1)"
-		$as_echo "    = value_double->tme_value64_uint32_lo;"
-		$as_echo ""
-		$as_echo "  /* do the store: */"
-		$as_echo "  tme_sparc${arch}_std(ic, _rs1, _rs2, &ic->tme_sparc_ireg_uint32(TME_SPARC_IREG_FPX${reg32_shift}));"
+		AS_ECHO(["  /* set the floating-point register value: */"])
+		AS_ECHO(["  ic->tme_sparc_ireg_uint32((TME_SPARC_IREG_FPX${reg32_shift}) + 0)"])
+		AS_ECHO(["    = value_double->tme_value64_uint32_hi;"])
+		AS_ECHO(["  ic->tme_sparc_ireg_uint32((TME_SPARC_IREG_FPX${reg32_shift}) + 1)"])
+		AS_ECHO(["    = value_double->tme_value64_uint32_lo;"])
+		AS_ECHO([""])
+		AS_ECHO(["  /* do the store: */"])
+		AS_ECHO(["  tme_sparc${arch}_std(ic, _rs1, _rs2, &ic->tme_sparc_ireg_uint32(TME_SPARC_IREG_FPX${reg32_shift}));"])
 	    else
-		$as_echo "  /* if bit two of the address is set, and this SPARC supports"
-		$as_echo "     32-bit-aligned ${insn} instructions: */"
-		$as_echo "  if ((misaligned & sizeof(tme_uint32_t))"
-		$as_echo "      && fpreg != &float_buffer) {"
-		$as_echo ""
-		$as_echo "    /* set the floating-point register value: */"
-		$as_echo "    ic->tme_sparc_ireg_uint64(TME_SPARC_IREG_FPX + 0)"
-		$as_echo "      = value_double->tme_value64_uint32_hi;"
-		$as_echo "    ic->tme_sparc_ireg_uint32(TME_SPARC_IREG_FPX + 1)"
-		$as_echo "      = value_double->tme_value64_uint32_lo;"
-		$as_echo ""
-		$as_echo "    /* do two 32-bit stores: */"
-		$as_echo "    offset = sizeof(tme_uint32_t) * 0;"
-		$as_echo "    tme_sparc${arch}_st${alternate}(ic, &address, &offset, &ic->tme_sparc_ireg_uint${arch}(TME_SPARC_IREG_FPX + 0));"
-		$as_echo "    offset = sizeof(tme_uint32_t) * 1;"
-		$as_echo "    tme_sparc${arch}_st${alternate}(ic, &address, &offset, &ic->tme_sparc_ireg_uint${arch}(TME_SPARC_IREG_FPX + 1));"
-		$as_echo "  }"
-		$as_echo ""
-		$as_echo "  /* otherwise, bit two of the address is not set, or this SPARC"
-		$as_echo "     doesn't support 32-bit-aligned ${insn} instructions: */"
-		$as_echo "  else {"
-		$as_echo ""
-		$as_echo "    /* set the floating-point register value: */"
-		$as_echo "    ic->tme_sparc_ireg_uint64(TME_SPARC_IREG_FPX)"
-		$as_echo "      = value_double->tme_value64_uint;"
-		$as_echo ""
-		$as_echo "    /* do an stx${alternate}-style store: */"
-		$as_echo "    tme_sparc${arch}_stx${alternate}(ic, _rs1, _rs2, &ic->tme_sparc_ireg_uint${arch}(TME_SPARC_IREG_FPX));"
-		$as_echo "  }"
+		AS_ECHO(["  /* if bit two of the address is set, and this SPARC supports"])
+		AS_ECHO(["     32-bit-aligned ${insn} instructions: */"])
+		AS_ECHO(["  if ((misaligned & sizeof(tme_uint32_t))"])
+		AS_ECHO(["      && fpreg != &float_buffer) {"])
+		AS_ECHO([""])
+		AS_ECHO(["    /* set the floating-point register value: */"])
+		AS_ECHO(["    ic->tme_sparc_ireg_uint64(TME_SPARC_IREG_FPX + 0)"])
+		AS_ECHO(["      = value_double->tme_value64_uint32_hi;"])
+		AS_ECHO(["    ic->tme_sparc_ireg_uint32(TME_SPARC_IREG_FPX + 1)"])
+		AS_ECHO(["      = value_double->tme_value64_uint32_lo;"])
+		AS_ECHO([""])
+		AS_ECHO(["    /* do two 32-bit stores: */"])
+		AS_ECHO(["    offset = sizeof(tme_uint32_t) * 0;"])
+		AS_ECHO(["    tme_sparc${arch}_st${alternate}(ic, &address, &offset, &ic->tme_sparc_ireg_uint${arch}(TME_SPARC_IREG_FPX + 0));"])
+		AS_ECHO(["    offset = sizeof(tme_uint32_t) * 1;"])
+		AS_ECHO(["    tme_sparc${arch}_st${alternate}(ic, &address, &offset, &ic->tme_sparc_ireg_uint${arch}(TME_SPARC_IREG_FPX + 1));"])
+		AS_ECHO(["  }"])
+		AS_ECHO([""])
+		AS_ECHO(["  /* otherwise, bit two of the address is not set, or this SPARC"])
+		AS_ECHO(["     doesn't support 32-bit-aligned ${insn} instructions: */"])
+		AS_ECHO(["  else {"])
+		AS_ECHO([""])
+		AS_ECHO(["    /* set the floating-point register value: */"])
+		AS_ECHO(["    ic->tme_sparc_ireg_uint64(TME_SPARC_IREG_FPX)"])
+		AS_ECHO(["      = value_double->tme_value64_uint;"])
+		AS_ECHO([""])
+		AS_ECHO(["    /* do an stx${alternate}-style store: */"])
+		AS_ECHO(["    tme_sparc${arch}_stx${alternate}(ic, _rs1, _rs2, &ic->tme_sparc_ireg_uint${arch}(TME_SPARC_IREG_FPX));"])
+		AS_ECHO(["  }"])
 	    fi
-	    $as_echo ""
-	    $as_echo "  assert (fpreg != &float_buffer);"
-	    $as_echo "  TME_SPARC_INSN_OK;"
-	    $as_echo "}"
+	    AS_ECHO([""])
+	    AS_ECHO(["  assert (fpreg != &float_buffer);"])
+	    AS_ECHO(["  TME_SPARC_INSN_OK;"])
+	    AS_ECHO(["}"])
 	fi
 
 	# the ldfsr instruction:
 	#
 	if test ${insn} = ldfsr; then
 
-	    $as_echo ""
-	    $as_echo "/* this does a sparc${arch} ${insn}: */"
-	    $as_echo "TME_SPARC_FORMAT3(tme_sparc${arch}_${insn}, tme_uint${arch}_t)"
-	    $as_echo "{"
-	    $as_echo "  tme_uint32_t fsr;"
+	    AS_ECHO([""])
+	    AS_ECHO(["/* this does a sparc${arch} ${insn}: */"])
+	    AS_ECHO(["TME_SPARC_FORMAT3(tme_sparc${arch}_${insn}, tme_uint${arch}_t)"])
+	    AS_ECHO(["{"])
+	    AS_ECHO(["  tme_uint32_t fsr;"])
 	    if test ${arch} != 32; then
-		$as_echo "  tme_uint32_t reg_rd;"
-		$as_echo ""
-		$as_echo "  /* see if this is an ldfsr or an ldxfsr: */"
-		$as_echo "  reg_rd = TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, TME_SPARC_FORMAT3_MASK_RD);"
-		$as_echo "  if (__tme_predict_false(reg_rd > 1)) {"
-		$as_echo "    TME_SPARC_INSN_ILL(ic);"
-		$as_echo "  }"
+		AS_ECHO(["  tme_uint32_t reg_rd;"])
+		AS_ECHO([""])
+		AS_ECHO(["  /* see if this is an ldfsr or an ldxfsr: */"])
+		AS_ECHO(["  reg_rd = TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, TME_SPARC_FORMAT3_MASK_RD);"])
+		AS_ECHO(["  if (__tme_predict_false(reg_rd > 1)) {"])
+		AS_ECHO(["    TME_SPARC_INSN_ILL(ic);"])
+		AS_ECHO(["  }"])
 	    fi
-	    $as_echo ""
-	    $as_echo "  _tme_sparc${arch}_fpu_mem(ic);"
-	    $as_echo ""
+	    AS_ECHO([""])
+	    AS_ECHO(["  _tme_sparc${arch}_fpu_mem(ic);"])
+	    AS_ECHO([""])
 	    if test ${arch} = 32; then
-		$as_echo "  /* do the load: */"
+		AS_ECHO(["  /* do the load: */"])
 	    else
-		$as_echo "  /* if this is an ldxfsr: */"
-		$as_echo "  if (reg_rd == 1) {"
-		$as_echo ""
-		$as_echo "    /* do the load: */"
-		$as_echo "    tme_sparc${arch}_ldx(ic, _rs1, _rs2,  &ic->tme_sparc_ireg_uint${arch}(TME_SPARC_IREG_FPX));"
-		$as_echo ""
-		$as_echo "    /* update the extended FSR: */"
-		$as_echo "    ic->tme_sparc_fpu_xfsr"
-		$as_echo "      = (ic->tme_sparc_ireg_uint32((TME_SPARC_IREG_FPX${reg32_shift}) + 1)"
-		$as_echo "         & 0x3f /* fcc3 .. fcc1 */);"
-		$as_echo "  }"
-		$as_echo ""
-		$as_echo "  /* otherwise, this is an ldfsr.  do the load: */"
-		$as_echo "  else"
-		$as_echo_n "  "
+		AS_ECHO(["  /* if this is an ldxfsr: */"])
+		AS_ECHO(["  if (reg_rd == 1) {"])
+		AS_ECHO([""])
+		AS_ECHO(["    /* do the load: */"])
+		AS_ECHO(["    tme_sparc${arch}_ldx(ic, _rs1, _rs2,  &ic->tme_sparc_ireg_uint${arch}(TME_SPARC_IREG_FPX));"])
+		AS_ECHO([""])
+		AS_ECHO(["    /* update the extended FSR: */"])
+		AS_ECHO(["    ic->tme_sparc_fpu_xfsr"])
+		AS_ECHO(["      = (ic->tme_sparc_ireg_uint32((TME_SPARC_IREG_FPX${reg32_shift}) + 1)"])
+		AS_ECHO(["         & 0x3f /* fcc3 .. fcc1 */);"])
+		AS_ECHO(["  }"])
+		AS_ECHO([""])
+		AS_ECHO(["  /* otherwise, this is an ldfsr.  do the load: */"])
+		AS_ECHO(["  else"])
+		AS_ECHO_N(["  "])
 	    fi
-	    $as_echo "  tme_sparc${arch}_ld(ic, _rs1, _rs2, &ic->tme_sparc_ireg_uint${arch}(TME_SPARC_IREG_FPX));"
-	    $as_echo ""
-	    $as_echo "  /* update the FSR: */"
-	    $as_echo "  fsr = ic->tme_sparc_ireg_uint32(TME_SPARC_IREG_FPX${reg32_shift});"
-	    $as_echo "  /* \"An LDFSR instruction does not affect ftt.\" */"
-	    $as_echo "  /* \"The LDFSR instruction does not affect qne.\" */"
-	    $as_echo "  fsr &= ~(TME_SPARC_FSR_VER | TME_SPARC_FSR_FTT | TME_SPARC_FSR_QNE);"
-	    $as_echo "  ic->tme_sparc_fpu_fsr = (ic->tme_sparc_fpu_fsr & (TME_SPARC_FSR_VER | TME_SPARC_FSR_FTT | TME_SPARC_FSR_QNE)) | fsr;"
-	    $as_echo ""
-	    $as_echo "  TME_SPARC_INSN_OK;"
-	    $as_echo "}"
+	    AS_ECHO(["  tme_sparc${arch}_ld(ic, _rs1, _rs2, &ic->tme_sparc_ireg_uint${arch}(TME_SPARC_IREG_FPX));"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* update the FSR: */"])
+	    AS_ECHO(["  fsr = ic->tme_sparc_ireg_uint32(TME_SPARC_IREG_FPX${reg32_shift});"])
+	    AS_ECHO(["  /* \"An LDFSR instruction does not affect ftt.\" */"])
+	    AS_ECHO(["  /* \"The LDFSR instruction does not affect qne.\" */"])
+	    AS_ECHO(["  fsr &= ~(TME_SPARC_FSR_VER | TME_SPARC_FSR_FTT | TME_SPARC_FSR_QNE);"])
+	    AS_ECHO(["  ic->tme_sparc_fpu_fsr = (ic->tme_sparc_fpu_fsr & (TME_SPARC_FSR_VER | TME_SPARC_FSR_FTT | TME_SPARC_FSR_QNE)) | fsr;"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  TME_SPARC_INSN_OK;"])
+	    AS_ECHO(["}"])
 	fi
 
 	# the stfsr instruction:
 	#
 	if test ${insn} = stfsr; then
 
-	    $as_echo ""
-	    $as_echo "/* this does a sparc${arch} ${insn}: */"
-	    $as_echo "TME_SPARC_FORMAT3(tme_sparc${arch}_${insn}, tme_uint${arch}_t)"
-	    $as_echo "{"
+	    AS_ECHO([""])
+	    AS_ECHO(["/* this does a sparc${arch} ${insn}: */"])
+	    AS_ECHO(["TME_SPARC_FORMAT3(tme_sparc${arch}_${insn}, tme_uint${arch}_t)"])
+	    AS_ECHO(["{"])
 	    if test ${arch} = 64; then
-		$as_echo "  tme_uint32_t reg_rd;"
-		$as_echo ""
-		$as_echo "  /* see if this is an stfsr or an stxfsr: */"
-		$as_echo "  reg_rd = TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, TME_SPARC_FORMAT3_MASK_RD);"
-		$as_echo "  if (__tme_predict_false(reg_rd > 1)) {"
-		$as_echo "    TME_SPARC_INSN_ILL(ic);"
-		$as_echo "  }"
+		AS_ECHO(["  tme_uint32_t reg_rd;"])
+		AS_ECHO([""])
+		AS_ECHO(["  /* see if this is an stfsr or an stxfsr: */"])
+		AS_ECHO(["  reg_rd = TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, TME_SPARC_FORMAT3_MASK_RD);"])
+		AS_ECHO(["  if (__tme_predict_false(reg_rd > 1)) {"])
+		AS_ECHO(["    TME_SPARC_INSN_ILL(ic);"])
+		AS_ECHO(["  }"])
 	    fi
-	    $as_echo ""
-	    $as_echo "  _tme_sparc${arch}_fpu_mem(ic);"
-	    $as_echo ""
-	    $as_echo "  /* set the FSR value to store: */"
-	    $as_echo "  ic->tme_sparc_ireg_uint32(TME_SPARC_IREG_FPX${reg32_shift}) = ic->tme_sparc_fpu_fsr;"
-	    $as_echo ""
+	    AS_ECHO([""])
+	    AS_ECHO(["  _tme_sparc${arch}_fpu_mem(ic);"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* set the FSR value to store: */"])
+	    AS_ECHO(["  ic->tme_sparc_ireg_uint32(TME_SPARC_IREG_FPX${reg32_shift}) = ic->tme_sparc_fpu_fsr;"])
+	    AS_ECHO([""])
 	    if test ${arch} = 32; then
-		$as_echo "  /* do the store: */"
+		AS_ECHO(["  /* do the store: */"])
 	    else
-		$as_echo "  /* if this is an stxfsr: */"
-		$as_echo "  if (reg_rd == 1) {"
-		$as_echo ""
-		$as_echo "    /* set in the extended FSR to store and do the store: */"
-		$as_echo "    ic->tme_sparc_ireg_uint32((TME_SPARC_IREG_FPX${reg32_shift}) + 1) = ic->tme_sparc_fpu_xfsr;"
-		$as_echo "    tme_sparc${arch}_stx(ic, _rs1, _rs2, &ic->tme_sparc_ireg_uint${arch}(TME_SPARC_IREG_FPX));"
-		$as_echo "  }"
-		$as_echo ""
-		$as_echo "  /* otherwise, this is a stfsr.  do the store: */"
-		$as_echo "  else"
-		$as_echo_n "  "
+		AS_ECHO(["  /* if this is an stxfsr: */"])
+		AS_ECHO(["  if (reg_rd == 1) {"])
+		AS_ECHO([""])
+		AS_ECHO(["    /* set in the extended FSR to store and do the store: */"])
+		AS_ECHO(["    ic->tme_sparc_ireg_uint32((TME_SPARC_IREG_FPX${reg32_shift}) + 1) = ic->tme_sparc_fpu_xfsr;"])
+		AS_ECHO(["    tme_sparc${arch}_stx(ic, _rs1, _rs2, &ic->tme_sparc_ireg_uint${arch}(TME_SPARC_IREG_FPX));"])
+		AS_ECHO(["  }"])
+		AS_ECHO([""])
+		AS_ECHO(["  /* otherwise, this is a stfsr.  do the store: */"])
+		AS_ECHO(["  else"])
+		AS_ECHO_N(["  "])
 	    fi
-	    $as_echo "  tme_sparc${arch}_st(ic, _rs1, _rs2, &ic->tme_sparc_ireg_uint${arch}(TME_SPARC_IREG_FPX));"
-	    $as_echo ""
-	    $as_echo "  TME_SPARC_INSN_OK;"
-	    $as_echo "}"
+	    AS_ECHO(["  tme_sparc${arch}_st(ic, _rs1, _rs2, &ic->tme_sparc_ireg_uint${arch}(TME_SPARC_IREG_FPX));"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  TME_SPARC_INSN_OK;"])
+	    AS_ECHO(["}"])
 	fi
 
 	# the fpop1 and fpop2 instructions:
 	#
 	if test ${insn} = fpop1 || test ${insn} = fpop2; then
 
-	    $as_echo ""
-	    $as_echo "/* this does a sparc${arch} ${insn}: */"
-	    $as_echo "TME_SPARC_FORMAT3(tme_sparc${arch}_${insn}, tme_uint${arch}_t)"
-	    $as_echo "{"
-	    $as_echo "  TME_SPARC_INSN_FPU;"
-	    $as_echo "  tme_sparc_fpu_${insn}(ic);"
-	    $as_echo "  TME_SPARC_INSN_OK;"
-	    $as_echo "}"
+	    AS_ECHO([""])
+	    AS_ECHO(["/* this does a sparc${arch} ${insn}: */"])
+	    AS_ECHO(["TME_SPARC_FORMAT3(tme_sparc${arch}_${insn}, tme_uint${arch}_t)"])
+	    AS_ECHO(["{"])
+	    AS_ECHO(["  TME_SPARC_INSN_FPU;"])
+	    AS_ECHO(["  tme_sparc_fpu_${insn}(ic);"])
+	    AS_ECHO(["  TME_SPARC_INSN_OK;"])
+	    AS_ECHO(["}"])
 	fi
 
     done
@@ -1641,145 +1641,145 @@ for arch in 32 64; do
     # the slow atomic function:
     #
     if $header; then
-	$as_echo "void tme_sparc${arch}_atomic _TME_P((struct tme_sparc *, struct tme_sparc_ls *));"
+	AS_ECHO(["void tme_sparc${arch}_atomic _TME_P((struct tme_sparc *, struct tme_sparc_ls *));"])
     else
-	$as_echo ""
-	$as_echo "/* this does a slow atomic operation: */"
-	$as_echo "void"
-	$as_echo "tme_sparc${arch}_atomic(struct tme_sparc *ic, struct tme_sparc_ls *ls)"
-	$as_echo "{"
-	$as_echo "  tme_uint32_t endian_little;"
-	$as_echo "  tme_uint32_t insn;"
+	AS_ECHO([""])
+	AS_ECHO(["/* this does a slow atomic operation: */"])
+	AS_ECHO(["void"])
+	AS_ECHO(["tme_sparc${arch}_atomic(struct tme_sparc *ic, struct tme_sparc_ls *ls)"])
+	AS_ECHO(["{"])
+	AS_ECHO(["  tme_uint32_t endian_little;"])
+	AS_ECHO(["  tme_uint32_t insn;"])
 	if test ${arch} = 64; then
-	    $as_echo "  tme_uint${arch}_t value${arch};"
-	    $as_echo "  tme_uint${arch}_t value_swap${arch};"
-	    $as_echo "  unsigned int reg_rs2;"
+	    AS_ECHO(["  tme_uint${arch}_t value${arch};"])
+	    AS_ECHO(["  tme_uint${arch}_t value_swap${arch};"])
+	    AS_ECHO(["  unsigned int reg_rs2;"])
 	fi
-	$as_echo "  tme_uint32_t value32;"
-	$as_echo "  tme_uint32_t value_swap32;"
-	$as_echo "  tme_uint32_t size;"
-	$as_echo ""
-	$as_echo "  /* if this is the beginning of the operation: */"
-	$as_echo "  if (ls->tme_sparc_ls_state == 0) {"
-	$as_echo ""
-	$as_echo "    /* start the load part of the operation: */"
-	$as_echo "    ls->tme_sparc_ls_state = ls->tme_sparc_ls_size;"
-	$as_echo "    assert (ls->tme_sparc_ls_state != 0"
-	$as_echo "            && (ls->tme_sparc_ls_state & TME_BIT(7)) == 0);"
-	$as_echo ""
-	$as_echo "    /* the load must start at the beginning of the buffer: */"
-	$as_echo "    assert (ls->tme_sparc_ls_buffer_offset == 0);"
-	$as_echo "  }"
-	$as_echo ""
-	$as_echo "  /* if this is the load part of the operation: */"
-	$as_echo "  if ((ls->tme_sparc_ls_state & TME_BIT(7)) == 0) {"
-	$as_echo ""
-	$as_echo "    /* do one slow load cycle: */"
-	$as_echo "    tme_sparc${arch}_load(ic, ls);"
-	$as_echo ""
-	$as_echo "    /* if the slow load cycle did not load all of the data: */"
-	$as_echo "    if (__tme_predict_false(ls->tme_sparc_ls_size != 0)) {"
-	$as_echo "      return;"
-	$as_echo "    }"
-	$as_echo ""
-	$as_echo "    /* get the byte order of this transfer: */"
+	AS_ECHO(["  tme_uint32_t value32;"])
+	AS_ECHO(["  tme_uint32_t value_swap32;"])
+	AS_ECHO(["  tme_uint32_t size;"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* if this is the beginning of the operation: */"])
+	AS_ECHO(["  if (ls->tme_sparc_ls_state == 0) {"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* start the load part of the operation: */"])
+	AS_ECHO(["    ls->tme_sparc_ls_state = ls->tme_sparc_ls_size;"])
+	AS_ECHO(["    assert (ls->tme_sparc_ls_state != 0"])
+	AS_ECHO(["            && (ls->tme_sparc_ls_state & TME_BIT(7)) == 0);"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* the load must start at the beginning of the buffer: */"])
+	AS_ECHO(["    assert (ls->tme_sparc_ls_buffer_offset == 0);"])
+	AS_ECHO(["  }"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* if this is the load part of the operation: */"])
+	AS_ECHO(["  if ((ls->tme_sparc_ls_state & TME_BIT(7)) == 0) {"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* do one slow load cycle: */"])
+	AS_ECHO(["    tme_sparc${arch}_load(ic, ls);"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* if the slow load cycle did not load all of the data: */"])
+	AS_ECHO(["    if (__tme_predict_false(ls->tme_sparc_ls_size != 0)) {"])
+	AS_ECHO(["      return;"])
+	AS_ECHO(["    }"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* get the byte order of this transfer: */"])
 	if test ${arch} = 32; then
-	    $as_echo "    endian_little = FALSE;"
+	    AS_ECHO(["    endian_little = FALSE;"])
 	else
-	    $as_echo "    endian_little = ls->tme_sparc_ls_lsinfo & TME_SPARC_LSINFO_ENDIAN_LITTLE;"
+	    AS_ECHO(["    endian_little = ls->tme_sparc_ls_lsinfo & TME_SPARC_LSINFO_ENDIAN_LITTLE;"])
 	fi
-	$as_echo ""
-	$as_echo "    /* dispatch on the op3 of the instruction: */"
-	$as_echo "    insn = TME_SPARC_INSN;"
-	$as_echo "    switch ((insn >> 19) & 0x3f) {"
+	AS_ECHO([""])
+	AS_ECHO(["    /* dispatch on the op3 of the instruction: */"])
+	AS_ECHO(["    insn = TME_SPARC_INSN;"])
+	AS_ECHO(["    switch ((insn >> 19) & 0x3f) {"])
 	if test ${arch} = 64; then
 	    for size in 32 64; do
-		$as_echo ""
+		AS_ECHO([""])
 		if test ${size} = 32; then
-		    $as_echo "    case 0x3c: /* casa */"
+		    AS_ECHO(["    case 0x3c: /* casa */"])
 		else
-		    $as_echo "    case 0x3e: /* casxa */"
+		    AS_ECHO(["    case 0x3e: /* casxa */"])
 		fi
-		$as_echo ""
-		$as_echo "      /* finish the load part of the compare and swap: */"
-		$as_echo "      assert (ls->tme_sparc_ls_state == sizeof(tme_uint${size}_t));"
-		$as_echo "      value${size} = ic->tme_sparc_memory_buffer.tme_sparc_memory_buffer${size}s[[0]];"
-		$as_echo "      value_swap${size} = *ls->tme_sparc_ls_rd64;"
-		$as_echo "      if (endian_little) {"
-		$as_echo "        value${size} = tme_letoh_u${size}(value${size});"
-		$as_echo "        value_swap${size} = tme_htole_u${size}(value_swap${size});"
-		$as_echo "      }"
-		$as_echo "      else {"
-		$as_echo "        value${size} = tme_betoh_u${size}(value${size});"
-		$as_echo "        value_swap${size} = tme_htobe_u${size}(value_swap${size});"
-		$as_echo "      }"
-		$as_echo "      *ls->tme_sparc_ls_rd64 = value${size};"
-		$as_echo ""
-		$as_echo "      /* if the comparison fails: */"
-		$as_echo "      reg_rs2 = TME_FIELD_MASK_EXTRACTU(insn, TME_SPARC_FORMAT3_MASK_RS2);"
-		$as_echo "      TME_SPARC_REG_INDEX(ic, reg_rs2);"
-		$as_echo "      if (value${size} != (tme_uint${size}_t) ic->tme_sparc_ireg_uint${arch}(reg_rs2)) {"
-		$as_echo "        return;"
-		$as_echo "      }"
-		$as_echo ""
-		$as_echo "      /* start the store part of the compare and swap: */"
-		$as_echo "      ic->tme_sparc_memory_buffer.tme_sparc_memory_buffer${size}s[[0]] = value_swap${size};"
-		$as_echo "      break;"
+		AS_ECHO([""])
+		AS_ECHO(["      /* finish the load part of the compare and swap: */"])
+		AS_ECHO(["      assert (ls->tme_sparc_ls_state == sizeof(tme_uint${size}_t));"])
+		AS_ECHO(["      value${size} = ic->tme_sparc_memory_buffer.tme_sparc_memory_buffer${size}s[[0]];"])
+		AS_ECHO(["      value_swap${size} = *ls->tme_sparc_ls_rd64;"])
+		AS_ECHO(["      if (endian_little) {"])
+		AS_ECHO(["        value${size} = tme_letoh_u${size}(value${size});"])
+		AS_ECHO(["        value_swap${size} = tme_htole_u${size}(value_swap${size});"])
+		AS_ECHO(["      }"])
+		AS_ECHO(["      else {"])
+		AS_ECHO(["        value${size} = tme_betoh_u${size}(value${size});"])
+		AS_ECHO(["        value_swap${size} = tme_htobe_u${size}(value_swap${size});"])
+		AS_ECHO(["      }"])
+		AS_ECHO(["      *ls->tme_sparc_ls_rd64 = value${size};"])
+		AS_ECHO([""])
+		AS_ECHO(["      /* if the comparison fails: */"])
+		AS_ECHO(["      reg_rs2 = TME_FIELD_MASK_EXTRACTU(insn, TME_SPARC_FORMAT3_MASK_RS2);"])
+		AS_ECHO(["      TME_SPARC_REG_INDEX(ic, reg_rs2);"])
+		AS_ECHO(["      if (value${size} != (tme_uint${size}_t) ic->tme_sparc_ireg_uint${arch}(reg_rs2)) {"])
+		AS_ECHO(["        return;"])
+		AS_ECHO(["      }"])
+		AS_ECHO([""])
+		AS_ECHO(["      /* start the store part of the compare and swap: */"])
+		AS_ECHO(["      ic->tme_sparc_memory_buffer.tme_sparc_memory_buffer${size}s[[0]] = value_swap${size};"])
+		AS_ECHO(["      break;"])
 	    done
 	fi
-	$as_echo ""
-	$as_echo "    case 0x0d: /* ldstub */"
-	$as_echo "    case 0x1d: /* ldstuba */"
-	$as_echo ""
-	$as_echo "      /* finish the load part of the ldstub: */"
-	$as_echo "      assert (ls->tme_sparc_ls_state == sizeof(tme_uint8_t));"
-	$as_echo "      *ls->tme_sparc_ls_rd${arch} = ic->tme_sparc_memory_buffer.tme_sparc_memory_buffer8s[[0]];"
-	$as_echo ""
-	$as_echo "      /* start the store part of the ldstub: */"
-	$as_echo "      ic->tme_sparc_memory_buffer.tme_sparc_memory_buffer8s[[0]] = 0xff;"
-	$as_echo "      break;"
-	$as_echo ""
-	$as_echo "    /* otherwise, this must be swap: */"
-	$as_echo "    default:"
-	$as_echo "      assert (((insn >> 19) & 0x2f) == 0x0f /* swap, swapa */);"
-	$as_echo ""
-	$as_echo "      /* finish the load part of the swap: */"
-	$as_echo "      assert (ls->tme_sparc_ls_state == sizeof(tme_uint32_t));"
-	$as_echo "      value32 = ic->tme_sparc_memory_buffer.tme_sparc_memory_buffer32s[[0]];"
-	$as_echo "      value_swap32 = *ls->tme_sparc_ls_rd${arch};"
-	$as_echo "      if (endian_little) {"
-	$as_echo "        value32 = tme_letoh_u32(value32);"
-	$as_echo "        value_swap32 = tme_htole_u32(value32);"
-	$as_echo "      }"
-	$as_echo "      else {"
-	$as_echo "        value32 = tme_betoh_u32(value32);"
-	$as_echo "        value_swap32 = tme_htobe_u32(value32);"
-	$as_echo "      }"
-	$as_echo "      *ls->tme_sparc_ls_rd${arch} = value32;"
-	$as_echo ""
-	$as_echo "      /* start the store part of the swap: */"
-	$as_echo "      ic->tme_sparc_memory_buffer.tme_sparc_memory_buffer32s[[0]] = value_swap32;"
-	$as_echo "      break;"
-	$as_echo "    }"
-	$as_echo ""
-	$as_echo "    /* start the store part of the operation: */"
-	$as_echo "    size = ls->tme_sparc_ls_state;"
-	$as_echo "    ls->tme_sparc_ls_address${arch} -= size;"
-	$as_echo "    ls->tme_sparc_ls_size = size;"
-	$as_echo "    ls->tme_sparc_ls_buffer_offset = 0;"
-	$as_echo "    ls->tme_sparc_ls_state = size | TME_BIT(7);"
-	$as_echo "  }"
-	$as_echo ""
-	$as_echo "  /* this is the store part of the operation: */"
-	$as_echo ""
-	$as_echo "  /* do one slow store cycle: */"
-	$as_echo "  tme_sparc${arch}_store(ic, ls);"
-	$as_echo ""
-	$as_echo "  /* if the slow store cycle did not store all of the data: */"
-	$as_echo "  if (__tme_predict_false(ls->tme_sparc_ls_size != 0)) {"
-	$as_echo "    return;"
-	$as_echo "  }"
-	$as_echo "}"
+	AS_ECHO([""])
+	AS_ECHO(["    case 0x0d: /* ldstub */"])
+	AS_ECHO(["    case 0x1d: /* ldstuba */"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* finish the load part of the ldstub: */"])
+	AS_ECHO(["      assert (ls->tme_sparc_ls_state == sizeof(tme_uint8_t));"])
+	AS_ECHO(["      *ls->tme_sparc_ls_rd${arch} = ic->tme_sparc_memory_buffer.tme_sparc_memory_buffer8s[[0]];"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* start the store part of the ldstub: */"])
+	AS_ECHO(["      ic->tme_sparc_memory_buffer.tme_sparc_memory_buffer8s[[0]] = 0xff;"])
+	AS_ECHO(["      break;"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* otherwise, this must be swap: */"])
+	AS_ECHO(["    default:"])
+	AS_ECHO(["      assert (((insn >> 19) & 0x2f) == 0x0f /* swap, swapa */);"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* finish the load part of the swap: */"])
+	AS_ECHO(["      assert (ls->tme_sparc_ls_state == sizeof(tme_uint32_t));"])
+	AS_ECHO(["      value32 = ic->tme_sparc_memory_buffer.tme_sparc_memory_buffer32s[[0]];"])
+	AS_ECHO(["      value_swap32 = *ls->tme_sparc_ls_rd${arch};"])
+	AS_ECHO(["      if (endian_little) {"])
+	AS_ECHO(["        value32 = tme_letoh_u32(value32);"])
+	AS_ECHO(["        value_swap32 = tme_htole_u32(value32);"])
+	AS_ECHO(["      }"])
+	AS_ECHO(["      else {"])
+	AS_ECHO(["        value32 = tme_betoh_u32(value32);"])
+	AS_ECHO(["        value_swap32 = tme_htobe_u32(value32);"])
+	AS_ECHO(["      }"])
+	AS_ECHO(["      *ls->tme_sparc_ls_rd${arch} = value32;"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* start the store part of the swap: */"])
+	AS_ECHO(["      ic->tme_sparc_memory_buffer.tme_sparc_memory_buffer32s[[0]] = value_swap32;"])
+	AS_ECHO(["      break;"])
+	AS_ECHO(["    }"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* start the store part of the operation: */"])
+	AS_ECHO(["    size = ls->tme_sparc_ls_state;"])
+	AS_ECHO(["    ls->tme_sparc_ls_address${arch} -= size;"])
+	AS_ECHO(["    ls->tme_sparc_ls_size = size;"])
+	AS_ECHO(["    ls->tme_sparc_ls_buffer_offset = 0;"])
+	AS_ECHO(["    ls->tme_sparc_ls_state = size | TME_BIT(7);"])
+	AS_ECHO(["  }"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* this is the store part of the operation: */"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* do one slow store cycle: */"])
+	AS_ECHO(["  tme_sparc${arch}_store(ic, ls);"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* if the slow store cycle did not store all of the data: */"])
+	AS_ECHO(["  if (__tme_predict_false(ls->tme_sparc_ls_size != 0)) {"])
+	AS_ECHO(["    return;"])
+	AS_ECHO(["  }"])
+	AS_ECHO(["}"])
     fi
 
     # the slow load and store functions:
@@ -1794,774 +1794,774 @@ for arch in 32 64; do
 	    capcycle="WRITE"
 	fi
 	if $header; then
-	    $as_echo "void tme_sparc${arch}_${slow} _TME_P((struct tme_sparc *, struct tme_sparc_ls *));"
+	    AS_ECHO(["void tme_sparc${arch}_${slow} _TME_P((struct tme_sparc *, struct tme_sparc_ls *));"])
 	    continue
 	fi
 
-	$as_echo ""
-	$as_echo "/* this does one slow ${slow} cycle: */"
-	$as_echo "void"
-	$as_echo "tme_sparc${arch}_${slow}(struct tme_sparc *ic, "
-	$as_echo "                  struct tme_sparc_ls *ls)"
-	$as_echo "{"
+	AS_ECHO([""])
+	AS_ECHO(["/* this does one slow ${slow} cycle: */"])
+	AS_ECHO(["void"])
+	AS_ECHO(["tme_sparc${arch}_${slow}(struct tme_sparc *ic, "])
+	AS_ECHO(["                  struct tme_sparc_ls *ls)"])
+	AS_ECHO(["{"])
 
 	# our locals:
 	#
-	$as_echo "  struct tme_sparc_tlb *tlb;"
-	$as_echo "  tme_uint${arch}_t address;"
-	$as_echo "  unsigned int cycle_size;"
-	$as_echo "  tme_bus_addr_t physical_address;"
-	$as_echo "  int shift;"
-	$as_echo "  int err;"
+	AS_ECHO(["  struct tme_sparc_tlb *tlb;"])
+	AS_ECHO(["  tme_uint${arch}_t address;"])
+	AS_ECHO(["  unsigned int cycle_size;"])
+	AS_ECHO(["  tme_bus_addr_t physical_address;"])
+	AS_ECHO(["  int shift;"])
+	AS_ECHO(["  int err;"])
 
-	$as_echo ""
-	$as_echo "  /* get the TLB entry: */"
-	$as_echo "  tlb = ls->tme_sparc_ls_tlb;"
-	$as_echo ""
-	$as_echo "  /* the TLB entry must be busy and valid: */"
-	$as_echo "  assert (tme_bus_tlb_is_valid(&tlb->tme_sparc_tlb_bus_tlb));"
-	$as_echo ""
-	$as_echo "  /* start the bus cycle structure: */"
-	$as_echo "  ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_type = TME_BUS_CYCLE_${capcycle};"
-	$as_echo ""
-	$as_echo "  /* get the buffer: */"
-	$as_echo "  ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_buffer = &ic->tme_sparc_memory_buffer.tme_sparc_memory_buffer8s[[ls->tme_sparc_ls_buffer_offset]];"
-	$as_echo "  ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_buffer_increment = 1;"
-	$as_echo ""
-	$as_echo "  /* get the current address: */"
-	$as_echo "  address = ls->tme_sparc_ls_address${arch};"
-	$as_echo "  ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_address = address;"
-	$as_echo ""
-	$as_echo "  /* start the cycle size: */"
-	$as_echo "  cycle_size = ls->tme_sparc_ls_size;"
-	$as_echo "  assert (cycle_size > 0);"
-	$as_echo "  cycle_size--;"
-	$as_echo "  cycle_size = TME_MIN(cycle_size, (((tme_bus_addr${arch}_t) tlb->tme_sparc_tlb_addr_last) - address)) + 1;"
-	$as_echo ""
-	$as_echo "  /* if this TLB entry allows fast ${cycle}s: */"
-	$as_echo "  if (__tme_predict_true(tlb->tme_sparc_tlb_emulator_off_${cycle} != TME_EMULATOR_OFF_UNDEF)) {"
-	$as_echo ""
-	$as_echo "    /* do a ${cycle}: */"
-	$as_echo "    ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_size = cycle_size;"
-	$as_echo "    tme_memory_bus_${cycle}_buffer((tlb->tme_sparc_tlb_emulator_off_${cycle} + (tme_uint${arch}_t) ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_address),"
-	$as_echo "                                  ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_buffer,"
-	$as_echo "                                  ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_size,"
-	$as_echo "                                  tlb->tme_sparc_tlb_bus_rwlock,"
-	$as_echo "                                  sizeof(tme_uint8_t),"
-	$as_echo "                                  sizeof(tme_uint${arch}_t));"
-	$as_echo "  }"
-	$as_echo ""
-	$as_echo "  /* otherwise, this TLB entry does not allow fast ${cycle}s: */"
-	$as_echo "  else {"
-	$as_echo ""
-	$as_echo "    /* finish the cycle size: */"
-	$as_echo "    cycle_size = TME_MIN(cycle_size, 1 + ((~ (unsigned int) address) % sizeof(tme_uint${arch}_t)));"
-	$as_echo "    ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_size = cycle_size;"
-	$as_echo ""
-	$as_echo "    /* form the physical address for the bus cycle handler: */"
-	$as_echo "    physical_address = ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_address;"
-	$as_echo "    physical_address += tlb->tme_sparc_tlb_addr_offset;"
-	$as_echo "    shift = tlb->tme_sparc_tlb_addr_shift;"
-	$as_echo "    if (shift < 0) {"
-	$as_echo "      physical_address <<= (0 - shift);"
-	$as_echo "    }"
-	$as_echo "    else if (shift > 0) {"
-	$as_echo "      physical_address >>= shift;"
-	$as_echo "    }"
-	$as_echo "    ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_address = physical_address;"
-	$as_echo ""
-	$as_echo "    /* finish the bus cycle structure: */"
-	$as_echo "    (*ic->_tme_sparc_ls_bus_cycle)(ic, ls);"
+	AS_ECHO([""])
+	AS_ECHO(["  /* get the TLB entry: */"])
+	AS_ECHO(["  tlb = ls->tme_sparc_ls_tlb;"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* the TLB entry must be busy and valid: */"])
+	AS_ECHO(["  assert (tme_bus_tlb_is_valid(&tlb->tme_sparc_tlb_bus_tlb));"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* start the bus cycle structure: */"])
+	AS_ECHO(["  ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_type = TME_BUS_CYCLE_${capcycle};"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* get the buffer: */"])
+	AS_ECHO(["  ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_buffer = &ic->tme_sparc_memory_buffer.tme_sparc_memory_buffer8s[[ls->tme_sparc_ls_buffer_offset]];"])
+	AS_ECHO(["  ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_buffer_increment = 1;"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* get the current address: */"])
+	AS_ECHO(["  address = ls->tme_sparc_ls_address${arch};"])
+	AS_ECHO(["  ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_address = address;"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* start the cycle size: */"])
+	AS_ECHO(["  cycle_size = ls->tme_sparc_ls_size;"])
+	AS_ECHO(["  assert (cycle_size > 0);"])
+	AS_ECHO(["  cycle_size--;"])
+	AS_ECHO(["  cycle_size = TME_MIN(cycle_size, (((tme_bus_addr${arch}_t) tlb->tme_sparc_tlb_addr_last) - address)) + 1;"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* if this TLB entry allows fast ${cycle}s: */"])
+	AS_ECHO(["  if (__tme_predict_true(tlb->tme_sparc_tlb_emulator_off_${cycle} != TME_EMULATOR_OFF_UNDEF)) {"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* do a ${cycle}: */"])
+	AS_ECHO(["    ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_size = cycle_size;"])
+	AS_ECHO(["    tme_memory_bus_${cycle}_buffer((tlb->tme_sparc_tlb_emulator_off_${cycle} + (tme_uint${arch}_t) ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_address),"])
+	AS_ECHO(["                                  ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_buffer,"])
+	AS_ECHO(["                                  ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_size,"])
+	AS_ECHO(["                                  tlb->tme_sparc_tlb_bus_rwlock,"])
+	AS_ECHO(["                                  sizeof(tme_uint8_t),"])
+	AS_ECHO(["                                  sizeof(tme_uint${arch}_t));"])
+	AS_ECHO(["  }"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* otherwise, this TLB entry does not allow fast ${cycle}s: */"])
+	AS_ECHO(["  else {"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* finish the cycle size: */"])
+	AS_ECHO(["    cycle_size = TME_MIN(cycle_size, 1 + ((~ (unsigned int) address) % sizeof(tme_uint${arch}_t)));"])
+	AS_ECHO(["    ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_size = cycle_size;"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* form the physical address for the bus cycle handler: */"])
+	AS_ECHO(["    physical_address = ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_address;"])
+	AS_ECHO(["    physical_address += tlb->tme_sparc_tlb_addr_offset;"])
+	AS_ECHO(["    shift = tlb->tme_sparc_tlb_addr_shift;"])
+	AS_ECHO(["    if (shift < 0) {"])
+	AS_ECHO(["      physical_address <<= (0 - shift);"])
+	AS_ECHO(["    }"])
+	AS_ECHO(["    else if (shift > 0) {"])
+	AS_ECHO(["      physical_address >>= shift;"])
+	AS_ECHO(["    }"])
+	AS_ECHO(["    ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_address = physical_address;"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* finish the bus cycle structure: */"])
+	AS_ECHO(["    (*ic->_tme_sparc_ls_bus_cycle)(ic, ls);"])
 
-	$as_echo "    tme_sparc_log(ic, 10000, TME_OK,"
-	$as_echo "                 (TME_SPARC_LOG_HANDLE(ic),"
-	$as_echo "                  _(\"cycle-${slow}%u\t0x%0"`expr ${arch} / 4`"\" TME_PRIx${arch}),"
-	$as_echo "                  (unsigned int) (ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_size * 8),"
-	$as_echo "                  (tme_bus_addr${arch}_t) ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_address));"
+	AS_ECHO(["    tme_sparc_log(ic, 10000, TME_OK,"])
+	AS_ECHO(["                 (TME_SPARC_LOG_HANDLE(ic),"])
+	AS_ECHO(["                  _(\"cycle-${slow}%u\t0x%0"`expr ${arch} / 4`"\" TME_PRIx${arch}),"])
+	AS_ECHO(["                  (unsigned int) (ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_size * 8),"])
+	AS_ECHO(["                  (tme_bus_addr${arch}_t) ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_address));"])
 
-	$as_echo ""
-	$as_echo "    /* callout the bus cycle: */"
-	$as_echo "    tme_sparc_tlb_unbusy(tlb);"
-	$as_echo "    tme_sparc_callout_unlock(ic);"
-	$as_echo "    err = (*tlb->tme_sparc_tlb_bus_tlb.tme_bus_tlb_cycle)"
-	$as_echo "           (tlb->tme_sparc_tlb_bus_tlb.tme_bus_tlb_cycle_private,"
-	$as_echo "            &ls->tme_sparc_ls_bus_cycle);"
-	$as_echo "    tme_sparc_callout_relock(ic);"
-	$as_echo "    tme_sparc_tlb_busy(tlb);"
-	$as_echo ""
-	$as_echo "    /* the TLB entry can't have been invalidated before the ${slow}: */"
-	$as_echo "    assert (err != EBADF);"
-	$as_echo ""
-	$as_echo "    /* if the bus cycle didn't complete normally: */"
-	$as_echo "    if (err != TME_OK) {"
-	$as_echo ""
-	$as_echo "      /* if a real bus fault may have happened, instead of"
-	$as_echo "         some synchronous event: */"
-	$as_echo "      if (err != TME_BUS_CYCLE_SYNCHRONOUS_EVENT) {"
-	$as_echo ""
-	$as_echo "        /* call the bus fault handlers: */"
-	$as_echo "        err = tme_bus_tlb_fault(&tlb->tme_sparc_tlb_bus_tlb, &ls->tme_sparc_ls_bus_cycle, err);"
-	$as_echo "      }"
-	$as_echo ""
-	$as_echo "      /* if some synchronous event has happened: */"
-	$as_echo "      if (err == TME_BUS_CYCLE_SYNCHRONOUS_EVENT) {"
-	$as_echo ""
-	$as_echo "        /* after the currently executing instruction finishes, check"
-	$as_echo "           for external resets, halts, or interrupts: */"
-	$as_echo "        ic->_tme_sparc_instruction_burst_remaining = 0;"
-	$as_echo "        ic->_tme_sparc_instruction_burst_other = TRUE;"
-	$as_echo "      }"
-	$as_echo ""
-	$as_echo "      /* otherwise, if no real bus fault happened: */"
-	$as_echo "      else if (err == TME_OK) {"
-	$as_echo ""
-	$as_echo "        /* nothing to do */"
-	$as_echo "      }"
-	$as_echo ""
-	$as_echo "      /* otherwise, a real bus fault happened: */"
-	$as_echo "      else {"
-	$as_echo "        (*ic->_tme_sparc_ls_bus_fault)(ic, ls, err);"
-	$as_echo "        return;"
-	$as_echo "      }"
-	$as_echo "    }"
-	$as_echo "  }"
+	AS_ECHO([""])
+	AS_ECHO(["    /* callout the bus cycle: */"])
+	AS_ECHO(["    tme_sparc_tlb_unbusy(tlb);"])
+	AS_ECHO(["    tme_sparc_callout_unlock(ic);"])
+	AS_ECHO(["    err = (*tlb->tme_sparc_tlb_bus_tlb.tme_bus_tlb_cycle)"])
+	AS_ECHO(["           (tlb->tme_sparc_tlb_bus_tlb.tme_bus_tlb_cycle_private,"])
+	AS_ECHO(["            &ls->tme_sparc_ls_bus_cycle);"])
+	AS_ECHO(["    tme_sparc_callout_relock(ic);"])
+	AS_ECHO(["    tme_sparc_tlb_busy(tlb);"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* the TLB entry can't have been invalidated before the ${slow}: */"])
+	AS_ECHO(["    assert (err != EBADF);"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* if the bus cycle didn't complete normally: */"])
+	AS_ECHO(["    if (err != TME_OK) {"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* if a real bus fault may have happened, instead of"])
+	AS_ECHO(["         some synchronous event: */"])
+	AS_ECHO(["      if (err != TME_BUS_CYCLE_SYNCHRONOUS_EVENT) {"])
+	AS_ECHO([""])
+	AS_ECHO(["        /* call the bus fault handlers: */"])
+	AS_ECHO(["        err = tme_bus_tlb_fault(&tlb->tme_sparc_tlb_bus_tlb, &ls->tme_sparc_ls_bus_cycle, err);"])
+	AS_ECHO(["      }"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* if some synchronous event has happened: */"])
+	AS_ECHO(["      if (err == TME_BUS_CYCLE_SYNCHRONOUS_EVENT) {"])
+	AS_ECHO([""])
+	AS_ECHO(["        /* after the currently executing instruction finishes, check"])
+	AS_ECHO(["           for external resets, halts, or interrupts: */"])
+	AS_ECHO(["        ic->_tme_sparc_instruction_burst_remaining = 0;"])
+	AS_ECHO(["        ic->_tme_sparc_instruction_burst_other = TRUE;"])
+	AS_ECHO(["      }"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* otherwise, if no real bus fault happened: */"])
+	AS_ECHO(["      else if (err == TME_OK) {"])
+	AS_ECHO([""])
+	AS_ECHO(["        /* nothing to do */"])
+	AS_ECHO(["      }"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* otherwise, a real bus fault happened: */"])
+	AS_ECHO(["      else {"])
+	AS_ECHO(["        (*ic->_tme_sparc_ls_bus_fault)(ic, ls, err);"])
+	AS_ECHO(["        return;"])
+	AS_ECHO(["      }"])
+	AS_ECHO(["    }"])
+	AS_ECHO(["  }"])
 
-	$as_echo ""
-	$as_echo "  /* some data must have been transferred: */"
-	$as_echo "  assert (ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_size > 0);"
+	AS_ECHO([""])
+	AS_ECHO(["  /* some data must have been transferred: */"])
+	AS_ECHO(["  assert (ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_size > 0);"])
 	
 	if test ${slow} = store; then
-	    $as_echo ""
-	    $as_echo "  /* if this was an atomic operation: */"
-	    $as_echo "  if (__tme_predict_false(ls->tme_sparc_ls_lsinfo & TME_SPARC_LSINFO_OP_ATOMIC)) {"
-	    $as_echo ""
-	    $as_echo "    /* we do not support atomic operations in TLB entries that"
-	    $as_echo "       do not support both fast reads and fast writes.  assuming"
-	    $as_echo "       that all atomic operations are to regular memory, we"
-	    $as_echo "       should always get fast read and fast write TLBs.  when"
-	    $as_echo "       we do not, it should only be because the memory has been"
-	    $as_echo "       made read-only in the MMU.  the write above was supposed"
-	    $as_echo "       to cause a fault (with the instruction rerun later with"
-	    $as_echo "       a fast read and fast write TLB entry), but instead it"
-	    $as_echo "       succeeded and transferred some data.  we have modified"
-	    $as_echo "       memory and cannot recover: */"
-	    $as_echo "    abort();"
-	    $as_echo "  }"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* if this was an atomic operation: */"])
+	    AS_ECHO(["  if (__tme_predict_false(ls->tme_sparc_ls_lsinfo & TME_SPARC_LSINFO_OP_ATOMIC)) {"])
+	    AS_ECHO([""])
+	    AS_ECHO(["    /* we do not support atomic operations in TLB entries that"])
+	    AS_ECHO(["       do not support both fast reads and fast writes.  assuming"])
+	    AS_ECHO(["       that all atomic operations are to regular memory, we"])
+	    AS_ECHO(["       should always get fast read and fast write TLBs.  when"])
+	    AS_ECHO(["       we do not, it should only be because the memory has been"])
+	    AS_ECHO(["       made read-only in the MMU.  the write above was supposed"])
+	    AS_ECHO(["       to cause a fault (with the instruction rerun later with"])
+	    AS_ECHO(["       a fast read and fast write TLB entry), but instead it"])
+	    AS_ECHO(["       succeeded and transferred some data.  we have modified"])
+	    AS_ECHO(["       memory and cannot recover: */"])
+	    AS_ECHO(["    abort();"])
+	    AS_ECHO(["  }"])
 	fi
 
-	$as_echo ""
-	$as_echo "  /* update: */"
-	$as_echo "  cycle_size = ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_size;"
-	$as_echo "  ls->tme_sparc_ls_address${arch} += cycle_size;"
-	$as_echo "  ls->tme_sparc_ls_buffer_offset += cycle_size;"
-	$as_echo "  ls->tme_sparc_ls_size -= cycle_size;"
-	$as_echo "}"
+	AS_ECHO([""])
+	AS_ECHO(["  /* update: */"])
+	AS_ECHO(["  cycle_size = ls->tme_sparc_ls_bus_cycle.tme_bus_cycle_size;"])
+	AS_ECHO(["  ls->tme_sparc_ls_address${arch} += cycle_size;"])
+	AS_ECHO(["  ls->tme_sparc_ls_buffer_offset += cycle_size;"])
+	AS_ECHO(["  ls->tme_sparc_ls_size -= cycle_size;"])
+	AS_ECHO(["}"])
     done
 
     # the load/store function:
     #
     if $header; then
-	$as_echo "tme_shared tme_uint8_t *tme_sparc${arch}_ls _TME_P((struct tme_sparc *, tme_uint${arch}_t, tme_uint${arch}_t *, tme_uint32_t));"
+	AS_ECHO(["tme_shared tme_uint8_t *tme_sparc${arch}_ls _TME_P((struct tme_sparc *, tme_uint${arch}_t, tme_uint${arch}_t *, tme_uint32_t));"])
     else
 
-	$as_echo ""
-	$as_echo "/* this does a slow load or store: */"
-	$as_echo "tme_shared tme_uint8_t *"
-	$as_echo "tme_sparc${arch}_ls(struct tme_sparc *ic,"
-	$as_echo "               tme_uint${arch}_t const address_first,"
-	$as_echo "               tme_uint${arch}_t *_rd,"
-	$as_echo "               tme_uint32_t lsinfo)"
-	$as_echo "{"
-	$as_echo "  struct tme_sparc_ls ls;"
-	$as_echo "  tme_uint32_t size;"
-	$as_echo "  tme_uint32_t asi;"
-	$as_echo "  tme_uint32_t asi_mask_flags;"
-	$as_echo "  tme_uint32_t asi_mask;"
-	$as_echo "  tme_bus_context_t context;"
-	$as_echo "  tme_uint32_t tlb_hash;"
-	$as_echo "  unsigned long tlb_i;"
-	$as_echo "  unsigned long handler_i;"
-	$as_echo "  struct tme_sparc_tlb *tlb;"
-	$as_echo "  unsigned int cycle_type;"
-	$as_echo "  tme_uint${arch}_t address;"
-	$as_echo "  void (*address_map) _TME_P((struct tme_sparc *, struct tme_sparc_ls *));"
-	$as_echo "  tme_bus_addr_t address_bus;"
-	$as_echo "  int rc;"
-	$as_echo "  const tme_shared tme_uint8_t *emulator_off;"
-	$as_echo "  unsigned int buffer_offset;"
-	$as_echo "  tme_uint${arch}_t value;"
-	$as_echo "  tme_uint32_t value32;"
-	$as_echo ""
-	$as_echo "  /* we must not be replaying instructions: */"
-	$as_echo "  assert (tme_sparc_recode_verify_replay_last_pc(ic) == 0);"
-	$as_echo ""
-	$as_echo "  /* initialize the pointer to the rd register: */"
-	$as_echo "  ls.tme_sparc_ls_rd${arch} = _rd;"
-	$as_echo ""
-	$as_echo "#ifndef NDEBUG"
-	$as_echo ""
-	$as_echo "  /* initialize the cycle function: */"
-	$as_echo "  ls.tme_sparc_ls_cycle = NULL;"
-	$as_echo ""
-	$as_echo "  /* initialize the TLB entry pointer: */"
-	$as_echo "  ls.tme_sparc_ls_tlb = NULL;"
-	$as_echo ""
-	$as_echo "#endif /* NDEBUG */"
-	$as_echo ""
-	$as_echo "  /* initialize the faults: */"
-	$as_echo "  ls.tme_sparc_ls_faults = TME_SPARC_LS_FAULT_NONE;"
-	$as_echo ""
-	$as_echo "  /* initialize the address: */"
-	$as_echo "  ls.tme_sparc_ls_address${arch} = address_first;"
-	$as_echo ""
-	$as_echo "  /* initialize the size: */"
-	$as_echo "  size = TME_SPARC_LSINFO_WHICH_SIZE(lsinfo);"
-	$as_echo "  ls.tme_sparc_ls_size = size;"
-	$as_echo ""
-	$as_echo "  /* initialize the info: */"
-	$as_echo "  ls.tme_sparc_ls_lsinfo = lsinfo;"
-	$as_echo ""
-	$as_echo "  /* if the address is not aligned: */"
-	$as_echo "  if (__tme_predict_false(((size - 1) & (tme_uint32_t) address_first) != 0)) {"
-	$as_echo "    ls.tme_sparc_ls_faults |= TME_SPARC_LS_FAULT_ADDRESS_NOT_ALIGNED;"
-	$as_echo "  }"
-	$as_echo ""
-	$as_echo "  /* otherwise, the address is aligned: */"
-	$as_echo "  else {"
-	$as_echo ""
-	$as_echo "    /* the transfer must not cross a 32-bit boundary: */"
-	$as_echo "    assert ((size - 1) <= (tme_uint32_t) ~address_first);"
-	$as_echo "  }"
-	$as_echo ""
-	$as_echo "  /* initialize the address map: */"
-	$as_echo "  ls.tme_sparc_ls_address_map = ic->_tme_sparc_ls_address_map;"
-	$as_echo ""
-	$as_echo "  /* if this is a ldd, ldda, std, or stda, or an instruction"
-	$as_echo "     that loads or stores in the same way: */"
-	$as_echo "  if (lsinfo & TME_SPARC_LSINFO_LDD_STD) {"
-	$as_echo ""
-	$as_echo "    /* if the rd register is odd: */"
-	$as_echo "    /* NB: we don't check the rd field in the instruction,"
-	$as_echo "       because the register number there might be encoded"
-	$as_echo "       in some way, or the architecture might ignore bit"
-	$as_echo "       zero in the rd field (for example, the sparc32 lddf)."
-	$as_echo "       instead, we test the rd register pointer: */"
-	$as_echo "    if (__tme_predict_false((ls.tme_sparc_ls_rd${arch}"
-	$as_echo "                             - ic->tme_sparc_ic.tme_ic_iregs.tme_ic_iregs_uint${arch}s)"
-	$as_echo "                            % 2)) {"
-	$as_echo "      ls.tme_sparc_ls_faults |= TME_SPARC_LS_FAULT_LDD_STD_RD_ODD;"
-	$as_echo "    }"
-	$as_echo "  }"
+	AS_ECHO([""])
+	AS_ECHO(["/* this does a slow load or store: */"])
+	AS_ECHO(["tme_shared tme_uint8_t *"])
+	AS_ECHO(["tme_sparc${arch}_ls(struct tme_sparc *ic,"])
+	AS_ECHO(["               tme_uint${arch}_t const address_first,"])
+	AS_ECHO(["               tme_uint${arch}_t *_rd,"])
+	AS_ECHO(["               tme_uint32_t lsinfo)"])
+	AS_ECHO(["{"])
+	AS_ECHO(["  struct tme_sparc_ls ls;"])
+	AS_ECHO(["  tme_uint32_t size;"])
+	AS_ECHO(["  tme_uint32_t asi;"])
+	AS_ECHO(["  tme_uint32_t asi_mask_flags;"])
+	AS_ECHO(["  tme_uint32_t asi_mask;"])
+	AS_ECHO(["  tme_bus_context_t context;"])
+	AS_ECHO(["  tme_uint32_t tlb_hash;"])
+	AS_ECHO(["  unsigned long tlb_i;"])
+	AS_ECHO(["  unsigned long handler_i;"])
+	AS_ECHO(["  struct tme_sparc_tlb *tlb;"])
+	AS_ECHO(["  unsigned int cycle_type;"])
+	AS_ECHO(["  tme_uint${arch}_t address;"])
+	AS_ECHO(["  void (*address_map) _TME_P((struct tme_sparc *, struct tme_sparc_ls *));"])
+	AS_ECHO(["  tme_bus_addr_t address_bus;"])
+	AS_ECHO(["  int rc;"])
+	AS_ECHO(["  const tme_shared tme_uint8_t *emulator_off;"])
+	AS_ECHO(["  unsigned int buffer_offset;"])
+	AS_ECHO(["  tme_uint${arch}_t value;"])
+	AS_ECHO(["  tme_uint32_t value32;"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* we must not be replaying instructions: */"])
+	AS_ECHO(["  assert (tme_sparc_recode_verify_replay_last_pc(ic) == 0);"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* initialize the pointer to the rd register: */"])
+	AS_ECHO(["  ls.tme_sparc_ls_rd${arch} = _rd;"])
+	AS_ECHO([""])
+	AS_ECHO(["#ifndef NDEBUG"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* initialize the cycle function: */"])
+	AS_ECHO(["  ls.tme_sparc_ls_cycle = NULL;"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* initialize the TLB entry pointer: */"])
+	AS_ECHO(["  ls.tme_sparc_ls_tlb = NULL;"])
+	AS_ECHO([""])
+	AS_ECHO(["#endif /* NDEBUG */"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* initialize the faults: */"])
+	AS_ECHO(["  ls.tme_sparc_ls_faults = TME_SPARC_LS_FAULT_NONE;"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* initialize the address: */"])
+	AS_ECHO(["  ls.tme_sparc_ls_address${arch} = address_first;"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* initialize the size: */"])
+	AS_ECHO(["  size = TME_SPARC_LSINFO_WHICH_SIZE(lsinfo);"])
+	AS_ECHO(["  ls.tme_sparc_ls_size = size;"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* initialize the info: */"])
+	AS_ECHO(["  ls.tme_sparc_ls_lsinfo = lsinfo;"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* if the address is not aligned: */"])
+	AS_ECHO(["  if (__tme_predict_false(((size - 1) & (tme_uint32_t) address_first) != 0)) {"])
+	AS_ECHO(["    ls.tme_sparc_ls_faults |= TME_SPARC_LS_FAULT_ADDRESS_NOT_ALIGNED;"])
+	AS_ECHO(["  }"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* otherwise, the address is aligned: */"])
+	AS_ECHO(["  else {"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* the transfer must not cross a 32-bit boundary: */"])
+	AS_ECHO(["    assert ((size - 1) <= (tme_uint32_t) ~address_first);"])
+	AS_ECHO(["  }"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* initialize the address map: */"])
+	AS_ECHO(["  ls.tme_sparc_ls_address_map = ic->_tme_sparc_ls_address_map;"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* if this is a ldd, ldda, std, or stda, or an instruction"])
+	AS_ECHO(["     that loads or stores in the same way: */"])
+	AS_ECHO(["  if (lsinfo & TME_SPARC_LSINFO_LDD_STD) {"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* if the rd register is odd: */"])
+	AS_ECHO(["    /* NB: we don't check the rd field in the instruction,"])
+	AS_ECHO(["       because the register number there might be encoded"])
+	AS_ECHO(["       in some way, or the architecture might ignore bit"])
+	AS_ECHO(["       zero in the rd field (for example, the sparc32 lddf)."])
+	AS_ECHO(["       instead, we test the rd register pointer: */"])
+	AS_ECHO(["    if (__tme_predict_false((ls.tme_sparc_ls_rd${arch}"])
+	AS_ECHO(["                             - ic->tme_sparc_ic.tme_ic_iregs.tme_ic_iregs_uint${arch}s)"])
+	AS_ECHO(["                            % 2)) {"])
+	AS_ECHO(["      ls.tme_sparc_ls_faults |= TME_SPARC_LS_FAULT_LDD_STD_RD_ODD;"])
+	AS_ECHO(["    }"])
+	AS_ECHO(["  }"])
 	
-	$as_echo ""
-	$as_echo "  /* if the ASI has been specified: */"
-	$as_echo "  if (lsinfo & TME_SPARC_LSINFO_A) {"
-	$as_echo ""
-	$as_echo "    /* get the ASI: */"
-	$as_echo "    asi = TME_SPARC_LSINFO_WHICH_ASI(lsinfo);"
-	$as_echo ""
-	$as_echo "    /* get the flags for this ASI: */"
-	$as_echo "    asi_mask_flags = ic->tme_sparc_asis[[asi]].tme_sparc_asi_mask_flags;"
-	$as_echo ""
+	AS_ECHO([""])
+	AS_ECHO(["  /* if the ASI has been specified: */"])
+	AS_ECHO(["  if (lsinfo & TME_SPARC_LSINFO_A) {"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* get the ASI: */"])
+	AS_ECHO(["    asi = TME_SPARC_LSINFO_WHICH_ASI(lsinfo);"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* get the flags for this ASI: */"])
+	AS_ECHO(["    asi_mask_flags = ic->tme_sparc_asis[[asi]].tme_sparc_asi_mask_flags;"])
+	AS_ECHO([""])
 	if test ${arch} = 32; then
-	    $as_echo "    /* make the ASI mask: */"
-	    $as_echo "    if (asi_mask_flags & TME_SPARC32_ASI_MASK_FLAG_SPECIAL) {"
-	    $as_echo "      asi_mask"
-	    $as_echo "        = TME_SPARC_ASI_MASK_SPECIAL(asi, TRUE);"
-	    $as_echo "    }"
-	    $as_echo "    else {"
-	    $as_echo "      asi_mask = TME_SPARC32_ASI_MASK(asi, asi);"
-	    $as_echo "    }"
+	    AS_ECHO(["    /* make the ASI mask: */"])
+	    AS_ECHO(["    if (asi_mask_flags & TME_SPARC32_ASI_MASK_FLAG_SPECIAL) {"])
+	    AS_ECHO(["      asi_mask"])
+	    AS_ECHO(["        = TME_SPARC_ASI_MASK_SPECIAL(asi, TRUE);"])
+	    AS_ECHO(["    }"])
+	    AS_ECHO(["    else {"])
+	    AS_ECHO(["      asi_mask = TME_SPARC32_ASI_MASK(asi, asi);"])
+	    AS_ECHO(["    }"])
 	elif test ${arch} = 64; then
-	    $as_echo "    /* if this is a nonprivileged access: */"
-	    $as_echo "    if (!TME_SPARC_PRIV(ic)) {"
-	    $as_echo ""
-	    $as_echo "      /* if this is a restricted ASI: */"
-	    $as_echo "      if (__tme_predict_false((asi & TME_SPARC64_ASI_FLAG_UNRESTRICTED) == 0)) {"
-	    $as_echo "        ls.tme_sparc_ls_faults |= TME_SPARC64_LS_FAULT_PRIVILEGED_ASI;"
-	    $as_echo "      }"
-	    $as_echo ""
-	    $as_echo "      /* force a nonprivileged access with the ASI: */"
-	    $as_echo "      asi_mask_flags |= TME_SPARC64_ASI_MASK_FLAG_INSN_AS_IF_USER;"
-	    $as_echo "    }"
-	    $as_echo ""
-	    $as_echo "    /* make the ASI mask: */"
-	    $as_echo "    if (asi_mask_flags & TME_SPARC64_ASI_MASK_FLAG_SPECIAL) {"
-	    $as_echo "      asi_mask"
-	    $as_echo "        = (asi_mask_flags"
-	    $as_echo "           + TME_SPARC_ASI_MASK_SPECIAL(asi,"
-	    $as_echo "                                        (asi_mask_flags & TME_SPARC64_ASI_MASK_FLAG_INSN_AS_IF_USER) == 0));"
-	    $as_echo "    }"
-	    $as_echo "    else {"
-	    $as_echo "      asi_mask = TME_SPARC64_ASI_MASK(asi, asi_mask_flags);"
-	    $as_echo "    }"
+	    AS_ECHO(["    /* if this is a nonprivileged access: */"])
+	    AS_ECHO(["    if (!TME_SPARC_PRIV(ic)) {"])
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* if this is a restricted ASI: */"])
+	    AS_ECHO(["      if (__tme_predict_false((asi & TME_SPARC64_ASI_FLAG_UNRESTRICTED) == 0)) {"])
+	    AS_ECHO(["        ls.tme_sparc_ls_faults |= TME_SPARC64_LS_FAULT_PRIVILEGED_ASI;"])
+	    AS_ECHO(["      }"])
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* force a nonprivileged access with the ASI: */"])
+	    AS_ECHO(["      asi_mask_flags |= TME_SPARC64_ASI_MASK_FLAG_INSN_AS_IF_USER;"])
+	    AS_ECHO(["    }"])
+	    AS_ECHO([""])
+	    AS_ECHO(["    /* make the ASI mask: */"])
+	    AS_ECHO(["    if (asi_mask_flags & TME_SPARC64_ASI_MASK_FLAG_SPECIAL) {"])
+	    AS_ECHO(["      asi_mask"])
+	    AS_ECHO(["        = (asi_mask_flags"])
+	    AS_ECHO(["           + TME_SPARC_ASI_MASK_SPECIAL(asi,"])
+	    AS_ECHO(["                                        (asi_mask_flags & TME_SPARC64_ASI_MASK_FLAG_INSN_AS_IF_USER) == 0));"])
+	    AS_ECHO(["    }"])
+	    AS_ECHO(["    else {"])
+	    AS_ECHO(["      asi_mask = TME_SPARC64_ASI_MASK(asi, asi_mask_flags);"])
+	    AS_ECHO(["    }"])
 	fi
-	$as_echo "    ls.tme_sparc_ls_asi_mask = asi_mask;"
+	AS_ECHO(["    ls.tme_sparc_ls_asi_mask = asi_mask;"])
 	if test ${arch} = 64; then
-	    $as_echo ""
-	    $as_echo "    /* if this is a no-fault ASI with a non-load instruction: */"
-	    $as_echo "    if (asi_mask & TME_SPARC64_ASI_FLAG_NO_FAULT) {"
-	    $as_echo "      if (__tme_predict_false(lsinfo & (TME_SPARC_LSINFO_OP_ST | TME_SPARC_LSINFO_OP_ATOMIC))) {"
-	    $as_echo "        ls.tme_sparc_ls_faults |= TME_SPARC64_LS_FAULT_NO_FAULT_NON_LOAD;"
-	    $as_echo "      }"
-	    $as_echo "    }"
+	    AS_ECHO([""])
+	    AS_ECHO(["    /* if this is a no-fault ASI with a non-load instruction: */"])
+	    AS_ECHO(["    if (asi_mask & TME_SPARC64_ASI_FLAG_NO_FAULT) {"])
+	    AS_ECHO(["      if (__tme_predict_false(lsinfo & (TME_SPARC_LSINFO_OP_ST | TME_SPARC_LSINFO_OP_ATOMIC))) {"])
+	    AS_ECHO(["        ls.tme_sparc_ls_faults |= TME_SPARC64_LS_FAULT_NO_FAULT_NON_LOAD;"])
+	    AS_ECHO(["      }"])
+	    AS_ECHO(["    }"])
 	fi
-	$as_echo ""
-	$as_echo "    /* get the context for the alternate address space: */"
+	AS_ECHO([""])
+	AS_ECHO(["    /* get the context for the alternate address space: */"])
 	if test ${arch} = 32; then
-	    $as_echo "    context = ic->tme_sparc_memory_context_default;"
+	    AS_ECHO(["    context = ic->tme_sparc_memory_context_default;"])
 	elif test ${arch} = 64; then
-	    $as_echo "    context = ic->tme_sparc_memory_context_primary;"
-	    $as_echo "    if (asi_mask & TME_SPARC64_ASI_FLAG_SECONDARY) {"
-	    $as_echo "      context = ic->tme_sparc_memory_context_secondary;"
-	    $as_echo "    }"
-	    $as_echo "    if (__tme_predict_false(asi_mask & TME_SPARC64_ASI_MASK_FLAG_INSN_NUCLEUS)) {"
-	    $as_echo "      if (TME_SPARC_MEMORY_FLAGS(ic) & TME_SPARC_MEMORY_FLAG_HAS_NUCLEUS) {"
-	    $as_echo "        context = 0;"
-	    $as_echo "      }"
-	    $as_echo "    }"
+	    AS_ECHO(["    context = ic->tme_sparc_memory_context_primary;"])
+	    AS_ECHO(["    if (asi_mask & TME_SPARC64_ASI_FLAG_SECONDARY) {"])
+	    AS_ECHO(["      context = ic->tme_sparc_memory_context_secondary;"])
+	    AS_ECHO(["    }"])
+	    AS_ECHO(["    if (__tme_predict_false(asi_mask & TME_SPARC64_ASI_MASK_FLAG_INSN_NUCLEUS)) {"])
+	    AS_ECHO(["      if (TME_SPARC_MEMORY_FLAGS(ic) & TME_SPARC_MEMORY_FLAG_HAS_NUCLEUS) {"])
+	    AS_ECHO(["        context = 0;"])
+	    AS_ECHO(["      }"])
+	    AS_ECHO(["    }"])
 	fi
-	$as_echo "    ls.tme_sparc_ls_context = context;"
-	$as_echo ""
-	$as_echo "    /* get the default TLB entry index: */"
-	$as_echo "    tlb_hash = TME_SPARC_TLB_HASH(ic, context, address_first);"
-	$as_echo "    if (lsinfo & TME_SPARC_LSINFO_OP_FETCH) {"
-	$as_echo "      tlb_i = TME_SPARC_ITLB_ENTRY(ic, tlb_hash);"
-	$as_echo "    }"
-	$as_echo "    else {"
-	$as_echo "      tlb_i = TME_SPARC_DTLB_ENTRY(ic, tlb_hash);"
-	$as_echo "    }"
-	$as_echo "    ls.tme_sparc_ls_tlb_i = tlb_i;"
-	$as_echo ""
-	$as_echo "    /* call any special handler for this ASI: */"
-	$as_echo "    handler_i = ic->tme_sparc_asis[[TME_SPARC_ASI_MASK_WHICH(asi_mask)]].tme_sparc_asi_handler;"
-	$as_echo "    if (__tme_predict_false(handler_i != 0)) {"
-	$as_echo "      (*ic->_tme_sparc_ls_asi_handlers[[handler_i]])(ic, &ls);"
-	$as_echo "    }"
-	$as_echo ""
-	$as_echo "    /* get the final TLB entry index: */"
-	$as_echo "    tlb_i = ls.tme_sparc_ls_tlb_i;"
-	$as_echo "  }"
+	AS_ECHO(["    ls.tme_sparc_ls_context = context;"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* get the default TLB entry index: */"])
+	AS_ECHO(["    tlb_hash = TME_SPARC_TLB_HASH(ic, context, address_first);"])
+	AS_ECHO(["    if (lsinfo & TME_SPARC_LSINFO_OP_FETCH) {"])
+	AS_ECHO(["      tlb_i = TME_SPARC_ITLB_ENTRY(ic, tlb_hash);"])
+	AS_ECHO(["    }"])
+	AS_ECHO(["    else {"])
+	AS_ECHO(["      tlb_i = TME_SPARC_DTLB_ENTRY(ic, tlb_hash);"])
+	AS_ECHO(["    }"])
+	AS_ECHO(["    ls.tme_sparc_ls_tlb_i = tlb_i;"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* call any special handler for this ASI: */"])
+	AS_ECHO(["    handler_i = ic->tme_sparc_asis[[TME_SPARC_ASI_MASK_WHICH(asi_mask)]].tme_sparc_asi_handler;"])
+	AS_ECHO(["    if (__tme_predict_false(handler_i != 0)) {"])
+	AS_ECHO(["      (*ic->_tme_sparc_ls_asi_handlers[[handler_i]])(ic, &ls);"])
+	AS_ECHO(["    }"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* get the final TLB entry index: */"])
+	AS_ECHO(["    tlb_i = ls.tme_sparc_ls_tlb_i;"])
+	AS_ECHO(["  }"])
 
-	$as_echo ""
-	$as_echo "  /* otherwise, the ASI has not been specified: */"
-	$as_echo "  else {"
-	$as_echo ""
-	$as_echo "    /* get the ASI mask: */"
-	$as_echo "    asi_mask = ic->tme_sparc_asi_mask_data;"
-	$as_echo ""
-	$as_echo "    /* add in any ASI mask flags from the instruction: */"
+	AS_ECHO([""])
+	AS_ECHO(["  /* otherwise, the ASI has not been specified: */"])
+	AS_ECHO(["  else {"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* get the ASI mask: */"])
+	AS_ECHO(["    asi_mask = ic->tme_sparc_asi_mask_data;"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* add in any ASI mask flags from the instruction: */"])
 	if test ${arch} = 64; then
-	    $as_echo "    /* NB: initially, TME_SPARC64_ASI_FLAG_NO_FAULT is the"
-	    $as_echo "       only flag allowed, and only the flush instruction"
-	    $as_echo "       can use it: */"
+	    AS_ECHO(["    /* NB: initially, TME_SPARC64_ASI_FLAG_NO_FAULT is the"])
+	    AS_ECHO(["       only flag allowed, and only the flush instruction"])
+	    AS_ECHO(["       can use it: */"])
 	fi
-	$as_echo "    assert (TME_SPARC_LSINFO_WHICH_ASI_FLAGS(lsinfo) == 0"
+	AS_ECHO(["    assert (TME_SPARC_LSINFO_WHICH_ASI_FLAGS(lsinfo) == 0"])
 	if test ${arch} = 64; then
-	    $as_echo "            || (TME_SPARC_LSINFO_WHICH_ASI_FLAGS(lsinfo) == TME_SPARC64_ASI_FLAG_NO_FAULT"
-	    $as_echo "                && ((ic->_tme_sparc_insn >> 19) & 0x3f) == 0x3b)"
+	    AS_ECHO(["            || (TME_SPARC_LSINFO_WHICH_ASI_FLAGS(lsinfo) == TME_SPARC64_ASI_FLAG_NO_FAULT"])
+	    AS_ECHO(["                && ((ic->_tme_sparc_insn >> 19) & 0x3f) == 0x3b)"])
 	fi
-	$as_echo "            );"
-	$as_echo "    asi_mask |= TME_SPARC_LSINFO_WHICH_ASI_FLAGS(lsinfo);"
-	$as_echo ""
-	$as_echo "    /* set the ASI mask: */"
-	$as_echo "    ls.tme_sparc_ls_asi_mask = asi_mask;"
-	$as_echo ""
-	$as_echo "    /* get the context: */"
-	$as_echo "    context = ic->tme_sparc_memory_context_default;"
-	$as_echo "    ls.tme_sparc_ls_context = context;"
-	$as_echo ""
-	$as_echo "    /* this must not be a fetch: */"
-	$as_echo "    assert ((lsinfo & TME_SPARC_LSINFO_OP_FETCH) == 0);"
-	$as_echo ""
-	$as_echo "    /* get the TLB entry index: */"
-	$as_echo "    tlb_hash = TME_SPARC_TLB_HASH(ic, context, address_first);"
-	$as_echo "    tlb_i = TME_SPARC_DTLB_ENTRY(ic, tlb_hash);"
-	$as_echo "    ls.tme_sparc_ls_tlb_i = tlb_i;"
-	$as_echo "  }"
+	AS_ECHO(["            );"])
+	AS_ECHO(["    asi_mask |= TME_SPARC_LSINFO_WHICH_ASI_FLAGS(lsinfo);"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* set the ASI mask: */"])
+	AS_ECHO(["    ls.tme_sparc_ls_asi_mask = asi_mask;"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* get the context: */"])
+	AS_ECHO(["    context = ic->tme_sparc_memory_context_default;"])
+	AS_ECHO(["    ls.tme_sparc_ls_context = context;"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* this must not be a fetch: */"])
+	AS_ECHO(["    assert ((lsinfo & TME_SPARC_LSINFO_OP_FETCH) == 0);"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* get the TLB entry index: */"])
+	AS_ECHO(["    tlb_hash = TME_SPARC_TLB_HASH(ic, context, address_first);"])
+	AS_ECHO(["    tlb_i = TME_SPARC_DTLB_ENTRY(ic, tlb_hash);"])
+	AS_ECHO(["    ls.tme_sparc_ls_tlb_i = tlb_i;"])
+	AS_ECHO(["  }"])
 
-	$as_echo ""
-	$as_echo "  /* get the TLB entry pointer: */"
-	$as_echo "  tlb = &ic->tme_sparc_tlbs[[tlb_i]];"
-	$as_echo "  ls.tme_sparc_ls_tlb = tlb;"
+	AS_ECHO([""])
+	AS_ECHO(["  /* get the TLB entry pointer: */"])
+	AS_ECHO(["  tlb = &ic->tme_sparc_tlbs[[tlb_i]];"])
+	AS_ECHO(["  ls.tme_sparc_ls_tlb = tlb;"])
 
-	$as_echo ""
-	$as_echo "  /* get the cycle type: */"
-	$as_echo "  /* NB: we deliberately set this once, now, since the lsinfo"
-	$as_echo "     may change once we start transferring: */"
-	$as_echo "  cycle_type"
-	$as_echo "    = ((lsinfo"
-	$as_echo "        & (TME_SPARC_LSINFO_OP_ST"
-	$as_echo "           | TME_SPARC_LSINFO_OP_ATOMIC))"
-	$as_echo "       ? TME_BUS_CYCLE_WRITE"
-	$as_echo "       : TME_BUS_CYCLE_READ);"
+	AS_ECHO([""])
+	AS_ECHO(["  /* get the cycle type: */"])
+	AS_ECHO(["  /* NB: we deliberately set this once, now, since the lsinfo"])
+	AS_ECHO(["     may change once we start transferring: */"])
+	AS_ECHO(["  cycle_type"])
+	AS_ECHO(["    = ((lsinfo"])
+	AS_ECHO(["        & (TME_SPARC_LSINFO_OP_ST"])
+	AS_ECHO(["           | TME_SPARC_LSINFO_OP_ATOMIC))"])
+	AS_ECHO(["       ? TME_BUS_CYCLE_WRITE"])
+	AS_ECHO(["       : TME_BUS_CYCLE_READ);"])
 
-	$as_echo ""
-	$as_echo "  /* loop until the transfer is complete: */"
-	$as_echo "  for (;;) {"
+	AS_ECHO([""])
+	AS_ECHO(["  /* loop until the transfer is complete: */"])
+	AS_ECHO(["  for (;;) {"])
 
-	$as_echo ""
-	$as_echo "    /* if we have faulted: */"
-	$as_echo "    if (__tme_predict_false(ls.tme_sparc_ls_faults != TME_SPARC_LS_FAULT_NONE)) {"
-	$as_echo ""
-	$as_echo "      /* unbusy this TLB, since the trap function may not return: */"
-	$as_echo "      tme_bus_tlb_unbusy(&tlb->tme_sparc_tlb_bus_tlb);"
-	$as_echo ""
-	$as_echo "      /* call the trap function, which will not return if it traps: */"
-	$as_echo "      (*ic->_tme_sparc_ls_trap)(ic, &ls);"
-	$as_echo ""
-	$as_echo "      /* rebusy this TLB: */"
-	$as_echo "      tme_bus_tlb_busy(&tlb->tme_sparc_tlb_bus_tlb);"
-	$as_echo ""
-	$as_echo "      /* since the trap function returned, it must have cleared the fault: */"
-	$as_echo "      assert (ls.tme_sparc_ls_faults == TME_SPARC_LS_FAULT_NONE);"
-	$as_echo "    }"
+	AS_ECHO([""])
+	AS_ECHO(["    /* if we have faulted: */"])
+	AS_ECHO(["    if (__tme_predict_false(ls.tme_sparc_ls_faults != TME_SPARC_LS_FAULT_NONE)) {"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* unbusy this TLB, since the trap function may not return: */"])
+	AS_ECHO(["      tme_bus_tlb_unbusy(&tlb->tme_sparc_tlb_bus_tlb);"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* call the trap function, which will not return if it traps: */"])
+	AS_ECHO(["      (*ic->_tme_sparc_ls_trap)(ic, &ls);"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* rebusy this TLB: */"])
+	AS_ECHO(["      tme_bus_tlb_busy(&tlb->tme_sparc_tlb_bus_tlb);"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* since the trap function returned, it must have cleared the fault: */"])
+	AS_ECHO(["      assert (ls.tme_sparc_ls_faults == TME_SPARC_LS_FAULT_NONE);"])
+	AS_ECHO(["    }"])
 
-	$as_echo ""
-	$as_echo "    /* if the transfer is complete, stop now: */"
-	$as_echo "    if (__tme_predict_false(ls.tme_sparc_ls_size == 0)) {"
-	$as_echo "      break;"
-	$as_echo "    }"
+	AS_ECHO([""])
+	AS_ECHO(["    /* if the transfer is complete, stop now: */"])
+	AS_ECHO(["    if (__tme_predict_false(ls.tme_sparc_ls_size == 0)) {"])
+	AS_ECHO(["      break;"])
+	AS_ECHO(["    }"])
 
-	$as_echo ""
-	$as_echo "    /* get the current address: */"
-	$as_echo "    address = ls.tme_sparc_ls_address${arch};"
+	AS_ECHO([""])
+	AS_ECHO(["    /* get the current address: */"])
+	AS_ECHO(["    address = ls.tme_sparc_ls_address${arch};"])
 
-	$as_echo ""
-	$as_echo "    /* if this TLB entry does not apply or is invalid: */"
-	$as_echo "    if ((tlb->tme_sparc_tlb_context != ls.tme_sparc_ls_context"
-	$as_echo "         && tlb->tme_sparc_tlb_context <= ic->tme_sparc_memory_context_max)"
-	$as_echo "        || address < (tme_bus_addr${arch}_t) tlb->tme_sparc_tlb_addr_first"
-	$as_echo "        || address > (tme_bus_addr${arch}_t) tlb->tme_sparc_tlb_addr_last"
-	$as_echo "        || !TME_SPARC_TLB_ASI_MASK_OK(tlb, ls.tme_sparc_ls_asi_mask)"
-	$as_echo "        || ((tlb->tme_sparc_tlb_cycles_ok & cycle_type) == 0"
-	$as_echo "            && (cycle_type == TME_BUS_CYCLE_READ"
-	$as_echo "                ? tlb->tme_sparc_tlb_emulator_off_read"
-	$as_echo "                : tlb->tme_sparc_tlb_emulator_off_write) == TME_EMULATOR_OFF_UNDEF)"
-	$as_echo "        || tme_bus_tlb_is_invalid(&tlb->tme_sparc_tlb_bus_tlb)) {"
-	$as_echo ""
-	$as_echo "      /* unbusy this TLB entry for filling: */"
-	$as_echo "      tme_bus_tlb_unbusy_fill(&tlb->tme_sparc_tlb_bus_tlb);"
-	$as_echo ""
-	$as_echo "      /* if we haven't mapped this address yet: */"
-	$as_echo "      address_map = ls.tme_sparc_ls_address_map;"
-	$as_echo "      if (address_map != NULL) {"
-	$as_echo "        ls.tme_sparc_ls_address_map = NULL;"
-	$as_echo ""
-	$as_echo "        /* count this mapping: */"
-	$as_echo "        if (ls.tme_sparc_ls_lsinfo & TME_SPARC_LSINFO_OP_FETCH) {"
-	$as_echo "          TME_SPARC_STAT(ic, tme_sparc_stats_itlb_map);"
-	$as_echo "        }"
-	$as_echo "        else {"
-	$as_echo "          TME_SPARC_STAT(ic, tme_sparc_stats_dtlb_map);"
-	$as_echo "        }"
-	$as_echo ""
-	$as_echo "        /* initialize the ASI mask and context on this TLB entry: */"
-	$as_echo "        /* NB that the ASI mask will likely be updated by either the"
-	$as_echo "           address mapping or the TLB fill: */"
-	$as_echo "        tlb->tme_sparc_tlb_asi_mask"
-	$as_echo "          = (ls.tme_sparc_ls_asi_mask"
-	$as_echo "             & ~TME_SPARC_ASI_MASK_FLAGS_AVAIL);"
-	$as_echo "        tlb->tme_sparc_tlb_context = ls.tme_sparc_ls_context;"
-	$as_echo ""
-	$as_echo "        /* NB: if the address mapping traps, we won't get a chance"
-	$as_echo "           to finish updating this TLB entry, which is currently in"
-	$as_echo "           an inconsistent state - but not necessarily an unusable"
-	$as_echo "           state.  poison it to be unusable, including any recode"
-	$as_echo "           TLB entry: */"
-	$as_echo "        tlb->tme_sparc_tlb_addr_first = 1;"
-	$as_echo "        tlb->tme_sparc_tlb_addr_last = 0;"
-	$as_echo "#if TME_SPARC_HAVE_RECODE(ic)"
-	$as_echo "        if (ls.tme_sparc_ls_lsinfo & TME_SPARC_LSINFO_OP_FETCH) {"
-	$as_echo "          tme_sparc${arch}_recode_chain_tlb_update(ic, &ls);"
-	$as_echo "        }"
-	$as_echo "        else {"
-	$as_echo "          tme_sparc${arch}_recode_ls_tlb_update(ic, &ls);"
-	$as_echo "        }"
-	$as_echo "#endif /* TME_SPARC_HAVE_RECODE(ic) */"
-	$as_echo ""
-	$as_echo "#ifndef NDEBUG"
-	$as_echo ""
-	$as_echo "        /* initialize the mapping TLB entry: */"
-	$as_echo "        ls.tme_sparc_ls_tlb_map.tme_bus_tlb_addr_first = 0 - (tme_bus_addr_t) 1;"
-	$as_echo "        ls.tme_sparc_ls_tlb_map.tme_bus_tlb_addr_last = 0 - (tme_bus_addr_t) 2;"
-	$as_echo "        ls.tme_sparc_ls_tlb_map.tme_bus_tlb_cycles_ok = 0;"
-	$as_echo "        ls.tme_sparc_ls_tlb_map.tme_bus_tlb_addr_offset = 0 - (tme_bus_addr_t) 1;"
-	$as_echo ""
-	$as_echo "#endif /* !NDEBUG */"
-	$as_echo ""
-	$as_echo "        /* map the address: */"
-	$as_echo "        (*address_map)(ic, &ls);"
-	$as_echo ""
-	$as_echo "        /* the address mapping must do any trapping itself: */"
-	$as_echo "        assert (ls.tme_sparc_ls_faults == TME_SPARC_LS_FAULT_NONE);"
-	$as_echo ""
-	$as_echo "        /* if the address mapping completed the transfer: */"
-	$as_echo "        if (__tme_predict_false(ls.tme_sparc_ls_size == 0)) {"
-	$as_echo ""
-	$as_echo "          /* rebusy the TLB entry: */"
-	$as_echo "          tme_sparc_tlb_busy(tlb);"
-	$as_echo ""
-	$as_echo "          /* stop now: */"
-	$as_echo "          break;"
-	$as_echo "        }"
-	$as_echo ""
-	$as_echo "        /* the mapping must have actually made a mapping: */"
-	$as_echo "        assert (ls.tme_sparc_ls_tlb_map.tme_bus_tlb_addr_first != 0 - (tme_bus_addr_t) 1);"
-	$as_echo "        assert (ls.tme_sparc_ls_tlb_map.tme_bus_tlb_addr_last != 0 - (tme_bus_addr_t) 2);"
-	$as_echo "        assert (ls.tme_sparc_ls_tlb_map.tme_bus_tlb_cycles_ok != 0);"
-	$as_echo "        assert (ls.tme_sparc_ls_tlb_map.tme_bus_tlb_addr_offset != 0 - (tme_bus_addr_t) 1);"
-	$as_echo "      }"
-	$as_echo ""
-	$as_echo "      /* count this fill: */"
-	$as_echo "      if (ls.tme_sparc_ls_lsinfo & TME_SPARC_LSINFO_OP_FETCH) {"
-	$as_echo "        TME_SPARC_STAT(ic, tme_sparc_stats_itlb_fill);"
-	$as_echo "      }"
-	$as_echo "      else {"
-	$as_echo "        TME_SPARC_STAT(ic, tme_sparc_stats_dtlb_fill);"
-	$as_echo "      }"
-	$as_echo ""
-	$as_echo "      /* get the bus address: */"
-	$as_echo "      address_bus = ls.tme_sparc_ls_address${arch} + ls.tme_sparc_ls_tlb_map.tme_bus_tlb_addr_offset;"
-	$as_echo ""
-	$as_echo "      /* fill the TLB entry: */"
-	$as_echo "      tme_sparc_callout_unlock(ic);"
-	$as_echo "      rc = (*ic->_tme_sparc_bus_connection->tme_sparc_bus_tlb_fill)"
-	$as_echo "        (ic->_tme_sparc_bus_connection,"
-	$as_echo "         tlb,"
-	$as_echo "         ls.tme_sparc_ls_asi_mask,"
-	$as_echo "         address_bus,"
-	$as_echo "         cycle_type);"
-	$as_echo "      assert (rc == TME_OK);"
-	$as_echo "      tme_sparc_callout_relock(ic);"
-	$as_echo ""
-	$as_echo "      /* map the TLB entry: */"
-	$as_echo "      tme_bus_tlb_map(&tlb->tme_sparc_tlb_bus_tlb, address_bus,"
-	$as_echo "                      &ls.tme_sparc_ls_tlb_map, ls.tme_sparc_ls_address${arch});"
-	$as_echo ""
-	$as_echo "      /* update any recode TLB entry: */"
-	$as_echo "#if TME_SPARC_HAVE_RECODE(ic)"
-	$as_echo "      if (ls.tme_sparc_ls_lsinfo & TME_SPARC_LSINFO_OP_FETCH) {"
-	$as_echo "        tme_sparc${arch}_recode_chain_tlb_update(ic, &ls);"
-	$as_echo "      }"
-	$as_echo "      else {"
-	$as_echo "        tme_sparc${arch}_recode_ls_tlb_update(ic, &ls);"
-	$as_echo "      }"
-	$as_echo "#endif /* TME_SPARC_HAVE_RECODE(ic) */"
-	$as_echo ""
-	$as_echo "      /* rebusy the TLB entry: */"
-	$as_echo "      tme_sparc_tlb_busy(tlb);"
-	$as_echo ""
-	$as_echo "      /* if this TLB entry is already invalid: */"
-	$as_echo "      if (tme_bus_tlb_is_invalid(&tlb->tme_sparc_tlb_bus_tlb)) {"
-	$as_echo "        continue;"
-	$as_echo "      }"
-	$as_echo "    }"
+	AS_ECHO([""])
+	AS_ECHO(["    /* if this TLB entry does not apply or is invalid: */"])
+	AS_ECHO(["    if ((tlb->tme_sparc_tlb_context != ls.tme_sparc_ls_context"])
+	AS_ECHO(["         && tlb->tme_sparc_tlb_context <= ic->tme_sparc_memory_context_max)"])
+	AS_ECHO(["        || address < (tme_bus_addr${arch}_t) tlb->tme_sparc_tlb_addr_first"])
+	AS_ECHO(["        || address > (tme_bus_addr${arch}_t) tlb->tme_sparc_tlb_addr_last"])
+	AS_ECHO(["        || !TME_SPARC_TLB_ASI_MASK_OK(tlb, ls.tme_sparc_ls_asi_mask)"])
+	AS_ECHO(["        || ((tlb->tme_sparc_tlb_cycles_ok & cycle_type) == 0"])
+	AS_ECHO(["            && (cycle_type == TME_BUS_CYCLE_READ"])
+	AS_ECHO(["                ? tlb->tme_sparc_tlb_emulator_off_read"])
+	AS_ECHO(["                : tlb->tme_sparc_tlb_emulator_off_write) == TME_EMULATOR_OFF_UNDEF)"])
+	AS_ECHO(["        || tme_bus_tlb_is_invalid(&tlb->tme_sparc_tlb_bus_tlb)) {"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* unbusy this TLB entry for filling: */"])
+	AS_ECHO(["      tme_bus_tlb_unbusy_fill(&tlb->tme_sparc_tlb_bus_tlb);"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* if we haven't mapped this address yet: */"])
+	AS_ECHO(["      address_map = ls.tme_sparc_ls_address_map;"])
+	AS_ECHO(["      if (address_map != NULL) {"])
+	AS_ECHO(["        ls.tme_sparc_ls_address_map = NULL;"])
+	AS_ECHO([""])
+	AS_ECHO(["        /* count this mapping: */"])
+	AS_ECHO(["        if (ls.tme_sparc_ls_lsinfo & TME_SPARC_LSINFO_OP_FETCH) {"])
+	AS_ECHO(["          TME_SPARC_STAT(ic, tme_sparc_stats_itlb_map);"])
+	AS_ECHO(["        }"])
+	AS_ECHO(["        else {"])
+	AS_ECHO(["          TME_SPARC_STAT(ic, tme_sparc_stats_dtlb_map);"])
+	AS_ECHO(["        }"])
+	AS_ECHO([""])
+	AS_ECHO(["        /* initialize the ASI mask and context on this TLB entry: */"])
+	AS_ECHO(["        /* NB that the ASI mask will likely be updated by either the"])
+	AS_ECHO(["           address mapping or the TLB fill: */"])
+	AS_ECHO(["        tlb->tme_sparc_tlb_asi_mask"])
+	AS_ECHO(["          = (ls.tme_sparc_ls_asi_mask"])
+	AS_ECHO(["             & ~TME_SPARC_ASI_MASK_FLAGS_AVAIL);"])
+	AS_ECHO(["        tlb->tme_sparc_tlb_context = ls.tme_sparc_ls_context;"])
+	AS_ECHO([""])
+	AS_ECHO(["        /* NB: if the address mapping traps, we won't get a chance"])
+	AS_ECHO(["           to finish updating this TLB entry, which is currently in"])
+	AS_ECHO(["           an inconsistent state - but not necessarily an unusable"])
+	AS_ECHO(["           state.  poison it to be unusable, including any recode"])
+	AS_ECHO(["           TLB entry: */"])
+	AS_ECHO(["        tlb->tme_sparc_tlb_addr_first = 1;"])
+	AS_ECHO(["        tlb->tme_sparc_tlb_addr_last = 0;"])
+	AS_ECHO(["#if TME_SPARC_HAVE_RECODE(ic)"])
+	AS_ECHO(["        if (ls.tme_sparc_ls_lsinfo & TME_SPARC_LSINFO_OP_FETCH) {"])
+	AS_ECHO(["          tme_sparc${arch}_recode_chain_tlb_update(ic, &ls);"])
+	AS_ECHO(["        }"])
+	AS_ECHO(["        else {"])
+	AS_ECHO(["          tme_sparc${arch}_recode_ls_tlb_update(ic, &ls);"])
+	AS_ECHO(["        }"])
+	AS_ECHO(["#endif /* TME_SPARC_HAVE_RECODE(ic) */"])
+	AS_ECHO([""])
+	AS_ECHO(["#ifndef NDEBUG"])
+	AS_ECHO([""])
+	AS_ECHO(["        /* initialize the mapping TLB entry: */"])
+	AS_ECHO(["        ls.tme_sparc_ls_tlb_map.tme_bus_tlb_addr_first = 0 - (tme_bus_addr_t) 1;"])
+	AS_ECHO(["        ls.tme_sparc_ls_tlb_map.tme_bus_tlb_addr_last = 0 - (tme_bus_addr_t) 2;"])
+	AS_ECHO(["        ls.tme_sparc_ls_tlb_map.tme_bus_tlb_cycles_ok = 0;"])
+	AS_ECHO(["        ls.tme_sparc_ls_tlb_map.tme_bus_tlb_addr_offset = 0 - (tme_bus_addr_t) 1;"])
+	AS_ECHO([""])
+	AS_ECHO(["#endif /* !NDEBUG */"])
+	AS_ECHO([""])
+	AS_ECHO(["        /* map the address: */"])
+	AS_ECHO(["        (*address_map)(ic, &ls);"])
+	AS_ECHO([""])
+	AS_ECHO(["        /* the address mapping must do any trapping itself: */"])
+	AS_ECHO(["        assert (ls.tme_sparc_ls_faults == TME_SPARC_LS_FAULT_NONE);"])
+	AS_ECHO([""])
+	AS_ECHO(["        /* if the address mapping completed the transfer: */"])
+	AS_ECHO(["        if (__tme_predict_false(ls.tme_sparc_ls_size == 0)) {"])
+	AS_ECHO([""])
+	AS_ECHO(["          /* rebusy the TLB entry: */"])
+	AS_ECHO(["          tme_sparc_tlb_busy(tlb);"])
+	AS_ECHO([""])
+	AS_ECHO(["          /* stop now: */"])
+	AS_ECHO(["          break;"])
+	AS_ECHO(["        }"])
+	AS_ECHO([""])
+	AS_ECHO(["        /* the mapping must have actually made a mapping: */"])
+	AS_ECHO(["        assert (ls.tme_sparc_ls_tlb_map.tme_bus_tlb_addr_first != 0 - (tme_bus_addr_t) 1);"])
+	AS_ECHO(["        assert (ls.tme_sparc_ls_tlb_map.tme_bus_tlb_addr_last != 0 - (tme_bus_addr_t) 2);"])
+	AS_ECHO(["        assert (ls.tme_sparc_ls_tlb_map.tme_bus_tlb_cycles_ok != 0);"])
+	AS_ECHO(["        assert (ls.tme_sparc_ls_tlb_map.tme_bus_tlb_addr_offset != 0 - (tme_bus_addr_t) 1);"])
+	AS_ECHO(["      }"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* count this fill: */"])
+	AS_ECHO(["      if (ls.tme_sparc_ls_lsinfo & TME_SPARC_LSINFO_OP_FETCH) {"])
+	AS_ECHO(["        TME_SPARC_STAT(ic, tme_sparc_stats_itlb_fill);"])
+	AS_ECHO(["      }"])
+	AS_ECHO(["      else {"])
+	AS_ECHO(["        TME_SPARC_STAT(ic, tme_sparc_stats_dtlb_fill);"])
+	AS_ECHO(["      }"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* get the bus address: */"])
+	AS_ECHO(["      address_bus = ls.tme_sparc_ls_address${arch} + ls.tme_sparc_ls_tlb_map.tme_bus_tlb_addr_offset;"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* fill the TLB entry: */"])
+	AS_ECHO(["      tme_sparc_callout_unlock(ic);"])
+	AS_ECHO(["      rc = (*ic->_tme_sparc_bus_connection->tme_sparc_bus_tlb_fill)"])
+	AS_ECHO(["        (ic->_tme_sparc_bus_connection,"])
+	AS_ECHO(["         tlb,"])
+	AS_ECHO(["         ls.tme_sparc_ls_asi_mask,"])
+	AS_ECHO(["         address_bus,"])
+	AS_ECHO(["         cycle_type);"])
+	AS_ECHO(["      assert (rc == TME_OK);"])
+	AS_ECHO(["      tme_sparc_callout_relock(ic);"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* map the TLB entry: */"])
+	AS_ECHO(["      tme_bus_tlb_map(&tlb->tme_sparc_tlb_bus_tlb, address_bus,"])
+	AS_ECHO(["                      &ls.tme_sparc_ls_tlb_map, ls.tme_sparc_ls_address${arch});"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* update any recode TLB entry: */"])
+	AS_ECHO(["#if TME_SPARC_HAVE_RECODE(ic)"])
+	AS_ECHO(["      if (ls.tme_sparc_ls_lsinfo & TME_SPARC_LSINFO_OP_FETCH) {"])
+	AS_ECHO(["        tme_sparc${arch}_recode_chain_tlb_update(ic, &ls);"])
+	AS_ECHO(["      }"])
+	AS_ECHO(["      else {"])
+	AS_ECHO(["        tme_sparc${arch}_recode_ls_tlb_update(ic, &ls);"])
+	AS_ECHO(["      }"])
+	AS_ECHO(["#endif /* TME_SPARC_HAVE_RECODE(ic) */"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* rebusy the TLB entry: */"])
+	AS_ECHO(["      tme_sparc_tlb_busy(tlb);"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* if this TLB entry is already invalid: */"])
+	AS_ECHO(["      if (tme_bus_tlb_is_invalid(&tlb->tme_sparc_tlb_bus_tlb)) {"])
+	AS_ECHO(["        continue;"])
+	AS_ECHO(["      }"])
+	AS_ECHO(["    }"])
 
-	$as_echo ""
-	$as_echo "    /* this TLB entry must apply: */"
-	$as_echo "    assert ((tlb->tme_sparc_tlb_context == ls.tme_sparc_ls_context"
-	$as_echo "             || tlb->tme_sparc_tlb_context > ic->tme_sparc_memory_context_max)"
-	$as_echo "            && ls.tme_sparc_ls_address${arch} >= (tme_bus_addr${arch}_t) tlb->tme_sparc_tlb_addr_first"
-	$as_echo "            && ls.tme_sparc_ls_address${arch} <= (tme_bus_addr${arch}_t) tlb->tme_sparc_tlb_addr_last"
-	$as_echo "            && ((tlb->tme_sparc_tlb_cycles_ok & cycle_type)"
-	$as_echo "                || (cycle_type == TME_BUS_CYCLE_READ"
-	$as_echo "                    ? tlb->tme_sparc_tlb_emulator_off_read"
-	$as_echo "                    : tlb->tme_sparc_tlb_emulator_off_write) != TME_EMULATOR_OFF_UNDEF)"
-	$as_echo "            && TME_SPARC_TLB_ASI_MASK_OK(tlb, ls.tme_sparc_ls_asi_mask));"
+	AS_ECHO([""])
+	AS_ECHO(["    /* this TLB entry must apply: */"])
+	AS_ECHO(["    assert ((tlb->tme_sparc_tlb_context == ls.tme_sparc_ls_context"])
+	AS_ECHO(["             || tlb->tme_sparc_tlb_context > ic->tme_sparc_memory_context_max)"])
+	AS_ECHO(["            && ls.tme_sparc_ls_address${arch} >= (tme_bus_addr${arch}_t) tlb->tme_sparc_tlb_addr_first"])
+	AS_ECHO(["            && ls.tme_sparc_ls_address${arch} <= (tme_bus_addr${arch}_t) tlb->tme_sparc_tlb_addr_last"])
+	AS_ECHO(["            && ((tlb->tme_sparc_tlb_cycles_ok & cycle_type)"])
+	AS_ECHO(["                || (cycle_type == TME_BUS_CYCLE_READ"])
+	AS_ECHO(["                    ? tlb->tme_sparc_tlb_emulator_off_read"])
+	AS_ECHO(["                    : tlb->tme_sparc_tlb_emulator_off_write) != TME_EMULATOR_OFF_UNDEF)"])
+	AS_ECHO(["            && TME_SPARC_TLB_ASI_MASK_OK(tlb, ls.tme_sparc_ls_asi_mask));"])
 
-	$as_echo ""
-	$as_echo "    /* get the current lsinfo: */"
-	$as_echo "    lsinfo = ls.tme_sparc_ls_lsinfo;"
+	AS_ECHO([""])
+	AS_ECHO(["    /* get the current lsinfo: */"])
+	AS_ECHO(["    lsinfo = ls.tme_sparc_ls_lsinfo;"])
 
-	$as_echo ""
-	$as_echo "    /* if we have to check the TLB: */"
-	$as_echo "    if (__tme_predict_true((lsinfo & TME_SPARC_LSINFO_NO_CHECK_TLB) == 0)) {"
-	$as_echo ""
-	$as_echo "      /* get the ASI mask for this TLB entry: */"
-	$as_echo "      asi_mask = tlb->tme_sparc_tlb_asi_mask;"
+	AS_ECHO([""])
+	AS_ECHO(["    /* if we have to check the TLB: */"])
+	AS_ECHO(["    if (__tme_predict_true((lsinfo & TME_SPARC_LSINFO_NO_CHECK_TLB) == 0)) {"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* get the ASI mask for this TLB entry: */"])
+	AS_ECHO(["      asi_mask = tlb->tme_sparc_tlb_asi_mask;"])
 	if test ${arch} = 64; then
-	    $as_echo ""
-	    $as_echo "      /* if this TLB entry is for no-fault accesses only: */"
-	    $as_echo "      if (__tme_predict_false(asi_mask & TME_SPARC64_ASI_FLAG_NO_FAULT)) {"
-	    $as_echo ""
-	    $as_echo "        /* if this access is not using a no-fault ASI: */"
-	    $as_echo "        if (__tme_predict_false((ls.tme_sparc_ls_asi_mask & TME_SPARC64_ASI_FLAG_NO_FAULT) == 0)) {"
-	    $as_echo "          ls.tme_sparc_ls_faults |= TME_SPARC64_LS_FAULT_NO_FAULT_FAULT;"
-	    $as_echo "          continue;"
-	    $as_echo "        }"
-	    $as_echo "      }"
-	    $as_echo ""
-	    $as_echo "      /* if this TLB entry is for addresses with side effects: */"
-	    $as_echo "      if (asi_mask & TME_SPARC64_ASI_MASK_FLAG_TLB_SIDE_EFFECTS) {"
-	    $as_echo ""
-	    $as_echo "        /* if this access is using a no-fault ASI: */"
-	    $as_echo "        /* NB: a flush may be implemented as a load with a no-fault ASI: */"
-	    $as_echo "        if (__tme_predict_false(ls.tme_sparc_ls_asi_mask & TME_SPARC64_ASI_FLAG_NO_FAULT)) {"
-	    $as_echo "          ls.tme_sparc_ls_faults |= TME_SPARC64_LS_FAULT_SIDE_EFFECTS;"
-	    $as_echo "          continue;"
-	    $as_echo "        }"
-	    $as_echo "      }"
-	    $as_echo ""
-	    $as_echo "      /* if this TLB entry is for uncacheable addresses: */"
-	    $as_echo "      if (asi_mask & TME_SPARC64_ASI_MASK_FLAG_TLB_UNCACHEABLE) {"
-	    $as_echo ""
-	    $as_echo "        /* if this is an atomic access: */"
-	    $as_echo "        if (__tme_predict_false(lsinfo & TME_SPARC_LSINFO_OP_ATOMIC)) {"
-	    $as_echo "          ls.tme_sparc_ls_faults |= TME_SPARC64_LS_FAULT_UNCACHEABLE;"
-	    $as_echo "          continue;"
-	    $as_echo "        }"
-	    $as_echo "      }"
-	    $as_echo ""
-	    $as_echo "      /* see if this is a little-endian instruction: */"
-	    $as_echo "      lsinfo"
-	    $as_echo "        = ((lsinfo"
-	    $as_echo "            & ~TME_SPARC_LSINFO_ENDIAN_LITTLE)"
-	    $as_echo "           + ((ls.tme_sparc_ls_asi_mask"
-	    $as_echo "               & TME_SPARC64_ASI_FLAG_LITTLE)"
-	    $as_echo "#if TME_SPARC_LSINFO_ENDIAN_LITTLE < TME_SPARC64_ASI_FLAG_LITTLE"
-	    $as_echo "#error \"TME_SPARC_LSINFO_ENDIAN_ values changed\""
-	    $as_echo "#endif"
-	    $as_echo "              * (TME_SPARC_LSINFO_ENDIAN_LITTLE"
-	    $as_echo "                 / TME_SPARC64_ASI_FLAG_LITTLE)));"
-	    $as_echo ""
-	    $as_echo "      /* if this TLB entry has its little-endian bit set: */"
-	    $as_echo "      if (__tme_predict_false(asi_mask & TME_SPARC64_ASI_FLAG_LITTLE)) {"
-	    $as_echo "        assert (TME_SPARC_MEMORY_FLAGS(ic) & TME_SPARC_MEMORY_FLAG_HAS_INVERT_ENDIAN);"
-	    $as_echo "        if (TRUE) {"
-	    $as_echo "          lsinfo ^= TME_SPARC_LSINFO_ENDIAN_LITTLE;"
-	    $as_echo "        }"
-	    $as_echo "      }"
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* if this TLB entry is for no-fault accesses only: */"])
+	    AS_ECHO(["      if (__tme_predict_false(asi_mask & TME_SPARC64_ASI_FLAG_NO_FAULT)) {"])
+	    AS_ECHO([""])
+	    AS_ECHO(["        /* if this access is not using a no-fault ASI: */"])
+	    AS_ECHO(["        if (__tme_predict_false((ls.tme_sparc_ls_asi_mask & TME_SPARC64_ASI_FLAG_NO_FAULT) == 0)) {"])
+	    AS_ECHO(["          ls.tme_sparc_ls_faults |= TME_SPARC64_LS_FAULT_NO_FAULT_FAULT;"])
+	    AS_ECHO(["          continue;"])
+	    AS_ECHO(["        }"])
+	    AS_ECHO(["      }"])
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* if this TLB entry is for addresses with side effects: */"])
+	    AS_ECHO(["      if (asi_mask & TME_SPARC64_ASI_MASK_FLAG_TLB_SIDE_EFFECTS) {"])
+	    AS_ECHO([""])
+	    AS_ECHO(["        /* if this access is using a no-fault ASI: */"])
+	    AS_ECHO(["        /* NB: a flush may be implemented as a load with a no-fault ASI: */"])
+	    AS_ECHO(["        if (__tme_predict_false(ls.tme_sparc_ls_asi_mask & TME_SPARC64_ASI_FLAG_NO_FAULT)) {"])
+	    AS_ECHO(["          ls.tme_sparc_ls_faults |= TME_SPARC64_LS_FAULT_SIDE_EFFECTS;"])
+	    AS_ECHO(["          continue;"])
+	    AS_ECHO(["        }"])
+	    AS_ECHO(["      }"])
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* if this TLB entry is for uncacheable addresses: */"])
+	    AS_ECHO(["      if (asi_mask & TME_SPARC64_ASI_MASK_FLAG_TLB_UNCACHEABLE) {"])
+	    AS_ECHO([""])
+	    AS_ECHO(["        /* if this is an atomic access: */"])
+	    AS_ECHO(["        if (__tme_predict_false(lsinfo & TME_SPARC_LSINFO_OP_ATOMIC)) {"])
+	    AS_ECHO(["          ls.tme_sparc_ls_faults |= TME_SPARC64_LS_FAULT_UNCACHEABLE;"])
+	    AS_ECHO(["          continue;"])
+	    AS_ECHO(["        }"])
+	    AS_ECHO(["      }"])
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* see if this is a little-endian instruction: */"])
+	    AS_ECHO(["      lsinfo"])
+	    AS_ECHO(["        = ((lsinfo"])
+	    AS_ECHO(["            & ~TME_SPARC_LSINFO_ENDIAN_LITTLE)"])
+	    AS_ECHO(["           + ((ls.tme_sparc_ls_asi_mask"])
+	    AS_ECHO(["               & TME_SPARC64_ASI_FLAG_LITTLE)"])
+	    AS_ECHO(["#if TME_SPARC_LSINFO_ENDIAN_LITTLE < TME_SPARC64_ASI_FLAG_LITTLE"])
+	    AS_ECHO(["#error \"TME_SPARC_LSINFO_ENDIAN_ values changed\""])
+	    AS_ECHO(["#endif"])
+	    AS_ECHO(["              * (TME_SPARC_LSINFO_ENDIAN_LITTLE"])
+	    AS_ECHO(["                 / TME_SPARC64_ASI_FLAG_LITTLE)));"])
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* if this TLB entry has its little-endian bit set: */"])
+	    AS_ECHO(["      if (__tme_predict_false(asi_mask & TME_SPARC64_ASI_FLAG_LITTLE)) {"])
+	    AS_ECHO(["        assert (TME_SPARC_MEMORY_FLAGS(ic) & TME_SPARC_MEMORY_FLAG_HAS_INVERT_ENDIAN);"])
+	    AS_ECHO(["        if (TRUE) {"])
+	    AS_ECHO(["          lsinfo ^= TME_SPARC_LSINFO_ENDIAN_LITTLE;"])
+	    AS_ECHO(["        }"])
+	    AS_ECHO(["      }"])
 	fi
-	$as_echo "    }"
+	AS_ECHO(["    }"])
 
-	$as_echo ""
-	$as_echo "    /* if we might not have to call a slow cycle function: */"
-	$as_echo "    if (__tme_predict_true((lsinfo & TME_SPARC_LSINFO_SLOW_CYCLES) == 0)) {"
-	$as_echo ""
-	$as_echo "      /* if this TLB entry allows fast transfer of all of the addresses: */"
-	$as_echo "      if (__tme_predict_true(((tme_bus_addr${arch}_t) tlb->tme_sparc_tlb_addr_last) >= (address_first + (ls.tme_sparc_ls_size - 1)))) {"
-	$as_echo "        emulator_off = tlb->tme_sparc_tlb_emulator_off_read;"
-	$as_echo "        if (lsinfo & TME_SPARC_LSINFO_OP_ST) {"
-	$as_echo "          emulator_off = tlb->tme_sparc_tlb_emulator_off_write;"
-	$as_echo "        }"
-	$as_echo "        if (__tme_predict_true(emulator_off != TME_EMULATOR_OFF_UNDEF"
-	$as_echo "                               && (((lsinfo & TME_SPARC_LSINFO_OP_ATOMIC) == 0)"
-	$as_echo "                                   || emulator_off == tlb->tme_sparc_tlb_emulator_off_write))) {"
-	$as_echo ""
-	$as_echo "          /* return and let our caller do the transfer: */"
-	$as_echo "          /* NB: we break const here: */"
-	$as_echo "          return ((tme_shared tme_uint8_t *) emulator_off);"
-	$as_echo "        }"
-	$as_echo "      }"
-	$as_echo ""
-	$as_echo "      /* we have to call a slow cycle function: */"
-	$as_echo "      lsinfo |= TME_SPARC_LSINFO_SLOW_CYCLES;"
-	$as_echo "      assert (ls.tme_sparc_ls_cycle == NULL);"
+	AS_ECHO([""])
+	AS_ECHO(["    /* if we might not have to call a slow cycle function: */"])
+	AS_ECHO(["    if (__tme_predict_true((lsinfo & TME_SPARC_LSINFO_SLOW_CYCLES) == 0)) {"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* if this TLB entry allows fast transfer of all of the addresses: */"])
+	AS_ECHO(["      if (__tme_predict_true(((tme_bus_addr${arch}_t) tlb->tme_sparc_tlb_addr_last) >= (address_first + (ls.tme_sparc_ls_size - 1)))) {"])
+	AS_ECHO(["        emulator_off = tlb->tme_sparc_tlb_emulator_off_read;"])
+	AS_ECHO(["        if (lsinfo & TME_SPARC_LSINFO_OP_ST) {"])
+	AS_ECHO(["          emulator_off = tlb->tme_sparc_tlb_emulator_off_write;"])
+	AS_ECHO(["        }"])
+	AS_ECHO(["        if (__tme_predict_true(emulator_off != TME_EMULATOR_OFF_UNDEF"])
+	AS_ECHO(["                               && (((lsinfo & TME_SPARC_LSINFO_OP_ATOMIC) == 0)"])
+	AS_ECHO(["                                   || emulator_off == tlb->tme_sparc_tlb_emulator_off_write))) {"])
+	AS_ECHO([""])
+	AS_ECHO(["          /* return and let our caller do the transfer: */"])
+	AS_ECHO(["          /* NB: we break const here: */"])
+	AS_ECHO(["          return ((tme_shared tme_uint8_t *) emulator_off);"])
+	AS_ECHO(["        }"])
+	AS_ECHO(["      }"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* we have to call a slow cycle function: */"])
+	AS_ECHO(["      lsinfo |= TME_SPARC_LSINFO_SLOW_CYCLES;"])
+	AS_ECHO(["      assert (ls.tme_sparc_ls_cycle == NULL);"])
 	if test ${arch} = 32; then
 	    endian_little="FALSE"
 	else
 	    endian_little="(lsinfo & TME_SPARC_LSINFO_ENDIAN_LITTLE)"
 	fi
-	$as_echo ""
-	$as_echo "      /* assume that this operation will transfer the start of the buffer: */"
-	$as_echo "      buffer_offset = 0;"
-	$as_echo ""
-	$as_echo "      /* assume that this is a load or a fetch: */"
-	$as_echo "      ls.tme_sparc_ls_cycle = tme_sparc${arch}_load;"
-	$as_echo ""
-	$as_echo "      /* if this is a store: */"
-	$as_echo "      if (lsinfo & TME_SPARC_LSINFO_OP_ST) {"
-	$as_echo ""
-	$as_echo "        /* put the (first) register to store in the memory buffer: */"
-	$as_echo "        value = TME_SPARC_FORMAT3_RD;"
-	$as_echo "        value = (${endian_little} ? tme_htole_u${arch}(value) : tme_htobe_u${arch}(value));"
-	$as_echo "        ic->tme_sparc_memory_buffer.tme_sparc_memory_buffer${arch}s[[0]] = value;"
-	$as_echo ""
-	$as_echo "        /* find the offset in the memory buffer corresponding to the"
-	$as_echo "           first address: */"
-	$as_echo "        buffer_offset = sizeof(tme_uint${arch}_t) - ls.tme_sparc_ls_size;"
-	$as_echo "        if (${endian_little}) {"
-	$as_echo "          buffer_offset = 0;"
-	$as_echo "        }"
+	AS_ECHO([""])
+	AS_ECHO(["      /* assume that this operation will transfer the start of the buffer: */"])
+	AS_ECHO(["      buffer_offset = 0;"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* assume that this is a load or a fetch: */"])
+	AS_ECHO(["      ls.tme_sparc_ls_cycle = tme_sparc${arch}_load;"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* if this is a store: */"])
+	AS_ECHO(["      if (lsinfo & TME_SPARC_LSINFO_OP_ST) {"])
+	AS_ECHO([""])
+	AS_ECHO(["        /* put the (first) register to store in the memory buffer: */"])
+	AS_ECHO(["        value = TME_SPARC_FORMAT3_RD;"])
+	AS_ECHO(["        value = (${endian_little} ? tme_htole_u${arch}(value) : tme_htobe_u${arch}(value));"])
+	AS_ECHO(["        ic->tme_sparc_memory_buffer.tme_sparc_memory_buffer${arch}s[[0]] = value;"])
+	AS_ECHO([""])
+	AS_ECHO(["        /* find the offset in the memory buffer corresponding to the"])
+	AS_ECHO(["           first address: */"])
+	AS_ECHO(["        buffer_offset = sizeof(tme_uint${arch}_t) - ls.tme_sparc_ls_size;"])
+	AS_ECHO(["        if (${endian_little}) {"])
+	AS_ECHO(["          buffer_offset = 0;"])
+	AS_ECHO(["        }"])
 
-	$as_echo ""
-	$as_echo "        /* if this is a std or stda: */"
-	$as_echo "        if (lsinfo & TME_SPARC_LSINFO_LDD_STD) {"
-	$as_echo ""
-	$as_echo "          /* put the odd 32-bit register to store in the memory buffer"
-	$as_echo "             after the even 32-bit register.  exactly where this is depends"
-	$as_echo "             on the architecture and on the byte order of the store: */"
-	$as_echo "          value32 = TME_SPARC_FORMAT3_RD_ODD(tme_ic_ireg_uint${arch});"
-	$as_echo "          if (${endian_little}) {"
-	$as_echo "            value32 = tme_htole_u32(value32);"
-	$as_echo "            ic->tme_sparc_memory_buffer.tme_sparc_memory_buffer32s[[1]] = value32;"
-	$as_echo "            buffer_offset = 0;"
-	$as_echo "          }"
-	$as_echo "          else {"
-	$as_echo "            value32 = tme_htobe_u32(value32);"
-	$as_echo "            ic->tme_sparc_memory_buffer.tme_sparc_memory_buffer32s[[(${arch} / 32)]] = value32;"
-	$as_echo "            buffer_offset = sizeof(tme_uint${arch}_t) - sizeof(tme_uint32_t);"
-	$as_echo "          }"
-	$as_echo "        }"
-	$as_echo ""
-	$as_echo "        /* set the cycle function: */"
-	$as_echo "        ls.tme_sparc_ls_cycle = tme_sparc${arch}_store;"
-	$as_echo "      }"
-	$as_echo ""
-	$as_echo "      /* otherwise, if this is an atomic: */"
-	$as_echo "      else if (lsinfo & TME_SPARC_LSINFO_OP_ATOMIC) {"
-	$as_echo ""
-	$as_echo "        /* set the cycle function: */"
-	$as_echo "        ls.tme_sparc_ls_cycle = tme_sparc${arch}_atomic;"
-	$as_echo "      }"
-	$as_echo ""
-	$as_echo "      /* set the buffer offset for the (first) slow cycle: */"
-	$as_echo "      ls.tme_sparc_ls_buffer_offset = buffer_offset;"
-	$as_echo ""
-	$as_echo "      /* clear the state for this operation: */"
-	$as_echo "      ls.tme_sparc_ls_state = 0;"
-	$as_echo "    }"
+	AS_ECHO([""])
+	AS_ECHO(["        /* if this is a std or stda: */"])
+	AS_ECHO(["        if (lsinfo & TME_SPARC_LSINFO_LDD_STD) {"])
+	AS_ECHO([""])
+	AS_ECHO(["          /* put the odd 32-bit register to store in the memory buffer"])
+	AS_ECHO(["             after the even 32-bit register.  exactly where this is depends"])
+	AS_ECHO(["             on the architecture and on the byte order of the store: */"])
+	AS_ECHO(["          value32 = TME_SPARC_FORMAT3_RD_ODD(tme_ic_ireg_uint${arch});"])
+	AS_ECHO(["          if (${endian_little}) {"])
+	AS_ECHO(["            value32 = tme_htole_u32(value32);"])
+	AS_ECHO(["            ic->tme_sparc_memory_buffer.tme_sparc_memory_buffer32s[[1]] = value32;"])
+	AS_ECHO(["            buffer_offset = 0;"])
+	AS_ECHO(["          }"])
+	AS_ECHO(["          else {"])
+	AS_ECHO(["            value32 = tme_htobe_u32(value32);"])
+	AS_ECHO(["            ic->tme_sparc_memory_buffer.tme_sparc_memory_buffer32s[[(${arch} / 32)]] = value32;"])
+	AS_ECHO(["            buffer_offset = sizeof(tme_uint${arch}_t) - sizeof(tme_uint32_t);"])
+	AS_ECHO(["          }"])
+	AS_ECHO(["        }"])
+	AS_ECHO([""])
+	AS_ECHO(["        /* set the cycle function: */"])
+	AS_ECHO(["        ls.tme_sparc_ls_cycle = tme_sparc${arch}_store;"])
+	AS_ECHO(["      }"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* otherwise, if this is an atomic: */"])
+	AS_ECHO(["      else if (lsinfo & TME_SPARC_LSINFO_OP_ATOMIC) {"])
+	AS_ECHO([""])
+	AS_ECHO(["        /* set the cycle function: */"])
+	AS_ECHO(["        ls.tme_sparc_ls_cycle = tme_sparc${arch}_atomic;"])
+	AS_ECHO(["      }"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* set the buffer offset for the (first) slow cycle: */"])
+	AS_ECHO(["      ls.tme_sparc_ls_buffer_offset = buffer_offset;"])
+	AS_ECHO([""])
+	AS_ECHO(["      /* clear the state for this operation: */"])
+	AS_ECHO(["      ls.tme_sparc_ls_state = 0;"])
+	AS_ECHO(["    }"])
 
-	$as_echo ""
-	$as_echo "    /* assume that we won't have to check the TLB again: */"
-	$as_echo "    ls.tme_sparc_ls_lsinfo = lsinfo | TME_SPARC_LSINFO_NO_CHECK_TLB;"
+	AS_ECHO([""])
+	AS_ECHO(["    /* assume that we won't have to check the TLB again: */"])
+	AS_ECHO(["    ls.tme_sparc_ls_lsinfo = lsinfo | TME_SPARC_LSINFO_NO_CHECK_TLB;"])
 
-	$as_echo "    /* call the slow cycle function: */"
-	$as_echo "    (*ls.tme_sparc_ls_cycle)(ic, &ls);"
-	$as_echo "  }"
-	$as_echo ""
-	$as_echo "  /* if this was a load that has already completed, a store,"
-	$as_echo "     or an atomic, make sure our caller doesn't try to complete"
-	$as_echo "     a fast transfer: */"
-	$as_echo "  if (ls.tme_sparc_ls_lsinfo"
-	$as_echo "      & (TME_SPARC_LSINFO_LD_COMPLETED"
-	$as_echo "         | TME_SPARC_LSINFO_OP_ST"
-	$as_echo "         | TME_SPARC_LSINFO_OP_ATOMIC)) {"
-	$as_echo "    return (TME_EMULATOR_OFF_UNDEF);"
-	$as_echo "  }"
-	$as_echo ""
-	$as_echo "  /* otherwise, this was a load that did slow cycles into the"
-	$as_echo "     memory buffer and hasn't updated rd yet.  return a pointer"
-	$as_echo "     to the memory buffer so our caller can complete the load: */"
-	$as_echo "  return (ic->tme_sparc_memory_buffer.tme_sparc_memory_buffer8s"
-	$as_echo "          - address_first);"
-	$as_echo "}"
+	AS_ECHO(["    /* call the slow cycle function: */"])
+	AS_ECHO(["    (*ls.tme_sparc_ls_cycle)(ic, &ls);"])
+	AS_ECHO(["  }"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* if this was a load that has already completed, a store,"])
+	AS_ECHO(["     or an atomic, make sure our caller doesn't try to complete"])
+	AS_ECHO(["     a fast transfer: */"])
+	AS_ECHO(["  if (ls.tme_sparc_ls_lsinfo"])
+	AS_ECHO(["      & (TME_SPARC_LSINFO_LD_COMPLETED"])
+	AS_ECHO(["         | TME_SPARC_LSINFO_OP_ST"])
+	AS_ECHO(["         | TME_SPARC_LSINFO_OP_ATOMIC)) {"])
+	AS_ECHO(["    return (TME_EMULATOR_OFF_UNDEF);"])
+	AS_ECHO(["  }"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* otherwise, this was a load that did slow cycles into the"])
+	AS_ECHO(["     memory buffer and hasn't updated rd yet.  return a pointer"])
+	AS_ECHO(["     to the memory buffer so our caller can complete the load: */"])
+	AS_ECHO(["  return (ic->tme_sparc_memory_buffer.tme_sparc_memory_buffer8s"])
+	AS_ECHO(["          - address_first);"])
+	AS_ECHO(["}"])
     fi
 
     # unfix the architecture version:
     #
     if $header; then :; else
-	$as_echo ""
-	$as_echo "#undef TME_SPARC_VERSION"
-	$as_echo "#define TME_SPARC_VERSION(ic) _TME_SPARC_VERSION(ic)"
+	AS_ECHO([""])
+	AS_ECHO(["#undef TME_SPARC_VERSION"])
+	AS_ECHO(["#define TME_SPARC_VERSION(ic) _TME_SPARC_VERSION(ic)"])
     fi
 
     # the sparc64 support depends on a 64-bit integer type:
     #
     if test ${arch} = 64; then
-	$as_echo ""
-	$as_echo "#endif /* TME_HAVE_INT64_T */"
+	AS_ECHO([""])
+	AS_ECHO(["#endif /* TME_HAVE_INT64_T */"])
     fi
 done
 

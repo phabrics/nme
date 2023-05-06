@@ -92,7 +92,7 @@ for size in 8 16 32; do
 	addx) op=' + ' ; arith=add ; optype=mathx ; with_x=true ;;
 	subx) op=' - ' ; arith=sub ; optype=mathx ; with_x=true ;;
 	cmpm) op=' - ' ; arith=sub ; optype=mathx ; store_res=false ;;
-	*) $as_echo "$0 internal error: unknown ALU function $name" 1>&2 ; exit 1 ;;
+	*) AS_ECHO(["$0 internal error: unknown ALU function $name"]) 1>&2 ; exit 1 ;;
 	esac
 
 	# placeholder for another permutation:
@@ -100,32 +100,32 @@ for size in 8 16 32; do
 
 	    # if we're making the header, just emit a declaration:
 	    if $header; then
-		$as_echo "TME_M68K_INSN_DECL(tme_m68k_${name}${size});"
+		AS_ECHO(["TME_M68K_INSN_DECL(tme_m68k_${name}${size});"])
 		continue
 	    fi
 
 	    # open the function:
-	    $as_echo ""
-	    $as_echo_n "/* this does a ${size}-bit \"$name "
-	    case "${src}/${dst}" in *op0*) $as_echo_n "SRC, " ;; esac
-	    $as_echo "DST\": */"
-	    $as_echo "TME_M68K_INSN(tme_m68k_${name}${size})"
-	    $as_echo "{"
+	    AS_ECHO([""])
+	    AS_ECHO_N(["/* this does a ${size}-bit \"$name "])
+	    case "${src}/${dst}" in *op0*) AS_ECHO_N(["SRC, "]) ;; esac
+	    AS_ECHO(["DST\": */"])
+	    AS_ECHO(["TME_M68K_INSN(tme_m68k_${name}${size})"])
+	    AS_ECHO(["{"])
 
 	    # declare our locals:
 	    if test $name = cmpa; then size=32; fi
-	    $as_echo_n "  tme_uint${size}_t res"
-	    case "${src}/${dst}" in *op0*) $as_echo_n ", op0" ;; esac
-	    case "${src}/${dst}" in *op1*) $as_echo_n ", op1" ;; esac
-	    $as_echo ";"
-	    $as_echo "  tme_uint8_t flags;"
+	    AS_ECHO_N(["  tme_uint${size}_t res"])
+	    case "${src}/${dst}" in *op0*) AS_ECHO_N([", op0"]) ;; esac
+	    case "${src}/${dst}" in *op1*) AS_ECHO_N([", op1"]) ;; esac
+	    AS_ECHO([";"])
+	    AS_ECHO(["  tme_uint8_t flags;"])
 
 	    # load the operand(s):
-	    $as_echo ""
-	    $as_echo "  /* load the operand(s): */"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* load the operand(s): */"])
 	    case ${optype} in
 	    mathx)
-		$as_echo "  unsigned int function_code = TME_M68K_FUNCTION_CODE_DATA(ic);"
+		AS_ECHO(["  unsigned int function_code = TME_M68K_FUNCTION_CODE_DATA(ic);"])
 
 		# NB: in my 68000 Programmer's Manual, the description
 		# of subx is a little backwards from addx and cmpm. in
@@ -137,74 +137,74 @@ for size in 8 16 32; do
 		# 0-2 always identifies the source operand, and the
 		# reg field at bits 9-11 always identifies the
 		# destination operand:
-		$as_echo "  int ireg_src = TME_FIELD_EXTRACTU(TME_M68K_INSN_OPCODE, 0, 3);"
-		$as_echo "  int ireg_dst = TME_FIELD_EXTRACTU(TME_M68K_INSN_OPCODE, 9, 3);"
+		AS_ECHO(["  int ireg_src = TME_FIELD_EXTRACTU(TME_M68K_INSN_OPCODE, 0, 3);"])
+		AS_ECHO(["  int ireg_dst = TME_FIELD_EXTRACTU(TME_M68K_INSN_OPCODE, 9, 3);"])
 
 		# the stack pointer must always be adjusted by a multiple of two.
 		# assuming ireg < 8, ((ireg + 1) >> 3) == 1 iff ireg == 7, meaning %a7:
-		$as_echo_n "  tme_uint32_t ireg_src_adjust = sizeof(tme_uint${size}_t)";
+		AS_ECHO_N(["  tme_uint32_t ireg_src_adjust = sizeof(tme_uint${size}_t)";])
 		if test ${size} = 8; then
-		    $as_echo_n " + ((ireg_src + 1) >> 3)"
+		    AS_ECHO_N([" + ((ireg_src + 1) >> 3)"])
 		fi
-		$as_echo ";"
-		$as_echo_n "  tme_uint32_t ireg_dst_adjust = sizeof(tme_uint${size}_t)";
+		AS_ECHO([";"])
+		AS_ECHO_N(["  tme_uint32_t ireg_dst_adjust = sizeof(tme_uint${size}_t)";])
 		if test ${size} = 8; then
-		    $as_echo_n " + ((ireg_dst + 1) >> 3)"
+		    AS_ECHO_N([" + ((ireg_dst + 1) >> 3)"])
 		fi
-		$as_echo ";"
+		AS_ECHO([";"])
 
 		case ${name} in
 
 		# cmpm always uses memory and is always postincrement:
 		cmpm)
-		    $as_echo ""
-		    $as_echo "  TME_M68K_INSN_CANFAULT;"
-		    $as_echo ""
-		    $as_echo "  if (!TME_M68K_SEQUENCE_RESTARTING) {"
-		    $as_echo "    ic->_tme_m68k_ea_function_code = function_code;"
-		    $as_echo "    ic->_tme_m68k_ea_address = ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0 + ireg_src);"
-		    $as_echo "    ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0 + ireg_src) += ireg_src_adjust;"
-		    $as_echo "  }"
-		    $as_echo "  tme_m68k_read_mem${size}(ic, TME_M68K_IREG_MEMY${size});"
-		    $as_echo "  if (!TME_M68K_SEQUENCE_RESTARTING) {"
-		    $as_echo "    ic->_tme_m68k_ea_function_code = function_code;"
-		    $as_echo "    ic->_tme_m68k_ea_address = ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0 + ireg_dst);"
-		    $as_echo "    ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0 + ireg_dst) += ireg_dst_adjust;"
-		    $as_echo "  }"
-		    $as_echo "  tme_m68k_read_memx${size}(ic);"
-		    $as_echo "  ${dst} = ic->tme_m68k_ireg_memx${size};"
-		    $as_echo "  ${src} = ic->tme_m68k_ireg_memy${size};"
+		    AS_ECHO([""])
+		    AS_ECHO(["  TME_M68K_INSN_CANFAULT;"])
+		    AS_ECHO([""])
+		    AS_ECHO(["  if (!TME_M68K_SEQUENCE_RESTARTING) {"])
+		    AS_ECHO(["    ic->_tme_m68k_ea_function_code = function_code;"])
+		    AS_ECHO(["    ic->_tme_m68k_ea_address = ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0 + ireg_src);"])
+		    AS_ECHO(["    ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0 + ireg_src) += ireg_src_adjust;"])
+		    AS_ECHO(["  }"])
+		    AS_ECHO(["  tme_m68k_read_mem${size}(ic, TME_M68K_IREG_MEMY${size});"])
+		    AS_ECHO(["  if (!TME_M68K_SEQUENCE_RESTARTING) {"])
+		    AS_ECHO(["    ic->_tme_m68k_ea_function_code = function_code;"])
+		    AS_ECHO(["    ic->_tme_m68k_ea_address = ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0 + ireg_dst);"])
+		    AS_ECHO(["    ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0 + ireg_dst) += ireg_dst_adjust;"])
+		    AS_ECHO(["  }"])
+		    AS_ECHO(["  tme_m68k_read_memx${size}(ic);"])
+		    AS_ECHO(["  ${dst} = ic->tme_m68k_ireg_memx${size};"])
+		    AS_ECHO(["  ${src} = ic->tme_m68k_ireg_memy${size};"])
 		    ;;
 
 		# addx and subx use either registers or memory.  if they use memory,
 		# they always predecrement:
 		addx|subx)
-		    $as_echo "  tme_uint16_t memory;"
-		    $as_echo ""
-		    $as_echo "  memory = (TME_M68K_INSN_OPCODE & TME_BIT(3));"
-		    $as_echo "  if (memory) {"
-		    $as_echo "    TME_M68K_INSN_CANFAULT;"
-		    $as_echo "    if (!TME_M68K_SEQUENCE_RESTARTING) {"
-		    $as_echo "      ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0 + ireg_src) -= ireg_src_adjust;"
-		    $as_echo "      ic->_tme_m68k_ea_function_code = function_code;"
-		    $as_echo "      ic->_tme_m68k_ea_address = ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0 + ireg_src);"
-		    $as_echo "    }"
-		    $as_echo "    tme_m68k_read_mem${size}(ic, TME_M68K_IREG_MEMY${size});"
-		    $as_echo "    if (!TME_M68K_SEQUENCE_RESTARTING) {"
-		    $as_echo "      ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0 + ireg_dst) -= ireg_dst_adjust;"
-		    $as_echo "      ic->_tme_m68k_ea_function_code = function_code;"
-		    $as_echo "      ic->_tme_m68k_ea_address = ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0 + ireg_dst);"
-		    $as_echo "    }"
-		    $as_echo "    tme_m68k_read_memx${size}(ic);"
-		    $as_echo "    ${dst} = ic->tme_m68k_ireg_memx${size};"
-		    $as_echo "    ${src} = ic->tme_m68k_ireg_memy${size};"
-		    $as_echo "  }"
-		    $as_echo "  else {"
-		    $as_echo "    ${src} = ic->tme_m68k_ireg_uint${size}((TME_M68K_IREG_D0 + ireg_src)${reg_size_shift});"
-		    $as_echo "    ${dst} = ic->tme_m68k_ireg_uint${size}((TME_M68K_IREG_D0 + ireg_dst)${reg_size_shift});"
-		    $as_echo "  }"
+		    AS_ECHO(["  tme_uint16_t memory;"])
+		    AS_ECHO([""])
+		    AS_ECHO(["  memory = (TME_M68K_INSN_OPCODE & TME_BIT(3));"])
+		    AS_ECHO(["  if (memory) {"])
+		    AS_ECHO(["    TME_M68K_INSN_CANFAULT;"])
+		    AS_ECHO(["    if (!TME_M68K_SEQUENCE_RESTARTING) {"])
+		    AS_ECHO(["      ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0 + ireg_src) -= ireg_src_adjust;"])
+		    AS_ECHO(["      ic->_tme_m68k_ea_function_code = function_code;"])
+		    AS_ECHO(["      ic->_tme_m68k_ea_address = ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0 + ireg_src);"])
+		    AS_ECHO(["    }"])
+		    AS_ECHO(["    tme_m68k_read_mem${size}(ic, TME_M68K_IREG_MEMY${size});"])
+		    AS_ECHO(["    if (!TME_M68K_SEQUENCE_RESTARTING) {"])
+		    AS_ECHO(["      ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0 + ireg_dst) -= ireg_dst_adjust;"])
+		    AS_ECHO(["      ic->_tme_m68k_ea_function_code = function_code;"])
+		    AS_ECHO(["      ic->_tme_m68k_ea_address = ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0 + ireg_dst);"])
+		    AS_ECHO(["    }"])
+		    AS_ECHO(["    tme_m68k_read_memx${size}(ic);"])
+		    AS_ECHO(["    ${dst} = ic->tme_m68k_ireg_memx${size};"])
+		    AS_ECHO(["    ${src} = ic->tme_m68k_ireg_memy${size};"])
+		    AS_ECHO(["  }"])
+		    AS_ECHO(["  else {"])
+		    AS_ECHO(["    ${src} = ic->tme_m68k_ireg_uint${size}((TME_M68K_IREG_D0 + ireg_src)${reg_size_shift});"])
+		    AS_ECHO(["    ${dst} = ic->tme_m68k_ireg_uint${size}((TME_M68K_IREG_D0 + ireg_dst)${reg_size_shift});"])
+		    AS_ECHO(["  }"])
 		    ;;
-		*) $as_echo "$0 internal error: unknown mathx ${name}" 1>&2 ; exit 1 ;;
+		*) AS_ECHO(["$0 internal error: unknown mathx ${name}" 1>&2 ; exit 1 ;;])
 		esac
 		;;
 	    normal)
@@ -213,60 +213,60 @@ for size in 8 16 32; do
 		    case "x${what}" in
 		    x|x0) ;;
 		    xop[[01]].16s32)
-			what=`$as_echo ${what} | sed -e 's/\..*//'`
+			what=`AS_ECHO([${what} | sed -e 's/\..*//'`
 			eval ${which}"=${what}"
-			$as_echo "  ${what} = (tme_uint32_t) ((tme_int32_t) *((tme_int16_t *) _${what}));"
+			AS_ECHO(["  ${what} = (tme_uint32_t) ((tme_int32_t) *((tme_int16_t *) _${what}));"])
 			;;
 		    xop[[01]])
-			$as_echo "  ${what} = *((tme_uint${size}_t *) _${what});"
+			AS_ECHO(["  ${what} = *((tme_uint${size}_t *) _${what});"])
 			;;
 		    xopc8)
 		        eval ${which}"='TME_EXT_S8_U${size}((tme_int8_t) (TME_M68K_INSN_OPCODE & 0xff))'"
 			;;
-		    *) $as_echo "$0 internal error: unknown what ${what}" 1>&2 ; exit 1 ;;
+		    *) AS_ECHO(["$0 internal error: unknown what ${what}"]) 1>&2 ; exit 1 ;;
 		    esac
 		done
 		;;
-	    *) $as_echo "$0 internal error: unknown optype ${optype}" 1>&2 ; exit 1 ;;
+	    *) AS_ECHO(["$0 internal error: unknown optype ${optype}"]) 1>&2 ; exit 1 ;;
 	    esac
 
 	    # perform the operation:
-	    $as_echo ""
-	    $as_echo "  /* perform the operation: */"
-	    $as_echo_n "  res = ${dst}${op}${src}"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* perform the operation: */"])
+	    AS_ECHO_N(["  res = ${dst}${op}${src}"])
 	    if $with_x; then
-		$as_echo_n "${op}((ic->tme_m68k_ireg_ccr / TME_M68K_FLAG_X) & 1)"
+		AS_ECHO_N(["${op}((ic->tme_m68k_ireg_ccr / TME_M68K_FLAG_X) & 1)"])
 	    fi
-	    $as_echo ";"
+	    AS_ECHO([";"])
 
 	    # store the result:
 	    if $store_res; then
-		$as_echo ""
-		$as_echo "  /* store the result: */"
+		AS_ECHO([""])
+		AS_ECHO(["  /* store the result: */"])
 		case ${optype} in
 		mathx)
-		    $as_echo "  if (memory) {"
-		    $as_echo "    if (!TME_M68K_SEQUENCE_RESTARTING) {"
-		    $as_echo "      ic->tme_m68k_ireg_memx${size} = res;"
-		    $as_echo "      ic->_tme_m68k_ea_function_code = function_code;"
-		    $as_echo "      ic->_tme_m68k_ea_address = ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0 + ireg_dst);"
-		    $as_echo "    }"
-		    $as_echo "    tme_m68k_write_memx${size}(ic);"
-		    $as_echo "  }"
-		    $as_echo "  else {"
-		    $as_echo "    ic->tme_m68k_ireg_uint${size}((TME_M68K_IREG_D0 + ireg_dst)${reg_size_shift}) = res;"
-		    $as_echo "  }"
+		    AS_ECHO(["  if (memory) {"])
+		    AS_ECHO(["    if (!TME_M68K_SEQUENCE_RESTARTING) {"])
+		    AS_ECHO(["      ic->tme_m68k_ireg_memx${size} = res;"])
+		    AS_ECHO(["      ic->_tme_m68k_ea_function_code = function_code;"])
+		    AS_ECHO(["      ic->_tme_m68k_ea_address = ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0 + ireg_dst);"])
+		    AS_ECHO(["    }"])
+		    AS_ECHO(["    tme_m68k_write_memx${size}(ic);"])
+		    AS_ECHO(["  }"])
+		    AS_ECHO(["  else {"])
+		    AS_ECHO(["    ic->tme_m68k_ireg_uint${size}((TME_M68K_IREG_D0 + ireg_dst)${reg_size_shift}) = res;"])
+		    AS_ECHO(["  }"])
 		    ;;
 		normal)
-		    $as_echo "  *((tme_uint${size}_t *) _${res}) = res;"
+		    AS_ECHO(["  *((tme_uint${size}_t *) _${res}) = res;"])
 		    ;;
-		*) $as_echo "$0 internal error: unknown optype ${optype}" 1>&2 ; exit 1 ;;
+		*) AS_ECHO(["$0 internal error: unknown optype ${optype}" 1>&2 ; exit 1 ;;])
 		esac
 	    fi
 
 	    # start the status flags, maybe preserving X:
-	    $as_echo ""
-	    $as_echo "  /* set the flags: */"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* set the flags: */"])
 	    case "${name}:${arith}" in
 	    cmp*|*:no)
 		flag_x=
@@ -279,13 +279,13 @@ for size in 8 16 32; do
 	    # set N.  we cast to tme_uint8_t as soon as we know the
 	    # bit we want is within the range of the type, to try
 	    # to affect the generated assembly:
-	    $as_echo "  flags = ((tme_uint8_t) (((tme_uint${size}_t) res) >> (${size} - 1))) * TME_M68K_FLAG_N;"
+	    AS_ECHO(["  flags = ((tme_uint8_t) (((tme_uint${size}_t) res) >> (${size} - 1))) * TME_M68K_FLAG_N;"])
 	    
 	    # set Z:
 	    if $with_x; then
-		$as_echo "  if (res == 0) flags |= (ic->tme_m68k_ireg_ccr & TME_M68K_FLAG_Z);"
+		AS_ECHO(["  if (res == 0) flags |= (ic->tme_m68k_ireg_ccr & TME_M68K_FLAG_Z);"])
 	    else
-		$as_echo "  if (res == 0) flags |= TME_M68K_FLAG_Z;"
+		AS_ECHO(["  if (res == 0) flags |= TME_M68K_FLAG_Z;"])
 	    fi
 
 	    # set V and C and maybe X:
@@ -300,13 +300,13 @@ for size in 8 16 32; do
 	        # a different sign, set V.   we cast to tme_uint8_t as 
 		# soon as we know the bit we want is within the range 
 		# of the type, to try to affect the generated assembly:
-		$as_echo "  flags |= ((tme_uint8_t) (((${src} ^ ${dst} ^ ${ones}) & (${dst} ^ res)) >> (${size} - 1))) * TME_M68K_FLAG_V;"
+		AS_ECHO(["  flags |= ((tme_uint8_t) (((${src} ^ ${dst} ^ ${ones}) & (${dst} ^ res)) >> (${size} - 1))) * TME_M68K_FLAG_V;"])
 		# if src is greater than the logical inverse of dst, set C:
-		$as_echo_n "  if (${src} > (${dst} ^ ${ones})"
+		AS_ECHO_N(["  if (${src} > (${dst} ^ ${ones})"])
 		if $with_x; then
-		    $as_echo_n " || (${src} == (${dst} ^ ${ones}) && (ic->tme_m68k_ireg_ccr & TME_M68K_FLAG_X))"
+		    AS_ECHO_N([" || (${src} == (${dst} ^ ${ones}) && (ic->tme_m68k_ireg_ccr & TME_M68K_FLAG_X))"])
 		fi
-		$as_echo ") flags |= TME_M68K_FLAG_C${flag_x};"
+		AS_ECHO([") flags |= TME_M68K_FLAG_C${flag_x};"])
 		;;
 	    sub) 
 		# if the operands are different signs, and the result has
@@ -314,29 +314,29 @@ for size in 8 16 32; do
 		# cast to tme_uint8_t as soon as we know the bit we want
 		# is within the range of the type, to try to affect the
 		# generated assembly:
-		$as_echo "  flags |= ((tme_uint8_t) (((${src} ^ ${dst}) & (${dst} ^ res)) >> (${size} - 1))) * TME_M68K_FLAG_V;"
+		AS_ECHO(["  flags |= ((tme_uint8_t) (((${src} ^ ${dst}) & (${dst} ^ res)) >> (${size} - 1))) * TME_M68K_FLAG_V;"])
 		# if src is greater than dst, set C:
-		$as_echo_n "  if (${src} > ${dst}"
+		AS_ECHO_N(["  if (${src} > ${dst}"])
 		if $with_x; then
-		    $as_echo_n " || (${src} == ${dst} && (ic->tme_m68k_ireg_ccr & TME_M68K_FLAG_X))"
+		    AS_ECHO_N([" || (${src} == ${dst} && (ic->tme_m68k_ireg_ccr & TME_M68K_FLAG_X))"])
 		fi
-		$as_echo ") flags |= TME_M68K_FLAG_C${flag_x};"
+		AS_ECHO([") flags |= TME_M68K_FLAG_C${flag_x};"])
 		;;
 	    no) ;;
 	    esac
 
 	    # preserve X:
 	    if test "x${flag_x}" = x; then
-		$as_echo "  flags |= (ic->tme_m68k_ireg_ccr & TME_M68K_FLAG_X);"
+		AS_ECHO(["  flags |= (ic->tme_m68k_ireg_ccr & TME_M68K_FLAG_X);"])
 	    fi
 
 	    # set the flags:
-	    $as_echo "  ic->tme_m68k_ireg_ccr = flags;"
+	    AS_ECHO(["  ic->tme_m68k_ireg_ccr = flags;"])
 	    
 	    # done:
-	    $as_echo ""
-	    $as_echo "  TME_M68K_INSN_OK;"
-	    $as_echo "}"
+	    AS_ECHO([""])
+	    AS_ECHO(["  TME_M68K_INSN_OK;"])
+	    AS_ECHO(["}"])
 
 	    if test $name = cmpa; then size=16; fi
     done
@@ -351,31 +351,31 @@ for size in 8 16 32; do
 
 	# if we're making the header, just emit a declaration:
 	if $header; then
-	    $as_echo "TME_M68K_INSN_DECL(tme_m68k_move_sr${name}${size});"
+	    AS_ECHO(["TME_M68K_INSN_DECL(tme_m68k_move_sr${name}${size});"])
 	    continue
 	fi
 
-	$as_echo ""
-	$as_echo "/* a move of an address register to a predecrement or"
-	$as_echo "   postincrement EA with that same address register, must"
-	$as_echo "   store the original value of the address register.  since the"
-	$as_echo "   predecrement and postincrement code in the executer updates"
-	$as_echo "   the address register before the move has happened, we wrap"
-	$as_echo "   the normal move function in this one, that gives an op1"
-	$as_echo "   argument that is the original value of the address register: */"
-	$as_echo "TME_M68K_INSN(tme_m68k_move_sr${name}${size})"
-	$as_echo "{"
-	if test ${name} = pd; then op='+'; else op='-'; fi
-	$as_echo "  /* NB: both this function and tme_m68k_move${size}()"
-	$as_echo "     get the source operand as _op1, and the destination"
-	$as_echo "     operand as _op0: */"
-	$as_echo "  if (!TME_M68K_SEQUENCE_RESTARTING) {"
-	$as_echo "    *((tme_uint${size}_t *) _op0)"
-	$as_echo "      = (*((tme_uint${size}_t *) _op1)"
-	$as_echo "         ${op} sizeof(tme_uint${size}_t));"
-	$as_echo "  }"
-	$as_echo "  tme_m68k_move${size}(ic, _op0, _op0);"
-	$as_echo "}"
+	AS_ECHO([""])
+	AS_ECHO(["/* a move of an address register to a predecrement or"])
+	AS_ECHO(["   postincrement EA with that same address register, must"])
+	AS_ECHO(["   store the original value of the address register.  since the"])
+	AS_ECHO(["   predecrement and postincrement code in the executer updates"])
+	AS_ECHO(["   the address register before the move has happened, we wrap"])
+	AS_ECHO(["   the normal move function in this one, that gives an op1"])
+	AS_ECHO(["   argument that is the original value of the address register: */"])
+	AS_ECHO(["TME_M68K_INSN(tme_m68k_move_sr${name}${size})"])
+	AS_ECHO(["{"])
+	if test ${name} = pd; then op='+'; else op='-'; fi])
+	AS_ECHO(["  /* NB: both this function and tme_m68k_move${size}()"])
+	AS_ECHO(["     get the source operand as _op1, and the destination"])
+	AS_ECHO(["     operand as _op0: */"])
+	AS_ECHO(["  if (!TME_M68K_SEQUENCE_RESTARTING) {"])
+	AS_ECHO(["    *((tme_uint${size}_t *) _op0)"])
+	AS_ECHO(["      = (*((tme_uint${size}_t *) _op1)"])
+	AS_ECHO(["         ${op} sizeof(tme_uint${size}_t));"])
+	AS_ECHO(["  }"])
+	AS_ECHO(["  tme_m68k_move${size}(ic, _op0, _op0);"])
+	AS_ECHO(["}"])
     done
 
     # generate the address math functions:
@@ -386,22 +386,22 @@ for size in 8 16 32; do
 
 	# if we're making the header, just emit a declaration:
 	if $header; then
-	    $as_echo "TME_M68K_INSN_DECL(tme_m68k_${name}${size});"
+	    AS_ECHO(["TME_M68K_INSN_DECL(tme_m68k_${name}${size});"])
 	    continue
 	fi
 
-	$as_echo ""
-	$as_echo "/* the ${name} function on a ${size}-byte EA: */"
-	$as_echo "TME_M68K_INSN(tme_m68k_${name}${size})"
-	$as_echo "{"
+	AS_ECHO([""])
+	AS_ECHO(["/* the ${name} function on a ${size}-byte EA: */"])
+	AS_ECHO(["TME_M68K_INSN(tme_m68k_${name}${size})"])
+	AS_ECHO(["{"])
 	case $name in
 	suba) op='-' ; src="_op0" ; dst="_op1" ;;
 	adda) op='+' ; src="_op0" ; dst="_op1" ;;
 	movea) op='' ; src="_op1" ; dst="_op0" ;;
 	esac
-	$as_echo "  *((tme_int32_t *) ${dst}) ${op}= *((tme_int${size}_t *) ${src});"
-	$as_echo "  TME_M68K_INSN_OK;"
-	$as_echo "}"
+	AS_ECHO(["  *((tme_int32_t *) ${dst}) ${op}= *((tme_int${size}_t *) ${src});"])
+	AS_ECHO(["  TME_M68K_INSN_OK;"])
+	AS_ECHO(["}"])
     done
 	    
     # generate the bit functions:
@@ -412,31 +412,31 @@ for size in 8 16 32; do
 
 	# if we're making the header, just emit a declaration:
 	if $header; then
-	    $as_echo "TME_M68K_INSN_DECL(tme_m68k_${name}${size});"
+	    AS_ECHO(["TME_M68K_INSN_DECL(tme_m68k_${name}${size});"])
 	    continue
 	fi
 
-	$as_echo ""
-	$as_echo "/* the ${name} function on a ${size}-byte EA: */"
-	$as_echo "TME_M68K_INSN(tme_m68k_${name}${size})"
-	$as_echo "{"
-	$as_echo "  tme_uint${size}_t value, bit;"
-	$as_echo "  bit = _TME_BIT(tme_uint${size}_t, TME_M68K_INSN_OP0(tme_uint8_t) & (${size} - 1));"
-	$as_echo "  value = TME_M68K_INSN_OP1(tme_uint${size}_t);"
-	$as_echo "  if (value & bit) {"
-	$as_echo "    ic->tme_m68k_ireg_ccr &= ~TME_M68K_FLAG_Z;"
-	$as_echo "  }"
-	$as_echo "  else {"
-	$as_echo "    ic->tme_m68k_ireg_ccr |= TME_M68K_FLAG_Z;"
-	$as_echo "  }"
+	AS_ECHO([""])
+	AS_ECHO(["/* the ${name} function on a ${size}-byte EA: */"])
+	AS_ECHO(["TME_M68K_INSN(tme_m68k_${name}${size})"])
+	AS_ECHO(["{"])
+	AS_ECHO(["  tme_uint${size}_t value, bit;"])
+	AS_ECHO(["  bit = _TME_BIT(tme_uint${size}_t, TME_M68K_INSN_OP0(tme_uint8_t) & (${size} - 1));"])
+	AS_ECHO(["  value = TME_M68K_INSN_OP1(tme_uint${size}_t);"])
+	AS_ECHO(["  if (value & bit) {"])
+	AS_ECHO(["    ic->tme_m68k_ireg_ccr &= ~TME_M68K_FLAG_Z;"])
+	AS_ECHO(["  }"])
+	AS_ECHO(["  else {"])
+	AS_ECHO(["    ic->tme_m68k_ireg_ccr |= TME_M68K_FLAG_Z;"])
+	AS_ECHO(["  }"])
 	case ${name} in
 	btst) ;;
-	bchg) $as_echo "  TME_M68K_INSN_OP1(tme_uint${size}_t) = value ^ bit;" ;;
-	bclr) $as_echo "  TME_M68K_INSN_OP1(tme_uint${size}_t) = value & ~bit;" ;;
-	bset) $as_echo "  TME_M68K_INSN_OP1(tme_uint${size}_t) = value | bit;" ;;
+	bchg) AS_ECHO(["  TME_M68K_INSN_OP1(tme_uint${size}_t) = value ^ bit;"]) ;;
+	bclr) AS_ECHO(["  TME_M68K_INSN_OP1(tme_uint${size}_t) = value & ~bit;"]) ;;
+	bset) AS_ECHO(["  TME_M68K_INSN_OP1(tme_uint${size}_t) = value | bit;"]) ;;
 	esac
-	$as_echo "  TME_M68K_INSN_OK;"
-	$as_echo "}"
+	AS_ECHO(["  TME_M68K_INSN_OK;"])
+	AS_ECHO(["}"])
     done
 
     # generate the shift/rotate functions:
@@ -446,199 +446,199 @@ for size in 8 16 32; do
 
 	    # if we're making the header, just emit a declaration:
 	    if $header; then
-		$as_echo "TME_M68K_INSN_DECL(tme_m68k_${name}${size});"
+		AS_ECHO(["TME_M68K_INSN_DECL(tme_m68k_${name}${size});"])
 		continue
 	    fi
 
-	    $as_echo ""
-	    $as_echo "/* the ${name} function on a ${size}-byte EA: */"
-	    $as_echo "TME_M68K_INSN(tme_m68k_${name}${size})"
-	    $as_echo "{"
-	    $as_echo "  unsigned int count;"
+	    AS_ECHO([""])
+	    AS_ECHO(["/* the ${name} function on a ${size}-byte EA: */"])
+	    AS_ECHO(["TME_M68K_INSN(tme_m68k_${name}${size})"])
+	    AS_ECHO(["{"])
+	    AS_ECHO(["  unsigned int count;"])
 	    sign=u
 	    case "${name}" in
 	    asr) sign= ;;
-	    asl) $as_echo "  tme_uint${size}_t sign_bits, sign_bits_mask;" ;;
-	    rox[[lr]]) $as_echo "  tme_uint8_t xbit;" ;;
+	    asl) AS_ECHO(["  tme_uint${size}_t sign_bits, sign_bits_mask;"]) ;;
+	    rox[[lr]]) AS_ECHO(["  tme_uint8_t xbit;"]) ;;
 	    *) ;;
 	    esac
-	    $as_echo "  tme_${sign}int${size}_t res;"
-	    $as_echo "  tme_uint8_t flags;"
-	    $as_echo ""
-	    $as_echo "  /* get the count and operand: */"
-	    $as_echo "  count = TME_M68K_INSN_OP0(tme_uint8_t) & 63;"
-	    $as_echo "  res = TME_M68K_INSN_OP1(tme_${sign}int${size}_t);"
+	    AS_ECHO(["  tme_${sign}int${size}_t res;"])
+	    AS_ECHO(["  tme_uint8_t flags;"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* get the count and operand: */"])
+	    AS_ECHO(["  count = TME_M68K_INSN_OP0(tme_uint8_t) & 63;"])
+	    AS_ECHO(["  res = TME_M68K_INSN_OP1(tme_${sign}int${size}_t);"])
 
-	    $as_echo ""
-	    $as_echo "  /* generate the X, V, and C flags assuming the count is zero: */"
-	    $as_echo "  flags = ic->tme_m68k_ireg_ccr & TME_M68K_FLAG_X;"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* generate the X, V, and C flags assuming the count is zero: */"])
+	    AS_ECHO(["  flags = ic->tme_m68k_ireg_ccr & TME_M68K_FLAG_X;"])
 	    case "${name}" in
 	    rox[[lr]])
-		$as_echo "  xbit = (flags / TME_M68K_FLAG_X);"
-		$as_echo "  flags |= (xbit * TME_M68K_FLAG_C);"
+		AS_ECHO(["  xbit = (flags / TME_M68K_FLAG_X);"])
+		AS_ECHO(["  flags |= (xbit * TME_M68K_FLAG_C);"])
 		;;
 	    esac
 
-	    $as_echo ""
-	    $as_echo "  /* if the count is nonzero, update the result and"
-	    $as_echo "     generate the X, V, and C flags: */"
-	    $as_echo "  if (count > 0) {"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* if the count is nonzero, update the result and"])
+	    AS_ECHO(["     generate the X, V, and C flags: */"])
+	    AS_ECHO(["  if (count > 0) {"])
 	    case "${name}" in
 	    lsr)
-		$as_echo "    if (63 > SHIFTMAX_INT${size}_T"
-		$as_echo "        && count > ${size}) {"
-		$as_echo "      res = 0;"
-		$as_echo "    }"
-		$as_echo "    res >>= (count - 1);"
-		$as_echo "    flags = (res & 1);"
-		$as_echo "    flags *= TME_M68K_FLAG_C;"
-		$as_echo "    flags |= (flags * TME_M68K_FLAG_X);"
-		$as_echo "    res >>= 1;"
+		AS_ECHO(["    if (63 > SHIFTMAX_INT${size}_T"])
+		AS_ECHO(["        && count > ${size}) {"])
+		AS_ECHO(["      res = 0;"])
+		AS_ECHO(["    }"])
+		AS_ECHO(["    res >>= (count - 1);"])
+		AS_ECHO(["    flags = (res & 1);"])
+		AS_ECHO(["    flags *= TME_M68K_FLAG_C;"])
+		AS_ECHO(["    flags |= (flags * TME_M68K_FLAG_X);"])
+		AS_ECHO(["    res >>= 1;"])
 		;;
 	    asr)
-		$as_echo "    if (63 > SHIFTMAX_INT${size}_T"
-		$as_echo "        && count > ${size}) {"
-		$as_echo "      res = 0 - (res < 0);"
-		$as_echo "    }"
-		$as_echo "#ifdef SHIFTSIGNED_INT${size}_T"
-		$as_echo "    res >>= (count - 1);"
-		$as_echo "#else  /* !SHIFTSIGNED_INT${size}_T */"
-		$as_echo "    for (; --count > 0; ) {"
-		$as_echo "      res = (res & ~((tme_${sign}int${size}_t) 1)) / 2;"
-		$as_echo "    }"
-		$as_echo "#endif /* !SHIFTSIGNED_INT${size}_T */"
-		$as_echo "    flags = (res & 1);"
-		$as_echo "    flags *= TME_M68K_FLAG_C;"
-		$as_echo "    flags |= (flags * TME_M68K_FLAG_X);"
-		$as_echo "#ifdef SHIFTSIGNED_INT${size}_T"
-		$as_echo "    res >>= 1;"
-		$as_echo "#else  /* !SHIFTSIGNED_INT${size}_T */"
-		$as_echo "    res = (res & ~((tme_${sign}int${size}_t) 1)) / 2;"
-		$as_echo "#endif /* !SHIFTSIGNED_INT${size}_T */"
+		AS_ECHO(["    if (63 > SHIFTMAX_INT${size}_T"])
+		AS_ECHO(["        && count > ${size}) {"])
+		AS_ECHO(["      res = 0 - (res < 0);"])
+		AS_ECHO(["    }"])
+		AS_ECHO(["#ifdef SHIFTSIGNED_INT${size}_T"])
+		AS_ECHO(["    res >>= (count - 1);"])
+		AS_ECHO(["#else  /* !SHIFTSIGNED_INT${size}_T */"])
+		AS_ECHO(["    for (; --count > 0; ) {"])
+		AS_ECHO(["      res = (res & ~((tme_${sign}int${size}_t) 1)) / 2;"])
+		AS_ECHO(["    }"])
+		AS_ECHO(["#endif /* !SHIFTSIGNED_INT${size}_T */"])
+		AS_ECHO(["    flags = (res & 1);"])
+		AS_ECHO(["    flags *= TME_M68K_FLAG_C;"])
+		AS_ECHO(["    flags |= (flags * TME_M68K_FLAG_X);"])
+		AS_ECHO(["#ifdef SHIFTSIGNED_INT${size}_T"])
+		AS_ECHO(["    res >>= 1;"])
+		AS_ECHO(["#else  /* !SHIFTSIGNED_INT${size}_T */"])
+		AS_ECHO(["    res = (res & ~((tme_${sign}int${size}_t) 1)) / 2;"])
+		AS_ECHO(["#endif /* !SHIFTSIGNED_INT${size}_T */"])
 		;;
 	    [[al]]sl)
 		if test ${name} = asl; then
-		    $as_echo ""
-		    $as_echo "    /* we need to see how the sign of the result will change during"
-		    $as_echo "       shifting in order to generate V."
-		    $as_echo ""
-		    $as_echo "       in general, the idea is to get all of the bits that will ever"
-		    $as_echo "       appear in the sign position into sign_bits, with a mask in"
-		    $as_echo "       sign_bits_mask.  if (sign_bits & sign_bits_mask) is zero or"
-		    $as_echo "       sign_bits_mask, clear V, else set V."
-		    $as_echo ""
-		    $as_echo "       start by loading the operand into sign_bits and setting"
-		    $as_echo "       sign_bits_mask to all-bits-one."
-		    $as_echo ""
-		    $as_echo "       if the shift count is exactly ${size} - 1, then all of the bits"
-		    $as_echo "       of the operand will appear in the sign position."
-		    $as_echo ""
-		    $as_echo "       if the shift count is less than ${size} - 1, then some of the"
-		    $as_echo "       less significant bits of the operand will never appear in the"
-		    $as_echo "       sign position, so we can shift sign_bits_mask to ignore them."
-		    $as_echo ""
-		    $as_echo "       if the shift count is greater than ${size} - 1, then all of the"
-		    $as_echo "       bits in the operand, plus at least one zero bit, will appear in"
-		    $as_echo "       the sign position.  the only way that the sign bit will never"
-		    $as_echo "       change during the shift is if the operand was zero to begin with."
-		    $as_echo "       without any changes to sign_bits or sign_bits_mask, the final"
-		    $as_echo "       test will always work, except when sign_bits is all-bits-one."
-		    $as_echo "       the magic below clears the least-significant bit of sign_bits"
-		    $as_echo "       iff sign_bits is all-bits-one: */"
-		    $as_echo "    sign_bits = res;"
+		    AS_ECHO([""])
+		    AS_ECHO(["    /* we need to see how the sign of the result will change during"])
+		    AS_ECHO(["       shifting in order to generate V."])
+		    AS_ECHO([""])
+		    AS_ECHO(["       in general, the idea is to get all of the bits that will ever"])
+		    AS_ECHO(["       appear in the sign position into sign_bits, with a mask in"])
+		    AS_ECHO(["       sign_bits_mask.  if (sign_bits & sign_bits_mask) is zero or"])
+		    AS_ECHO(["       sign_bits_mask, clear V, else set V."])
+		    AS_ECHO([""])
+		    AS_ECHO(["       start by loading the operand into sign_bits and setting"])
+		    AS_ECHO(["       sign_bits_mask to all-bits-one."])
+		    AS_ECHO([""])
+		    AS_ECHO(["       if the shift count is exactly ${size} - 1, then all of the bits"])
+		    AS_ECHO(["       of the operand will appear in the sign position."])
+		    AS_ECHO([""])
+		    AS_ECHO(["       if the shift count is less than ${size} - 1, then some of the"])
+		    AS_ECHO(["       less significant bits of the operand will never appear in the"])
+		    AS_ECHO(["       sign position, so we can shift sign_bits_mask to ignore them."])
+		    AS_ECHO([""])
+		    AS_ECHO(["       if the shift count is greater than ${size} - 1, then all of the"])
+		    AS_ECHO(["       bits in the operand, plus at least one zero bit, will appear in"])
+		    AS_ECHO(["       the sign position.  the only way that the sign bit will never"])
+		    AS_ECHO(["       change during the shift is if the operand was zero to begin with."])
+		    AS_ECHO(["       without any changes to sign_bits or sign_bits_mask, the final"])
+		    AS_ECHO(["       test will always work, except when sign_bits is all-bits-one."])
+		    AS_ECHO(["       the magic below clears the least-significant bit of sign_bits"])
+		    AS_ECHO(["       iff sign_bits is all-bits-one: */"])
+		    AS_ECHO(["    sign_bits = res;"])
 		fi
-		$as_echo "    if (63 > SHIFTMAX_INT${size}_T"
-		$as_echo "        && count > ${size}) {"
-		$as_echo "      res = 0;"
-		$as_echo "    }"
-		$as_echo "    res <<= (count - 1);"
-		$as_echo "    flags = (res >> (${size} - 1));"
-		$as_echo "    flags *= TME_M68K_FLAG_C;"
-		$as_echo "    flags |= (flags * TME_M68K_FLAG_X);"
-		$as_echo "    res <<= 1;"
+		AS_ECHO(["    if (63 > SHIFTMAX_INT${size}_T"])
+		AS_ECHO(["        && count > ${size}) {"])
+		AS_ECHO(["      res = 0;"])
+		AS_ECHO(["    }"])
+		AS_ECHO(["    res <<= (count - 1);"])
+		AS_ECHO(["    flags = (res >> (${size} - 1));"])
+		AS_ECHO(["    flags *= TME_M68K_FLAG_C;"])
+		AS_ECHO(["    flags |= (flags * TME_M68K_FLAG_X);"])
+		AS_ECHO(["    res <<= 1;"])
 		if test ${name} = asl; then		
-		    $as_echo "    sign_bits_mask = (tme_uint${size}_t) -1;"
-		    $as_echo "    if (count != ${size} - 1) {"
-		    $as_echo "      if (count < ${size}) {"
-		    $as_echo "        sign_bits_mask <<= ((${size} - 1) - count);"
-		    $as_echo "      }"
-		    $as_echo "      else {"
-		    $as_echo "        sign_bits ^= !(sign_bits + 1);"
-		    $as_echo "      }"
-		    $as_echo "    }"		    
-		    $as_echo "    sign_bits &= sign_bits_mask;"
-		    $as_echo "    if (sign_bits != 0 && sign_bits != sign_bits_mask) {"
-		    $as_echo "      flags |= TME_M68K_FLAG_V;"
-		    $as_echo "    }"
+		    AS_ECHO(["    sign_bits_mask = (tme_uint${size}_t) -1;"])
+		    AS_ECHO(["    if (count != ${size} - 1) {"])
+		    AS_ECHO(["      if (count < ${size}) {"])
+		    AS_ECHO(["        sign_bits_mask <<= ((${size} - 1) - count);"])
+		    AS_ECHO(["      }"])
+		    AS_ECHO(["      else {"])
+		    AS_ECHO(["        sign_bits ^= !(sign_bits + 1);"])
+		    AS_ECHO(["      }"])
+		    AS_ECHO(["    }"		    ])
+		    AS_ECHO(["    sign_bits &= sign_bits_mask;"])
+		    AS_ECHO(["    if (sign_bits != 0 && sign_bits != sign_bits_mask) {"])
+		    AS_ECHO(["      flags |= TME_M68K_FLAG_V;"])
+		    AS_ECHO(["    }"])
 		fi
 		;;
 	    ro[[lr]])
-		$as_echo "    count &= (${size} - 1);"
+		AS_ECHO(["    count &= (${size} - 1);"])
 		if test $dir = l; then
-		    $as_echo "    res = (res << count) | (res >> (${size} - count));"
-		    $as_echo "    flags |= ((res & 1) * TME_M68K_FLAG_C);"
+		    AS_ECHO(["    res = (res << count) | (res >> (${size} - count));"])
+		    AS_ECHO(["    flags |= ((res & 1) * TME_M68K_FLAG_C);"])
 		else
-		    $as_echo "    res = (res << (${size} - count)) | (res >> count);"
-		    $as_echo "    flags |= ((res >> (${size} - 1)) * TME_M68K_FLAG_C);"
+		    AS_ECHO(["    res = (res << (${size} - count)) | (res >> count);"])
+		    AS_ECHO(["    flags |= ((res >> (${size} - 1)) * TME_M68K_FLAG_C);"])
 		fi
 		;;
 	    rox[[lr]])
-		$as_echo "    count %= (${size} + 1);"
-		$as_echo "    flags = xbit;"
-		$as_echo "    if (count > 0) {"
+		AS_ECHO(["    count %= (${size} + 1);"])
+		AS_ECHO(["    flags = xbit;"])
+		AS_ECHO(["    if (count > 0) {"])
 		if test $dir = l; then
-		    $as_echo "      flags = (res >> (${size} - count)) & 1;"
-		    $as_echo "      if (${size} > SHIFTMAX_INT${size}_T"
-		    $as_echo "          && count == ${size}) {"
-		    $as_echo "        res = 0 | (xbit << (${size} - 1)) | (res >> ((${size} + 1) - ${size}));"
-		    $as_echo "      }"
-		    $as_echo "      else if (${size} > SHIFTMAX_INT${size}_T"
-		    $as_echo "               && count == 1) {"
-		    $as_echo "        res = (res << 1) | (xbit << (1 - 1)) | 0;"
-		    $as_echo "      }"
-		    $as_echo "      else {"
-		    $as_echo "        res = (res << count) | (xbit << (count - 1)) | (res >> ((${size} + 1) - count));"
-		    $as_echo "      }"
+		    AS_ECHO(["      flags = (res >> (${size} - count)) & 1;"])
+		    AS_ECHO(["      if (${size} > SHIFTMAX_INT${size}_T"])
+		    AS_ECHO(["          && count == ${size}) {"])
+		    AS_ECHO(["        res = 0 | (xbit << (${size} - 1)) | (res >> ((${size} + 1) - ${size}));"])
+		    AS_ECHO(["      }"])
+		    AS_ECHO(["      else if (${size} > SHIFTMAX_INT${size}_T"])
+		    AS_ECHO(["               && count == 1) {"])
+		    AS_ECHO(["        res = (res << 1) | (xbit << (1 - 1)) | 0;"])
+		    AS_ECHO(["      }"])
+		    AS_ECHO(["      else {"])
+		    AS_ECHO(["        res = (res << count) | (xbit << (count - 1)) | (res >> ((${size} + 1) - count));"])
+		    AS_ECHO(["      }"])
 		else
-		    $as_echo "      flags = (res >> (count - 1)) & 1;"
-		    $as_echo "      if (${size} > SHIFTMAX_INT${size}_T"
-		    $as_echo "          && count == ${size}) {"
-		    $as_echo "        res = (res << ((${size} + 1) - ${size})) | (xbit << (${size} - ${size})) | 0;"
-		    $as_echo "      }"
-		    $as_echo "      else if (${size} > SHIFTMAX_INT${size}_T"
-		    $as_echo "               && count == 1) {"
-		    $as_echo "        res = 0 | (xbit << (${size} - 1)) | (res >> 1);"
-		    $as_echo "      }"
-		    $as_echo "      else {"
-		    $as_echo "        res = (res << ((${size} + 1) - count)) | (xbit << (${size} - count)) | (res >> count);"
-		    $as_echo "      }"
+		    AS_ECHO(["      flags = (res >> (count - 1)) & 1;"])
+		    AS_ECHO(["      if (${size} > SHIFTMAX_INT${size}_T"])
+		    AS_ECHO(["          && count == ${size}) {"])
+		    AS_ECHO(["        res = (res << ((${size} + 1) - ${size})) | (xbit << (${size} - ${size})) | 0;"])
+		    AS_ECHO(["      }"])
+		    AS_ECHO(["      else if (${size} > SHIFTMAX_INT${size}_T"])
+		    AS_ECHO(["               && count == 1) {"])
+		    AS_ECHO(["        res = 0 | (xbit << (${size} - 1)) | (res >> 1);"])
+		    AS_ECHO(["      }"])
+		    AS_ECHO(["      else {"])
+		    AS_ECHO(["        res = (res << ((${size} + 1) - count)) | (xbit << (${size} - count)) | (res >> count);"])
+		    AS_ECHO(["      }"])
 		fi
-		$as_echo "    }"
-		$as_echo "    flags *= TME_M68K_FLAG_C;"
-		$as_echo "    flags |= (flags * TME_M68K_FLAG_X);"
+		AS_ECHO(["    }"])
+		AS_ECHO(["    flags *= TME_M68K_FLAG_C;"])
+		AS_ECHO(["    flags |= (flags * TME_M68K_FLAG_X);"])
 		;;
 	    esac
-		$as_echo "  }"
+		AS_ECHO(["  }"])
 
-	    $as_echo ""
-	    $as_echo "  /* store the result: */"
-	    $as_echo "  TME_M68K_INSN_OP1(tme_${sign}int${size}_t) = res;"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* store the result: */"])
+	    AS_ECHO(["  TME_M68K_INSN_OP1(tme_${sign}int${size}_t) = res;"])
 
-	    $as_echo ""
-	    $as_echo "  /* generate the N flag.  we cast to tme_uint8_t as soon as we"
-	    $as_echo "     know the bit we want is within the range of the type, to try"
-	    $as_echo "     to affect the generated assembly: */"
-	    $as_echo "  flags |= ((tme_uint8_t) (((tme_uint${size}_t) res) >> (${size} - 1))) * TME_M68K_FLAG_N;"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* generate the N flag.  we cast to tme_uint8_t as soon as we"])
+	    AS_ECHO(["     know the bit we want is within the range of the type, to try"])
+	    AS_ECHO(["     to affect the generated assembly: */"])
+	    AS_ECHO(["  flags |= ((tme_uint8_t) (((tme_uint${size}_t) res) >> (${size} - 1))) * TME_M68K_FLAG_N;"])
 	    
-	    $as_echo ""
-	    $as_echo "  /* generate the Z flag: */"
-	    $as_echo "  if (res == 0) flags |= TME_M68K_FLAG_Z;"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* generate the Z flag: */"])
+	    AS_ECHO(["  if (res == 0) flags |= TME_M68K_FLAG_Z;"])
 
-	    $as_echo ""
-	    $as_echo "  /* store the flags: */"
-	    $as_echo "  ic->tme_m68k_ireg_ccr = flags;"
-	    $as_echo "  TME_M68K_INSN_OK;"
-	    $as_echo "}"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* store the flags: */"])
+	    AS_ECHO(["  ic->tme_m68k_ireg_ccr = flags;"])
+	    AS_ECHO(["  TME_M68K_INSN_OK;"])
+	    AS_ECHO(["}"])
 	done
     done
 
@@ -650,33 +650,33 @@ for size in 8 16 32; do
 
 	# if we're making the header, just emit declarations:
 	if $header; then
-	    $as_echo "TME_M68K_INSN_DECL(tme_m68k_movep_${name}${size});"
-	    $as_echo "TME_M68K_INSN_DECL(tme_m68k_movem_${name}${size});"
+	    AS_ECHO(["TME_M68K_INSN_DECL(tme_m68k_movep_${name}${size});"])
+	    AS_ECHO(["TME_M68K_INSN_DECL(tme_m68k_movem_${name}${size});"])
 	    continue
 	fi
 
 	# emit the movep function:
-	$as_echo ""
-	$as_echo "/* the movep_${name} function on a ${size}-bit dreg: */"
-	$as_echo "TME_M68K_INSN(tme_m68k_movep_${name}${size})"
-	$as_echo "{"
-	$as_echo "  unsigned int function_code;"
-	$as_echo "  tme_uint32_t linear_address;"
+	AS_ECHO([""])
+	AS_ECHO(["/* the movep_${name} function on a ${size}-bit dreg: */"])
+	AS_ECHO(["TME_M68K_INSN(tme_m68k_movep_${name}${size})"])
+	AS_ECHO(["{"])
+	AS_ECHO(["  unsigned int function_code;"])
+	AS_ECHO(["  tme_uint32_t linear_address;"])
 	if test $name = rm; then
-	    $as_echo "  tme_uint${size}_t value;"
+	    AS_ECHO(["  tme_uint${size}_t value;"])
 	fi
-	$as_echo "  int dreg;"
-	$as_echo ""
-	$as_echo "  TME_M68K_INSN_CANFAULT;"
-	$as_echo ""
-	$as_echo "  function_code = TME_M68K_FUNCTION_CODE_DATA(ic);"
-	$as_echo "  linear_address = TME_M68K_INSN_OP1(tme_uint32_t);"
-	$as_echo "  linear_address += (tme_int32_t) ((tme_int16_t) TME_M68K_INSN_SPECOP);"
-	$as_echo "  dreg = TME_M68K_IREG_D0 + TME_FIELD_EXTRACTU(TME_M68K_INSN_OPCODE, 9, 3);"
+	AS_ECHO(["  int dreg;"])
+	AS_ECHO([""])
+	AS_ECHO(["  TME_M68K_INSN_CANFAULT;"])
+	AS_ECHO([""])
+	AS_ECHO(["  function_code = TME_M68K_FUNCTION_CODE_DATA(ic);"])
+	AS_ECHO(["  linear_address = TME_M68K_INSN_OP1(tme_uint32_t);"])
+	AS_ECHO(["  linear_address += (tme_int32_t) ((tme_int16_t) TME_M68K_INSN_SPECOP);"])
+	AS_ECHO(["  dreg = TME_M68K_IREG_D0 + TME_FIELD_EXTRACTU(TME_M68K_INSN_OPCODE, 9, 3);"])
 
 	# set value:
 	if test $name = rm; then
-	    $as_echo "  value = ic->tme_m68k_ireg_uint${size}(dreg${reg_size_shift});"
+	    AS_ECHO(["  value = ic->tme_m68k_ireg_uint${size}(dreg${reg_size_shift});"])
             value="value"
         else
             value="ic->tme_m68k_ireg_uint${size}(dreg${reg_size_shift})"
@@ -686,132 +686,132 @@ for size in 8 16 32; do
 	pos=${size}
 	while test $pos != 0; do
 	    pos=`expr ${pos} - 8`
-	    $as_echo "  if (!TME_M68K_SEQUENCE_RESTARTING) {"
-	    $as_echo "    ic->_tme_m68k_ea_function_code = function_code;"
-	    $as_echo "    ic->_tme_m68k_ea_address = linear_address;"
+	    AS_ECHO(["  if (!TME_M68K_SEQUENCE_RESTARTING) {"])
+	    AS_ECHO(["    ic->_tme_m68k_ea_function_code = function_code;"])
+	    AS_ECHO(["    ic->_tme_m68k_ea_address = linear_address;"])
 	    if test $name = rm; then
-		$as_echo "    ic->tme_m68k_ireg_memx8 = TME_FIELD_EXTRACTU(${value}, ${pos}, 8);"
-		$as_echo "  }"
-		$as_echo "  tme_m68k_write_memx8(ic);"
+		AS_ECHO(["    ic->tme_m68k_ireg_memx8 = TME_FIELD_EXTRACTU(${value}, ${pos}, 8);"])
+		AS_ECHO(["  }"])
+		AS_ECHO(["  tme_m68k_write_memx8(ic);"])
 	    else
-		$as_echo "  }"
-		$as_echo "  tme_m68k_read_memx8(ic);"
-		$as_echo "  if (!TME_M68K_SEQUENCE_RESTARTING) {"
-		$as_echo "    TME_FIELD_DEPOSIT${size}(${value}, ${pos}, 8, ic->tme_m68k_ireg_memx8);"
-		$as_echo "  }"
+		AS_ECHO(["  }"])
+		AS_ECHO(["  tme_m68k_read_memx8(ic);"])
+		AS_ECHO(["  if (!TME_M68K_SEQUENCE_RESTARTING) {"])
+		AS_ECHO(["    TME_FIELD_DEPOSIT${size}(${value}, ${pos}, 8, ic->tme_m68k_ireg_memx8);"])
+		AS_ECHO(["  }"])
 	    fi
-	    $as_echo "  linear_address += 2;"
+	    AS_ECHO(["  linear_address += 2;"])
 	done
 
-	$as_echo "  TME_M68K_INSN_OK;"
-	$as_echo "}"
+	AS_ECHO(["  TME_M68K_INSN_OK;"])
+	AS_ECHO(["}"])
 
 	# emit the movem function:
-	$as_echo ""
-	$as_echo "/* the movem_${name} function on ${size}-bit registers: */"
-	$as_echo "TME_M68K_INSN(tme_m68k_movem_${name}${size})"
-	$as_echo "{"
-	$as_echo "  int ireg, direction;"
-	$as_echo "  tme_uint16_t mask, bit;"
-	$as_echo "  unsigned int ea_mode;"
-	$as_echo "  tme_uint32_t addend;"
-	$as_echo "  tme_uint32_t total_size;"
+	AS_ECHO([""])
+	AS_ECHO(["/* the movem_${name} function on ${size}-bit registers: */"])
+	AS_ECHO(["TME_M68K_INSN(tme_m68k_movem_${name}${size})"])
+	AS_ECHO(["{"])
+	AS_ECHO(["  int ireg, direction;"])
+	AS_ECHO(["  tme_uint16_t mask, bit;"])
+	AS_ECHO(["  unsigned int ea_mode;"])
+	AS_ECHO(["  tme_uint32_t addend;"])
+	AS_ECHO(["  tme_uint32_t total_size;"])
 
-	$as_echo "  /* get the register mask, and figure out the total size"
-	$as_echo "     of the transfer: */"
-	$as_echo "  mask = TME_M68K_INSN_SPECOP;"
-	$as_echo "  total_size = 0;"
-	$as_echo "  if (mask != 0) {"
-	$as_echo "    TME_M68K_INSN_CANFAULT;"
-	$as_echo "    bit = mask;"
-	$as_echo "    do {"
-	$as_echo "      total_size += sizeof(tme_uint${size}_t);"
-	$as_echo "      bit &= (bit - 1);"
-	$as_echo "    } while (bit != 0);"
-	$as_echo "  }"
+	AS_ECHO(["  /* get the register mask, and figure out the total size"])
+	AS_ECHO(["     of the transfer: */"])
+	AS_ECHO(["  mask = TME_M68K_INSN_SPECOP;"])
+	AS_ECHO(["  total_size = 0;"])
+	AS_ECHO(["  if (mask != 0) {"])
+	AS_ECHO(["    TME_M68K_INSN_CANFAULT;"])
+	AS_ECHO(["    bit = mask;"])
+	AS_ECHO(["    do {"])
+	AS_ECHO(["      total_size += sizeof(tme_uint${size}_t);"])
+	AS_ECHO(["      bit &= (bit - 1);"])
+	AS_ECHO(["    } while (bit != 0);"])
+	AS_ECHO(["  }"])
 
-	$as_echo ""
-	$as_echo "  /* figure out what direction to move in, and where to start from: */"
-	$as_echo "  ea_mode = TME_FIELD_EXTRACTU(TME_M68K_INSN_OPCODE, 3, 3);"
-	$as_echo "  direction = 1;"
-	$as_echo "  ireg = TME_M68K_IREG_D0;"
+	AS_ECHO([""])
+	AS_ECHO(["  /* figure out what direction to move in, and where to start from: */"])
+	AS_ECHO(["  ea_mode = TME_FIELD_EXTRACTU(TME_M68K_INSN_OPCODE, 3, 3);"])
+	AS_ECHO(["  direction = 1;"])
+	AS_ECHO(["  ireg = TME_M68K_IREG_D0;"])
 	if test $name = rm; then
-	    $as_echo "  if (ea_mode == 4) {"
-	    $as_echo "    direction = -1;"
-	    $as_echo "    ireg = TME_M68K_IREG_A7;"
-	    $as_echo "    if (!TME_M68K_SEQUENCE_RESTARTING) {"
-	    $as_echo ""
-	    $as_echo "      /* \"For the MC68020, MC68030, MC68040, and CPU32, if"
-	    $as_echo "         the addressing register is also moved to memory, the"
-	    $as_echo "         value written is the initial register value decremented "
-	    $as_echo "         by the size of the operation. The MC68000 and MC68010 "
-	    $as_echo "         write the initial register value (not decremented).\" */"
-	    $as_echo "      if (ic->tme_m68k_type >= TME_M68K_M68020) {"
-	    $as_echo "        ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0"
-	    $as_echo "                                 + TME_FIELD_EXTRACTU(TME_M68K_INSN_OPCODE, 0, 3))"
-	    $as_echo "          = (ic->_tme_m68k_ea_address - total_size);"
-	    $as_echo "      }"
-	    $as_echo ""
-	    $as_echo "      /* predecrement the effective address for the first transfer: */"
-	    $as_echo "      ic->_tme_m68k_ea_address -= sizeof(tme_uint${size}_t);"
-	    $as_echo "    }"
-	    $as_echo "  }"
+	    AS_ECHO(["  if (ea_mode == 4) {"])
+	    AS_ECHO(["    direction = -1;"])
+	    AS_ECHO(["    ireg = TME_M68K_IREG_A7;"])
+	    AS_ECHO(["    if (!TME_M68K_SEQUENCE_RESTARTING) {"])
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* \"For the MC68020, MC68030, MC68040, and CPU32, if"])
+	    AS_ECHO(["         the addressing register is also moved to memory, the"])
+	    AS_ECHO(["         value written is the initial register value decremented "])
+	    AS_ECHO(["         by the size of the operation. The MC68000 and MC68010 "])
+	    AS_ECHO(["         write the initial register value (not decremented).\" */"])
+	    AS_ECHO(["      if (ic->tme_m68k_type >= TME_M68K_M68020) {"])
+	    AS_ECHO(["        ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0"])
+	    AS_ECHO(["                                 + TME_FIELD_EXTRACTU(TME_M68K_INSN_OPCODE, 0, 3))"])
+	    AS_ECHO(["          = (ic->_tme_m68k_ea_address - total_size);"])
+	    AS_ECHO(["      }"])
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* predecrement the effective address for the first transfer: */"])
+	    AS_ECHO(["      ic->_tme_m68k_ea_address -= sizeof(tme_uint${size}_t);"])
+	    AS_ECHO(["    }"])
+	    AS_ECHO(["  }"])
 	fi
-	$as_echo "  addend = (tme_uint32_t) (direction * sizeof(tme_uint${size}_t));"
+	AS_ECHO(["  addend = (tme_uint32_t) (direction * sizeof(tme_uint${size}_t));"])
 
-	$as_echo ""
-	$as_echo "  /* do the transfer: */"
-	$as_echo "  for (bit = 1; bit != 0; bit <<= 1) {"
-	$as_echo "    if (mask & bit) {"
+	AS_ECHO([""])
+	AS_ECHO(["  /* do the transfer: */"])
+	AS_ECHO(["  for (bit = 1; bit != 0; bit <<= 1) {"])
+	AS_ECHO(["    if (mask & bit) {"])
 	if test $name = rm; then
-	    $as_echo "      if (!TME_M68K_SEQUENCE_RESTARTING) {"
-	    $as_echo "        ic->tme_m68k_ireg_memx${size} = ic->tme_m68k_ireg_uint${size}(ireg${reg_size_shift});"
-	    $as_echo "      }"
-	    $as_echo "      tme_m68k_write_memx${size}(ic);"
-	    $as_echo "      if (!TME_M68K_SEQUENCE_RESTARTING) {"
+	    AS_ECHO(["      if (!TME_M68K_SEQUENCE_RESTARTING) {"])
+	    AS_ECHO(["        ic->tme_m68k_ireg_memx${size} = ic->tme_m68k_ireg_uint${size}(ireg${reg_size_shift});"])
+	    AS_ECHO(["      }"])
+	    AS_ECHO(["      tme_m68k_write_memx${size}(ic);"])
+	    AS_ECHO(["      if (!TME_M68K_SEQUENCE_RESTARTING) {"])
 	else
-	    $as_echo "      tme_m68k_read_memx${size}(ic);"
-	    $as_echo "      if (!TME_M68K_SEQUENCE_RESTARTING) {"
-	    $as_echo_n "        ic->tme_m68k_ireg_uint32(ireg) = "
+	    AS_ECHO(["      tme_m68k_read_memx${size}(ic);"])
+	    AS_ECHO(["      if (!TME_M68K_SEQUENCE_RESTARTING) {"])
+	    AS_ECHO_N(["        ic->tme_m68k_ireg_uint32(ireg) = "])
 	    if test $size = 32; then
-		$as_echo "ic->tme_m68k_ireg_memx${size};"
+		AS_ECHO(["ic->tme_m68k_ireg_memx${size};"])
 	    else
-		$as_echo "TME_EXT_S${size}_U32((tme_int${size}_t) ic->tme_m68k_ireg_memx${size});"
+		AS_ECHO(["TME_EXT_S${size}_U32((tme_int${size}_t) ic->tme_m68k_ireg_memx${size});"])
 	    fi
 	fi
-	$as_echo "        ic->_tme_m68k_ea_address += addend;"
-	$as_echo "      }"
-	$as_echo "    }"
-	$as_echo "    ireg += direction;"
-	$as_echo "  }"
-	$as_echo ""
+	AS_ECHO(["        ic->_tme_m68k_ea_address += addend;"])
+	AS_ECHO(["      }"])
+	AS_ECHO(["    }"])
+	AS_ECHO(["    ireg += direction;"])
+	AS_ECHO(["  }"])
+	AS_ECHO([""])
 
 	# for the predecrement and postincrement modes, update the
 	# address register:
 	if test $name = rm; then 
-	    $as_echo "  /* if this is the predecrement mode, update the address register: */"
-	    $as_echo "  /* \"For the MC68020, MC68030, MC68040, and CPU32, if"
-	    $as_echo "     the addressing register is also moved to memory, the"
-	    $as_echo "     value written is the initial register value decremented "
-	    $as_echo "     by the size of the operation. The MC68000 and MC68010 "
-	    $as_echo "     write the initial register value (not decremented).\" */"
-	    $as_echo "  if (ea_mode == 4"
-	    $as_echo "      && ic->tme_m68k_type < TME_M68K_M68020) {"
-	    $as_echo "    ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0"
-	    $as_echo "                              + TME_FIELD_EXTRACTU(TME_M68K_INSN_OPCODE, 0, 3))"
-	    $as_echo "      = (ic->_tme_m68k_ea_address + sizeof(tme_uint${size}_t));"
-	    $as_echo "  }"
+	    AS_ECHO(["  /* if this is the predecrement mode, update the address register: */"])
+	    AS_ECHO(["  /* \"For the MC68020, MC68030, MC68040, and CPU32, if"])
+	    AS_ECHO(["     the addressing register is also moved to memory, the"])
+	    AS_ECHO(["     value written is the initial register value decremented "])
+	    AS_ECHO(["     by the size of the operation. The MC68000 and MC68010 "])
+	    AS_ECHO(["     write the initial register value (not decremented).\" */"])
+	    AS_ECHO(["  if (ea_mode == 4"])
+	    AS_ECHO(["      && ic->tme_m68k_type < TME_M68K_M68020) {"])
+	    AS_ECHO(["    ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0"])
+	    AS_ECHO(["                              + TME_FIELD_EXTRACTU(TME_M68K_INSN_OPCODE, 0, 3))"])
+	    AS_ECHO(["      = (ic->_tme_m68k_ea_address + sizeof(tme_uint${size}_t));"])
+	    AS_ECHO(["  }"])
 	else
-	    $as_echo "  /* if this is the postincrement mode, update the address register: */"
-	    $as_echo "  if (ea_mode == 3) {"
-	    $as_echo "    ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0"
-	    $as_echo "                              + TME_FIELD_EXTRACTU(TME_M68K_INSN_OPCODE, 0, 3))"
-	    $as_echo "      = ic->_tme_m68k_ea_address;"
-	    $as_echo "  }"
+	    AS_ECHO(["  /* if this is the postincrement mode, update the address register: */"])
+	    AS_ECHO(["  if (ea_mode == 3) {"])
+	    AS_ECHO(["    ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0"])
+	    AS_ECHO(["                              + TME_FIELD_EXTRACTU(TME_M68K_INSN_OPCODE, 0, 3))"])
+	    AS_ECHO(["      = ic->_tme_m68k_ea_address;"])
+	    AS_ECHO(["  }"])
 	fi
 	
-	$as_echo "  TME_M68K_INSN_OK;"
-	$as_echo "}"
+	AS_ECHO(["  TME_M68K_INSN_OK;"])
+	AS_ECHO(["}"])
     done
 
     # chk32 and chk16:
@@ -819,116 +819,116 @@ for size in 8 16 32; do
 
 	# if we're making the header, just emit a declaration:
 	if $header; then
-	    $as_echo "TME_M68K_INSN_DECL(tme_m68k_chk${size});"
+	    AS_ECHO(["TME_M68K_INSN_DECL(tme_m68k_chk${size});"])
 	else
-	    $as_echo ""
-	    $as_echo "/* chk${size}: */"
-	    $as_echo "TME_M68K_INSN(tme_m68k_chk${size})"
-	    $as_echo "{"
-	    $as_echo "  if (*((tme_int${size}_t *) _op0) < 0) {"
-	    $as_echo "    ic->tme_m68k_ireg_ccr |= TME_M68K_FLAG_N;"
-	    $as_echo "    ic->tme_m68k_ireg_pc_last = ic->tme_m68k_ireg_pc;"
-	    $as_echo "    ic->tme_m68k_ireg_pc = ic->tme_m68k_ireg_pc_next;"
-	    $as_echo "    TME_M68K_INSN_EXCEPTION(TME_M68K_EXCEPTION_INST(TME_M68K_VECTOR_CHK));"
-	    $as_echo "  }"
-	    $as_echo "  if (*((tme_int${size}_t *) _op0) > *((tme_int${size}_t *) _op1)) {"
-	    $as_echo "    ic->tme_m68k_ireg_ccr &= ~TME_M68K_FLAG_N;"
-	    $as_echo "    ic->tme_m68k_ireg_pc_last = ic->tme_m68k_ireg_pc;"
-	    $as_echo "    ic->tme_m68k_ireg_pc = ic->tme_m68k_ireg_pc_next;"
-	    $as_echo "    TME_M68K_INSN_EXCEPTION(TME_M68K_EXCEPTION_INST(TME_M68K_VECTOR_CHK));"
-	    $as_echo "  }"
-	    $as_echo "  TME_M68K_INSN_OK;"
-	    $as_echo "}"
+	    AS_ECHO([""])
+	    AS_ECHO(["/* chk${size}: */"])
+	    AS_ECHO(["TME_M68K_INSN(tme_m68k_chk${size})"])
+	    AS_ECHO(["{"])
+	    AS_ECHO(["  if (*((tme_int${size}_t *) _op0) < 0) {"])
+	    AS_ECHO(["    ic->tme_m68k_ireg_ccr |= TME_M68K_FLAG_N;"])
+	    AS_ECHO(["    ic->tme_m68k_ireg_pc_last = ic->tme_m68k_ireg_pc;"])
+	    AS_ECHO(["    ic->tme_m68k_ireg_pc = ic->tme_m68k_ireg_pc_next;"])
+	    AS_ECHO(["    TME_M68K_INSN_EXCEPTION(TME_M68K_EXCEPTION_INST(TME_M68K_VECTOR_CHK));"])
+	    AS_ECHO(["  }"])
+	    AS_ECHO(["  if (*((tme_int${size}_t *) _op0) > *((tme_int${size}_t *) _op1)) {"])
+	    AS_ECHO(["    ic->tme_m68k_ireg_ccr &= ~TME_M68K_FLAG_N;"])
+	    AS_ECHO(["    ic->tme_m68k_ireg_pc_last = ic->tme_m68k_ireg_pc;"])
+	    AS_ECHO(["    ic->tme_m68k_ireg_pc = ic->tme_m68k_ireg_pc_next;"])
+	    AS_ECHO(["    TME_M68K_INSN_EXCEPTION(TME_M68K_EXCEPTION_INST(TME_M68K_VECTOR_CHK));"])
+	    AS_ECHO(["  }"])
+	    AS_ECHO(["  TME_M68K_INSN_OK;"])
+	    AS_ECHO(["}"])
 	fi
     fi
 
     # cas:
     name=cas
     if $header; then
-	$as_echo "TME_M68K_INSN_DECL(tme_m68k_${name}${size});"
+	AS_ECHO(["TME_M68K_INSN_DECL(tme_m68k_${name}${size});"])
     else
-	$as_echo ""
-	$as_echo "/* ${name}${size}: */"
-	$as_echo "TME_M68K_INSN(tme_m68k_${name}${size})"
-	$as_echo "{"
-	$as_echo "  struct tme_m68k_rmw rmw;"
-	$as_echo "  struct tme_m68k_tlb *tlb;"
-	$as_echo "  int ireg_dc, ireg_du;"
-	$as_echo "  tme_uint${size}_t value_dc, value_du, value_mem;"
-	$as_echo ""
-	$as_echo "  /* start the read/modify/write cycle: */"
-	$as_echo "  rmw.tme_m68k_rmw_addresses[[0]] = ic->_tme_m68k_ea_address;"
-	$as_echo "  rmw.tme_m68k_rmw_address_count = 1;"
-	$as_echo "  rmw.tme_m68k_rmw_size = sizeof(tme_uint${size}_t);"
-	$as_echo "  if (tme_m68k_rmw_start(ic,"
-	$as_echo "                         &rmw)) {"
-	$as_echo "    TME_M68K_INSN_OK;"
-	$as_echo "  }"
-	$as_echo ""
-	$as_echo "  /* get the compare and update registers: */"
-	$as_echo "  ireg_dc = TME_M68K_IREG_D0 + TME_FIELD_EXTRACTU(TME_M68K_INSN_SPECOP, 0, 3);"
-	$as_echo "  ireg_du = TME_M68K_IREG_D0 + TME_FIELD_EXTRACTU(TME_M68K_INSN_SPECOP, 6, 3);"
-	$as_echo ""
-	$as_echo "  /* if we can do the fast compare-and-exchange: */"
-	$as_echo "  if (!rmw.tme_m68k_rmw_slow_reads[[0]]) {"
-	$as_echo ""
-	$as_echo "    /* get the compare and update values in big-endian byte order: */"
-	$as_echo "    value_dc = ic->tme_m68k_ireg_uint${size}(ireg_dc${reg_size_shift});"
-	$as_echo "    value_du = ic->tme_m68k_ireg_uint${size}(ireg_du${reg_size_shift});"
+	AS_ECHO([""])
+	AS_ECHO(["/* ${name}${size}: */"])
+	AS_ECHO(["TME_M68K_INSN(tme_m68k_${name}${size})"])
+	AS_ECHO(["{"])
+	AS_ECHO(["  struct tme_m68k_rmw rmw;"])
+	AS_ECHO(["  struct tme_m68k_tlb *tlb;"])
+	AS_ECHO(["  int ireg_dc, ireg_du;"])
+	AS_ECHO(["  tme_uint${size}_t value_dc, value_du, value_mem;"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* start the read/modify/write cycle: */"])
+	AS_ECHO(["  rmw.tme_m68k_rmw_addresses[[0]] = ic->_tme_m68k_ea_address;"])
+	AS_ECHO(["  rmw.tme_m68k_rmw_address_count = 1;"])
+	AS_ECHO(["  rmw.tme_m68k_rmw_size = sizeof(tme_uint${size}_t);"])
+	AS_ECHO(["  if (tme_m68k_rmw_start(ic,"])
+	AS_ECHO(["                         &rmw)) {"])
+	AS_ECHO(["    TME_M68K_INSN_OK;"])
+	AS_ECHO(["  }"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* get the compare and update registers: */"])
+	AS_ECHO(["  ireg_dc = TME_M68K_IREG_D0 + TME_FIELD_EXTRACTU(TME_M68K_INSN_SPECOP, 0, 3);"])
+	AS_ECHO(["  ireg_du = TME_M68K_IREG_D0 + TME_FIELD_EXTRACTU(TME_M68K_INSN_SPECOP, 6, 3);"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* if we can do the fast compare-and-exchange: */"])
+	AS_ECHO(["  if (!rmw.tme_m68k_rmw_slow_reads[[0]]) {"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* get the compare and update values in big-endian byte order: */"])
+	AS_ECHO(["    value_dc = ic->tme_m68k_ireg_uint${size}(ireg_dc${reg_size_shift});"])
+	AS_ECHO(["    value_du = ic->tme_m68k_ireg_uint${size}(ireg_du${reg_size_shift});"])
 	if test ${size} != 8; then
-	    $as_echo "    value_dc = tme_htobe_u${size}(value_dc);"
-	    $as_echo "    value_du = tme_htobe_u${size}(value_du);"
+	    AS_ECHO(["    value_dc = tme_htobe_u${size}(value_dc);"])
+	    AS_ECHO(["    value_du = tme_htobe_u${size}(value_du);"])
 	fi
-	$as_echo ""
-	$as_echo "    /* get this TLB entry: */"
-	$as_echo "    tlb = rmw.tme_m68k_rmw_tlbs[[0]];"
-	$as_echo ""
-	$as_echo "    /* this TLB entry must allow fast reading and fast writing"
-	$as_echo "       to the same memory: */"
-	$as_echo "    assert (tlb->tme_m68k_tlb_emulator_off_read != TME_EMULATOR_OFF_UNDEF"
-	$as_echo "            && tlb->tme_m68k_tlb_emulator_off_write == tlb->tme_m68k_tlb_emulator_off_read);"
-	$as_echo ""
-	$as_echo "    /* do the compare-and-exchange: */"
-	$as_echo "    value_mem ="
-	$as_echo "      tme_memory_atomic_cx${size}(((tme_shared tme_uint${size}_t *)"
-	$as_echo "                                   (tlb->tme_m68k_tlb_emulator_off_read"
-	$as_echo "                                    + ic->_tme_m68k_ea_address)),"
-	$as_echo "                                  value_dc,"
-	$as_echo "                                  value_du,"
-	$as_echo "                                  tlb->tme_m68k_tlb_bus_rwlock,"
-	$as_echo "                                  sizeof(tme_uint8_t));"
-   	$as_echo_n "    ic->tme_m68k_ireg_memx${size} = "
-	if test ${size} != 8; then $as_echo_n "tme_betoh_u${size}"; fi
-	$as_echo "(value_mem);"
-	$as_echo ""
-	$as_echo "    /* step the transfer count once for the read, and once for the write: */"
-	$as_echo "    TME_M68K_SEQUENCE_TRANSFER_STEP;"
-	$as_echo "    TME_M68K_SEQUENCE_TRANSFER_STEP;"
-	$as_echo "  }"
-	$as_echo ""
-	$as_echo "  /* compare the compare operand to the effective address operand: */"
-	$as_echo "  tme_m68k_cmp${size}(ic, &ic->tme_m68k_ireg_uint${size}(ireg_dc${reg_size_shift}), &ic->tme_m68k_ireg_memx${size});"
-	$as_echo ""
-	$as_echo "  /* if the comparison succeeded: */"
-	$as_echo "  if (ic->tme_m68k_ireg_ccr & TME_M68K_FLAG_Z) {"
-	$as_echo ""
-	$as_echo "    /* write the update operand to the effective address operand: */"
-	$as_echo "    ic->tme_m68k_ireg_memx${size} = ic->tme_m68k_ireg_uint${size}(ireg_du${reg_size_shift});"
-	$as_echo "  }"
-	$as_echo ""
-	$as_echo "  /* otherwise, the comparison failed: */"
-	$as_echo "  else {"
-	$as_echo ""
-	$as_echo "    /* write the effective address operand to the compare operand: */"
-	$as_echo "    ic->tme_m68k_ireg_uint${size}(ireg_dc${reg_size_shift}) = ic->tme_m68k_ireg_memx${size};"
-	$as_echo "  }"
-	$as_echo ""
-	$as_echo "  /* finish the read/modify/write cycle: */"
-	$as_echo "  tme_m68k_rmw_finish(ic,"
-	$as_echo "                      &rmw,"
-	$as_echo "                      (ic->tme_m68k_ireg_ccr & TME_M68K_FLAG_Z) != 0);"
-	$as_echo "  TME_M68K_INSN_OK;"
-	$as_echo "}"
+	AS_ECHO([""])
+	AS_ECHO(["    /* get this TLB entry: */"])
+	AS_ECHO(["    tlb = rmw.tme_m68k_rmw_tlbs[[0]];"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* this TLB entry must allow fast reading and fast writing"])
+	AS_ECHO(["       to the same memory: */"])
+	AS_ECHO(["    assert (tlb->tme_m68k_tlb_emulator_off_read != TME_EMULATOR_OFF_UNDEF"])
+	AS_ECHO(["            && tlb->tme_m68k_tlb_emulator_off_write == tlb->tme_m68k_tlb_emulator_off_read);"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* do the compare-and-exchange: */"])
+	AS_ECHO(["    value_mem ="])
+	AS_ECHO(["      tme_memory_atomic_cx${size}(((tme_shared tme_uint${size}_t *)"])
+	AS_ECHO(["                                   (tlb->tme_m68k_tlb_emulator_off_read"])
+	AS_ECHO(["                                    + ic->_tme_m68k_ea_address)),"])
+	AS_ECHO(["                                  value_dc,"])
+	AS_ECHO(["                                  value_du,"])
+	AS_ECHO(["                                  tlb->tme_m68k_tlb_bus_rwlock,"])
+	AS_ECHO(["                                  sizeof(tme_uint8_t));"])
+   	AS_ECHO_N(["    ic->tme_m68k_ireg_memx${size} = "])
+	if test ${size} != 8; then AS_ECHO_N(["tme_betoh_u${size}"]); fi
+	AS_ECHO(["(value_mem);"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* step the transfer count once for the read, and once for the write: */"])
+	AS_ECHO(["    TME_M68K_SEQUENCE_TRANSFER_STEP;"])
+	AS_ECHO(["    TME_M68K_SEQUENCE_TRANSFER_STEP;"])
+	AS_ECHO(["  }"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* compare the compare operand to the effective address operand: */"])
+	AS_ECHO(["  tme_m68k_cmp${size}(ic, &ic->tme_m68k_ireg_uint${size}(ireg_dc${reg_size_shift}), &ic->tme_m68k_ireg_memx${size});"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* if the comparison succeeded: */"])
+	AS_ECHO(["  if (ic->tme_m68k_ireg_ccr & TME_M68K_FLAG_Z) {"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* write the update operand to the effective address operand: */"])
+	AS_ECHO(["    ic->tme_m68k_ireg_memx${size} = ic->tme_m68k_ireg_uint${size}(ireg_du${reg_size_shift});"])
+	AS_ECHO(["  }"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* otherwise, the comparison failed: */"])
+	AS_ECHO(["  else {"])
+	AS_ECHO([""])
+	AS_ECHO(["    /* write the effective address operand to the compare operand: */"])
+	AS_ECHO(["    ic->tme_m68k_ireg_uint${size}(ireg_dc${reg_size_shift}) = ic->tme_m68k_ireg_memx${size};"])
+	AS_ECHO(["  }"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* finish the read/modify/write cycle: */"])
+	AS_ECHO(["  tme_m68k_rmw_finish(ic,"])
+	AS_ECHO(["                      &rmw,"])
+	AS_ECHO(["                      (ic->tme_m68k_ireg_ccr & TME_M68K_FLAG_Z) != 0);"])
+	AS_ECHO(["  TME_M68K_INSN_OK;"])
+	AS_ECHO(["}"])
     fi
 
     # cas2:
@@ -936,131 +936,131 @@ for size in 8 16 32; do
     if test $size != 8; then
 
 	if $header; then
-	    $as_echo "TME_M68K_INSN_DECL(tme_m68k_${name}${size});"
+	    AS_ECHO(["TME_M68K_INSN_DECL(tme_m68k_${name}${size});"])
 	else
-	    $as_echo ""
-	    $as_echo "/* ${name}${size}: */"
-	    $as_echo "TME_M68K_INSN(tme_m68k_${name}${size})"
-	    $as_echo "{"
-	    $as_echo "  struct tme_m68k_rmw rmw;"
-	    $as_echo "  int ireg_dcx, ireg_dux;"
-	    $as_echo "  int ireg_dcy, ireg_duy;"
-	    $as_echo "  const tme_uint16_t specopx = TME_M68K_INSN_SPECOP;"
-	    $as_echo "  const tme_uint16_t specopy = TME_M68K_INSN_OP0(tme_uint16_t);"
-	    $as_echo ""
-	    $as_echo "  /* start the read/modify/write cycle: */"
-	    $as_echo "  ic->_tme_m68k_ea_function_code = TME_M68K_FUNCTION_CODE_DATA(ic);"
-	    $as_echo "  rmw.tme_m68k_rmw_addresses[[0]] = ic->tme_m68k_ireg_uint32(TME_M68K_IREG_D0"
-	    $as_echo "                                                           + TME_FIELD_EXTRACTU(specopx, 12, 4));"
-	    $as_echo "  rmw.tme_m68k_rmw_addresses[[1]] = ic->tme_m68k_ireg_uint32(TME_M68K_IREG_D0"
-	    $as_echo "                                                           + TME_FIELD_EXTRACTU(specopy, 12, 4));"
-	    $as_echo "  rmw.tme_m68k_rmw_address_count = 2;"
-	    $as_echo "  rmw.tme_m68k_rmw_size = sizeof(tme_uint${size}_t);"
-	    $as_echo "  if (tme_m68k_rmw_start(ic,"
-	    $as_echo "                         &rmw)) {"
-	    $as_echo "    TME_M68K_INSN_OK;"
-	    $as_echo "  }"
-	    $as_echo ""
-	    $as_echo "  /* do the comparisons: */"
-	    $as_echo "  ireg_dcx = TME_M68K_IREG_D0 + TME_FIELD_EXTRACTU(specopx, 0, 3);"
-	    $as_echo "  ireg_dcy = TME_M68K_IREG_D0 + TME_FIELD_EXTRACTU(specopy, 0, 3);"
-	    $as_echo "  tme_m68k_cmp${size}(ic,"
-	    $as_echo "                 &ic->tme_m68k_ireg_uint${size}(ireg_dcx${reg_size_shift}),"
-	    $as_echo "                 &ic->tme_m68k_ireg_memx${size});"
-	    $as_echo "  if (ic->tme_m68k_ireg_ccr & TME_M68K_FLAG_Z) {"
-	    $as_echo "    tme_m68k_cmp${size}(ic,"
-	    $as_echo "                   &ic->tme_m68k_ireg_uint${size}(ireg_dcy${reg_size_shift}),"
-	    $as_echo "                   &ic->tme_m68k_ireg_memy${size});"
-	    $as_echo "  }"
-	    $as_echo ""
-	    $as_echo "  /* if the comparisons succeeded: */"
-	    $as_echo "  if (ic->tme_m68k_ireg_ccr & TME_M68K_FLAG_Z) {"
-	    $as_echo ""
-	    $as_echo "    /* write the update operands to the effective address operands: */"
-	    $as_echo "    ireg_dux = TME_M68K_IREG_D0 + TME_FIELD_EXTRACTU(specopx, 6, 3);"
-	    $as_echo "    ireg_duy = TME_M68K_IREG_D0 + TME_FIELD_EXTRACTU(specopy, 6, 3);"
-	    $as_echo "    ic->tme_m68k_ireg_memx${size} = ic->tme_m68k_ireg_uint${size}(ireg_dux${reg_size_shift});"
-	    $as_echo "    ic->tme_m68k_ireg_memy${size} = ic->tme_m68k_ireg_uint${size}(ireg_duy${reg_size_shift});"
-	    $as_echo "  }"
-	    $as_echo ""
-	    $as_echo "  /* otherwise, the comparisons failed: */"
-	    $as_echo "  else {"
-	    $as_echo ""
-	    $as_echo "    /* write the effective address operands to the compare operands."
-	    $as_echo "       \"If Dc1 and Dc2 specify the same data register and the comparison"
-	    $as_echo "        fails, memory operand 1 is stored in the data register.\" */"
-	    $as_echo "    ic->tme_m68k_ireg_uint${size}(ireg_dcy${reg_size_shift}) = ic->tme_m68k_ireg_memy${size};"
-	    $as_echo "    ic->tme_m68k_ireg_uint${size}(ireg_dcx${reg_size_shift}) = ic->tme_m68k_ireg_memx${size};"
-	    $as_echo "  }"
-	    $as_echo ""
-	    $as_echo "  /* finish the read/modify/write cycle: */"
-	    $as_echo "  tme_m68k_rmw_finish(ic,"
-	    $as_echo "                      &rmw,"
-	    $as_echo "                      (ic->tme_m68k_ireg_ccr & TME_M68K_FLAG_Z) != 0);"
-	    $as_echo "  TME_M68K_INSN_OK;"
-	    $as_echo "}"
+	    AS_ECHO([""])
+	    AS_ECHO(["/* ${name}${size}: */"])
+	    AS_ECHO(["TME_M68K_INSN(tme_m68k_${name}${size})"])
+	    AS_ECHO(["{"])
+	    AS_ECHO(["  struct tme_m68k_rmw rmw;"])
+	    AS_ECHO(["  int ireg_dcx, ireg_dux;"])
+	    AS_ECHO(["  int ireg_dcy, ireg_duy;"])
+	    AS_ECHO(["  const tme_uint16_t specopx = TME_M68K_INSN_SPECOP;"])
+	    AS_ECHO(["  const tme_uint16_t specopy = TME_M68K_INSN_OP0(tme_uint16_t);"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* start the read/modify/write cycle: */"])
+	    AS_ECHO(["  ic->_tme_m68k_ea_function_code = TME_M68K_FUNCTION_CODE_DATA(ic);"])
+	    AS_ECHO(["  rmw.tme_m68k_rmw_addresses[[0]] = ic->tme_m68k_ireg_uint32(TME_M68K_IREG_D0"])
+	    AS_ECHO(["                                                           + TME_FIELD_EXTRACTU(specopx, 12, 4));"])
+	    AS_ECHO(["  rmw.tme_m68k_rmw_addresses[[1]] = ic->tme_m68k_ireg_uint32(TME_M68K_IREG_D0"])
+	    AS_ECHO(["                                                           + TME_FIELD_EXTRACTU(specopy, 12, 4));"])
+	    AS_ECHO(["  rmw.tme_m68k_rmw_address_count = 2;"])
+	    AS_ECHO(["  rmw.tme_m68k_rmw_size = sizeof(tme_uint${size}_t);"])
+	    AS_ECHO(["  if (tme_m68k_rmw_start(ic,"])
+	    AS_ECHO(["                         &rmw)) {"])
+	    AS_ECHO(["    TME_M68K_INSN_OK;"])
+	    AS_ECHO(["  }"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* do the comparisons: */"])
+	    AS_ECHO(["  ireg_dcx = TME_M68K_IREG_D0 + TME_FIELD_EXTRACTU(specopx, 0, 3);"])
+	    AS_ECHO(["  ireg_dcy = TME_M68K_IREG_D0 + TME_FIELD_EXTRACTU(specopy, 0, 3);"])
+	    AS_ECHO(["  tme_m68k_cmp${size}(ic,"])
+	    AS_ECHO(["                 &ic->tme_m68k_ireg_uint${size}(ireg_dcx${reg_size_shift}),"])
+	    AS_ECHO(["                 &ic->tme_m68k_ireg_memx${size});"])
+	    AS_ECHO(["  if (ic->tme_m68k_ireg_ccr & TME_M68K_FLAG_Z) {"])
+	    AS_ECHO(["    tme_m68k_cmp${size}(ic,"])
+	    AS_ECHO(["                   &ic->tme_m68k_ireg_uint${size}(ireg_dcy${reg_size_shift}),"])
+	    AS_ECHO(["                   &ic->tme_m68k_ireg_memy${size});"])
+	    AS_ECHO(["  }"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* if the comparisons succeeded: */"])
+	    AS_ECHO(["  if (ic->tme_m68k_ireg_ccr & TME_M68K_FLAG_Z) {"])
+	    AS_ECHO([""])
+	    AS_ECHO(["    /* write the update operands to the effective address operands: */"])
+	    AS_ECHO(["    ireg_dux = TME_M68K_IREG_D0 + TME_FIELD_EXTRACTU(specopx, 6, 3);"])
+	    AS_ECHO(["    ireg_duy = TME_M68K_IREG_D0 + TME_FIELD_EXTRACTU(specopy, 6, 3);"])
+	    AS_ECHO(["    ic->tme_m68k_ireg_memx${size} = ic->tme_m68k_ireg_uint${size}(ireg_dux${reg_size_shift});"])
+	    AS_ECHO(["    ic->tme_m68k_ireg_memy${size} = ic->tme_m68k_ireg_uint${size}(ireg_duy${reg_size_shift});"])
+	    AS_ECHO(["  }"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* otherwise, the comparisons failed: */"])
+	    AS_ECHO(["  else {"])
+	    AS_ECHO([""])
+	    AS_ECHO(["    /* write the effective address operands to the compare operands."])
+	    AS_ECHO(["       \"If Dc1 and Dc2 specify the same data register and the comparison"])
+	    AS_ECHO(["        fails, memory operand 1 is stored in the data register.\" */"])
+	    AS_ECHO(["    ic->tme_m68k_ireg_uint${size}(ireg_dcy${reg_size_shift}) = ic->tme_m68k_ireg_memy${size};"])
+	    AS_ECHO(["    ic->tme_m68k_ireg_uint${size}(ireg_dcx${reg_size_shift}) = ic->tme_m68k_ireg_memx${size};"])
+	    AS_ECHO(["  }"])
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* finish the read/modify/write cycle: */"])
+	    AS_ECHO(["  tme_m68k_rmw_finish(ic,"])
+	    AS_ECHO(["                      &rmw,"])
+	    AS_ECHO(["                      (ic->tme_m68k_ireg_ccr & TME_M68K_FLAG_Z) != 0);"])
+	    AS_ECHO(["  TME_M68K_INSN_OK;"])
+	    AS_ECHO(["}"])
 	fi
     fi
 
     # moves:
     if $header; then
-	$as_echo "TME_M68K_INSN_DECL(tme_m68k_moves${size});"
+	AS_ECHO(["TME_M68K_INSN_DECL(tme_m68k_moves${size});"])
     else
-	$as_echo ""
-	$as_echo "/* moves${size}: */"
-	$as_echo "TME_M68K_INSN(tme_m68k_moves${size})"
-	$as_echo "{"
-	$as_echo "  int ireg;"
-	$as_echo "  tme_uint${size}_t ireg_value;"
-	$as_echo "  unsigned int ea_reg;"
-	$as_echo "  unsigned int increment;"
-	$as_echo "  TME_M68K_INSN_PRIV;"
-	$as_echo "  TME_M68K_INSN_CANFAULT;"
-	$as_echo "  ireg = TME_M68K_IREG_D0 + TME_FIELD_EXTRACTU(TME_M68K_INSN_SPECOP, 12, 4);"
-	$as_echo ""
-	$as_echo "  /* in case we're storing the same address register used in a"
-	$as_echo "     postincrement or predecrement EA, save the current value"
-	$as_echo "     of the register now: */"
-	$as_echo "  ireg_value = ic->tme_m68k_ireg_uint${size}(ireg${reg_size_shift});"
-	$as_echo ""
-	$as_echo "  /* we have to handle postincrement and predecrement ourselves: */"
-	$as_echo "  if (!TME_M68K_SEQUENCE_RESTARTING) {"
-	$as_echo "    ea_reg = TME_M68K_IREG_A0 + TME_FIELD_EXTRACTU(TME_M68K_INSN_OPCODE, 0, 3);"
-	$as_echo "    increment = TME_M68K_SIZE_${size};"
-	$as_echo "    if (increment == TME_M68K_SIZE_8 && ea_reg == TME_M68K_IREG_A7) {"
-	$as_echo "      increment = TME_M68K_SIZE_16;"
-	$as_echo "    }"
-	$as_echo "    switch (TME_FIELD_EXTRACTU(TME_M68K_INSN_OPCODE, 3, 3)) {"
-	$as_echo "    case 3: ic->tme_m68k_ireg_uint32(ea_reg) += increment; break;"
-	$as_echo "    case 4: ic->_tme_m68k_ea_address = (ic->tme_m68k_ireg_uint32(ea_reg) -= increment); break;"
-	$as_echo "    default: break;"
-	$as_echo "    }"
-	$as_echo "  }"
-	$as_echo ""
-	$as_echo "  if (TME_M68K_INSN_SPECOP & TME_BIT(11)) {"
-	$as_echo "    if (!TME_M68K_SEQUENCE_RESTARTING) {"
-	$as_echo "      ic->tme_m68k_ireg_memx${size} = ireg_value;"
-	$as_echo "      ic->_tme_m68k_ea_function_code = ic->tme_m68k_ireg_dfc;"
-	$as_echo "    }"
-	$as_echo "    tme_m68k_write_memx${size}(ic);"
-	$as_echo "  }"
-	$as_echo "  else {"
-	$as_echo "    if (!TME_M68K_SEQUENCE_RESTARTING) {"
-	$as_echo "      ic->_tme_m68k_ea_function_code = ic->tme_m68k_ireg_sfc;"
-	$as_echo "    }"
-	$as_echo "    tme_m68k_read_memx${size}(ic);"
+	AS_ECHO([""])
+	AS_ECHO(["/* moves${size}: */"])
+	AS_ECHO(["TME_M68K_INSN(tme_m68k_moves${size})"])
+	AS_ECHO(["{"])
+	AS_ECHO(["  int ireg;"])
+	AS_ECHO(["  tme_uint${size}_t ireg_value;"])
+	AS_ECHO(["  unsigned int ea_reg;"])
+	AS_ECHO(["  unsigned int increment;"])
+	AS_ECHO(["  TME_M68K_INSN_PRIV;"])
+	AS_ECHO(["  TME_M68K_INSN_CANFAULT;"])
+	AS_ECHO(["  ireg = TME_M68K_IREG_D0 + TME_FIELD_EXTRACTU(TME_M68K_INSN_SPECOP, 12, 4);"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* in case we're storing the same address register used in a"])
+	AS_ECHO(["     postincrement or predecrement EA, save the current value"])
+	AS_ECHO(["     of the register now: */"])
+	AS_ECHO(["  ireg_value = ic->tme_m68k_ireg_uint${size}(ireg${reg_size_shift});"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* we have to handle postincrement and predecrement ourselves: */"])
+	AS_ECHO(["  if (!TME_M68K_SEQUENCE_RESTARTING) {"])
+	AS_ECHO(["    ea_reg = TME_M68K_IREG_A0 + TME_FIELD_EXTRACTU(TME_M68K_INSN_OPCODE, 0, 3);"])
+	AS_ECHO(["    increment = TME_M68K_SIZE_${size};"])
+	AS_ECHO(["    if (increment == TME_M68K_SIZE_8 && ea_reg == TME_M68K_IREG_A7) {"])
+	AS_ECHO(["      increment = TME_M68K_SIZE_16;"])
+	AS_ECHO(["    }"])
+	AS_ECHO(["    switch (TME_FIELD_EXTRACTU(TME_M68K_INSN_OPCODE, 3, 3)) {"])
+	AS_ECHO(["    case 3: ic->tme_m68k_ireg_uint32(ea_reg) += increment; break;"])
+	AS_ECHO(["    case 4: ic->_tme_m68k_ea_address = (ic->tme_m68k_ireg_uint32(ea_reg) -= increment); break;"])
+	AS_ECHO(["    default: break;"])
+	AS_ECHO(["    }"])
+	AS_ECHO(["  }"])
+	AS_ECHO([""])
+	AS_ECHO(["  if (TME_M68K_INSN_SPECOP & TME_BIT(11)) {"])
+	AS_ECHO(["    if (!TME_M68K_SEQUENCE_RESTARTING) {"])
+	AS_ECHO(["      ic->tme_m68k_ireg_memx${size} = ireg_value;"])
+	AS_ECHO(["      ic->_tme_m68k_ea_function_code = ic->tme_m68k_ireg_dfc;"])
+	AS_ECHO(["    }"])
+	AS_ECHO(["    tme_m68k_write_memx${size}(ic);"])
+	AS_ECHO(["  }"])
+	AS_ECHO(["  else {"])
+	AS_ECHO(["    if (!TME_M68K_SEQUENCE_RESTARTING) {"])
+	AS_ECHO(["      ic->_tme_m68k_ea_function_code = ic->tme_m68k_ireg_sfc;"])
+	AS_ECHO(["    }"])
+	AS_ECHO(["    tme_m68k_read_memx${size}(ic);"])
 	if test ${size} != 32; then
-	    $as_echo "    if (ireg >= TME_M68K_IREG_A0) {"
-	    $as_echo "      ic->tme_m68k_ireg_uint32(ireg) = "
-	    $as_echo "        TME_EXT_S${size}_U32((tme_int${size}_t) ic->tme_m68k_ireg_memx${size});"
-	    $as_echo "    }"
-	    $as_echo "    else"
-	    $as_echo_n "  "
+	    AS_ECHO(["    if (ireg >= TME_M68K_IREG_A0) {"])
+	    AS_ECHO(["      ic->tme_m68k_ireg_uint32(ireg) = "])
+	    AS_ECHO(["        TME_EXT_S${size}_U32((tme_int${size}_t) ic->tme_m68k_ireg_memx${size});"])
+	    AS_ECHO(["    }"])
+	    AS_ECHO(["    else"])
+	    AS_ECHO_N(["  "])
 	fi
-	$as_echo "    ic->tme_m68k_ireg_uint${size}(ireg${reg_size_shift}) = ic->tme_m68k_ireg_memx${size};"
-	$as_echo "  }"
-	$as_echo "  TME_M68K_INSN_OK;"
-	$as_echo "}"
+	AS_ECHO(["    ic->tme_m68k_ireg_uint${size}(ireg${reg_size_shift}) = ic->tme_m68k_ireg_memx${size};"])
+	AS_ECHO(["  }"])
+	AS_ECHO(["  TME_M68K_INSN_OK;"])
+	AS_ECHO(["}"])
     fi
 done
 
@@ -1071,7 +1071,7 @@ for size in 8 16 32 any; do
 
     # permute on read or write:
     for name in read write; do
-	capname=`$as_echo $name | tr a-z A-Z`
+	capname=`AS_ECHO([$name | tr a-z A-Z`
 	if test $name = read; then 
 	    from="from"
 	else
@@ -1161,103 +1161,103 @@ for size in 8 16 32 any; do
 
 		# if we're making the header, just emit a declaration:
 		if $header; then
-		    $as_echo "${rval} tme_m68k_${action} _TME_P((struct tme_m68k *${args_proto}));"
+		    AS_ECHO(["${rval} tme_m68k_${action} _TME_P((struct tme_m68k *${args_proto}));"])
 		    continue
 		fi
 
 		# start the function:
-		$as_echo ""
-		$as_echo "/* this ${name}s a ${size}-bit ${what} value: */"
-		$as_echo "${rval}"
-		$as_echo "tme_m68k_${action}(struct tme_m68k *ic${args}) "
-		$as_echo "{"
+		AS_ECHO([""])
+		AS_ECHO(["/* this ${name}s a ${size}-bit ${what} value: */"])
+		AS_ECHO(["${rval}"])
+		AS_ECHO(["tme_m68k_${action}(struct tme_m68k *ic${args}) "])
+		AS_ECHO(["{"])
 
 		# our locals:
-		$as_echo "  tme_bus_context_t bus_context = ic->_tme_m68k_bus_context;"
-		$as_echo_n "  unsigned int function_code = "
+		AS_ECHO(["  tme_bus_context_t bus_context = ic->_tme_m68k_bus_context;"])
+		AS_ECHO_N(["  unsigned int function_code = "])
 		if test "x${fc}" != x; then
-		    $as_echo "${fc};"
+		    AS_ECHO(["${fc};"])
 		    fc="function_code"
 		    fcptr="&function_code"
 		else
-		    fc=`$as_echo ${fcptr} | sed -e 's,^&,,'`
-		    $as_echo "${fc};"
+		    fc=`AS_ECHO([${fcptr}]) | sed -e 's,^&,,'`
+		    AS_ECHO(["${fc};"])
 		fi
-		$as_echo_n "  tme_uint32_t linear_address${_first} = "
+		AS_ECHO_N(["  tme_uint32_t linear_address${_first} = "])
 		if test "x${addr}" != x; then
-		    $as_echo "${addr};"
+		    AS_ECHO(["${addr};"])
 		    addr="linear_address${_first}"
 		    addrptr="&linear_address${_first}"
 		else
-		    addr=`$as_echo ${addrptr} | sed -e 's,^&,,'`
-		    $as_echo "${addr};"
+		    addr=`AS_ECHO([${addrptr} | sed -e 's,^&,,'`
+		    AS_ECHO(["${addr};"])
 		fi
 		if test "x${count}" = x; then
 		    if test $size = any; then count=count; else count="sizeof(tme_uint${size}_t)"; fi
 		fi
 		if test x$_last != x; then
-		    $as_echo "  tme_uint32_t linear_address${_last} = linear_address_first + ${count} - 1;";
+		    AS_ECHO(["  tme_uint32_t linear_address${_last} = linear_address_first + ${count} - 1;";])
 		fi
-		$as_echo "  struct tme_m68k_tlb *tlb = ${tlb};"
+		AS_ECHO(["  struct tme_m68k_tlb *tlb = ${tlb};"])
 		if test $size != any; then
 		    memtype="tme_uint${size}_t"
-		    $as_echo "  ${memtype} mem_value;"
+		    AS_ECHO(["  ${memtype} mem_value;"])
 		    memtype="tme_shared ${memtype} *"
 		    if test $name = read; then memtype="const ${memtype}"; fi
-		    $as_echo "  ${memtype}mem;"
+		    AS_ECHO(["  ${memtype}mem;"])
 		fi
 		case "$what" in
 		inst)
-		    $as_echo "  unsigned int fetch_slow_next = ic->_tme_m68k_insn_fetch_slow_next;"
+		    AS_ECHO(["  unsigned int fetch_slow_next = ic->_tme_m68k_insn_fetch_slow_next;"])
 		    regptr="((tme_uint${size}_t *) (((tme_uint8_t *) &ic->_tme_m68k_insn_fetch_buffer[[0]]) + fetch_slow_next))"
 		    reg="*${regptr}"
 		    ;;
 		esac
 
 		# track statistics:
-		$as_echo ""
-		$as_echo "#ifdef _TME_M68K_STATS"
-		$as_echo "  ic->tme_m68k_stats.tme_m68k_stats_memory_total++;"
-		$as_echo "#endif /* _TME_M68K_STATS */"
+		AS_ECHO([""])
+		AS_ECHO(["#ifdef _TME_M68K_STATS"])
+		AS_ECHO(["  ic->tme_m68k_stats.tme_m68k_stats_memory_total++;"])
+		AS_ECHO(["#endif /* _TME_M68K_STATS */"])
 
 		# if this is a write, log the value written:
 		if test $name = write; then
-		    $as_echo ""
-		    $as_echo "  /* log the value written: */"
+		    AS_ECHO([""])
+		    AS_ECHO(["  /* log the value written: */"])
 		    if test $size != any; then
-			$as_echo "  tme_m68k_verify_mem${size}(ic, ${fc}, ${addr}, ${reg}, TME_BUS_CYCLE_WRITE);"
-			$as_echo "  tme_m68k_log(ic, 1000, TME_OK, "
-			$as_echo "               (TME_M68K_LOG_HANDLE(ic),"
-			$as_echo "                _(\"${action}\t%d:0x%08x:\t0x%0"`expr ${size} / 4`"x\"),"
-			$as_echo "                ${fc},"
-			$as_echo "                ${addr},"
-			$as_echo "                ${reg}));"
+			AS_ECHO(["  tme_m68k_verify_mem${size}(ic, ${fc}, ${addr}, ${reg}, TME_BUS_CYCLE_WRITE);"])
+			AS_ECHO(["  tme_m68k_log(ic, 1000, TME_OK, "])
+			AS_ECHO(["               (TME_M68K_LOG_HANDLE(ic),"])
+			AS_ECHO(["                _(\"${action}\t%d:0x%08x:\t0x%0"`expr ${size} / 4`"x\"),"])
+			AS_ECHO(["                ${fc},"])
+			AS_ECHO(["                ${addr},"])
+			AS_ECHO(["                ${reg}));"])
 		    else
-			$as_echo "  tme_m68k_verify_mem_any(ic, ${fc}, ${addr}, ${regptr}, ${count}, TME_BUS_CYCLE_WRITE);"
-			$as_echo "  tme_m68k_log_start(ic, 1000, TME_OK) {"
-			$as_echo "    unsigned int byte_i;"
-			$as_echo "    tme_log_part(TME_M68K_LOG_HANDLE(ic),"
-			$as_echo "                 _(\"${action} %d:0x%08x count %d:\"),"
-			$as_echo "                 ${fc},"
-			$as_echo "                 ${addr},"
-			$as_echo "                 ${count});"
-			$as_echo "    for (byte_i = 0; byte_i < count ; byte_i++) {"
-			$as_echo "      tme_log_part(TME_M68K_LOG_HANDLE(ic), \" 0x%02x\", (${regptr})[[byte_i]]);"
-			$as_echo "    }"
-			$as_echo "  } tme_m68k_log_finish(ic);"
+			AS_ECHO(["  tme_m68k_verify_mem_any(ic, ${fc}, ${addr}, ${regptr}, ${count}, TME_BUS_CYCLE_WRITE);"])
+			AS_ECHO(["  tme_m68k_log_start(ic, 1000, TME_OK) {"])
+			AS_ECHO(["    unsigned int byte_i;"])
+			AS_ECHO(["    tme_log_part(TME_M68K_LOG_HANDLE(ic),"])
+			AS_ECHO(["                 _(\"${action} %d:0x%08x count %d:\"),"])
+			AS_ECHO(["                 ${fc},"])
+			AS_ECHO(["                 ${addr},"])
+			AS_ECHO(["                 ${count});"])
+			AS_ECHO(["    for (byte_i = 0; byte_i < count ; byte_i++) {"])
+			AS_ECHO(["      tme_log_part(TME_M68K_LOG_HANDLE(ic), \" 0x%02x\", (${regptr})[[byte_i]]);"])
+			AS_ECHO(["    }"])
+			AS_ECHO(["  } tme_m68k_log_finish(ic);"])
 		    fi
 		fi
 
-		$as_echo ""
-		$as_echo "  /* busy this TLB entry: */"
-		$as_echo "  tme_m68k_tlb_busy(tlb);"
+		AS_ECHO([""])
+		AS_ECHO(["  /* busy this TLB entry: */"])
+		AS_ECHO(["  tme_m68k_tlb_busy(tlb);"])
 
 		# if this is an any-transfer:
 		#
 		if test $size = any; then
-		    $as_echo ""
-		    $as_echo "  /* call the full ${name} function: */"
-		    $as_echo "  tme_m68k_${name}(ic, tlb, ${fcptr}, ${addrptr}, ${regptr}, ${count}, TME_M68K_BUS_CYCLE_RAW);"
+		    AS_ECHO([""])
+		    AS_ECHO(["  /* call the full ${name} function: */"])
+		    AS_ECHO(["  tme_m68k_${name}(ic, tlb, ${fcptr}, ${addrptr}, ${regptr}, ${count}, TME_M68K_BUS_CYCLE_RAW);"])
 
 		# otherwise, this is not an any-transfer:
 		#
@@ -1268,175 +1268,175 @@ for size in 8 16 32 any; do
 		    i=
 		    case "$what" in
 		    inst)
-			$as_echo ""
-			$as_echo "  /* if this fetch was done by the fast executor: */"
-			$as_echo "  if (__tme_predict_true(fetch_slow_next < ic->_tme_m68k_insn_fetch_slow_count_fast)) {"
-			$as_echo ""
-			$as_echo "    /* the entire fetch must be in the instruction buffer, and"
-			$as_echo "       we must be restarting: */"
-			$as_echo "    assert ((fetch_slow_next + sizeof(tme_uint${size}_t))"
-			$as_echo "            <= ic->_tme_m68k_insn_fetch_slow_count_fast);"
-			$as_echo "    assert (TME_M68K_SEQUENCE_RESTARTING);"
-			$as_echo "    mem_value = tme_memory_read${size}(${regptr}, sizeof(tme_uint16_t));"
-			$as_echo "  }"
-			$as_echo ""
-			$as_echo "  /* otherwise, this fetch was not done by the fast executor: */"
-			$as_echo "  else {"
-			$as_echo ""
-			$as_echo "    /* if we're restarting, but the offset in the instruction buffer"
-			$as_echo "       to fetch into is at the instruction buffer total, this must be"
-			$as_echo "       a fake fault caused by the fast executor.  we confirm this by"
-			$as_echo "       checking that this transfer \"caused\" the fault, and that this"
-			$as_echo "       transfer will be the first slow one after any fast fetches."
-			$as_echo "       in this case, we can cancel the restart for now: */"
-			$as_echo "    if (TME_M68K_SEQUENCE_RESTARTING"
-			$as_echo "        && (fetch_slow_next"
-			$as_echo "            == ic->_tme_m68k_insn_fetch_slow_count_total)) {"
-			$as_echo "      assert ((ic->_tme_m68k_sequence._tme_m68k_sequence_transfer_next"
-			$as_echo "               == ic->_tme_m68k_sequence._tme_m68k_sequence_transfer_faulted)"
-			$as_echo "              && (fetch_slow_next"
-			$as_echo "                  == ic->_tme_m68k_insn_fetch_slow_count_fast));"
-			$as_echo "      ic->_tme_m68k_sequence._tme_m68k_sequence_transfer_faulted--;"
-			$as_echo "    }"
-			$as_echo ""
-			$as_echo "    /* if we're not restarting: */"
-			$as_echo "    if (!TME_M68K_SEQUENCE_RESTARTING) {"
-			$as_echo ""
-			$as_echo "      /* we advance the instruction buffer total *before* we do"
-			$as_echo "         what may be a slow fetch, because we may transfer a few"
-			$as_echo "         bytes and then fault.  without this, those few bytes"
-			$as_echo "         would not get saved in the exception stack frame and"
-			$as_echo "         restored later before the continuation of the fetch: */"
-			$as_echo "      ic->_tme_m68k_insn_fetch_slow_count_total += sizeof(tme_uint${size}_t);"
-			$as_echo "    }"
-			$as_echo ""
-			$as_echo "    /* make sure that if this is a new transfer or if this"
-			$as_echo "       transfer faulted, that we're fetching for the current"
-			$as_echo "       last positions in the instruction buffer: */"
-			$as_echo "    assert ((ic->_tme_m68k_sequence._tme_m68k_sequence_transfer_next"
-			$as_echo "             < ic->_tme_m68k_sequence._tme_m68k_sequence_transfer_faulted)"
-			$as_echo "            || ((fetch_slow_next + sizeof(tme_uint${size}_t))"
-			$as_echo "                == ic->_tme_m68k_insn_fetch_slow_count_total));"
+			AS_ECHO([""])
+			AS_ECHO(["  /* if this fetch was done by the fast executor: */"])
+			AS_ECHO(["  if (__tme_predict_true(fetch_slow_next < ic->_tme_m68k_insn_fetch_slow_count_fast)) {"])
+			AS_ECHO([""])
+			AS_ECHO(["    /* the entire fetch must be in the instruction buffer, and"])
+			AS_ECHO(["       we must be restarting: */"])
+			AS_ECHO(["    assert ((fetch_slow_next + sizeof(tme_uint${size}_t))"])
+			AS_ECHO(["            <= ic->_tme_m68k_insn_fetch_slow_count_fast);"])
+			AS_ECHO(["    assert (TME_M68K_SEQUENCE_RESTARTING);"])
+			AS_ECHO(["    mem_value = tme_memory_read${size}(${regptr}, sizeof(tme_uint16_t));"])
+			AS_ECHO(["  }"])
+			AS_ECHO([""])
+			AS_ECHO(["  /* otherwise, this fetch was not done by the fast executor: */"])
+			AS_ECHO(["  else {"])
+			AS_ECHO([""])
+			AS_ECHO(["    /* if we're restarting, but the offset in the instruction buffer"])
+			AS_ECHO(["       to fetch into is at the instruction buffer total, this must be"])
+			AS_ECHO(["       a fake fault caused by the fast executor.  we confirm this by"])
+			AS_ECHO(["       checking that this transfer \"caused\" the fault, and that this"])
+			AS_ECHO(["       transfer will be the first slow one after any fast fetches."])
+			AS_ECHO(["       in this case, we can cancel the restart for now: */"])
+			AS_ECHO(["    if (TME_M68K_SEQUENCE_RESTARTING"])
+			AS_ECHO(["        && (fetch_slow_next"])
+			AS_ECHO(["            == ic->_tme_m68k_insn_fetch_slow_count_total)) {"])
+			AS_ECHO(["      assert ((ic->_tme_m68k_sequence._tme_m68k_sequence_transfer_next"])
+			AS_ECHO(["               == ic->_tme_m68k_sequence._tme_m68k_sequence_transfer_faulted)"])
+			AS_ECHO(["              && (fetch_slow_next"])
+			AS_ECHO(["                  == ic->_tme_m68k_insn_fetch_slow_count_fast));"])
+			AS_ECHO(["      ic->_tme_m68k_sequence._tme_m68k_sequence_transfer_faulted--;"])
+			AS_ECHO(["    }"])
+			AS_ECHO([""])
+			AS_ECHO(["    /* if we're not restarting: */"])
+			AS_ECHO(["    if (!TME_M68K_SEQUENCE_RESTARTING) {"])
+			AS_ECHO([""])
+			AS_ECHO(["      /* we advance the instruction buffer total *before* we do"])
+			AS_ECHO(["         what may be a slow fetch, because we may transfer a few"])
+			AS_ECHO(["         bytes and then fault.  without this, those few bytes"])
+			AS_ECHO(["         would not get saved in the exception stack frame and"])
+			AS_ECHO(["         restored later before the continuation of the fetch: */"])
+			AS_ECHO(["      ic->_tme_m68k_insn_fetch_slow_count_total += sizeof(tme_uint${size}_t);"])
+			AS_ECHO(["    }"])
+			AS_ECHO([""])
+			AS_ECHO(["    /* make sure that if this is a new transfer or if this"])
+			AS_ECHO(["       transfer faulted, that we're fetching for the current"])
+			AS_ECHO(["       last positions in the instruction buffer: */"])
+			AS_ECHO(["    assert ((ic->_tme_m68k_sequence._tme_m68k_sequence_transfer_next"])
+			AS_ECHO(["             < ic->_tme_m68k_sequence._tme_m68k_sequence_transfer_faulted)"])
+			AS_ECHO(["            || ((fetch_slow_next + sizeof(tme_uint${size}_t))"])
+			AS_ECHO(["                == ic->_tme_m68k_insn_fetch_slow_count_total));"])
 			i="  "
 			;;
 		    esac
 
-		    $as_echo ""
-		    $as_echo "${i}  /* if we aren't restarting, and this address is properly aligned,"
-		    $as_echo "${i}     and this TLB entry covers the operand and allows fast ${name}s: */"
-		    $as_echo "${i}  if (__tme_predict_true(!TME_M68K_SEQUENCE_RESTARTING"
+		    AS_ECHO([""])
+		    AS_ECHO(["${i}  /* if we aren't restarting, and this address is properly aligned,"])
+		    AS_ECHO(["${i}     and this TLB entry covers the operand and allows fast ${name}s: */"])
+		    AS_ECHO(["${i}  if (__tme_predict_true(!TME_M68K_SEQUENCE_RESTARTING"])
 		    align_min="sizeof(tme_uint8_t)"
 		    if test $size != 8; then
-			$as_echo_n "${i}                         && ("
+			AS_ECHO_N(["${i}                         && ("])
 			if test $what = inst; then
 			    align_min="sizeof(tme_uint16_t)"
-			    $as_echo_n "(${align_min} - 1)"
+			    AS_ECHO_N(["(${align_min} - 1)"])
 			else
-			    $as_echo_n "ic->_tme_m68k_bus_16bit"
+			    AS_ECHO_N(["ic->_tme_m68k_bus_16bit"])
 			fi
-			$as_echo " & linear_address${_first}) == 0"
+			AS_ECHO([" & linear_address${_first}) == 0"])
 		    fi
-		    $as_echo "${i}                         && tme_m68k_tlb_is_valid(tlb)"
-		    $as_echo "${i}                         && tlb->tme_m68k_tlb_bus_context == bus_context"
-		    $as_echo "${i}                         && (tlb->tme_m68k_tlb_function_codes_mask"
-		    $as_echo "${i}                             & TME_BIT(function_code))"
-		    $as_echo "${i}                         && linear_address${_first} >= (tme_bus_addr32_t) tlb->tme_m68k_tlb_linear_first"
-		    $as_echo "${i}                         && linear_address${_last} <= (tme_bus_addr32_t) tlb->tme_m68k_tlb_linear_last"
-		    $as_echo "${i}                         && tlb->tme_m68k_tlb_emulator_off_${name} != TME_EMULATOR_OFF_UNDEF)) {"
+		    AS_ECHO(["${i}                         && tme_m68k_tlb_is_valid(tlb)"])
+		    AS_ECHO(["${i}                         && tlb->tme_m68k_tlb_bus_context == bus_context"])
+		    AS_ECHO(["${i}                         && (tlb->tme_m68k_tlb_function_codes_mask"])
+		    AS_ECHO(["${i}                             & TME_BIT(function_code))"])
+		    AS_ECHO(["${i}                         && linear_address${_first} >= (tme_bus_addr32_t) tlb->tme_m68k_tlb_linear_first"])
+		    AS_ECHO(["${i}                         && linear_address${_last} <= (tme_bus_addr32_t) tlb->tme_m68k_tlb_linear_last"])
+		    AS_ECHO(["${i}                         && tlb->tme_m68k_tlb_emulator_off_${name} != TME_EMULATOR_OFF_UNDEF)) {"])
 
-		    $as_echo ""
-		    $as_echo "${i}    /* make the emulator memory pointer: */"
-		    $as_echo "${i}    mem = (${memtype}) (tlb->tme_m68k_tlb_emulator_off_${name} + linear_address${_first});"
+		    AS_ECHO([""])
+		    AS_ECHO(["${i}    /* make the emulator memory pointer: */"])
+		    AS_ECHO(["${i}    mem = (${memtype}) (tlb->tme_m68k_tlb_emulator_off_${name} + linear_address${_first});"])
 
 		    if test $name = write; then
 			if test $size = 8; then
-			    $as_echo ""
-			    $as_echo "${i}    /* get the value to write: */"
-			    $as_echo "${i}    mem_value = ${reg};"
+			    AS_ECHO([""])
+			    AS_ECHO(["${i}    /* get the value to write: */"])
+			    AS_ECHO(["${i}    mem_value = ${reg};"])
 			else
-			    $as_echo ""
-			    $as_echo "${i}    /* get the value to write, in big-endian byte order: */"
-			    $as_echo "${i}    mem_value = tme_htobe_u${size}(${reg});"
+			    AS_ECHO([""])
+			    AS_ECHO(["${i}    /* get the value to write, in big-endian byte order: */"])
+			    AS_ECHO(["${i}    mem_value = tme_htobe_u${size}(${reg});"])
 			fi
 		    fi
 
-		    $as_echo ""
-		    $as_echo "${i}    /* do the ${size}-bit bus ${name}: */"
+		    AS_ECHO([""])
+		    AS_ECHO(["${i}    /* do the ${size}-bit bus ${name}: */"])
 		    if test $name = read; then
-			$as_echo_n "${i}    mem_value = tme_memory_bus_${name}${size}(mem"
+			AS_ECHO_N(["${i}    mem_value = tme_memory_bus_${name}${size}(mem"])
 		    else
-			$as_echo_n "${i}    tme_memory_bus_${name}${size}(mem, mem_value"
+			AS_ECHO_N(["${i}    tme_memory_bus_${name}${size}(mem, mem_value"])
 		    fi
-		    $as_echo ", tlb->tme_m68k_tlb_bus_rwlock, ${align_min}, sizeof(tme_uint32_t));"
+		    AS_ECHO([", tlb->tme_m68k_tlb_bus_rwlock, ${align_min}, sizeof(tme_uint32_t));"])
 
 		    if test $name = read; then
 			if test $what = inst; then
-			    $as_echo ""
-			    $as_echo "${i}    /* put the value read, in host byte order: */"
-			    $as_echo "${i}    mem_value = tme_betoh_u${size}(mem_value);"
-			    $as_echo "${i}    tme_memory_write${size}(${regptr}, mem_value, sizeof(tme_uint16_t));"
+			    AS_ECHO([""])
+			    AS_ECHO(["${i}    /* put the value read, in host byte order: */"])
+			    AS_ECHO(["${i}    mem_value = tme_betoh_u${size}(mem_value);"])
+			    AS_ECHO(["${i}    tme_memory_write${size}(${regptr}, mem_value, sizeof(tme_uint16_t));"])
 			elif test $size = 8; then
-			    $as_echo ""
-			    $as_echo "${i}    /* put the value read: */"
-			    $as_echo "${i}    ${reg} = mem_value;"
+			    AS_ECHO([""])
+			    AS_ECHO(["${i}    /* put the value read: */"])
+			    AS_ECHO(["${i}    ${reg} = mem_value;"])
 			else
-			    $as_echo ""
-			    $as_echo "${i}    /* put the value read, in host byte order: */"
-			    $as_echo "${i}    ${reg} = tme_betoh_u${size}(mem_value);"
+			    AS_ECHO([""])
+			    AS_ECHO(["${i}    /* put the value read, in host byte order: */"])
+			    AS_ECHO(["${i}    ${reg} = tme_betoh_u${size}(mem_value);"])
 			fi
 		    fi
 
-		    $as_echo ""
-		    $as_echo "${i}    /* step the transfer count: */"
-		    $as_echo "${i}    TME_M68K_SEQUENCE_TRANSFER_STEP;"
-		    $as_echo "${i}  }"
+		    AS_ECHO([""])
+		    AS_ECHO(["${i}    /* step the transfer count: */"])
+		    AS_ECHO(["${i}    TME_M68K_SEQUENCE_TRANSFER_STEP;"])
+		    AS_ECHO(["${i}  }"])
 
-		    $as_echo ""
-		    $as_echo "${i}  /* otherwise, do the bus cycles the slow way: */"
-		    $as_echo "${i}  else {"
-		    $as_echo "${i}    tme_m68k_${name}${size}(ic, tlb,"
-		    $as_echo "${i}                    ${fcptr},"
-		    $as_echo "${i}                    ${addrptr},"
-		    $as_echo "${i}                    ${regptr},"
-		    $as_echo "${i}                    ${flags});"
+		    AS_ECHO([""])
+		    AS_ECHO(["${i}  /* otherwise, do the bus cycles the slow way: */"])
+		    AS_ECHO(["${i}  else {"])
+		    AS_ECHO(["${i}    tme_m68k_${name}${size}(ic, tlb,"])
+		    AS_ECHO(["${i}                    ${fcptr},"])
+		    AS_ECHO(["${i}                    ${addrptr},"])
+		    AS_ECHO(["${i}                    ${regptr},"])
+		    AS_ECHO(["${i}                    ${flags});"])
 		    if test ${what} = inst; then
-			$as_echo "${i}    mem_value = tme_memory_read${size}(${regptr}, sizeof(tme_uint16_t));"
+			AS_ECHO(["${i}    mem_value = tme_memory_read${size}(${regptr}, sizeof(tme_uint16_t));"])
 		    fi
-		    $as_echo "${i}  }"
+		    AS_ECHO(["${i}  }"])
 		fi
 		if test "x${i}" != x; then
-		    $as_echo "  }"
+		    AS_ECHO(["  }"])
 		fi
 
-		$as_echo ""
-		$as_echo "  /* unbusy this TLB entry: */"
-		$as_echo "  tme_m68k_tlb_unbusy(tlb);"
+		AS_ECHO([""])
+		AS_ECHO(["  /* unbusy this TLB entry: */"])
+		AS_ECHO(["  tme_m68k_tlb_unbusy(tlb);"])
 		
 		# if this is a read, log the value read:
 		if test $name = read; then
-		    $as_echo ""
-		    $as_echo "  /* log the value read: */"
-		    if test $size != any; then
-			$as_echo "  tme_m68k_verify_mem${size}(ic, ${fc}, ${addr}, ${reg}, TME_BUS_CYCLE_READ);"
-			$as_echo "  tme_m68k_log(ic, 1000, TME_OK,"
-			$as_echo "               (TME_M68K_LOG_HANDLE(ic),"
-			$as_echo "                _(\"${action}\t%d:0x%08x:\t0x%0"`expr ${size} / 4`"x\"),"
-			$as_echo "                ${fc},"
-			$as_echo "                ${addr},"
-			$as_echo "                ${reg}));"
+		    AS_ECHO([""])
+		    AS_ECHO(["  /* log the value read: */"])
+		    if test $size != any; then])
+			AS_ECHO(["  tme_m68k_verify_mem${size}(ic, ${fc}, ${addr}, ${reg}, TME_BUS_CYCLE_READ);"])
+			AS_ECHO(["  tme_m68k_log(ic, 1000, TME_OK,"])
+			AS_ECHO(["               (TME_M68K_LOG_HANDLE(ic),"])
+			AS_ECHO(["                _(\"${action}\t%d:0x%08x:\t0x%0"`expr ${size} / 4`"x\"),"])
+			AS_ECHO(["                ${fc},"])
+			AS_ECHO(["                ${addr},"])
+			AS_ECHO(["                ${reg}));"])
 		    else
-			$as_echo "  tme_m68k_verify_mem_any(ic, ${fc}, ${addr}, ${regptr}, ${count}, TME_BUS_CYCLE_READ);"
-			$as_echo "  tme_m68k_log_start(ic, 1000, TME_OK) {"
-			$as_echo "    unsigned int byte_i;"
-			$as_echo "    tme_log_part(TME_M68K_LOG_HANDLE(ic),"
-			$as_echo "                 _(\"${action} %d:0x%08x count %d:\"),"
-			$as_echo "                 ${fc},"
-			$as_echo "                 ${addr},"
-			$as_echo "                 ${count});"
-			$as_echo "    for (byte_i = 0; byte_i < count ; byte_i++) {"
-			$as_echo "      tme_log_part(TME_M68K_LOG_HANDLE(ic), \" 0x%02x\", (${regptr})[[byte_i]]);"
-			$as_echo "    }"
-			$as_echo "  } tme_m68k_log_finish(ic);"
+			AS_ECHO(["  tme_m68k_verify_mem_any(ic, ${fc}, ${addr}, ${regptr}, ${count}, TME_BUS_CYCLE_READ);"])
+			AS_ECHO(["  tme_m68k_log_start(ic, 1000, TME_OK) {"])
+			AS_ECHO(["    unsigned int byte_i;"])
+			AS_ECHO(["    tme_log_part(TME_M68K_LOG_HANDLE(ic),"])
+			AS_ECHO(["                 _(\"${action} %d:0x%08x count %d:\"),"])
+			AS_ECHO(["                 ${fc},"])
+			AS_ECHO(["                 ${addr},"])
+			AS_ECHO(["                 ${count});"])
+			AS_ECHO(["    for (byte_i = 0; byte_i < count ; byte_i++) {"])
+			AS_ECHO(["      tme_log_part(TME_M68K_LOG_HANDLE(ic), \" 0x%02x\", (${regptr})[[byte_i]]);"])
+			AS_ECHO(["    }"])
+			AS_ECHO(["  } tme_m68k_log_finish(ic);"])
 		    fi
 		fi
 
@@ -1444,22 +1444,22 @@ for size in 8 16 32 any; do
 		case "$what" in
 		stack)
 		    if test $name = read; then dir="+"; else dir="-"; fi
-		    $as_echo "  if (!TME_M68K_SEQUENCE_RESTARTING) {"
-		    $as_echo "    ic->tme_m68k_ireg_a7 ${dir}= sizeof(tme_uint${size}_t);"
-		    $as_echo "  }"
+		    AS_ECHO(["  if (!TME_M68K_SEQUENCE_RESTARTING) {"])
+		    AS_ECHO(["    ic->tme_m68k_ireg_a7 ${dir}= sizeof(tme_uint${size}_t);"])
+		    AS_ECHO(["  }"])
 		    ;;
 		inst)
-		    $as_echo ""
-		    $as_echo "  /* advance the offset in the instruction buffer for the next slow fetch: */"
-		    $as_echo "  fetch_slow_next += sizeof(tme_uint${size}_t);"
-		    $as_echo "  ic->_tme_m68k_insn_fetch_slow_next = fetch_slow_next;"
-		    $as_echo ""
-		    $as_echo "  /* return the fetched value: */"
-		    $as_echo "  return(mem_value);"
+		    AS_ECHO([""])
+		    AS_ECHO(["  /* advance the offset in the instruction buffer for the next slow fetch: */"])
+		    AS_ECHO(["  fetch_slow_next += sizeof(tme_uint${size}_t);"])
+		    AS_ECHO(["  ic->_tme_m68k_insn_fetch_slow_next = fetch_slow_next;"])
+		    AS_ECHO([""])
+		    AS_ECHO(["  /* return the fetched value: */"])
+		    AS_ECHO(["  return(mem_value);"])
 		    ;;
 		esac
 
-		$as_echo "}"
+		AS_ECHO(["}"])
 	    :
 	done
 
@@ -1468,359 +1468,359 @@ for size in 8 16 32 any; do
 
 	    # if we're making the header, emit a macro:
 	    if $header; then
-		$as_echo "#define tme_m68k_${name}${size}(ic, t, fc, la, _v, f) \\"
-		$as_echo "  tme_m68k_${name}(ic, t, fc, la, (tme_uint8_t *) (_v), sizeof(tme_uint${size}_t), f)"
+		AS_ECHO(["#define tme_m68k_${name}${size}(ic, t, fc, la, _v, f) \\"])
+		AS_ECHO(["  tme_m68k_${name}(ic, t, fc, la, (tme_uint8_t *) (_v), sizeof(tme_uint${size}_t), f)"])
 	    fi
 	else
 
 	    # if we're making the header, just emit a declaration:
 	    if $header; then
-		$as_echo "void tme_m68k_${name} _TME_P((struct tme_m68k *, struct tme_m68k_tlb *, unsigned int *, tme_uint32_t *, tme_uint8_t *, unsigned int, unsigned int));"
+		AS_ECHO(["void tme_m68k_${name} _TME_P((struct tme_m68k *, struct tme_m68k_tlb *, unsigned int *, tme_uint32_t *, tme_uint8_t *, unsigned int, unsigned int));"])
 		continue
 	    fi
 
-	    $as_echo ""
-	    $as_echo "/* this ${name}s a region of address space using actual bus cycles: */"
-	    $as_echo "void"
-	    $as_echo "tme_m68k_${name}(struct tme_m68k *ic, "
-	    $as_echo "              struct tme_m68k_tlb *tlb,"
-	    $as_echo "              unsigned int *_function_code, "
-	    $as_echo "              tme_uint32_t *_linear_address, "
-	    $as_echo "              tme_uint8_t *reg,"
-	    $as_echo "              unsigned int reg_size,"
-	    $as_echo "              unsigned int flags)"
-	    $as_echo "{"
+	    AS_ECHO([""])
+	    AS_ECHO(["/* this ${name}s a region of address space using actual bus cycles: */"])
+	    AS_ECHO(["void"])
+	    AS_ECHO(["tme_m68k_${name}(struct tme_m68k *ic, "])
+	    AS_ECHO(["              struct tme_m68k_tlb *tlb,"])
+	    AS_ECHO(["              unsigned int *_function_code, "])
+	    AS_ECHO(["              tme_uint32_t *_linear_address, "])
+	    AS_ECHO(["              tme_uint8_t *reg,"])
+	    AS_ECHO(["              unsigned int reg_size,"])
+	    AS_ECHO(["              unsigned int flags)"])
+	    AS_ECHO(["{"])
 
 	    # our locals:
-	    $as_echo "  unsigned int function_code;"
-	    $as_echo "  tme_uint32_t linear_address;"
-	    $as_echo "  tme_bus_addr_t physical_address;"
-	    $as_echo "  int shift;"
-	    $as_echo "  struct tme_bus_cycle cycle;"
-	    $as_echo "  unsigned int transferred, resid, cycle_size;"
-	    $as_echo "  int exception;"
-	    $as_echo "  int err;"
-	    $as_echo "  tme_uint8_t *reg_p;"
-	    $as_echo "  unsigned int buffer_i;"
-	    $as_echo "  tme_uint8_t reg_buffer[[sizeof(tme_uint32_t) * 2]];"
+	    AS_ECHO(["  unsigned int function_code;"])
+	    AS_ECHO(["  tme_uint32_t linear_address;"])
+	    AS_ECHO(["  tme_bus_addr_t physical_address;"])
+	    AS_ECHO(["  int shift;"])
+	    AS_ECHO(["  struct tme_bus_cycle cycle;"])
+	    AS_ECHO(["  unsigned int transferred, resid, cycle_size;"])
+	    AS_ECHO(["  int exception;"])
+	    AS_ECHO(["  int err;"])
+	    AS_ECHO(["  tme_uint8_t *reg_p;"])
+	    AS_ECHO(["  unsigned int buffer_i;"])
+	    AS_ECHO(["  tme_uint8_t reg_buffer[[sizeof(tme_uint32_t) * 2]];"])
 	    if test ${name} = read; then name_const_mem="const "; else name_const_mem= ; fi
-	    $as_echo "  ${name_const_mem}tme_shared tme_uint8_t *mem;"
+	    AS_ECHO(["  ${name_const_mem}tme_shared tme_uint8_t *mem;"])
 
-	    $as_echo ""
-	    $as_echo "  /* if we're not restarting, everything is fresh: */"
-	    $as_echo "  if (!TME_M68K_SEQUENCE_RESTARTING) {"
-	    $as_echo "    function_code = *_function_code;"
-	    $as_echo "    linear_address = *_linear_address;"
-	    $as_echo "    transferred = 0;"
-	    $as_echo "  }"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* if we're not restarting, everything is fresh: */"])
+	    AS_ECHO(["  if (!TME_M68K_SEQUENCE_RESTARTING) {"])
+	    AS_ECHO(["    function_code = *_function_code;"])
+	    AS_ECHO(["    linear_address = *_linear_address;"])
+	    AS_ECHO(["    transferred = 0;"])
+	    AS_ECHO(["  }"])
 
-	    $as_echo ""
-	    $as_echo "  /* otherwise, if this is the transfer that faulted, restore"
-	    $as_echo "     our state to the cycle that faulted, then take into account"
-	    $as_echo "     any data provided by a software rerun of the faulted cycle: */"
-	    $as_echo "  else if (ic->_tme_m68k_sequence._tme_m68k_sequence_transfer_faulted"
-	    $as_echo "           == ic->_tme_m68k_sequence._tme_m68k_sequence_transfer_next) {"
-	    $as_echo "    function_code = *_function_code = ic->_tme_m68k_group0_function_code;"
-	    $as_echo "    linear_address = ic->_tme_m68k_group0_address;"
-	    $as_echo "    transferred = ic->_tme_m68k_sequence._tme_m68k_sequence_transfer_faulted_after;"
-	    $as_echo "    if (transferred >= reg_size) abort();"
-	    $as_echo "    *_linear_address = linear_address - transferred;"
-	    $as_echo "    resid = reg_size - transferred;"
-	    $as_echo "    if (ic->_tme_m68k_group0_buffer_${name}_size > resid) abort();"
-	    $as_echo "    if (ic->_tme_m68k_group0_buffer_${name}_softrr > resid) abort();"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* otherwise, if this is the transfer that faulted, restore"])
+	    AS_ECHO(["     our state to the cycle that faulted, then take into account"])
+	    AS_ECHO(["     any data provided by a software rerun of the faulted cycle: */"])
+	    AS_ECHO(["  else if (ic->_tme_m68k_sequence._tme_m68k_sequence_transfer_faulted"])
+	    AS_ECHO(["           == ic->_tme_m68k_sequence._tme_m68k_sequence_transfer_next) {"])
+	    AS_ECHO(["    function_code = *_function_code = ic->_tme_m68k_group0_function_code;"])
+	    AS_ECHO(["    linear_address = ic->_tme_m68k_group0_address;"])
+	    AS_ECHO(["    transferred = ic->_tme_m68k_sequence._tme_m68k_sequence_transfer_faulted_after;"])
+	    AS_ECHO(["    if (transferred >= reg_size) abort();"])
+	    AS_ECHO(["    *_linear_address = linear_address - transferred;"])
+	    AS_ECHO(["    resid = reg_size - transferred;"])
+	    AS_ECHO(["    if (ic->_tme_m68k_group0_buffer_${name}_size > resid) abort();"])
+	    AS_ECHO(["    if (ic->_tme_m68k_group0_buffer_${name}_softrr > resid) abort();"])
 	    if test $name = read; then cmp=">"; else cmp="=="; fi
-	    $as_echo "    if (ic->_tme_m68k_group0_buffer_${name}_softrr ${cmp} 0) {"
-	    $as_echo "#ifdef WORDS_BIGENDIAN"
-	    $as_echo "      memcpy(reg + transferred, "
-	    $as_echo "             ic->_tme_m68k_group0_buffer_${name},"
-	    $as_echo "             ic->_tme_m68k_group0_buffer_${name}_size);"
-	    $as_echo "#else  /* !WORDS_BIGENDIAN */"
-	    $as_echo "      reg_p = (reg + reg_size - 1) - transferred;"
-	    $as_echo "      for (buffer_i = 0;"
-	    $as_echo "           buffer_i < ic->_tme_m68k_group0_buffer_${name}_size;"
-	    $as_echo "           buffer_i++) {"
-	    $as_echo "        *(reg_p--) = ic->_tme_m68k_group0_buffer_${name}[[buffer_i]];"
-	    $as_echo "      }"
-	    $as_echo "#endif /* !WORDS_BIGENDIAN */"
-	    $as_echo "    }"
-	    $as_echo "    transferred += ic->_tme_m68k_group0_buffer_${name}_softrr;"
-	    $as_echo "  }"
+	    AS_ECHO(["    if (ic->_tme_m68k_group0_buffer_${name}_softrr ${cmp} 0) {"])
+	    AS_ECHO(["#ifdef WORDS_BIGENDIAN"])
+	    AS_ECHO(["      memcpy(reg + transferred, "])
+	    AS_ECHO(["             ic->_tme_m68k_group0_buffer_${name},"])
+	    AS_ECHO(["             ic->_tme_m68k_group0_buffer_${name}_size);"])
+	    AS_ECHO(["#else  /* !WORDS_BIGENDIAN */"])
+	    AS_ECHO(["      reg_p = (reg + reg_size - 1) - transferred;"])
+	    AS_ECHO(["      for (buffer_i = 0;"])
+	    AS_ECHO(["           buffer_i < ic->_tme_m68k_group0_buffer_${name}_size;"])
+	    AS_ECHO(["           buffer_i++) {"])
+	    AS_ECHO(["        *(reg_p--) = ic->_tme_m68k_group0_buffer_${name}[[buffer_i]];"])
+	    AS_ECHO(["      }"])
+	    AS_ECHO(["#endif /* !WORDS_BIGENDIAN */"])
+	    AS_ECHO(["    }"])
+	    AS_ECHO(["    transferred += ic->_tme_m68k_group0_buffer_${name}_softrr;"])
+	    AS_ECHO(["  }"])
 
-	    $as_echo ""
-	    $as_echo "  /* otherwise, a later transfer has faulted.  just step the"
-	    $as_echo "     transfer number and return: */"
-	    $as_echo "  else {"
-	    $as_echo "    TME_M68K_SEQUENCE_TRANSFER_STEP;"
-	    $as_echo "    return;"
-	    $as_echo "  }"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* otherwise, a later transfer has faulted.  just step the"])
+	    AS_ECHO(["     transfer number and return: */"])
+	    AS_ECHO(["  else {"])
+	    AS_ECHO(["    TME_M68K_SEQUENCE_TRANSFER_STEP;"])
+	    AS_ECHO(["    return;"])
+	    AS_ECHO(["  }"])
 
-	    $as_echo ""
-	    $as_echo "  /* do as many bus cycles as needed to complete the transfer: */"
-	    $as_echo "  exception = TME_M68K_EXCEPTION_NONE;"
-	    $as_echo "  cycle_size = 0;"
-	    $as_echo "  for(; transferred < reg_size; ) {"
-	    $as_echo "    resid = reg_size - transferred;"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* do as many bus cycles as needed to complete the transfer: */"])
+	    AS_ECHO(["  exception = TME_M68K_EXCEPTION_NONE;"])
+	    AS_ECHO(["  cycle_size = 0;"])
+	    AS_ECHO(["  for(; transferred < reg_size; ) {"])
+	    AS_ECHO(["    resid = reg_size - transferred;"])
 
-	    $as_echo ""
-	    $as_echo "    /* start the bus cycle structure: */"
-	    $as_echo "    cycle.tme_bus_cycle_type = TME_BUS_CYCLE_${capname};"
-	    $as_echo "    if (TME_ENDIAN_NATIVE == TME_ENDIAN_BIG"
-	    $as_echo "        || (flags & TME_M68K_BUS_CYCLE_RAW)) {"
-	    $as_echo "      cycle.tme_bus_cycle_buffer = reg + transferred;"
-	    $as_echo "      cycle.tme_bus_cycle_buffer_increment = 1;"
-	    $as_echo "    }"
-	    $as_echo "    else {"
-	    $as_echo "      cycle.tme_bus_cycle_buffer = reg + reg_size - (1 + transferred);"
-	    $as_echo "      cycle.tme_bus_cycle_buffer_increment = -1;"
-	    $as_echo "    }"
+	    AS_ECHO([""])
+	    AS_ECHO(["    /* start the bus cycle structure: */"])
+	    AS_ECHO(["    cycle.tme_bus_cycle_type = TME_BUS_CYCLE_${capname};"])
+	    AS_ECHO(["    if (TME_ENDIAN_NATIVE == TME_ENDIAN_BIG"])
+	    AS_ECHO(["        || (flags & TME_M68K_BUS_CYCLE_RAW)) {"])
+	    AS_ECHO(["      cycle.tme_bus_cycle_buffer = reg + transferred;"])
+	    AS_ECHO(["      cycle.tme_bus_cycle_buffer_increment = 1;"])
+	    AS_ECHO(["    }"])
+	    AS_ECHO(["    else {"])
+	    AS_ECHO(["      cycle.tme_bus_cycle_buffer = reg + reg_size - (1 + transferred);"])
+	    AS_ECHO(["      cycle.tme_bus_cycle_buffer_increment = -1;"])
+	    AS_ECHO(["    }"])
 
-	    $as_echo ""
-	    $as_echo "    /* if we're emulating a CPU with a 16-bit bus interface: */"
-	    $as_echo "    if (ic->_tme_m68k_bus_16bit) {"
-	    $as_echo ""
-	    $as_echo "      /* if we're trying to transfer a non-power-of-two"
-	    $as_echo "         number of bytes, either the CPU is broken (no"
-	    $as_echo "         instructions ever transfer a non-power-of-two"
-	    $as_echo "         number of bytes), or this function allowed an"
-	    $as_echo "         unaligned transfer: */"
-	    $as_echo "      assert((resid & (resid - 1)) == 0"
-	    $as_echo "             || (flags & TME_M68K_BUS_CYCLE_RAW));"
-	    $as_echo ""
-	    $as_echo "      /* only byte transfers can be unaligned: */"
-	    $as_echo "      if (resid > sizeof(tme_uint8_t)"
-	    $as_echo "          && (linear_address & 1)) {"
-	    $as_echo "          exception = TME_M68K_EXCEPTION_AERR;"
-	    $as_echo "          break;"
-	    $as_echo "      }"
-	    $as_echo ""
-	    $as_echo "      /* set the bus-size specific parts of the bus cycle structure: */"
-	    $as_echo "      cycle_size = TME_MIN(resid, sizeof(tme_uint16_t));"
-	    $as_echo "      cycle.tme_bus_cycle_size = cycle_size;"
-	    $as_echo "      cycle.tme_bus_cycle_port = TME_BUS_CYCLE_PORT(0, TME_BUS16_LOG2);"
-	    $as_echo "      cycle.tme_bus_cycle_lane_routing = "
-	    $as_echo "        &tme_m68k_router_16[[TME_M68K_BUS_ROUTER_INDEX(TME_BUS16_LOG2, cycle_size, linear_address)]];"
-	    $as_echo "    }"
-	    $as_echo ""
-	    $as_echo "    /* otherwise we're emulating a CPU with a 32-bit bus interface: */"
-	    $as_echo "    else {"
+	    AS_ECHO([""])
+	    AS_ECHO(["    /* if we're emulating a CPU with a 16-bit bus interface: */"])
+	    AS_ECHO(["    if (ic->_tme_m68k_bus_16bit) {"])
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* if we're trying to transfer a non-power-of-two"])
+	    AS_ECHO(["         number of bytes, either the CPU is broken (no"])
+	    AS_ECHO(["         instructions ever transfer a non-power-of-two"])
+	    AS_ECHO(["         number of bytes), or this function allowed an"])
+	    AS_ECHO(["         unaligned transfer: */"])
+	    AS_ECHO(["      assert((resid & (resid - 1)) == 0"])
+	    AS_ECHO(["             || (flags & TME_M68K_BUS_CYCLE_RAW));"])
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* only byte transfers can be unaligned: */"])
+	    AS_ECHO(["      if (resid > sizeof(tme_uint8_t)"])
+	    AS_ECHO(["          && (linear_address & 1)) {"])
+	    AS_ECHO(["          exception = TME_M68K_EXCEPTION_AERR;"])
+	    AS_ECHO(["          break;"])
+	    AS_ECHO(["      }"])
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* set the bus-size specific parts of the bus cycle structure: */"])
+	    AS_ECHO(["      cycle_size = TME_MIN(resid, sizeof(tme_uint16_t));"])
+	    AS_ECHO(["      cycle.tme_bus_cycle_size = cycle_size;"])
+	    AS_ECHO(["      cycle.tme_bus_cycle_port = TME_BUS_CYCLE_PORT(0, TME_BUS16_LOG2);"])
+	    AS_ECHO(["      cycle.tme_bus_cycle_lane_routing = "])
+	    AS_ECHO(["        &tme_m68k_router_16[[TME_M68K_BUS_ROUTER_INDEX(TME_BUS16_LOG2, cycle_size, linear_address)]];"])
+	    AS_ECHO(["    }"])
+	    AS_ECHO([""])
+	    AS_ECHO(["    /* otherwise we're emulating a CPU with a 32-bit bus interface: */"])
+	    AS_ECHO(["    else {"])
 	    if test $name = read; then
-		$as_echo ""
-		$as_echo "      /* an instruction fetch must be aligned: */"
-		$as_echo "      if (flags & TME_M68K_BUS_CYCLE_FETCH) {"
-		$as_echo "        if (linear_address & 1) {"
-		$as_echo "          exception = TME_M68K_EXCEPTION_AERR;"
-		$as_echo "          break;"
-		$as_echo "        }"
-		$as_echo "        assert(!(resid & 1));"
-		$as_echo "      }"
+		AS_ECHO([""])
+		AS_ECHO(["      /* an instruction fetch must be aligned: */"])
+		AS_ECHO(["      if (flags & TME_M68K_BUS_CYCLE_FETCH) {"])
+		AS_ECHO(["        if (linear_address & 1) {"])
+		AS_ECHO(["          exception = TME_M68K_EXCEPTION_AERR;"])
+		AS_ECHO(["          break;"])
+		AS_ECHO(["        }"])
+		AS_ECHO(["        assert(!(resid & 1));"])
+		AS_ECHO(["      }"])
 	    fi
-	    $as_echo ""
-	    $as_echo "      /* set the bus-size specific parts of the bus cycle structure: */"
-	    $as_echo "      cycle_size = TME_MIN(resid, sizeof(tme_uint32_t) - (linear_address & (sizeof(tme_uint32_t) - 1)));"
-	    $as_echo "      cycle.tme_bus_cycle_size = cycle_size;"
-	    $as_echo "      cycle.tme_bus_cycle_port = TME_BUS_CYCLE_PORT(0, TME_BUS32_LOG2);"
-	    $as_echo "      cycle.tme_bus_cycle_lane_routing = "
-	    $as_echo "        &tme_m68k_router_32[[TME_M68K_BUS_ROUTER_INDEX(TME_BUS32_LOG2, cycle_size, linear_address)]];"
-	    $as_echo "    }"
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* set the bus-size specific parts of the bus cycle structure: */"])
+	    AS_ECHO(["      cycle_size = TME_MIN(resid, sizeof(tme_uint32_t) - (linear_address & (sizeof(tme_uint32_t) - 1)));"])
+	    AS_ECHO(["      cycle.tme_bus_cycle_size = cycle_size;"])
+	    AS_ECHO(["      cycle.tme_bus_cycle_port = TME_BUS_CYCLE_PORT(0, TME_BUS32_LOG2);"])
+	    AS_ECHO(["      cycle.tme_bus_cycle_lane_routing = "])
+	    AS_ECHO(["        &tme_m68k_router_32[[TME_M68K_BUS_ROUTER_INDEX(TME_BUS32_LOG2, cycle_size, linear_address)]];"])
+	    AS_ECHO(["    }"])
 	
-	    $as_echo ""
-	    $as_echo "    /* loop while this TLB entry is invalid or does not apply: */"
-	    $as_echo "    for (; __tme_predict_false(tme_m68k_tlb_is_invalid(tlb)"
-	    $as_echo "                               || tlb->tme_m68k_tlb_bus_context != ic->_tme_m68k_bus_context"
-	    $as_echo "                               || (tlb->tme_m68k_tlb_function_codes_mask & TME_BIT(function_code)) == 0"
-	    $as_echo "                               || linear_address < (tme_bus_addr32_t) tlb->tme_m68k_tlb_linear_first"
-	    $as_echo "                               || linear_address > (tme_bus_addr32_t) tlb->tme_m68k_tlb_linear_last"
-	    $as_echo "                               || (tlb->tme_m68k_tlb_emulator_off_${name} == TME_EMULATOR_OFF_UNDEF"
-	    $as_echo "                                   && (tlb->tme_m68k_tlb_cycles_ok & TME_BUS_CYCLE_${capname}) == 0)); ) {"
-	    $as_echo ""
-	    $as_echo "      /* this must not be part of a read/modify/write cycle: */"
-	    $as_echo "      assert(!(flags & TME_M68K_BUS_CYCLE_RMW));"
-	    $as_echo ""
-	    $as_echo "      /* fill this TLB entry: */"
-	    $as_echo "      tme_m68k_tlb_fill(ic, tlb,"
-	    $as_echo "                        function_code,"
-	    $as_echo "                        linear_address,"
-	    $as_echo "                        TME_BUS_CYCLE_${capname});"
-	    $as_echo "    }"
-	    $as_echo ""
-	    $as_echo "    /* if this TLB entry allows for fast ${name}s: */"
-	    $as_echo "    mem = tlb->tme_m68k_tlb_emulator_off_${name};"
-	    $as_echo "    if (__tme_predict_true(mem != TME_EMULATOR_OFF_UNDEF)) {"
-	    $as_echo ""
-	    $as_echo "      /* make the emulator memory pointer: */"
-	    $as_echo "      mem += linear_address;"
-	    $as_echo ""
-	    $as_echo "      /* limit the cycle size to addresses covered by the TLB entry: */"
-	    $as_echo "      if (__tme_predict_false((cycle_size - 1)"
-	    $as_echo "                              > (((tme_bus_addr32_t) tlb->tme_m68k_tlb_linear_last) - linear_address))) {"
-	    $as_echo "        cycle_size = (((tme_bus_addr32_t) tlb->tme_m68k_tlb_linear_last) - linear_address) + 1;"
-	    $as_echo "      }"
-	    $as_echo ""
-	    $as_echo "      /* if this is a little-endian host, and this isn't a raw ${name}: */"
-	    $as_echo "      if (TME_ENDIAN_NATIVE == TME_ENDIAN_LITTLE"
-	    $as_echo "          && (flags & TME_M68K_BUS_CYCLE_RAW) == 0) {"
+	    AS_ECHO([""])
+	    AS_ECHO(["    /* loop while this TLB entry is invalid or does not apply: */"])
+	    AS_ECHO(["    for (; __tme_predict_false(tme_m68k_tlb_is_invalid(tlb)"])
+	    AS_ECHO(["                               || tlb->tme_m68k_tlb_bus_context != ic->_tme_m68k_bus_context"])
+	    AS_ECHO(["                               || (tlb->tme_m68k_tlb_function_codes_mask & TME_BIT(function_code)) == 0"])
+	    AS_ECHO(["                               || linear_address < (tme_bus_addr32_t) tlb->tme_m68k_tlb_linear_first"])
+	    AS_ECHO(["                               || linear_address > (tme_bus_addr32_t) tlb->tme_m68k_tlb_linear_last"])
+	    AS_ECHO(["                               || (tlb->tme_m68k_tlb_emulator_off_${name} == TME_EMULATOR_OFF_UNDEF"])
+	    AS_ECHO(["                                   && (tlb->tme_m68k_tlb_cycles_ok & TME_BUS_CYCLE_${capname}) == 0)); ) {"])
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* this must not be part of a read/modify/write cycle: */"])
+	    AS_ECHO(["      assert(!(flags & TME_M68K_BUS_CYCLE_RMW));"])
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* fill this TLB entry: */"])
+	    AS_ECHO(["      tme_m68k_tlb_fill(ic, tlb,"])
+	    AS_ECHO(["                        function_code,"])
+	    AS_ECHO(["                        linear_address,"])
+	    AS_ECHO(["                        TME_BUS_CYCLE_${capname});"])
+	    AS_ECHO(["    }"])
+	    AS_ECHO([""])
+	    AS_ECHO(["    /* if this TLB entry allows for fast ${name}s: */"])
+	    AS_ECHO(["    mem = tlb->tme_m68k_tlb_emulator_off_${name};"])
+	    AS_ECHO(["    if (__tme_predict_true(mem != TME_EMULATOR_OFF_UNDEF)) {"])
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* make the emulator memory pointer: */"])
+	    AS_ECHO(["      mem += linear_address;"])
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* limit the cycle size to addresses covered by the TLB entry: */"])
+	    AS_ECHO(["      if (__tme_predict_false((cycle_size - 1)"])
+	    AS_ECHO(["                              > (((tme_bus_addr32_t) tlb->tme_m68k_tlb_linear_last) - linear_address))) {"])
+	    AS_ECHO(["        cycle_size = (((tme_bus_addr32_t) tlb->tme_m68k_tlb_linear_last) - linear_address) + 1;"])
+	    AS_ECHO(["      }"])
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* if this is a little-endian host, and this isn't a raw ${name}: */"])
+	    AS_ECHO(["      if (TME_ENDIAN_NATIVE == TME_ENDIAN_LITTLE"])
+	    AS_ECHO(["          && (flags & TME_M68K_BUS_CYCLE_RAW) == 0) {"])
 	    if test ${name} = write; then
-		$as_echo ""
-		$as_echo "        /* byteswap the data to write in the intermediate buffer: */"
-		$as_echo "        reg_p = cycle.tme_bus_cycle_buffer;"
-		$as_echo "        buffer_i = 0;"
-		$as_echo "        do {"
-		$as_echo "          reg_buffer[[buffer_i]] = *(reg_p--);"
-		$as_echo "        } while (++buffer_i != cycle_size);"
+		AS_ECHO([""])
+		AS_ECHO(["        /* byteswap the data to write in the intermediate buffer: */"])
+		AS_ECHO(["        reg_p = cycle.tme_bus_cycle_buffer;"])
+		AS_ECHO(["        buffer_i = 0;"])
+		AS_ECHO(["        do {"])
+		AS_ECHO(["          reg_buffer[[buffer_i]] = *(reg_p--);"])
+		AS_ECHO(["        } while (++buffer_i != cycle_size);"])
 	    fi
-	    $as_echo ""
-	    $as_echo "        /* use the intermediate buffer for the ${name}: */"
-	    $as_echo "        cycle.tme_bus_cycle_buffer = &reg_buffer[[0]];"
-	    $as_echo "      }"
-	    $as_echo ""
-	    $as_echo "      /* do the bus ${name}: */"
-	    $as_echo "      tme_memory_bus_${name}_buffer(mem,"
-	    $as_echo "                                 cycle.tme_bus_cycle_buffer,"
-	    $as_echo "                                 cycle_size,"
-	    $as_echo "                                 tlb->tme_m68k_tlb_bus_rwlock,"
-	    $as_echo "                                 sizeof(tme_uint8_t),"
-	    $as_echo "                                 sizeof(tme_uint32_t));"
+	    AS_ECHO([""])
+	    AS_ECHO(["        /* use the intermediate buffer for the ${name}: */"])
+	    AS_ECHO(["        cycle.tme_bus_cycle_buffer = &reg_buffer[[0]];"])
+	    AS_ECHO(["      }"])
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* do the bus ${name}: */"])
+	    AS_ECHO(["      tme_memory_bus_${name}_buffer(mem,"])
+	    AS_ECHO(["                                 cycle.tme_bus_cycle_buffer,"])
+	    AS_ECHO(["                                 cycle_size,"])
+	    AS_ECHO(["                                 tlb->tme_m68k_tlb_bus_rwlock,"])
+	    AS_ECHO(["                                 sizeof(tme_uint8_t),"])
+	    AS_ECHO(["                                 sizeof(tme_uint32_t));"])
 	    if test ${name} = read; then
-		$as_echo ""
-		$as_echo "      /* if this is a little-endian host, and this isn't a raw ${name}: */"
-		$as_echo "      if (TME_ENDIAN_NATIVE == TME_ENDIAN_LITTLE"
-		$as_echo "          && (flags & TME_M68K_BUS_CYCLE_RAW) == 0) {"
-		$as_echo ""
-		$as_echo "        /* byteswap the read data in the intermediate buffer: */"
-		$as_echo "        reg_p = reg + reg_size - (1 + transferred);"
-		$as_echo "        buffer_i = 0;"
-		$as_echo "        do {"
-		$as_echo "          *(reg_p--) = reg_buffer[[buffer_i]];"
-		$as_echo "        } while (++buffer_i != cycle_size);"
-		$as_echo "      }"
+		AS_ECHO([""])
+		AS_ECHO(["      /* if this is a little-endian host, and this isn't a raw ${name}: */"])
+		AS_ECHO(["      if (TME_ENDIAN_NATIVE == TME_ENDIAN_LITTLE"])
+		AS_ECHO(["          && (flags & TME_M68K_BUS_CYCLE_RAW) == 0) {"])
+		AS_ECHO([""])
+		AS_ECHO(["        /* byteswap the read data in the intermediate buffer: */"])
+		AS_ECHO(["        reg_p = reg + reg_size - (1 + transferred);"])
+		AS_ECHO(["        buffer_i = 0;"])
+		AS_ECHO(["        do {"])
+		AS_ECHO(["          *(reg_p--) = reg_buffer[[buffer_i]];"])
+		AS_ECHO(["        } while (++buffer_i != cycle_size);"])
+		AS_ECHO(["      }"])
 	    fi
-	    $as_echo ""
-	    $as_echo "      /* update: */"
-	    $as_echo "      linear_address += cycle_size;"
-	    $as_echo "      transferred += cycle_size;"
-	    $as_echo "      continue;"
-	    $as_echo "    }"
-	    $as_echo ""
-	    $as_echo "    /* otherwise, this TLB entry does not allow for fast ${name}s: */"
-	    $as_echo ""
-	    $as_echo "    /* if this is a part of a read/modify/write cycle: */"
-	    $as_echo "    if (flags & TME_M68K_BUS_CYCLE_RMW) {"
-	    $as_echo ""
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* update: */"])
+	    AS_ECHO(["      linear_address += cycle_size;"])
+	    AS_ECHO(["      transferred += cycle_size;"])
+	    AS_ECHO(["      continue;"])
+	    AS_ECHO(["    }"])
+	    AS_ECHO([""])
+	    AS_ECHO(["    /* otherwise, this TLB entry does not allow for fast ${name}s: */"])
+	    AS_ECHO([""])
+	    AS_ECHO(["    /* if this is a part of a read/modify/write cycle: */"])
+	    AS_ECHO(["    if (flags & TME_M68K_BUS_CYCLE_RMW) {"])
+	    AS_ECHO([""])
 	    if test ${name} = read; then
-		$as_echo "      /* if this is the first cycle in this read,"
-		$as_echo "         we will establish the new lock, otherwise"
-		$as_echo "         we will continue using the existing lock: */"
+		AS_ECHO(["      /* if this is the first cycle in this read,"])
+		AS_ECHO(["         we will establish the new lock, otherwise"])
+		AS_ECHO(["         we will continue using the existing lock: */"])
 	    else
-		$as_echo "      /* we will continue using the existing lock."
-		$as_echo "         the device will automatically unlock after"
-		$as_echo "         the last cycle of this write: */"
+		AS_ECHO(["      /* we will continue using the existing lock."])
+		AS_ECHO(["         the device will automatically unlock after"])
+		AS_ECHO(["         the last cycle of this write: */"])
 	    fi
-	    $as_echo "      cycle.tme_bus_cycle_type"
-	    $as_echo "        |= (TME_BUS_CYCLE_LOCK"
-	    $as_echo_n "            | ("
+	    AS_ECHO(["      cycle.tme_bus_cycle_type"])
+	    AS_ECHO(["        |= (TME_BUS_CYCLE_LOCK"])
+	    AS_ECHO_N(["            | ("])
 	    if test ${name} = read; then
-		$as_echo_n "transferred == 0 ? 0 : "
+		AS_ECHO_N(["transferred == 0 ? 0 : "])
 	    fi
-	    $as_echo "TME_BUS_CYCLE_UNLOCK));"
-	    $as_echo "    }"
+	    AS_ECHO(["TME_BUS_CYCLE_UNLOCK));"])
+	    AS_ECHO(["    }"])
 
-	    $as_echo ""
-	    $as_echo "    /* form the physical address for the bus cycle handler: */"
-	    $as_echo "    physical_address = tlb->tme_m68k_tlb_addr_offset + linear_address;"
-	    $as_echo "    shift = tlb->tme_m68k_tlb_addr_shift;"
-	    $as_echo "    if (shift < 0) {"
-	    $as_echo "      physical_address <<= (0 - shift);"
-	    $as_echo "    }"
-	    $as_echo "    else if (shift > 0) {"
-	    $as_echo "      physical_address >>= shift;"
-	    $as_echo "    }"
-	    $as_echo "    cycle.tme_bus_cycle_address = physical_address;"
+	    AS_ECHO([""])
+	    AS_ECHO(["    /* form the physical address for the bus cycle handler: */"])
+	    AS_ECHO(["    physical_address = tlb->tme_m68k_tlb_addr_offset + linear_address;"])
+	    AS_ECHO(["    shift = tlb->tme_m68k_tlb_addr_shift;"])
+	    AS_ECHO(["    if (shift < 0) {"])
+	    AS_ECHO(["      physical_address <<= (0 - shift);"])
+	    AS_ECHO(["    }"])
+	    AS_ECHO(["    else if (shift > 0) {"])
+	    AS_ECHO(["      physical_address >>= shift;"])
+	    AS_ECHO(["    }"])
+	    AS_ECHO(["    cycle.tme_bus_cycle_address = physical_address;"])
 
-	    $as_echo ""
-	    $as_echo "    /* run the bus cycle: */"
-	    $as_echo "    tme_m68k_tlb_unbusy(tlb);"
-	    $as_echo "    tme_m68k_callout_unlock(ic);"
-	    $as_echo "    err = (*tlb->tme_m68k_tlb_bus_tlb.tme_bus_tlb_cycle)"
-	    $as_echo "         (tlb->tme_m68k_tlb_bus_tlb.tme_bus_tlb_cycle_private, &cycle);"
-	    $as_echo "    tme_m68k_callout_relock(ic);"
-	    $as_echo "    tme_m68k_tlb_busy(tlb);"
-	    $as_echo ""
-	    $as_echo "    /* if the TLB entry was invalidated before the ${name}: */"
-	    $as_echo "    if (err == EBADF"
-	    $as_echo "        && tme_m68k_tlb_is_invalid(tlb)) {"
-	    $as_echo "      cycle.tme_bus_cycle_size = 0;"
-	    $as_echo "    }"
-	    $as_echo ""
-	    $as_echo "    /* otherwise, if we didn't get a bus error, but some"
-	    $as_echo "       synchronous event has happened: */"
-	    $as_echo "    else if (err == TME_BUS_CYCLE_SYNCHRONOUS_EVENT) {"
-	    $as_echo ""
-	    $as_echo "      /* after the currently executing instruction finishes, check"
-	    $as_echo "         for external resets, halts, or interrupts: */"
-	    $as_echo "      ic->_tme_m68k_instruction_burst_remaining = 0;"
-	    $as_echo "    }"
-	    $as_echo ""
-	    $as_echo "    /* otherwise, any other error might be a bus error: */"
-	    $as_echo "    else if (err != TME_OK) {"
-	    $as_echo "      err = tme_bus_tlb_fault(&tlb->tme_m68k_tlb_bus_tlb, &cycle, err);"
-	    $as_echo "      if (err != TME_OK) {"
-	    $as_echo "        exception = TME_M68K_EXCEPTION_BERR;"
-	    $as_echo "        break;"
-	    $as_echo "      }"
-	    $as_echo "    }"
-	    $as_echo ""
-	    $as_echo "    /* update: */"
-	    $as_echo "    linear_address += cycle.tme_bus_cycle_size;"
-	    $as_echo "    transferred += cycle.tme_bus_cycle_size;"
-	    $as_echo "  }"
+	    AS_ECHO([""])
+	    AS_ECHO(["    /* run the bus cycle: */"])
+	    AS_ECHO(["    tme_m68k_tlb_unbusy(tlb);"])
+	    AS_ECHO(["    tme_m68k_callout_unlock(ic);"])
+	    AS_ECHO(["    err = (*tlb->tme_m68k_tlb_bus_tlb.tme_bus_tlb_cycle)"])
+	    AS_ECHO(["         (tlb->tme_m68k_tlb_bus_tlb.tme_bus_tlb_cycle_private, &cycle);"])
+	    AS_ECHO(["    tme_m68k_callout_relock(ic);"])
+	    AS_ECHO(["    tme_m68k_tlb_busy(tlb);"])
+	    AS_ECHO([""])
+	    AS_ECHO(["    /* if the TLB entry was invalidated before the ${name}: */"])
+	    AS_ECHO(["    if (err == EBADF"])
+	    AS_ECHO(["        && tme_m68k_tlb_is_invalid(tlb)) {"])
+	    AS_ECHO(["      cycle.tme_bus_cycle_size = 0;"])
+	    AS_ECHO(["    }"])
+	    AS_ECHO([""])
+	    AS_ECHO(["    /* otherwise, if we didn't get a bus error, but some"])
+	    AS_ECHO(["       synchronous event has happened: */"])
+	    AS_ECHO(["    else if (err == TME_BUS_CYCLE_SYNCHRONOUS_EVENT) {"])
+	    AS_ECHO([""])
+	    AS_ECHO(["      /* after the currently executing instruction finishes, check"])
+	    AS_ECHO(["         for external resets, halts, or interrupts: */"])
+	    AS_ECHO(["      ic->_tme_m68k_instruction_burst_remaining = 0;"])
+	    AS_ECHO(["    }"])
+	    AS_ECHO([""])
+	    AS_ECHO(["    /* otherwise, any other error might be a bus error: */"])
+	    AS_ECHO(["    else if (err != TME_OK) {"])
+	    AS_ECHO(["      err = tme_bus_tlb_fault(&tlb->tme_m68k_tlb_bus_tlb, &cycle, err);"])
+	    AS_ECHO(["      if (err != TME_OK) {"])
+	    AS_ECHO(["        exception = TME_M68K_EXCEPTION_BERR;"])
+	    AS_ECHO(["        break;"])
+	    AS_ECHO(["      }"])
+	    AS_ECHO(["    }"])
+	    AS_ECHO([""])
+	    AS_ECHO(["    /* update: */"])
+	    AS_ECHO(["    linear_address += cycle.tme_bus_cycle_size;"])
+	    AS_ECHO(["    transferred += cycle.tme_bus_cycle_size;"])
+	    AS_ECHO(["  }"])
        
-	    $as_echo ""
-	    $as_echo "  /* NB: there is no need to explicitly unlock"
-	    $as_echo "     a device.  if a locked bus cycle to a device"
-	    $as_echo "     faults, the lock must be automatically unlocked: */"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* NB: there is no need to explicitly unlock"])
+	    AS_ECHO(["     a device.  if a locked bus cycle to a device"])
+	    AS_ECHO(["     faults, the lock must be automatically unlocked: */"])
 
-	    $as_echo ""
-	    $as_echo "  /* if we faulted, stash the information the fault stacker"
-	    $as_echo "     will need and start exception processing: */"
-	    $as_echo "  if (exception != TME_M68K_EXCEPTION_NONE) {"
-	    $as_echo_n "    ic->_tme_m68k_group0_flags = flags"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* if we faulted, stash the information the fault stacker"])
+	    AS_ECHO(["     will need and start exception processing: */"])
+	    AS_ECHO(["  if (exception != TME_M68K_EXCEPTION_NONE) {"])
+	    AS_ECHO_N(["    ic->_tme_m68k_group0_flags = flags"])
 	    if test $name = read; then
-		$as_echo_n " | TME_M68K_BUS_CYCLE_READ"
+		AS_ECHO_N([" | TME_M68K_BUS_CYCLE_READ"])
 	    fi
-	    $as_echo ";"
-	    $as_echo "    ic->_tme_m68k_group0_function_code = function_code;"
-	    $as_echo "    ic->_tme_m68k_group0_address = linear_address;"
-	    $as_echo "    ic->_tme_m68k_group0_sequence = ic->_tme_m68k_sequence;"
-	    $as_echo "    ic->_tme_m68k_group0_sequence._tme_m68k_sequence_transfer_faulted_after = transferred;"
-	    $as_echo "    ic->_tme_m68k_group0_buffer_${name}_size = cycle_size;"
+	    AS_ECHO([";"])
+	    AS_ECHO(["    ic->_tme_m68k_group0_function_code = function_code;"])
+	    AS_ECHO(["    ic->_tme_m68k_group0_address = linear_address;"])
+	    AS_ECHO(["    ic->_tme_m68k_group0_sequence = ic->_tme_m68k_sequence;"])
+	    AS_ECHO(["    ic->_tme_m68k_group0_sequence._tme_m68k_sequence_transfer_faulted_after = transferred;"])
+	    AS_ECHO(["    ic->_tme_m68k_group0_buffer_${name}_size = cycle_size;"])
 	    if test $name = write; then
-		$as_echo "#ifdef WORDS_BIGENDIAN"
-		$as_echo "    memcpy(ic->_tme_m68k_group0_buffer_${name},"
-		$as_echo "           reg + transferred,"
-		$as_echo "           ic->_tme_m68k_group0_buffer_${name}_size);"
-		$as_echo "#else  /* !WORDS_BIGENDIAN */"
-		$as_echo "      reg_p = (reg + reg_size - 1) - transferred;"
-		$as_echo "      for (buffer_i = 0;"
-		$as_echo "           buffer_i < ic->_tme_m68k_group0_buffer_${name}_size;"
-		$as_echo "           buffer_i++) {"
-		$as_echo "        ic->_tme_m68k_group0_buffer_${name}[[buffer_i]] = *(reg_p--);"
-		$as_echo "      }"
-		$as_echo "#endif /* !WORDS_BIGENDIAN */"
+		AS_ECHO(["#ifdef WORDS_BIGENDIAN"])
+		AS_ECHO(["    memcpy(ic->_tme_m68k_group0_buffer_${name},"])
+		AS_ECHO(["           reg + transferred,"])
+		AS_ECHO(["           ic->_tme_m68k_group0_buffer_${name}_size);"])
+		AS_ECHO(["#else  /* !WORDS_BIGENDIAN */"])
+		AS_ECHO(["      reg_p = (reg + reg_size - 1) - transferred;"])
+		AS_ECHO(["      for (buffer_i = 0;"])
+		AS_ECHO(["           buffer_i < ic->_tme_m68k_group0_buffer_${name}_size;"])
+		AS_ECHO(["           buffer_i++) {"])
+		AS_ECHO(["        ic->_tme_m68k_group0_buffer_${name}[[buffer_i]] = *(reg_p--);"])
+		AS_ECHO(["      }"])
+		AS_ECHO(["#endif /* !WORDS_BIGENDIAN */"])
 	    fi
-	    $as_echo "    if (ic->_tme_m68k_group0_hook != NULL) {"
-	    $as_echo "      (*ic->_tme_m68k_group0_hook)(ic);"
-	    $as_echo "    }"
-	    $as_echo "    ic->_tme_m68k_group0_sequence._tme_m68k_sequence_transfer_faulted = ";
-	    $as_echo "      ic->_tme_m68k_group0_sequence._tme_m68k_sequence_transfer_next;"
-	    $as_echo "    tme_m68k_tlb_unbusy(tlb);"
-	    $as_echo "    tme_m68k_exception(ic, exception);"
-	    $as_echo "  }"
+	    AS_ECHO(["    if (ic->_tme_m68k_group0_hook != NULL) {"])
+	    AS_ECHO(["      (*ic->_tme_m68k_group0_hook)(ic);"])
+	    AS_ECHO(["    }"])
+	    AS_ECHO(["    ic->_tme_m68k_group0_sequence._tme_m68k_sequence_transfer_faulted = ";])
+	    AS_ECHO(["      ic->_tme_m68k_group0_sequence._tme_m68k_sequence_transfer_next;"])
+	    AS_ECHO(["    tme_m68k_tlb_unbusy(tlb);"])
+	    AS_ECHO(["    tme_m68k_exception(ic, exception);"])
+	    AS_ECHO(["  }"])
 
-	    $as_echo ""
-	    $as_echo "  /* otherwise, this transfer has now completed: */"
-	    $as_echo "  TME_M68K_SEQUENCE_TRANSFER_STEP;"
+	    AS_ECHO([""])
+	    AS_ECHO(["  /* otherwise, this transfer has now completed: */"])
+	    AS_ECHO(["  TME_M68K_SEQUENCE_TRANSFER_STEP;"])
 
-	    $as_echo "}"
+	    AS_ECHO(["}"])
 	fi
     done
 
@@ -1831,106 +1831,106 @@ for name in abcd sbcd nbcd; do
 
     # if we're making the header, just emit a declaration:
     if $header; then
-	$as_echo "TME_M68K_INSN_DECL(tme_m68k_${name});"
+	AS_ECHO(["TME_M68K_INSN_DECL(tme_m68k_${name});"])
 	continue
     fi
 
     # emit the function:
-    $as_echo ""
-    $as_echo "TME_M68K_INSN(tme_m68k_${name})"
-    $as_echo "{"
-    $as_echo "  tme_uint8_t dst, dst_msd, dst_lsd;"
-    $as_echo "  tme_uint8_t src, src_msd, src_lsd;"
-    $as_echo "  tme_uint8_t res, res_msd, res_lsd;"
-    $as_echo "  tme_uint8_t flags;"
+    AS_ECHO([""])
+    AS_ECHO(["TME_M68K_INSN(tme_m68k_${name})"])
+    AS_ECHO(["{"])
+    AS_ECHO(["  tme_uint8_t dst, dst_msd, dst_lsd;"])
+    AS_ECHO(["  tme_uint8_t src, src_msd, src_lsd;"])
+    AS_ECHO(["  tme_uint8_t res, res_msd, res_lsd;"])
+    AS_ECHO(["  tme_uint8_t flags;"])
 
     # get the operands:
     if test $name != nbcd; then
-	$as_echo "  int memory;"
-	$as_echo "  int rx, ry, function_code;"
-	$as_echo ""
-	$as_echo "  /* load the operands: */"
-	$as_echo "  rx = TME_FIELD_EXTRACTU(TME_M68K_INSN_OPCODE, 0, 3);"
-	$as_echo "  ry = TME_FIELD_EXTRACTU(TME_M68K_INSN_OPCODE, 9, 3);"
-	$as_echo "  memory = (TME_M68K_INSN_OPCODE & TME_BIT(3)) != 0;"
-	$as_echo "  function_code = TME_M68K_FUNCTION_CODE_DATA(ic);"
-	$as_echo "  if (memory) {"
-	$as_echo "    TME_M68K_INSN_CANFAULT;"
-	$as_echo "    if (!TME_M68K_SEQUENCE_RESTARTING) {"
+	AS_ECHO(["  int memory;"])
+	AS_ECHO(["  int rx, ry, function_code;"])
+	AS_ECHO([""])
+	AS_ECHO(["  /* load the operands: */"])
+	AS_ECHO(["  rx = TME_FIELD_EXTRACTU(TME_M68K_INSN_OPCODE, 0, 3);"])
+	AS_ECHO(["  ry = TME_FIELD_EXTRACTU(TME_M68K_INSN_OPCODE, 9, 3);"])
+	AS_ECHO(["  memory = (TME_M68K_INSN_OPCODE & TME_BIT(3)) != 0;"])
+	AS_ECHO(["  function_code = TME_M68K_FUNCTION_CODE_DATA(ic);"])
+	AS_ECHO(["  if (memory) {"])
+	AS_ECHO(["    TME_M68K_INSN_CANFAULT;"])
+	AS_ECHO(["    if (!TME_M68K_SEQUENCE_RESTARTING) {"])
 	# the stack pointer must always be decremented by a multiple of two.
 	# assuming rx < 8, ((rx + 1) >> 3) == 1 iff rx == 7, meaning %a7:
-	$as_echo "      ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0 + rx) -= sizeof(tme_uint8_t) + ((rx + 1) >> 3);"
-	$as_echo "      ic->_tme_m68k_ea_function_code = function_code;"
-	$as_echo "      ic->_tme_m68k_ea_address = ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0 + rx);"
-	$as_echo "    }"
-	$as_echo "    tme_m68k_read_memx8(ic);"
-	$as_echo "    if (!TME_M68K_SEQUENCE_RESTARTING) {"
+	AS_ECHO(["      ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0 + rx) -= sizeof(tme_uint8_t) + ((rx + 1) >> 3);"])
+	AS_ECHO(["      ic->_tme_m68k_ea_function_code = function_code;"])
+	AS_ECHO(["      ic->_tme_m68k_ea_address = ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0 + rx);"])
+	AS_ECHO(["    }"])
+	AS_ECHO(["    tme_m68k_read_memx8(ic);"])
+	AS_ECHO(["    if (!TME_M68K_SEQUENCE_RESTARTING) {"])
 	# the stack pointer must always be incremented by a multiple of two.
 	# assuming rx < 8, ((rx + 1) >> 3) == 1 iff rx == 7, meaning %a7:
-	$as_echo "      ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0 + ry) -= sizeof(tme_uint8_t) + ((ry + 1) >> 3);"
-	$as_echo "      ic->_tme_m68k_ea_function_code = function_code;"
-	$as_echo "      ic->_tme_m68k_ea_address = ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0 + ry);"
-	$as_echo "    }"
-	$as_echo "    tme_m68k_read_mem8(ic, TME_M68K_IREG_MEMY32);"
-	$as_echo "    src = ic->tme_m68k_ireg_memx8;"
-	$as_echo "    dst = ic->tme_m68k_ireg_memy8;"
-	$as_echo "  }"
-	$as_echo "  else {"
-	$as_echo "    src = ic->tme_m68k_ireg_uint8(rx << 2);"
-	$as_echo "    dst = ic->tme_m68k_ireg_uint8(ry << 2);"
-	$as_echo "  }"
+	AS_ECHO(["      ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0 + ry) -= sizeof(tme_uint8_t) + ((ry + 1) >> 3);"])
+	AS_ECHO(["      ic->_tme_m68k_ea_function_code = function_code;"])
+	AS_ECHO(["      ic->_tme_m68k_ea_address = ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0 + ry);"])
+	AS_ECHO(["    }"])
+	AS_ECHO(["    tme_m68k_read_mem8(ic, TME_M68K_IREG_MEMY32);"])
+	AS_ECHO(["    src = ic->tme_m68k_ireg_memx8;"])
+	AS_ECHO(["    dst = ic->tme_m68k_ireg_memy8;"])
+	AS_ECHO(["  }"])
+	AS_ECHO(["  else {"])
+	AS_ECHO(["    src = ic->tme_m68k_ireg_uint8(rx << 2);"])
+	AS_ECHO(["    dst = ic->tme_m68k_ireg_uint8(ry << 2);"])
+	AS_ECHO(["  }"])
     else
-	$as_echo ""
-	$as_echo "  dst = 0x00;"
-	$as_echo "  src = TME_M68K_INSN_OP1(tme_uint8_t);"
+	AS_ECHO([""])
+	AS_ECHO(["  dst = 0x00;"])
+	AS_ECHO(["  src = TME_M68K_INSN_OP1(tme_uint8_t);"])
     fi
-    $as_echo "  dst_lsd = TME_FIELD_EXTRACTU(dst, 0, 4);"
-    $as_echo "  dst_msd = TME_FIELD_EXTRACTU(dst, 4, 4);"
-    $as_echo "  src_lsd = TME_FIELD_EXTRACTU(src, 0, 4);"
-    $as_echo "  src_msd = TME_FIELD_EXTRACTU(src, 4, 4);"
+    AS_ECHO(["  dst_lsd = TME_FIELD_EXTRACTU(dst, 0, 4);"])
+    AS_ECHO(["  dst_msd = TME_FIELD_EXTRACTU(dst, 4, 4);"])
+    AS_ECHO(["  src_lsd = TME_FIELD_EXTRACTU(src, 0, 4);"])
+    AS_ECHO(["  src_msd = TME_FIELD_EXTRACTU(src, 4, 4);"])
 
     # perform the operation:
-    $as_echo ""
-    $as_echo "  /* perform the operation: */"
-    if test $name = abcd; then op='+' ; opc='-' ; else op='-' ; opc='+' ; fi
-    $as_echo "  res_lsd = dst_lsd ${op} src_lsd ${op} ((ic->tme_m68k_ireg_ccr & TME_M68K_FLAG_X) != 0);"
-    $as_echo "  res_msd = dst_msd ${op} src_msd;"
-    $as_echo "  flags = 0;"
-    $as_echo "  if (res_lsd > 9) {"
-    $as_echo "    res_lsd ${opc}= 10;"
-    $as_echo "    res_msd ${op}= 1;"
-    $as_echo "  }"
-    $as_echo "  if (res_msd > 9) {"
-    $as_echo "    res_msd ${opc}= 10;"
-    $as_echo "    flags |= TME_M68K_FLAG_C | TME_M68K_FLAG_X;"
-    $as_echo "  }"
-    $as_echo "  res = (res_msd << 4) + (res_lsd & 0xf);"
-    $as_echo "  if (res == 0) flags |= TME_M68K_FLAG_N;"
-    $as_echo ""
+    AS_ECHO([""])
+    AS_ECHO(["  /* perform the operation: */"])
+    if test $name = abcd; then op='+' ; opc='-' ; else op='-' ; opc='+' ; fi])
+    AS_ECHO(["  res_lsd = dst_lsd ${op} src_lsd ${op} ((ic->tme_m68k_ireg_ccr & TME_M68K_FLAG_X) != 0);"])
+    AS_ECHO(["  res_msd = dst_msd ${op} src_msd;"])
+    AS_ECHO(["  flags = 0;"])
+    AS_ECHO(["  if (res_lsd > 9) {"])
+    AS_ECHO(["    res_lsd ${opc}= 10;"])
+    AS_ECHO(["    res_msd ${op}= 1;"])
+    AS_ECHO(["  }"])
+    AS_ECHO(["  if (res_msd > 9) {"])
+    AS_ECHO(["    res_msd ${opc}= 10;"])
+    AS_ECHO(["    flags |= TME_M68K_FLAG_C | TME_M68K_FLAG_X;"])
+    AS_ECHO(["  }"])
+    AS_ECHO(["  res = (res_msd << 4) + (res_lsd & 0xf);"])
+    AS_ECHO(["  if (res == 0) flags |= TME_M68K_FLAG_N;"])
+    AS_ECHO([""])
 
     # store the result
-    $as_echo "  /* store the result and set the flags: */"
+    AS_ECHO(["  /* store the result and set the flags: */"])
     if test $name != nbcd; then
-	$as_echo "  if (memory) {"
-	$as_echo "    if (!TME_M68K_SEQUENCE_RESTARTING) {"
-	$as_echo "      ic->tme_m68k_ireg_memx8 = res;"
-	$as_echo "      ic->_tme_m68k_ea_function_code = function_code;"
-	$as_echo "      ic->_tme_m68k_ea_address = ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0 + ry);"
-	$as_echo "      ic->tme_m68k_ireg_ccr = flags;"
-	$as_echo "     }"
-	$as_echo "     tme_m68k_write_memx8(ic);"
-	$as_echo "  }"
-	$as_echo "  else {"
-	$as_echo "    ic->tme_m68k_ireg_uint8(ry << 2) = res;"
-	$as_echo "    ic->tme_m68k_ireg_ccr = flags;"
-	$as_echo "  }"
+	AS_ECHO(["  if (memory) {"])
+	AS_ECHO(["    if (!TME_M68K_SEQUENCE_RESTARTING) {"])
+	AS_ECHO(["      ic->tme_m68k_ireg_memx8 = res;"])
+	AS_ECHO(["      ic->_tme_m68k_ea_function_code = function_code;"])
+	AS_ECHO(["      ic->_tme_m68k_ea_address = ic->tme_m68k_ireg_uint32(TME_M68K_IREG_A0 + ry);"])
+	AS_ECHO(["      ic->tme_m68k_ireg_ccr = flags;"])
+	AS_ECHO(["     }"])
+	AS_ECHO(["     tme_m68k_write_memx8(ic);"])
+	AS_ECHO(["  }"])
+	AS_ECHO(["  else {"])
+	AS_ECHO(["    ic->tme_m68k_ireg_uint8(ry << 2) = res;"])
+	AS_ECHO(["    ic->tme_m68k_ireg_ccr = flags;"])
+	AS_ECHO(["  }"])
     else
-	$as_echo "  TME_M68K_INSN_OP1(tme_uint8_t) = res;"
-	$as_echo "  ic->tme_m68k_ireg_ccr = flags;"
+	AS_ECHO(["  TME_M68K_INSN_OP1(tme_uint8_t) = res;"])
+	AS_ECHO(["  ic->tme_m68k_ireg_ccr = flags;"])
     fi
-    $as_echo ""
-    $as_echo "  TME_M68K_INSN_OK;"
-    $as_echo "}"
+    AS_ECHO([""])
+    AS_ECHO(["  TME_M68K_INSN_OK;"])
+    AS_ECHO(["}"])
 done
 
 # generate the ccr and sr functions:
@@ -1940,37 +1940,37 @@ for reg in ccr sr; do
 
 	# if we're making the header, just emit a declaration:
 	if $header; then
-	    $as_echo "TME_M68K_INSN_DECL(tme_m68k_${name}_${reg});"
+	    AS_ECHO(["TME_M68K_INSN_DECL(tme_m68k_${name}_${reg});"])
 	    continue
 	fi
 
 	# emit the function:
-	$as_echo ""
-	$as_echo "TME_M68K_INSN(tme_m68k_${name}_${reg})"
-	$as_echo "{"
-	$as_echo "  tme_uint${size}_t reg;"
+	AS_ECHO([""])
+	AS_ECHO(["TME_M68K_INSN(tme_m68k_${name}_${reg})"])
+	AS_ECHO(["{"])
+	AS_ECHO(["  tme_uint${size}_t reg;"])
 
 	# form the new register value:
 	src=0
-	$as_echo_n "  reg = "
+	AS_ECHO_N(["  reg = "])
 	case $name in
-	ori) $as_echo_n "ic->tme_m68k_ireg_${reg} | " ;;
-	andi) $as_echo_n "ic->tme_m68k_ireg_${reg} & " ;;
-	eori) $as_echo_n "ic->tme_m68k_ireg_${reg} ^ " ;;
+	ori) AS_ECHO_N(["ic->tme_m68k_ireg_${reg} | "]) ;;
+	andi) AS_ECHO_N(["ic->tme_m68k_ireg_${reg} & "]) ;;
+	eori) AS_ECHO_N(["ic->tme_m68k_ireg_${reg} ^ "]) ;;
 	move_to) size=16 ; src=1 ;;
 	esac
-	$as_echo "(TME_M68K_INSN_OP${src}(tme_uint${size}_t) & TME_M68K_FLAG_"`$as_echo $reg | tr a-z A-Z`");"
+	AS_ECHO(["(TME_M68K_INSN_OP${src}(tme_uint${size}_t) & TME_M68K_FLAG_"])`AS_ECHO([$reg | tr a-z A-Z`");"])
 	
 	# sr changes are special:
 	if test $reg = sr; then
-	    $as_echo "  TME_M68K_INSN_PRIV;"
-	    $as_echo "  TME_M68K_INSN_CHANGE_SR(reg);"
+	    AS_ECHO(["  TME_M68K_INSN_PRIV;"])
+	    AS_ECHO(["  TME_M68K_INSN_CHANGE_SR(reg);"])
 	else
-	    $as_echo "  ic->tme_m68k_ireg_${reg} = reg;"
+	    AS_ECHO(["  ic->tme_m68k_ireg_${reg} = reg;"])
 	fi
 
-	$as_echo "  TME_M68K_INSN_OK;"
-	$as_echo "}"
+	AS_ECHO(["  TME_M68K_INSN_OK;"])
+	AS_ECHO(["}"])
     done
 done
 
@@ -1996,156 +1996,156 @@ for _sign in u s; do
 
 	# if we're making the header, just emit declarations:
 	if $header; then
-	    $as_echo "TME_M68K_INSN_DECL(tme_m68k_mul${_sign}${_size});"
-	    $as_echo "TME_M68K_INSN_DECL(tme_m68k_div${_sign}${_size});"
+	    AS_ECHO(["TME_M68K_INSN_DECL(tme_m68k_mul${_sign}${_size});"])
+	    AS_ECHO(["TME_M68K_INSN_DECL(tme_m68k_div${_sign}${_size});"])
 	    continue
 	fi
 
 	# emit the multiply function:
-	$as_echo ""
-	$as_echo "TME_M68K_INSN(tme_m68k_mul${_sign}${_size})"
-	$as_echo "{"
+	AS_ECHO([""])
+	AS_ECHO(["TME_M68K_INSN(tme_m68k_mul${_sign}${_size})"])
+	AS_ECHO(["{"])
  	if test $large = 64; then
-	    $as_echo "#ifndef TME_HAVE_INT${large}_T"
-	    $as_echo "  abort();"
-	    $as_echo "#else /* TME_HAVE_INT${large}_T */"
-	    $as_echo "  unsigned int flag_v;"
-	    $as_echo "  int ireg_dh;"
+	    AS_ECHO(["#ifndef TME_HAVE_INT${large}_T"])
+	    AS_ECHO(["  abort();"])
+	    AS_ECHO(["#else /* TME_HAVE_INT${large}_T */"])
+	    AS_ECHO(["  unsigned int flag_v;"])
+	    AS_ECHO(["  int ireg_dh;"])
 	fi
-	$as_echo "  int ireg_dl;"
-	$as_echo "  tme_${sign}int${large}_t res;"
-	$as_echo "  tme_uint8_t flags;"
+	AS_ECHO(["  int ireg_dl;"])
+	AS_ECHO(["  tme_${sign}int${large}_t res;"])
+	AS_ECHO(["  tme_uint8_t flags;"])
 
-	$as_echo ""
-	$as_echo "  /* get the register containing the factor: */"
-	$as_echo_n "  ireg_dl = TME_M68K_IREG_D0 + "
+	AS_ECHO([""])
+	AS_ECHO(["  /* get the register containing the factor: */"])
+	AS_ECHO_N(["  ireg_dl = TME_M68K_IREG_D0 + "])
 	if test $size = s; then
-	    $as_echo "TME_M68K_INSN_OP0(tme_uint32_t);"
+	    AS_ECHO(["TME_M68K_INSN_OP0(tme_uint32_t);"])
 	else
-	    $as_echo "TME_FIELD_EXTRACTU(TME_M68K_INSN_SPECOP, 12, 3);"
+	    AS_ECHO(["TME_FIELD_EXTRACTU(TME_M68K_INSN_SPECOP, 12, 3);"])
 	fi
 
-	$as_echo ""
-	$as_echo "  /* perform the multiplication: */"
-	$as_echo "  res = (((tme_${sign}int${large}_t) ic->tme_m68k_ireg_${sign}int${small}(ireg_dl${reg_size_shift}))"
-	$as_echo "         * TME_M68K_INSN_OP1(tme_${sign}int${small}_t));"
+	AS_ECHO([""])
+	AS_ECHO(["  /* perform the multiplication: */"])
+	AS_ECHO(["  res = (((tme_${sign}int${large}_t) ic->tme_m68k_ireg_${sign}int${small}(ireg_dl${reg_size_shift}))"])
+	AS_ECHO(["         * TME_M68K_INSN_OP1(tme_${sign}int${small}_t));"])
 	
-	$as_echo ""
-	$as_echo "  /* store the result: */"
-	$as_echo "  ic->tme_m68k_ireg_${sign}int32(ireg_dl) = (tme_${sign}int32_t) res;"
+	AS_ECHO([""])
+	AS_ECHO(["  /* store the result: */"])
+	AS_ECHO(["  ic->tme_m68k_ireg_${sign}int32(ireg_dl) = (tme_${sign}int32_t) res;"])
 	if test $large = 64; then
-	    $as_echo "  flag_v = TME_M68K_FLAG_V;"
-	    $as_echo "  if (TME_M68K_INSN_SPECOP & TME_BIT(10)) {"
-	    $as_echo "    flag_v = 0;"
-	    $as_echo "    ireg_dh = TME_M68K_IREG_D0 + TME_FIELD_EXTRACTU(TME_M68K_INSN_SPECOP, 0, 3);"
-	    $as_echo "    ic->tme_m68k_ireg_${sign}int32(ireg_dh) = (tme_${sign}int32_t) (res >> 32);"
-	    $as_echo "  }"
+	    AS_ECHO(["  flag_v = TME_M68K_FLAG_V;"])
+	    AS_ECHO(["  if (TME_M68K_INSN_SPECOP & TME_BIT(10)) {"])
+	    AS_ECHO(["    flag_v = 0;"])
+	    AS_ECHO(["    ireg_dh = TME_M68K_IREG_D0 + TME_FIELD_EXTRACTU(TME_M68K_INSN_SPECOP, 0, 3);"])
+	    AS_ECHO(["    ic->tme_m68k_ireg_${sign}int32(ireg_dh) = (tme_${sign}int32_t) (res >> 32);"])
+	    AS_ECHO(["  }"])
 	fi
 	
-	$as_echo ""
-	$as_echo "  /* set the flags: */"
-	$as_echo "  flags = ic->tme_m68k_ireg_ccr & TME_M68K_FLAG_X;"
-	$as_echo "  if (((tme_int${large}_t) res) < 0) flags |= TME_M68K_FLAG_N;"
-	$as_echo "  if (res == 0) flags |= TME_M68K_FLAG_Z;"
+	AS_ECHO([""])
+	AS_ECHO(["  /* set the flags: */"])
+	AS_ECHO(["  flags = ic->tme_m68k_ireg_ccr & TME_M68K_FLAG_X;"])
+	AS_ECHO(["  if (((tme_int${large}_t) res) < 0) flags |= TME_M68K_FLAG_N;"])
+	AS_ECHO(["  if (res == 0) flags |= TME_M68K_FLAG_Z;"])
 	if test $large = 64; then
 	    if test $_sign = s; then
-		$as_echo_n "  if (res > 0x7fffffffL || res < ((0L - 0x7fffffffL) - 1L)"
+		AS_ECHO_N(["  if (res > 0x7fffffffL || res < ((0L - 0x7fffffffL) - 1L)"])
 	    else
-		$as_echo_n "  if (res > 0xffffffffUL"
+		AS_ECHO_N(["  if (res > 0xffffffffUL"])
 	    fi
-	    $as_echo ") flags |= flag_v;"
+	    AS_ECHO([") flags |= flag_v;"])
 	fi
-	$as_echo "  ic->tme_m68k_ireg_ccr = flags;"
+	AS_ECHO(["  ic->tme_m68k_ireg_ccr = flags;"])
 
-	$as_echo ""
-	$as_echo "  TME_M68K_INSN_OK;"
+	AS_ECHO([""])
+	AS_ECHO(["  TME_M68K_INSN_OK;"])
  	if test $large = 64; then
-	    $as_echo "#endif /* TME_HAVE_INT${large}_T */"
+	    AS_ECHO(["#endif /* TME_HAVE_INT${large}_T */"])
 	fi
-	$as_echo "}"
+	AS_ECHO(["}"])
 
 	# emit the divide function:
-	$as_echo ""
-	$as_echo "TME_M68K_INSN(tme_m68k_div${_sign}${_size})"
-	$as_echo "{"
+	AS_ECHO([""])
+	AS_ECHO(["TME_M68K_INSN(tme_m68k_div${_sign}${_size})"])
+	AS_ECHO(["{"])
  	if test $large = 64; then
-	    $as_echo "#ifndef TME_HAVE_INT${large}_T"
-	    $as_echo "  abort();"
-	    $as_echo "#else /* TME_HAVE_INT${large}_T */"
-	    $as_echo "  int ireg_dr;"
+	    AS_ECHO(["#ifndef TME_HAVE_INT${large}_T"])
+	    AS_ECHO(["  abort();"])
+	    AS_ECHO(["#else /* TME_HAVE_INT${large}_T */"])
+	    AS_ECHO(["  int ireg_dr;"])
 	fi
-	$as_echo "  int ireg_dq;"
-	$as_echo "  tme_${sign}int${large}_t dividend, quotient;"
-	$as_echo "  tme_${sign}int${small}_t divisor, remainder;"
-	$as_echo "  tme_uint8_t flags;"
+	AS_ECHO(["  int ireg_dq;"])
+	AS_ECHO(["  tme_${sign}int${large}_t dividend, quotient;"])
+	AS_ECHO(["  tme_${sign}int${small}_t divisor, remainder;"])
+	AS_ECHO(["  tme_uint8_t flags;"])
 
-	$as_echo ""
-	$as_echo "  /* get the register(s): */"
-	$as_echo_n "  ireg_dq = TME_M68K_IREG_D0 + "
+	AS_ECHO([""])
+	AS_ECHO(["  /* get the register(s): */"])
+	AS_ECHO_N(["  ireg_dq = TME_M68K_IREG_D0 + "])
 	if test $size = s; then
-	    $as_echo "TME_M68K_INSN_OP0(tme_uint32_t);"
+	    AS_ECHO(["TME_M68K_INSN_OP0(tme_uint32_t);"])
 	else
-	    $as_echo "TME_FIELD_EXTRACTU(TME_M68K_INSN_SPECOP, 12, 3);"
-	    $as_echo "  ireg_dr = TME_M68K_IREG_D0 + TME_FIELD_EXTRACTU(TME_M68K_INSN_SPECOP, 0, 3);"
+	    AS_ECHO(["TME_FIELD_EXTRACTU(TME_M68K_INSN_SPECOP, 12, 3);"])
+	    AS_ECHO(["  ireg_dr = TME_M68K_IREG_D0 + TME_FIELD_EXTRACTU(TME_M68K_INSN_SPECOP, 0, 3);"])
 	fi
 
-	$as_echo ""
-	$as_echo "  /* form the dividend and the divisor: */"
+	AS_ECHO([""])
+	AS_ECHO(["  /* form the dividend and the divisor: */"])
 	if test $large = 64; then
-	    $as_echo "  if (TME_M68K_INSN_SPECOP & TME_BIT(10)) {"
-	    $as_echo "    dividend = (tme_${sign}int${large}_t)"
-	    $as_echo "               ((((tme_uint${large}_t) ic->tme_m68k_ireg_uint32(ireg_dr)) << 32)"
-	    $as_echo "                | ic->tme_m68k_ireg_uint32(ireg_dq));"
-	    $as_echo "  }"
-	    $as_echo "  else"
-	    $as_echo_n "  "
+	    AS_ECHO(["  if (TME_M68K_INSN_SPECOP & TME_BIT(10)) {"])
+	    AS_ECHO(["    dividend = (tme_${sign}int${large}_t)"])
+	    AS_ECHO(["               ((((tme_uint${large}_t) ic->tme_m68k_ireg_uint32(ireg_dr)) << 32)"])
+	    AS_ECHO(["                | ic->tme_m68k_ireg_uint32(ireg_dq));"])
+	    AS_ECHO(["  }"])
+	    AS_ECHO(["  else"])
+	    AS_ECHO_N(["  "])
 	fi
-	$as_echo "  dividend = (tme_${sign}int${large}_t) ic->tme_m68k_ireg_${sign}int32(ireg_dq);"
-	$as_echo "  divisor = TME_M68K_INSN_OP1(tme_${sign}int${small}_t);"
-	$as_echo "  if (divisor == 0) {"
-	$as_echo "    ic->tme_m68k_ireg_pc_last = ic->tme_m68k_ireg_pc;"
-	$as_echo "    ic->tme_m68k_ireg_pc = ic->tme_m68k_ireg_pc_next;"
-	$as_echo "    TME_M68K_INSN_EXCEPTION(TME_M68K_EXCEPTION_INST(TME_M68K_VECTOR_DIV0));"
-	$as_echo "  }"
+	AS_ECHO(["  dividend = (tme_${sign}int${large}_t) ic->tme_m68k_ireg_${sign}int32(ireg_dq);"])
+	AS_ECHO(["  divisor = TME_M68K_INSN_OP1(tme_${sign}int${small}_t);"])
+	AS_ECHO(["  if (divisor == 0) {"])
+	AS_ECHO(["    ic->tme_m68k_ireg_pc_last = ic->tme_m68k_ireg_pc;"])
+	AS_ECHO(["    ic->tme_m68k_ireg_pc = ic->tme_m68k_ireg_pc_next;"])
+	AS_ECHO(["    TME_M68K_INSN_EXCEPTION(TME_M68K_EXCEPTION_INST(TME_M68K_VECTOR_DIV0));"])
+	AS_ECHO(["  }"])
 
-	$as_echo ""
-	$as_echo "  /* do the division: */"
-	$as_echo "  quotient = dividend / divisor;"
-	$as_echo "  remainder = dividend % divisor;"
+	AS_ECHO([""])
+	AS_ECHO(["  /* do the division: */"])
+	AS_ECHO(["  quotient = dividend / divisor;"])
+	AS_ECHO(["  remainder = dividend % divisor;"])
 
-	$as_echo ""
-	$as_echo "  /* set the flags and return the quotient and remainder: */"
-	$as_echo "  flags = ic->tme_m68k_ireg_ccr & TME_M68K_FLAG_X;"
-	$as_echo_n "  if ("
+	AS_ECHO([""])
+	AS_ECHO(["  /* set the flags and return the quotient and remainder: */"])
+	AS_ECHO(["  flags = ic->tme_m68k_ireg_ccr & TME_M68K_FLAG_X;"])
+	AS_ECHO_N(["  if ("])
 	case "${small}${_sign}" in
-	16s) $as_echo_n "quotient > 0x7fff || quotient < -32768" ;;
-	16u) $as_echo_n "quotient > 0xffff" ;;
-	32s) $as_echo_n "quotient > 0x7fffffffL || quotient < ((0L - 0x7fffffffL) - 1L)" ;;
-	32u) $as_echo_n "quotient > 0xffffffffUL" ;;
+	16s) AS_ECHO_N(["quotient > 0x7fff || quotient < -32768"]) ;;
+	16u) AS_ECHO_N(["quotient > 0xffff"]) ;;
+	32s) AS_ECHO_N(["quotient > 0x7fffffffL || quotient < ((0L - 0x7fffffffL) - 1L)"]) ;;
+	32u) AS_ECHO_N(["quotient > 0xffffffffUL"]) ;;
 	esac
-	$as_echo ") {"
-	$as_echo "    flags |= TME_M68K_FLAG_V;"
-	$as_echo "  }"
-	$as_echo "  else {"
-	$as_echo "    if (((tme_int${small}_t) quotient) < 0) flags |= TME_M68K_FLAG_N;"
-	$as_echo "    if (quotient == 0) flags |= TME_M68K_FLAG_Z;"
-	$as_echo "    ic->tme_m68k_ireg_${sign}int${small}(ireg_dq${reg_size_shift}) = (tme_${sign}int${small}_t) quotient;"
+	AS_ECHO([") {"])
+	AS_ECHO(["    flags |= TME_M68K_FLAG_V;"])
+	AS_ECHO(["  }"])
+	AS_ECHO(["  else {"])
+	AS_ECHO(["    if (((tme_int${small}_t) quotient) < 0) flags |= TME_M68K_FLAG_N;"])
+	AS_ECHO(["    if (quotient == 0) flags |= TME_M68K_FLAG_Z;"])
+	AS_ECHO(["    ic->tme_m68k_ireg_${sign}int${small}(ireg_dq${reg_size_shift}) = (tme_${sign}int${small}_t) quotient;"])
 	if test $small = 16; then
-	    $as_echo "    ic->tme_m68k_ireg_${sign}int${small}((ireg_dq${reg_size_shift}) + 1) = remainder;"
+	    AS_ECHO(["    ic->tme_m68k_ireg_${sign}int${small}((ireg_dq${reg_size_shift}) + 1) = remainder;"])
 	else
-	    $as_echo "    if (ireg_dr != ireg_dq) {"
-	    $as_echo "      ic->tme_m68k_ireg_${sign}int${small}(ireg_dr) = remainder;"
-	    $as_echo "    }"
+	    AS_ECHO(["    if (ireg_dr != ireg_dq) {"])
+	    AS_ECHO(["      ic->tme_m68k_ireg_${sign}int${small}(ireg_dr) = remainder;"])
+	    AS_ECHO(["    }"])
 	fi
-	$as_echo "  }"
-	$as_echo "  ic->tme_m68k_ireg_ccr = flags;"
+	AS_ECHO(["  }"])
+	AS_ECHO(["  ic->tme_m68k_ireg_ccr = flags;"])
 
-	$as_echo ""
-	$as_echo "  TME_M68K_INSN_OK;"
+	AS_ECHO([""])
+	AS_ECHO(["  TME_M68K_INSN_OK;"])
  	if test $large = 64; then
-	    $as_echo "#endif /* TME_HAVE_INT${large}_T */"
+	    AS_ECHO(["#endif /* TME_HAVE_INT${large}_T */"])
 	fi
-	$as_echo "}"
+	AS_ECHO(["}"])
 
     done
 done

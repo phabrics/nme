@@ -66,14 +66,14 @@ for _builtin_type in float double long_double; do
 
     # make the builtin type without underscores, and in all caps:
     #
-    builtin_type=`$as_echo ${_builtin_type} | sed -e 's/_/ /g'`
-    _BUILTIN_TYPE=`$as_echo ${_builtin_type} | tr 'a-z' 'A-Z'`
+    builtin_type=`AS_ECHO(["${_builtin_type}"]) | sed -e 's/_/ /g'`
+    _BUILTIN_TYPE=`AS_ECHO(["${_builtin_type}"]) | tr 'a-z' 'A-Z'`
 
     # dispatch on the builtin type to open any protection:
     #
     case ${_builtin_type} in
     long_double) 
-	$as_echo ; $as_echo "#ifdef _TME_HAVE_${_BUILTIN_TYPE}" ;;
+	AS_ECHO([""]) ; AS_ECHO(["#ifdef _TME_HAVE_${_BUILTIN_TYPE}"]) ;;
     *) ;;
     esac
 
@@ -231,9 +231,9 @@ EOF
 	    #
 	    if test ${_sign} = pos; then sign= ; combine='*' ; else sign=- ; combine='/' ; fi
 
-	    $as_echo ""
-	    $as_echo "/* a series of ${builtin_type} values of the form ${radix}^${sign}x, where x is a power of two: */"
-	    $as_echo "static const ${builtin_type} _tme_float_radix${radix}_exponent_bits_${_builtin_type}_${_sign}[[]] = {"
+	    AS_ECHO([""])
+	    AS_ECHO(["/* a series of ${builtin_type} values of the form ${radix}^${sign}x, where x is a power of two: */"])
+	    AS_ECHO(["static const ${builtin_type} _tme_float_radix${radix}_exponent_bits_${_builtin_type}_${_sign}[[]] = {"])
 	    exponent=1
 	    formats_last=
 
@@ -247,7 +247,7 @@ EOF
 		2)  exponent_radix2=${exponent} ; x=16777216 ; exponent_x=24 ;;
 		10) exponent_radix2=`expr ${exponent} \* 4` ; x=10000 ; exponent_x=4 ;;
 		*) 
-		    $as_echo "$PROG internal error: can't handle radix ${radix}" 1>&2 
+		    AS_ECHO(["$PROG internal error: can't handle radix ${radix}"]) 1>&2 
 		    exit 1
 		    ;;
 		esac
@@ -282,7 +282,7 @@ EOF
 
 		    # clean up the formats:
 		    #
-		    formats="((TME_FLOAT_FORMAT_${_BUILTIN_TYPE} & ("`$as_echo "${formats}" | sed -e 's%^ | %%'`")) != 0)"
+		    formats="((TME_FLOAT_FORMAT_${_BUILTIN_TYPE} & ("`AS_ECHO(["${formats}"]) | sed -e 's%^ | %%'`")) != 0)"
 		fi
 
 		# if the formats have changed: 
@@ -292,21 +292,21 @@ EOF
 		    # close any old #if first:
 		    #
 		    if test "x${formats_last}" != x; then
-			$as_echo ""
-			$as_echo "#endif /* ${formats_last} */"
+			AS_ECHO([""])
+			AS_ECHO(["#endif /* ${formats_last} */"])
 		    fi
 
 		    # open the new #if:
 		    #
-		    $as_echo ""
-		    $as_echo "#if ${formats}"
+		    AS_ECHO([""])
+		    AS_ECHO(["#if ${formats}"])
 		    formats_last=${formats}
 		fi
 
 		# compute this value:
 		#
-		$as_echo ""
-		$as_echo "  /* ${radix}^${sign}${exponent}: */"
+		AS_ECHO([""])
+		AS_ECHO(["  /* ${radix}^${sign}${exponent}: */"])
 		exponent_remaining=${exponent}
 		value=1
 		while test ${exponent_remaining} != 0; do
@@ -318,7 +318,7 @@ EOF
 			exponent_x=`expr ${exponent_x} - 1`
 		    fi
 		done
-		$as_echo "  ${value},"
+		AS_ECHO(["  ${value},"])
 
 		# double the exponent:
 		#
@@ -328,11 +328,11 @@ EOF
 	    # close any #if:
 	    #
 	    if test "x${formats_last}" != x; then
-		$as_echo ""
-		$as_echo "#endif /* ${formats_last} */"
+		AS_ECHO([""])
+		AS_ECHO(["#endif /* ${formats_last} */"])
 	    fi
 
-	    $as_echo "};"
+	    AS_ECHO(["};"])
 	done
 
 cat <<EOF
@@ -454,7 +454,7 @@ EOF
     #
     case ${_builtin_type} in
     long_double) 
-	$as_echo ; $as_echo "#endif /* _TME_HAVE_${_BUILTIN_TYPE} */" ;;
+	AS_ECHO([""]) ; AS_ECHO(["#endif /* _TME_HAVE_${_BUILTIN_TYPE} */"]) ;;
     *) ;;
     esac
 
