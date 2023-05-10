@@ -54,7 +54,7 @@ _tme_gtk_keyboard_key_down(
 {
   if(screen->tme_gtk_screen_mouse_keyval
      != keyval)
-    return _tme_keyboard_key_event(TRUE, keyval, screen->screen.tme_screen_display);
+    return _tme_keyboard_key_event((state<<1)+1, keyval, screen->screen.tme_screen_display);
 
   gtk_switch_set_active(GTK_SWITCH(screen->tme_gtk_screen_mouse_button), FALSE);
 
@@ -70,7 +70,7 @@ _tme_gtk_keyboard_key_up(
   GdkModifierType* state,
   struct tme_gtk_screen *screen)
 {
-  return _tme_keyboard_key_event(FALSE, keyval, screen->screen.tme_screen_display);
+  return _tme_keyboard_key_event(state<<1, keyval, screen->screen.tme_screen_display);
 }
 
 /* this sets the mouse mode, e.g., on/off.  it is called with the mutex locked: */

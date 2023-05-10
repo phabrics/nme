@@ -292,7 +292,7 @@ struct tme_keyboard_buffer_int {
 
   /* the lists of keysyms that are attached to input stage zero
      modifiers: */
-  struct tme_keysym_state *tme_keyboard_buffer_int_in0_modkeys[TME_KEYBOARD_MODIFIER_MAX + 1];
+  struct tme_keysym_state *tme_keyboard_buffer_int_in0_modkeys[TME_KEYBOARD_MODIFIER_MAX];
 
   /* the current input stage zero modifiers mask: */
   tme_keyboard_modifiers_t tme_keyboard_buffer_int_in0_modifiers;
@@ -333,7 +333,7 @@ struct tme_keyboard_buffer_int {
   int tme_keyboard_buffer_int_out0_mod_num_lock;
 
   /* the lists of keysyms that are output stage zero modifiers: */
-  struct tme_keysym_state *tme_keyboard_buffer_int_out0_modkeys[TME_KEYBOARD_MODIFIER_MAX + 1];
+  struct tme_keysym_state *tme_keyboard_buffer_int_out0_modkeys[TME_KEYBOARD_MODIFIER_MAX];
 
   /* the current output stage zero modifiers mask: */
   tme_keyboard_modifiers_t tme_keyboard_buffer_int_out0_modifiers;
@@ -436,7 +436,7 @@ tme_keyboard_buffer_new(unsigned int size)
 
   /* initialize the input stage zero modifier keys lists: */
   for (modifier = 0;
-       modifier <= TME_KEYBOARD_MODIFIER_MAX;
+       modifier < TME_KEYBOARD_MODIFIER_MAX;
        modifier++) {
     buffer->tme_keyboard_buffer_int_in0_modkeys[modifier] = NULL;
   }
@@ -490,7 +490,7 @@ tme_keyboard_buffer_new(unsigned int size)
 
   /* initialize the output stage zero modifier keys lists: */
   for (modifier = 0;
-       modifier <= TME_KEYBOARD_MODIFIER_MAX;
+       modifier < TME_KEYBOARD_MODIFIER_MAX;
        modifier++) {
     buffer->tme_keyboard_buffer_int_out0_modkeys[modifier] = NULL;
   }
@@ -664,7 +664,7 @@ tme_keyboard_buffer_in_modifier(struct tme_keyboard_buffer *_buffer,
 
   /* this must be a valid modifier: */
   assert (modifier > TME_KEYBOARD_MODIFIER_NONE
-	  && modifier <= TME_KEYBOARD_MODIFIER_MAX);
+	  && modifier < TME_KEYBOARD_MODIFIER_MAX);
 
   /* remove all currently attached keysyms from this modifier: */
   for (mod_keysym = buffer->tme_keyboard_buffer_int_in0_modkeys[modifier];
@@ -2032,7 +2032,7 @@ _tme_keyboard_buffer_out0(struct tme_keyboard_buffer_int *buffer,
       
       /* loop over the modifiers that need clearing: */
       for (modifier = 0;
-	   modifier <= TME_KEYBOARD_MODIFIER_MAX;
+	   modifier < TME_KEYBOARD_MODIFIER_MAX;
 	   modifier++) {
 	if (!(modifiers_clear & (1 << modifier))) {
 	  continue;
@@ -2100,7 +2100,7 @@ _tme_keyboard_buffer_out0(struct tme_keyboard_buffer_int *buffer,
       
       /* loop over the modifiers that need setting: */
       for (modifier = 0;
-	   modifier <= TME_KEYBOARD_MODIFIER_MAX;
+	   modifier < TME_KEYBOARD_MODIFIER_MAX;
 	   modifier++) {
 	if (!(modifiers_set & (1 << modifier))) {
 	  continue;
@@ -2565,7 +2565,7 @@ _tme_keyboard_buffer_in0(struct tme_keyboard_buffer_int *buffer,
 
       /* loop over the modifiers that need clearing: */
       for (modifier = 0;
-	   modifier <= TME_KEYBOARD_MODIFIER_MAX;
+	   modifier < TME_KEYBOARD_MODIFIER_MAX;
 	   modifier++) {
 	if (!(modifiers_clear & (1 << modifier))) {
 	  continue;
@@ -2608,7 +2608,7 @@ _tme_keyboard_buffer_in0(struct tme_keyboard_buffer_int *buffer,
 
       /* loop over the modifiers that need setting: */
       for (modifier = 0;
-	   modifier <= TME_KEYBOARD_MODIFIER_MAX;
+	   modifier < TME_KEYBOARD_MODIFIER_MAX;
 	   modifier++) {
 	if (!(modifiers_set & (1 << modifier))) {
 	  continue;

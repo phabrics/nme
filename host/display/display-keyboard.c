@@ -69,8 +69,8 @@ static void
 _tme_keyboard_disp_new(struct tme_display *display)
 {
   struct tme_keyboard_buffer *buffer;
-  tme_keyboard_keyval_t *modifier_keysyms[TME_KEYBOARD_MODIFIER_MAX + 1];
-  int modifier_keysyms_count[TME_KEYBOARD_MODIFIER_MAX + 1];
+  tme_keyboard_keyval_t *modifier_keysyms[TME_KEYBOARD_MODIFIER_MAX];
+  int modifier_keysyms_count[TME_KEYBOARD_MODIFIER_MAX];
   int keycode, keysym_i, keysym_j, modifier;
   const char *string;
   struct tme_keysym *_keysym;
@@ -227,7 +227,7 @@ _tme_keyboard_keyval_name(tme_keyboard_keyval_t keyval)
 
 /* this is a generic callback for a key press or release event: */
 int
-_tme_keyboard_key_event(int down, tme_keyboard_keyval_t key, struct tme_display *display)
+_tme_keyboard_key_event(int state, tme_keyboard_keyval_t key, struct tme_display *display)
 {
   struct tme_keyboard_event tme_event;
   int was_empty;
@@ -236,11 +236,11 @@ _tme_keyboard_key_event(int down, tme_keyboard_keyval_t key, struct tme_display 
 
   /* make a tme event from this key event: */
   tme_event.tme_keyboard_event_type
-    = (down
+    = (state&1
        ? TME_KEYBOARD_EVENT_PRESS
        : TME_KEYBOARD_EVENT_RELEASE);
   tme_event.tme_keyboard_event_modifiers
-    = TME_KEYBOARD_MODIFIER_NONE;
+    = state>>1;
   tme_event.tme_keyboard_event_keyval
     = key;
   tme_event.tme_keyboard_event_time = tme_thread_get_time();

@@ -196,7 +196,7 @@ void _tme_screen_xlat_set _TME_P((struct tme_screen *screen));
 void _tme_keyboard_new _TME_P((struct tme_display *));
 int _tme_keyboard_connections_new _TME_P((struct tme_display *,
 					  struct tme_connection **));
-int _tme_keyboard_key_event _TME_P((int down, tme_keyboard_keyval_t key, struct tme_display *disp));
+int _tme_keyboard_key_event _TME_P((int state, tme_keyboard_keyval_t key, struct tme_display *disp));
 void _tme_mouse_new _TME_P((struct tme_display *));
 void _tme_mouse_mode_off _TME_P((struct tme_screen *, tme_uint32_t));
 int _tme_mouse_connections_new _TME_P((struct tme_display *,
