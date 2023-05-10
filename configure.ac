@@ -32,7 +32,7 @@ dnl ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Checks that we are given a good source directory.
-AC_PREREQ([2.69])
+AC_PREREQ([2.71])
 m4_include(version.m4)
 AC_INIT([tme],[0.12rc11])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])

@@ -49,7 +49,7 @@ _tme_gtk_keyboard_key_down(
   GtkEventControllerKey* self,
   guint keyval,
   guint keycode,
-  GdkModifierType* state,
+  GdkModifierType state,
   struct tme_gtk_screen *screen)
 {
   if(screen->tme_gtk_screen_mouse_keyval
@@ -67,7 +67,7 @@ _tme_gtk_keyboard_key_up(
   GtkEventControllerKey* self,
   guint keyval,
   guint keycode,
-  GdkModifierType* state,
+  GdkModifierType state,
   struct tme_gtk_screen *screen)
 {
   return _tme_keyboard_key_event(state<<1, keyval, screen->screen.tme_screen_display);
