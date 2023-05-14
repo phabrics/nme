@@ -39,6 +39,26 @@ _TME_RCSID("$Id: gtk-screen.c,v 1.11 2009/08/30 21:39:03 fredette Exp $");
 /* includes: */
 #include "gtk-display.h"
 #include <stdlib.h>
+
+static int gtk_keymods[] = {
+  GDK_SHIFT_MASK,
+  GDK_LOCK_MASK,
+  GDK_CONTROL_MASK,
+#if GTK_MAJOR_VERSION == 4
+  GDK_ALT_MASK,
+  GDK_META_MASK,
+  GDK_SUPER_MASK,
+  GDK_HYPER_MASK,
+  0
+#else
+  GDK_MOD1_MASK,
+  GDK_MOD2_MASK,
+  GDK_MOD3_MASK,
+  GDK_MOD4_MASK,
+  GDK_MOD5_MASK
+#endif
+};
+
 #if GTK_MAJOR_VERSION == 4
 #define _tme_gtk_init gtk_init_check
 #else
@@ -571,6 +591,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   display->display.tme_screen_resize = _tme_gtk_screen_resize;
   display->display.tme_screen_redraw = _tme_gtk_screen_redraw;
 
+  display->display.tme_display_keymods = gtk_keymods;
   /* setup the thread loop function: */
   //tme_threads_init(NULL, gtk_main);
 

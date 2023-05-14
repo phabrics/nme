@@ -162,6 +162,9 @@ struct tme_display {
 
   /* a convenience pointer for any platform-specific host data: */
   void *tme_screen_data;
+
+  /* an array of keyboard modifier masks for a given display: */
+  int *tme_display_keymods;
   
   /* implementation-specific callback functions: */
   int (*tme_display_bell) _TME_P((struct tme_display *));

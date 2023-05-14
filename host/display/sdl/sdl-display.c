@@ -45,6 +45,17 @@
 #error "No keysym header file on system."
 #endif
 
+static int sdl_keymods[] = {
+  KMOD_SHIFT,
+  KMOD_NUM | KMOD_CAPS,
+  KMOD_CTRL,
+  KMOD_ALT,
+  KMOD_GUI,
+  0,
+  0,
+  0
+};
+
 struct { char mask; int bits_stored; } utf8Mapping[]= {
         {0b00111111, 6},
         {0b01111111, 7},
@@ -149,9 +160,9 @@ static int _tme_sdl_screen_resize(struct tme_sdl_screen *screen)
   return TRUE;
 }
 
-static tme_keyboard_keyval_t SDL_key2rfbKeySym(SDL_KeyboardEvent* e) {
+static tme_keyboard_keyval_t SDL_key2rfbKeySym(SDL_Keycode sym) {
         tme_keyboard_keyval_t k = 0;
-        SDL_Keycode sym = e->keysym.sym;
+
         switch (sym) {
         case SDLK_BACKSPACE: k = XK_BackSpace; break;
         case SDLK_TAB: k = XK_Tab; break;
@@ -222,7 +233,7 @@ static tme_keyboard_keyval_t SDL_key2rfbKeySym(SDL_KeyboardEvent* e) {
         default: break;
         }
         /* SDL_TEXTINPUT does not generate characters if ctrl is down, so handle those here */
-        if (k == 0 && sym > 0x0 && sym < 0x100 && e->keysym.mod & KMOD_CTRL)
+        if (k == 0 && sym > 0x0 && sym < 0x100) // && s->mod & KMOD_CTRL)
                k = sym;
         return k;
 }
@@ -265,7 +276,7 @@ _tme_sdl_screen_redraw(struct tme_sdl_screen *screen, int x, int y, int w, int h
 static int
 _tme_sdl_display_update(struct tme_display *display) {
   SDL_Event e;
-
+  int state;
   if(SDL_PollEvent(&e)) {
 
     switch(e.type) {
@@ -342,12 +353,12 @@ _tme_sdl_display_update(struct tme_display *display) {
     case SDL_KEYDOWN:
       if (viewOnly)
 	break;
-      tme_keyboard_keyval_t sym = SDL_key2rfbKeySym(&e.key);
-      _tme_keyboard_key_event(e.type == SDL_KEYDOWN ? TRUE : FALSE,
-			      (sym) ? (sym) : (e.key.keysym.sym), display);
-      if (e.key.keysym.sym == SDLK_RALT)
+      SDL_Keycode sym = e.key.keysym.sym;
+      _tme_keyboard_key_event((e.type == SDL_KEYDOWN ? (1) : (0)) | e.key.keysym.mod<<1,
+			      SDL_key2rfbKeySym(sym), display);
+      if (sym == SDLK_RALT)
 	rightAltKeyDown = e.type == SDL_KEYDOWN;
-      if (e.key.keysym.sym == SDLK_LALT)
+      if (sym == SDLK_LALT)
 	leftAltKeyDown = e.type == SDL_KEYDOWN;
       break;
     case SDL_TEXTINPUT:
@@ -393,5 +404,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_sdl,display) {
   display->tme_screen_resize = _tme_sdl_screen_resize;
   display->tme_screen_redraw = _tme_sdl_screen_redraw;
 
+  display->tme_display_keymods = sdl_keymods;
   return (TME_OK);
 }

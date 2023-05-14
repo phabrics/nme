@@ -232,15 +232,19 @@ _tme_keyboard_key_event(int state, tme_keyboard_keyval_t key, struct tme_display
   struct tme_keyboard_event tme_event;
   int was_empty;
   int new_callouts;
-  int rc;
+  int rc, i;
 
   /* make a tme event from this key event: */
   tme_event.tme_keyboard_event_type
     = (state&1
        ? TME_KEYBOARD_EVENT_PRESS
        : TME_KEYBOARD_EVENT_RELEASE);
-  tme_event.tme_keyboard_event_modifiers
-    = state>>1;
+  state>>=1;
+  tme_event.tme_keyboard_event_modifiers = 0;
+  if(state && display->tme_display_keymods)
+    for(i=0;i<TME_KEYBOARD_MODIFIER_MAX;i++)
+      if(state & display->tme_display_keymods[i])
+	tme_event.tme_keyboard_event_modifiers |= 1 << i;
   tme_event.tme_keyboard_event_keyval
     = key;
   tme_event.tme_keyboard_event_time = tme_thread_get_time();
