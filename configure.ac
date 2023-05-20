@@ -99,6 +99,7 @@ linux*)
 mingw* | msys*)
    AC_DEFINE([TARGET_WIN32], [1], [Are we running WIN32?])
    AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["W"], [Target prefix])
+   AC_DEFINE_UNQUOTED([TME_MODULE_PATH_VAR], ["PKG_CONFIG_SYSTEM_LIBRARY_PATH"], [Use pkgconf environment variable to determine lib path in MSYS2.])
    CPPFLAGS="${CPPFLAGS} -DWIN32_LEAN_AND_MEAN"
    CPPFLAGS="${CPPFLAGS} -DNTDDI_VERSION=NTDDI_WINXP -D_WIN32_WINNT=_WIN32_WINNT_WINXP"
    WIN32=yes
@@ -1081,15 +1082,16 @@ _LTDL_INSTALLABLE
 #AC_SUBST(LIBLTDL)
 #_LT_SET_OPTION([LT_INIT],[dlopen])
 
-LT_INIT([dlopen])
+#LT_INIT([dlopen])
 #AC_SUBST(LTLIBOBJS)
 #AC_CONFIG_SUBDIRS(libltdl)
 LT_PREREQ([2.4])
 LT_CONFIG_LTDL_DIR([libltdl])
 LT_INIT([dlopen,win32-dll])
 LT_LANG([Windows Resource])
-LTDL_INIT([recursive installable])
+LTDL_INIT([recursive])
 CPPFLAGS="${CPPFLAGS-} ${LTDLINCL}" # -DLT_DEBUG_LOADERS"
+#LT_SYS_MODULE_PATH
 
 AC_ARG_VAR([IFCONFIG], [full path to ipconfig utility])
 AC_ARG_VAR([ROUTE], [full path to route utility])
@@ -1154,7 +1156,7 @@ AC_ARG_ENABLE(debug,
 [  --enable-debug          compile debuggable libraries and programs (default=don't)],
 [ ], [enable_debug=no])
 if test "x${enable_debug}" = "xyes"; then
-  CPPFLAGS="${CPPFLAGS-} -DENABLE_DEBUG -DTME_NO_DEBUG_LOCKS -DTME_RECODE_DEBUG -D_TME_SPARC_STATS -DGTK_DISABLE_SINGLE_INCLUDES -DNDEBUG"
+  CPPFLAGS="${CPPFLAGS-} -DENABLE_DEBUG -DTME_NO_DEBUG_LOCKS -D_TME_SPARC_STATS -DGTK_DISABLE_SINGLE_INCLUDES -DNDEBUG" # -DTME_RECODE_DEBUG
   if test "x${have_Og}" = xyes; then
      CFLAGS="${CFLAGS-} -Og"
      CXXFLAGS="${CXXFLAGS-} -g3 -Og"

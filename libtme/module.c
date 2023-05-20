@@ -112,10 +112,13 @@ _tme_modules_find(const char *top_name,
     search_path = NULL;
     switch (pass) {
     case 1: search_path = getenv("LTDL_LIBRARY_PATH"); break;
-    case 2:
-#ifdef LT_MODULE_PATH_VAR
-      search_path = getenv(LT_MODULE_PATH_VAR); break;
+    case 2: 
+#ifdef TME_MODULE_PATH_VAR
+      search_path = getenv(TME_MODULE_PATH_VAR);
+#elif defined(LT_MODULE_PATH_PREFIX)
+      search_path = getenv(LT_MODULE_PATH_VAR);
 #endif
+      break;
     case 3: search_path = getenv("TME_MODULE_PATH"); break;
     case 4: search_path = TME_PACKAGE_PATH; break;
     case 5: search_path = LT_DLSEARCH_PATH; break;
