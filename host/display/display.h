@@ -165,6 +165,12 @@ struct tme_display {
 
   /* an array of keyboard modifier masks for a given display: */
   int *tme_display_keymods;
+
+  /* the display host-specific versions of common keyboard lookup functions: */
+  char *(*tme_display_keyval_name)(tme_keyboard_keyval_t);
+  tme_keyboard_keyval_t (*tme_display_keyval_from_name)(const char *);
+  void (*tme_display_keyval_convert_case)(tme_keyboard_keyval_t, tme_keyboard_keyval_t *, tme_keyboard_keyval_t *);
+  tme_keyboard_keyval_t tme_display_key_void_symbol;
   
   /* implementation-specific callback functions: */
   int (*tme_display_bell) _TME_P((struct tme_display *));

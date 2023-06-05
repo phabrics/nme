@@ -102,7 +102,7 @@ $keymap_cnt = scalar @keymap;
 my $keymap_width = scalar @{$keymap[0]};
 print "\nstatic int keymap_width = ".$keymap_width.";\n";
 
-print "\nstatic guint keymap[] = {\n";
+print "\nstatic tme_keyboard_keyval_t keymap[] = {\n";
 
 # loop over the keycodes in the keyboard mapping:
 for ($keycode = 0;

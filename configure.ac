@@ -794,15 +794,16 @@ dnl Start the list of display host support.
 TME_FB_XLAT_DST="d32b32s0p32olml_r0xffff0000_g0xff00ff00_b0xff0000ff d24b32s0p32olml_r0xff0000_g0xff00_b0xff"
 
 dnl Checks for GLIB.
-PKG_CHECK_MODULES([GLIB], [glib-2.0], [AC_DEFINE([HAVE_GLIB], [], [Defined if GLIB 2.0 is found.])], [])
+PKG_CHECK_MODULES([GLIB], [glib-2.0], [AC_DEFINE([HAVE_GLIB], [], [Defined if GLIB 2.0 is found.])], [have_glib=no])
+AM_CONDITIONAL([HAVE_GLIB], [test "x${have_glib}" != xno])
 
 dnl Checks for display type support
 PKG_CHECK_MODULES([GTK], [gtk4], [have_gtk=$enable_gtk], [
-   PKG_CHECK_MODULES([GTK], [gtk+-3.0], [have_gtk=$enable_gtk], [])
+   PKG_CHECK_MODULES([GTK], [gtk+-3.0], [have_gtk=$enable_gtk], [have_gtk=no])
 ])
-PKG_CHECK_MODULES([SDL], [sdl2], [have_sdl=$enable_sdl], [])
+PKG_CHECK_MODULES([SDL], [sdl2], [have_sdl=$enable_sdl], [have_sdl=no])
 AM_CONDITIONAL([HAVE_SDL], [test "x${have_sdl}" = xyes])
-PKG_CHECK_MODULES([RFB], [libvncclient libvncserver], [have_rfb=$enable_rfb], [])
+PKG_CHECK_MODULES([RFB], [libvncclient libvncserver], [have_rfb=$enable_rfb], [have_rfb=no])
 
 dnl Start the list of ethernet host support.
 AM_CONDITIONAL([USE_TAP_WINDOWS], [test "x${enable_openvpn}" = xyes && test "x${have_tap_header}" = x && test "x${WIN32}" != x])

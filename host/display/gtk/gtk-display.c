@@ -592,6 +592,11 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   display->display.tme_screen_redraw = _tme_gtk_screen_redraw;
 
   display->display.tme_display_keymods = gtk_keymods;
+  display->display.tme_display_keyval_name = gdk_keyval_name;
+  display->display.tme_display_keyval_from_name = gdk_keyval_from_name;
+  display->display.tme_display_keyval_convert_case = gdk_keyval_convert_case;
+  display->display.tme_display_key_void_symbol = GDK_KEY_VoidSymbol;
+
   /* setup the thread loop function: */
   //tme_threads_init(NULL, gtk_main);
 

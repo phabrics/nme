@@ -45,7 +45,7 @@
 #error "No keysym header file on system."
 #endif
 
-static int sdl_keymods[] = {
+static int _tme_sdl_keymods[] = {
   KMOD_SHIFT,
   KMOD_NUM | KMOD_CAPS,
   KMOD_CTRL,
@@ -160,95 +160,173 @@ static int _tme_sdl_screen_resize(struct tme_sdl_screen *screen)
   return TRUE;
 }
 
-static tme_keyboard_keyval_t SDL_key2rfbKeySym(SDL_Keycode sym) {
-        tme_keyboard_keyval_t k = 0;
+static tme_keyboard_keyval_t sdl_to_tme_keysym(SDL_Keycode sym) {
+  tme_keyboard_keyval_t k = 0;
 
-        switch (sym) {
-        case SDLK_BACKSPACE: k = XK_BackSpace; break;
-        case SDLK_TAB: k = XK_Tab; break;
-        case SDLK_CLEAR: k = XK_Clear; break;
-        case SDLK_RETURN: k = XK_Return; break;
-        case SDLK_PAUSE: k = XK_Pause; break;
-        case SDLK_ESCAPE: k = XK_Escape; break;
-        case SDLK_DELETE: k = XK_Delete; break;
-        case SDLK_KP_0: k = XK_KP_0; break;
-        case SDLK_KP_1: k = XK_KP_1; break;
-        case SDLK_KP_2: k = XK_KP_2; break;
-        case SDLK_KP_3: k = XK_KP_3; break;
-        case SDLK_KP_4: k = XK_KP_4; break;
-        case SDLK_KP_5: k = XK_KP_5; break;
-        case SDLK_KP_6: k = XK_KP_6; break;
-        case SDLK_KP_7: k = XK_KP_7; break;
-        case SDLK_KP_8: k = XK_KP_8; break;
-        case SDLK_KP_9: k = XK_KP_9; break;
-        case SDLK_KP_PERIOD: k = XK_KP_Decimal; break;
-        case SDLK_KP_DIVIDE: k = XK_KP_Divide; break;
-        case SDLK_KP_MULTIPLY: k = XK_KP_Multiply; break;
-        case SDLK_KP_MINUS: k = XK_KP_Subtract; break;
-        case SDLK_KP_PLUS: k = XK_KP_Add; break;
-        case SDLK_KP_ENTER: k = XK_KP_Enter; break;
-        case SDLK_KP_EQUALS: k = XK_KP_Equal; break;
-        case SDLK_UP: k = XK_Up; break;
-        case SDLK_DOWN: k = XK_Down; break;
-        case SDLK_RIGHT: k = XK_Right; break;
-        case SDLK_LEFT: k = XK_Left; break;
-        case SDLK_INSERT: k = XK_Insert; break;
-        case SDLK_HOME: k = XK_Home; break;
-        case SDLK_END: k = XK_End; break;
-        case SDLK_PAGEUP: k = XK_Page_Up; break;
-        case SDLK_PAGEDOWN: k = XK_Page_Down; break;
-        case SDLK_F1: k = XK_F1; break;
-        case SDLK_F2: k = XK_F2; break;
-        case SDLK_F3: k = XK_F3; break;
-        case SDLK_F4: k = XK_F4; break;
-        case SDLK_F5: k = XK_F5; break;
-        case SDLK_F6: k = XK_F6; break;
-        case SDLK_F7: k = XK_F7; break;
-        case SDLK_F8: k = XK_F8; break;
-        case SDLK_F9: k = XK_F9; break;
-        case SDLK_F10: k = XK_F10; break;
-        case SDLK_F11: k = XK_F11; break;
-        case SDLK_F12: k = XK_F12; break;
-        case SDLK_F13: k = XK_F13; break;
-        case SDLK_F14: k = XK_F14; break;
-        case SDLK_F15: k = XK_F15; break;
-        case SDLK_NUMLOCKCLEAR: k = XK_Num_Lock; break;
-        case SDLK_CAPSLOCK: k = XK_Caps_Lock; break;
-        case SDLK_SCROLLLOCK: k = XK_Scroll_Lock; break;
-        case SDLK_RSHIFT: k = XK_Shift_R; break;
-        case SDLK_LSHIFT: k = XK_Shift_L; break;
-        case SDLK_RCTRL: k = XK_Control_R; break;
-        case SDLK_LCTRL: k = XK_Control_L; break;
-        case SDLK_RALT: k = XK_Alt_R; break;
-        case SDLK_LALT: k = XK_Alt_L; break;
-        case SDLK_LGUI: k = XK_Super_L; break;
-        case SDLK_RGUI: k = XK_Super_R; break;
+  switch (sym) {
+  case SDLK_BACKSPACE: k = XK_BackSpace; break;
+  case SDLK_TAB: k = XK_Tab; break;
+  case SDLK_CLEAR: k = XK_Clear; break;
+  case SDLK_RETURN: k = XK_Return; break;
+  case SDLK_PAUSE: k = XK_Pause; break;
+  case SDLK_ESCAPE: k = XK_Escape; break;
+  case SDLK_DELETE: k = XK_Delete; break;
+  case SDLK_KP_0: k = XK_KP_0; break;
+  case SDLK_KP_1: k = XK_KP_1; break;
+  case SDLK_KP_2: k = XK_KP_2; break;
+  case SDLK_KP_3: k = XK_KP_3; break;
+  case SDLK_KP_4: k = XK_KP_4; break;
+  case SDLK_KP_5: k = XK_KP_5; break;
+  case SDLK_KP_6: k = XK_KP_6; break;
+  case SDLK_KP_7: k = XK_KP_7; break;
+  case SDLK_KP_8: k = XK_KP_8; break;
+  case SDLK_KP_9: k = XK_KP_9; break;
+  case SDLK_KP_PERIOD: k = XK_KP_Decimal; break;
+  case SDLK_KP_DIVIDE: k = XK_KP_Divide; break;
+  case SDLK_KP_MULTIPLY: k = XK_KP_Multiply; break;
+  case SDLK_KP_MINUS: k = XK_KP_Subtract; break;
+  case SDLK_KP_PLUS: k = XK_KP_Add; break;
+  case SDLK_KP_ENTER: k = XK_KP_Enter; break;
+  case SDLK_KP_EQUALS: k = XK_KP_Equal; break;
+  case SDLK_UP: k = XK_Up; break;
+  case SDLK_DOWN: k = XK_Down; break;
+  case SDLK_RIGHT: k = XK_Right; break;
+  case SDLK_LEFT: k = XK_Left; break;
+  case SDLK_INSERT: k = XK_Insert; break;
+  case SDLK_HOME: k = XK_Home; break;
+  case SDLK_END: k = XK_End; break;
+  case SDLK_PAGEUP: k = XK_Page_Up; break;
+  case SDLK_PAGEDOWN: k = XK_Page_Down; break;
+  case SDLK_F1: k = XK_F1; break;
+  case SDLK_F2: k = XK_F2; break;
+  case SDLK_F3: k = XK_F3; break;
+  case SDLK_F4: k = XK_F4; break;
+  case SDLK_F5: k = XK_F5; break;
+  case SDLK_F6: k = XK_F6; break;
+  case SDLK_F7: k = XK_F7; break;
+  case SDLK_F8: k = XK_F8; break;
+  case SDLK_F9: k = XK_F9; break;
+  case SDLK_F10: k = XK_F10; break;
+  case SDLK_F11: k = XK_F11; break;
+  case SDLK_F12: k = XK_F12; break;
+  case SDLK_F13: k = XK_F13; break;
+  case SDLK_F14: k = XK_F14; break;
+  case SDLK_F15: k = XK_F15; break;
+  case SDLK_NUMLOCKCLEAR: k = XK_Num_Lock; break;
+  case SDLK_CAPSLOCK: k = XK_Caps_Lock; break;
+  case SDLK_SCROLLLOCK: k = XK_Scroll_Lock; break;
+  case SDLK_RSHIFT: k = XK_Shift_R; break;
+  case SDLK_LSHIFT: k = XK_Shift_L; break;
+  case SDLK_RCTRL: k = XK_Control_R; break;
+  case SDLK_LCTRL: k = XK_Control_L; break;
+  case SDLK_RALT: k = XK_Alt_R; break;
+  case SDLK_LALT: k = XK_Alt_L; break;
+  case SDLK_LGUI: k = XK_Super_L; break;
+  case SDLK_RGUI: k = XK_Super_R; break;
 #if 0
-        case SDLK_COMPOSE: k = XK_Compose; break;
+  case SDLK_COMPOSE: k = XK_Compose; break;
 #endif
-        case SDLK_MODE: k = XK_Mode_switch; break;
-        case SDLK_HELP: k = XK_Help; break;
-        case SDLK_PRINTSCREEN: k = XK_Print; break;
-        case SDLK_SYSREQ: k = XK_Sys_Req; break;
-        default: break;
-        }
-        /* SDL_TEXTINPUT does not generate characters if ctrl is down, so handle those here */
-        if (k == 0 && sym > 0x0 && sym < 0x100) // && s->mod & KMOD_CTRL)
-               k = sym;
-        return k;
+  case SDLK_MODE: k = XK_Mode_switch; break;
+  case SDLK_HELP: k = XK_Help; break;
+  case SDLK_PRINTSCREEN: k = XK_Print; break;
+  case SDLK_SYSREQ: k = XK_Sys_Req; break;
+  default: break;
+  }
+  /* SDL_TEXTINPUT does not generate characters if ctrl is down, so handle those here */
+  if (k == 0 && sym > 0x0 && sym < 0x100) // && s->mod & KMOD_CTRL)
+    k = sym;
+  return k;
+}
+
+static SDL_Keycode tme_to_sdl_keysym(tme_keyboard_keyval_t sym) {
+  SDL_Keycode k = 0;
+
+  switch (sym) {
+  case XK_BackSpace: k = SDLK_BACKSPACE; break;
+  case XK_Tab: k = SDLK_TAB; break;
+  case XK_Clear: k = SDLK_CLEAR; break;
+  case XK_Return: k = SDLK_RETURN; break;
+  case XK_Pause: k = SDLK_PAUSE; break;
+  case XK_Escape: k = SDLK_ESCAPE; break;
+  case XK_Delete: k = SDLK_DELETE; break;
+  case XK_KP_0: k = SDLK_KP_0; break;
+  case XK_KP_1: k = SDLK_KP_1; break;
+  case XK_KP_2: k = SDLK_KP_2; break;
+  case XK_KP_3: k = SDLK_KP_3; break;
+  case XK_KP_4: k = SDLK_KP_4; break;
+  case XK_KP_5: k = SDLK_KP_5; break;
+  case XK_KP_6: k = SDLK_KP_6; break;
+  case XK_KP_7: k = SDLK_KP_7; break;
+  case XK_KP_8: k = SDLK_KP_8; break;
+  case XK_KP_9: k = SDLK_KP_9; break;
+  case XK_KP_Decimal: k = SDLK_KP_PERIOD; break;
+  case XK_KP_Divide: k = SDLK_KP_DIVIDE; break;
+  case XK_KP_Multiply: k = SDLK_KP_MULTIPLY; break;
+  case XK_KP_Subtract: k = SDLK_KP_MINUS; break;
+  case XK_KP_Add: k = SDLK_KP_PLUS; break;
+  case XK_KP_Enter: k = SDLK_KP_ENTER; break;
+  case XK_KP_Equal: k = SDLK_KP_EQUALS; break;
+  case XK_Up: k = SDLK_UP; break;
+  case XK_Down: k = SDLK_DOWN; break;
+  case XK_Right: k = SDLK_RIGHT; break;
+  case XK_Left: k = SDLK_LEFT; break;
+  case XK_Insert: k = SDLK_INSERT; break;
+  case XK_Home: k = SDLK_HOME; break;
+  case XK_End: k = SDLK_END; break;
+  case XK_Page_Up: k = SDLK_PAGEUP; break;
+  case XK_Page_Down: k = SDLK_PAGEDOWN; break;
+  case XK_F1: k = SDLK_F1; break;
+  case XK_F2: k = SDLK_F2; break;
+  case XK_F3: k = SDLK_F3; break;
+  case XK_F4: k = SDLK_F4; break;
+  case XK_F5: k = SDLK_F5; break;
+  case XK_F6: k = SDLK_F6; break;
+  case XK_F7: k = SDLK_F7; break;
+  case XK_F8: k = SDLK_F8; break;
+  case XK_F9: k = SDLK_F9; break;
+  case XK_F10: k = SDLK_F10; break;
+  case XK_F11: k = SDLK_F11; break;
+  case XK_F12: k = SDLK_F12; break;
+  case XK_F13: k = SDLK_F13; break;
+  case XK_F14: k = SDLK_F14; break;
+  case XK_F15: k = SDLK_F15; break;
+  case XK_Num_Lock: k = SDLK_NUMLOCKCLEAR; break;
+  case XK_Caps_Lock: k = SDLK_CAPSLOCK; break;
+  case XK_Scroll_Lock: k = SDLK_SCROLLLOCK; break;
+  case XK_Shift_R: k = SDLK_RSHIFT; break;
+  case XK_Shift_L: k = SDLK_LSHIFT; break;
+  case XK_Control_R: k = SDLK_RCTRL; break;
+  case XK_Control_L: k = SDLK_LCTRL; break;
+  case XK_Alt_R: k = SDLK_RALT; break;
+  case XK_Alt_L: k = SDLK_LALT; break;
+  case XK_Super_L: k = SDLK_LGUI; break;
+  case XK_Super_R: k = SDLK_RGUI; break;
+#if 0
+  case XK_Compose: k = SDLK_COMPOSE; break;
+#endif
+  case XK_Mode_switch: k = SDLK_MODE; break;
+  case XK_Help: k = SDLK_HELP; break;
+  case XK_Print: k = SDLK_PRINTSCREEN; break;
+  case XK_Sys_Req: k = SDLK_SYSREQ; break;
+  default: break;
+  }
+  /* SDL_TEXTINPUT does not generate characters if ctrl is down, so handle those here */
+  if (k == 0 && sym > 0x0 && sym < 0x100) // && s->mod & KMOD_CTRL)
+    k = sym;
+  return k;
 }
 
 /* UTF-8 decoding is from https://rosettacode.org/wiki/UTF-8_encode_and_decode which is under GFDL 1.2 */
 static tme_keyboard_keyval_t utf8char2rfbKeySym(const char chr[4]) {
-        int bytes = strlen(chr);
-        int shift = utf8Mapping[0].bits_stored * (bytes - 1);
-        tme_keyboard_keyval_t codep = (*chr++ & utf8Mapping[bytes].mask) << shift;
-        int i;
-        for(i = 1; i < bytes; ++i, ++chr) {
-                shift -= utf8Mapping[0].bits_stored;
-                codep |= ((char)*chr & utf8Mapping[0].mask) << shift;
-        }
-        return codep;
+  int bytes = strlen(chr);
+  int shift = utf8Mapping[0].bits_stored * (bytes - 1);
+  tme_keyboard_keyval_t codep = (*chr++ & utf8Mapping[bytes].mask) << shift;
+  int i;
+  for(i = 1; i < bytes; ++i, ++chr) {
+    shift -= utf8Mapping[0].bits_stored;
+    codep |= ((char)*chr & utf8Mapping[0].mask) << shift;
+  }
+  return codep;
 }
 static void
 _tme_sdl_screen_redraw(struct tme_sdl_screen *screen, int x, int y, int w, int h)
@@ -259,16 +337,16 @@ _tme_sdl_screen_redraw(struct tme_sdl_screen *screen, int x, int y, int w, int h
   struct tme_display *display = screen->screen.tme_screen_display;
   
   if(SDL_UpdateTexture(screen->sdlTexture, &r, sdl->pixels + y*sdl->pitch + x*4, sdl->pitch) < 0)
-        tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
+    tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
 	    (&display->tme_display_element->tme_element_log_handle,
 	     _("update: failed to update texture: %s\n"), SDL_GetError()));
   /* copy texture to renderer and show */
   if(SDL_RenderClear(screen->sdlRenderer) < 0)
-        tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
+    tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
 	    (&display->tme_display_element->tme_element_log_handle,
 	     _("update: failed to clear renderer: %s\n"), SDL_GetError()));
   if(SDL_RenderCopy(screen->sdlRenderer, screen->sdlTexture, NULL, NULL) < 0)
-        tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
+    tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
 	    (&display->tme_display_element->tme_element_log_handle,
 	     _("update: failed to copy texture to renderer: %s\n"), SDL_GetError()));
   SDL_RenderPresent(screen->sdlRenderer);
@@ -378,7 +456,15 @@ _tme_sdl_display_update(struct tme_display *display) {
     return TRUE;
   }
 }
-  
+
+static char *_tme_sdl_keyval_name(tme_keyboard_keyval_t sym) {
+  return SDL_GetKeyName(tme_to_sdl_keysym(sym));
+}
+
+static tme_keyboard_keyval_t _tme_sdl_keyval_from_name(const char *name) {
+  return sdl_to_tme_keysym(SDL_GetKeyFromName(name));
+}
+
 /* the new SDL display function: */
 TME_ELEMENT_SUB_NEW_DECL(tme_host_sdl,display) {
   struct tme_display *display;
@@ -404,6 +490,10 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_sdl,display) {
   display->tme_screen_resize = _tme_sdl_screen_resize;
   display->tme_screen_redraw = _tme_sdl_screen_redraw;
 
-  display->tme_display_keymods = sdl_keymods;
+  display->tme_display_keymods = _tme_sdl_keymods;
+  display->tme_display_keyval_name = _tme_sdl_keyval_name;
+  display->tme_display_keyval_from_name = _tme_sdl_keyval_from_name;
+  display->tme_display_key_void_symbol = SDLK_UNKNOWN;
+
   return (TME_OK);
 }

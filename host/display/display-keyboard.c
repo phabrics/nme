@@ -35,8 +35,6 @@
 
 /* includes: */
 #include "display.h"
-#include <gtk/gtk.h>
-#include <gdk/gdkkeysyms.h>
 
 /* macros: */
 
@@ -75,7 +73,7 @@ _tme_keyboard_disp_new(struct tme_display *display)
   const char *string;
   struct tme_keysym *_keysym;
   int rc;
-  guint keysym, keysym_cases[2];
+  tme_keyboard_keyval_t keysym, keysym_cases[2];
 
   /* get the keyboard buffer: */
   buffer = display->tme_display_keyboard_buffer;
@@ -112,13 +110,18 @@ _tme_keyboard_disp_new(struct tme_display *display)
       /* get the upper- and lowercase versions of this keysym.  if
 	 this keysym has no case, this sets both keysym_cases[] values
 	 to keysym: */
-      gdk_keyval_convert_case(keysym, &keysym_cases[0], &keysym_cases[1]);
+      if(display->tme_display_keyval_convert_case)
+	display->tme_display_keyval_convert_case(keysym, &keysym_cases[0], &keysym_cases[1]);
+      else {
+	keysym_cases[0]=tolower(keysym);
+	keysym_cases[1]=toupper(keysym);	
+      }
       for (keysym_j = 0;
 	   keysym_j < (int) TME_ARRAY_ELS(keysym_cases);
 	   keysym_j++) {
 	keysym = keysym_cases[keysym_j];
 	
-	if ((string = gdk_keyval_name(keysym)) == NULL)
+	if ((string = display->tme_display_keyval_name(keysym)) == NULL)
 	  continue;
 	/* skip this keysym if it's already known: */
 	if (tme_hash_lookup(display->tme_display_keyboard_keysyms,
@@ -215,16 +218,6 @@ _tme_keyboard_disp_new(struct tme_display *display)
   }
 }
 
-#if 1
-/* this is used for debugging only: */
-const char *_tme_keyboard_keyval_name _TME_P((tme_keyboard_keyval_t));
-const char *
-_tme_keyboard_keyval_name(tme_keyboard_keyval_t keyval)
-{
-  return (gdk_keyval_name(keyval));
-}
-#endif
-
 /* this is a generic callback for a key press or release event: */
 int
 _tme_keyboard_key_event(int state, tme_keyboard_keyval_t key, struct tme_display *display)
@@ -299,7 +292,7 @@ _tme_keyboard_lookup(struct tme_keyboard_connection *conn_keyboard,
   struct tme_keysym_bad **_keysym_bad, *keysym_bad;
   char *string;
   const char *string_other;
-  guint _keysym;
+  tme_keyboard_keyval_t _keysym;
 
   /* recover our data structure: */
   display = conn_keyboard
@@ -383,12 +376,12 @@ _tme_keyboard_lookup(struct tme_keyboard_connection *conn_keyboard,
     
     /* if GDK knows a keysym for this name: */
     keysym->tme_keysym_keysym
-      = gdk_keyval_from_name(string);
+      = display->tme_display_keyval_from_name(string);
     
     /* if GDK doesn't know a keysym for this name, or if the string
        for this keysym isn't the same name, find an unused keysym: */
-    if (keysym->tme_keysym_keysym == GDK_KEY_VoidSymbol
-	|| (string_other = gdk_keyval_name(keysym->tme_keysym_keysym)) == NULL
+    if (keysym->tme_keysym_keysym == display->tme_display_key_void_symbol
+	|| (string_other = display->tme_display_keyval_name(keysym->tme_keysym_keysym)) == NULL
 	|| strcmp(string, string_other)) {
       
       /* loop until we have an unused keysym that isn't also
@@ -399,9 +392,9 @@ _tme_keyboard_lookup(struct tme_keyboard_connection *conn_keyboard,
 	  abort();
 	}
 	if (_keysym != TME_KEYBOARD_KEYVAL_UNDEF
-	    && _keysym != GDK_KEY_VoidSymbol
-	    && ((string_other = gdk_keyval_name(_keysym)) == NULL
-		|| gdk_keyval_from_name(string_other) == GDK_KEY_VoidSymbol)) {
+	    && _keysym != display->tme_display_key_void_symbol
+	    && ((string_other = display->tme_display_keyval_name(_keysym)) == NULL
+		|| display->tme_display_keyval_from_name(string_other) == display->tme_display_key_void_symbol)) {
 	  break;
 	}
 	_keysym++;
