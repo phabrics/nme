@@ -166,7 +166,7 @@ LIBS=$OLDLIBS
 AC_SUBST(NATLIBS)
 
 dnl Checks for header files.
-AC_CHECK_HEADERS([unistd.h stdio.h memory.h stdarg.h stdbool.h limits.h float.h])
+AC_CHECK_HEADERS([unistd.h stdio.h memory.h stdarg.h stdbool.h limits.h float.h curses.h])
 AC_CHECK_HEADERS([sys/ioctl.h sys/sockio.h sys/socketio.h net/if_dl.h ioctls.h netpacket/packet.h ifaddrs.h])
 AC_CHECK_HEADERS([byteswap.h sys/endian.h])
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h poll.h sys/socket.h sys/select.h sys/time.h time.h errno.h sys/mman.h sys/uio.h])

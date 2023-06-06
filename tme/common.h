@@ -58,9 +58,13 @@
 #ifdef HAVE_TIME_H
 #include <time.h>
 #endif
+#ifdef HAVE_CURSES_H
+#include <curses.h>
+#endif
 #if defined(USE_GLIB_TIME) && defined(_TME_HAVE_GLIB)
 #include <glib.h>
-#elif defined(WIN32)
+#endif
+#if defined(WIN32)
 #include <windows.h>
 #endif
 
@@ -482,6 +486,14 @@ static _tme_inline tme_date_t *tme_time_get_date _TME_P((tme_time_t time, tme_da
 #define TME_DATE_MONTH(date) ((date)->tm_mon + 1)
 #define TME_DATE_YEAR(date) ((date)->tm_year)
 #endif
+
+static _tme_inline void tme_beep _TME_P((void)) {
+#ifdef WIN32
+  Beep(750, 500);
+#else // if defined(HAVE_CURSES_H)
+  beep();
+#endif
+}
 
 /* prototypes: */
 void *tme_malloc _TME_P((unsigned int));

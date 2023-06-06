@@ -328,7 +328,20 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_rfb,display) {
   while(args[++arg_i] != NULL);
   
   /* start our data structure: */
-  tme_display_init(element, 0);
+  display = tme_new0(struct tme_display, 1);
+#ifdef _TME_HAVE_GLIB
+  display->tme_display_keyval_name = gdk_keyval_name;
+  display->tme_display_keyval_from_name = gdk_keyval_from_name;
+  display->tme_display_keyval_convert_case = gdk_keyval_convert_case;
+  display->tme_display_key_void_symbol = GDK_KEY_VoidSymbol;
+#else
+  display->tme_display_keyval_name = _tme_sdl_keyval_name;
+  display->tme_display_keyval_from_name = _tme_sdl_keyval_from_name;
+  display->tme_display_key_void_symbol = SDLK_UNKNOWN;
+#endif
+
+  /* start our data structure: */
+  tme_display_init(element, display);
 
   /* recover our data structure: */
   display = element->tme_element_private;
@@ -371,5 +384,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_rfb,display) {
   display->tme_display_keyval_from_name = _tme_sdl_keyval_from_name;
   display->tme_display_key_void_symbol = SDLK_UNKNOWN;
 #endif
+
   return (TME_OK);
 }

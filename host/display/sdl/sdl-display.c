@@ -81,6 +81,12 @@ struct tme_sdl_screen {
 /* client's pointer position */
 int x,y;
 static int rightAltKeyDown, leftAltKeyDown;
+
+static void
+_tme_sdl_display_bell(struct tme_display *display) {
+  tme_beep();
+}
+
 /* switch to new framebuffer contents */
 static int _tme_sdl_screen_resize(struct tme_sdl_screen *screen)
 {
@@ -433,7 +439,7 @@ _tme_sdl_display_update(struct tme_display *display) {
 	break;
       SDL_Keycode sym = e.key.keysym.sym;
       _tme_keyboard_key_event((e.type == SDL_KEYDOWN ? (1) : (0)) | e.key.keysym.mod<<1,
-			      SDL_key2rfbKeySym(sym), display);
+			      sdl_to_tme_keysym(sym), display);
       if (sym == SDLK_RALT)
 	rightAltKeyDown = e.type == SDL_KEYDOWN;
       if (sym == SDLK_LALT)
@@ -474,6 +480,10 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_sdl,display) {
   
   /* start our data structure: */
   display = tme_new0(struct tme_display, 1);
+  display->tme_display_keymods = _tme_sdl_keymods;
+  display->tme_display_keyval_name = _tme_sdl_keyval_name;
+  display->tme_display_keyval_from_name = _tme_sdl_keyval_from_name;
+  display->tme_display_key_void_symbol = SDLK_UNKNOWN;
   tme_display_init(element, display);
 
   /* recover our data structure: */
@@ -484,16 +494,11 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_sdl,display) {
   signal(SIGINT, exit);
 
   /* set the display-specific functions: */
-  //  display->tme_display_bell = _tme_sdl_display_bell;
+  display->tme_display_bell = _tme_sdl_display_bell;
   display->tme_display_update = _tme_sdl_display_update;
   display->tme_screen_add = (void *)sizeof(struct tme_sdl_screen);
   display->tme_screen_resize = _tme_sdl_screen_resize;
   display->tme_screen_redraw = _tme_sdl_screen_redraw;
-
-  display->tme_display_keymods = _tme_sdl_keymods;
-  display->tme_display_keyval_name = _tme_sdl_keyval_name;
-  display->tme_display_keyval_from_name = _tme_sdl_keyval_from_name;
-  display->tme_display_key_void_symbol = SDLK_UNKNOWN;
 
   return (TME_OK);
 }
