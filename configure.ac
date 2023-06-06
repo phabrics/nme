@@ -834,7 +834,8 @@ found_BPFVERSION
 
 for tme_host in $TME_HOST_TYPES; do
     if eval test "x\$have_${tme_host}" = xyes; then
-       TME_HOST_CFLAGS="\$(${tme_host^^}_CFLAGS) ${TME_HOST_CFLAGS}"
+       TME_HOST=`echo ${tme_host} | tr '[a-z]' '[A-Z]'`
+       TME_HOST_CFLAGS="\$(${TME_HOST}_CFLAGS) ${TME_HOST_CFLAGS}"
        TME_HOST_LIBS="-dlopen \$(tme_host_${tme_host})/tme_host_${tme_host}.la ${TME_HOST_LIBS}"
        TME_HOST_DIRS="\$(tme_host_${tme_host}) ${TME_HOST_DIRS}"
     fi
