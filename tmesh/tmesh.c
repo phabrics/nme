@@ -714,7 +714,7 @@ main(int argc, char **argv)
   
   if (usage) do_usage(argv0, NULL);
 
-#ifdef TME_OPENVPN
+#ifdef OPENVPN_VERSION_RESOURCE
   if(init_static()) {
     es = openvpn_setup(NULL, 0, NULL);
 #ifdef WIN32

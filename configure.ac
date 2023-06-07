@@ -58,8 +58,104 @@ AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 AC_PROG_EGREP
 
+AC_ARG_VAR([TAP_CFLAGS], [C compiler flags for tap])
+old_CFLAGS="${CFLAGS}"
+CFLAGS="${CFLAGS} ${TAP_CFLAGS}"
+AC_CHECK_HEADERS(
+	[ \
+		net/if_tun.h net/tun/if_tun.h \
+		linux/if_tun.h \
+		tap-windows.h \
+	],
+	[have_tap_header="yes"]
+)
+AC_CHECK_DECLS(
+	[TUNSETPERSIST],
+	[AC_DEFINE([ENABLE_FEATURE_TUN_PERSIST], [1], [We have persist tun capability])],
+	,
+	[[
+		#ifdef HAVE_LINUX_IF_TUN_H
+		#include <linux/if_tun.h>
+		#endif
+	]]
+)
+CFLAGS="${old_CFLAGS}"
+
+TME_HOST_TYPES="gtk rfb sdl tun bsd openvpn"
+AC_SUBST(TME_HOST_TYPES)
+
+AC_ARG_ENABLE(hosts,
+[  --enable-hosts=hosttypes         enable hosts (default="$TME_HOST_TYPES")],
+   [tme_enable_hosts=${enableval}], [enable_hosts=yes])
+
+if test "x${enable_hosts}" = xyes; then
+   tme_enable_hosts=$TME_HOST_TYPES
+fi
+
+for tme_host_type in ${tme_enable_hosts}; do
+    eval enable_${tme_host_type}=yes
+done
+
+dnl Checks for GLIB.
+PKG_CHECK_MODULES([GLIB], [glib-2.0], [AC_DEFINE([HAVE_GLIB], [], [Defined if GLIB 2.0 is found.])], [have_glib=no])
+AM_CONDITIONAL([HAVE_GLIB], [test "x${have_glib}" != xno])
+
+dnl Checks for display type support
+PKG_CHECK_MODULES([GTK], [gtk4], [have_gtk=$enable_gtk], [
+   PKG_CHECK_MODULES([GTK], [gtk+-3.0], [have_gtk=$enable_gtk], [have_gtk=no])
+])
+PKG_CHECK_MODULES([SDL], [sdl2], [have_sdl=$enable_sdl], [have_sdl=no])
+AM_CONDITIONAL([HAVE_SDL], [test "x${have_sdl}" = xyes])
+PKG_CHECK_MODULES([RFB], [libvncclient libvncserver], [have_rfb=$enable_rfb], [have_rfb=no])
+
+dnl Start the list of ethernet host support.
+AM_CONDITIONAL([USE_TAP_WINDOWS], [test "x${enable_openvpn}" = xyes && test "x${have_tap_header}" = x && test "x${WIN32}" != x])
+
+if test "x${have_tap_header}" = xyes || test "x${WIN32}" != x; then
+   have_openvpn=$enable_openvpn
+   host_type=$host_os
+   AC_DEFINE([OPENVPN_VERSION_RESOURCE], [PRODUCT_VERSION_RESOURCE], [Version in windows resource format])
+fi
+
+AC_CHECK_HEADERS([linux/if_tun.h net/if_tap.h net/tap/if_tap.h net/if_tun.h],
+		 [have_tun=$enable_tun])
+
+AC_CHECK_HEADERS([linux/filter.h net/bpf.h])
+
+AC_EGREP_CPP(found_BPFVERSION,
+[
+#ifdef HAVE_LINUX_FILTER_H
+#include <linux/filter.h>
+#elif HAVE_NET_BPF_H
+#include <net/bpf.h>
+#endif
+#if BPF_MAJOR_VERSION == 1 && BPF_MINOR_VERSION >= 1
+found_BPFVERSION
+#endif
+],
+[have_bsd=$enable_bsd])
+
+for tme_host in $TME_HOST_TYPES; do
+    if eval test "x\$have_${tme_host}" = xyes; then
+       TME_HOST=`echo ${tme_host} | tr '[a-z]' '[A-Z]'`
+       TME_HOST_CFLAGS="\$(${TME_HOST}_CFLAGS) ${TME_HOST_CFLAGS}"
+       TME_HOST_LIBS="-dlopen \$(tme_host_${tme_host})/tme_host_${tme_host}.la ${TME_HOST_LIBS}"
+       TME_HOST_DIRS="\$(tme_host_${tme_host}) ${TME_HOST_DIRS}"
+    fi
+done
+
+dnl Checks for host support.
+AC_MSG_CHECKING([for enabled host types])
+
+dnl The list of ethernet host support is finished.
+AC_SUBST(TME_HOST_CFLAGS)
+AC_SUBST(TME_HOST_LIBS)
+AC_SUBST(TME_HOST_DIRS)
+
+AC_MSG_RESULT($TME_HOST_DIRS)
+
 AC_DEFINE_UNQUOTED([TARGET_ALIAS], ["${host}"], [A string representing our host])
-case "${host_os}" in
+case "${host_type}" in
 netbsd*) 
    AC_DEFINE([TARGET_NETBSD], [1], [Are we running NetBSD?])
    AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["N"], [Target prefix])
@@ -120,13 +216,11 @@ darwin*)
    dnl some Mac OS X tendering (we use vararg macros...)
    CPPFLAGS="$CPPFLAGS -no-cpp-precomp"
    SETCAP="chmod u+s"
-   have_tap_header="yes"
    ;;
 *)
    AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["X"], [Target prefix])
    CPPFLAGS="${CPPFLAGS-}"
    SETCAP="chmod u+s"
-   have_tap_header="yes"
    ;;
 esac
 
@@ -743,30 +837,8 @@ AC_DEFINE(HAVE_AF_PACKET, [], [Define if you have AF_PACKET.])
 AC_MSG_RESULT(no)
 ])
 
-AC_ARG_VAR([TAP_CFLAGS], [C compiler flags for tap])
-old_CFLAGS="${CFLAGS}"
-CFLAGS="${CFLAGS} ${TAP_CFLAGS}"
-AC_CHECK_HEADERS(
-	[ \
-		net/if_tun.h net/tun/if_tun.h \
-		linux/if_tun.h \
-		tap-windows.h \
-	],
-	[have_tap_header="yes"]
-)
-AC_CHECK_DECLS(
-	[TUNSETPERSIST],
-	[AC_DEFINE([ENABLE_FEATURE_TUN_PERSIST], [1], [We have persist tun capability])],
-	,
-	[[
-		#ifdef HAVE_LINUX_IF_TUN_H
-		#include <linux/if_tun.h>
-		#endif
-	]]
-)
-CFLAGS="${old_CFLAGS}"
-
-TME_FB_XLAT_DST=
+dnl Start the list of display host support.
+TME_FB_XLAT_DST="d32b32s0p32olml_r0xffff0000_g0xff00ff00_b0xff0000ff d24b32s0p32olml_r0xff0000_g0xff00_b0xff"
 
 # if --with-tme-host-displays is given, characterize those given displays:
 AC_ARG_WITH(tme-host-displays,
@@ -774,82 +846,6 @@ AC_ARG_WITH(tme-host-displays,
 [ TME_FB_XLAT_DST=$withval $TME_FB_XLAT_DST], [])
 
 AC_SUBST(TME_FB_XLAT_DST)
-
-TME_HOST_TYPES="gtk rfb sdl tun bsd openvpn"
-AC_SUBST(TME_HOST_TYPES)
-
-AC_ARG_ENABLE(hosts,
-[  --enable-hosts=hosttypes         enable hosts (default="$TME_HOST_TYPES")],
-   [tme_enable_hosts=${enableval}], [enable_hosts=yes])
-
-if test "x${enable_hosts}" = xyes; then
-   tme_enable_hosts=$TME_HOST_TYPES
-fi
-
-for tme_host_type in ${tme_enable_hosts}; do
-    eval enable_${tme_host_type}=yes
-done
-
-dnl Start the list of display host support.
-TME_FB_XLAT_DST="d32b32s0p32olml_r0xffff0000_g0xff00ff00_b0xff0000ff d24b32s0p32olml_r0xff0000_g0xff00_b0xff"
-
-dnl Checks for GLIB.
-PKG_CHECK_MODULES([GLIB], [glib-2.0], [AC_DEFINE([HAVE_GLIB], [], [Defined if GLIB 2.0 is found.])], [have_glib=no])
-AM_CONDITIONAL([HAVE_GLIB], [test "x${have_glib}" != xno])
-
-dnl Checks for display type support
-PKG_CHECK_MODULES([GTK], [gtk4], [have_gtk=$enable_gtk], [
-   PKG_CHECK_MODULES([GTK], [gtk+-3.0], [have_gtk=$enable_gtk], [have_gtk=no])
-])
-PKG_CHECK_MODULES([SDL], [sdl2], [have_sdl=$enable_sdl], [have_sdl=no])
-AM_CONDITIONAL([HAVE_SDL], [test "x${have_sdl}" = xyes])
-PKG_CHECK_MODULES([RFB], [libvncclient libvncserver], [have_rfb=$enable_rfb], [have_rfb=no])
-
-dnl Start the list of ethernet host support.
-AM_CONDITIONAL([USE_TAP_WINDOWS], [test "x${enable_openvpn}" = xyes && test "x${have_tap_header}" = x && test "x${WIN32}" != x])
-
-if test "x${have_tap_header}" = xyes || test "x${WIN32}" != x; then
-   have_openvpn=$enable_openvpn
-   AC_DEFINE([OPENVPN_VERSION_RESOURCE], [PRODUCT_VERSION_RESOURCE], [Version in windows resource format])
-fi
-AM_CONDITIONAL([HAVE_OPENVPN], [test "x${have_openvpn}" = xyes])
-
-AC_CHECK_HEADERS([linux/if_tun.h net/if_tap.h net/tap/if_tap.h net/if_tun.h],
-		 [have_tun=$enable_tun])
-
-AC_CHECK_HEADERS([linux/filter.h net/bpf.h])
-
-AC_EGREP_CPP(found_BPFVERSION,
-[
-#ifdef HAVE_LINUX_FILTER_H
-#include <linux/filter.h>
-#elif HAVE_NET_BPF_H
-#include <net/bpf.h>
-#endif
-#if BPF_MAJOR_VERSION == 1 && BPF_MINOR_VERSION >= 1
-found_BPFVERSION
-#endif
-],
-[have_bsd=$enable_bsd])
-
-for tme_host in $TME_HOST_TYPES; do
-    if eval test "x\$have_${tme_host}" = xyes; then
-       TME_HOST=`echo ${tme_host} | tr '[a-z]' '[A-Z]'`
-       TME_HOST_CFLAGS="\$(${TME_HOST}_CFLAGS) ${TME_HOST_CFLAGS}"
-       TME_HOST_LIBS="-dlopen \$(tme_host_${tme_host})/tme_host_${tme_host}.la ${TME_HOST_LIBS}"
-       TME_HOST_DIRS="\$(tme_host_${tme_host}) ${TME_HOST_DIRS}"
-    fi
-done
-
-dnl Checks for host support.
-AC_MSG_CHECKING([for enabled host types])
-
-dnl The list of ethernet host support is finished.
-AC_SUBST(TME_HOST_CFLAGS)
-AC_SUBST(TME_HOST_LIBS)
-AC_SUBST(TME_HOST_DIRS)
-
-AC_MSG_RESULT($TME_HOST_DIRS)
 
 AC_SYS_POSIX_TERMIOS
 

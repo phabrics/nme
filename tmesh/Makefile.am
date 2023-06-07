@@ -5,10 +5,6 @@ AUTOMAKE_OPTIONS = 1.4 gnu
 
 AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(top_srcdir)/lib -I. -D_TME_IMPL @TME_HOST_CFLAGS@
 
-if HAVE_OPENVPN
-AM_CPPFLAGS += -DTME_OPENVPN
-endif
-
 noinst_LTLIBRARIES = libtmesh.la
 libtmesh_la_SOURCES = \
 	tmesh-impl.h \
