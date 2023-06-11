@@ -43,6 +43,7 @@ AC_CANONICAL_TARGET
 AC_CONFIG_LIBOBJ_DIR([lib])
 AM_INIT_AUTOMAKE([subdir-objects])
 AM_EXTRA_RECURSIVE_TARGETS([modules])
+AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PREFIX_PROGRAM([tmesh])
 
@@ -51,7 +52,6 @@ AC_CONFIG_HEADERS([config.h])
 
 dnl Checks for programs.
 AC_PROG_AWK
-#AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_YACC
 AC_PROG_INSTALL
@@ -105,6 +105,8 @@ PKG_CHECK_MODULES([GTK], [gtk4], [have_gtk=$enable_gtk], [
    PKG_CHECK_MODULES([GTK], [gtk+-3.0], [have_gtk=$enable_gtk], [have_gtk=no])
 ])
 PKG_CHECK_MODULES([SDL], [sdl2], [have_sdl=$enable_sdl], [have_sdl=no])
+AC_CHECK_DEFINE(__EMSCRIPTEN__,  [have_sdl=$enable_sdl], [have_sdl=no])
+AX_APPEND_COMPILE_FLAGS(-sUSE_SDL=2, SDL_CFLAGS)
 AM_CONDITIONAL([HAVE_SDL], [test "x${have_sdl}" = xyes])
 PKG_CHECK_MODULES([RFB], [libvncclient libvncserver], [have_rfb=$enable_rfb], [have_rfb=no])
 
