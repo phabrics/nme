@@ -108,7 +108,7 @@ AC_CHECK_DEFINE(__EMSCRIPTEN__,  [have_emscripten=yes], [have_emscripten=no])
 AM_CONDITIONAL([HAVE_EMSCRIPTEN], [test "x${have_emscripten}" = xyes])
 PKG_CHECK_MODULES([SDL], [sdl2], [have_sdl=$enable_sdl], [have_sdl=$have_emscripten])
 AX_APPEND_COMPILE_FLAGS(-sUSE_SDL=2, SDL_CFLAGS)
-AX_APPEND_LINK_FLAGS(-sUSE_SDL=2, SDL_CFLAGS)
+AX_APPEND_LINK_FLAGS(-sUSE_SDL=2, SDL_LIBS)
 AM_CONDITIONAL([HAVE_SDL], [test "x${have_sdl}" = xyes])
 PKG_CHECK_MODULES([RFB], [libvncclient libvncserver], [have_rfb=$enable_rfb], [have_rfb=no])
 

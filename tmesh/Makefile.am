@@ -17,6 +17,11 @@ libtmesh_la_LIBADD = $(top_builddir)/libtme/libtme.la
 bin_PROGRAMS = tmesh
 tmesh_LDADD = libtmesh.la $(tme_preopen) @TME_HOST_LIBS@
 tmesh_LDFLAGS = -dlpreopen force -dlopen self
+
+if HAVE_EMSCRIPTEN
+tmesh_LDADD += $(SDL_LIBS)
+endif
+
 if WIN32
 if HAVE_SDL
 tmesh_LDFLAGS += -mwindows

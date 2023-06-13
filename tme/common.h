@@ -64,7 +64,7 @@
 #if defined(USE_GLIB_TIME) && defined(_TME_HAVE_GLIB)
 #include <glib.h>
 #endif
-#if defined(WIN32)
+#ifdef WIN32
 #include <windows.h>
 #endif
 
@@ -488,10 +488,12 @@ static _tme_inline tme_date_t *tme_time_get_date _TME_P((tme_time_t time, tme_da
 #endif
 
 static _tme_inline void tme_beep _TME_P((void)) {
-#ifdef WIN32
-  Beep(750, 500);
-#else // if defined(HAVE_CURSES_H)
+#ifdef HAVE_CURSES_H
   beep();
+#elif defined(WIN32)
+  MessageBeep(-1);
+#else
+  putchar('\a');
 #endif
 }
 
