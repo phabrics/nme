@@ -191,7 +191,7 @@ PKG_CHECK_MODULES([SDL], [sdl2], [have_sdl=$enable_sdl], [have_sdl=no])
 
 AX_CHECK_COMPILE_FLAG(-sUSE_SDL=2, [have_sdl=$enable_sdl])
 AX_APPEND_COMPILE_FLAGS(-sUSE_SDL=2, SDL_CFLAGS)
-AX_APPEND_LINK_FLAGS(-sUSE_SDL=2, SDL_CFLAGS)
+AX_APPEND_LINK_FLAGS(-sUSE_SDL=2, SDL_LIBS)
 
 AM_CONDITIONAL([HAVE_SDL], [test "x${have_sdl}" = xyes])
 PKG_CHECK_MODULES([RFB], [libvncclient libvncserver], [have_rfb=$enable_rfb], [have_rfb=no])
