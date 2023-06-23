@@ -19,7 +19,7 @@ tmesh_LDADD = libtmesh.la $(tme_preopen) @TME_HOST_LIBS@
 tmesh_LDFLAGS = -dlpreopen force -dlopen self
 
 if HAVE_EMSCRIPTEN
-tmesh_LDADD += $(SDL_LIBS)
+tmesh_LDADD += $(SDL_LIBS) -lnodefs.js
 endif
 
 if WIN32

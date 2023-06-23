@@ -938,10 +938,11 @@ fi
 for tme_thread_type in ${tme_thread_types}; do
 case "x${tme_thread_type}" in
 xpthreads| xposix)  CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_POSIX"
-#	  	    CFLAGS="${CFLAGS-} -pthread"
+	  	    CFLAGS="${CFLAGS-} -pthread"
+		    LDFLAGS="${LDFLAGS-} -pthread"
 		     ;;
 xglib)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_GLIB -DUSE_GLIB_TIME ${GLIB_CFLAGS}"
-#	 LDFLAGS="${LDFLAGS-} ${GLIB_LIBS}"
+	 LDFLAGS="${LDFLAGS-} ${GLIB_LIBS}"
 	 ;;
 xsjlj)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_SJLJ"
 	 ;;

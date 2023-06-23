@@ -43,6 +43,11 @@ _TME_RCSID("$Id: tmesh.c,v 1.4 2009/08/30 17:06:38 fredette Exp $");
 #include <tme/libopenvpn/openvpn-setup.h>
 #include <stdio.h>
 #include <string.h>
+#if defined(__EMSCRIPTEN__) && !defined(NODERAWFS)
+#include <emscripten.h>
+#define NME_DIR "/nme"
+#endif
+
 /* macros: */
 
 /* the binary log message buffer size: */
@@ -468,6 +473,7 @@ _tmesh_th(int *interactive)
       fprintf(stderr, "%s: %s\n",
 	      io->tmesh_io_name,
 	      strerror(errno));
+      if(!*interactive) break;
       continue;
     }
 
@@ -519,10 +525,11 @@ do_usage(const char *prog_name, char *msg)
                    \n--log LOGFILE          log to LOGFILE		\
                    \n-c, --noninteractive   read no commands from standard input (<INITIAL-CONFIG> required here)\n", prog_name);
   
-#ifdef TME_THREADS_POSIX
 #define fpe(msg) fprintf(stderr, "\t%s", msg);          /* Shorter */
+  fpe("-d <dir> Set current working directory.\n");
+#ifdef TME_THREADS_POSIX
 #ifdef HAVE_PTHREAD_SETAFFINITY_NP
-  fpe("--cpus            cpusetmask\n");
+  fpe("--cpus <cpus>           cpusetmask\n");
 #endif // HAVE_PTHREAD_SETAFFINITY_NP
 #ifdef HAVE_PTHREAD_SETSCHEDPARAM  
   fpe("-a <policy><prio> Set scheduling policy and priority in\n");
@@ -594,7 +601,8 @@ main(int argc, char **argv)
   int usage;
   const char *opt;
   int arg_i;
-  const char **initial_config_filename;
+  char *config_filename;
+  char *config_dirname;
   const char *log_filename;
   int interactive;
   struct tmesh_io io;
@@ -625,7 +633,8 @@ main(int argc, char **argv)
 
   /* check our command line: */
   usage = FALSE;
-  initial_config_filename = NULL;
+  config_filename = NULL;
+  config_dirname = NULL;
   log_filename = "/dev/null";
   interactive = TRUE;
   if ((argv0 = strrchr(argv[0], '/')) == NULL) argv0 = argv[0]; else argv0++;
@@ -634,7 +643,7 @@ main(int argc, char **argv)
 	&& *argv[arg_i] == '-');
        arg_i++) {
     opt = argv[arg_i];
-    if (!strcmp(opt, "--log")) {
+    if (!strcmp(opt, "-l") || !strcmp(opt, "--log")) {
       if (++arg_i < argc) {
 	log_filename = argv[arg_i];
       }
@@ -883,11 +892,30 @@ main(int argc, char **argv)
   /* evaluate pre-threads once (to avoid synchronization problems with init code): */
   if(interactive) printf("%s> ", argv0);
   for(rc = 0;arg_i<argc;arg_i++) {
+    if ((config_filename = strrchr(argv[arg_i], '/')) == NULL) config_filename = argv[arg_i];
+    else {
+      config_filename++;
+      if (config_dirname == NULL) {
+#if defined(__EMSCRIPTEN__) && !defined(NODERAWFS)
+	//	printf("Mounting %s to %s\n", argv[arg_i], dir);
+	// mount the current folder as a NODEFS instance
+	// inside of emscripten
+	EM_ASM(
+	       FS.mkdir('/nme');
+	       FS.mount(NODEFS, { root: '.' }, '/nme');
+	       );
+	chdir(NME_DIR);
+#endif
+	config_dirname = strdup(argv[arg_i]);
+	chdir(dirname(config_dirname));
+      }
+    }
     /* stuff console with the commands to source the initial config files: */
     rc += snprintf(input_stdin->_tmesh_input_buffer + rc,
 		   sizeof(input_stdin->_tmesh_input_buffer) - rc,
-		   "source %s\n", argv[arg_i]);
+		   "source %s\n", config_filename);
   }
+  if(config_dirname) free(config_dirname);
   input_stdin->_tmesh_input_buffer_head += rc;
   printf("%s", input_stdin->_tmesh_input_buffer);
   fflush(stdout);
