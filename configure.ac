@@ -75,6 +75,9 @@ done
 
 AC_CHECK_DEFINE(__EMSCRIPTEN__, [host_type=emscripten], [host_type=$host_os])
 AM_CONDITIONAL([HAVE_EMSCRIPTEN], [test "${host_type}" = emscripten])
+if test "${host_type}" = emscripten; then
+   EXEEXT=.html
+fi
 
 AC_DEFINE_UNQUOTED([TARGET_ALIAS], ["${host}"], [A string representing our host])
 case "${host_type}" in

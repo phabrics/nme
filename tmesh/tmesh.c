@@ -523,10 +523,10 @@ do_usage(const char *prog_name, char *msg)
   fprintf(stderr, "usage: %s [OPTIONS] <INITIAL-CONFIG> \
                    \nwhere OPTIONS are:			   \
                    \n--log LOGFILE          log to LOGFILE		\
-                   \n-c, --noninteractive   read no commands from standard input (<INITIAL-CONFIG> required here)\n", prog_name);
+                   \n-c, --interactive   read no commands from standard input (<INITIAL-CONFIG> not required here)\n", prog_name);
   
 #define fpe(msg) fprintf(stderr, "\t%s", msg);          /* Shorter */
-  fpe("-d <dir> Set current working directory.\n");
+
 #ifdef TME_THREADS_POSIX
 #ifdef HAVE_PTHREAD_SETAFFINITY_NP
   fpe("--cpus <cpus>           cpusetmask\n");
@@ -598,7 +598,6 @@ static void tmesh_finish() {
 int
 main(int argc, char **argv)
 {
-  int usage;
   const char *opt;
   int arg_i;
   char *config_filename;
@@ -632,11 +631,10 @@ main(int argc, char **argv)
 #endif // TME_THREADS_POSIX
 
   /* check our command line: */
-  usage = FALSE;
   config_filename = NULL;
   config_dirname = NULL;
   log_filename = "/dev/null";
-  interactive = TRUE;
+  interactive = FALSE;
   if ((argv0 = strrchr(argv[0], '/')) == NULL) argv0 = argv[0]; else argv0++;
   for (arg_i = 1;
        (arg_i < argc
@@ -648,7 +646,7 @@ main(int argc, char **argv)
 	log_filename = argv[arg_i];
       }
       else {
-	usage = TRUE;
+	arg_i = argc;
 	break;
       }
     }
@@ -656,7 +654,7 @@ main(int argc, char **argv)
       ++arg_i;
       if (arg_i >= argc
 	  || strcmp(argv[arg_i], "binary")) {
-	usage = TRUE;
+	arg_i = argc;
 	break;
       }
       _tmesh_log_mode = TME_LOG_MODE_BINARY;
@@ -670,7 +668,7 @@ main(int argc, char **argv)
       if (++arg_i < argc) {
 	cpus=strtol(argv[arg_i], NULL, 0);
       } else {
-	usage = TRUE;
+	arg_i = argc;
 	break;
       }
     }
@@ -680,7 +678,7 @@ main(int argc, char **argv)
       if (++arg_i < argc) {
 	main_sched_str=argv[arg_i];
       } else {
-	usage = TRUE;
+	arg_i = argc;
 	break;
       }
     }
@@ -688,7 +686,7 @@ main(int argc, char **argv)
       if (++arg_i < argc) {
 	attr_sched_str=argv[arg_i];
       } else {
-	usage = TRUE;
+	arg_i = argc;
 	break;
       }
     }
@@ -699,15 +697,15 @@ main(int argc, char **argv)
       if (++arg_i < argc) {
 	inheritsched_str=argv[arg_i];
       } else {
-	usage = TRUE;
+	arg_i = argc;
 	break;
       }
     }
 #endif // HAVE_PTHREAD_SETSCHEDPARAM  
 #endif // TME_THREADS_POSIX
     else if (!strcmp(opt, "-c")
-	     || !strcmp(opt, "--noninteractive")) {
-      interactive = FALSE;
+	     || !strcmp(opt, "--interactive")) {
+      interactive = TRUE;
     }
     else {
       if (strcmp(opt, "-h")
@@ -716,12 +714,12 @@ main(int argc, char **argv)
 	fprintf(stderr, "%s: unknown option %s\n",
 		argv0, opt);
       }
-      usage = TRUE;
+      arg_i = argc;
       break;
     }
   }
   
-  if (usage) do_usage(argv0, NULL);
+  if (!interactive && (arg_i == argc)) do_usage(argv0, NULL);
 
 #ifdef OPENVPN_VERSION_RESOURCE
   if(init_static()) {
