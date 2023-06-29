@@ -73,6 +73,6 @@ shlibvar.h: $(top_builddir)/config.h Makefile
 	grep LT_DLSEARCH_PATH $(top_builddir)/config.h >> $@
 	echo "#define TME_PACKAGE_PATH \"$(libdir)\"" >> $@
 	echo -n "#define TME_PREFIX_PATH \"" >> $@
-	echo -n / | tr -d "\n\r\f" >> $@
+	echo -n @NME_DIR@ | tr -d "\n\r\f" >> $@
 #	$(CYGPATH_M) / | tr -d "\n\r\f" >> $@
 	echo \" >> $@

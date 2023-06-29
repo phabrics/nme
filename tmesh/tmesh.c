@@ -45,7 +45,6 @@ _TME_RCSID("$Id: tmesh.c,v 1.4 2009/08/30 17:06:38 fredette Exp $");
 #include <string.h>
 #if defined(__EMSCRIPTEN__) && !defined(NODERAWFS)
 #include <emscripten.h>
-#define NME_DIR "/nme"
 #endif
 
 /* macros: */
@@ -900,9 +899,11 @@ main(int argc, char **argv)
 	// inside of emscripten
 	EM_ASM(
 	       FS.mkdir('/nme');
-	       FS.mount(NODEFS, { root: '.' }, '/nme');
+	       FS.mount(NODEFS, { root: '/usr/local' }, '/nme');
+	       FS.mkdir('/machines');
+	       FS.mount(NODEFS, { root: '.' }, '/machines');
 	       );
-	chdir(NME_DIR);
+	chdir("/machines");
 #endif
 	config_dirname = strdup(argv[arg_i]);
 	chdir(dirname(config_dirname));

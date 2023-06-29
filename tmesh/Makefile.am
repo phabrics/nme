@@ -18,17 +18,24 @@ bin_PROGRAMS = tmesh
 tmesh_LDADD = libtmesh.la $(tme_preopen) @TME_HOST_LIBS@
 tmesh_LDFLAGS = -dlpreopen force -dlopen self
 
-if HAVE_EMSCRIPTEN
-tmesh_LDADD += $(SDL_LIBS) -lnodefs.js
-endif
+dist_bin_SCRIPTS = tmesh.sh
 
+if HAVE_EMSCRIPTEN
+bin_SCRIPTS = tmesh.js tmesh.wasm # tmesh.data
+AM_CPPFLAGS += -DNME_DIR=@NME_DIR@
+tmesh_LDADD += $(SDL_LIBS) -lnodefs.js
+#tmesh_LDFLAGS += --emrun --preload-file $(top_srcdir)/tme/tme-plugins.txt@/lib/tme/tme-plugins.txt
+tmesh.js tmesh.wasm: tmesh.html
+	@test -f $@ || cp .libs/$@ .
+else
 if WIN32
 if HAVE_SDL
-tmesh_LDFLAGS += -mwindows
+	tmesh_LDFLAGS += -mwindows
 endif
 else
 install-exec-hook:
 	$(SETCAP) $(DESTDIR)$(bindir)/$(TGTPFX)tmesh$(EXEEXT)
+endif
 endif
 
 include $(top_srcdir)/tme-hosts.txt
