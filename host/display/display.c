@@ -37,7 +37,7 @@
 unsigned int _tme_scanline_pad(int bpl);
 #include "display.h"
 
-static int
+static void
 _tme_screen_update(struct tme_screen *screen) {
   struct tme_fb_connection *conn_fb;
   struct tme_fb_connection *conn_fb_other;
@@ -47,7 +47,7 @@ _tme_screen_update(struct tme_screen *screen) {
   if (screen->tme_screen_update != TME_SCREEN_UPDATE_NONE ||
       !(conn_fb = screen->tme_screen_fb) ||
       !conn_fb->tme_fb_connection_buffsz ||
-      !(conn_fb_other = (struct tme_fb_connection *)conn_fb->tme_fb_connection.tme_connection_other)) return rc;
+      !(conn_fb_other = (struct tme_fb_connection *)conn_fb->tme_fb_connection.tme_connection_other)) return;
   
   /* unlock the mutex: */
   tme_mutex_unlock(&screen->tme_screen_display->tme_display_mutex);
@@ -473,6 +473,7 @@ _tme_screen_configure(struct tme_screen *screen)
     conn_fb->tme_fb_connection_height = height;
     conn_fb->tme_fb_connection_buffsz = 0;
   }
+  return (TME_OK);
 }
 
 /* this is called for a mode change: */

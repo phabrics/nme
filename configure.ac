@@ -57,6 +57,7 @@ AC_PROG_YACC
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 AC_PROG_EGREP
+AC_PROG_LN_S
 
 TME_HOST_TYPES="gtk rfb sdl tun bsd openvpn"
 AC_SUBST(TME_HOST_TYPES)
@@ -1194,7 +1195,7 @@ else
     CFLAGS="${CFLAGS-} -Wno-tautological-compare -Wno-sometimes-uninitialized \
     		       -Wno-sign-compare -Wno-incompatible-pointer-types \
 		       -Wno-implicit-function-declaration -Wno-int-conversion \
-		       -fbracket-depth=1024"
+		       -Wno-cpp -Wno-compound-token-split-by-macro -fbracket-depth=1024"
   fi
   if test "x${have_Og}" = xyes; then
      CFLAGS="${CFLAGS-} -Wno-unused-but-set-variable -Wno-array-bounds -Wno-type-limits -Wno-incompatible-pointer-types \

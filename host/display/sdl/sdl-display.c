@@ -459,8 +459,8 @@ _tme_sdl_display_update(struct tme_display *display) {
 	      (&display->tme_display_element->tme_element_log_handle,
 	       _("ignore SDL event: 0x%x\n"), e.type));
     }
-    return TRUE;
   }
+  return TRUE;
 }
 
 static char *_tme_sdl_keyval_name(tme_keyboard_keyval_t sym) {

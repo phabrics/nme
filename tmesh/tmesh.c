@@ -376,7 +376,7 @@ _tmesh_log_close(struct tmesh_support *support,
 }
 
 /* the tmesh evaluation loop */
-int _tmesh_eval() {
+void _tmesh_eval() {
   int rc;
   struct tmesh_io *io;
   struct _tmesh_input *input;
