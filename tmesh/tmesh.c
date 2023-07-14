@@ -41,11 +41,12 @@ _TME_RCSID("$Id: tmesh.c,v 1.4 2009/08/30 17:06:38 fredette Exp $");
 #include <tme/tmesh.h>
 #include <tme/hash.h>
 #include <tme/libopenvpn/openvpn-setup.h>
-#include <stdio.h>
-#include <string.h>
-#if defined(__EMSCRIPTEN__) && !defined(NODERAWFS)
+#ifdef __EMSCRIPTEN__
+#include <tme/shlibvar.h>
 #include <emscripten.h>
 #endif
+#include <stdio.h>
+#include <string.h>
 
 /* macros: */
 
@@ -469,8 +470,9 @@ _tmesh_th(int *interactive)
     */
     /* if the read failed: */
     if (rc < 0) {
-      fprintf(stderr, "%s: %s\n",
+      fprintf(stderr, "%s(%d): %s\n",
 	      io->tmesh_io_name,
+	      errno,
 	      strerror(errno));
       if(!*interactive) break;
       continue;
@@ -893,20 +895,25 @@ main(int argc, char **argv)
     else {
       config_filename++;
       if (config_dirname == NULL) {
-#if defined(__EMSCRIPTEN__) && !defined(NODERAWFS)
-	//	printf("Mounting %s to %s\n", argv[arg_i], dir);
+#ifdef __EMSCRIPTEN__
+#if defined(USE_NODEFS) && !defined(NODERAWFS)
 	// mount the current folder as a NODEFS instance
 	// inside of emscripten
 	EM_ASM(
 	       FS.mkdir('/nme');
-	       FS.mount(NODEFS, { root: '/usr/local' }, '/nme');
-	       FS.mkdir('/machines');
-	       FS.mount(NODEFS, { root: '.' }, '/machines');
+	       FS.mount(NODEFS, { root: '.' }, '/nme');
 	       );
-	chdir("/machines");
+#endif
+	chdir(TME_PREFIX_PATH);
 #endif
 	config_dirname = strdup(argv[arg_i]);
 	chdir(dirname(config_dirname));
+	free(config_dirname);
+	config_dirname = get_current_dir_name();
+	if(config_dirname) { 
+	  fprintf(stderr, "cwd=%s\n", config_dirname);
+	  free(config_dirname);
+	}
       }
     }
     /* stuff console with the commands to source the initial config files: */
@@ -914,7 +921,6 @@ main(int argc, char **argv)
 		   sizeof(input_stdin->_tmesh_input_buffer) - rc,
 		   "source %s\n", config_filename);
   }
-  if(config_dirname) free(config_dirname);
   input_stdin->_tmesh_input_buffer_head += rc;
   printf("%s", input_stdin->_tmesh_input_buffer);
   fflush(stdout);

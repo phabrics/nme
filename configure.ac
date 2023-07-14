@@ -76,13 +76,15 @@ done
 
 AC_CHECK_DEFINE(__EMSCRIPTEN__, [host_type=emscripten], [host_type=$host_os])
 AM_CONDITIONAL([HAVE_EMSCRIPTEN], [test "${host_type}" = emscripten])
+AM_CONDITIONAL([USE_NODEFS], [test "${enable_nodefs}" = yes])
 if test "${host_type}" = emscripten; then
-   NME_DIR=/nme/
+   NME_DIR=${HOME}/machines
+   ROOT_DIR=/nme/
    EXEEXT=.html
 else
-   NME_DIR=/
+   ROOT_DIR=/
 fi
-AC_SUBST(NME_DIR)
+AC_SUBST(ROOT_DIR)
 
 AC_DEFINE_UNQUOTED([TARGET_ALIAS], ["${host}"], [A string representing our host])
 case "${host_type}" in

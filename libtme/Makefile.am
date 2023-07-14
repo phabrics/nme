@@ -45,7 +45,7 @@ endif
 
 noinst_SCRIPTS = memory-auto.sh
 
-BUILT_SOURCES = shlibvar.h memory-auto.h memory-auto.c
+BUILT_SOURCES = memory-auto.h memory-auto.c
 
 CLEANFILES = $(noinst_SCRIPTS) $(BUILT_SOURCES)
 
@@ -65,14 +65,3 @@ memory-auto.h: memory-auto.sh
 # target to make memory-auto.c:
 memory-auto.c: memory-auto.sh
 	$(SHELL) $< > $@
-
-# module.c needs to know the LTDL_SHLIBPATH_VAR that libltdl
-# is using:
-shlibvar.h: $(top_builddir)/config.h Makefile
-	grep LT_MODULE_PATH_VAR $(top_builddir)/config.h > $@
-	grep LT_DLSEARCH_PATH $(top_builddir)/config.h >> $@
-	echo "#define TME_PACKAGE_PATH \"$(libdir)\"" >> $@
-	echo -n "#define TME_PREFIX_PATH \"" >> $@
-	echo -n @NME_DIR@ | tr -d "\n\r\f" >> $@
-#	$(CYGPATH_M) / | tr -d "\n\r\f" >> $@
-	echo \" >> $@

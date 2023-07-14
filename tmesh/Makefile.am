@@ -21,15 +21,22 @@ tmesh_LDFLAGS = -dlpreopen force -dlopen self
 EXTRA_DIST = tmesh.sh
 
 if HAVE_EMSCRIPTEN
-bin_SCRIPTS = tmesh.sh tmesh.js tmesh.wasm # tmesh.data
-AM_CPPFLAGS += -DNME_DIR=@NME_DIR@
-tmesh_LDADD += $(SDL_LIBS) -lnodefs.js
-#tmesh_LDFLAGS += --emrun --preload-file $(top_srcdir)/tme/tme-plugins.txt@/lib/tme/tme-plugins.txt
+bin_SCRIPTS = tmesh.sh tmesh.js tmesh.wasm tmesh.data
+tmesh_LDADD += $(SDL_LIBS) 
+if USE_NODEFS
+AM_CPPFLAGS += -DUSE_NODEFS
+tmesh_LDADD += -lnodefs.js
+else
+tmesh_LDFLAGS += --emrun --preload-file $(datadir)@@ROOT_DIR@
+endif
 tmesh.js tmesh.wasm: tmesh.html
 	@test -f $@ || $(LN_S) .libs/$@ .
 install-exec-hook:
 	mv -f $(DESTDIR)$(bindir)/tmesh.sh \
 	$(DESTDIR)$(bindir)/tmesh
+	mkdir -p  $(DESTDIR)$(datadir)/lib/tme
+	cp -f $(DESTDIR)$(libdir)/tme/*.la $(DESTDIR)$(datadir)/lib/tme
+	cp -f $(DESTDIR)$(libdir)/tme/*.txt $(DESTDIR)$(datadir)/lib/tme
 else
 if WIN32
 if HAVE_SDL
