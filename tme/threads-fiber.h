@@ -1,6 +1,6 @@
 /* $Id: threads.h,v 1.10 2010/06/05 19:36:35 fredette Exp $ */
 
-/* tme/threads-sjlj.h - header file for setjmp/longjmp threads: */
+/* tme/threads-fiber.h - header file for cooperative threads: */
 
 /*
  * Copyright (c) 2003 Matt Fredette
@@ -46,10 +46,10 @@
 #define tme_thread_cooperative() TRUE
 
 /* initializing and starting: */
-void tme_sjlj_threads_init _TME_P((void));
-#define _tme_threads_init tme_sjlj_threads_init
-#define tme_threads_main_iter tme_sjlj_threads_main_iter
-#define _tme_threads_main_iter tme_sjlj_threads_main_iter
+void tme_fiber_threads_init _TME_P((void));
+#define _tme_threads_init tme_fiber_threads_init
+#define tme_threads_main_iter tme_fiber_threads_main_iter
+#define _tme_threads_main_iter tme_fiber_threads_main_iter
 
 /* thread suspension: */
 #define tme_thread_suspend_others()	do { } while (/* CONSTCOND */ 0)
@@ -68,29 +68,29 @@ typedef int tme_rwlock_t;
 #else  /* !TME_NO_DEBUG_LOCKS */   
 
 /* debugging rwlocks: */
-typedef struct tme_sjlj_rwlock {
+typedef struct tme_fiber_rwlock {
 
   /* nonzero iff the lock is locked: */
-  int _tme_sjlj_rwlock_locked;
+  int _tme_fiber_rwlock_locked;
 
   /* the file and line number of the last locker or unlocker: */
-  _tme_const char *_tme_sjlj_rwlock_file;
-  unsigned long _tme_sjlj_rwlock_line;
+  _tme_const char *_tme_fiber_rwlock_file;
+  unsigned long _tme_fiber_rwlock_line;
 } tme_rwlock_t;
 
 /* lock operations: */
-int tme_sjlj_rwlock_init _TME_P((struct tme_sjlj_rwlock *));
-int tme_sjlj_rwlock_lock _TME_P((struct tme_sjlj_rwlock *, _tme_const char *, unsigned long, int));
-int tme_sjlj_rwlock_unlock _TME_P((struct tme_sjlj_rwlock *, _tme_const char *, unsigned long));
-#define tme_rwlock_init tme_sjlj_rwlock_init
+int tme_fiber_rwlock_init _TME_P((struct tme_fiber_rwlock *));
+int tme_fiber_rwlock_lock _TME_P((struct tme_fiber_rwlock *, _tme_const char *, unsigned long, int));
+int tme_fiber_rwlock_unlock _TME_P((struct tme_fiber_rwlock *, _tme_const char *, unsigned long));
+#define tme_rwlock_init tme_fiber_rwlock_init
 #if defined(__FILE__) && defined(__LINE__)
-#define tme_rwlock_rdlock(l) tme_sjlj_rwlock_lock(l, __FILE__, __LINE__, FALSE)
-#define tme_rwlock_tryrdlock(l) tme_sjlj_rwlock_lock(l, __FILE__, __LINE__, TRUE)
-#define tme_rwlock_rdunlock(l) tme_sjlj_rwlock_unlock(l, __FILE__, __LINE__)
+#define tme_rwlock_rdlock(l) tme_fiber_rwlock_lock(l, __FILE__, __LINE__, FALSE)
+#define tme_rwlock_tryrdlock(l) tme_fiber_rwlock_lock(l, __FILE__, __LINE__, TRUE)
+#define tme_rwlock_rdunlock(l) tme_fiber_rwlock_unlock(l, __FILE__, __LINE__)
 #else  /* !defined(__FILE__) || !defined(__LINE__) */
-#define tme_rwlock_rdlock(l) tme_sjlj_rwlock_lock(l, NULL, 0, FALSE)
-#define tme_rwlock_tryrdlock(l) tme_sjlj_rwlock_lock(l, NULL, 0, TRUE)
-#define tme_rwlock_rdunlock(l) tme_sjlj_rwlock_unlock(l, NULL, 0)
+#define tme_rwlock_rdlock(l) tme_fiber_rwlock_lock(l, NULL, 0, FALSE)
+#define tme_rwlock_tryrdlock(l) tme_fiber_rwlock_lock(l, NULL, 0, TRUE)
+#define tme_rwlock_rdunlock(l) tme_fiber_rwlock_unlock(l, NULL, 0)
 #endif /* !defined(__FILE__) || !defined(__LINE__) */
 
 #endif /* TME_NO_DEBUG_LOCKS */
@@ -117,55 +117,55 @@ int tme_sjlj_rwlock_unlock _TME_P((struct tme_sjlj_rwlock *, _tme_const char *, 
 /* conditions: */
 typedef int tme_cond_t;
 #define tme_cond_init(x) do { } while (/* CONSTCOND */ 0)
-void tme_sjlj_cond_wait_yield _TME_P((tme_cond_t *, tme_mutex_t *));
-void tme_sjlj_cond_sleep_yield _TME_P((tme_cond_t *, tme_mutex_t *, const tme_time_t));
-void tme_sjlj_cond_notify _TME_P((tme_cond_t *, int));
-#define tme_cond_wait_yield tme_sjlj_cond_wait_yield
-#define tme_cond_sleep_yield tme_sjlj_cond_sleep_yield
-#define tme_cond_notify tme_sjlj_cond_notify
+void tme_fiber_cond_wait_yield _TME_P((tme_cond_t *, tme_mutex_t *));
+void tme_fiber_cond_sleep_yield _TME_P((tme_cond_t *, tme_mutex_t *, const tme_time_t));
+void tme_fiber_cond_notify _TME_P((tme_cond_t *, int));
+#define tme_cond_wait_yield tme_fiber_cond_wait_yield
+#define tme_cond_sleep_yield tme_fiber_cond_sleep_yield
+#define tme_cond_notify tme_fiber_cond_notify
 
 /* deadlock sleeping: */
 #define TME_THREAD_TIMEDLOCK		(0)
 #define TME_THREAD_DEADLOCK_SLEEP	abort
 
 /* threads: */
-struct tme_sjlj_thread;
+struct tme_fiber_thread;
 typedef void _tme_thret;
 typedef _tme_thret (*tme_thread_t) _TME_P((void *));
-int tme_sjlj_threads_main_iter _TME_P((void *unused));
-typedef struct tme_sjlj_thread *tme_threadid_t;
-void tme_sjlj_thread_create _TME_P((tme_threadid_t *, tme_thread_t, void *));
-#define tme_thread_create tme_sjlj_thread_create
-void tme_sjlj_yield _TME_P((void));
-#define tme_thread_yield tme_sjlj_yield
+int tme_fiber_threads_main_iter _TME_P((void *unused));
+typedef struct tme_fiber_thread *tme_threadid_t;
+void tme_fiber_thread_create _TME_P((tme_threadid_t *, tme_thread_t, void *));
+#define tme_thread_create tme_fiber_thread_create
+void tme_fiber_yield _TME_P((void));
+#define tme_thread_yield tme_fiber_yield
 #define tme_thread_join(id) do { } while (/* CONSTCOND */ 0)
-void tme_sjlj_exit _TME_P((tme_mutex_t *mutex));
-#define tme_thread_exit tme_sjlj_exit
+void tme_fiber_exit _TME_P((tme_mutex_t *mutex));
+#define tme_thread_exit tme_fiber_exit
 
 /* sleeping: */
-void tme_sjlj_sleep_yield _TME_P((tme_time_t));
-#define tme_thread_sleep tme_sjlj_sleep_yield
+void tme_fiber_sleep_yield _TME_P((tme_time_t));
+#define tme_thread_sleep tme_fiber_sleep_yield
 
 /* Events: */
-typedef struct tme_sjlj_event_set tme_event_set_t;
+typedef struct tme_fiber_event_set tme_event_set_t;
 
-tme_event_set_t *tme_sjlj_event_set_init _TME_P((int *maxevents, unsigned int flags));
-void tme_sjlj_event_free _TME_P((tme_event_set_t *es));
-void tme_sjlj_event_reset _TME_P((tme_event_set_t *es));
-int tme_sjlj_event_del _TME_P((tme_event_set_t *es, event_t event));
-int tme_sjlj_event_ctl _TME_P((tme_event_set_t *es, event_t event, unsigned int rwflags, void *arg));
-int tme_sjlj_event_wait _TME_P((tme_event_set_t *es, const struct timeval *tv, struct event_set_return *out, int outlen, tme_mutex_t *mutex));
+tme_event_set_t *tme_fiber_event_set_init _TME_P((int *maxevents, unsigned int flags));
+void tme_fiber_event_free _TME_P((tme_event_set_t *es));
+void tme_fiber_event_reset _TME_P((tme_event_set_t *es));
+int tme_fiber_event_del _TME_P((tme_event_set_t *es, event_t event));
+int tme_fiber_event_ctl _TME_P((tme_event_set_t *es, event_t event, unsigned int rwflags, void *arg));
+int tme_fiber_event_wait _TME_P((tme_event_set_t *es, const struct timeval *tv, struct event_set_return *out, int outlen, tme_mutex_t *mutex));
 #define tme_event_set(s) (*(struct event_set **)(s))
-#define tme_event_set_init tme_sjlj_event_set_init
-#define tme_event_free tme_sjlj_event_free
-#define tme_event_reset tme_sjlj_event_reset
-#define tme_event_del tme_sjlj_event_del
-#define tme_event_ctl tme_sjlj_event_ctl
-#define tme_event_wait tme_sjlj_event_wait
+#define tme_event_set_init tme_fiber_event_set_init
+#define tme_event_free tme_fiber_event_free
+#define tme_event_reset tme_fiber_event_reset
+#define tme_event_del tme_fiber_event_del
+#define tme_event_ctl tme_fiber_event_ctl
+#define tme_event_wait tme_fiber_event_wait
 
 /* time: */
-tme_time_t tme_sjlj_get_time _TME_P((void));
-//#define tme_thread_get_time() tme_sjlj_get_time()
-extern int tme_sjlj_thread_short;
-#define tme_thread_long() do { tme_sjlj_thread_short = FALSE; } while (/* CONSTCOND */ 0)
+tme_time_t tme_fiber_get_time _TME_P((void));
+//#define tme_thread_get_time() tme_fiber_get_time()
+extern int tme_fiber_thread_short;
+#define tme_thread_long() do { tme_fiber_thread_short = FALSE; } while (/* CONSTCOND */ 0)
 

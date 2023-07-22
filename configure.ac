@@ -942,7 +942,7 @@ if test "x${enable_threads}" = xno; then
 
    dnl Make brackets the quote characters again.
    changequote([, ])dnl
-   tme_thread_types=sjlj
+   tme_thread_types=fiber
 fi
 
 for tme_thread_type in ${tme_thread_types}; do
@@ -954,7 +954,7 @@ xpthreads| xposix)  CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_POSIX"
 xglib)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_GLIB -DUSE_GLIB_TIME ${GLIB_CFLAGS}"
 	 LDFLAGS="${LDFLAGS-} ${GLIB_LIBS}"
 	 ;;
-xsjlj)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_SJLJ"
+xfiber)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_FIBER"
 	 ;;
 esac
 done
@@ -963,7 +963,7 @@ CPPFLAGS="${CPPFLAGS-} -D_GNU_SOURCE"
 
 AM_CONDITIONAL([THREADS_POSIX], [test "x${tme_thread_types}" = xpthreads || test "x${tme_thread_types}" = xposix])
 AM_CONDITIONAL([THREADS_GLIB], [test "x${tme_thread_type}" = xglib])
-AM_CONDITIONAL([THREADS_SJLJ], [test "x${tme_thread_types}" = xsjlj])
+AM_CONDITIONAL([THREADS_FIBER], [test "x${tme_thread_types}" = xfiber])
 AC_MSG_RESULT($tme_thread_types)
 
 dnl Configures for the system(s) to emulate.

@@ -77,7 +77,7 @@ struct tuntap *setup_tuntap(struct frame *frame, struct link_socket_addr *lsa, s
     do_ifconfig(tt, guess, TUN_MTU_SIZE(frame), es);
   }
 
-#ifdef TME_THREADS_SJLJ
+#ifdef TME_THREADS_FIBER
   /* temporarily turn off ipv6 to disable protocol info being prepended to packets on Linux */
   tt->ipv6 = FALSE;
 #endif

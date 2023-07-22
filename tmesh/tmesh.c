@@ -890,36 +890,42 @@ main(int argc, char **argv)
   
   /* evaluate pre-threads once (to avoid synchronization problems with init code): */
   if(interactive) printf("%s> ", argv0);
+
+#ifdef __EMSCRIPTEN__
+#if defined(USE_NODEFS) && !defined(NODERAWFS)
+  // mount the current folder as a NODEFS instance
+  // inside of emscripten
+  EM_ASM(
+	 FS.mkdir('/nme');
+	 FS.mount(NODEFS, { root: '.' }, '/nme');
+	 );
+#endif
+  chdir(TME_PREFIX_PATH);
+#endif
+
   for(rc = 0;arg_i<argc;arg_i++) {
     if ((config_filename = strrchr(argv[arg_i], '/')) == NULL) config_filename = argv[arg_i];
     else {
       config_filename++;
       if (config_dirname == NULL) {
-#ifdef __EMSCRIPTEN__
-#if defined(USE_NODEFS) && !defined(NODERAWFS)
-	// mount the current folder as a NODEFS instance
-	// inside of emscripten
-	EM_ASM(
-	       FS.mkdir('/nme');
-	       FS.mount(NODEFS, { root: '.' }, '/nme');
-	       );
-#endif
-	chdir(TME_PREFIX_PATH);
-#endif
-	config_dirname = strdup(argv[arg_i]);
-	chdir(dirname(config_dirname));
-	free(config_dirname);
+	if(strlen(config_filename)) {
+	  config_dirname = strdup(argv[arg_i]);
+	  chdir(dirname(config_dirname));
+	  free(config_dirname);
+	} else
+	  chdir(argv[arg_i]);
 	config_dirname = get_current_dir_name();
 	if(config_dirname) { 
-	  fprintf(stderr, "cwd=%s\n", config_dirname);
+	  fprintf(stderr, "cd %s\n", config_dirname);
 	  free(config_dirname);
 	}
       }
     }
-    /* stuff console with the commands to source the initial config files: */
-    rc += snprintf(input_stdin->_tmesh_input_buffer + rc,
-		   sizeof(input_stdin->_tmesh_input_buffer) - rc,
-		   "source %s\n", config_filename);
+    if(strlen(config_filename))
+      /* stuff console with the commands to source the initial config files: */
+      rc += snprintf(input_stdin->_tmesh_input_buffer + rc,
+		     sizeof(input_stdin->_tmesh_input_buffer) - rc,
+		     "source %s\n", config_filename);
   }
   input_stdin->_tmesh_input_buffer_head += rc;
   printf("%s", input_stdin->_tmesh_input_buffer);

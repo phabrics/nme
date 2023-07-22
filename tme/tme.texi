@@ -296,7 +296,7 @@ bison (for generating tmesh input grammar)
 perl (for runtime, or compile-time if regenerating certain sources)
 
 @item
-Glib2 (if using glib or sjlj threading, or automatically if GTK used)
+Glib2 (if using glib or fiber threading, or automatically if GTK used)
 
 @item
 GTK+3 (for a GUI, but will work without if serial support available)
@@ -418,12 +418,12 @@ usually not for standard install locations such as /usr/local
 
 Note: recode doesn't seem to currently work on 64-bit platforms with
 threading enabled, so --disable-recode is required on these hosts when
-using multithreading. SJLJ threading (i.e., single-threaded
+using multithreading. FIBER threading (i.e., single-threaded
 multitasking using setjmp/longjmp) should work with recode on all
 platforms that it builds on.
 
-Note: --disable-threads is an alternative way to use the classic SJLJ
-threading model. Also specified by --enable-threads=sjlj
+Note: --disable-threads is an alternative way to use the classic FIBER
+threading model. Also specified by --enable-threads=fiber
 
 Note: To debug, or if you otherwise have issues running TME, you may
 try the --enable-debug configure option.

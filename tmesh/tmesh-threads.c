@@ -32,7 +32,6 @@
  */
 
 #include <tme/common.h>
-_TME_RCSID("$Id: threads-sjlj.c,v 1.18 2010/06/05 19:10:28 fredette Exp $");
 
 /* includes: */
 #include <tme/threads.h>

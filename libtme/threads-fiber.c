@@ -1,6 +1,6 @@
-/* $Id: threads-sjlj.c,v 1.18 2010/06/05 19:10:28 fredette Exp $ */
+/* $Id: threads-fiber.c,v 1.18 2010/06/05 19:10:28 fredette Exp $ */
 
-/* libtme/threads-sjlj.c - implementation of setjmp/longjmp threads: */
+/* libtme/threads-fiber.c - implementation of cooperative threads: */
 
 /*
  * Copyright (c) 2003 Matt Fredette, 2014-2016 Ruben Agin
@@ -34,176 +34,228 @@
  */
 
 #include <tme/common.h>
-_TME_RCSID("$Id: threads-sjlj.c,v 1.18 2010/06/05 19:10:28 fredette Exp $");
+_TME_RCSID("$Id: threads-fiber.c,v 1.18 2010/06/05 19:10:28 fredette Exp $");
 
 /* includes: */
 #include <tme/threads.h>
 #include <stdlib.h>
-#ifndef WIN32
+#ifdef __EMSCRIPTEN__
+#include <emscripten/fiber.h>
+#elif !defined(WIN32)
+#define USE_SJLJ
 #include <setjmp.h>
 #endif
 
 /* thread states: */
-#define TME_SJLJ_THREAD_STATE_BLOCKED		(1)
-#define TME_SJLJ_THREAD_STATE_RUNNABLE		(2)
-#define TME_SJLJ_THREAD_STATE_DISPATCHING	(3)
+#define TME_FIBER_THREAD_STATE_BLOCKED		(1)
+#define TME_FIBER_THREAD_STATE_RUNNABLE		(2)
+#define TME_FIBER_THREAD_STATE_DISPATCHING	(3)
 #define TME_NUM_EVENTS 1024
 #define TME_NUM_EVFLAGS 3
 
 /* types: */
 
 /* a thread: */
-struct tme_sjlj_thread {
+typedef struct tme_fiber_thread {
 
   /* the all-threads list: */
-  struct tme_sjlj_thread *next;
-  struct tme_sjlj_thread **prev;
+  struct tme_fiber_thread *next;
+  struct tme_fiber_thread **prev;
 
   /* the current state of the thread, and any state-related list that
      it is on: */
-  int tme_sjlj_thread_state;
-  struct tme_sjlj_thread *state_next;
-  struct tme_sjlj_thread **state_prev;
+  int tme_fiber_thread_state;
+  struct tme_fiber_thread *state_next;
+  struct tme_fiber_thread **state_prev;
 
   /* the thread function: */
-  void *tme_sjlj_thread_func_private;
-  tme_thread_t tme_sjlj_thread_func;
+  tme_thread_t tme_fiber_thread_func;
+  void *tme_fiber_thread_func_private;
+
+#ifdef __EMSCRIPTEN__
+  emscripten_fiber_t tme_fiber_context;
+  char tme_fiber_asyncify_stack[1024];
+  char tme_fiber_c_stack[4096]  __attribute__((aligned(16)));
+#endif  
 
   /* any condition that this thread is waiting on: */
-  tme_cond_t *tme_sjlj_thread_cond;
+  tme_cond_t *tme_fiber_thread_cond;
 
   /* any events that this thread is waiting on: */
-  struct tme_sjlj_event_set *tme_sjlj_thread_events;
+  struct tme_fiber_event_set *tme_fiber_thread_events;
   
   /* if nonzero, the amount of time that this thread is sleeping,
      followed by the time the sleep will timeout.  all threads with
      timeouts are kept on a sorted list: */
-  tme_time_t tme_sjlj_thread_sleep;
-  tme_time_t tme_sjlj_thread_timeout;
-  struct tme_sjlj_thread *timeout_next;
-  struct tme_sjlj_thread **timeout_prev;
+  tme_time_t tme_fiber_thread_sleep;
+  tme_time_t tme_fiber_thread_timeout;
+  struct tme_fiber_thread *timeout_next;
+  struct tme_fiber_thread **timeout_prev;
 
   /* the last dispatch number for this thread: */
-  tme_uint32_t tme_sjlj_thread_dispatch_number;
-};
+  tme_uint32_t tme_fiber_thread_dispatch_number;
+} tme_fiber_thread_t;
 
 /* event envelope */
-struct tme_sjlj_event {
+struct tme_fiber_event {
   event_t event;
   unsigned int flags;
   void *arg;
 };
 
 /* a collection of events */
-struct tme_sjlj_event_set {
+struct tme_fiber_event_set {
   struct event_set *es;
   int max_event;
   unsigned int flags;
-  struct tme_sjlj_event events[0];
+  struct tme_fiber_event events[0];
 };
 
 /* thread blocked on an event */
-struct tme_sjlj_event_arg {
-  struct tme_sjlj_thread *thread;
+struct tme_fiber_event_arg {
+  tme_fiber_thread_t *thread;
   void *arg;
 };
 
 /* globals: */
 
 /* the all-threads list: */
-static struct tme_sjlj_thread *tme_sjlj_threads_all;
+static tme_fiber_thread_t *tme_fiber_threads_all;
 
 /* the timeout-threads list: */
-static struct tme_sjlj_thread *tme_sjlj_threads_timeout;
+static tme_fiber_thread_t *tme_fiber_threads_timeout;
 
 /* the runnable-threads list: */
-static struct tme_sjlj_thread *tme_sjlj_threads_runnable;
+static tme_fiber_thread_t *tme_fiber_threads_runnable;
 
 /* the dispatching-threads list: */
-static struct tme_sjlj_thread *tme_sjlj_threads_dispatching;
+static tme_fiber_thread_t *tme_fiber_threads_dispatching;
 
 /* the active thread: */
-static struct tme_sjlj_thread *tme_sjlj_thread_active;
+static tme_fiber_thread_t *tme_fiber_thread_active;
 
 /* this is set if the active thread is exiting: */
-static int tme_sjlj_thread_exiting;
+static int tme_fiber_thread_exiting;
 
-#ifndef WIN32
+/* the fiber function interface to the platform-specific implementations: */
+
+static inline void tme_fiber_convert(tme_fiber_thread_t *thread) {
+#ifdef __EMSCRIPTEN__
+  emscripten_fiber_init_from_current_context(&thread->tme_fiber_context,
+					     thread->tme_fiber_asyncify_stack,
+					     sizeof(thread->tme_fiber_asyncify_stack));
+#elif defined(WIN32)
+  thread->tme_fiber_thread_func = ConvertThreadToFiber(NULL);
+#else
+  thread->tme_fiber_thread_func = NULL;
+#endif
+}
+
+static inline void tme_fiber_create(tme_fiber_thread_t *thread,
+				    tme_thread_t func,
+				    void *func_private) {
+#ifdef __EMSCRIPTEN__
+  emscripten_fiber_init(&thread->tme_fiber_context,
+			func,
+			func_private,
+			thread->tme_fiber_c_stack,
+			sizeof(thread->tme_fiber_c_stack),
+			thread->tme_fiber_asyncify_stack,
+			sizeof(thread->tme_fiber_asyncify_stack));
+#elif defined(WIN32)
+  thread->tme_fiber_thread_func = CreateFiber(0,
+					      func,
+					      func_private);
+#else
+  thread->tme_fiber_thread_func_private = func_private;
+  thread->tme_fiber_thread_func = func;
+#endif
+}
+
+#ifdef USE_SJLJ
 /* this is a jmp_buf back to the dispatcher: */
-static jmp_buf tme_sjlj_dispatcher_jmp;
+static jmp_buf tme_fiber_dispatcher_jmp;
+#define tme_fiber_switch(old_thread, new_thread)
+#else
+static inline void tme_fiber_switch(tme_fiber_thread_t *old_thread,
+				    tme_fiber_thread_t *new_thread) {
+#ifdef __EMSCRIPTEN__
+  emscripten_fiber_swap(&old_thread->tme_fiber_context,
+			&new_thread->tme_fiber_context);
+#elif defined(WIN32)
+  SwitchToFiber(new_thread->tme_fiber_thread_func);
+#endif
+}
 #endif
 
 /* the main loop events: */
-static struct tme_sjlj_event_set *tme_sjlj_main_events;
+static struct tme_fiber_event_set *tme_fiber_main_events;
 
 /* this dummy thread structure is filled before a yield to represent
    what, if anything, the active thread is blocking on when it yields: */
-static struct tme_sjlj_thread tme_sjlj_thread_blocked;
+static tme_fiber_thread_t tme_fiber_thread_blocked;
 
 /* the dispatch number: */
-static tme_uint32_t _tme_sjlj_thread_dispatch_number;
+static tme_uint32_t _tme_fiber_thread_dispatch_number;
 
 /* a reasonably current time: */
-static tme_time_t _tme_sjlj_now;
+static tme_time_t _tme_fiber_now;
 
 /* if nonzero, the last dispatched thread ran for only a short time: */
-int tme_sjlj_thread_short;
+int tme_fiber_thread_short;
 
 /* this initializes the threads system: */
 void
-tme_sjlj_threads_init()
+tme_fiber_threads_init()
 {
   int num = TME_NUM_EVENTS;
   
   /* there are no threads: */
-  tme_sjlj_threads_all = NULL;
-  tme_sjlj_threads_timeout = NULL;
-  tme_sjlj_threads_runnable = NULL;
-  tme_sjlj_threads_dispatching = NULL;
-  tme_sjlj_thread_active = NULL;
-  tme_sjlj_thread_exiting = FALSE;
+  tme_fiber_threads_all = NULL;
+  tme_fiber_threads_timeout = NULL;
+  tme_fiber_threads_runnable = NULL;
+  tme_fiber_threads_dispatching = NULL;
+  tme_fiber_thread_active = NULL;
+  tme_fiber_thread_exiting = FALSE;
 
   /* no threads are waiting on any fds: */
-  tme_sjlj_main_events = tme_sjlj_event_set_init(&num, 0);
+  tme_fiber_main_events = tme_fiber_event_set_init(&num, 0);
   
   /* initialize the thread-blocked structure: */
-  tme_sjlj_thread_blocked.tme_sjlj_thread_func = NULL;
-#ifdef WIN32
-  tme_sjlj_thread_blocked.tme_sjlj_thread_func = ConvertThreadToFiber(NULL);
-#endif
-  tme_sjlj_thread_blocked.tme_sjlj_thread_cond = NULL;
-  tme_sjlj_thread_blocked.tme_sjlj_thread_events = NULL;
-  tme_sjlj_thread_blocked.tme_sjlj_thread_sleep = 0;
-  tme_sjlj_thread_blocked.tme_sjlj_thread_timeout = 0;
+  tme_fiber_convert(&tme_fiber_thread_blocked);
+  tme_fiber_thread_blocked.tme_fiber_thread_cond = NULL;
+  tme_fiber_thread_blocked.tme_fiber_thread_events = NULL;
+  tme_fiber_thread_blocked.tme_fiber_thread_sleep = 0;
+  tme_fiber_thread_blocked.tme_fiber_thread_timeout = 0;
 }
 
 /* this returns a reasonably current time: */
 tme_time_t
-tme_sjlj_get_time()
+tme_fiber_get_time()
 {
 
   /* if we need to, call tme_thread_get_time(): */
-  if (__tme_predict_false(!tme_sjlj_thread_short)) {
-    _tme_sjlj_now = tme_thread_get_time();
-    tme_sjlj_thread_short = TRUE;
+  if (__tme_predict_false(!tme_fiber_thread_short)) {
+    _tme_fiber_now = tme_thread_get_time();
+    tme_fiber_thread_short = TRUE;
   }
 
   /* return the reasonably current time: */
-  return _tme_sjlj_now;
+  return _tme_fiber_now;
 }
 
 /* this changes a thread's state: */
 static void
-_tme_sjlj_change_state(struct tme_sjlj_thread *thread, int state)
+_tme_fiber_change_state(tme_fiber_thread_t *thread, int state)
 {
-  struct tme_sjlj_thread **_thread_prev;
-  struct tme_sjlj_thread *thread_next;
+  tme_fiber_thread_t **_thread_prev;
+  tme_fiber_thread_t *thread_next;
 
   /* the active thread is the only thread that can become blocked.
      the active thread cannot become runnable or dispatching: */
-  assert (state == TME_SJLJ_THREAD_STATE_BLOCKED
-	  ? (thread->state_next == tme_sjlj_thread_active)
-	  : (thread != tme_sjlj_thread_active));
+  assert (state == TME_FIBER_THREAD_STATE_BLOCKED
+	  ? (thread->state_next == tme_fiber_thread_active)
+	  : (thread != tme_fiber_thread_active));
 
   /* if the thread's current state is not BLOCKED: */
   _thread_prev = thread->state_prev;
@@ -222,36 +274,36 @@ _tme_sjlj_change_state(struct tme_sjlj_thread *thread, int state)
   }
 
   /* if the thread's desired state is not BLOCKED: */
-  if (state != TME_SJLJ_THREAD_STATE_BLOCKED) {
+  if (state != TME_FIBER_THREAD_STATE_BLOCKED) {
 
     /* this thread must be runnable, or this thread must be
        dispatching before threads are being dispatched: */
-    assert (state == TME_SJLJ_THREAD_STATE_RUNNABLE
-	    || (state == TME_SJLJ_THREAD_STATE_DISPATCHING
-		&& tme_sjlj_thread_active == NULL));
+    assert (state == TME_FIBER_THREAD_STATE_RUNNABLE
+	    || (state == TME_FIBER_THREAD_STATE_DISPATCHING
+		&& tme_fiber_thread_active == NULL));
 
     /* if threads are being dispatched, and this thread wasn't already
        in this dispatch: */
-    if (tme_sjlj_thread_active != NULL
-	&& thread->tme_sjlj_thread_dispatch_number != _tme_sjlj_thread_dispatch_number) {
+    if (tme_fiber_thread_active != NULL
+	&& thread->tme_fiber_thread_dispatch_number != _tme_fiber_thread_dispatch_number) {
 
       /* add this thread to the dispatching list after the current
 	 thread: */
-      _thread_prev = &tme_sjlj_thread_active->state_next;
+      _thread_prev = &tme_fiber_thread_active->state_next;
     }
 
     /* otherwise, if this thread is dispatching: */
-    else if (state == TME_SJLJ_THREAD_STATE_DISPATCHING) {
+    else if (state == TME_FIBER_THREAD_STATE_DISPATCHING) {
 
       /* add this thread to the dispatching list at the head: */
-      _thread_prev = &tme_sjlj_threads_dispatching;
+      _thread_prev = &tme_fiber_threads_dispatching;
     }
 
     /* otherwise, this thread is runnable: */
     else {
 
       /* add this thread to the runnable list at the head: */
-      _thread_prev = &tme_sjlj_threads_runnable;
+      _thread_prev = &tme_fiber_threads_runnable;
     }
 
     /* add this thread to the list: */
@@ -264,70 +316,70 @@ _tme_sjlj_change_state(struct tme_sjlj_thread *thread, int state)
     }
 
     /* all nonblocked threads appear to be runnable: */
-    state = TME_SJLJ_THREAD_STATE_RUNNABLE;
+    state = TME_FIBER_THREAD_STATE_RUNNABLE;
   }
 
   /* set the new state of the thread: */
-  thread->tme_sjlj_thread_state = state;
+  thread->tme_fiber_thread_state = state;
 }
 
 /* this moves the runnable list to the dispatching list: */
 static void
-_tme_sjlj_threads_dispatching_runnable(void)
+_tme_fiber_threads_dispatching_runnable(void)
 {
-  struct tme_sjlj_thread *threads_dispatching;
+  tme_fiber_thread_t *threads_dispatching;
 
   /* the dispatching list must be empty: */
-  assert (tme_sjlj_threads_dispatching == NULL);
+  assert (tme_fiber_threads_dispatching == NULL);
 
   /* move the runnable list to the dispatching list: */
-  threads_dispatching = tme_sjlj_threads_runnable;
-  tme_sjlj_threads_runnable = NULL;
-  tme_sjlj_threads_dispatching = threads_dispatching;
+  threads_dispatching = tme_fiber_threads_runnable;
+  tme_fiber_threads_runnable = NULL;
+  tme_fiber_threads_dispatching = threads_dispatching;
   if (threads_dispatching != NULL) {
-    threads_dispatching->state_prev = &tme_sjlj_threads_dispatching;
+    threads_dispatching->state_prev = &tme_fiber_threads_dispatching;
   }
 }
 
 /* this moves all threads that have timed out to the dispatching list: */
 static void
-_tme_sjlj_threads_dispatching_timeout(void)
+_tme_fiber_threads_dispatching_timeout(void)
 {
   tme_time_t now;
-  struct tme_sjlj_thread *thread_timeout;
+  tme_fiber_thread_t *thread_timeout;
 
   /* get the current time: */
   now = tme_thread_get_time();
 
   /* loop over the timeout list: */
-  for (thread_timeout = tme_sjlj_threads_timeout;
+  for (thread_timeout = tme_fiber_threads_timeout;
        thread_timeout != NULL;
        thread_timeout = thread_timeout->timeout_next) {
 
     /* if this timeout has not expired: */
-    if (thread_timeout->tme_sjlj_thread_timeout <= now)
+    if (thread_timeout->tme_fiber_thread_timeout <= now)
       /* move this thread to the dispatching list: */
-      _tme_sjlj_change_state(thread_timeout, TME_SJLJ_THREAD_STATE_DISPATCHING);
-    else if(tme_sjlj_thread_blocked.tme_sjlj_thread_timeout <= now ||
-	    thread_timeout->tme_sjlj_thread_timeout <
-	    tme_sjlj_thread_blocked.tme_sjlj_thread_timeout)
+      _tme_fiber_change_state(thread_timeout, TME_FIBER_THREAD_STATE_DISPATCHING);
+    else if(tme_fiber_thread_blocked.tme_fiber_thread_timeout <= now ||
+	    thread_timeout->tme_fiber_thread_timeout <
+	    tme_fiber_thread_blocked.tme_fiber_thread_timeout)
       /* set the minimum timeout to wait: */
-      tme_sjlj_thread_blocked.tme_sjlj_thread_timeout =
-	thread_timeout->tme_sjlj_thread_timeout;
+      tme_fiber_thread_blocked.tme_fiber_thread_timeout =
+	thread_timeout->tme_fiber_thread_timeout;
   }
 }
 
 /* this moves all threads with the given event flags to
    the dispatching list: */
 static void
-_tme_sjlj_threads_dispatching_event(struct tme_sjlj_event_arg *event_arg,
+_tme_fiber_threads_dispatching_event(struct tme_fiber_event_arg *event_arg,
 				    unsigned int flags)
 {
   int i;
   
   for(i=0;i<TME_NUM_EVFLAGS;i++) {
     if(flags & (1<<i)) {
-      _tme_sjlj_change_state(event_arg->thread, TME_SJLJ_THREAD_STATE_DISPATCHING);
+      _tme_fiber_change_state(event_arg->thread, TME_FIBER_THREAD_STATE_DISPATCHING);
     }
     event_arg++;
   }
@@ -335,24 +387,24 @@ _tme_sjlj_threads_dispatching_event(struct tme_sjlj_event_arg *event_arg,
 
 /* this dispatches all dispatching threads: */
 static void
-tme_sjlj_dispatch(volatile int passes)
+tme_fiber_dispatch(volatile int passes)
 {
-  struct tme_sjlj_thread * volatile thread;
-  struct tme_sjlj_thread **_thread_timeout_prev;
-  struct tme_sjlj_thread *thread_timeout_next;
-  struct tme_sjlj_thread *thread_other;
+  tme_fiber_thread_t * volatile thread;
+  tme_fiber_thread_t **_thread_timeout_prev;
+  tme_fiber_thread_t *thread_timeout_next;
+  tme_fiber_thread_t *thread_other;
   volatile int _passes;
   int rc_one;
 
   /* dispatch the given number of passes over the dispatching threads: */
   for (_passes = passes; _passes-- > 0; ) {
-    for (tme_sjlj_thread_active = tme_sjlj_threads_dispatching;
-	 (thread = tme_sjlj_thread_active) != NULL; ) {
+    for (tme_fiber_thread_active = tme_fiber_threads_dispatching;
+	 (thread = tme_fiber_thread_active) != NULL; ) {
 
       /* if this thread is on the timeout list: */
       _thread_timeout_prev = thread->timeout_prev;
       assert ((_thread_timeout_prev != NULL)
-	      == (thread->tme_sjlj_thread_sleep != 0));
+	      == (thread->tme_fiber_thread_sleep != 0));
       if (_thread_timeout_prev != NULL) {
 
 	/* remove this thread from the timeout list: */
@@ -368,34 +420,34 @@ tme_sjlj_dispatch(volatile int passes)
       }
 
       /* set the dispatch number on this thread: */
-      thread->tme_sjlj_thread_dispatch_number = _tme_sjlj_thread_dispatch_number;
+      thread->tme_fiber_thread_dispatch_number = _tme_fiber_thread_dispatch_number;
       
       /* when this active thread yields, we'll return here, where we
 	 will continue the inner dispatching loop: */
-#ifdef WIN32
-      SwitchToFiber(thread->tme_sjlj_thread_func);
-#else
-      rc_one = setjmp(tme_sjlj_dispatcher_jmp);
+#ifdef USE_SJLJ
+      rc_one = setjmp(tme_fiber_dispatcher_jmp);
       if (rc_one) {
 	continue;
       }
 
       /* run this thread.  if it happens to return, just call
-         tme_sjlj_exit(): */
-      (*thread->tme_sjlj_thread_func)(thread->tme_sjlj_thread_func_private);
-      //      tme_sjlj_exit();
+         tme_fiber_exit(): */
+      (*thread->tme_fiber_thread_func)(thread->tme_fiber_thread_func_private);
+      //      tme_fiber_exit();
+#else
+      tme_fiber_switch(&tme_fiber_thread_blocked, thread);
 #endif
     }
   }
 
   /* if there are still dispatching threads, move them en masse to the
      runnable list: */
-  thread = tme_sjlj_threads_dispatching;
+  thread = tme_fiber_threads_dispatching;
   if (thread != NULL) {
-    thread_other = tme_sjlj_threads_runnable;
-    thread->state_prev = &tme_sjlj_threads_runnable;
-    tme_sjlj_threads_runnable = thread;
-    tme_sjlj_threads_dispatching = NULL;
+    thread_other = tme_fiber_threads_runnable;
+    thread->state_prev = &tme_fiber_threads_runnable;
+    tme_fiber_threads_runnable = thread;
+    tme_fiber_threads_dispatching = NULL;
     for (;; thread = thread->state_next) {
       if (thread->state_next == NULL) {
 	thread->state_next = thread_other;
@@ -408,12 +460,12 @@ tme_sjlj_dispatch(volatile int passes)
   }
 
   /* the next dispatch will use the next number: */
-  _tme_sjlj_thread_dispatch_number++;
+  _tme_fiber_thread_dispatch_number++;
 }
 
 /* this is the main loop iteration function: */
 int
-tme_sjlj_threads_main_iter(void *unused)
+tme_fiber_threads_main_iter(void *unused)
 {
   int fd;
   struct timeval timeout;
@@ -423,7 +475,7 @@ tme_sjlj_threads_main_iter(void *unused)
   /* make the select timeout: */
 
   /* if the timeout list is empty: */
-  if (tme_sjlj_threads_timeout == NULL) {
+  if (tme_fiber_threads_timeout == NULL) {
 
     /* assume that we will block in select indefinitely.  there must
        either be runnable threads (in which case we will not block
@@ -431,37 +483,37 @@ tme_sjlj_threads_main_iter(void *unused)
        descriptors: */
     timeout.tv_sec = BIG_TIMEOUT;
     timeout.tv_usec = 0;
-    assert (tme_sjlj_threads_runnable != NULL
-	    || tme_sjlj_main_events->max_event >= 0);
+    assert (tme_fiber_threads_runnable != NULL
+	    || tme_fiber_main_events->max_event >= 0);
   }
 
   /* otherwise, the timeout list is not empty: */
-  else if(tme_sjlj_thread_blocked.tme_sjlj_thread_timeout >
+  else if(tme_fiber_thread_blocked.tme_fiber_thread_timeout >
 	  (now = tme_thread_get_time())) {
-    now = tme_sjlj_thread_blocked.tme_sjlj_thread_timeout - now;
+    now = tme_fiber_thread_blocked.tme_fiber_thread_timeout - now;
     /* set the timeout time: */
     timeout.tv_sec = TME_TIME_GET_SEC(now);
     timeout.tv_usec = TME_TIME_GET_USEC(now % TME_FRAC_PER_SEC);
   }
 
   /* if there are runnable threads, make this a poll: */
-  if (tme_sjlj_threads_runnable != NULL) {
+  if (tme_fiber_threads_runnable != NULL) {
     timeout.tv_sec = 0;
     timeout.tv_usec = 0;
   }
   
-  rc = (tme_sjlj_main_events->max_event >= 0) ?
-    (event_wait(tme_sjlj_main_events->es, &timeout, esr, SIZE(esr))) :
-    (tme_sjlj_main_events->max_event);
+  rc = (tme_fiber_main_events->max_event >= 0) ?
+    (event_wait(tme_fiber_main_events->es, &timeout, esr, SIZE(esr))) :
+    (tme_fiber_main_events->max_event);
   
   /* we were in select() for an unknown amount of time: */
   tme_thread_long();
 
   /* move all runnable threads to the dispatching list: */
-  _tme_sjlj_threads_dispatching_runnable();
+  _tme_fiber_threads_dispatching_runnable();
 
   /* move all threads that have timed out to the dispatching list: */
-  _tme_sjlj_threads_dispatching_timeout();
+  _tme_fiber_threads_dispatching_timeout();
 
   /* if some fds are ready, dispatch them: */
   if (rc > 0) {	
@@ -472,28 +524,28 @@ tme_sjlj_threads_main_iter(void *unused)
 
 	/* move all threads that match the conditions on this file
 	   descriptor to the dispatching list: */
-	_tme_sjlj_threads_dispatching_event((struct tme_sjlj_event_arg *)e->arg, e->rwflags);
+	_tme_fiber_threads_dispatching_event((struct tme_fiber_event_arg *)e->arg, e->rwflags);
 
       }
     }
   }
     
   /* dispatch: */
-  tme_sjlj_dispatch(1);
+  tme_fiber_dispatch(1);
 
   return TME_OK;
 }
 
 /* this creates a new thread: */
 void
-tme_sjlj_thread_create(tme_threadid_t *thr, tme_thread_t func, void *func_private)
+tme_fiber_thread_create(tme_threadid_t *thr, tme_thread_t func, void *func_private)
 {
-  struct tme_sjlj_thread *thread;
+  tme_fiber_thread_t *thread;
 
   /* allocate a new thread and put it on the all-threads list: */
-  thread = tme_new(struct tme_sjlj_thread, 1);
+  thread = tme_new(tme_fiber_thread_t, 1);
   *thr = thread;
-  thread->prev = &tme_sjlj_threads_all;
+  thread->prev = &tme_fiber_threads_all;
   thread->next = *thread->prev;
   *thread->prev = thread;
   if (thread->next != NULL) {
@@ -501,37 +553,31 @@ tme_sjlj_thread_create(tme_threadid_t *thr, tme_thread_t func, void *func_privat
   }
 
   /* initialize the thread: */
-  thread->tme_sjlj_thread_func_private = func_private;
-  thread->tme_sjlj_thread_func = func;
-#ifdef WIN32
-    thread->tme_sjlj_thread_func = CreateFiber(0,
-					       thread->tme_sjlj_thread_func,
-					       thread->tme_sjlj_thread_func_private);
-#endif
-  thread->tme_sjlj_thread_cond = NULL;
-  thread->tme_sjlj_thread_events = NULL;
-  thread->tme_sjlj_thread_sleep = 0;
+  tme_fiber_create(thread, func, func_private);
+  thread->tme_fiber_thread_cond = NULL;
+  thread->tme_fiber_thread_events = NULL;
+  thread->tme_fiber_thread_sleep = 0;
   thread->timeout_prev = NULL;
 
   /* make this thread runnable: */
-  thread->tme_sjlj_thread_state = TME_SJLJ_THREAD_STATE_BLOCKED;
+  thread->tme_fiber_thread_state = TME_FIBER_THREAD_STATE_BLOCKED;
   thread->state_prev = NULL;
   thread->state_next = NULL;
-  thread->tme_sjlj_thread_dispatch_number = _tme_sjlj_thread_dispatch_number - 1;
-  _tme_sjlj_change_state(thread,
-			 TME_SJLJ_THREAD_STATE_RUNNABLE);
+  thread->tme_fiber_thread_dispatch_number = _tme_fiber_thread_dispatch_number - 1;
+  _tme_fiber_change_state(thread,
+			 TME_FIBER_THREAD_STATE_RUNNABLE);
 }
 
 /* this makes a thread wait on a condition: */
 void
-tme_sjlj_cond_wait_yield(tme_cond_t *cond, tme_mutex_t *mutex)
+tme_fiber_cond_wait_yield(tme_cond_t *cond, tme_mutex_t *mutex)
 {
 
   /* unlock the mutex: */
   tme_mutex_unlock(mutex);
 
   /* remember that this thread is waiting on this condition: */
-  tme_sjlj_thread_blocked.tme_sjlj_thread_cond = cond;
+  tme_fiber_thread_blocked.tme_fiber_thread_cond = cond;
 
   /* yield: */
   tme_thread_yield();
@@ -542,11 +588,11 @@ tme_sjlj_cond_wait_yield(tme_cond_t *cond, tme_mutex_t *mutex)
 
 /* this makes a thread sleep on a condition: */
 void
-tme_sjlj_cond_sleep_yield(tme_cond_t *cond, tme_mutex_t *mutex, const tme_time_t sleep)
+tme_fiber_cond_sleep_yield(tme_cond_t *cond, tme_mutex_t *mutex, const tme_time_t sleep)
 {
 
   /* remember that this thread is waiting on this condition: */
-  tme_sjlj_thread_blocked.tme_sjlj_thread_cond = cond;
+  tme_fiber_thread_blocked.tme_fiber_thread_cond = cond;
 
   /* sleep and yield: */
   tme_thread_sleep_yield(sleep, mutex);
@@ -554,19 +600,19 @@ tme_sjlj_cond_sleep_yield(tme_cond_t *cond, tme_mutex_t *mutex, const tme_time_t
 
 /* this notifies one or more threads waiting on a condition: */
 void
-tme_sjlj_cond_notify(tme_cond_t *cond, int broadcast)
+tme_fiber_cond_notify(tme_cond_t *cond, int broadcast)
 {
-  struct tme_sjlj_thread *thread;
+  tme_fiber_thread_t *thread;
 
-  for (thread = tme_sjlj_threads_all;
+  for (thread = tme_fiber_threads_all;
        thread != NULL;
        thread = thread->next) {
-    if (thread->tme_sjlj_thread_state == TME_SJLJ_THREAD_STATE_BLOCKED
-	&& thread->tme_sjlj_thread_cond == cond) {
+    if (thread->tme_fiber_thread_state == TME_FIBER_THREAD_STATE_BLOCKED
+	&& thread->tme_fiber_thread_cond == cond) {
       
       /* this thread is runnable: */
-      _tme_sjlj_change_state(thread,
-			     TME_SJLJ_THREAD_STATE_RUNNABLE);
+      _tme_fiber_change_state(thread,
+			     TME_FIBER_THREAD_STATE_RUNNABLE);
 
       /* if we're not broadcasting this notification, stop now: */
       if (!broadcast) {
@@ -578,40 +624,40 @@ tme_sjlj_cond_notify(tme_cond_t *cond, int broadcast)
 
 /* this sleeps and yields: */
 void
-tme_sjlj_sleep_yield(tme_time_t time)
+tme_fiber_sleep_yield(tme_time_t time)
 {
-  tme_sjlj_thread_blocked.tme_sjlj_thread_sleep = time;
+  tme_fiber_thread_blocked.tme_fiber_thread_sleep = time;
 
   /* yield: */
   tme_thread_yield();
 
 }
 
-struct tme_sjlj_event_set *tme_sjlj_event_set_init(int *maxevents, unsigned int flags) {
-  struct tme_sjlj_event_set *tes;
+struct tme_fiber_event_set *tme_fiber_event_set_init(int *maxevents, unsigned int flags) {
+  struct tme_fiber_event_set *tes;
   struct event_set *es;
   es = event_set_init(maxevents, flags);
-  tes = (struct tme_sjlj_event_set *) tme_malloc(sizeof(struct tme_sjlj_event_set) + sizeof(struct tme_sjlj_event) * (*maxevents));
+  tes = (struct tme_fiber_event_set *) tme_malloc(sizeof(struct tme_fiber_event_set) + sizeof(struct tme_fiber_event) * (*maxevents));
   tes->es = es;
   tes->max_event = -1;
   tes->flags = flags;
   return tes;
 }
 
-void tme_sjlj_event_free(struct tme_sjlj_event_set *es) {
+void tme_fiber_event_free(struct tme_fiber_event_set *es) {
   if(es->es)
     event_free(es->es);
   tme_free(es);
 }
 
-void tme_sjlj_event_reset(struct tme_sjlj_event_set *es)
+void tme_fiber_event_reset(struct tme_fiber_event_set *es)
 {
   if(es->es)
     event_reset(es->es);
   es->max_event = -1;
 }
 
-int tme_sjlj_event_del(struct tme_sjlj_event_set *es, event_t event)
+int tme_fiber_event_del(struct tme_fiber_event_set *es, event_t event)
 {
   int i, rc;
 
@@ -631,7 +677,7 @@ int tme_sjlj_event_del(struct tme_sjlj_event_set *es, event_t event)
   return rc;
 }
 
-int tme_sjlj_event_ctl(struct tme_sjlj_event_set *es, event_t event, unsigned int rwflags, void *arg) {
+int tme_fiber_event_ctl(struct tme_fiber_event_set *es, event_t event, unsigned int rwflags, void *arg) {
   int i = -1, min_event;
   
   if(es->es)
@@ -656,7 +702,7 @@ int tme_sjlj_event_ctl(struct tme_sjlj_event_set *es, event_t event, unsigned in
 
 /* this selects and yields: */
 int
-tme_sjlj_event_wait(struct tme_sjlj_event_set *es, const struct timeval *timeout_in, struct event_set_return *out, int outlen, tme_mutex_t *mutex)
+tme_fiber_event_wait(struct tme_fiber_event_set *es, const struct timeval *timeout_in, struct event_set_return *out, int outlen, tme_mutex_t *mutex)
 {
   struct timeval timeout_out;
   int rc;
@@ -675,9 +721,9 @@ tme_sjlj_event_wait(struct tme_sjlj_event_set *es, const struct timeval *timeout
 
   /* unlock the mutex: */
   if(mutex) tme_mutex_unlock(mutex);
-  tme_sjlj_thread_blocked.tme_sjlj_thread_events = es;
+  tme_fiber_thread_blocked.tme_fiber_thread_events = es;
 
-  tme_sjlj_thread_blocked.tme_sjlj_thread_sleep =
+  tme_fiber_thread_blocked.tme_fiber_thread_sleep =
     (timeout_in != NULL) ?
     TME_TIME_SET_SEC(timeout_in->tv_sec) + TME_TIME_SET_USEC(timeout_in->tv_usec) :
     TME_TIME_SET_SEC(BIG_TIMEOUT);
@@ -692,11 +738,11 @@ tme_sjlj_event_wait(struct tme_sjlj_event_set *es, const struct timeval *timeout
 
 /* this exits a thread: */
 void
-tme_sjlj_exit(tme_mutex_t *mutex)
+tme_fiber_exit(tme_mutex_t *mutex)
 {
   
   /* mark that this thread is exiting: */
-  tme_sjlj_thread_exiting = TRUE;
+  tme_fiber_thread_exiting = TRUE;
 
   if(mutex)
     tme_mutex_unlock(mutex);
@@ -707,18 +753,18 @@ tme_sjlj_exit(tme_mutex_t *mutex)
        
 /* this yields the current thread: */
 void
-tme_sjlj_yield(void)
+tme_fiber_yield(void)
 {
-  struct tme_sjlj_thread *thread;
+  tme_fiber_thread_t *thread;
   int blocked;
-  struct tme_sjlj_thread **_thread_prev;
-  struct tme_sjlj_thread *thread_other;
-  struct tme_sjlj_event_arg *event_arg;
-  struct tme_sjlj_event_set *es, *es2 = NULL;
+  tme_fiber_thread_t **_thread_prev;
+  tme_fiber_thread_t *thread_other;
+  struct tme_fiber_event_arg *event_arg;
+  struct tme_fiber_event_set *es, *es2 = NULL;
   int i, j, changed;
   
   /* get the active thread: */
-  thread = tme_sjlj_thread_active;
+  thread = tme_fiber_thread_active;
 
   /* the thread ran for an unknown amount of time: */
   tme_thread_long();
@@ -727,54 +773,54 @@ tme_sjlj_yield(void)
   blocked = FALSE;
 
   /* see if this thread is blocked on a condition: */
-  if (tme_sjlj_thread_blocked.tme_sjlj_thread_cond != NULL) {
+  if (tme_fiber_thread_blocked.tme_fiber_thread_cond != NULL) {
     blocked = TRUE;
   }
-  thread->tme_sjlj_thread_cond = tme_sjlj_thread_blocked.tme_sjlj_thread_cond;
-  tme_sjlj_thread_blocked.tme_sjlj_thread_cond = NULL;
+  thread->tme_fiber_thread_cond = tme_fiber_thread_blocked.tme_fiber_thread_cond;
+  tme_fiber_thread_blocked.tme_fiber_thread_cond = NULL;
 
   /* see if this thread is blocked on any events: */
-  es = tme_sjlj_thread_blocked.tme_sjlj_thread_events;
+  es = tme_fiber_thread_blocked.tme_fiber_thread_events;
 
   if(es) {
     j = es->max_event + 1;
-    es2 = tme_sjlj_event_set_init(&j, 0);
+    es2 = tme_fiber_event_set_init(&j, 0);
     for(i=0;i<=es->max_event;i++) {
       if(es->events[i].event == UNDEFINED_EVENT)
 	continue;
       j = -1;
       changed = FALSE;
-      if(thread->tme_sjlj_thread_events)
-	j = tme_sjlj_event_del(thread->tme_sjlj_thread_events, es->events[i].event);
+      if(thread->tme_fiber_thread_events)
+	j = tme_fiber_event_del(thread->tme_fiber_thread_events, es->events[i].event);
       if(j<0) {
 	changed = TRUE;
-	j = tme_sjlj_event_del(tme_sjlj_main_events, es->events[i].event);
+	j = tme_fiber_event_del(tme_fiber_main_events, es->events[i].event);
 	if(j<0)
-	  j = tme_sjlj_event_ctl(tme_sjlj_main_events,
+	  j = tme_fiber_event_ctl(tme_fiber_main_events,
 				 es->events[i].event,
 				 es->events[i].flags,
-				 tme_new0(struct tme_sjlj_event_arg, TME_NUM_EVFLAGS));
+				 tme_new0(struct tme_fiber_event_arg, TME_NUM_EVFLAGS));
 	else
-	  tme_sjlj_main_events->events[j].event = es->events[i].event;
+	  tme_fiber_main_events->events[j].event = es->events[i].event;
       } else {
-	if(es->events[i].flags != thread->tme_sjlj_thread_events->events[j].flags) {
+	if(es->events[i].flags != thread->tme_fiber_thread_events->events[j].flags) {
 	  changed = TRUE;
-	  tme_sjlj_main_events->events[(int)thread->tme_sjlj_thread_events->events[j].arg].flags
-	    &= ~thread->tme_sjlj_thread_events->events[j].flags;
+	  tme_fiber_main_events->events[(int)thread->tme_fiber_thread_events->events[j].arg].flags
+	    &= ~thread->tme_fiber_thread_events->events[j].flags;
 	}
-	j = (int)thread->tme_sjlj_thread_events->events[j].arg;
+	j = (int)thread->tme_fiber_thread_events->events[j].arg;
       }
-      tme_sjlj_event_ctl(es2,
+      tme_fiber_event_ctl(es2,
 			 es->events[i].event,
 			 es->events[i].flags,
 			 (void *)j);			      
       if(changed) {
-	tme_sjlj_main_events->events[j].flags |= es->events[i].flags;
-	event_ctl(tme_sjlj_main_events->es,
+	tme_fiber_main_events->events[j].flags |= es->events[i].flags;
+	event_ctl(tme_fiber_main_events->es,
 		  es->events[i].event,
-		  tme_sjlj_main_events->events[j].flags,
-		  tme_sjlj_main_events->events[j].arg);
-	event_arg = (struct tme_sjlj_event_arg *)tme_sjlj_main_events->events[j].arg;
+		  tme_fiber_main_events->events[j].flags,
+		  tme_fiber_main_events->events[j].arg);
+	event_arg = (struct tme_fiber_event_arg *)tme_fiber_main_events->events[j].arg;
 	for(j=0;j<TME_NUM_EVFLAGS;j++) {
 	  if(es->events[i].flags & (1<<j)) {
 	    event_arg->thread = thread;
@@ -785,54 +831,54 @@ tme_sjlj_yield(void)
       }
     }
     blocked = i;
-#ifndef WIN32
-    tme_sjlj_event_free(es);
+#ifdef USE_SJLJ
+    tme_fiber_event_free(es);
 #endif
   }
 
-  if(thread->tme_sjlj_thread_events) {
-    for(i=0;i<=thread->tme_sjlj_thread_events->max_event;i++) {
-      j = (int)thread->tme_sjlj_thread_events->events[i].arg;
-      if(tme_sjlj_main_events->events[j].flags &= ~thread->tme_sjlj_thread_events->events[i].flags)
-	event_ctl(tme_sjlj_main_events->es,
-		  tme_sjlj_main_events->events[j].event,
-		  tme_sjlj_main_events->events[j].flags,
-		  tme_sjlj_main_events->events[j].arg);
+  if(thread->tme_fiber_thread_events) {
+    for(i=0;i<=thread->tme_fiber_thread_events->max_event;i++) {
+      j = (int)thread->tme_fiber_thread_events->events[i].arg;
+      if(tme_fiber_main_events->events[j].flags &= ~thread->tme_fiber_thread_events->events[i].flags)
+	event_ctl(tme_fiber_main_events->es,
+		  tme_fiber_main_events->events[j].event,
+		  tme_fiber_main_events->events[j].flags,
+		  tme_fiber_main_events->events[j].arg);
       else {
-	event_del(tme_sjlj_main_events->es,
-		  tme_sjlj_main_events->events[j].event);
-	tme_sjlj_main_events->events[j].event = UNDEFINED_EVENT;
-	tme_free(tme_sjlj_main_events->events[j].arg);
-	while(j == tme_sjlj_main_events->max_event) {
-	  if(tme_sjlj_main_events->events[j--].event == UNDEFINED_EVENT)
-	    tme_sjlj_main_events->max_event--;
+	event_del(tme_fiber_main_events->es,
+		  tme_fiber_main_events->events[j].event);
+	tme_fiber_main_events->events[j].event = UNDEFINED_EVENT;
+	tme_free(tme_fiber_main_events->events[j].arg);
+	while(j == tme_fiber_main_events->max_event) {
+	  if(tme_fiber_main_events->events[j--].event == UNDEFINED_EVENT)
+	    tme_fiber_main_events->max_event--;
 	  if(j<0) break;
 	}
       }
     }
-    tme_sjlj_event_free(thread->tme_sjlj_thread_events);
+    tme_fiber_event_free(thread->tme_fiber_thread_events);
   }
   
-  thread->tme_sjlj_thread_events = es2;
-  tme_sjlj_thread_blocked.tme_sjlj_thread_events = NULL;
+  thread->tme_fiber_thread_events = es2;
+  tme_fiber_thread_blocked.tme_fiber_thread_events = NULL;
   
   /* see if this thread is blocked for some amount of time: */
-  if (tme_sjlj_thread_blocked.tme_sjlj_thread_sleep != 0) {
+  if (tme_fiber_thread_blocked.tme_fiber_thread_sleep != 0) {
 
-    //    assert(TME_TIME_GET_FRAC(tme_sjlj_thread_blocked.tme_sjlj_thread_sleep) < 1000000);
+    //    assert(TME_TIME_GET_FRAC(tme_fiber_thread_blocked.tme_fiber_thread_sleep) < 1000000);
     blocked = TRUE;
 
     /* set the timeout for this thread: */
-    thread->tme_sjlj_thread_timeout = tme_thread_get_time()
-      + tme_sjlj_thread_blocked.tme_sjlj_thread_sleep;
+    thread->tme_fiber_thread_timeout = tme_thread_get_time()
+      + tme_fiber_thread_blocked.tme_fiber_thread_sleep;
     
     /* insert this thread into the timeout list: */
     assert (thread->timeout_prev == NULL);
-    for (_thread_prev = &tme_sjlj_threads_timeout;
+    for (_thread_prev = &tme_fiber_threads_timeout;
 	 (thread_other = *_thread_prev) != NULL;
 	 _thread_prev = &thread_other->timeout_next) {
-      if (thread_other->tme_sjlj_thread_timeout >
-	  thread->tme_sjlj_thread_timeout) {
+      if (thread_other->tme_fiber_thread_timeout >
+	  thread->tme_fiber_thread_timeout) {
 	break;
       }
     }
@@ -843,27 +889,27 @@ tme_sjlj_yield(void)
       thread_other->timeout_prev = &thread->timeout_next;
     }
   }
-  thread->tme_sjlj_thread_sleep = tme_sjlj_thread_blocked.tme_sjlj_thread_sleep;
-  tme_sjlj_thread_blocked.tme_sjlj_thread_sleep = 0;
+  thread->tme_fiber_thread_sleep = tme_fiber_thread_blocked.tme_fiber_thread_sleep;
+  tme_fiber_thread_blocked.tme_fiber_thread_sleep = 0;
 
   /* if this thread is actually exiting, it must appear to be
      runnable, and it only isn't because it's exiting: */
-  if (tme_sjlj_thread_exiting) {
+  if (tme_fiber_thread_exiting) {
     assert(!blocked);
     blocked = TRUE;
   }
 
   /* make any following thread on the runnable list the next active
      thread: */
-  tme_sjlj_thread_active = thread->state_next;
+  tme_fiber_thread_active = thread->state_next;
 
   /* if this thread is blocked, move it to the blocked list: */
   if (blocked) {
-    _tme_sjlj_change_state(thread, 
-			   TME_SJLJ_THREAD_STATE_BLOCKED);
+    _tme_fiber_change_state(thread, 
+			   TME_FIBER_THREAD_STATE_BLOCKED);
 
     /* if this thread is exiting: */
-    if (tme_sjlj_thread_exiting) {
+    if (tme_fiber_thread_exiting) {
 
       /* remove this thread from the all-threads list: */
       *thread->prev = thread->next;
@@ -875,15 +921,15 @@ tme_sjlj_yield(void)
       tme_free(thread);
 
       /* nothing is exiting any more: */
-      tme_sjlj_thread_exiting = FALSE;
+      tme_fiber_thread_exiting = FALSE;
     }
   }
 
   /* jump back to the dispatcher: */
-#ifdef WIN32
-  SwitchToFiber(tme_sjlj_thread_blocked.tme_sjlj_thread_func);
+#ifdef USE_SJLJ
+  longjmp(tme_fiber_dispatcher_jmp, TRUE);
 #else
-  longjmp(tme_sjlj_dispatcher_jmp, TRUE);
+  tme_fiber_switch(thread, &tme_fiber_thread_blocked);
 #endif
 }
 
@@ -891,20 +937,20 @@ tme_sjlj_yield(void)
 
 /* lock operations: */
 int
-tme_sjlj_rwlock_init(struct tme_sjlj_rwlock *lock)
+tme_fiber_rwlock_init(struct tme_fiber_rwlock *lock)
 {
   /* initialize the lock: */
-  lock->_tme_sjlj_rwlock_locked = FALSE;
-  lock->_tme_sjlj_rwlock_file = NULL;
-  lock->_tme_sjlj_rwlock_line = 0;
+  lock->_tme_fiber_rwlock_locked = FALSE;
+  lock->_tme_fiber_rwlock_file = NULL;
+  lock->_tme_fiber_rwlock_line = 0;
   return (TME_OK);
 }
 int
-tme_sjlj_rwlock_lock(struct tme_sjlj_rwlock *lock, _tme_const char *file, unsigned long line, int try)
+tme_fiber_rwlock_lock(struct tme_fiber_rwlock *lock, _tme_const char *file, unsigned long line, int try)
 {
   
   /* if this lock is already locked: */
-  if (lock->_tme_sjlj_rwlock_locked) {
+  if (lock->_tme_fiber_rwlock_locked) {
     if (try) {
       return (TME_EDEADLK);
     }
@@ -912,24 +958,24 @@ tme_sjlj_rwlock_lock(struct tme_sjlj_rwlock *lock, _tme_const char *file, unsign
   }
 
   /* lock the lock: */
-  lock->_tme_sjlj_rwlock_locked = TRUE;
-  lock->_tme_sjlj_rwlock_file = file;
-  lock->_tme_sjlj_rwlock_line = line;
+  lock->_tme_fiber_rwlock_locked = TRUE;
+  lock->_tme_fiber_rwlock_file = file;
+  lock->_tme_fiber_rwlock_line = line;
   return (TME_OK);
 }
 int
-tme_sjlj_rwlock_unlock(struct tme_sjlj_rwlock *lock, _tme_const char *file, unsigned long line)
+tme_fiber_rwlock_unlock(struct tme_fiber_rwlock *lock, _tme_const char *file, unsigned long line)
 {
   
   /* if this lock isn't locked: */
-  if (!lock->_tme_sjlj_rwlock_locked) {
+  if (!lock->_tme_fiber_rwlock_locked) {
     abort();
   }
 
   /* unlock the lock: */
-  lock->_tme_sjlj_rwlock_locked = FALSE;
-  lock->_tme_sjlj_rwlock_file = file;
-  lock->_tme_sjlj_rwlock_line = line;
+  lock->_tme_fiber_rwlock_locked = FALSE;
+  lock->_tme_fiber_rwlock_file = file;
+  lock->_tme_fiber_rwlock_line = line;
   return (TME_OK);
 }
 

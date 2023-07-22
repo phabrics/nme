@@ -33,8 +33,8 @@ libtme_la_SOURCES = misc-host.c \
 	runlength.c \
 	alloc.c
 
-if THREADS_SJLJ
-libtme_la_SOURCES += threads-sjlj.c
+if THREADS_FIBER
+libtme_la_SOURCES += threads-fiber.c
 endif
 libtme_la_LDFLAGS = -version-info 0:0:0
 libtme_la_LIBADD = $(LIBLTDL) $(LTLIBOBJS) $(top_builddir)/libopenvpn/libopenvpn.la

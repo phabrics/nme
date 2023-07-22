@@ -49,8 +49,8 @@ _TME_RCSID("$Id: threads.h,v 1.10 2010/06/05 19:36:35 fredette Exp $");
 #include "threads-posix.h"
 #elif defined(TME_THREADS_GLIB)
 #include "threads-glib.h"
-#elif defined(TME_THREADS_SJLJ)
-#include "threads-sjlj.h"
+#elif defined(TME_THREADS_FIBER)
+#include "threads-fiber.h"
 #endif
 
 typedef void (*tme_threads_fn) _TME_P((void));
@@ -124,7 +124,7 @@ static _tme_inline ssize_t tme_write _TME_P((HANDLE hand, const void *buf, size_
 
 #define TME_STD_HANDLE(hand) win32_##hand
 
-#ifdef TME_THREADS_SJLJ
+#ifdef TME_THREADS_FIBER
 
 typedef tme_event_t tme_thread_handle_t;
 #define TME_STD_THREAD_HANDLE TME_STD_HANDLE
@@ -138,7 +138,7 @@ typedef tme_event_t tme_thread_handle_t;
 #define tme_event_close tme_thread_close
 tme_off_t tme_thread_seek _TME_P((tme_thread_handle_t hand, tme_off_t off, int where));
 
-#else /* TME_THREADS_SJLJ */
+#else /* TME_THREADS_FIBER */
 
 #define TME_THREADS_DIRECTIO
 #define TME_STD_THREAD_HANDLE(hand) TME_WIN32_HANDLE(win32_##hand)
@@ -165,7 +165,7 @@ static _tme_inline tme_off_t tme_thread_seek _TME_P((tme_thread_handle_t hand, t
   return (SetFilePointerEx(hand, (LARGE_INTEGER)off, &ret, where)) ? (ret.QuadPart) : (-1);
 }
 
-#endif /* !TME_THREADS_SJLJ */
+#endif /* !TME_THREADS_FIBER */
 
 #else /* WIN32 */
 /* file flags: */
@@ -200,7 +200,7 @@ typedef off_t tme_off_t;
 
 ssize_t tme_event_yield _TME_P((tme_event_t, void *, size_t, unsigned int, tme_mutex_t *, void **));
 
-#ifdef TME_THREADS_SJLJ
+#ifdef TME_THREADS_FIBER
 
 #define tme_thread_read(hand, data, len, mutex) tme_event_yield(hand, data, len, EVENT_READ, mutex, NULL)
 #define tme_thread_write(hand, data, len, mutex) tme_event_yield(hand, data, len, EVENT_WRITE, mutex, NULL)
@@ -275,6 +275,6 @@ int tme_event_wait _TME_P((tme_event_set_t *es, const struct timeval *tv, struct
 
   return rc;
 }
-#endif /* !TME_THREADS_SJLJ */
+#endif /* !TME_THREADS_FIBER */
 
 #endif /* !_TME_THREADS_H */

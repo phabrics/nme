@@ -12,7 +12,7 @@ pkginclude_HEADERS = memory.h \
 	threads.h \
 	threads-posix.h \
 	threads-glib.h \
-	threads-sjlj.h \
+	threads-fiber.h \
 	module.h \
 	log.h \
 	tme.h \

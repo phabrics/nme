@@ -459,7 +459,7 @@ void tme_win32_close(tme_event_t hand) {
     }
 }
 
-#ifdef TME_THREADS_SJLJ
+#ifdef TME_THREADS_FIBER
 tme_off_t tme_thread_seek (tme_thread_handle_t hand, tme_off_t off, int where) {
   tme_event_seek(hand->handle, &hand->reads, off, where);
   return tme_event_seek(hand->handle, &hand->writes, off, where);
