@@ -914,7 +914,7 @@ main(int argc, char **argv)
 	  free(config_dirname);
 	} else
 	  chdir(argv[arg_i]);
-	config_dirname = get_current_dir_name();
+	config_dirname = getcwd(NULL, 0);
 	if(config_dirname) { 
 	  fprintf(stderr, "cd %s\n", config_dirname);
 	  free(config_dirname);
