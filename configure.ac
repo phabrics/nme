@@ -59,6 +59,14 @@ AC_PROG_MAKE_SET
 AC_PROG_EGREP
 AC_PROG_LN_S
 
+dnl Configure for libtool.
+LT_PREREQ([2.4])
+LT_CONFIG_LTDL_DIR([libltdl])
+LT_INIT([dlopen,win32-dll])
+LT_LANG([Windows Resource])
+LTDL_INIT([installable recursive])
+CPPFLAGS="${CPPFLAGS-} ${LTDLINCL}" # -DLT_DEBUG_LOADERS"
+
 TME_HOST_TYPES="gtk rfb sdl tun bsd openvpn"
 AC_SUBST(TME_HOST_TYPES)
 
@@ -74,10 +82,10 @@ for tme_host_type in ${tme_enable_hosts}; do
     eval enable_${tme_host_type}=yes
 done
 
-AC_CHECK_DEFINE(__EMSCRIPTEN__, [host_type=emscripten], [host_type=$host_os])
-AM_CONDITIONAL([HAVE_EMSCRIPTEN], [test "${host_type}" = emscripten])
+AC_CHECK_DEFINE(__EMSCRIPTEN__, [host_os=emscripten], [host_type=$host_os])
+AM_CONDITIONAL([HAVE_EMSCRIPTEN], [test "${host_os}" = emscripten])
 AM_CONDITIONAL([USE_NODEFS], [test "${enable_nodefs}" = yes])
-if test "${host_type}" = emscripten; then
+if test "${host_os}" = emscripten; then
    NME_DIR=${HOME}/machines
    ROOT_DIR=/nme/
    EXEEXT=.html
@@ -87,7 +95,7 @@ fi
 AC_SUBST(ROOT_DIR)
 
 AC_DEFINE_UNQUOTED([TARGET_ALIAS], ["${host}"], [A string representing our host])
-case "${host_type}" in
+case "${host_os}" in
 netbsd*) 
    AC_DEFINE([TARGET_NETBSD], [1], [Are we running NetBSD?])
    AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["N"], [Target prefix])
@@ -1092,25 +1100,6 @@ if test "x${misc_hosts}" = "xx86"; then
 #endif
 ])
 fi
-
-
-dnl Configure for libtool.
-#_LT_CONFIG_LTDL_DIR([m4_default([], [libltdl])])
-_LTDL_INSTALLABLE
-#AC_SUBST(INCLTDL)
-#AC_SUBST(LIBLTDL)
-#_LT_SET_OPTION([LT_INIT],[dlopen])
-
-#LT_INIT([dlopen])
-#AC_SUBST(LTLIBOBJS)
-#AC_CONFIG_SUBDIRS(libltdl)
-LT_PREREQ([2.4])
-LT_CONFIG_LTDL_DIR([libltdl])
-LT_INIT([dlopen,win32-dll])
-LT_LANG([Windows Resource])
-LTDL_INIT([recursive])
-CPPFLAGS="${CPPFLAGS-} ${LTDLINCL}" # -DLT_DEBUG_LOADERS"
-#LT_SYS_MODULE_PATH
 
 AC_ARG_VAR([IFCONFIG], [full path to ipconfig utility])
 AC_ARG_VAR([ROUTE], [full path to route utility])
