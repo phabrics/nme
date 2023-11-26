@@ -59,14 +59,6 @@ AC_PROG_MAKE_SET
 AC_PROG_EGREP
 AC_PROG_LN_S
 
-dnl Configure for libtool.
-LT_PREREQ([2.4])
-LT_CONFIG_LTDL_DIR([libltdl])
-LT_INIT([dlopen,win32-dll])
-LT_LANG([Windows Resource])
-LTDL_INIT([installable recursive])
-CPPFLAGS="${CPPFLAGS-} ${LTDLINCL}" # -DLT_DEBUG_LOADERS"
-
 TME_HOST_TYPES="gtk rfb sdl tun bsd openvpn"
 AC_SUBST(TME_HOST_TYPES)
 
@@ -93,6 +85,14 @@ else
    ROOT_DIR=/
 fi
 AC_SUBST(ROOT_DIR)
+
+dnl Configure for libtool.
+LT_PREREQ([2.4])
+LT_CONFIG_LTDL_DIR([libltdl])
+LT_INIT([dlopen,win32-dll])
+LT_LANG([Windows Resource])
+LTDL_INIT([installable recursive])
+CPPFLAGS="${CPPFLAGS-} ${LTDLINCL}" # -DLT_DEBUG_LOADERS"
 
 AC_DEFINE_UNQUOTED([TARGET_ALIAS], ["${host}"], [A string representing our host])
 case "${host_os}" in
