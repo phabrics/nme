@@ -74,16 +74,22 @@ for tme_host_type in ${tme_enable_hosts}; do
     eval enable_${tme_host_type}=yes
 done
 
-AC_CHECK_DEFINE(__EMSCRIPTEN__, [host_os=emscripten], [host_type=$host_os])
+AC_CHECK_DEFINE(__EMSCRIPTEN__, [
+				CC=$(basename -s .bat $CC)
+				host=$(echo "$host" | sed "s/$host_os/emscripten/")
+				host_os=emscripten
+				],
+				[host_type=$host_os])
 AM_CONDITIONAL([HAVE_EMSCRIPTEN], [test "${host_os}" = emscripten])
 AM_CONDITIONAL([USE_NODEFS], [test "${enable_nodefs}" = yes])
 if test "${host_os}" = emscripten; then
-   NME_DIR=${HOME}/machines
-   ROOT_DIR=/nme/
+   ROOT_DIR=/nme
    EXEEXT=.html
 else
-   ROOT_DIR=/
+   ROOT_DIR=
 fi
+NME_DIR=${HOME}/machines
+AC_SUBST(NME_DIR)
 AC_SUBST(ROOT_DIR)
 
 dnl Configure for libtool.

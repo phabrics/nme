@@ -28,16 +28,17 @@ if USE_NODEFS
 AM_CPPFLAGS += -DUSE_NODEFS
 tmesh_LDADD += -lnodefs.js
 else
-tmesh_LDFLAGS += --emrun --preload-file $(datadir)@@ROOT_DIR@
+tmesh_LDFLAGS += --emrun --preload-file $(NME_DIR)@$(ROOT_DIR)
+EXTRA_tmesh_DEPENDENCIES = @NME_DIR@/lib/tme
+$(NME_DIR)/lib/tme:
+	mkdir -p $(NME_DIR)/lib/tme
+	cp -f $(top_srcdir)/tme/*.txt $(NME_DIR)/lib/tme
+	find $(top_builddir) -type f -name '*.la' -exec cp '{}' $(NME_DIR)/lib/tme ';'
 endif
 tmesh.js tmesh.wasm: tmesh.html
 	@test -f $@ || $(LN_S) .libs/$@ .
 install-exec-hook:
-	mv -f $(DESTDIR)$(bindir)/tmesh.sh \
-	$(DESTDIR)$(bindir)/tmesh
-	mkdir -p  $(DESTDIR)$(datadir)/lib/tme
-	cp -f $(DESTDIR)$(libdir)/tme/*.la $(DESTDIR)$(datadir)/lib/tme
-	cp -f $(DESTDIR)$(libdir)/tme/*.txt $(DESTDIR)$(datadir)/lib/tme
+	mv -f $(DESTDIR)$(bindir)/tmesh.sh $(DESTDIR)$(bindir)/tmesh
 else
 if WIN32
 if HAVE_SDL
