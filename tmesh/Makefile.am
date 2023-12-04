@@ -35,7 +35,7 @@ $(NME_DIR)/lib/tme:
 	cp -f $(top_srcdir)/tme/*.txt $(NME_DIR)/lib/tme
 	find $(top_builddir) -type f -name '*.la' -exec cp '{}' $(NME_DIR)/lib/tme ';'
 endif
-tmesh.js tmesh.wasm: tmesh.html
+tmesh.js tmesh.wasm tmesh.data: tmesh.html
 	@test -f $@ || $(LN_S) .libs/$@ .
 install-exec-hook:
 	mv -f $(DESTDIR)$(bindir)/tmesh.sh $(DESTDIR)$(bindir)/tmesh

@@ -948,6 +948,9 @@ if test "x${enable_threads}" = xno; then
    case "${host_os}" in
    mingw* | msys* | cygwin*) 
    	recode=i686
+	;;
+   emscripten)
+	recode=no
    	;;
    *) 
    	recode=yes
@@ -1083,13 +1086,14 @@ AC_MSG_CHECKING([for host miscellaneous support])
 changequote(<<, >>)dnl
 case "${host_cpu}" in
 i[3456789]86 | x86_64) misc_hosts="x86" ;;
-*) misc_hosts=no ;;
+*) misc_hosts= ;;
 esac
 changequote([, ])dnl
-AC_MSG_RESULT([${misc_hosts}])
-if test "x${misc_hosts}" = "xno"; then
+
+if test "${host_os}" = emscripten; then
     misc_hosts=
 fi
+AC_MSG_RESULT([${misc_hosts}])
 
 if test "x${misc_hosts}" = "xx86"; then
   AC_CHECK_FUNC_LONG(__rdtsc, [
