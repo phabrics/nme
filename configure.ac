@@ -82,14 +82,20 @@ AC_CHECK_DEFINE(__EMSCRIPTEN__, [
 				[host_type=$host_os])
 AM_CONDITIONAL([HAVE_EMSCRIPTEN], [test "${host_os}" = emscripten])
 AM_CONDITIONAL([USE_NODEFS], [test "${enable_nodefs}" = yes])
+
+AC_CHECK_PROG([CYGPATH_M], [cygpath], [cygpath -m], [echo])
+AC_CHECK_PROG([CYGPATH_U], [cygpath], [cygpath -u], [echo])
+
 if test "${host_os}" = emscripten; then
    ROOT_DIR=/nme
    EXEEXT=.html
 else
-   ROOT_DIR=
+   ROOT_DIR=$(${CYGPATH_M} /)
 fi
+TME_DIR="\`\${CYGPATH_U} \${pkglibdir}\`"
 NME_DIR=${HOME}/machines
 AC_SUBST(NME_DIR)
+AC_SUBST(TME_DIR)
 AC_SUBST(ROOT_DIR)
 
 dnl Configure for libtool.
@@ -174,7 +180,6 @@ darwin*)
 esac
 
 AM_CONDITIONAL([WIN32], [test "${WIN32}" = "yes"])
-AC_CHECK_PROG([CYGPATH_M], [cygpath], [cygpath -m], [echo])
 
 AC_SUBST(DEV_TAP_FILENAME)
 AC_SUBST(SETCAP)

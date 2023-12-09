@@ -29,11 +29,11 @@ AM_CPPFLAGS += -DUSE_NODEFS
 tmesh_LDADD += -lnodefs.js
 else
 tmesh_LDFLAGS += --emrun --preload-file $(NME_DIR)@$(ROOT_DIR)
-EXTRA_tmesh_DEPENDENCIES = @NME_DIR@/lib/tme
-$(NME_DIR)/lib/tme:
-	mkdir -p $(NME_DIR)/lib/tme
-	cp -f $(top_srcdir)/tme/*.txt $(NME_DIR)/lib/tme
-	find $(top_builddir) -type f -name '*.la' -exec cp '{}' $(NME_DIR)/lib/tme ';'
+EXTRA_tmesh_DEPENDENCIES = $(NME_DIR)$(TME_DIR)
+$(NME_DIR)$(TME_DIR):
+	mkdir -p $@
+	cp -f $(top_srcdir)/tme/*.txt $@
+	find $(top_builddir) -type f -name '*.la' -exec cp '{}' $@ ';'
 endif
 tmesh.js tmesh.wasm tmesh.data: tmesh.html
 	@test -f $@ || $(LN_S) .libs/$@ .
