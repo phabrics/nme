@@ -89,10 +89,11 @@ AC_CHECK_PROG([CYGPATH_U], [cygpath], [cygpath -u], [echo])
 if test "${host_os}" = emscripten; then
    ROOT_DIR=/nme
    EXEEXT=.html
+   TME_DIR=/lib
 else
    ROOT_DIR=$(${CYGPATH_M} /)
+   TME_DIR="\`\${CYGPATH_U} \${libdir}\`"
 fi
-TME_DIR="\`\${CYGPATH_U} \${pkglibdir}\`"
 NME_DIR=${HOME}/machines
 AC_SUBST(NME_DIR)
 AC_SUBST(TME_DIR)
