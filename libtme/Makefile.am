@@ -65,3 +65,5 @@ memory-auto.h: memory-auto.sh
 # target to make memory-auto.c:
 memory-auto.c: memory-auto.sh
 	$(SHELL) $< > $@
+
+module.c: $(top_builddir)/tme/shlibvar.h

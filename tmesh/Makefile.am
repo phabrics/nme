@@ -29,26 +29,30 @@ AM_CPPFLAGS += -DUSE_NODEFS
 tmesh_LDADD += -lnodefs.js
 else
 tmesh_LDFLAGS += --emrun --preload-file $(NME_DIR)@$(ROOT_DIR)
-EXTRA_tmesh_DEPENDENCIES = $(NME_DIR)$(TME_DIR)
-$(NME_DIR)$(TME_DIR):
-	mkdir -p $@
-	cp -f $(top_srcdir)/tme/*.txt $@
-	find $(top_builddir) -type f -name '*.la' -exec cp '{}' $@ ';'
 endif
 tmesh.js tmesh.wasm tmesh.data: tmesh.html
 	@test -f $@ || $(LN_S) .libs/$@ .
-install-exec-hook:
-	mv -f $(DESTDIR)$(bindir)/tmesh.sh $(DESTDIR)$(bindir)/tmesh
 else
 if WIN32
 if HAVE_SDL
 	tmesh_LDFLAGS += -mwindows
 endif
-else
+endif
+endif
+
 install-exec-hook:
+#	test -f $(DESTDIR)$(bindir)/tmesh.sh && \
+#	mv -f $(DESTDIR)$(bindir)/tmesh.sh $(DESTDIR)$(bindir)/tmesh
+	mkdir -p  $(DESTDIR)$(pkgdatadir)/lib/tme
+	cp -f $(DESTDIR)$(pkglibdir)/*.la $(DESTDIR)$(pkgdatadir)/lib/tme
+	cp -f $(DESTDIR)$(pkglibdir)/*.txt $(DESTDIR)$(pkgdatadir)/lib/tme
 	$(SETCAP) $(DESTDIR)$(bindir)/$(TGTPFX)tmesh$(EXEEXT)
-endif
-endif
+
+EXTRA_tmesh_DEPENDENCIES = $(NME_DIR)/lib/tme
+$(EXTRA_tmesh_DEPENDENCIES):
+	mkdir -p $@
+	cp -f $(top_srcdir)/tme/*.txt $@
+	find $(top_builddir) -type f -name '*.la' -exec cp '{}' $@ ';'
 
 include $(top_srcdir)/tme-hosts.txt
 include $(top_srcdir)/tme-preopen.txt
