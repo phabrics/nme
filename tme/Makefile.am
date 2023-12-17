@@ -40,7 +40,8 @@ shlibvar.h: $(top_builddir)/config.h Makefile
 	grep LT_DLSEARCH_PATH $(top_builddir)/config.h >> $@
 	echo -n "#define TME_PACKAGE_PATH \"" >> $@
 	echo -n ${TME_DIR} | tr -d "\n\r\f" >> $@
-	echo -n ":${abs_top_builddir}/lib" | tr -d "\n\r\f" >> $@
+	echo -n ":/nme" | tr -d "\n\r\f" >> $@
+	echo -n ":${abs_top_builddir}/nme" | tr -d "\n\r\f" >> $@
 	echo \" >> $@
 	echo -n "#define TME_PREFIX_PATH \"" >> $@
 	echo -n ${ROOT_DIR} | tr -d "\n\r\f" >> $@
