@@ -87,7 +87,7 @@ AC_CHECK_PROG([CYGPATH_M], [cygpath], [cygpath -m], [echo])
 AC_CHECK_PROG([CYGPATH_U], [cygpath], [cygpath -u], [echo])
 
 if test "${host_os}" = emscripten; then
-   ROOT_DIR="\`\${CYGPATH_U} \${prefix}\`"
+   ROOT_DIR="\`\${CYGPATH_U} \${prefix}\`/"
    EXEEXT=.html
 else
    ROOT_DIR=$(${CYGPATH_M} /)
@@ -224,7 +224,7 @@ AM_CONDITIONAL([HAVE_SDL], [test "x${have_sdl}" = xyes])
 PKG_CHECK_MODULES([RFB], [libvncclient libvncserver], [have_rfb=$enable_rfb], [have_rfb=no])
 
 dnl Start the list of ethernet host support.
-AM_CONDITIONAL([USE_TAP_WINDOWS], [test "x${enable_openvpn}" = xyes && test "x${have_tap_header}" = x && test "x${WIN32}" != x])
+AM_CONDITIONAL([USE_TAP_WINDOWS], [test "x${have_tap_header}" = x && test "x${WIN32}" != x])
 
 if test "x${have_tap_header}" = xyes || test "x${WIN32}" != x; then
    have_openvpn=$enable_openvpn

@@ -43,10 +43,11 @@ endif
 install-exec-hook:
 #	test -f $(DESTDIR)$(bindir)/tmesh.sh && \
 #	mv -f $(DESTDIR)$(bindir)/tmesh.sh $(DESTDIR)$(bindir)/tmesh
-	mkdir -p  $(DESTDIR)$(pkgdatadir)$(TME_DIR)
+	mkdir -p $(DESTDIR)$(pkgdatadir)$(TME_DIR)/tme
 	cp -f $(DESTDIR)$(libdir)/libtme*.la $(DESTDIR)$(pkgdatadir)$(TME_DIR)
 	cp -f $(DESTDIR)$(libdir)/libltdl.la $(DESTDIR)$(pkgdatadir)$(TME_DIR)
-	cp -fr $(DESTDIR)$(pkglibdir) $(DESTDIR)$(pkgdatadir)$(TME_DIR)
+	cp -f $(DESTDIR)$(pkglibdir)/*.la $(DESTDIR)$(pkgdatadir)$(TME_DIR)/tme
+	cp -f $(DESTDIR)$(pkglibdir)/*.txt $(DESTDIR)$(pkgdatadir)$(TME_DIR)/tme
 	$(SETCAP) $(DESTDIR)$(bindir)/$(TGTPFX)tmesh$(EXEEXT)
 
 EXTRA_tmesh_DEPENDENCIES = $(top_builddir)/nme/tme
