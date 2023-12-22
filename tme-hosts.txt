@@ -1,6 +1,6 @@
-tme_host_gtk=../host/display/gtk
-tme_host_rfb=../host/display/rfb
-tme_host_sdl=../host/display/sdl
-tme_host_tun=../host/eth/tun
-tme_host_bsd=../host/eth/bsd
-tme_host_openvpn=../host/eth/openvpn
+tme_host_gtk=${top_builddir}/host/display/gtk
+tme_host_rfb=${top_builddir}/host/display/rfb
+tme_host_sdl=${top_builddir}/host/display/sdl
+tme_host_tun=${top_builddir}/host/eth/tun
+tme_host_bsd=${top_builddir}/host/eth/bsd
+tme_host_openvpn=${top_builddir}/host/eth/openvpn

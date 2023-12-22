@@ -98,7 +98,7 @@ _tme_modules_find(const char *top_name,
 		  char **_modules_dir)
 {
   unsigned int modules_dir_length, prefix_length = strlen(TME_PREFIX_PATH);
-  int pass;
+  int pass, i;
   const char *search_path;
   const char *p1, *p2, *p3;
   char c;
@@ -148,10 +148,15 @@ _tme_modules_find(const char *top_name,
       /* if this path is absolute: */
       if (*p1 == '/') {
 
+	if(modules_index_pathname[prefix_length-1] == '/')
+	  prefix_length--;
+	  
 	/* form the modules index pathname to try, remembering what
 	   part of it is the modules directory pathname: */
 	modules_dir_length =
 	  prefix_length
+	  /* a slash: */
+	  + 1
 	  /* the search path part, less any trailing slashes: */
 	  + (p2 - p1)
 	  /* a slash: */
@@ -167,18 +172,15 @@ _tme_modules_find(const char *top_name,
 		  /* a NUL: */
 		  + 1);
 	strcpy(modules_index_pathname, TME_PREFIX_PATH);
-	strncpy(modules_index_pathname + prefix_length, p1 + 1, (p2 - p1));
-	prefix_length += (p2 - p1);
-	modules_index_pathname[prefix_length++] = '/';
-	strncpy(modules_index_pathname + prefix_length,
-	       top_name,
-	       top_name_length);
-	prefix_length += top_name_length;
-	modules_index_pathname[prefix_length++] = '/';
-	strncpy(modules_index_pathname + prefix_length,
-	       top_name,
-	       top_name_length);
-	prefix_length += top_name_length;
+	strncpy(modules_index_pathname + prefix_length, p1, (p2 - p1 + 1));
+	prefix_length += (p2 - p1 + 1);
+	for(i=0;i<2;i++) {
+	  modules_index_pathname[prefix_length++] = '/';
+	  strncpy(modules_index_pathname + prefix_length,
+		  top_name,
+		  top_name_length);
+	  prefix_length += top_name_length;
+	}
 	strcpy(modules_index_pathname
 	       + prefix_length,
 	       "-plugins.txt");

@@ -87,7 +87,7 @@ AC_CHECK_PROG([CYGPATH_M], [cygpath], [cygpath -m], [echo])
 AC_CHECK_PROG([CYGPATH_U], [cygpath], [cygpath -u], [echo])
 
 if test "${host_os}" = emscripten; then
-   ROOT_DIR="\`\${CYGPATH_U} \${prefix}\`/"
+   ROOT_DIR="\$(abs_top_builddir)" # /
    EXEEXT=.html
 else
    ROOT_DIR=$(${CYGPATH_M} /)

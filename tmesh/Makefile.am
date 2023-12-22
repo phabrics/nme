@@ -28,10 +28,19 @@ if USE_NODEFS
 AM_CPPFLAGS += -DUSE_NODEFS
 tmesh_LDADD += -lnodefs.js
 else
-tmesh_LDFLAGS += --emrun --preload-file $(pkgdatadir)@$(ROOT_DIR)
+tmesh_LDFLAGS += --emrun --preload-file $(top_builddir)@$(ROOT_DIR)
 endif
 tmesh.js tmesh.wasm tmesh.data: tmesh.html
 	@test -f $@ || $(LN_S) .libs/$@ .
+install-exec-hook:
+	test -f $(DESTDIR)$(bindir)/tmesh.sh && \
+	mv -f $(DESTDIR)$(bindir)/tmesh.sh $(DESTDIR)$(bindir)/tmesh
+	mkdir -p $(DESTDIR)$(pkgdatadir)$(TME_DIR)/tme
+	cp -f $(DESTDIR)$(libdir)/libtme*.la $(DESTDIR)$(pkgdatadir)$(TME_DIR)
+	cp -f $(DESTDIR)$(libdir)/libltdl.la $(DESTDIR)$(pkgdatadir)$(TME_DIR)
+	cp -f $(DESTDIR)$(pkglibdir)/*.la $(DESTDIR)$(pkgdatadir)$(TME_DIR)/tme
+	cp -f $(DESTDIR)$(pkglibdir)/*.txt $(DESTDIR)$(pkgdatadir)$(TME_DIR)/tme
+	$(SETCAP) $(DESTDIR)$(bindir)/$(TGTPFX)tmesh$(EXEEXT)
 else
 if WIN32
 if HAVE_SDL
@@ -40,21 +49,18 @@ endif
 endif
 endif
 
-install-exec-hook:
-#	test -f $(DESTDIR)$(bindir)/tmesh.sh && \
-#	mv -f $(DESTDIR)$(bindir)/tmesh.sh $(DESTDIR)$(bindir)/tmesh
-	mkdir -p $(DESTDIR)$(pkgdatadir)$(TME_DIR)/tme
-	cp -f $(DESTDIR)$(libdir)/libtme*.la $(DESTDIR)$(pkgdatadir)$(TME_DIR)
-	cp -f $(DESTDIR)$(libdir)/libltdl.la $(DESTDIR)$(pkgdatadir)$(TME_DIR)
-	cp -f $(DESTDIR)$(pkglibdir)/*.la $(DESTDIR)$(pkgdatadir)$(TME_DIR)/tme
-	cp -f $(DESTDIR)$(pkglibdir)/*.txt $(DESTDIR)$(pkgdatadir)$(TME_DIR)/tme
-	$(SETCAP) $(DESTDIR)$(bindir)/$(TGTPFX)tmesh$(EXEEXT)
+EXTRA_tmesh_DEPENDENCIES = plugins
 
-EXTRA_tmesh_DEPENDENCIES = $(top_builddir)/nme/tme
-$(EXTRA_tmesh_DEPENDENCIES):
-	mkdir -p $@
-	cp -f $(top_srcdir)/tme/*.txt $@
-	find $(top_builddir) -type f -name '*.la' -exec cp '{}' $@ ';'
+NME_DIR = $(top_builddir)$(TME_DIR)/tme
+plugins:
+	mkdir -p $(NME_DIR)
+	cp -f $(top_srcdir)/tme/*.txt $(NME_DIR)
+#	find $(top_builddir) -type f -name '*.la' -exec cp '{}' $NME_DIR ';'
+	for mod in `cat "$(top_srcdir)/tme-modules.txt"`; do \
+		echo $$mod ; \
+		cp -f $(top_builddir)/$$mod $(NME_DIR) ; \
+	done
+	touch plugins
 
 include $(top_srcdir)/tme-hosts.txt
 include $(top_srcdir)/tme-preopen.txt

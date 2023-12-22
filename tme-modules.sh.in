@@ -26,7 +26,7 @@ for num; do
 	    fi
 	else
 	    if test $num = "tme_host_${tme_host}.la"; then
-	    	echo "tme_host_${tme_host}=../${subdir}" >> $topdir/tme-hosts.txt 
+	    	echo "tme_host_${tme_host}=\${top_builddir}/${subdir}" >> $topdir/tme-hosts.txt 
 		host=yes
 		break
 	    fi
@@ -34,6 +34,7 @@ for num; do
     done
     if test $num = $2; then continue; fi
     if test "x${host}" = x; then
-	echo -n "-dlopen ../${subdir}/$num " >> $topdir/tme-preopen.txt 
+	echo -n "-dlopen \${top_builddir}/${subdir}/$num " >> $topdir/tme-preopen.txt 
+	echo "${subdir}/$num" >> $topdir/tme-modules.txt 
     fi 
 done
