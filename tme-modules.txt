@@ -20,6 +20,12 @@ ic/tme_ic_mm58167.la
 machine/sun2/tme_machine_sun2.la
 machine/sun3/tme_machine_sun3.la
 machine/sun4/tme_machine_sun4.la
+host/display/gtk/tme_host_gtk.la
+host/display/rfb/tme_host_rfb.la
+host/display/sdl/tme_host_sdl.la
+host/eth/tun/tme_host_tun.la
+host/eth/bsd/tme_host_bsd.la
+host/eth/openvpn/tme_host_openvpn.la
 host/tme_host_posix.la
 bus/multibus/tme_bus_multibus.la
 bus/sbus/tme_bus_sbus.la
