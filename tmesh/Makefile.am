@@ -15,7 +15,7 @@ libtmesh_la_SOURCES = \
 libtmesh_la_LIBADD = $(top_builddir)/libtme/libtme.la
 
 bin_PROGRAMS = tmesh
-tmesh_LDADD = libtmesh.la $(tme_preopen) @TME_HOST_LIBS@
+tmesh_LDADD = libtmesh.la $(tme_preopen) $(TME_HOST_LIBS)
 tmesh_LDFLAGS = -dlpreopen force -dlopen self
 
 EXTRA_DIST = tmesh.sh
@@ -56,9 +56,11 @@ plugins:
 	mkdir -p $(NME_DIR)
 	cp -f $(top_srcdir)/tme/*.txt $(NME_DIR)
 #	find $(top_builddir) -type f -name '*.la' -exec cp '{}' $NME_DIR ';'
-	for mod in `cat "$(top_srcdir)/tme-modules.txt"`; do \
-		echo $$mod ; \
-		cp -f $(top_builddir)/$$mod $(NME_DIR) ; \
+	for mod in $(tme_preopen) $(TME_HOST_LIBS); do \
+		if test $$mod != -dlopen; then \
+			echo $$mod ; \
+			cp -f $$mod $(NME_DIR) ; \
+		fi \
 	done
 	touch plugins
 
