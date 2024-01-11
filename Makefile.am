@@ -4,12 +4,9 @@
 AUTOMAKE_OPTIONS = 1.4 gnu
 ACLOCAL_AMFLAGS = -I m4
 
-if USE_TAP_WINDOWS
-nodist_include_HEADERS = tap-windows.h
+if WIN32
+include_HEADERS = tap-windows.h
 endif
-
-tap-windows.h: tap-windows-def.h
-	cp $< $@
 
 SUBDIRS = . libopenvpn tme lib libltdl libtme generic ic machine host bus serial scsi tmesh tools
 

@@ -35,7 +35,7 @@ dnl Checks that we are given a good source directory.
 AC_PREREQ([2.71])
 AC_INIT([tme],[0.12rc11])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
-AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_MACRO_DIRS([m4])
 AC_CANONICAL_TARGET
 #AC_CONFIG_AUX_DIR([libltdl/config])
 #AC_CONFIG_MACRO_DIR([libltdl/m4])
@@ -45,6 +45,8 @@ AM_EXTRA_RECURSIVE_TARGETS([modules])
 AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PREFIX_PROGRAM([tmesh])
+
+m4_include(openvpn_version.m4)
 
 dnl Write configuration out to config.h through config.h.in.
 AC_CONFIG_HEADERS([config.h])
@@ -221,9 +223,6 @@ AX_APPEND_LINK_FLAGS(-sUSE_SDL=2, SDL_LIBS)
 
 AM_CONDITIONAL([HAVE_SDL], [test "x${have_sdl}" = xyes])
 PKG_CHECK_MODULES([RFB], [libvncclient libvncserver], [have_rfb=$enable_rfb], [have_rfb=no])
-
-dnl Start the list of ethernet host support.
-AM_CONDITIONAL([USE_TAP_WINDOWS], [test "x${have_tap_header}" = x && test "x${WIN32}" != x])
 
 if test "x${have_tap_header}" = xyes || test "x${WIN32}" != x; then
    have_openvpn=$enable_openvpn
