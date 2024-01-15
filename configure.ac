@@ -1179,7 +1179,6 @@ if test "x${enable_debug}" = "xyes"; then
   fi			   
 else
   CPPFLAGS="${CPPFLAGS-} -DTME_NO_LOG -DTME_NO_DEBUG_LOCKS -DTME_NO_AUDIT_ATOMICS -DNDEBUG"
-  CFLAGS="${CFLAGS-}"
 fi
 
 AC_ARG_ENABLE(warnings,
@@ -1201,6 +1200,21 @@ else
      			-Wno-discarded-qualifiers -Wno-implicit-function-declaration -Wno-cpp -fno-strict-aliasing"
   fi
   CXXFLAGS="${CXXFLAGS-} -W"
+fi
+
+if test "x${enable_shared}" = "xno" || test "x${host_cpu}" = "xi686"; then
+   lto=${GCC}
+else
+   lto=no
+fi
+
+AC_ARG_ENABLE(lto,
+[  --enable-lto      compile with link-time optimizations (default=supported)],
+[ ],[ enable_lto=$lto ])
+
+if test "x${enable_lto}" = "xyes"; then
+  CFLAGS="${CFLAGS-} -flto"
+  LDFLAGS="${LDFLAGS-} -flto"
 fi
 
 dnl Some code isn't alias-clean.
