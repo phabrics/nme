@@ -3,7 +3,7 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
-AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(top_srcdir)/lib -I$(srcdir)/.. -I. -D_TME_IMPL
+AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(top_srcdir)/lib -I$(top_srcdir)/tme/libopenvpn -I$(srcdir)/.. -I. -D_TME_IMPL
 
 pkglib_LTLIBRARIES = tme_host_openvpn.la
 tme_host_openvpn_la_SOURCES = \

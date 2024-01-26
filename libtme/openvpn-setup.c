@@ -32,9 +32,9 @@
  */
 
 #include <tme/common.h>
+#include <tme/openvpn-setup.h>
 
 /* includes: */
-#include "openvpn-setup.h"
 #include "options.h"
 
 const struct link_socket *accept_from; /* possibly do accept() on a parent link_socket */

@@ -7,7 +7,7 @@ include $(top_srcdir)/lib/ltrc.inc
 
 AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(top_srcdir)/lib -I$(top_srcdir)/tme/libopenvpn -I. -D_TME_IMPL
 
-noinst_LTLIBRARIES = libopenvpn.la
+lib_LTLIBRARIES = libopenvpn.la
 libopenvpn_la_SOURCES = \
 	base64.c \
 	buffer.c \
@@ -47,7 +47,6 @@ libopenvpn_la_SOURCES = \
 	pkcs11_openssl.c \
 	pkcs11_polarssl.c \
         openvpn.c \
-        openvpn-setup.c \
 	options.c \
 	otime.c \
 	packet_id.c \
@@ -86,7 +85,8 @@ libopenvpn_la_LIBADD = \
 	$(OPTIONAL_CRYPTO_LIBS) \
 	$(OPTIONAL_SELINUX_LIBS) \
 	$(OPTIONAL_SYSTEMD_LIBS) \
-	$(OPTIONAL_DL_LIBS)
+	$(OPTIONAL_DL_LIBS) \
+	$(top_builddir)/lib/libcompat.la
 
 if WIN32
 libopenvpn_la_SOURCES += openvpn_win32_resources.rc

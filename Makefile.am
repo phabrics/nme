@@ -8,7 +8,7 @@ if WIN32
 include_HEADERS = tap-windows.h
 endif
 
-SUBDIRS = . libopenvpn tme lib libltdl libtme generic ic machine host bus serial scsi tmesh tools
+SUBDIRS = . lib libopenvpn tme libltdl libtme generic ic machine host bus serial scsi tmesh tools
 
 EXTRA_DIST = modules edist tap-windows-def.h
 pkgdata_DATA = tmeconfig.h tmememory.h

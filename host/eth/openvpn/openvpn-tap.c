@@ -35,7 +35,7 @@
 
 /* includes: */
 #include "eth-if.h"
-#include <tme/libopenvpn/openvpn-setup.h>
+#include <tme/openvpn-setup.h>
 
 typedef struct _tme_openvpn_tun {
   struct tme_ethernet *eth;

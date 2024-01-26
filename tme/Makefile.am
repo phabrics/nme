@@ -13,6 +13,7 @@ pkginclude_HEADERS = memory.h \
 	threads-posix.h \
 	threads-glib.h \
 	threads-fiber.h \
+	openvpn-setup.h \
 	module.h \
 	log.h \
 	tme.h \

@@ -48,7 +48,6 @@ tmelibopenvpn_HEADERS = \
 	occ.h occ-inline.h \
 	openvpn.h \
 	openvpn-plugin.h \
-	openvpn-setup.h \
 	options.h \
 	otime.h \
 	packet_id.h \

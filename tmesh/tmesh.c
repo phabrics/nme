@@ -40,7 +40,7 @@ _TME_RCSID("$Id: tmesh.c,v 1.4 2009/08/30 17:06:38 fredette Exp $");
 #include <tme/tme.h>
 #include <tme/tmesh.h>
 #include <tme/hash.h>
-#include <tme/libopenvpn/openvpn-setup.h>
+#include <tme/openvpn-setup.h>
 #ifdef __EMSCRIPTEN__
 #include <tme/shlibvar.h>
 #include <emscripten.h>
