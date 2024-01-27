@@ -3,7 +3,7 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
-SUBDIRS = generic ic machine scsi host bus libopenvpn
+SUBDIRS = generic ic machine scsi host bus
 
 pkginclude_HEADERS = memory.h \
 	common.h \

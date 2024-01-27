@@ -7,7 +7,7 @@ AUTOM4TE = $(SHELL) $(top_srcdir)/missing --run autom4te
 
 SUBDIRS = host
 
-AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I. $(LTDLINCL) -I$(top_srcdir)/lib -I$(top_srcdir)/tme/libopenvpn -D_TME_IMPL
+AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I. $(LTDLINCL) -I$(top_srcdir)/lib -D_TME_IMPL
 if THREADS_GLIB
 AM_CPPFLAGS += $(GLIB_CFLAGS)
 endif
