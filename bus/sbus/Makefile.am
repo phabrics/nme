@@ -3,8 +3,6 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
-AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(top_srcdir)/lib -I. -D_TME_IMPL
-
 pkglib_LTLIBRARIES = tme_bus_sbus.la
 tme_bus_sbus_la_SOURCES = \
 	sun-fbs4.c

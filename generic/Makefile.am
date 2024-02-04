@@ -5,7 +5,7 @@ AUTOMAKE_OPTIONS = 1.4 gnu
 
 AUTOM4TE = $(SHELL) $(top_srcdir)/missing --run autom4te
 
-AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(top_srcdir)/lib -I. -D_TME_IMPL -DLIBTME_GENERIC_BUILD
+AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(LIBOBJDIR) -I. -D_TME_IMPL -DLIBTME_GENERIC_BUILD
 
 lib_LTLIBRARIES = libtme-generic.la
 libtme_generic_la_SOURCES = bus.c \

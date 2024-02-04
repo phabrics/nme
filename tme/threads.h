@@ -41,8 +41,8 @@ _TME_RCSID("$Id: threads.h,v 1.10 2010/06/05 19:36:35 fredette Exp $");
 
 /* includes: */
 #include <errno.h>
-#include <tme/libopenvpn/syshead.h>
-#include <tme/libopenvpn/event.h>
+#include <libopenvpn/syshead.h>
+#include <libopenvpn/event.h>
 
 /* setjmp/longjmp threading: */
 #ifdef TME_THREADS_POSIX

@@ -5,8 +5,6 @@ AUTOMAKE_OPTIONS = 1.4 gnu
 
 AUTOM4TE = $(SHELL) $(top_srcdir)/missing --run autom4te
 
-AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(top_srcdir)/lib -I. -D_TME_IMPL
-
 tmeicincludedir = $(pkgincludedir)/ic
 tmeicinclude_HEADERS = ieee754-auto.h ieee754-ops-auto.h
 

@@ -3,8 +3,6 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
-AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(top_srcdir)/lib -I. -D_TME_IMPL
-
 SUBDIRS = ieee754 m68k sparc stp22xx
 
 pkglib_LTLIBRARIES = tme_ic_am9513.la \

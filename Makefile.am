@@ -4,13 +4,9 @@
 AUTOMAKE_OPTIONS = 1.4 gnu
 ACLOCAL_AMFLAGS = -I m4
 
-if WIN32
-include_HEADERS = tap-windows.h
-endif
+SUBDIRS = . $(subdirs) tme libltdl libtme generic ic machine host bus serial scsi tmesh tools
 
-SUBDIRS = . lib libopenvpn tme libltdl libtme generic ic machine host bus serial scsi tmesh tools
-
-EXTRA_DIST = modules edist tap-windows-def.h
+EXTRA_DIST = modules edist
 pkgdata_DATA = tmeconfig.h tmememory.h
 
 # target to hook into the distribution:

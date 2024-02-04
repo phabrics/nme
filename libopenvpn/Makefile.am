@@ -2,10 +2,13 @@
 # Makefile.am for The Machine Emulator host/openvpn:
 
 AUTOMAKE_OPTIONS = 1.4 gnu
+ACLOCAL_AMFLAGS = -I m4
 
 include $(top_srcdir)/lib/ltrc.inc
 
-AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(top_srcdir)/lib -I. -D_TME_IMPL
+AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(LIBOBJDIR) -I.
+
+EXTRA_DIST = tap-windows.h
 
 lib_LTLIBRARIES = libopenvpn.la
 libopenvpn_la_SOURCES = \
@@ -93,9 +96,7 @@ libopenvpn_la_SOURCES += openvpn_win32_resources.rc
 libopenvpn_la_LIBADD += -lgdi32 -lws2_32 -lwininet -lcrypt32 -liphlpapi -lwinmm
 endif
 
-libopenvpndir = $(includedir)/libopenvpn
-
-libopenvpn_HEADERS = \
+pkginclude_HEADERS = \
 	base64.h \
 	basic.h \
 	buffer.h \
@@ -172,3 +173,9 @@ libopenvpn_HEADERS = \
 	syshead.h \
 	tun.h \
 	win32.h
+
+if WIN32
+pkginclude_HEADERS += tap-windows.h
+endif
+
+SUBDIRS = lib

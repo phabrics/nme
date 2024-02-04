@@ -2,7 +2,6 @@
 # Makefile.am for The Machine Emulator eth/:
 
 AUTOMAKE_OPTIONS = 1.4 gnu
-AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(top_srcdir)/lib -I. -D_TME_IMPL
 
 lib_LTLIBRARIES = libtme-eth.la
 libtme_eth_la_SOURCES = eth-impl.c eth-if.h

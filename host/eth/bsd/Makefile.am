@@ -3,7 +3,7 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
-AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(top_srcdir)/lib -I$(srcdir)/.. -I. -D_TME_IMPL
+tme_host_bsd_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/..
 
 pkglib_LTLIBRARIES = tme_host_bsd.la
 tme_host_bsd_la_SOURCES = bsd-bpf.c

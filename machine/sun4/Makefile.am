@@ -3,8 +3,6 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
-AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(top_srcdir)/lib -I. -D_TME_IMPL
-
 pkglib_LTLIBRARIES = tme_machine_sun4.la
 tme_machine_sun4_la_SOURCES =	\
 	sun4-mainbus.c		\
