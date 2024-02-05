@@ -9,7 +9,7 @@ AC_CONFIG_SRCDIR([base64.c])
 AC_CONFIG_HEADERS([config.h])
 AC_CANONICAL_TARGET
 AC_CONFIG_LIBOBJ_DIR([lib])
-AM_INIT_AUTOMAKE([foreign])
+AM_INIT_AUTOMAKE([subdir-objects])
 
 m4_include([version.m4])
 AC_DEFINE([OPENVPN_VERSION_RESOURCE], [PRODUCT_VERSION_RESOURCE], [Version in windows resource format])
@@ -90,7 +90,6 @@ AC_CHECK_HEADERS([arpa/inet.h fcntl.h inttypes.h netdb.h netinet/in.h stdint.h s
 AC_CHECK_HEADERS([io.h direct.h \
 		  ctype.h sys/types.h sys/socket.h \
 		  signal.h unistd.h dlfcn.h])
-
 
 AC_CHECK_HEADERS([netinet/in_systm.h netinet/tcp.h windows.h winsock2.h ws2tcpip.h])
 
@@ -419,6 +418,80 @@ ifdef(
 		AC_PROG_LIBTOOL
 	]
 )
+
+dnl Configure debugging and/or warnings.
+AC_MSG_CHECKING([for gcc --version >= 4.8])
+AC_EGREP_CPP(_gcc_has_Og,
+[
+#if (__GNUC__ > 3 && __GNUC_MINOR__ > 7) || __GNUC__ > 4
+_gcc_has_Og
+#endif
+], [
+AC_MSG_RESULT(yes)
+have_Og=yes
+], [ AC_MSG_RESULT(no) ])
+
+AC_MSG_CHECKING([for clang])
+AC_EGREP_CPP(_gcc_is_clang,
+[
+#if __clang__
+_gcc_is_clang
+#endif
+], [
+AC_MSG_RESULT(yes)
+have_clang=yes
+], [ AC_MSG_RESULT(no) ])
+
+AC_ARG_ENABLE(debug,
+[  --enable-debug          compile debuggable libraries and programs (default=don't)],
+[ ], [enable_debug=no])
+if test "x${enable_debug}" = "xyes"; then
+  CPPFLAGS="${CPPFLAGS-} -DENABLE_DEBUG"
+  if test "x${have_Og}" = xyes; then
+     CFLAGS="${CFLAGS-} -Og"
+     CXXFLAGS="${CXXFLAGS-} -g3 -Og"
+  fi			   
+fi
+
+AC_ARG_ENABLE(warnings,
+[  --disable-warnings      don't compile with warnings turned on (default=don't)],
+[ ], [enable_warnings=no])
+if test "x${enable_warnings}" = "xyes" -a "x${GCC}" = "xyes"; then
+  CFLAGS="${CFLAGS-} -Wno-unused -Wno-sign-compare -Wundef -Wall -Wextra"
+  CXXFLAGS="${CXXFLAGS-} -W"
+else
+  CFLAGS="${CFLAGS-} -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable"
+  if test "x${have_clang}" = xyes; then
+    CFLAGS="${CFLAGS-} -Wno-tautological-compare -Wno-sometimes-uninitialized \
+    		       -Wno-sign-compare -Wno-incompatible-pointer-types \
+		       -Wno-implicit-function-declaration -Wno-int-conversion \
+		       -Wno-cpp -Wno-compound-token-split-by-macro -fbracket-depth=1024"
+  fi
+  if test "x${have_Og}" = xyes; then
+     CFLAGS="${CFLAGS-} -Wno-unused-but-set-variable -Wno-array-bounds -Wno-type-limits -Wno-incompatible-pointer-types \
+     			-Wno-discarded-qualifiers -Wno-implicit-function-declaration -Wno-cpp -fno-strict-aliasing"
+  fi
+  CXXFLAGS="${CXXFLAGS-} -W"
+fi
+
+AC_ARG_ENABLE(lto,
+[  --enable-lto      compile with link-time optimizations (default=supported)],
+[ ],[ enable_lto=yes ])
+
+if test "x${enable_lto}" = "xyes"; then
+  CFLAGS="${CFLAGS-} -flto"
+  LDFLAGS="${LDFLAGS-} -flto"
+fi
+
+dnl Some code isn't alias-clean.
+CFLAGS_NO_STRICT_ALIASING=
+if test "x${GCC}" = "xyes"; then
+  CFLAGS_NO_STRICT_ALIASING=" -fno-strict-aliasing"
+fi
+AC_SUBST(CFLAGS_NO_STRICT_ALIASING)
+
+dnl For platforms, like Windows, where libraries must have all their symbols resolved
+LDFLAGS="${LDFLAGS-} -no-undefined"
 
 AC_CONFIG_FILES([Makefile
           lib/Makefile

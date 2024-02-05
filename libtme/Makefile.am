@@ -7,7 +7,7 @@ AUTOM4TE = $(SHELL) $(top_srcdir)/missing --run autom4te
 
 SUBDIRS = host
 
-AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(LIBOBJDIR) -I. -D_TME_IMPL $(LTDLINCL)
+AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(srcdir)/$(LIBOBJDIR) -I. -D_TME_IMPL $(LTDLINCL)
 
 if THREADS_GLIB
 AM_CPPFLAGS += $(GLIB_CFLAGS)

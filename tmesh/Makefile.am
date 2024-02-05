@@ -3,7 +3,7 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
-AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(LIBOBJDIR) -I. -D_TME_IMPL @TME_HOST_CFLAGS@
+AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(srcdir)/$(LIBOBJDIR) -I. -D_TME_IMPL @TME_HOST_CFLAGS@
 
 noinst_LTLIBRARIES = libtmesh.la
 libtmesh_la_SOURCES = \

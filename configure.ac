@@ -288,6 +288,8 @@ AC_CHECK_HEADERS([sys/param.h sys/linker.h sys/sysctl.h sys/module.h npf.h net/n
  #endif
 ])
 
+AC_CHECK_HEADERS([netinet/in_systm.h netinet/tcp.h windows.h winsock2.h ws2tcpip.h])
+
 AC_CHECK_HEADERS([net/if.h net/if_var.h net/if_types.h net/if_arp.h netinet/in.h netinet/in_var.h netinet/if_ether.h linux/netfilter.h net/pfvar.h net/pf/pfvar.h netinet/ip_compat.h netinet/ip_fil.h netinet/ip_nat.h netinet/ip_proxy.h], [], [],
 [#include <stdio.h>
  #ifdef STDC_HEADERS
@@ -440,6 +442,8 @@ AC_CHECK_FUNC_LONG(cpuset_create, [
 ])
 
 AC_SYS_SOCKADDR_SA_LEN
+AX_TYPE_SOCKLEN_T
+AX_EMPTY_ARRAY
 
 dnl Checks for library functions and prototypes.
 #AC_FUNC_MEMCMP
@@ -569,6 +573,10 @@ AC_DEFINE(HAVE_PTHREAD_SETAFFINITY_NP, [], [Define if you have pthread_setaffini
 AC_SEARCH_LIBS([pthread_setschedparam], [pthread], [
 AC_DEFINE(HAVE_PTHREAD_SETSCHEDPARAM, [], [Define if you have pthread_setschedparam.])
 ])
+
+dnl Invoke compatibility library in LIBOBJDIR
+AC_REPLACE_FUNCS([basename daemon dirname gettimeofday inet_ntop inet_pton])
+AC_REPLACE_FUNCS([mmap munmap mprotect msync mlock munlock])
 
 dnl Checks for perl.
 AC_PATH_PROGS(PERL, perl4.036 perl4 perl perl5, no)

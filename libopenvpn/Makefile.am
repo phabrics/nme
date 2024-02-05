@@ -6,7 +6,7 @@ ACLOCAL_AMFLAGS = -I m4
 
 include $(top_srcdir)/lib/ltrc.inc
 
-AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(LIBOBJDIR) -I.
+AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(srcdir)/$(LIBOBJDIR) -I.
 
 EXTRA_DIST = tap-windows.h
 
@@ -89,9 +89,11 @@ libopenvpn_la_LIBADD = \
 	$(OPTIONAL_SELINUX_LIBS) \
 	$(OPTIONAL_SYSTEMD_LIBS) \
 	$(OPTIONAL_DL_LIBS) \
-	$(top_builddir)/lib/libcompat.la
+	$(LTLIBOBJS)
+#	$(top_builddir)/lib/libcompat.la
 
 if WIN32
+include_HEADERS = tap-windows.h
 libopenvpn_la_SOURCES += openvpn_win32_resources.rc
 libopenvpn_la_LIBADD += -lgdi32 -lws2_32 -lwininet -lcrypt32 -liphlpapi -lwinmm
 endif
@@ -173,9 +175,5 @@ pkginclude_HEADERS = \
 	syshead.h \
 	tun.h \
 	win32.h
-
-if WIN32
-pkginclude_HEADERS += tap-windows.h
-endif
 
 SUBDIRS = lib
