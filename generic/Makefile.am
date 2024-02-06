@@ -20,7 +20,7 @@ libtme_generic_la_SOURCES = bus.c \
 	float.c \
 	keyboard.c
 libtme_generic_la_LDFLAGS = -version-info 0:0:0
-libtme_generic_la_LIBADD = $(top_builddir)/libtme/libtme.la
+libtme_generic_la_LIBADD = $(top_builddir)/libtme/libtme.la $(LTLIBOBJS)
 
 noinst_SCRIPTS = float-auto.sh \
 		bus-device-auto.sh \

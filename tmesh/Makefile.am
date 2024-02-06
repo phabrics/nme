@@ -12,7 +12,7 @@ libtmesh_la_SOURCES = \
 	tmesh-util.c \
 	tmesh-cmds.c \
 	tmesh-threads.c
-libtmesh_la_LIBADD = $(top_builddir)/libtme/libtme.la
+libtmesh_la_LIBADD = $(top_builddir)/libtme/libtme.la $(LTLIBOBJS)
 
 bin_PROGRAMS = tmesh
 tmesh_LDADD = libtmesh.la $(tme_preopen) $(TME_HOST_LIBS)

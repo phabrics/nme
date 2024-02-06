@@ -92,4 +92,4 @@ modules-local:
 # all of the .la files into that same directory:
 AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(srcdir)/$(LIBOBJDIR) -I. -D_TME_IMPL
 AM_LDFLAGS = -module -version-info 0:0:0
-TME_LIBS = $(top_builddir)/generic/libtme-generic.la $(top_builddir)/libtme/libtme.la
+TME_LIBS = $(top_builddir)/generic/libtme-generic.la $(top_builddir)/libtme/libtme.la $(LTLIBOBJS)
