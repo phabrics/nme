@@ -51,7 +51,7 @@ _TME_RCSID("$Id: posix-memory.c,v 1.7 2009/08/30 21:50:17 fredette Exp $");
 #ifdef HAVE_SYS_MMAN_H
 #include <sys/mman.h>
 #else
-#include "mman.h"
+#include <libopenvpn/lib/mman.h>
 #endif
 
 /* macros: */

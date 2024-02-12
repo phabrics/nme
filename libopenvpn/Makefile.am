@@ -4,9 +4,9 @@
 AUTOMAKE_OPTIONS = 1.4 gnu
 ACLOCAL_AMFLAGS = -I m4
 
-include $(top_srcdir)/lib/ltrc.inc
+AM_CPPFLAGS = -I$(top_srcdir)/lib  -I$(top_srcdir)/$(LIBOBJDIR) -D_OPENVPN_IMPL
 
-AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(srcdir)/$(LIBOBJDIR) -I.
+include $(top_srcdir)/lib/ltrc.inc
 
 EXTRA_DIST = tap-windows.h
 
@@ -123,6 +123,7 @@ pkginclude_HEADERS = \
 	init.h \
 	integer.h \
 	interval.h \
+	lib/mman.h \
 	list.h \
 	lladdr.h \
 	lzo.h \

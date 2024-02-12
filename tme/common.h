@@ -46,6 +46,16 @@
 #include <unistd.h>
 #include <tmeconfig.h>
 #include <sys/types.h>
+#ifdef HAVE_STDIO_H
+#include <stdio.h>
+#endif
+#ifdef HAVE_STDBOOL_H
+#include <stdbool.h>
+#else
+typedef int bool;
+#define false 0
+#define true 1
+#endif
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
 #endif

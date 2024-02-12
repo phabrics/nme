@@ -25,9 +25,6 @@
 #ifndef SYSHEAD_H
 #define SYSHEAD_H
 
-#include "compat.h"
-#include "compat-stdbool.h"
-
 /* branch prediction hints */
 #if defined(__GNUC__)
 # define likely(x)       __builtin_expect((x),1)
@@ -54,6 +51,10 @@
 #define __APPLE_USE_RFC_3542  1
 #endif
 #endif
+
+#ifdef _OPENVPN_IMPL
+#include "compat.h"
+#include "compat-stdbool.h"
 
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
@@ -357,16 +358,6 @@
 
 #endif /* TARGET_DARWIN */
 
-#ifdef WIN32
-#include <iphlpapi.h>
-#include <ntddndis.h>
-#include <wininet.h>
-#include <shellapi.h>
-/* The following two headers are needed of PF_INET6 */
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#endif
-
 #ifdef HAVE_SYS_MMAN_H
 #ifdef TARGET_DARWIN
 #define _P1003_1B_VISIBLE
@@ -482,23 +473,6 @@
 #else
 #define WIN32_0_1 0
 #endif
-
-/*
- * Our socket descriptor type.
- */
-#ifdef WIN32
-#define SOCKET_UNDEFINED (INVALID_SOCKET)
-typedef SOCKET socket_descriptor_t;
-#else
-#define SOCKET_UNDEFINED (-1)
-typedef int socket_descriptor_t;
-#endif
-
-static inline int
-socket_defined (const socket_descriptor_t sd)
-{
-  return sd != SOCKET_UNDEFINED;
-}
 
 /*
  * Should statistics counters be 64 bits?
@@ -733,5 +707,33 @@ socket_defined (const socket_descriptor_t sd)
 #ifdef TARGET_LINUX
 #define ENABLE_MEMSTATS
 #endif
+
+#endif
+
+#ifdef WIN32
+#include <iphlpapi.h>
+#include <ntddndis.h>
+#include <wininet.h>
+#include <shellapi.h>
+/* The following two headers are needed of PF_INET6 */
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#endif
+
+/*
+ * Our socket descriptor type.
+ */
+#ifdef WIN32
+#define SOCKET_UNDEFINED (INVALID_SOCKET)
+typedef SOCKET socket_descriptor_t;
+#else
+#define SOCKET_UNDEFINED (-1)
+typedef int socket_descriptor_t;
+#endif
+static inline int
+socket_defined (const socket_descriptor_t sd)
+{
+  return sd != SOCKET_UNDEFINED;
+}
 
 #endif

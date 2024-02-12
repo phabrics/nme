@@ -90,6 +90,6 @@ modules-local:
 # module.c can find the uninstalled tme-plugins.txt file, and libtool
 # will want to look in this directory for .la files, so we simply copy
 # all of the .la files into that same directory:
-AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(srcdir)/$(LIBOBJDIR) -I. -D_TME_IMPL
+AM_CPPFLAGS = -I$(top_srcdir) -D_TME_IMPL
 AM_LDFLAGS = -module -version-info 0:0:0
-TME_LIBS = $(top_builddir)/generic/libtme-generic.la $(top_builddir)/libtme/libtme.la $(LTLIBOBJS)
+TME_LIBS = $(top_builddir)/generic/libtme-generic.la $(top_builddir)/libtme/libtme.la

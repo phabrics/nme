@@ -5,7 +5,7 @@ AUTOMAKE_OPTIONS = 1.4 gnu
 
 AUTOM4TE = $(SHELL) $(top_srcdir)/missing --run autom4te
 
-AM_CPPFLAGS = -I$(top_srcdir) -I$(srcdir) -I$(srcdir)/$(LIBOBJDIR) -I. -D_TME_IMPL -DLIBTME_GENERIC_BUILD
+AM_CPPFLAGS = -I$(top_srcdir) -D_TME_IMPL -DLIBTME_GENERIC_BUILD
 
 lib_LTLIBRARIES = libtme-generic.la
 libtme_generic_la_SOURCES = bus.c \
@@ -20,7 +20,7 @@ libtme_generic_la_SOURCES = bus.c \
 	float.c \
 	keyboard.c
 libtme_generic_la_LDFLAGS = -version-info 0:0:0
-libtme_generic_la_LIBADD = $(top_builddir)/libtme/libtme.la $(LTLIBOBJS)
+libtme_generic_la_LIBADD = $(top_builddir)/libtme/libtme.la
 
 noinst_SCRIPTS = float-auto.sh \
 		bus-device-auto.sh \

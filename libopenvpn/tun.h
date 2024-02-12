@@ -25,9 +25,11 @@
 #ifndef TUN_H
 #define TUN_H
 
+#ifdef _OPENVPN_IMPL
 #ifdef WIN32
 #include <winioctl.h>
 #include <tap-windows.h>
+#endif
 #endif
 
 #include "buffer.h"

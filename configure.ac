@@ -40,7 +40,6 @@ AC_CONFIG_MACRO_DIRS([m4])
 AC_CANONICAL_TARGET
 #AC_CONFIG_AUX_DIR([libltdl/config])
 #AC_CONFIG_MACRO_DIR([libltdl/m4])
-AC_CONFIG_LIBOBJ_DIR([libopenvpn/lib])
 AM_INIT_AUTOMAKE([subdir-objects])
 AM_EXTRA_RECURSIVE_TARGETS([modules])
 AC_PROG_CC
@@ -575,8 +574,8 @@ AC_DEFINE(HAVE_PTHREAD_SETSCHEDPARAM, [], [Define if you have pthread_setschedpa
 ])
 
 dnl Invoke compatibility library in LIBOBJDIR
-AC_REPLACE_FUNCS([basename daemon dirname gettimeofday inet_ntop inet_pton])
-AC_REPLACE_FUNCS([mmap munmap mprotect msync mlock munlock])
+AC_CHECK_FUNCS([basename daemon dirname gettimeofday inet_ntop inet_pton])
+AC_CHECK_FUNCS([mmap munmap mprotect msync mlock munlock])
 
 dnl Checks for perl.
 AC_PATH_PROGS(PERL, perl4.036 perl4 perl perl5, no)

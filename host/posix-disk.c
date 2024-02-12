@@ -54,7 +54,7 @@ _TME_RCSID("$Id: posix-disk.c,v 1.6 2010/06/05 14:28:57 fredette Exp $");
 #ifdef HAVE_SYS_MMAN_H
 #include <sys/mman.h>
 #else
-#include "mman.h"
+#include <libopenvpn/lib/mman.h>
 #endif
 #ifdef WIN32
 #include <windows.h>
