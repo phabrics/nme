@@ -44,6 +44,11 @@
 #endif /* _TME_IMPL */
 #include <assert.h>
 #include <unistd.h>
+#include <stdio.h>
+#include <string.h>
+#include <stddef.h>	/* for offsetof */
+#include <errno.h>
+#include <fcntl.h>
 #include <tmeconfig.h>
 #include <sys/types.h>
 #ifdef HAVE_STDIO_H
@@ -67,6 +72,13 @@ typedef int bool;
 #endif
 #ifdef HAVE_TIME_H
 #include <time.h>
+#endif
+#ifdef HAVE_ARPA_INET_H
+#include <arpa/inet.h>
+#endif
+#ifndef HAVE_IN_ADDR_T
+/* Workaround missing in_addr_t */
+#define in_addr_t uint32_t
 #endif
 #ifdef HAVE_CURSES_H
 #include <curses.h>

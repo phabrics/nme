@@ -83,13 +83,36 @@ esac
 
 AM_CONDITIONAL([WIN32], [test "${WIN32}" = "yes"])
 
+AC_ARG_VAR([TAP_CFLAGS], [C compiler flags for tap])
+old_CFLAGS="${CFLAGS}"
+CFLAGS="${CFLAGS} ${TAP_CFLAGS}"
+AC_CHECK_HEADERS(
+	[ \
+		net/if_tun.h net/tun/if_tun.h \
+		linux/if_tun.h \
+		tap-windows.h \
+	],
+	[have_tap_header="yes"]
+)
+AC_CHECK_DECLS(
+	[TUNSETPERSIST],
+	[AC_DEFINE([ENABLE_FEATURE_TUN_PERSIST], [1], [We have persist tun capability])],
+	,
+	[[
+		#ifdef HAVE_LINUX_IF_TUN_H
+		#include <linux/if_tun.h>
+		#endif
+	]]
+)
+CFLAGS="${old_CFLAGS}"
+
 # Checks for header files.
 AC_HEADER_RESOLV
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h errno.h inttypes.h netdb.h netinet/in.h stdint.h strings.h sys/file.h sys/ioctl.h sys/socket.h sys/time.h syslog.h unistd.h])
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h errno.h inttypes.h netdb.h netinet/in.h stdint.h strings.h sys/file.h sys/ioctl.h sys/mman.h sys/socket.h sys/time.h syslog.h unistd.h])
 
-AC_CHECK_HEADERS([io.h direct.h \
-		  ctype.h sys/types.h sys/socket.h \
-		  signal.h unistd.h dlfcn.h])
+AC_CHECK_HEADERS([io.h direct.h ctype.h sys/types.h signal.h])
+
+AC_CHECK_HEADERS([stdio.h stdarg.h stdbool.h limits.h])
 
 AC_CHECK_HEADERS([netinet/in_systm.h netinet/tcp.h windows.h winsock2.h ws2tcpip.h])
 
@@ -418,6 +441,8 @@ ifdef(
 		AC_PROG_LIBTOOL
 	]
 )
+
+CPPFLAGS="${CPPFLAGS-} -D_GNU_SOURCE" 
 
 dnl Configure debugging and/or warnings.
 AC_MSG_CHECKING([for gcc --version >= 4.8])

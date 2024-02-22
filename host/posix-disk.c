@@ -39,9 +39,6 @@ _TME_RCSID("$Id: posix-disk.c,v 1.6 2010/06/05 14:28:57 fredette Exp $");
 /* includes: */
 #include <tme/generic/disk.h>
 #include <tme/generic/bus.h>
-#include <fcntl.h>
-#include <stdlib.h>
-#include <strings.h>
 #ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif

@@ -40,7 +40,6 @@ _TME_RCSID("$Id: recode-mmap.c,v 1.2 2008/07/01 02:00:53 fredette Exp $");
 
 /* includes: */
 #include "recode-impl.h"
-#include <fcntl.h>
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif

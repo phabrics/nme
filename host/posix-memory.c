@@ -39,9 +39,6 @@ _TME_RCSID("$Id: posix-memory.c,v 1.7 2009/08/30 21:50:17 fredette Exp $");
 /* includes: */
 #include <tme/generic/bus-device.h>
 #include <tme/hash.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <strings.h>
 #ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif

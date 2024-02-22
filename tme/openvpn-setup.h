@@ -33,14 +33,6 @@
 
 #include <tme/common.h>
 #include <tme/threads.h>
-
-#ifndef HAVE_IN_ADDR_T
-/* Workaround missing in_addr_t */
-#define in_addr_t uint32_t
-#endif
-
-/* includes: */
-#include <libopenvpn/syshead.h>
 #include <libopenvpn/socket.h>
 #include <libopenvpn/tun.h>
 #include <libopenvpn/ping.h>
