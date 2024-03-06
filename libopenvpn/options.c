@@ -2831,6 +2831,14 @@ options_postprocess (struct options *options)
 #endif /* !ENABLE_SMALL */
 }
 
+struct options *options_new (void)
+{
+  struct options *options;
+
+  ALLOC_OBJ_CLEAR (options, struct options);
+  return options;
+}
+
 #if P2MP
 
 /*

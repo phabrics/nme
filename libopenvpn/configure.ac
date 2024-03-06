@@ -298,7 +298,7 @@ AX_EMPTY_ARRAY
 AC_FUNC_FORK
 #AC_FUNC_MALLOC
 #AC_FUNC_MMAP
-#AC_CHECK_FUNCS([bzero dup2 ftruncate getpass gettimeofday inet_ntoa isascii memmove memset munmap select socket strcasecmp strchr strcspn strdup strerror strrchr strstr strtol])
+AC_CHECK_FUNCS([bzero dup2 ftruncate getpass gettimeofday inet_ntoa isascii memmove memset munmap select socket strcasecmp strchr strcspn strdup strerror strrchr strstr strtol])
 
 AC_CHECK_FUNCS([ \
 	chroot getpwnam setuid nice system getpid dup dup2 \

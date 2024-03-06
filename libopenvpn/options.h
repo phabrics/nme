@@ -57,6 +57,8 @@
 
 extern const char title_string[];
 
+struct options *options_new (void);
+
 #if P2MP
 
 /* certain options are saved before --pull modifications are applied */

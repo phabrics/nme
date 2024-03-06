@@ -196,11 +196,11 @@ do_setup_fast_io(struct options *options) {
 }
 
 struct env_set *openvpn_setup(const char *args[], int argc, struct options *options) {
-  struct options _options;
+  struct options *_options = options_new();
   /* initialize environmental variable store */
   struct env_set *es = env_set_create(NULL);
   
-  if(!options) options = &_options;
+  if(!options) options = _options;
   
   /* initialize options to default state */
   init_options(options, true);
@@ -236,6 +236,7 @@ struct env_set *openvpn_setup(const char *args[], int argc, struct options *opti
   /* set certain options as environmental variables */
   setenv_settings(es, options);
 
+  free(_options);
   return es;
 }
 

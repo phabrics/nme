@@ -141,14 +141,16 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,tun_tap) {
   u_char flags;
   struct frame *frame;
   int sz;
-  struct options options;
+  struct options *options = options_new();
   tme_openvpn_tun *tun = data = tme_new0(tme_openvpn_tun, 1);
   int arg_i = 0;
 
   while(args[++arg_i] != NULL);
   
-  es = openvpn_setup(args, arg_i, &options);
-  frame = openvpn_setup_frame(&options, &tt, NULL, es, &flags, NULL);
+  es = openvpn_setup(args, arg_i, options);
+  frame = openvpn_setup_frame(options, &tt, NULL, es, &flags, NULL);
+  free(options);
+
   sz = BUF_SIZE(frame);
 
   tun->tt = tt;

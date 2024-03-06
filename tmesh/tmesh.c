@@ -722,7 +722,7 @@ main(int argc, char **argv)
   
   if (!interactive && (arg_i == argc)) do_usage(argv0, NULL);
 
-#ifdef OPENVPN_VERSION_RESOURCE
+  // Initialize openvpn library
   if(init_static()) {
     es = openvpn_setup(NULL, 0, NULL);
 #ifdef WIN32
@@ -731,7 +731,7 @@ main(int argc, char **argv)
 #endif
   } else
     exit(1);
-#endif
+
   if (!strcmp(log_filename, "-")) {
     _tmesh_log = stdout;
   }
