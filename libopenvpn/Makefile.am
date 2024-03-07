@@ -30,6 +30,7 @@ libopenvpn_la_SOURCES = \
 	lladdr.c \
 	init.c \
 	interval.c \
+	link.c \
 	list.c \
 	lzo.c \
 	manage.c \
@@ -124,6 +125,7 @@ pkginclude_HEADERS = \
 	integer.h \
 	interval.h \
 	lib/mman.h \
+	link.h \
 	list.h \
 	lladdr.h \
 	lzo.h \

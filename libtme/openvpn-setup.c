@@ -35,11 +35,6 @@
 
 #include <tme/common.h>
 #include <tme/openvpn-setup.h>
-#include <libopenvpn/options.h>
-
-const struct link_socket *accept_from; /* possibly do accept() on a parent link_socket */
-
-struct signal_info *sig;      /**< Internal error signaling object. */
 
 static inline
 struct tuntap *setup_tuntap(struct frame *frame, struct link_socket_addr *lsa, struct options *options, struct env_set *es) {
@@ -114,85 +109,6 @@ struct tuntap *setup_tuntap(struct frame *frame, struct link_socket_addr *lsa, s
 	      es);
 
   return tt;
-}
-
-static inline
-struct link_socket *setup_link_socket(struct frame *frame, struct link_socket_addr *lsa, struct options *options) {
-  struct link_socket *link_socket = link_socket_new();
-  unsigned int sockflags = options->sockflags;
-
-#if PORT_SHARE
-  if (options->port_share_host && options->port_share_port)
-    sockflags |= SF_PORT_SHARE;
-#endif
-
-  link_socket_init_phase1 (link_socket,
-			   connection_list_defined(options),
-			   options->ce.local,
-			   options->ce.local_port,
-			   options->ce.remote,
-			   options->ce.remote_port,
-			   options->ce.proto,
-			   LS_MODE_DEFAULT,
-			   accept_from,
-#ifdef ENABLE_HTTP_PROXY
-			   http_proxy,
-#endif
-#ifdef ENABLE_OPENVPNS
-			   socks_proxy,
-#endif
-#ifdef ENABLE_DEBUG
-			   options->gremlin,
-#endif
-			   options->ce.bind_local,
-			   options->ce.remote_float,
-			   options->inetd,
-			   lsa,
-			   options->ipchange,
-			   NULL,
-			   options->resolve_retry_seconds,
-			   options->ce.connect_retry_seconds,
-			   options->ce.connect_timeout,
-			   options->ce.connect_retry_max,
-			   options->ce.mtu_discover_type,
-			   options->rcvbuf,
-			   options->sndbuf,
-			   options->mark,
-			   sockflags);
-  
-  link_socket_init_phase2(link_socket, frame,
-			   &sig->signal_received);
-
-  return link_socket;
-}
-
-/*
- * Fast I/O setup.  Fast I/O is an optimization which only works
- * if all of the following are true:
- *
- * (1) The platform is not Windows
- * (2) --proto udp is enabled
- * (3) --shaper is disabled
- */
-static bool
-do_setup_fast_io(struct options *options) {
-  if (options->fast_io) {
-#ifdef WIN32
-    msg (M_INFO, "NOTE: --fast-io is disabled since we are running on Windows");
-#else
-    if (!proto_is_udp(options->ce.proto))
-      msg (M_INFO, "NOTE: --fast-io is disabled since we are not using UDP");
-    else {
-#ifdef ENABLE_FEATURE_SHAPER
-      if (options->shaper)
-	msg (M_INFO, "NOTE: --fast-io is disabled since we are using --shaper");
-      else
-#endif
-	return true;
-    }
-#endif
-  }
-  return false;
 }
 
 struct env_set *openvpn_setup(const char *args[], int argc, struct options *options) {
@@ -291,9 +207,7 @@ struct frame *openvpn_setup_frame(struct options *options, struct tuntap **tt, s
     *event_set = tme_event_set_init(&maxevents, EVENT_METHOD_FAST);
   }
 
-  sig = &siginfo_static;
-  
-  if(sock) *sock = setup_link_socket(frame, lsa, options);
+  if(sock) *sock = setup_link_socket(frame, lsa, options, &siginfo_static);
   
   /* tun/tap persist command? */
   if(!do_persist_tuntap(options) && tt)

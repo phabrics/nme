@@ -1,4 +1,4 @@
-/* host/openvpn/openvpn-setup.h - OpenVPN Ethernet setup: */
+/* host/openvpn/link.c - OpenVPN Ethernet setup: */
 
 /*
  * Copyright (c) 2016 Ruben Agin
@@ -31,14 +31,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <tme/common.h>
-#include <tme/threads.h>
-#include <libopenvpn/tun.h>
-#include <libopenvpn/link.h>
+#include "socket.h"
+#include "ping.h"
+#include "options.h"
 
-#define OPENVPN_CAN_WRITE 1
-#define OPENVPN_FAST_IO 2
-
-struct env_set *openvpn_setup _TME_P((const char *args[], int argc, struct options *options));
-
-struct frame *openvpn_setup_frame _TME_P((struct options *options, struct tuntap **tt, struct link_socket **sock, struct env_set *es, u_char *flags, tme_event_set_t **event_set));
+struct link_socket *setup_link_socket(struct frame *frame, struct link_socket_addr *lsa, struct options *options, struct signal_info *sig);
+bool do_setup_fast_io(struct options *options);
