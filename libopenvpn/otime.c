@@ -112,7 +112,8 @@ time_string (time_t t, int usec, bool show_usec, struct gc_arena *gc)
 {
   struct buffer out = alloc_buf_gc (64, gc);
   struct timeval tv;
-
+  char *s;
+  
   if (t)
     {
       tv.tv_sec = t;
@@ -124,7 +125,8 @@ time_string (time_t t, int usec, bool show_usec, struct gc_arena *gc)
     }
 
   t = tv.tv_sec;
-  buf_printf (&out, "%s", ctime(&t));
+  s = ctime(&t);
+  buf_printf (&out, "%s", s);
   buf_rmtail (&out, '\n');
 
   if (show_usec && tv.tv_usec)

@@ -108,7 +108,7 @@ CFLAGS="${old_CFLAGS}"
 
 # Checks for header files.
 AC_HEADER_RESOLV
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h errno.h inttypes.h netdb.h netinet/in.h stdint.h strings.h sys/file.h sys/ioctl.h sys/mman.h sys/socket.h sys/time.h syslog.h unistd.h])
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h errno.h inttypes.h netdb.h netinet/in.h stdint.h strings.h sys/file.h sys/ioctl.h sys/mman.h sys/socket.h sys/time.h time.h syslog.h unistd.h])
 
 AC_CHECK_HEADERS([io.h direct.h ctype.h sys/types.h signal.h])
 
