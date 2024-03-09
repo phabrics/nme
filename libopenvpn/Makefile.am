@@ -99,7 +99,7 @@ libopenvpn_la_SOURCES += openvpn_win32_resources.rc
 libopenvpn_la_LIBADD += -lgdi32 -lws2_32 -lwininet -lcrypt32 -liphlpapi -lwinmm
 endif
 
-pkginclude_HEADERS = \
+nobase_pkginclude_HEADERS = \
 	base64.h \
 	basic.h \
 	buffer.h \
