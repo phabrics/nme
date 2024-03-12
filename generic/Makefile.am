@@ -37,19 +37,22 @@ $(noinst_SCRIPTS): %.sh: %.m4
 	$(AUTOM4TE) -l m4sh $< > $@
 
 # target to make float-auto.c and bus-device-auto.c:
-float-auto.c bus-device-auto.c: %.c: %.sh
+$(srcdir)/float-auto.c: float-auto.sh
+	$(SHELL) $< > $@
+
+$(srcdir)/bus-device-auto.c: bus-device-auto.sh
 	$(SHELL) $< > $@
 
 # target to make fb-xlat-auto.c:
 if USING_X
-fb-xlat-auto.c: %.c: %.sh %.in
+$(srcdir)/fb-xlat-auto.c: fb-xlat-auto.sh fb-xlat-auto.in
 	cat $*.in | xargs $(SHELL) $< > $@
 
-fb-xlat-auto.in: %.in: %.pl
+fb-xlat-auto.in: fb-xlat-auto.pl
 	$(PERL) $< src $(TME_FB_XLAT_SRC) dst $(TME_FB_XLAT_DST) > $@ || \
 	echo "src $(TME_FB_XLAT_SRC) dst $(TME_FB_XLAT_DST)" > $@
 else
-fb-xlat-auto.c: %.c: %.sh
+$(srcdir)/fb-xlat-auto.c: fb-xlat-auto.sh
 	$(SHELL) $< src $(TME_FB_XLAT_SRC) dst $(TME_FB_XLAT_DST) > $@
 endif
 

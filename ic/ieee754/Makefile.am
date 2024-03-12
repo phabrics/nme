@@ -26,19 +26,19 @@ $(noinst_SCRIPTS): %.sh: %.m4
 	$(AUTOM4TE) -l m4sh $< > $@
 
 # target to make ieee754-auto.h:
-ieee754-auto.h: ieee754-misc-auto.sh ieee754-precision.sh
+$(srcdir)/ieee754-auto.h: ieee754-misc-auto.sh ieee754-precision.sh
 	$(SHELL) $< --header > $@
 
 # target to make ieee754-misc-auto.c:
-ieee754-misc-auto.c: ieee754-misc-auto.sh ieee754-precision.sh
+$(srcdir)/ieee754-misc-auto.c: ieee754-misc-auto.sh ieee754-precision.sh
 	$(SHELL) $< > $@
 
 # target to make ieee754-ops-auto.h:
-ieee754-ops-auto.h: ieee754-ops-auto.sh ieee754-precision.sh
+$(srcdir)/ieee754-ops-auto.h: ieee754-ops-auto.sh ieee754-precision.sh
 	$(SHELL) $< --header > $@
 
 # target to make ieee754-ops-auto.c:
-ieee754-ops-auto.c: ieee754-ops-auto.sh ieee754-precision.sh
+$(srcdir)/ieee754-ops-auto.c: ieee754-ops-auto.sh ieee754-precision.sh
 	$(SHELL) $< > $@
 
 include $(top_srcdir)/modules

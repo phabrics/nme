@@ -38,25 +38,25 @@ $(noinst_SCRIPTS): %.sh: %.m4
 	$(AUTOM4TE) -l m4sh $< > $@
 
 # target to make sparc-auto.h:
-sparc-auto.h: sparc-misc-auto.sh sparc-insns-auto.sh
+$(srcdir)/sparc-auto.h: sparc-misc-auto.sh sparc-insns-auto.sh
 	$(SHELL) $< --header > $@
-	$(SHELL) $(srcdir)/sparc-insns-auto.sh --header >> $@
+	$(SHELL) sparc-insns-auto.sh --header >> $@
 
 # target to make sparc-insns-auto.c:
-sparc-insns-auto.c: sparc-insns-auto.sh sparc-misc-auto.sh
+$(srcdir)/sparc-insns-auto.c: sparc-insns-auto.sh sparc-misc-auto.sh
 	$(SHELL) $< > $@
-	$(SHELL) $(srcdir)/sparc-misc-auto.sh >> $@
+	$(SHELL) sparc-misc-auto.sh >> $@
 
 # target to make sparc-bus-auto.c:
-sparc-bus-auto.c: sparc-bus-auto.sh
+$(srcdir)/sparc-bus-auto.c: sparc-bus-auto.sh
 	$(SHELL) $< > $@
 
 # target to make sparc-fpu-auto.c:
-sparc-fpu-auto.c: sparc-fpu-auto.sh
+$(srcdir)/sparc-fpu-auto.c: sparc-fpu-auto.sh
 	$(SHELL) $< > $@
 
 # target to make sparc-vis-auto.c:
-sparc-vis-auto.c: sparc-vis-auto.sh
+$(srcdir)/sparc-vis-auto.c: sparc-vis-auto.sh
 	$(SHELL) $< > $@
 
 # dependencies on automatically-generated IEEE 754 sources:

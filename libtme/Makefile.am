@@ -61,11 +61,11 @@ $(noinst_SCRIPTS): %.sh: %.m4
 	$(AUTOM4TE) -l m4sh $< > $@
 
 # target to make memory-auto.h:
-memory-auto.h: memory-auto.sh
+$(srcdir)/memory-auto.h: memory-auto.sh
 	$(SHELL) $< --header > $@
 
 # target to make memory-auto.c:
-memory-auto.c: memory-auto.sh
+$(srcdir)/memory-auto.c: memory-auto.sh
 	$(SHELL) $< > $@
 
 module.c: $(top_builddir)/tme/shlibvar.h
