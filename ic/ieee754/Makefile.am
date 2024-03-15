@@ -22,7 +22,7 @@ CLEANFILES = $(noinst_SCRIPTS) $(BUILT_SOURCES) ieee754-ops-auto.c
 EXTRA_DIST = $(CLEANFILES) $(noinst_SCRIPTS:.sh=.m4) softfloat-tme.h
 
 # default rule for regenerating the portable shell scripts from m4 descriptions
-$(noinst_SCRIPTS): %.sh: %.m4
+$(addprefix $(srcdir)/,$(noinst_SCRIPTS)): %.sh: %.m4
 	$(AUTOM4TE) -l m4sh $< > $@
 
 # target to make ieee754-auto.h:

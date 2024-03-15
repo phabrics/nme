@@ -1,68 +1,70 @@
 #! /bin/sh
-# Generated from ../../../ic/sparc/sparc-fpu-auto.m4 by GNU Autoconf 2.69.
+# Generated from sparc-fpu-auto.m4 by GNU Autoconf 2.72.
 ## -------------------- ##
 ## M4sh Initialization. ##
 ## -------------------- ##
 
 # Be more Bourne compatible
 DUALCASE=1; export DUALCASE # for MKS sh
-if test -n "${ZSH_VERSION+set}" && (emulate sh) >/dev/null 2>&1; then :
+if test ${ZSH_VERSION+y} && (emulate sh) >/dev/null 2>&1
+then :
   emulate sh
   NULLCMD=:
   # Pre-4.2 versions of Zsh do word splitting on ${1+"$@"}, which
   # is contrary to our usage.  Disable this feature.
   alias -g '${1+"$@"}'='"$@"'
   setopt NO_GLOB_SUBST
-else
-  case `(set -o) 2>/dev/null` in #(
+else case e in #(
+  e) case `(set -o) 2>/dev/null` in #(
   *posix*) :
     set -o posix ;; #(
   *) :
      ;;
+esac ;;
 esac
 fi
 
 
+
+# Reset variables that may have inherited troublesome values from
+# the environment.
+
+# IFS needs to be set, to space, tab, and newline, in precisely that order.
+# (If _AS_PATH_WALK were called with IFS unset, it would have the
+# side effect of setting IFS to empty, thus disabling word splitting.)
+# Quoting is to prevent editors from complaining about space-tab.
 as_nl='
 '
 export as_nl
-# Printing a long string crashes Solaris 7 /usr/bin/printf.
-as_echo='\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\'
-as_echo=$as_echo$as_echo$as_echo$as_echo$as_echo
-as_echo=$as_echo$as_echo$as_echo$as_echo$as_echo$as_echo
-# Prefer a ksh shell builtin over an external printf program on Solaris,
-# but without wasting forks for bash or zsh.
-if test -z "$BASH_VERSION$ZSH_VERSION" \
-    && (test "X`print -r -- $as_echo`" = "X$as_echo") 2>/dev/null; then
-  as_echo='print -r --'
-  as_echo_n='print -rn --'
-elif (test "X`printf %s $as_echo`" = "X$as_echo") 2>/dev/null; then
-  as_echo='printf %s\n'
-  as_echo_n='printf %s'
-else
-  if test "X`(/usr/ucb/echo -n -n $as_echo) 2>/dev/null`" = "X-n $as_echo"; then
-    as_echo_body='eval /usr/ucb/echo -n "$1$as_nl"'
-    as_echo_n='/usr/ucb/echo -n'
-  else
-    as_echo_body='eval expr "X$1" : "X\\(.*\\)"'
-    as_echo_n_body='eval
-      arg=$1;
-      case $arg in #(
-      *"$as_nl"*)
-	expr "X$arg" : "X\\(.*\\)$as_nl";
-	arg=`expr "X$arg" : ".*$as_nl\\(.*\\)"`;;
-      esac;
-      expr "X$arg" : "X\\(.*\\)" | tr -d "$as_nl"
-    '
-    export as_echo_n_body
-    as_echo_n='sh -c $as_echo_n_body as_echo'
-  fi
-  export as_echo_body
-  as_echo='sh -c $as_echo_body as_echo'
-fi
+IFS=" ""	$as_nl"
+
+PS1='$ '
+PS2='> '
+PS4='+ '
+
+# Ensure predictable behavior from utilities with locale-dependent output.
+LC_ALL=C
+export LC_ALL
+LANGUAGE=C
+export LANGUAGE
+
+# We cannot yet rely on "unset" to work, but we need these variables
+# to be unset--not just set to an empty or harmless value--now, to
+# avoid bugs in old shells (e.g. pre-3.0 UWIN ksh).  This construct
+# also avoids known problems related to "unset" and subshell syntax
+# in other old shells (e.g. bash 2.01 and pdksh 5.2.14).
+for as_var in BASH_ENV ENV MAIL MAILPATH CDPATH
+do eval test \${$as_var+y} \
+  && ( (unset $as_var) || exit 1) >/dev/null 2>&1 && unset $as_var || :
+done
+
+# Ensure that fds 0, 1, and 2 are open.
+if (exec 3>&0) 2>/dev/null; then :; else exec 0</dev/null; fi
+if (exec 3>&1) 2>/dev/null; then :; else exec 1>/dev/null; fi
+if (exec 3>&2)            ; then :; else exec 2>/dev/null; fi
 
 # The user is always right.
-if test "${PATH_SEPARATOR+set}" != set; then
+if ${PATH_SEPARATOR+false} :; then
   PATH_SEPARATOR=:
   (PATH='/bin;/bin'; FPATH=$PATH; sh -c :) >/dev/null 2>&1 && {
     (PATH='/bin:/bin'; FPATH=$PATH; sh -c :) >/dev/null 2>&1 ||
@@ -70,13 +72,6 @@ if test "${PATH_SEPARATOR+set}" != set; then
   }
 fi
 
-
-# IFS
-# We need space, tab and new line, in precisely that order.  Quoting is
-# there to prevent editors from complaining about space-tab.
-# (If _AS_PATH_WALK were called with IFS unset, it would disable word
-# splitting by setting IFS to empty value.)
-IFS=" ""	$as_nl"
 
 # Find who we are.  Look in the path if we contain no directory separator.
 as_myself=
@@ -86,58 +81,44 @@ case $0 in #((
 for as_dir in $PATH
 do
   IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    test -r "$as_dir/$0" && as_myself=$as_dir/$0 && break
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
+    test -r "$as_dir$0" && as_myself=$as_dir$0 && break
   done
 IFS=$as_save_IFS
 
      ;;
 esac
-# We did not find ourselves, most probably we were run as `sh COMMAND'
+# We did not find ourselves, most probably we were run as 'sh COMMAND'
 # in which case we are not to be found in the path.
 if test "x$as_myself" = x; then
   as_myself=$0
 fi
 if test ! -f "$as_myself"; then
-  $as_echo "$as_myself: error: cannot find myself; rerun with an absolute file name" >&2
+  printf "%s\n" "$as_myself: error: cannot find myself; rerun with an absolute file name" >&2
   exit 1
 fi
 
-# Unset variables that we do not need and which cause bugs (e.g. in
-# pre-3.0 UWIN ksh).  But do not cause bugs in bash 2.01; the "|| exit 1"
-# suppresses any "Segmentation fault" message there.  '((' could
-# trigger a bug in pdksh 5.2.14.
-for as_var in BASH_ENV ENV MAIL MAILPATH
-do eval test x\${$as_var+set} = xset \
-  && ( (unset $as_var) || exit 1) >/dev/null 2>&1 && unset $as_var || :
-done
-PS1='$ '
-PS2='> '
-PS4='+ '
-
-# NLS nuisances.
-LC_ALL=C
-export LC_ALL
-LANGUAGE=C
-export LANGUAGE
-
-# CDPATH.
-(unset CDPATH) >/dev/null 2>&1 && unset CDPATH
 
 if test "x$CONFIG_SHELL" = x; then
-  as_bourne_compatible="if test -n \"\${ZSH_VERSION+set}\" && (emulate sh) >/dev/null 2>&1; then :
+  as_bourne_compatible="if test \${ZSH_VERSION+y} && (emulate sh) >/dev/null 2>&1
+then :
   emulate sh
   NULLCMD=:
   # Pre-4.2 versions of Zsh do word splitting on \${1+\"\$@\"}, which
   # is contrary to our usage.  Disable this feature.
   alias -g '\${1+\"\$@\"}'='\"\$@\"'
   setopt NO_GLOB_SUBST
-else
-  case \`(set -o) 2>/dev/null\` in #(
+else case e in #(
+  e) case \`(set -o) 2>/dev/null\` in #(
   *posix*) :
     set -o posix ;; #(
   *) :
      ;;
+esac ;;
 esac
 fi
 "
@@ -152,36 +133,48 @@ as_fn_success || { exitcode=1; echo as_fn_success failed.; }
 as_fn_failure && { exitcode=1; echo as_fn_failure succeeded.; }
 as_fn_ret_success || { exitcode=1; echo as_fn_ret_success failed.; }
 as_fn_ret_failure && { exitcode=1; echo as_fn_ret_failure succeeded.; }
-if ( set x; as_fn_ret_success y && test x = \"\$1\" ); then :
+if ( set x; as_fn_ret_success y && test x = \"\$1\" )
+then :
 
-else
-  exitcode=1; echo positional parameters were not saved.
+else case e in #(
+  e) exitcode=1; echo positional parameters were not saved. ;;
+esac
 fi
 test x\$exitcode = x0 || exit 1
+blah=\$(echo \$(echo blah))
+test x\"\$blah\" = xblah || exit 1
 test -x / || exit 1"
   as_suggested=""
-  if (eval "$as_required") 2>/dev/null; then :
+  if (eval "$as_required") 2>/dev/null
+then :
   as_have_required=yes
-else
-  as_have_required=no
+else case e in #(
+  e) as_have_required=no ;;
+esac
 fi
-  if test x$as_have_required = xyes && (eval "$as_suggested") 2>/dev/null; then :
+  if test x$as_have_required = xyes && (eval "$as_suggested") 2>/dev/null
+then :
 
-else
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+else case e in #(
+  e) as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
 as_found=false
 for as_dir in /bin$PATH_SEPARATOR/usr/bin$PATH_SEPARATOR$PATH
 do
   IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
   as_found=:
   case $as_dir in #(
 	 /*)
 	   for as_base in sh bash ksh sh5; do
 	     # Try only shells that exist, to save several forks.
-	     as_shell=$as_dir/$as_base
+	     as_shell=$as_dir$as_base
 	     if { test -f "$as_shell" || test -f "$as_shell.exe"; } &&
-		    { $as_echo "$as_bourne_compatible""$as_required" | as_run=a "$as_shell"; } 2>/dev/null; then :
+		    as_run=a "$as_shell" -c "$as_bourne_compatible""$as_required" 2>/dev/null
+then :
   CONFIG_SHELL=$as_shell as_have_required=yes
 		   break 2
 fi
@@ -189,14 +182,22 @@ fi
        esac
   as_found=false
 done
-$as_found || { if { test -f "$SHELL" || test -f "$SHELL.exe"; } &&
-	      { $as_echo "$as_bourne_compatible""$as_required" | as_run=a "$SHELL"; } 2>/dev/null; then :
-  CONFIG_SHELL=$SHELL as_have_required=yes
-fi; }
 IFS=$as_save_IFS
+if $as_found
+then :
+
+else case e in #(
+  e) if { test -f "$SHELL" || test -f "$SHELL.exe"; } &&
+	      as_run=a "$SHELL" -c "$as_bourne_compatible""$as_required" 2>/dev/null
+then :
+  CONFIG_SHELL=$SHELL as_have_required=yes
+fi ;;
+esac
+fi
 
 
-      if test "x$CONFIG_SHELL" != x; then :
+      if test "x$CONFIG_SHELL" != x
+then :
   export CONFIG_SHELL
              # We cannot yet assume a decent shell, so we have to provide a
 # neutralization value for shells without unset; and this also
@@ -213,25 +214,27 @@ case $- in # ((((
 esac
 exec $CONFIG_SHELL $as_opts "$as_myself" ${1+"$@"}
 # Admittedly, this is quite paranoid, since all the known shells bail
-# out after a failed `exec'.
-$as_echo "$0: could not re-execute with $CONFIG_SHELL" >&2
+# out after a failed 'exec'.
+printf "%s\n" "$0: could not re-execute with $CONFIG_SHELL" >&2
 exit 255
 fi
 
-    if test x$as_have_required = xno; then :
-  $as_echo "$0: This script requires a shell more modern than all"
-  $as_echo "$0: the shells that I found on your system."
-  if test x${ZSH_VERSION+set} = xset ; then
-    $as_echo "$0: In particular, zsh $ZSH_VERSION has bugs and should"
-    $as_echo "$0: be upgraded to zsh 4.3.4 or later."
+    if test x$as_have_required = xno
+then :
+  printf "%s\n" "$0: This script requires a shell more modern than all"
+  printf "%s\n" "$0: the shells that I found on your system."
+  if test ${ZSH_VERSION+y} ; then
+    printf "%s\n" "$0: In particular, zsh $ZSH_VERSION has bugs and should"
+    printf "%s\n" "$0: be upgraded to zsh 4.3.4 or later."
   else
-    $as_echo "$0: Please tell bug-autoconf@gnu.org about your system,
+    printf "%s\n" "$0: Please tell bug-autoconf@gnu.org about your system,
 $0: including any error possibly output before this
 $0: message. Then install a modern shell, or manually run
 $0: the script under such a shell if you do have one."
   fi
   exit 1
-fi
+fi ;;
+esac
 fi
 fi
 SHELL=${CONFIG_SHELL-/bin/sh}
@@ -251,6 +254,7 @@ as_fn_unset ()
   { eval $1=; unset $1;}
 }
 as_unset=as_fn_unset
+
 ## -------------------- ##
 ## Main body of script. ##
 ## -------------------- ##
@@ -309,7 +313,7 @@ EOF
 
 # the precision information helper script:
 #
-ieee754_precision_sh=`$as_echo $0 | sed -e "s%$PROG%../ieee754/ieee754-precision.sh%"`
+ieee754_precision_sh=`printf "%s\n" $0 | sed -e "s%$PROG%../ieee754/ieee754-precision.sh%"`
 
 # permute for the different precisions:
 #
@@ -410,8 +414,8 @@ EOF
 done
 
 if $header; then :; else
-    $as_echo "#define _TME_SPARC_FPU_UNIMPL tme_sparc_fpu_exception(ic, TME_SPARC_FSR_FTT_unimplemented_FPop)"
-    $as_echo "#define _TME_SPARC_FPU_UNIMPL_IF(flags) do { if ((ic->tme_sparc_fpu_flags & (flags)) != 0) { _TME_SPARC_FPU_UNIMPL; } } while (/* CONSTCOND */ 0)"
+    printf "%s\n" "#define _TME_SPARC_FPU_UNIMPL tme_sparc_fpu_exception(ic, TME_SPARC_FSR_FTT_unimplemented_FPop)"
+    printf "%s\n" "#define _TME_SPARC_FPU_UNIMPL_IF(flags) do { if ((ic->tme_sparc_fpu_flags & (flags)) != 0) { _TME_SPARC_FPU_UNIMPL; } } while (/* CONSTCOND */ 0)"
 fi
 quad="_TME_SPARC_FPU_UNIMPL_IF(TME_SPARC_FPU_FLAG_NO_QUAD);"
 
@@ -425,123 +429,123 @@ for fpop in fpop1 fpop2; do
 
 	# open the function:
 	#
-	$as_echo ""
-	$as_echo "void"
-	$as_echo "tme_sparc_fpu_${fpop}(struct tme_sparc *ic)"
-	$as_echo "{"
-	$as_echo "  tme_uint8_t rounding_mode;"
-	$as_echo "  unsigned int opf;"
-	$as_echo "  unsigned int fpreg_rd_number_encoded;"
-	$as_echo "  unsigned int fpreg_rd_number;"
-	$as_echo "  const struct tme_float *fpreg_rs1;"
-	$as_echo "  const struct tme_float *fpreg_rs2;"
+	printf "%s\n" ""
+	printf "%s\n" "void"
+	printf "%s\n" "tme_sparc_fpu_${fpop}(struct tme_sparc *ic)"
+	printf "%s\n" "{"
+	printf "%s\n" "  tme_uint8_t rounding_mode;"
+	printf "%s\n" "  unsigned int opf;"
+	printf "%s\n" "  unsigned int fpreg_rd_number_encoded;"
+	printf "%s\n" "  unsigned int fpreg_rd_number;"
+	printf "%s\n" "  const struct tme_float *fpreg_rs1;"
+	printf "%s\n" "  const struct tme_float *fpreg_rs2;"
 	if test ${fpop} = fpop1; then
-	    $as_echo "  struct tme_float fpreg_rs1_buffer;"
-	    $as_echo "  struct tme_float fpreg_rs2_buffer;"
+	    printf "%s\n" "  struct tme_float fpreg_rs1_buffer;"
+	    printf "%s\n" "  struct tme_float fpreg_rs2_buffer;"
 	else
-	    $as_echo "  unsigned int cc;"
-	    $as_echo "  tme_uint32_t conds_mask;"
-	    $as_echo "  unsigned int cc_i;"
-	    $as_echo "  tme_uint32_t cond;"
+	    printf "%s\n" "  unsigned int cc;"
+	    printf "%s\n" "  tme_uint32_t conds_mask;"
+	    printf "%s\n" "  unsigned int cc_i;"
+	    printf "%s\n" "  tme_uint32_t cond;"
 	fi
-	$as_echo "  struct tme_float fpreg_rd;"
-	$as_echo "  unsigned int fpreg_rd_format;"
+	printf "%s\n" "  struct tme_float fpreg_rd;"
+	printf "%s\n" "  unsigned int fpreg_rd_format;"
 
-	$as_echo ""
-	$as_echo "  /* set the rounding mode: */"
-	$as_echo "  switch (ic->tme_sparc_fpu_fsr & TME_SPARC_FSR_RND) {"
-	$as_echo "  default: assert(FALSE);"
-	$as_echo "  case TME_SPARC_FSR_RND_RN: rounding_mode = TME_FLOAT_ROUND_NEAREST_EVEN; break;"
-	$as_echo "  case TME_SPARC_FSR_RND_RZ: rounding_mode = TME_FLOAT_ROUND_TO_ZERO; break;"
-	$as_echo "  case TME_SPARC_FSR_RND_RM: rounding_mode = TME_FLOAT_ROUND_DOWN; break;"
-	$as_echo "  case TME_SPARC_FSR_RND_RP: rounding_mode = TME_FLOAT_ROUND_UP; break;"
-	$as_echo "  }"
-	$as_echo "  ic->tme_sparc_fpu_ieee754_ctl.tme_ieee754_ctl_rounding_mode = rounding_mode;"
+	printf "%s\n" ""
+	printf "%s\n" "  /* set the rounding mode: */"
+	printf "%s\n" "  switch (ic->tme_sparc_fpu_fsr & TME_SPARC_FSR_RND) {"
+	printf "%s\n" "  default: assert(FALSE);"
+	printf "%s\n" "  case TME_SPARC_FSR_RND_RN: rounding_mode = TME_FLOAT_ROUND_NEAREST_EVEN; break;"
+	printf "%s\n" "  case TME_SPARC_FSR_RND_RZ: rounding_mode = TME_FLOAT_ROUND_TO_ZERO; break;"
+	printf "%s\n" "  case TME_SPARC_FSR_RND_RM: rounding_mode = TME_FLOAT_ROUND_DOWN; break;"
+	printf "%s\n" "  case TME_SPARC_FSR_RND_RP: rounding_mode = TME_FLOAT_ROUND_UP; break;"
+	printf "%s\n" "  }"
+	printf "%s\n" "  ic->tme_sparc_fpu_ieee754_ctl.tme_ieee754_ctl_rounding_mode = rounding_mode;"
 
-	$as_echo ""
-	$as_echo "  /* decode the rd and opf fields: */"
-	$as_echo "  fpreg_rd_number_encoded = TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, TME_SPARC_FORMAT3_MASK_RD);"
-	$as_echo "  opf = TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, (0x1ff << 5));"
+	printf "%s\n" ""
+	printf "%s\n" "  /* decode the rd and opf fields: */"
+	printf "%s\n" "  fpreg_rd_number_encoded = TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, TME_SPARC_FORMAT3_MASK_RD);"
+	printf "%s\n" "  opf = TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, (0x1ff << 5));"
 
-	$as_echo ""
-	$as_echo "  /* silence uninitialized variable warnings: */"
-	$as_echo "  fpreg_rd_number = 0;"
+	printf "%s\n" ""
+	printf "%s\n" "  /* silence uninitialized variable warnings: */"
+	printf "%s\n" "  fpreg_rd_number = 0;"
 
-	$as_echo ""
-	$as_echo "#ifdef _TME_SPARC_RECODE_VERIFY"
-	$as_echo "  /* clear the rd buffer: */"
-	$as_echo "  memset(&fpreg_rd, 0, sizeof(fpreg_rd));"
-	$as_echo "#endif /* _TME_SPARC_RECODE_VERIFY */"
+	printf "%s\n" ""
+	printf "%s\n" "#ifdef _TME_SPARC_RECODE_VERIFY"
+	printf "%s\n" "  /* clear the rd buffer: */"
+	printf "%s\n" "  memset(&fpreg_rd, 0, sizeof(fpreg_rd));"
+	printf "%s\n" "#endif /* _TME_SPARC_RECODE_VERIFY */"
 
 	fmovcc=
 	if test ${fpop} = fpop2; then
 	    fmovcc=cc
-	    $as_echo ""
-	    $as_echo "  /* if this is an FMOVcc: */"
-	    $as_echo "  if (((opf - 1) & 0x3f) < 3) {"
-	    $as_echo ""
-	    $as_echo "    /* if opf bit eight is set, this uses integer condition codes: */"
-	    $as_echo "    if (opf & TME_BIT(8)) {"
-	    $as_echo ""
-	    $as_echo "      /* if opf bit six is set, this is unimplemented: */"
-	    $as_echo "      if (__tme_predict_false(opf & TME_BIT(6))) {"
-	    $as_echo "        _TME_SPARC_FPU_UNIMPL;"
-	    $as_echo "      }"
-	    $as_echo ""
-	    $as_echo "      /* get %icc or %xcc, depending on opf bit seven: */"
-	    $as_echo "      cc = ic->tme_sparc64_ireg_ccr;"
-	    $as_echo "      if (opf & TME_BIT(7)) {"
-	    $as_echo "        cc /= (TME_SPARC64_CCR_XCC / TME_SPARC64_CCR_ICC);"
-	    $as_echo "      }"
-	    $as_echo "      cc = TME_FIELD_MASK_EXTRACTU(cc, TME_SPARC64_CCR_ICC);"
-	    $as_echo ""
-	    $as_echo "      /* get the conditions mask: */"
-	    $as_echo "      conds_mask = _tme_sparc_conds_icc[cc];"
-	    $as_echo "    }"
-	    $as_echo ""
-	    $as_echo "    /* otherwise, this uses floating-point condition codes: */"
-	    $as_echo "    else {"
-	    $as_echo ""
-	    $as_echo "      /* get the right %fcc: */"
-	    $as_echo "      cc_i = TME_FIELD_MASK_EXTRACTU(opf, (0x3 << 6));"
-	    $as_echo "      if (cc_i == 0) {"
-	    $as_echo "        cc = TME_FIELD_MASK_EXTRACTU(ic->tme_sparc_fpu_fsr, TME_SPARC_FSR_FCC);"
-	    $as_echo "      }"
-	    $as_echo "      else {"
-	    $as_echo "        cc = (ic->tme_sparc_fpu_xfsr >> (2 * (cc_i - 1))) & 0x3;"
-	    $as_echo "      }"
-	    $as_echo ""
-	    $as_echo "      /* get the conditions mask: */"
-	    $as_echo "      conds_mask = _tme_sparc_conds_fcc[cc];"
-	    $as_echo "    }"
-	    $as_echo ""
-	    $as_echo "    /* add the not-conditions to the conditions mask: */"
-	    $as_echo "    conds_mask += ((~conds_mask) << 8);"
-	    $as_echo ""
-	    $as_echo "    /* get the cond field: */"
-	    $as_echo "    cond = TME_BIT(TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, (0xf << 14)));"
-  	    $as_echo ""
-	    $as_echo "    /* if the condition is not true: */"
-	    $as_echo "    if (!(conds_mask & cond)) {"
-	    $as_echo ""
-	    $as_echo "      /* return now: */"
-	    $as_echo "      /* NB that this may expose us to guests, since we do not check"
-	    $as_echo "         that the floating-point register numbers are valid: */"
-	    $as_echo "      return;"
-	    $as_echo "    }"
-	    $as_echo ""
-	    $as_echo "    /* clear bits six, seven, and eight in opf: */"
-	    $as_echo "    opf &= 0x3f;"
-	    $as_echo "  }"
+	    printf "%s\n" ""
+	    printf "%s\n" "  /* if this is an FMOVcc: */"
+	    printf "%s\n" "  if (((opf - 1) & 0x3f) < 3) {"
+	    printf "%s\n" ""
+	    printf "%s\n" "    /* if opf bit eight is set, this uses integer condition codes: */"
+	    printf "%s\n" "    if (opf & TME_BIT(8)) {"
+	    printf "%s\n" ""
+	    printf "%s\n" "      /* if opf bit six is set, this is unimplemented: */"
+	    printf "%s\n" "      if (__tme_predict_false(opf & TME_BIT(6))) {"
+	    printf "%s\n" "        _TME_SPARC_FPU_UNIMPL;"
+	    printf "%s\n" "      }"
+	    printf "%s\n" ""
+	    printf "%s\n" "      /* get %icc or %xcc, depending on opf bit seven: */"
+	    printf "%s\n" "      cc = ic->tme_sparc64_ireg_ccr;"
+	    printf "%s\n" "      if (opf & TME_BIT(7)) {"
+	    printf "%s\n" "        cc /= (TME_SPARC64_CCR_XCC / TME_SPARC64_CCR_ICC);"
+	    printf "%s\n" "      }"
+	    printf "%s\n" "      cc = TME_FIELD_MASK_EXTRACTU(cc, TME_SPARC64_CCR_ICC);"
+	    printf "%s\n" ""
+	    printf "%s\n" "      /* get the conditions mask: */"
+	    printf "%s\n" "      conds_mask = _tme_sparc_conds_icc[cc];"
+	    printf "%s\n" "    }"
+	    printf "%s\n" ""
+	    printf "%s\n" "    /* otherwise, this uses floating-point condition codes: */"
+	    printf "%s\n" "    else {"
+	    printf "%s\n" ""
+	    printf "%s\n" "      /* get the right %fcc: */"
+	    printf "%s\n" "      cc_i = TME_FIELD_MASK_EXTRACTU(opf, (0x3 << 6));"
+	    printf "%s\n" "      if (cc_i == 0) {"
+	    printf "%s\n" "        cc = TME_FIELD_MASK_EXTRACTU(ic->tme_sparc_fpu_fsr, TME_SPARC_FSR_FCC);"
+	    printf "%s\n" "      }"
+	    printf "%s\n" "      else {"
+	    printf "%s\n" "        cc = (ic->tme_sparc_fpu_xfsr >> (2 * (cc_i - 1))) & 0x3;"
+	    printf "%s\n" "      }"
+	    printf "%s\n" ""
+	    printf "%s\n" "      /* get the conditions mask: */"
+	    printf "%s\n" "      conds_mask = _tme_sparc_conds_fcc[cc];"
+	    printf "%s\n" "    }"
+	    printf "%s\n" ""
+	    printf "%s\n" "    /* add the not-conditions to the conditions mask: */"
+	    printf "%s\n" "    conds_mask += ((~conds_mask) << 8);"
+	    printf "%s\n" ""
+	    printf "%s\n" "    /* get the cond field: */"
+	    printf "%s\n" "    cond = TME_BIT(TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, (0xf << 14)));"
+  	    printf "%s\n" ""
+	    printf "%s\n" "    /* if the condition is not true: */"
+	    printf "%s\n" "    if (!(conds_mask & cond)) {"
+	    printf "%s\n" ""
+	    printf "%s\n" "      /* return now: */"
+	    printf "%s\n" "      /* NB that this may expose us to guests, since we do not check"
+	    printf "%s\n" "         that the floating-point register numbers are valid: */"
+	    printf "%s\n" "      return;"
+	    printf "%s\n" "    }"
+	    printf "%s\n" ""
+	    printf "%s\n" "    /* clear bits six, seven, and eight in opf: */"
+	    printf "%s\n" "    opf &= 0x3f;"
+	    printf "%s\n" "  }"
 	fi
 
-	$as_echo ""
-	$as_echo "  /* dispatch on the opf field: */"
-	$as_echo "  switch (opf) {"
-	$as_echo "#define _TME_SPARC_FPU_FORMAT_RS1(format) fpreg_rs1 = tme_sparc_fpu_fpreg_read(ic, TME_SPARC_FORMAT3_MASK_RS1, (format))"
-	$as_echo "#define _TME_SPARC_FPU_FORMAT_RS2(format) fpreg_rs2 = tme_sparc_fpu_fpreg_read(ic, TME_SPARC_FORMAT3_MASK_RS2, (format))"
-	$as_echo "#define _TME_SPARC_FPU_FORMAT_RD(format) do { fpreg_rd_format = (format) | TME_IEEE754_FPREG_FORMAT_BUILTIN; fpreg_rd_number = tme_sparc_fpu_fpreg_decode(ic, fpreg_rd_number_encoded, fpreg_rd_format); } while (/* CONSTCOND */ 0)"
-	$as_echo ""
+	printf "%s\n" ""
+	printf "%s\n" "  /* dispatch on the opf field: */"
+	printf "%s\n" "  switch (opf) {"
+	printf "%s\n" "#define _TME_SPARC_FPU_FORMAT_RS1(format) fpreg_rs1 = tme_sparc_fpu_fpreg_read(ic, TME_SPARC_FORMAT3_MASK_RS1, (format))"
+	printf "%s\n" "#define _TME_SPARC_FPU_FORMAT_RS2(format) fpreg_rs2 = tme_sparc_fpu_fpreg_read(ic, TME_SPARC_FORMAT3_MASK_RS2, (format))"
+	printf "%s\n" "#define _TME_SPARC_FPU_FORMAT_RD(format) do { fpreg_rd_format = (format) | TME_IEEE754_FPREG_FORMAT_BUILTIN; fpreg_rd_number = tme_sparc_fpu_fpreg_decode(ic, fpreg_rd_number_encoded, fpreg_rd_format); } while (/* CONSTCOND */ 0)"
+	printf "%s\n" ""
 
 	# permute over the opf field:
 	#
@@ -571,480 +575,480 @@ for fpop in fpop1 fpop2; do
 	    default=false
 	    case "${fpop}:${opf}" in
 	    fpop1:011000100)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FiTOs: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_BEGIN;"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_single_from_int32,"
-		$as_echo "                              fpreg_rs2->tme_float_value_ieee754_single, &fpreg_rd);"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FiTOs: */"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
+		printf "%s\n" "    _TME_SPARC_FPU_BEGIN;"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_single_from_int32,"
+		printf "%s\n" "                              fpreg_rs2->tme_float_value_ieee754_single, &fpreg_rd);"
 		;;
 	    fpop1:011001000)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FiTOd: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "    _TME_SPARC_FPU_BEGIN;"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_from_int32,"
-		$as_echo "                              fpreg_rs2->tme_float_value_ieee754_single, &fpreg_rd);"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FiTOd: */"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
+		printf "%s\n" "    _TME_SPARC_FPU_BEGIN;"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_from_int32,"
+		printf "%s\n" "                              fpreg_rs2->tme_float_value_ieee754_single, &fpreg_rd);"
 		;;
 	    fpop1:011001100)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FiTOq: */"
-		$as_echo "    ${quad}"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"
-		$as_echo "    _TME_SPARC_FPU_BEGIN;"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_from_int32,"
-		$as_echo "                              fpreg_rs2->tme_float_value_ieee754_single, &fpreg_rd);"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FiTOq: */"
+		printf "%s\n" "    ${quad}"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"
+		printf "%s\n" "    _TME_SPARC_FPU_BEGIN;"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_from_int32,"
+		printf "%s\n" "                              fpreg_rs2->tme_float_value_ieee754_single, &fpreg_rd);"
 		;;
 	    fpop1:010000100)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FxTOs: */"
-		$as_echo "#ifdef TME_HAVE_INT64_T"
-		$as_echo "    if (__tme_predict_true(TME_SPARC_VERSION(ic) >= 9)) {"
-		$as_echo "      _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "      _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "      _TME_SPARC_FPU_BEGIN;"
-		$as_echo "      _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_single_from_int64,"
-		$as_echo "                                fpreg_rs2->tme_float_value_ieee754_double.tme_value64_int, &fpreg_rd);"
-		$as_echo "      break;"
-		$as_echo "    }"
-		$as_echo "#endif /* TME_HAVE_INT64_T */"
-		$as_echo "    _TME_SPARC_FPU_UNIMPL;"
-		$as_echo "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FxTOs: */"
+		printf "%s\n" "#ifdef TME_HAVE_INT64_T"
+		printf "%s\n" "    if (__tme_predict_true(TME_SPARC_VERSION(ic) >= 9)) {"
+		printf "%s\n" "      _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
+		printf "%s\n" "      _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
+		printf "%s\n" "      _TME_SPARC_FPU_BEGIN;"
+		printf "%s\n" "      _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_single_from_int64,"
+		printf "%s\n" "                                fpreg_rs2->tme_float_value_ieee754_double.tme_value64_int, &fpreg_rd);"
+		printf "%s\n" "      break;"
+		printf "%s\n" "    }"
+		printf "%s\n" "#endif /* TME_HAVE_INT64_T */"
+		printf "%s\n" "    _TME_SPARC_FPU_UNIMPL;"
+		printf "%s\n" "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
 		;;
 	    fpop1:010001000)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FxTOd: */"
-		$as_echo "#ifdef TME_HAVE_INT64_T"
-		$as_echo "    if (__tme_predict_true(TME_SPARC_VERSION(ic) >= 9)) {"
-		$as_echo "      _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "      _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "      _TME_SPARC_FPU_BEGIN;"
-		$as_echo "      _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_from_int64,"
-		$as_echo "                                fpreg_rs2->tme_float_value_ieee754_double.tme_value64_int, &fpreg_rd);"
-		$as_echo "      break;"
-		$as_echo "    }"
-		$as_echo "#endif /* TME_HAVE_INT64_T */"
-		$as_echo "    _TME_SPARC_FPU_UNIMPL;"
-		$as_echo "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FxTOd: */"
+		printf "%s\n" "#ifdef TME_HAVE_INT64_T"
+		printf "%s\n" "    if (__tme_predict_true(TME_SPARC_VERSION(ic) >= 9)) {"
+		printf "%s\n" "      _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
+		printf "%s\n" "      _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
+		printf "%s\n" "      _TME_SPARC_FPU_BEGIN;"
+		printf "%s\n" "      _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_from_int64,"
+		printf "%s\n" "                                fpreg_rs2->tme_float_value_ieee754_double.tme_value64_int, &fpreg_rd);"
+		printf "%s\n" "      break;"
+		printf "%s\n" "    }"
+		printf "%s\n" "#endif /* TME_HAVE_INT64_T */"
+		printf "%s\n" "    _TME_SPARC_FPU_UNIMPL;"
+		printf "%s\n" "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
 		;;
 	    fpop1:010001100)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FxTOq: */"
-		$as_echo "#ifdef TME_HAVE_INT64_T"
-		$as_echo "    if (__tme_predict_true(TME_SPARC_VERSION(ic) >= 9)) {"
-		$as_echo "      ${quad}"
-		$as_echo "      _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "      _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"
-		$as_echo "      _TME_SPARC_FPU_BEGIN;"
-		$as_echo "      _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_from_int64,"
-		$as_echo "                                fpreg_rs2->tme_float_value_ieee754_double.tme_value64_int, &fpreg_rd);"
-		$as_echo "      break;"
-		$as_echo "    }"
-		$as_echo "#endif /* TME_HAVE_INT64_T */"
-		$as_echo "    _TME_SPARC_FPU_UNIMPL;"
-		$as_echo "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FxTOq: */"
+		printf "%s\n" "#ifdef TME_HAVE_INT64_T"
+		printf "%s\n" "    if (__tme_predict_true(TME_SPARC_VERSION(ic) >= 9)) {"
+		printf "%s\n" "      ${quad}"
+		printf "%s\n" "      _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
+		printf "%s\n" "      _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"
+		printf "%s\n" "      _TME_SPARC_FPU_BEGIN;"
+		printf "%s\n" "      _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_from_int64,"
+		printf "%s\n" "                                fpreg_rs2->tme_float_value_ieee754_double.tme_value64_int, &fpreg_rd);"
+		printf "%s\n" "      break;"
+		printf "%s\n" "    }"
+		printf "%s\n" "#endif /* TME_HAVE_INT64_T */"
+		printf "%s\n" "    _TME_SPARC_FPU_UNIMPL;"
+		printf "%s\n" "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
 		;;
 	    fpop1:011010001)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FsTOi: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_BEGIN;"
-		$as_echo "    fpreg_rd.tme_float_format = TME_FLOAT_FORMAT_IEEE754_SINGLE;"
-		$as_echo "    ic->tme_sparc_fpu_ieee754_ctl.tme_ieee754_ctl_rounding_mode = TME_FLOAT_ROUND_TO_ZERO;"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_single_to_int32,"
-		$as_echo "                              fpreg_rs2, (tme_int32_t *) &fpreg_rd.tme_float_value_ieee754_single);"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FsTOi: */"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
+		printf "%s\n" "    _TME_SPARC_FPU_BEGIN;"
+		printf "%s\n" "    fpreg_rd.tme_float_format = TME_FLOAT_FORMAT_IEEE754_SINGLE;"
+		printf "%s\n" "    ic->tme_sparc_fpu_ieee754_ctl.tme_ieee754_ctl_rounding_mode = TME_FLOAT_ROUND_TO_ZERO;"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_single_to_int32,"
+		printf "%s\n" "                              fpreg_rs2, (tme_int32_t *) &fpreg_rd.tme_float_value_ieee754_single);"
 		;;
 	    fpop1:011010010)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FdTOi: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_BEGIN;"
-		$as_echo "    fpreg_rd.tme_float_format = TME_FLOAT_FORMAT_IEEE754_SINGLE;"
-		$as_echo "    ic->tme_sparc_fpu_ieee754_ctl.tme_ieee754_ctl_rounding_mode = TME_FLOAT_ROUND_TO_ZERO;"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_to_int32,"
-		$as_echo "                              fpreg_rs2, (tme_int32_t *) &fpreg_rd.tme_float_value_ieee754_single);"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FdTOi: */"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
+		printf "%s\n" "    _TME_SPARC_FPU_BEGIN;"
+		printf "%s\n" "    fpreg_rd.tme_float_format = TME_FLOAT_FORMAT_IEEE754_SINGLE;"
+		printf "%s\n" "    ic->tme_sparc_fpu_ieee754_ctl.tme_ieee754_ctl_rounding_mode = TME_FLOAT_ROUND_TO_ZERO;"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_to_int32,"
+		printf "%s\n" "                              fpreg_rs2, (tme_int32_t *) &fpreg_rd.tme_float_value_ieee754_single);"
 		;;
 	    fpop1:011010011)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FqTOi: */"
-		$as_echo "    ${quad}"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_BEGIN;"
-		$as_echo "    fpreg_rd.tme_float_format = TME_FLOAT_FORMAT_IEEE754_SINGLE;"
-		$as_echo "    ic->tme_sparc_fpu_ieee754_ctl.tme_ieee754_ctl_rounding_mode = TME_FLOAT_ROUND_TO_ZERO;"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_to_int32,"
-		$as_echo "                              fpreg_rs2, (tme_int32_t *) &fpreg_rd.tme_float_value_ieee754_single);"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FqTOi: */"
+		printf "%s\n" "    ${quad}"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
+		printf "%s\n" "    _TME_SPARC_FPU_BEGIN;"
+		printf "%s\n" "    fpreg_rd.tme_float_format = TME_FLOAT_FORMAT_IEEE754_SINGLE;"
+		printf "%s\n" "    ic->tme_sparc_fpu_ieee754_ctl.tme_ieee754_ctl_rounding_mode = TME_FLOAT_ROUND_TO_ZERO;"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_to_int32,"
+		printf "%s\n" "                              fpreg_rs2, (tme_int32_t *) &fpreg_rd.tme_float_value_ieee754_single);"
 		;;
 	    fpop1:010000001)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FsTOx: */"
-		$as_echo "#ifdef TME_HAVE_INT64_T"
-		$as_echo "    if (__tme_predict_true(TME_SPARC_VERSION(ic) >= 9)) {"
-		$as_echo "      _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "      _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "      _TME_SPARC_FPU_BEGIN;"
-		$as_echo "      fpreg_rd.tme_float_format = TME_FLOAT_FORMAT_IEEE754_DOUBLE;"
-		$as_echo "      ic->tme_sparc_fpu_ieee754_ctl.tme_ieee754_ctl_rounding_mode = TME_FLOAT_ROUND_TO_ZERO;"
-		$as_echo "      _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_single_to_int64,"
-		$as_echo "                                fpreg_rs2, &fpreg_rd.tme_float_value_ieee754_double.tme_value64_int);"
-		$as_echo "      break;"
-		$as_echo "    }"
-		$as_echo "#endif /* TME_HAVE_INT64_T */"
-		$as_echo "    _TME_SPARC_FPU_UNIMPL;"
-		$as_echo "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FsTOx: */"
+		printf "%s\n" "#ifdef TME_HAVE_INT64_T"
+		printf "%s\n" "    if (__tme_predict_true(TME_SPARC_VERSION(ic) >= 9)) {"
+		printf "%s\n" "      _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "      _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
+		printf "%s\n" "      _TME_SPARC_FPU_BEGIN;"
+		printf "%s\n" "      fpreg_rd.tme_float_format = TME_FLOAT_FORMAT_IEEE754_DOUBLE;"
+		printf "%s\n" "      ic->tme_sparc_fpu_ieee754_ctl.tme_ieee754_ctl_rounding_mode = TME_FLOAT_ROUND_TO_ZERO;"
+		printf "%s\n" "      _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_single_to_int64,"
+		printf "%s\n" "                                fpreg_rs2, &fpreg_rd.tme_float_value_ieee754_double.tme_value64_int);"
+		printf "%s\n" "      break;"
+		printf "%s\n" "    }"
+		printf "%s\n" "#endif /* TME_HAVE_INT64_T */"
+		printf "%s\n" "    _TME_SPARC_FPU_UNIMPL;"
+		printf "%s\n" "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
 		;;
 	    fpop1:010000010)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FdTOx: */"
-		$as_echo "#ifdef TME_HAVE_INT64_T"
-		$as_echo "    if (__tme_predict_true(TME_SPARC_VERSION(ic) >= 9)) {"
-		$as_echo "      _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "      _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "      _TME_SPARC_FPU_BEGIN;"
-		$as_echo "      fpreg_rd.tme_float_format = TME_FLOAT_FORMAT_IEEE754_DOUBLE;"
-		$as_echo "      ic->tme_sparc_fpu_ieee754_ctl.tme_ieee754_ctl_rounding_mode = TME_FLOAT_ROUND_TO_ZERO;"
-		$as_echo "      _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_to_int64,"
-		$as_echo "                                fpreg_rs2, &fpreg_rd.tme_float_value_ieee754_double.tme_value64_int);"
-		$as_echo "      break;"
-		$as_echo "    }"
-		$as_echo "#endif /* TME_HAVE_INT64_T */"
-		$as_echo "    _TME_SPARC_FPU_UNIMPL;"
-		$as_echo "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FdTOx: */"
+		printf "%s\n" "#ifdef TME_HAVE_INT64_T"
+		printf "%s\n" "    if (__tme_predict_true(TME_SPARC_VERSION(ic) >= 9)) {"
+		printf "%s\n" "      _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "      _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
+		printf "%s\n" "      _TME_SPARC_FPU_BEGIN;"
+		printf "%s\n" "      fpreg_rd.tme_float_format = TME_FLOAT_FORMAT_IEEE754_DOUBLE;"
+		printf "%s\n" "      ic->tme_sparc_fpu_ieee754_ctl.tme_ieee754_ctl_rounding_mode = TME_FLOAT_ROUND_TO_ZERO;"
+		printf "%s\n" "      _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_to_int64,"
+		printf "%s\n" "                                fpreg_rs2, &fpreg_rd.tme_float_value_ieee754_double.tme_value64_int);"
+		printf "%s\n" "      break;"
+		printf "%s\n" "    }"
+		printf "%s\n" "#endif /* TME_HAVE_INT64_T */"
+		printf "%s\n" "    _TME_SPARC_FPU_UNIMPL;"
+		printf "%s\n" "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
 		;;
 	    fpop1:010000011)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FqTOx: */"
-		$as_echo "#ifdef TME_HAVE_INT64_T"
-		$as_echo "    if (__tme_predict_true(TME_SPARC_VERSION(ic) >= 9)) {"
-		$as_echo "      ${quad}"
-		$as_echo "      _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "      _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "      _TME_SPARC_FPU_BEGIN;"
-		$as_echo "      fpreg_rd.tme_float_format = TME_FLOAT_FORMAT_IEEE754_DOUBLE;"
-		$as_echo "      ic->tme_sparc_fpu_ieee754_ctl.tme_ieee754_ctl_rounding_mode = TME_FLOAT_ROUND_TO_ZERO;"
-		$as_echo "      _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_to_int64,"
-		$as_echo "                                fpreg_rs2, &fpreg_rd.tme_float_value_ieee754_double.tme_value64_int);"
-		$as_echo "      break;"
-		$as_echo "    }"
-		$as_echo "#endif /* TME_HAVE_INT64_T */"
-		$as_echo "    _TME_SPARC_FPU_UNIMPL;"
-		$as_echo "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FqTOx: */"
+		printf "%s\n" "#ifdef TME_HAVE_INT64_T"
+		printf "%s\n" "    if (__tme_predict_true(TME_SPARC_VERSION(ic) >= 9)) {"
+		printf "%s\n" "      ${quad}"
+		printf "%s\n" "      _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "      _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
+		printf "%s\n" "      _TME_SPARC_FPU_BEGIN;"
+		printf "%s\n" "      fpreg_rd.tme_float_format = TME_FLOAT_FORMAT_IEEE754_DOUBLE;"
+		printf "%s\n" "      ic->tme_sparc_fpu_ieee754_ctl.tme_ieee754_ctl_rounding_mode = TME_FLOAT_ROUND_TO_ZERO;"
+		printf "%s\n" "      _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_to_int64,"
+		printf "%s\n" "                                fpreg_rs2, &fpreg_rd.tme_float_value_ieee754_double.tme_value64_int);"
+		printf "%s\n" "      break;"
+		printf "%s\n" "    }"
+		printf "%s\n" "#endif /* TME_HAVE_INT64_T */"
+		printf "%s\n" "    _TME_SPARC_FPU_UNIMPL;"
+		printf "%s\n" "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
 		;;
 	    fpop1:011001001)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FsTOd: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_from_single,"
-		$as_echo "                              fpreg_rs2, &fpreg_rd);"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FsTOd: */"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_from_single,"
+		printf "%s\n" "                              fpreg_rs2, &fpreg_rd);"
 		;;
 	    fpop1:011001101)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FsTOq: */"
-		$as_echo "    ${quad}"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_from_single,"
-		$as_echo "                              fpreg_rs2, &fpreg_rd);"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FsTOq: */"
+		printf "%s\n" "    ${quad}"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_from_single,"
+		printf "%s\n" "                              fpreg_rs2, &fpreg_rd);"
 		;;
 	    fpop1:011000110)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FdTOs: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_single_from_double,"
-		$as_echo "                              fpreg_rs2, &fpreg_rd);"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FdTOs: */"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_single_from_double,"
+		printf "%s\n" "                              fpreg_rs2, &fpreg_rd);"
 		;;
 	    fpop1:011001110)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FdTOq: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_from_double,"
-		$as_echo "                              fpreg_rs2, &fpreg_rd);"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FdTOq: */"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_from_double,"
+		printf "%s\n" "                              fpreg_rs2, &fpreg_rd);"
 		;;
 	    fpop1:011000111)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FqTOs: */"
-		$as_echo "    ${quad}"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_single_from_quad,"
-		$as_echo "                              fpreg_rs2, &fpreg_rd);"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FqTOs: */"
+		printf "%s\n" "    ${quad}"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_single_from_quad,"
+		printf "%s\n" "                              fpreg_rs2, &fpreg_rd);"
 		;;
 	    fpop1:011001011)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FqTOd: */"
-		$as_echo "    ${quad}"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_from_quad,"
-		$as_echo "                              fpreg_rs2, &fpreg_rd);"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FqTOd: */"
+		printf "%s\n" "    ${quad}"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_from_quad,"
+		printf "%s\n" "                              fpreg_rs2, &fpreg_rd);"
 		;;
 	    fpop1:000000001 | fpop2:000000001)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FMOVs${fmovcc}: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_BEGIN;"
-		$as_echo "    fpreg_rd = *fpreg_rs2;"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FMOVs${fmovcc}: */"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
+		printf "%s\n" "    _TME_SPARC_FPU_BEGIN;"
+		printf "%s\n" "    fpreg_rd = *fpreg_rs2;"
 		;;
 	    fpop1:000000010 | fpop2:000000010)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FMOVd${fmovcc}: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "    _TME_SPARC_FPU_BEGIN;"
-		$as_echo "    fpreg_rd = *fpreg_rs2;"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FMOVd${fmovcc}: */"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
+		printf "%s\n" "    _TME_SPARC_FPU_BEGIN;"
+		printf "%s\n" "    fpreg_rd = *fpreg_rs2;"
 		;;
 	    fpop1:000000101)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FNEGs: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_BEGIN;"
-		$as_echo "    fpreg_rd = *fpreg_rs2;"
-		$as_echo "    fpreg_rd.tme_float_value_ieee754_single ^= 0x80000000;"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FNEGs: */"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
+		printf "%s\n" "    _TME_SPARC_FPU_BEGIN;"
+		printf "%s\n" "    fpreg_rd = *fpreg_rs2;"
+		printf "%s\n" "    fpreg_rd.tme_float_value_ieee754_single ^= 0x80000000;"
 		;;
 	    fpop1:000000110)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FNEGd: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "    _TME_SPARC_FPU_BEGIN;"
-		$as_echo "    fpreg_rd = *fpreg_rs2;"
-		$as_echo "    fpreg_rd.tme_float_value_ieee754_double.tme_value64_uint32_hi ^= 0x80000000;"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FNEGd: */"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
+		printf "%s\n" "    _TME_SPARC_FPU_BEGIN;"
+		printf "%s\n" "    fpreg_rd = *fpreg_rs2;"
+		printf "%s\n" "    fpreg_rd.tme_float_value_ieee754_double.tme_value64_uint32_hi ^= 0x80000000;"
 		;;
 	    fpop1:000001001)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FABSs: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_BEGIN;"
-		$as_echo "    fpreg_rd = *fpreg_rs2;"
-		$as_echo "    fpreg_rd.tme_float_value_ieee754_single &= ~0x80000000;"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FABSs: */"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
+		printf "%s\n" "    _TME_SPARC_FPU_BEGIN;"
+		printf "%s\n" "    fpreg_rd = *fpreg_rs2;"
+		printf "%s\n" "    fpreg_rd.tme_float_value_ieee754_single &= ~0x80000000;"
 		;;
 	    fpop1:000001010)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FABSd: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "    _TME_SPARC_FPU_BEGIN;"
-		$as_echo "    fpreg_rd = *fpreg_rs2;"
-		$as_echo "    fpreg_rd.tme_float_value_ieee754_double.tme_value64_uint32_hi &= ~0x80000000;"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FABSd: */"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
+		printf "%s\n" "    _TME_SPARC_FPU_BEGIN;"
+		printf "%s\n" "    fpreg_rd = *fpreg_rs2;"
+		printf "%s\n" "    fpreg_rd.tme_float_value_ieee754_double.tme_value64_uint32_hi &= ~0x80000000;"
 		;;
 	    fpop1:000101001)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FSQRTs: */"
-		$as_echo "    _TME_SPARC_FPU_UNIMPL_IF(TME_SPARC_FPU_FLAG_NO_FSQRT);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_single_sqrt,"
-		$as_echo "                              fpreg_rs2, &fpreg_rd);"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FSQRTs: */"
+		printf "%s\n" "    _TME_SPARC_FPU_UNIMPL_IF(TME_SPARC_FPU_FLAG_NO_FSQRT);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_single_sqrt,"
+		printf "%s\n" "                              fpreg_rs2, &fpreg_rd);"
 		;;
 	    fpop1:000101010)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FSQRTd: */"
-		$as_echo "    _TME_SPARC_FPU_UNIMPL_IF(TME_SPARC_FPU_FLAG_NO_FSQRT);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_sqrt,"
-		$as_echo "                              fpreg_rs2, &fpreg_rd);"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FSQRTd: */"
+		printf "%s\n" "    _TME_SPARC_FPU_UNIMPL_IF(TME_SPARC_FPU_FLAG_NO_FSQRT);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_sqrt,"
+		printf "%s\n" "                              fpreg_rs2, &fpreg_rd);"
 		;;
 	    fpop1:000101011)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FSQRTq: */"
-		$as_echo "    _TME_SPARC_FPU_UNIMPL_IF(TME_SPARC_FPU_FLAG_NO_FSQRT | TME_SPARC_FPU_FLAG_NO_QUAD);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_sqrt,"
-		$as_echo "                              fpreg_rs2, &fpreg_rd);"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FSQRTq: */"
+		printf "%s\n" "    _TME_SPARC_FPU_UNIMPL_IF(TME_SPARC_FPU_FLAG_NO_FSQRT | TME_SPARC_FPU_FLAG_NO_QUAD);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_sqrt,"
+		printf "%s\n" "                              fpreg_rs2, &fpreg_rd);"
 		;;
 	    fpop1:001000001)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FADDs: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_single_add,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FADDs: */"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_single_add,"
+		printf "%s\n" "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
 		;;
 	    fpop1:001000010)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FADDd: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_double_add,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FADDd: */"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_double_add,"
+		printf "%s\n" "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
 		;;
 	    fpop1:001000011)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FADDq: */"
-		$as_echo "    ${quad}"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_quad_add,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FADDq: */"
+		printf "%s\n" "    ${quad}"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_quad_add,"
+		printf "%s\n" "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
 		;;
 	    fpop1:001000101)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FSUBs: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_single_sub,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FSUBs: */"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_single_sub,"
+		printf "%s\n" "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
 		;;
 	    fpop1:001000110)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FSUBd: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_double_sub,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FSUBd: */"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_double_sub,"
+		printf "%s\n" "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
 		;;
 	    fpop1:001000111)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FSUBq: */"
-		$as_echo "    ${quad}"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_quad_sub,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FSUBq: */"
+		printf "%s\n" "    ${quad}"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_quad_sub,"
+		printf "%s\n" "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
 		;;
 	    fpop1:001001001)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FMULs: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_single_mul,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FMULs: */"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_single_mul,"
+		printf "%s\n" "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
 		;;
 	    fpop1:001001010)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FMULd: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_double_mul,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FMULd: */"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_double_mul,"
+		printf "%s\n" "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
 		;;
 	    fpop1:001001011)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FMULq: */"
-		$as_echo "    ${quad}"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_quad_mul,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FMULq: */"
+		printf "%s\n" "    ${quad}"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_quad_mul,"
+		printf "%s\n" "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
 		;;
 	    fpop1:001101001)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FsMULd: */"
-		$as_echo "    _TME_SPARC_FPU_UNIMPL_IF(TME_SPARC_FPU_FLAG_NO_FMUL_WIDER);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_from_single,"
-		$as_echo "                              fpreg_rs1, &fpreg_rs1_buffer);"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_from_single,"
-		$as_echo "                              fpreg_rs2, &fpreg_rs2_buffer);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_double_mul,"
-		$as_echo "                             &fpreg_rs1_buffer, &fpreg_rs2_buffer, &fpreg_rd);"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FsMULd: */"
+		printf "%s\n" "    _TME_SPARC_FPU_UNIMPL_IF(TME_SPARC_FPU_FLAG_NO_FMUL_WIDER);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_from_single,"
+		printf "%s\n" "                              fpreg_rs1, &fpreg_rs1_buffer);"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_double_from_single,"
+		printf "%s\n" "                              fpreg_rs2, &fpreg_rs2_buffer);"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_double_mul,"
+		printf "%s\n" "                             &fpreg_rs1_buffer, &fpreg_rs2_buffer, &fpreg_rd);"
 		;;
 	    fpop1:001101110)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FdMULq: */"
-		$as_echo "    _TME_SPARC_FPU_UNIMPL_IF(TME_SPARC_FPU_FLAG_NO_FMUL_WIDER | TME_SPARC_FPU_FLAG_NO_QUAD);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_from_double,"
-		$as_echo "                              fpreg_rs1, &fpreg_rs1_buffer);"
-		$as_echo "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_from_double,"
-		$as_echo "                              fpreg_rs2, &fpreg_rs2_buffer);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_quad_mul,"
-		$as_echo "                             &fpreg_rs1_buffer, &fpreg_rs2_buffer, &fpreg_rd);"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FdMULq: */"
+		printf "%s\n" "    _TME_SPARC_FPU_UNIMPL_IF(TME_SPARC_FPU_FLAG_NO_FMUL_WIDER | TME_SPARC_FPU_FLAG_NO_QUAD);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_from_double,"
+		printf "%s\n" "                              fpreg_rs1, &fpreg_rs1_buffer);"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_MONADIC(tme_ieee754_ops_quad_from_double,"
+		printf "%s\n" "                              fpreg_rs2, &fpreg_rs2_buffer);"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_quad_mul,"
+		printf "%s\n" "                             &fpreg_rs1_buffer, &fpreg_rs2_buffer, &fpreg_rd);"
 		;;
 	    fpop1:001001101)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FDIVs: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_single_div,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FDIVs: */"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_SINGLE);"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_single_div,"
+		printf "%s\n" "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
 		;;
 	    fpop1:001001110)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FDIVd: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_double_div,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FDIVd: */"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_double_div,"
+		printf "%s\n" "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
 		;;
 	    fpop1:001001111)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FDIVq: */"
-		$as_echo "    ${quad}"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_quad_div,"
-		$as_echo "                              fpreg_rs1, fpreg_rs2, &fpreg_rd);"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FDIVq: */"
+		printf "%s\n" "    ${quad}"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_QUAD);"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_quad_div,"
+		printf "%s\n" "                              fpreg_rs1, fpreg_rs2, &fpreg_rd);"
 		;;
 	    fpop2:001010001)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FCMPs: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_single_sub,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
-		$as_echo "    _tme_sparc_fpu_fcc_single(ic, &fpreg_rd, FALSE);"
-		$as_echo "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FCMPs: */"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_single_sub,"
+		printf "%s\n" "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
+		printf "%s\n" "    _tme_sparc_fpu_fcc_single(ic, &fpreg_rd, FALSE);"
+		printf "%s\n" "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
 		;;
 	    fpop2:001010010)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FCMPd: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_double_sub,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
-		$as_echo "    _tme_sparc_fpu_fcc_double(ic, &fpreg_rd, FALSE);"
-		$as_echo "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FCMPd: */"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_double_sub,"
+		printf "%s\n" "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
+		printf "%s\n" "    _tme_sparc_fpu_fcc_double(ic, &fpreg_rd, FALSE);"
+		printf "%s\n" "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
 		;;
 	    fpop2:001010011)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FCMPq: */"
-		$as_echo "    ${quad}"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_quad_sub,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
-		$as_echo "    _tme_sparc_fpu_fcc_quad(ic, &fpreg_rd, FALSE);"
-		$as_echo "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FCMPq: */"
+		printf "%s\n" "    ${quad}"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_quad_sub,"
+		printf "%s\n" "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
+		printf "%s\n" "    _tme_sparc_fpu_fcc_quad(ic, &fpreg_rd, FALSE);"
+		printf "%s\n" "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
 		;;
 	    fpop2:001010101)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FCMPEs: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_single_sub,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
-		$as_echo "    _tme_sparc_fpu_fcc_single(ic, &fpreg_rd, TRUE);"
-		$as_echo "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FCMPEs: */"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_SINGLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_single_sub,"
+		printf "%s\n" "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
+		printf "%s\n" "    _tme_sparc_fpu_fcc_single(ic, &fpreg_rd, TRUE);"
+		printf "%s\n" "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
 		;;
 	    fpop2:001010110)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FCMPEd: */"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_double_sub,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
-		$as_echo "    _tme_sparc_fpu_fcc_double(ic, &fpreg_rd, TRUE);"
-		$as_echo "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FCMPEd: */"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_double_sub,"
+		printf "%s\n" "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
+		printf "%s\n" "    _tme_sparc_fpu_fcc_double(ic, &fpreg_rd, TRUE);"
+		printf "%s\n" "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
 		;;
 	    fpop2:001010111)
-		$as_echo "  case ${opf_decimal}:  /* ${opf} FCMPEq: */"
-		$as_echo "    ${quad}"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
-		$as_echo "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_quad_sub,"
-		$as_echo "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
-		$as_echo "    _tme_sparc_fpu_fcc_quad(ic, &fpreg_rd, TRUE);"
-		$as_echo "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
+		printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FCMPEq: */"
+		printf "%s\n" "    ${quad}"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_QUAD | TME_IEEE754_FPREG_FORMAT_BUILTIN);"
+		printf "%s\n" "    _TME_SPARC_FPU_OP_DYADIC(tme_ieee754_ops_quad_sub,"
+		printf "%s\n" "                             fpreg_rs1, fpreg_rs2, &fpreg_rd);"
+		printf "%s\n" "    _tme_sparc_fpu_fcc_quad(ic, &fpreg_rd, TRUE);"
+		printf "%s\n" "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
 		;;
 	    *) default=true ;;
 	    esac
-	    if $default; then :; else $as_echo "    break;"; $as_echo ""; fi
+	    if $default; then :; else printf "%s\n" "    break;"; printf "%s\n" ""; fi
 	done
-	$as_echo "  default:"
-	$as_echo "    _TME_SPARC_FPU_UNIMPL;"
-	$as_echo "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
-	$as_echo "    break;"
-	$as_echo ""
-	$as_echo "#undef _TME_SPARC_FPU_FORMAT_RS1"
-	$as_echo "#undef _TME_SPARC_FPU_FORMAT_RS2"
-	$as_echo "#undef _TME_SPARC_FPU_FORMAT_RD"
-	$as_echo "  }"
+	printf "%s\n" "  default:"
+	printf "%s\n" "    _TME_SPARC_FPU_UNIMPL;"
+	printf "%s\n" "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
+	printf "%s\n" "    break;"
+	printf "%s\n" ""
+	printf "%s\n" "#undef _TME_SPARC_FPU_FORMAT_RS1"
+	printf "%s\n" "#undef _TME_SPARC_FPU_FORMAT_RS2"
+	printf "%s\n" "#undef _TME_SPARC_FPU_FORMAT_RD"
+	printf "%s\n" "  }"
 
-	$as_echo ""
-	$as_echo "  /* store any destination: */"
-	$as_echo "  if (fpreg_rd_format != TME_IEEE754_FPREG_FORMAT_NULL) {"
-	$as_echo "    tme_sparc_fpu_fpreg_format(ic, fpreg_rd_number, fpreg_rd_format);"
-	$as_echo "    ic->tme_sparc_fpu_fpregs[fpreg_rd_number] = fpreg_rd;"
-	$as_echo "    TME_SPARC_FPU_DIRTY(ic, fpreg_rd_number);"
-	$as_echo "  }"
+	printf "%s\n" ""
+	printf "%s\n" "  /* store any destination: */"
+	printf "%s\n" "  if (fpreg_rd_format != TME_IEEE754_FPREG_FORMAT_NULL) {"
+	printf "%s\n" "    tme_sparc_fpu_fpreg_format(ic, fpreg_rd_number, fpreg_rd_format);"
+	printf "%s\n" "    ic->tme_sparc_fpu_fpregs[fpreg_rd_number] = fpreg_rd;"
+	printf "%s\n" "    TME_SPARC_FPU_DIRTY(ic, fpreg_rd_number);"
+	printf "%s\n" "  }"
 
-	$as_echo ""
-	$as_echo "}"
+	printf "%s\n" ""
+	printf "%s\n" "}"
    :
 done
 

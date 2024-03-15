@@ -33,7 +33,7 @@ CLEANFILES = $(noinst_SCRIPTS) $(BUILT_SOURCES)
 EXTRA_DIST = $(CLEANFILES) $(noinst_SCRIPTS:.sh=.m4) fb-xlat-auto.pl
 
 # default rule for regenerating the portable shell scripts from m4 descriptions
-$(noinst_SCRIPTS): %.sh: %.m4
+$(addprefix $(srcdir)/,$(noinst_SCRIPTS)): %.sh: %.m4
 	$(AUTOM4TE) -l m4sh $< > $@
 
 # target to make float-auto.c and bus-device-auto.c:
@@ -48,7 +48,7 @@ if USING_X
 $(srcdir)/fb-xlat-auto.c: fb-xlat-auto.sh fb-xlat-auto.in
 	cat $*.in | xargs $(SHELL) $< > $@
 
-fb-xlat-auto.in: fb-xlat-auto.pl
+$(srcdir)/fb-xlat-auto.in: fb-xlat-auto.pl
 	$(PERL) $< src $(TME_FB_XLAT_SRC) dst $(TME_FB_XLAT_DST) > $@ || \
 	echo "src $(TME_FB_XLAT_SRC) dst $(TME_FB_XLAT_DST)" > $@
 else

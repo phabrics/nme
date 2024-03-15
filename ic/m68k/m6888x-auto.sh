@@ -1,68 +1,70 @@
 #! /bin/sh
-# Generated from ../../../ic/m68k/m6888x-auto.m4 by GNU Autoconf 2.69.
+# Generated from m6888x-auto.m4 by GNU Autoconf 2.72.
 ## -------------------- ##
 ## M4sh Initialization. ##
 ## -------------------- ##
 
 # Be more Bourne compatible
 DUALCASE=1; export DUALCASE # for MKS sh
-if test -n "${ZSH_VERSION+set}" && (emulate sh) >/dev/null 2>&1; then :
+if test ${ZSH_VERSION+y} && (emulate sh) >/dev/null 2>&1
+then :
   emulate sh
   NULLCMD=:
   # Pre-4.2 versions of Zsh do word splitting on ${1+"$@"}, which
   # is contrary to our usage.  Disable this feature.
   alias -g '${1+"$@"}'='"$@"'
   setopt NO_GLOB_SUBST
-else
-  case `(set -o) 2>/dev/null` in #(
+else case e in #(
+  e) case `(set -o) 2>/dev/null` in #(
   *posix*) :
     set -o posix ;; #(
   *) :
      ;;
+esac ;;
 esac
 fi
 
 
+
+# Reset variables that may have inherited troublesome values from
+# the environment.
+
+# IFS needs to be set, to space, tab, and newline, in precisely that order.
+# (If _AS_PATH_WALK were called with IFS unset, it would have the
+# side effect of setting IFS to empty, thus disabling word splitting.)
+# Quoting is to prevent editors from complaining about space-tab.
 as_nl='
 '
 export as_nl
-# Printing a long string crashes Solaris 7 /usr/bin/printf.
-as_echo='\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\'
-as_echo=$as_echo$as_echo$as_echo$as_echo$as_echo
-as_echo=$as_echo$as_echo$as_echo$as_echo$as_echo$as_echo
-# Prefer a ksh shell builtin over an external printf program on Solaris,
-# but without wasting forks for bash or zsh.
-if test -z "$BASH_VERSION$ZSH_VERSION" \
-    && (test "X`print -r -- $as_echo`" = "X$as_echo") 2>/dev/null; then
-  as_echo='print -r --'
-  as_echo_n='print -rn --'
-elif (test "X`printf %s $as_echo`" = "X$as_echo") 2>/dev/null; then
-  as_echo='printf %s\n'
-  as_echo_n='printf %s'
-else
-  if test "X`(/usr/ucb/echo -n -n $as_echo) 2>/dev/null`" = "X-n $as_echo"; then
-    as_echo_body='eval /usr/ucb/echo -n "$1$as_nl"'
-    as_echo_n='/usr/ucb/echo -n'
-  else
-    as_echo_body='eval expr "X$1" : "X\\(.*\\)"'
-    as_echo_n_body='eval
-      arg=$1;
-      case $arg in #(
-      *"$as_nl"*)
-	expr "X$arg" : "X\\(.*\\)$as_nl";
-	arg=`expr "X$arg" : ".*$as_nl\\(.*\\)"`;;
-      esac;
-      expr "X$arg" : "X\\(.*\\)" | tr -d "$as_nl"
-    '
-    export as_echo_n_body
-    as_echo_n='sh -c $as_echo_n_body as_echo'
-  fi
-  export as_echo_body
-  as_echo='sh -c $as_echo_body as_echo'
-fi
+IFS=" ""	$as_nl"
+
+PS1='$ '
+PS2='> '
+PS4='+ '
+
+# Ensure predictable behavior from utilities with locale-dependent output.
+LC_ALL=C
+export LC_ALL
+LANGUAGE=C
+export LANGUAGE
+
+# We cannot yet rely on "unset" to work, but we need these variables
+# to be unset--not just set to an empty or harmless value--now, to
+# avoid bugs in old shells (e.g. pre-3.0 UWIN ksh).  This construct
+# also avoids known problems related to "unset" and subshell syntax
+# in other old shells (e.g. bash 2.01 and pdksh 5.2.14).
+for as_var in BASH_ENV ENV MAIL MAILPATH CDPATH
+do eval test \${$as_var+y} \
+  && ( (unset $as_var) || exit 1) >/dev/null 2>&1 && unset $as_var || :
+done
+
+# Ensure that fds 0, 1, and 2 are open.
+if (exec 3>&0) 2>/dev/null; then :; else exec 0</dev/null; fi
+if (exec 3>&1) 2>/dev/null; then :; else exec 1>/dev/null; fi
+if (exec 3>&2)            ; then :; else exec 2>/dev/null; fi
 
 # The user is always right.
-if test "${PATH_SEPARATOR+set}" != set; then
+if ${PATH_SEPARATOR+false} :; then
   PATH_SEPARATOR=:
   (PATH='/bin;/bin'; FPATH=$PATH; sh -c :) >/dev/null 2>&1 && {
     (PATH='/bin:/bin'; FPATH=$PATH; sh -c :) >/dev/null 2>&1 ||
@@ -70,13 +72,6 @@ if test "${PATH_SEPARATOR+set}" != set; then
   }
 fi
 
-
-# IFS
-# We need space, tab and new line, in precisely that order.  Quoting is
-# there to prevent editors from complaining about space-tab.
-# (If _AS_PATH_WALK were called with IFS unset, it would disable word
-# splitting by setting IFS to empty value.)
-IFS=" ""	$as_nl"
 
 # Find who we are.  Look in the path if we contain no directory separator.
 as_myself=
@@ -86,58 +81,44 @@ case $0 in #((
 for as_dir in $PATH
 do
   IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    test -r "$as_dir/$0" && as_myself=$as_dir/$0 && break
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
+    test -r "$as_dir$0" && as_myself=$as_dir$0 && break
   done
 IFS=$as_save_IFS
 
      ;;
 esac
-# We did not find ourselves, most probably we were run as `sh COMMAND'
+# We did not find ourselves, most probably we were run as 'sh COMMAND'
 # in which case we are not to be found in the path.
 if test "x$as_myself" = x; then
   as_myself=$0
 fi
 if test ! -f "$as_myself"; then
-  $as_echo "$as_myself: error: cannot find myself; rerun with an absolute file name" >&2
+  printf "%s\n" "$as_myself: error: cannot find myself; rerun with an absolute file name" >&2
   exit 1
 fi
 
-# Unset variables that we do not need and which cause bugs (e.g. in
-# pre-3.0 UWIN ksh).  But do not cause bugs in bash 2.01; the "|| exit 1"
-# suppresses any "Segmentation fault" message there.  '((' could
-# trigger a bug in pdksh 5.2.14.
-for as_var in BASH_ENV ENV MAIL MAILPATH
-do eval test x\${$as_var+set} = xset \
-  && ( (unset $as_var) || exit 1) >/dev/null 2>&1 && unset $as_var || :
-done
-PS1='$ '
-PS2='> '
-PS4='+ '
-
-# NLS nuisances.
-LC_ALL=C
-export LC_ALL
-LANGUAGE=C
-export LANGUAGE
-
-# CDPATH.
-(unset CDPATH) >/dev/null 2>&1 && unset CDPATH
 
 if test "x$CONFIG_SHELL" = x; then
-  as_bourne_compatible="if test -n \"\${ZSH_VERSION+set}\" && (emulate sh) >/dev/null 2>&1; then :
+  as_bourne_compatible="if test \${ZSH_VERSION+y} && (emulate sh) >/dev/null 2>&1
+then :
   emulate sh
   NULLCMD=:
   # Pre-4.2 versions of Zsh do word splitting on \${1+\"\$@\"}, which
   # is contrary to our usage.  Disable this feature.
   alias -g '\${1+\"\$@\"}'='\"\$@\"'
   setopt NO_GLOB_SUBST
-else
-  case \`(set -o) 2>/dev/null\` in #(
+else case e in #(
+  e) case \`(set -o) 2>/dev/null\` in #(
   *posix*) :
     set -o posix ;; #(
   *) :
      ;;
+esac ;;
 esac
 fi
 "
@@ -152,36 +133,48 @@ as_fn_success || { exitcode=1; echo as_fn_success failed.; }
 as_fn_failure && { exitcode=1; echo as_fn_failure succeeded.; }
 as_fn_ret_success || { exitcode=1; echo as_fn_ret_success failed.; }
 as_fn_ret_failure && { exitcode=1; echo as_fn_ret_failure succeeded.; }
-if ( set x; as_fn_ret_success y && test x = \"\$1\" ); then :
+if ( set x; as_fn_ret_success y && test x = \"\$1\" )
+then :
 
-else
-  exitcode=1; echo positional parameters were not saved.
+else case e in #(
+  e) exitcode=1; echo positional parameters were not saved. ;;
+esac
 fi
 test x\$exitcode = x0 || exit 1
+blah=\$(echo \$(echo blah))
+test x\"\$blah\" = xblah || exit 1
 test -x / || exit 1"
   as_suggested=""
-  if (eval "$as_required") 2>/dev/null; then :
+  if (eval "$as_required") 2>/dev/null
+then :
   as_have_required=yes
-else
-  as_have_required=no
+else case e in #(
+  e) as_have_required=no ;;
+esac
 fi
-  if test x$as_have_required = xyes && (eval "$as_suggested") 2>/dev/null; then :
+  if test x$as_have_required = xyes && (eval "$as_suggested") 2>/dev/null
+then :
 
-else
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+else case e in #(
+  e) as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
 as_found=false
 for as_dir in /bin$PATH_SEPARATOR/usr/bin$PATH_SEPARATOR$PATH
 do
   IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
   as_found=:
   case $as_dir in #(
 	 /*)
 	   for as_base in sh bash ksh sh5; do
 	     # Try only shells that exist, to save several forks.
-	     as_shell=$as_dir/$as_base
+	     as_shell=$as_dir$as_base
 	     if { test -f "$as_shell" || test -f "$as_shell.exe"; } &&
-		    { $as_echo "$as_bourne_compatible""$as_required" | as_run=a "$as_shell"; } 2>/dev/null; then :
+		    as_run=a "$as_shell" -c "$as_bourne_compatible""$as_required" 2>/dev/null
+then :
   CONFIG_SHELL=$as_shell as_have_required=yes
 		   break 2
 fi
@@ -189,14 +182,22 @@ fi
        esac
   as_found=false
 done
-$as_found || { if { test -f "$SHELL" || test -f "$SHELL.exe"; } &&
-	      { $as_echo "$as_bourne_compatible""$as_required" | as_run=a "$SHELL"; } 2>/dev/null; then :
-  CONFIG_SHELL=$SHELL as_have_required=yes
-fi; }
 IFS=$as_save_IFS
+if $as_found
+then :
+
+else case e in #(
+  e) if { test -f "$SHELL" || test -f "$SHELL.exe"; } &&
+	      as_run=a "$SHELL" -c "$as_bourne_compatible""$as_required" 2>/dev/null
+then :
+  CONFIG_SHELL=$SHELL as_have_required=yes
+fi ;;
+esac
+fi
 
 
-      if test "x$CONFIG_SHELL" != x; then :
+      if test "x$CONFIG_SHELL" != x
+then :
   export CONFIG_SHELL
              # We cannot yet assume a decent shell, so we have to provide a
 # neutralization value for shells without unset; and this also
@@ -213,25 +214,27 @@ case $- in # ((((
 esac
 exec $CONFIG_SHELL $as_opts "$as_myself" ${1+"$@"}
 # Admittedly, this is quite paranoid, since all the known shells bail
-# out after a failed `exec'.
-$as_echo "$0: could not re-execute with $CONFIG_SHELL" >&2
+# out after a failed 'exec'.
+printf "%s\n" "$0: could not re-execute with $CONFIG_SHELL" >&2
 exit 255
 fi
 
-    if test x$as_have_required = xno; then :
-  $as_echo "$0: This script requires a shell more modern than all"
-  $as_echo "$0: the shells that I found on your system."
-  if test x${ZSH_VERSION+set} = xset ; then
-    $as_echo "$0: In particular, zsh $ZSH_VERSION has bugs and should"
-    $as_echo "$0: be upgraded to zsh 4.3.4 or later."
+    if test x$as_have_required = xno
+then :
+  printf "%s\n" "$0: This script requires a shell more modern than all"
+  printf "%s\n" "$0: the shells that I found on your system."
+  if test ${ZSH_VERSION+y} ; then
+    printf "%s\n" "$0: In particular, zsh $ZSH_VERSION has bugs and should"
+    printf "%s\n" "$0: be upgraded to zsh 4.3.4 or later."
   else
-    $as_echo "$0: Please tell bug-autoconf@gnu.org about your system,
+    printf "%s\n" "$0: Please tell bug-autoconf@gnu.org about your system,
 $0: including any error possibly output before this
 $0: message. Then install a modern shell, or manually run
 $0: the script under such a shell if you do have one."
   fi
   exit 1
-fi
+fi ;;
+esac
 fi
 fi
 SHELL=${CONFIG_SHELL-/bin/sh}
@@ -251,6 +254,7 @@ as_fn_unset ()
   { eval $1=; unset $1;}
 }
 as_unset=as_fn_unset
+
 ## -------------------- ##
 ## Main body of script. ##
 ## -------------------- ##
@@ -337,7 +341,7 @@ EOF
 	#
 	opmode_bitmap=0
 	opmode_bit=1
-	$as_echo_n "  "
+	printf %s "  "
 	;;
 
 	table)
@@ -360,7 +364,7 @@ EOF
 	    # this byte:
 	    #
 	    if test ${what} = bitmap && test ${opmode_bit} = 256; then
-		$as_echo_n "${opmode_bitmap}, "
+		printf %s "${opmode_bitmap}, "
 		opmode_bitmap=0
 		opmode_bit=1
 	    fi
@@ -481,42 +485,42 @@ EOF
 
 	    table)
 
-		$as_echo ""
-		$as_echo "  /* opmode ${opmode}: */"
-		$as_echo_n "  { "
+		printf "%s\n" ""
+		printf "%s\n" "  /* opmode ${opmode}: */"
+		printf %s "  { "
 
 		# the function:
 		#
 		if test "x${name}" = x; then
-		    $as_echo_n "NULL"
-		    $as_echo_n ", 0"
+		    printf %s "NULL"
+		    printf %s ", 0"
 		    fpu_types=TME_M68K_FPU_NONE
 		elif test "x${name_ieee754}" != x; then
-		    $as_echo_n "NULL"
-		    $as_echo_n ", TME_M6888X_IEEE754_OP(tme_ieee754_ops_extended80_${name_ieee754})"
+		    printf %s "NULL"
+		    printf %s ", TME_M6888X_IEEE754_OP(tme_ieee754_ops_extended80_${name_ieee754})"
 		else
-		    $as_echo_n "_tme_m6888x_f${name}"
-		    $as_echo_n ", 0"
+		    printf %s "_tme_m6888x_f${name}"
+		    printf %s ", 0"
 		fi
 
 		# the m6888x types:
 		#
-		$as_echo_n ", ${fpu_types}"
+		printf %s ", ${fpu_types}"
 
 		# the operation type:
 		#
 		if test ${optype} != MONADIC; then optype="DYADIC_${optype}"; fi
-		$as_echo_n ", TME_M6888X_OPTYPE_${optype}"
+		printf %s ", TME_M6888X_OPTYPE_${optype}"
 
 		# the rounding mode:
 		#
-		$as_echo_n ", TME_FLOAT_ROUND_${rounding_mode}"
+		printf %s ", TME_FLOAT_ROUND_${rounding_mode}"
 
 		# the rounding precision:
 		#
-		$as_echo_n ", TME_M6888X_ROUNDING_PRECISION_${rounding_precision}"
+		printf %s ", TME_M6888X_ROUNDING_PRECISION_${rounding_precision}"
 
-		$as_echo " },"
+		printf "%s\n" " },"
 		;;
 	    esac
 	done
@@ -526,12 +530,12 @@ EOF
 	case ${what} in
 
 	bitmap)
-	    $as_echo "${opmode_bitmap}"
-	    $as_echo "};"
+	    printf "%s\n" "${opmode_bitmap}"
+	    printf "%s\n" "};"
 	    ;;
 
 	table)
-	    $as_echo "};"
+	    printf "%s\n" "};"
 	    ;;
 	esac
 

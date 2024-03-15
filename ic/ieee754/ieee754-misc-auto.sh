@@ -1,68 +1,70 @@
 #! /bin/sh
-# Generated from ../../../ic/ieee754/ieee754-misc-auto.m4 by GNU Autoconf 2.69.
+# Generated from ieee754-misc-auto.m4 by GNU Autoconf 2.72.
 ## -------------------- ##
 ## M4sh Initialization. ##
 ## -------------------- ##
 
 # Be more Bourne compatible
 DUALCASE=1; export DUALCASE # for MKS sh
-if test -n "${ZSH_VERSION+set}" && (emulate sh) >/dev/null 2>&1; then :
+if test ${ZSH_VERSION+y} && (emulate sh) >/dev/null 2>&1
+then :
   emulate sh
   NULLCMD=:
   # Pre-4.2 versions of Zsh do word splitting on ${1+"$@"}, which
   # is contrary to our usage.  Disable this feature.
   alias -g '${1+"$@"}'='"$@"'
   setopt NO_GLOB_SUBST
-else
-  case `(set -o) 2>/dev/null` in #(
+else case e in #(
+  e) case `(set -o) 2>/dev/null` in #(
   *posix*) :
     set -o posix ;; #(
   *) :
      ;;
+esac ;;
 esac
 fi
 
 
+
+# Reset variables that may have inherited troublesome values from
+# the environment.
+
+# IFS needs to be set, to space, tab, and newline, in precisely that order.
+# (If _AS_PATH_WALK were called with IFS unset, it would have the
+# side effect of setting IFS to empty, thus disabling word splitting.)
+# Quoting is to prevent editors from complaining about space-tab.
 as_nl='
 '
 export as_nl
-# Printing a long string crashes Solaris 7 /usr/bin/printf.
-as_echo='\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\'
-as_echo=$as_echo$as_echo$as_echo$as_echo$as_echo
-as_echo=$as_echo$as_echo$as_echo$as_echo$as_echo$as_echo
-# Prefer a ksh shell builtin over an external printf program on Solaris,
-# but without wasting forks for bash or zsh.
-if test -z "$BASH_VERSION$ZSH_VERSION" \
-    && (test "X`print -r -- $as_echo`" = "X$as_echo") 2>/dev/null; then
-  as_echo='print -r --'
-  as_echo_n='print -rn --'
-elif (test "X`printf %s $as_echo`" = "X$as_echo") 2>/dev/null; then
-  as_echo='printf %s\n'
-  as_echo_n='printf %s'
-else
-  if test "X`(/usr/ucb/echo -n -n $as_echo) 2>/dev/null`" = "X-n $as_echo"; then
-    as_echo_body='eval /usr/ucb/echo -n "$1$as_nl"'
-    as_echo_n='/usr/ucb/echo -n'
-  else
-    as_echo_body='eval expr "X$1" : "X\\(.*\\)"'
-    as_echo_n_body='eval
-      arg=$1;
-      case $arg in #(
-      *"$as_nl"*)
-	expr "X$arg" : "X\\(.*\\)$as_nl";
-	arg=`expr "X$arg" : ".*$as_nl\\(.*\\)"`;;
-      esac;
-      expr "X$arg" : "X\\(.*\\)" | tr -d "$as_nl"
-    '
-    export as_echo_n_body
-    as_echo_n='sh -c $as_echo_n_body as_echo'
-  fi
-  export as_echo_body
-  as_echo='sh -c $as_echo_body as_echo'
-fi
+IFS=" ""	$as_nl"
+
+PS1='$ '
+PS2='> '
+PS4='+ '
+
+# Ensure predictable behavior from utilities with locale-dependent output.
+LC_ALL=C
+export LC_ALL
+LANGUAGE=C
+export LANGUAGE
+
+# We cannot yet rely on "unset" to work, but we need these variables
+# to be unset--not just set to an empty or harmless value--now, to
+# avoid bugs in old shells (e.g. pre-3.0 UWIN ksh).  This construct
+# also avoids known problems related to "unset" and subshell syntax
+# in other old shells (e.g. bash 2.01 and pdksh 5.2.14).
+for as_var in BASH_ENV ENV MAIL MAILPATH CDPATH
+do eval test \${$as_var+y} \
+  && ( (unset $as_var) || exit 1) >/dev/null 2>&1 && unset $as_var || :
+done
+
+# Ensure that fds 0, 1, and 2 are open.
+if (exec 3>&0) 2>/dev/null; then :; else exec 0</dev/null; fi
+if (exec 3>&1) 2>/dev/null; then :; else exec 1>/dev/null; fi
+if (exec 3>&2)            ; then :; else exec 2>/dev/null; fi
 
 # The user is always right.
-if test "${PATH_SEPARATOR+set}" != set; then
+if ${PATH_SEPARATOR+false} :; then
   PATH_SEPARATOR=:
   (PATH='/bin;/bin'; FPATH=$PATH; sh -c :) >/dev/null 2>&1 && {
     (PATH='/bin:/bin'; FPATH=$PATH; sh -c :) >/dev/null 2>&1 ||
@@ -70,13 +72,6 @@ if test "${PATH_SEPARATOR+set}" != set; then
   }
 fi
 
-
-# IFS
-# We need space, tab and new line, in precisely that order.  Quoting is
-# there to prevent editors from complaining about space-tab.
-# (If _AS_PATH_WALK were called with IFS unset, it would disable word
-# splitting by setting IFS to empty value.)
-IFS=" ""	$as_nl"
 
 # Find who we are.  Look in the path if we contain no directory separator.
 as_myself=
@@ -86,58 +81,44 @@ case $0 in #((
 for as_dir in $PATH
 do
   IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    test -r "$as_dir/$0" && as_myself=$as_dir/$0 && break
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
+    test -r "$as_dir$0" && as_myself=$as_dir$0 && break
   done
 IFS=$as_save_IFS
 
      ;;
 esac
-# We did not find ourselves, most probably we were run as `sh COMMAND'
+# We did not find ourselves, most probably we were run as 'sh COMMAND'
 # in which case we are not to be found in the path.
 if test "x$as_myself" = x; then
   as_myself=$0
 fi
 if test ! -f "$as_myself"; then
-  $as_echo "$as_myself: error: cannot find myself; rerun with an absolute file name" >&2
+  printf "%s\n" "$as_myself: error: cannot find myself; rerun with an absolute file name" >&2
   exit 1
 fi
 
-# Unset variables that we do not need and which cause bugs (e.g. in
-# pre-3.0 UWIN ksh).  But do not cause bugs in bash 2.01; the "|| exit 1"
-# suppresses any "Segmentation fault" message there.  '((' could
-# trigger a bug in pdksh 5.2.14.
-for as_var in BASH_ENV ENV MAIL MAILPATH
-do eval test x\${$as_var+set} = xset \
-  && ( (unset $as_var) || exit 1) >/dev/null 2>&1 && unset $as_var || :
-done
-PS1='$ '
-PS2='> '
-PS4='+ '
-
-# NLS nuisances.
-LC_ALL=C
-export LC_ALL
-LANGUAGE=C
-export LANGUAGE
-
-# CDPATH.
-(unset CDPATH) >/dev/null 2>&1 && unset CDPATH
 
 if test "x$CONFIG_SHELL" = x; then
-  as_bourne_compatible="if test -n \"\${ZSH_VERSION+set}\" && (emulate sh) >/dev/null 2>&1; then :
+  as_bourne_compatible="if test \${ZSH_VERSION+y} && (emulate sh) >/dev/null 2>&1
+then :
   emulate sh
   NULLCMD=:
   # Pre-4.2 versions of Zsh do word splitting on \${1+\"\$@\"}, which
   # is contrary to our usage.  Disable this feature.
   alias -g '\${1+\"\$@\"}'='\"\$@\"'
   setopt NO_GLOB_SUBST
-else
-  case \`(set -o) 2>/dev/null\` in #(
+else case e in #(
+  e) case \`(set -o) 2>/dev/null\` in #(
   *posix*) :
     set -o posix ;; #(
   *) :
      ;;
+esac ;;
 esac
 fi
 "
@@ -152,36 +133,48 @@ as_fn_success || { exitcode=1; echo as_fn_success failed.; }
 as_fn_failure && { exitcode=1; echo as_fn_failure succeeded.; }
 as_fn_ret_success || { exitcode=1; echo as_fn_ret_success failed.; }
 as_fn_ret_failure && { exitcode=1; echo as_fn_ret_failure succeeded.; }
-if ( set x; as_fn_ret_success y && test x = \"\$1\" ); then :
+if ( set x; as_fn_ret_success y && test x = \"\$1\" )
+then :
 
-else
-  exitcode=1; echo positional parameters were not saved.
+else case e in #(
+  e) exitcode=1; echo positional parameters were not saved. ;;
+esac
 fi
 test x\$exitcode = x0 || exit 1
+blah=\$(echo \$(echo blah))
+test x\"\$blah\" = xblah || exit 1
 test -x / || exit 1"
   as_suggested=""
-  if (eval "$as_required") 2>/dev/null; then :
+  if (eval "$as_required") 2>/dev/null
+then :
   as_have_required=yes
-else
-  as_have_required=no
+else case e in #(
+  e) as_have_required=no ;;
+esac
 fi
-  if test x$as_have_required = xyes && (eval "$as_suggested") 2>/dev/null; then :
+  if test x$as_have_required = xyes && (eval "$as_suggested") 2>/dev/null
+then :
 
-else
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+else case e in #(
+  e) as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
 as_found=false
 for as_dir in /bin$PATH_SEPARATOR/usr/bin$PATH_SEPARATOR$PATH
 do
   IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
   as_found=:
   case $as_dir in #(
 	 /*)
 	   for as_base in sh bash ksh sh5; do
 	     # Try only shells that exist, to save several forks.
-	     as_shell=$as_dir/$as_base
+	     as_shell=$as_dir$as_base
 	     if { test -f "$as_shell" || test -f "$as_shell.exe"; } &&
-		    { $as_echo "$as_bourne_compatible""$as_required" | as_run=a "$as_shell"; } 2>/dev/null; then :
+		    as_run=a "$as_shell" -c "$as_bourne_compatible""$as_required" 2>/dev/null
+then :
   CONFIG_SHELL=$as_shell as_have_required=yes
 		   break 2
 fi
@@ -189,14 +182,22 @@ fi
        esac
   as_found=false
 done
-$as_found || { if { test -f "$SHELL" || test -f "$SHELL.exe"; } &&
-	      { $as_echo "$as_bourne_compatible""$as_required" | as_run=a "$SHELL"; } 2>/dev/null; then :
-  CONFIG_SHELL=$SHELL as_have_required=yes
-fi; }
 IFS=$as_save_IFS
+if $as_found
+then :
+
+else case e in #(
+  e) if { test -f "$SHELL" || test -f "$SHELL.exe"; } &&
+	      as_run=a "$SHELL" -c "$as_bourne_compatible""$as_required" 2>/dev/null
+then :
+  CONFIG_SHELL=$SHELL as_have_required=yes
+fi ;;
+esac
+fi
 
 
-      if test "x$CONFIG_SHELL" != x; then :
+      if test "x$CONFIG_SHELL" != x
+then :
   export CONFIG_SHELL
              # We cannot yet assume a decent shell, so we have to provide a
 # neutralization value for shells without unset; and this also
@@ -213,25 +214,27 @@ case $- in # ((((
 esac
 exec $CONFIG_SHELL $as_opts "$as_myself" ${1+"$@"}
 # Admittedly, this is quite paranoid, since all the known shells bail
-# out after a failed `exec'.
-$as_echo "$0: could not re-execute with $CONFIG_SHELL" >&2
+# out after a failed 'exec'.
+printf "%s\n" "$0: could not re-execute with $CONFIG_SHELL" >&2
 exit 255
 fi
 
-    if test x$as_have_required = xno; then :
-  $as_echo "$0: This script requires a shell more modern than all"
-  $as_echo "$0: the shells that I found on your system."
-  if test x${ZSH_VERSION+set} = xset ; then
-    $as_echo "$0: In particular, zsh $ZSH_VERSION has bugs and should"
-    $as_echo "$0: be upgraded to zsh 4.3.4 or later."
+    if test x$as_have_required = xno
+then :
+  printf "%s\n" "$0: This script requires a shell more modern than all"
+  printf "%s\n" "$0: the shells that I found on your system."
+  if test ${ZSH_VERSION+y} ; then
+    printf "%s\n" "$0: In particular, zsh $ZSH_VERSION has bugs and should"
+    printf "%s\n" "$0: be upgraded to zsh 4.3.4 or later."
   else
-    $as_echo "$0: Please tell bug-autoconf@gnu.org about your system,
+    printf "%s\n" "$0: Please tell bug-autoconf@gnu.org about your system,
 $0: including any error possibly output before this
 $0: message. Then install a modern shell, or manually run
 $0: the script under such a shell if you do have one."
   fi
   exit 1
-fi
+fi ;;
+esac
 fi
 fi
 SHELL=${CONFIG_SHELL-/bin/sh}
@@ -251,6 +254,7 @@ as_fn_unset ()
   { eval $1=; unset $1;}
 }
 as_unset=as_fn_unset
+
 ## -------------------- ##
 ## Main body of script. ##
 ## -------------------- ##
@@ -330,7 +334,7 @@ for precision in single double extended80 quad; do
 
     # get information about this precision:
     #
-    _precision=`$as_echo $0 | sed -e "s/$PROG/ieee754-precision.sh/"`
+    _precision=`printf "%s\n" $0 | sed -e "s/$PROG/ieee754-precision.sh/"`
     eval `sh ${_precision} ${precision}`
 
     # if we're generating a header:
@@ -448,22 +452,22 @@ EOF
 	x_value="(x)->tme_float_value_ieee754_${precision}"
 	case "${precision}" in
 	single)
-	    $as_echo "    ${x_value} = *(y); \\"
+	    printf "%s\n" "    ${x_value} = *(y); \\"
 	    ;;
 	double)
-	    $as_echo "    ${x_value}.tme_value64_uint32_hi = (y)->tme_ieee754_double_constant_hi; \\"
-	    $as_echo "    ${x_value}.tme_value64_uint32_lo = (y)->tme_ieee754_double_constant_lo; \\"
+	    printf "%s\n" "    ${x_value}.tme_value64_uint32_hi = (y)->tme_ieee754_double_constant_hi; \\"
+	    printf "%s\n" "    ${x_value}.tme_value64_uint32_lo = (y)->tme_ieee754_double_constant_lo; \\"
 	    ;;
 	extended80)
-	    $as_echo "    ${x_value}.tme_float_ieee754_extended80_sexp = (y)->tme_ieee754_extended80_constant_sexp; \\"
-	    $as_echo "    ${x_value}.tme_float_ieee754_extended80_significand.tme_value64_uint32_hi = (y)->tme_ieee754_extended80_constant_significand_hi; \\"
-	    $as_echo "    ${x_value}.tme_float_ieee754_extended80_significand.tme_value64_uint32_lo = (y)->tme_ieee754_extended80_constant_significand_lo; \\"
+	    printf "%s\n" "    ${x_value}.tme_float_ieee754_extended80_sexp = (y)->tme_ieee754_extended80_constant_sexp; \\"
+	    printf "%s\n" "    ${x_value}.tme_float_ieee754_extended80_significand.tme_value64_uint32_hi = (y)->tme_ieee754_extended80_constant_significand_hi; \\"
+	    printf "%s\n" "    ${x_value}.tme_float_ieee754_extended80_significand.tme_value64_uint32_lo = (y)->tme_ieee754_extended80_constant_significand_lo; \\"
 	    ;;
 	quad)
-	    $as_echo "    ${x_value}.tme_float_ieee754_quad_hi.tme_value64_uint32_hi = (y)->tme_ieee754_quad_constant_hi_hi; \\"
-	    $as_echo "    ${x_value}.tme_float_ieee754_quad_hi.tme_value64_uint32_lo = (y)->tme_ieee754_quad_constant_hi_lo; \\"
-	    $as_echo "    ${x_value}.tme_float_ieee754_quad_lo.tme_value64_uint32_hi = (y)->tme_ieee754_quad_constant_lo_hi; \\"
-	    $as_echo "    ${x_value}.tme_float_ieee754_quad_lo.tme_value64_uint32_lo = (y)->tme_ieee754_quad_constant_lo_lo; \\"
+	    printf "%s\n" "    ${x_value}.tme_float_ieee754_quad_hi.tme_value64_uint32_hi = (y)->tme_ieee754_quad_constant_hi_hi; \\"
+	    printf "%s\n" "    ${x_value}.tme_float_ieee754_quad_hi.tme_value64_uint32_lo = (y)->tme_ieee754_quad_constant_hi_lo; \\"
+	    printf "%s\n" "    ${x_value}.tme_float_ieee754_quad_lo.tme_value64_uint32_hi = (y)->tme_ieee754_quad_constant_lo_hi; \\"
+	    printf "%s\n" "    ${x_value}.tme_float_ieee754_quad_lo.tme_value64_uint32_lo = (y)->tme_ieee754_quad_constant_lo_lo; \\"
 	    ;;
 	esac
 	cat <<EOF
@@ -508,16 +512,16 @@ EOF
 	case "${precision}" in
 	single) ;;
 	double)
-	    $as_echo "	(x)->tme_float_value_ieee754_double.tme_value64_uint32_lo = 0; \\"
+	    printf "%s\n" "	(x)->tme_float_value_ieee754_double.tme_value64_uint32_lo = 0; \\"
 	    ;;
 	extended80)
-	    $as_echo "	(x)->tme_float_value_ieee754_extended80.tme_float_ieee754_extended80_significand.tme_value64_uint32_hi = 0; \\"
-	    $as_echo "	(x)->tme_float_value_ieee754_extended80.tme_float_ieee754_extended80_significand.tme_value64_uint32_lo = 0; \\"
+	    printf "%s\n" "	(x)->tme_float_value_ieee754_extended80.tme_float_ieee754_extended80_significand.tme_value64_uint32_hi = 0; \\"
+	    printf "%s\n" "	(x)->tme_float_value_ieee754_extended80.tme_float_ieee754_extended80_significand.tme_value64_uint32_lo = 0; \\"
 	    ;;
 	quad)
-	    $as_echo "	(x)->tme_float_value_ieee754_quad.tme_float_ieee754_quad_hi.tme_value64_uint32_lo = 0; \\"
-	    $as_echo "	(x)->tme_float_value_ieee754_quad.tme_float_ieee754_quad_lo.tme_value64_uint32_hi = 0; \\"
-	    $as_echo "	(x)->tme_float_value_ieee754_quad.tme_float_ieee754_quad_lo.tme_value64_uint32_lo = 0; \\"
+	    printf "%s\n" "	(x)->tme_float_value_ieee754_quad.tme_float_ieee754_quad_hi.tme_value64_uint32_lo = 0; \\"
+	    printf "%s\n" "	(x)->tme_float_value_ieee754_quad.tme_float_ieee754_quad_lo.tme_value64_uint32_hi = 0; \\"
+	    printf "%s\n" "	(x)->tme_float_value_ieee754_quad.tme_float_ieee754_quad_lo.tme_value64_uint32_lo = 0; \\"
 	    ;;
 	esac
 	cat <<EOF
@@ -572,17 +576,17 @@ EOF
 	    esac
 
 	    if test "${cond}" != 1; then
-		$as_echo ""
-		$as_echo "#if ${cond}"
+		printf "%s\n" ""
+		printf "%s\n" "#if ${cond}"
 	    fi
 
-	    $as_echo ""
-	    $as_echo "/* this converts a ${convert_builtin} to a ${precision}: */"
-	    $as_echo "void tme_ieee754_${precision}_from_${convert} _TME_P((${convert_builtin}, struct tme_float *));"
+	    printf "%s\n" ""
+	    printf "%s\n" "/* this converts a ${convert_builtin} to a ${precision}: */"
+	    printf "%s\n" "void tme_ieee754_${precision}_from_${convert} _TME_P((${convert_builtin}, struct tme_float *));"
 
 	    if test "${cond}" != 1; then
-		$as_echo ""
-		$as_echo "#endif /* ${cond} */"
+		printf "%s\n" ""
+		printf "%s\n" "#endif /* ${cond} */"
 	    fi
 	done
 
@@ -633,20 +637,20 @@ EOF
 	    if test "x${chunk_member}" = xx; then
 		break
 	    fi
-	    $as_echo "  chunk = TME_FIELD_MASK_EXTRACTU((*x_ieee754)${chunk_member}, ${chunk_mask});"
+	    printf "%s\n" "  chunk = TME_FIELD_MASK_EXTRACTU((*x_ieee754)${chunk_member}, ${chunk_mask});"
 	    if test ${chunk_i} = 0; then
-		$as_echo "  fracor = chunk;"
+		printf "%s\n" "  fracor = chunk;"
 		if ${implicit}; then
-		    $as_echo "  /* if the exponent is nonzero, add the implicit integer bit: */"
-		    $as_echo "  if (exponent != 0) chunk |= ((${chunk_mask} / _TME_FIELD_MASK_FACTOR(${chunk_mask})) + 1);"
+		    printf "%s\n" "  /* if the exponent is nonzero, add the implicit integer bit: */"
+		    printf "%s\n" "  if (exponent != 0) chunk |= ((${chunk_mask} / _TME_FIELD_MASK_FACTOR(${chunk_mask})) + 1);"
 		else
-		    $as_echo "  /* if the exponent is the biased maximum, clear the explicit integer bit: */"
-		    $as_echo "  if (exponent == ${exp_biased_max}) fracor &= ~_TME_FIELD_MASK_MSBIT(${chunk_mask} / _TME_FIELD_MASK_FACTOR(${chunk_mask}));"
+		    printf "%s\n" "  /* if the exponent is the biased maximum, clear the explicit integer bit: */"
+		    printf "%s\n" "  if (exponent == ${exp_biased_max}) fracor &= ~_TME_FIELD_MASK_MSBIT(${chunk_mask} / _TME_FIELD_MASK_FACTOR(${chunk_mask}));"
 		fi
-		$as_echo "  x_builtin = chunk;"
+		printf "%s\n" "  x_builtin = chunk;"
 	    else
-		$as_echo "  fracor |= chunk;"
-		$as_echo "  x_builtin = (x_builtin * 65536) + chunk;"
+		printf "%s\n" "  fracor |= chunk;"
+		printf "%s\n" "  x_builtin = (x_builtin * 65536) + chunk;"
 	    fi
 	    chunk_i=`expr ${chunk_i} + 1`
 	done
@@ -823,19 +827,19 @@ EOF
 	    factor="((${chunk_mask} / _TME_FIELD_MASK_FACTOR(${chunk_mask})) + 1)"
 	    if test ${chunk_i} = 0; then
 		if ${implicit}; then
-		    $as_echo "    /* remove any implicit integer bit: */"
-		    $as_echo "    if (x_builtin >= 1) {"
-		    $as_echo "      x_builtin -= 1;"
-		    $as_echo "    }"
+		    printf "%s\n" "    /* remove any implicit integer bit: */"
+		    printf "%s\n" "    if (x_builtin >= 1) {"
+		    printf "%s\n" "      x_builtin -= 1;"
+		    printf "%s\n" "    }"
 		else
 		    factor="(${factor} / 2)"
 		fi
 	    fi
-	    $as_echo "    x_builtin = x_builtin * ${factor};"
-	    $as_echo "    chunk = x_builtin;"
-	    $as_echo "    chunk -= (chunk > x_builtin);"
-	    $as_echo "    x_builtin -= chunk;"
-	    $as_echo "    TME_FIELD_MASK_DEPOSITU((*x_ieee754)${chunk_member}, ${chunk_mask}, chunk);"
+	    printf "%s\n" "    x_builtin = x_builtin * ${factor};"
+	    printf "%s\n" "    chunk = x_builtin;"
+	    printf "%s\n" "    chunk -= (chunk > x_builtin);"
+	    printf "%s\n" "    x_builtin -= chunk;"
+	    printf "%s\n" "    TME_FIELD_MASK_DEPOSITU((*x_ieee754)${chunk_member}, ${chunk_mask}, chunk);"
 	    chunk_i=`expr ${chunk_i} + 1`
 	done
 	cat <<EOF
@@ -854,50 +858,50 @@ EOF
 	for monadic in true false; do
 	    if ${monadic}; then type=monadic; else type=dyadic; fi
 
-	    $as_echo ""
-	    $as_echo "/* this does a NaN check for an IEEE 754 ${precision} precision ${type} function: */"
-	    $as_echo "int"
-	    $as_echo_n "tme_ieee754_${precision}_check_nan_${type}(struct tme_ieee754_ctl *ieee754_ctl, const struct tme_float *src0"
+	    printf "%s\n" ""
+	    printf "%s\n" "/* this does a NaN check for an IEEE 754 ${precision} precision ${type} function: */"
+	    printf "%s\n" "int"
+	    printf %s "tme_ieee754_${precision}_check_nan_${type}(struct tme_ieee754_ctl *ieee754_ctl, const struct tme_float *src0"
 	    if ${monadic}; then :; else
-		$as_echo_n ", const struct tme_float *src1"
+		printf %s ", const struct tme_float *src1"
 	    fi
-	    $as_echo ", struct tme_float *dst)"
-	    $as_echo "{"
-	    $as_echo "  const ${integral} *nan0;"
+	    printf "%s\n" ", struct tme_float *dst)"
+	    printf "%s\n" "{"
+	    printf "%s\n" "  const ${integral} *nan0;"
 	    if $monadic; then :; else
-		$as_echo "  const ${integral} *nan1;"
+		printf "%s\n" "  const ${integral} *nan1;"
 	    fi
-	    $as_echo ""
-	    $as_echo "  /* check for a NaN operand: */"
-	    $as_echo "  nan0 = NULL;"
-	    $as_echo "  if (tme_ieee754_${precision}_is_nan(src0)) {"
-	    $as_echo "    assert (src0->tme_float_format == TME_FLOAT_FORMAT_IEEE754_${capprecision});"
-	    $as_echo "    nan0 = &src0->tme_float_value_ieee754_${precision};"
-	    $as_echo "  }"
+	    printf "%s\n" ""
+	    printf "%s\n" "  /* check for a NaN operand: */"
+	    printf "%s\n" "  nan0 = NULL;"
+	    printf "%s\n" "  if (tme_ieee754_${precision}_is_nan(src0)) {"
+	    printf "%s\n" "    assert (src0->tme_float_format == TME_FLOAT_FORMAT_IEEE754_${capprecision});"
+	    printf "%s\n" "    nan0 = &src0->tme_float_value_ieee754_${precision};"
+	    printf "%s\n" "  }"
 	    if $monadic; then nan1=nan0; else
 		nan1=nan1
-		$as_echo "  nan1 = nan0;"
-		$as_echo "  if (tme_ieee754_${precision}_is_nan(src1)) {"
-		$as_echo "    assert (src1->tme_float_format == TME_FLOAT_FORMAT_IEEE754_${capprecision});"
-		$as_echo "    nan1 = &src1->tme_float_value_ieee754_${precision};"
-		$as_echo "    if (nan0 == NULL) {"
-		$as_echo "      nan0 = nan1;"
-		$as_echo "    }"
-		$as_echo "  }"
+		printf "%s\n" "  nan1 = nan0;"
+		printf "%s\n" "  if (tme_ieee754_${precision}_is_nan(src1)) {"
+		printf "%s\n" "    assert (src1->tme_float_format == TME_FLOAT_FORMAT_IEEE754_${capprecision});"
+		printf "%s\n" "    nan1 = &src1->tme_float_value_ieee754_${precision};"
+		printf "%s\n" "    if (nan0 == NULL) {"
+		printf "%s\n" "      nan0 = nan1;"
+		printf "%s\n" "    }"
+		printf "%s\n" "  }"
 	    fi
-	    $as_echo ""
-	    $as_echo "  /* if we have a NaN operand: */"
-	    $as_echo "  if (__tme_predict_false(nan0 != NULL)) {"
-	    $as_echo ""
-	    $as_echo "    /* propagate a NaN: */"
-	    $as_echo "    dst->tme_float_format = TME_FLOAT_FORMAT_IEEE754_${capprecision};"
-	    $as_echo "    (*ieee754_ctl->tme_ieee754_ctl_nan_from_nans_${precision})"
-	    $as_echo "      (ieee754_ctl, nan0, ${nan1}, &dst->tme_float_value_ieee754_${precision});"
-	    $as_echo "    return (TRUE);"
-	    $as_echo "  }"
-	    $as_echo ""
-	    $as_echo "  return (FALSE);"
-	    $as_echo "}"
+	    printf "%s\n" ""
+	    printf "%s\n" "  /* if we have a NaN operand: */"
+	    printf "%s\n" "  if (__tme_predict_false(nan0 != NULL)) {"
+	    printf "%s\n" ""
+	    printf "%s\n" "    /* propagate a NaN: */"
+	    printf "%s\n" "    dst->tme_float_format = TME_FLOAT_FORMAT_IEEE754_${capprecision};"
+	    printf "%s\n" "    (*ieee754_ctl->tme_ieee754_ctl_nan_from_nans_${precision})"
+	    printf "%s\n" "      (ieee754_ctl, nan0, ${nan1}, &dst->tme_float_value_ieee754_${precision});"
+	    printf "%s\n" "    return (TRUE);"
+	    printf "%s\n" "  }"
+	    printf "%s\n" ""
+	    printf "%s\n" "  return (FALSE);"
+	    printf "%s\n" "}"
 	done
 
 	# emit the from-integer conversion functions:
@@ -911,21 +915,21 @@ EOF
 	    esac
 
 	    if test "${cond}" != 1; then
-		$as_echo ""
-		$as_echo "#if ${cond}"
+		printf "%s\n" ""
+		printf "%s\n" "#if ${cond}"
 	    fi
 
-	    $as_echo ""
-	    $as_echo "/* this converts a ${convert_builtin} to a ${precision}: */"
-	    $as_echo "void"
-	    $as_echo "tme_ieee754_${precision}_from_${convert}(${convert_builtin} src, struct tme_float *dst)"
-	    $as_echo "{"
-	    $as_echo "  _tme_ieee754_${precision}_value_set(dst, ${precision_sf}, ${convert}_to_${precision_sf}(src));"
-	    $as_echo "}"
+	    printf "%s\n" ""
+	    printf "%s\n" "/* this converts a ${convert_builtin} to a ${precision}: */"
+	    printf "%s\n" "void"
+	    printf "%s\n" "tme_ieee754_${precision}_from_${convert}(${convert_builtin} src, struct tme_float *dst)"
+	    printf "%s\n" "{"
+	    printf "%s\n" "  _tme_ieee754_${precision}_value_set(dst, ${precision_sf}, ${convert}_to_${precision_sf}(src));"
+	    printf "%s\n" "}"
 
 	    if test "${cond}" != 1; then
-		$as_echo ""
-		$as_echo "#endif /* ${cond} */"
+		printf "%s\n" ""
+		printf "%s\n" "#endif /* ${cond} */"
 	    fi
 	done
 
@@ -990,14 +994,14 @@ EOF
   }
 EOF
 	    if test ${radix} = 2; then
-		$as_echo ""
-		$as_echo "  /* extract the unbiased exponent: */"
-		$as_echo "  exponent = TME_FIELD_MASK_EXTRACTU(src->tme_float_value_ieee754_${precision}${sexp}, ${mask_exp});"
-		$as_echo "  exponent -= ${exp_bias};"
-		$as_echo ""
-		$as_echo "  /* the mantissa is the source with a biased zero for the exponent: */"
-		$as_echo "  *_mantissa = *src;"
-		$as_echo "  TME_FIELD_MASK_DEPOSITU(_mantissa->tme_float_value_ieee754_${precision}${sexp}, ${mask_exp}, ${exp_bias});"
+		printf "%s\n" ""
+		printf "%s\n" "  /* extract the unbiased exponent: */"
+		printf "%s\n" "  exponent = TME_FIELD_MASK_EXTRACTU(src->tme_float_value_ieee754_${precision}${sexp}, ${mask_exp});"
+		printf "%s\n" "  exponent -= ${exp_bias};"
+		printf "%s\n" ""
+		printf "%s\n" "  /* the mantissa is the source with a biased zero for the exponent: */"
+		printf "%s\n" "  *_mantissa = *src;"
+		printf "%s\n" "  TME_FIELD_MASK_DEPOSITU(_mantissa->tme_float_value_ieee754_${precision}${sexp}, ${mask_exp}, ${exp_bias});"
 	    else
 		cat <<EOF
 

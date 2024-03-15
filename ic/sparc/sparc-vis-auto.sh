@@ -1,68 +1,70 @@
 #! /bin/sh
-# Generated from ../../../ic/sparc/sparc-vis-auto.m4 by GNU Autoconf 2.69.
+# Generated from sparc-vis-auto.m4 by GNU Autoconf 2.72.
 ## -------------------- ##
 ## M4sh Initialization. ##
 ## -------------------- ##
 
 # Be more Bourne compatible
 DUALCASE=1; export DUALCASE # for MKS sh
-if test -n "${ZSH_VERSION+set}" && (emulate sh) >/dev/null 2>&1; then :
+if test ${ZSH_VERSION+y} && (emulate sh) >/dev/null 2>&1
+then :
   emulate sh
   NULLCMD=:
   # Pre-4.2 versions of Zsh do word splitting on ${1+"$@"}, which
   # is contrary to our usage.  Disable this feature.
   alias -g '${1+"$@"}'='"$@"'
   setopt NO_GLOB_SUBST
-else
-  case `(set -o) 2>/dev/null` in #(
+else case e in #(
+  e) case `(set -o) 2>/dev/null` in #(
   *posix*) :
     set -o posix ;; #(
   *) :
      ;;
+esac ;;
 esac
 fi
 
 
+
+# Reset variables that may have inherited troublesome values from
+# the environment.
+
+# IFS needs to be set, to space, tab, and newline, in precisely that order.
+# (If _AS_PATH_WALK were called with IFS unset, it would have the
+# side effect of setting IFS to empty, thus disabling word splitting.)
+# Quoting is to prevent editors from complaining about space-tab.
 as_nl='
 '
 export as_nl
-# Printing a long string crashes Solaris 7 /usr/bin/printf.
-as_echo='\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\'
-as_echo=$as_echo$as_echo$as_echo$as_echo$as_echo
-as_echo=$as_echo$as_echo$as_echo$as_echo$as_echo$as_echo
-# Prefer a ksh shell builtin over an external printf program on Solaris,
-# but without wasting forks for bash or zsh.
-if test -z "$BASH_VERSION$ZSH_VERSION" \
-    && (test "X`print -r -- $as_echo`" = "X$as_echo") 2>/dev/null; then
-  as_echo='print -r --'
-  as_echo_n='print -rn --'
-elif (test "X`printf %s $as_echo`" = "X$as_echo") 2>/dev/null; then
-  as_echo='printf %s\n'
-  as_echo_n='printf %s'
-else
-  if test "X`(/usr/ucb/echo -n -n $as_echo) 2>/dev/null`" = "X-n $as_echo"; then
-    as_echo_body='eval /usr/ucb/echo -n "$1$as_nl"'
-    as_echo_n='/usr/ucb/echo -n'
-  else
-    as_echo_body='eval expr "X$1" : "X\\(.*\\)"'
-    as_echo_n_body='eval
-      arg=$1;
-      case $arg in #(
-      *"$as_nl"*)
-	expr "X$arg" : "X\\(.*\\)$as_nl";
-	arg=`expr "X$arg" : ".*$as_nl\\(.*\\)"`;;
-      esac;
-      expr "X$arg" : "X\\(.*\\)" | tr -d "$as_nl"
-    '
-    export as_echo_n_body
-    as_echo_n='sh -c $as_echo_n_body as_echo'
-  fi
-  export as_echo_body
-  as_echo='sh -c $as_echo_body as_echo'
-fi
+IFS=" ""	$as_nl"
+
+PS1='$ '
+PS2='> '
+PS4='+ '
+
+# Ensure predictable behavior from utilities with locale-dependent output.
+LC_ALL=C
+export LC_ALL
+LANGUAGE=C
+export LANGUAGE
+
+# We cannot yet rely on "unset" to work, but we need these variables
+# to be unset--not just set to an empty or harmless value--now, to
+# avoid bugs in old shells (e.g. pre-3.0 UWIN ksh).  This construct
+# also avoids known problems related to "unset" and subshell syntax
+# in other old shells (e.g. bash 2.01 and pdksh 5.2.14).
+for as_var in BASH_ENV ENV MAIL MAILPATH CDPATH
+do eval test \${$as_var+y} \
+  && ( (unset $as_var) || exit 1) >/dev/null 2>&1 && unset $as_var || :
+done
+
+# Ensure that fds 0, 1, and 2 are open.
+if (exec 3>&0) 2>/dev/null; then :; else exec 0</dev/null; fi
+if (exec 3>&1) 2>/dev/null; then :; else exec 1>/dev/null; fi
+if (exec 3>&2)            ; then :; else exec 2>/dev/null; fi
 
 # The user is always right.
-if test "${PATH_SEPARATOR+set}" != set; then
+if ${PATH_SEPARATOR+false} :; then
   PATH_SEPARATOR=:
   (PATH='/bin;/bin'; FPATH=$PATH; sh -c :) >/dev/null 2>&1 && {
     (PATH='/bin:/bin'; FPATH=$PATH; sh -c :) >/dev/null 2>&1 ||
@@ -70,13 +72,6 @@ if test "${PATH_SEPARATOR+set}" != set; then
   }
 fi
 
-
-# IFS
-# We need space, tab and new line, in precisely that order.  Quoting is
-# there to prevent editors from complaining about space-tab.
-# (If _AS_PATH_WALK were called with IFS unset, it would disable word
-# splitting by setting IFS to empty value.)
-IFS=" ""	$as_nl"
 
 # Find who we are.  Look in the path if we contain no directory separator.
 as_myself=
@@ -86,58 +81,44 @@ case $0 in #((
 for as_dir in $PATH
 do
   IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    test -r "$as_dir/$0" && as_myself=$as_dir/$0 && break
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
+    test -r "$as_dir$0" && as_myself=$as_dir$0 && break
   done
 IFS=$as_save_IFS
 
      ;;
 esac
-# We did not find ourselves, most probably we were run as `sh COMMAND'
+# We did not find ourselves, most probably we were run as 'sh COMMAND'
 # in which case we are not to be found in the path.
 if test "x$as_myself" = x; then
   as_myself=$0
 fi
 if test ! -f "$as_myself"; then
-  $as_echo "$as_myself: error: cannot find myself; rerun with an absolute file name" >&2
+  printf "%s\n" "$as_myself: error: cannot find myself; rerun with an absolute file name" >&2
   exit 1
 fi
 
-# Unset variables that we do not need and which cause bugs (e.g. in
-# pre-3.0 UWIN ksh).  But do not cause bugs in bash 2.01; the "|| exit 1"
-# suppresses any "Segmentation fault" message there.  '((' could
-# trigger a bug in pdksh 5.2.14.
-for as_var in BASH_ENV ENV MAIL MAILPATH
-do eval test x\${$as_var+set} = xset \
-  && ( (unset $as_var) || exit 1) >/dev/null 2>&1 && unset $as_var || :
-done
-PS1='$ '
-PS2='> '
-PS4='+ '
-
-# NLS nuisances.
-LC_ALL=C
-export LC_ALL
-LANGUAGE=C
-export LANGUAGE
-
-# CDPATH.
-(unset CDPATH) >/dev/null 2>&1 && unset CDPATH
 
 if test "x$CONFIG_SHELL" = x; then
-  as_bourne_compatible="if test -n \"\${ZSH_VERSION+set}\" && (emulate sh) >/dev/null 2>&1; then :
+  as_bourne_compatible="if test \${ZSH_VERSION+y} && (emulate sh) >/dev/null 2>&1
+then :
   emulate sh
   NULLCMD=:
   # Pre-4.2 versions of Zsh do word splitting on \${1+\"\$@\"}, which
   # is contrary to our usage.  Disable this feature.
   alias -g '\${1+\"\$@\"}'='\"\$@\"'
   setopt NO_GLOB_SUBST
-else
-  case \`(set -o) 2>/dev/null\` in #(
+else case e in #(
+  e) case \`(set -o) 2>/dev/null\` in #(
   *posix*) :
     set -o posix ;; #(
   *) :
      ;;
+esac ;;
 esac
 fi
 "
@@ -152,36 +133,48 @@ as_fn_success || { exitcode=1; echo as_fn_success failed.; }
 as_fn_failure && { exitcode=1; echo as_fn_failure succeeded.; }
 as_fn_ret_success || { exitcode=1; echo as_fn_ret_success failed.; }
 as_fn_ret_failure && { exitcode=1; echo as_fn_ret_failure succeeded.; }
-if ( set x; as_fn_ret_success y && test x = \"\$1\" ); then :
+if ( set x; as_fn_ret_success y && test x = \"\$1\" )
+then :
 
-else
-  exitcode=1; echo positional parameters were not saved.
+else case e in #(
+  e) exitcode=1; echo positional parameters were not saved. ;;
+esac
 fi
 test x\$exitcode = x0 || exit 1
+blah=\$(echo \$(echo blah))
+test x\"\$blah\" = xblah || exit 1
 test -x / || exit 1"
   as_suggested=""
-  if (eval "$as_required") 2>/dev/null; then :
+  if (eval "$as_required") 2>/dev/null
+then :
   as_have_required=yes
-else
-  as_have_required=no
+else case e in #(
+  e) as_have_required=no ;;
+esac
 fi
-  if test x$as_have_required = xyes && (eval "$as_suggested") 2>/dev/null; then :
+  if test x$as_have_required = xyes && (eval "$as_suggested") 2>/dev/null
+then :
 
-else
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+else case e in #(
+  e) as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
 as_found=false
 for as_dir in /bin$PATH_SEPARATOR/usr/bin$PATH_SEPARATOR$PATH
 do
   IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
   as_found=:
   case $as_dir in #(
 	 /*)
 	   for as_base in sh bash ksh sh5; do
 	     # Try only shells that exist, to save several forks.
-	     as_shell=$as_dir/$as_base
+	     as_shell=$as_dir$as_base
 	     if { test -f "$as_shell" || test -f "$as_shell.exe"; } &&
-		    { $as_echo "$as_bourne_compatible""$as_required" | as_run=a "$as_shell"; } 2>/dev/null; then :
+		    as_run=a "$as_shell" -c "$as_bourne_compatible""$as_required" 2>/dev/null
+then :
   CONFIG_SHELL=$as_shell as_have_required=yes
 		   break 2
 fi
@@ -189,14 +182,22 @@ fi
        esac
   as_found=false
 done
-$as_found || { if { test -f "$SHELL" || test -f "$SHELL.exe"; } &&
-	      { $as_echo "$as_bourne_compatible""$as_required" | as_run=a "$SHELL"; } 2>/dev/null; then :
-  CONFIG_SHELL=$SHELL as_have_required=yes
-fi; }
 IFS=$as_save_IFS
+if $as_found
+then :
+
+else case e in #(
+  e) if { test -f "$SHELL" || test -f "$SHELL.exe"; } &&
+	      as_run=a "$SHELL" -c "$as_bourne_compatible""$as_required" 2>/dev/null
+then :
+  CONFIG_SHELL=$SHELL as_have_required=yes
+fi ;;
+esac
+fi
 
 
-      if test "x$CONFIG_SHELL" != x; then :
+      if test "x$CONFIG_SHELL" != x
+then :
   export CONFIG_SHELL
              # We cannot yet assume a decent shell, so we have to provide a
 # neutralization value for shells without unset; and this also
@@ -213,25 +214,27 @@ case $- in # ((((
 esac
 exec $CONFIG_SHELL $as_opts "$as_myself" ${1+"$@"}
 # Admittedly, this is quite paranoid, since all the known shells bail
-# out after a failed `exec'.
-$as_echo "$0: could not re-execute with $CONFIG_SHELL" >&2
+# out after a failed 'exec'.
+printf "%s\n" "$0: could not re-execute with $CONFIG_SHELL" >&2
 exit 255
 fi
 
-    if test x$as_have_required = xno; then :
-  $as_echo "$0: This script requires a shell more modern than all"
-  $as_echo "$0: the shells that I found on your system."
-  if test x${ZSH_VERSION+set} = xset ; then
-    $as_echo "$0: In particular, zsh $ZSH_VERSION has bugs and should"
-    $as_echo "$0: be upgraded to zsh 4.3.4 or later."
+    if test x$as_have_required = xno
+then :
+  printf "%s\n" "$0: This script requires a shell more modern than all"
+  printf "%s\n" "$0: the shells that I found on your system."
+  if test ${ZSH_VERSION+y} ; then
+    printf "%s\n" "$0: In particular, zsh $ZSH_VERSION has bugs and should"
+    printf "%s\n" "$0: be upgraded to zsh 4.3.4 or later."
   else
-    $as_echo "$0: Please tell bug-autoconf@gnu.org about your system,
+    printf "%s\n" "$0: Please tell bug-autoconf@gnu.org about your system,
 $0: including any error possibly output before this
 $0: message. Then install a modern shell, or manually run
 $0: the script under such a shell if you do have one."
   fi
   exit 1
-fi
+fi ;;
+esac
 fi
 fi
 SHELL=${CONFIG_SHELL-/bin/sh}
@@ -251,6 +254,7 @@ as_fn_unset ()
   { eval $1=; unset $1;}
 }
 as_unset=as_fn_unset
+
 ## -------------------- ##
 ## Main body of script. ##
 ## -------------------- ##
@@ -307,45 +311,45 @@ cat <<EOF
 _TME_RCSID("\$Id: sparc-vis-auto.sh,v 1.4 2010/02/20 22:01:40 fredette Exp $");
 EOF
 
-$as_echo ""
-$as_echo "/* this handles VIS instructions: */"
-$as_echo "void"
-$as_echo "tme_sparc_vis(struct tme_sparc *ic)"
-$as_echo "{"
-$as_echo "  unsigned int opf;"
-$as_echo "  unsigned int fpreg_rd_number_encoded;"
-$as_echo "  const struct tme_float *fpreg_rs1;"
-$as_echo "  const struct tme_float *fpreg_rs2;"
-$as_echo "  unsigned int fpreg_rd_format;"
-$as_echo "  unsigned int fpreg_rd_number;"
-$as_echo "  struct tme_float fpreg_rd;"
-$as_echo "  tme_uint64_t value_fpreg_rs1;"
-$as_echo "  tme_uint64_t value_fpreg_rs2;"
-$as_echo "  unsigned int compare_result;"
-$as_echo "  unsigned int reg_rd;"
-$as_echo "  unsigned int alignaddr_off;"
-$as_echo ""
-$as_echo "  TME_SPARC_INSN_FPU;"
-$as_echo ""
-$as_echo "  /* extract the opf field: */"
-$as_echo "  opf = TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, (0x1ff << 5));"
-$as_echo ""
-$as_echo "  /* extract the encoded rd: */"
-$as_echo "  fpreg_rd_number_encoded = TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, TME_SPARC_FORMAT3_MASK_RD);"
+printf "%s\n" ""
+printf "%s\n" "/* this handles VIS instructions: */"
+printf "%s\n" "void"
+printf "%s\n" "tme_sparc_vis(struct tme_sparc *ic)"
+printf "%s\n" "{"
+printf "%s\n" "  unsigned int opf;"
+printf "%s\n" "  unsigned int fpreg_rd_number_encoded;"
+printf "%s\n" "  const struct tme_float *fpreg_rs1;"
+printf "%s\n" "  const struct tme_float *fpreg_rs2;"
+printf "%s\n" "  unsigned int fpreg_rd_format;"
+printf "%s\n" "  unsigned int fpreg_rd_number;"
+printf "%s\n" "  struct tme_float fpreg_rd;"
+printf "%s\n" "  tme_uint64_t value_fpreg_rs1;"
+printf "%s\n" "  tme_uint64_t value_fpreg_rs2;"
+printf "%s\n" "  unsigned int compare_result;"
+printf "%s\n" "  unsigned int reg_rd;"
+printf "%s\n" "  unsigned int alignaddr_off;"
+printf "%s\n" ""
+printf "%s\n" "  TME_SPARC_INSN_FPU;"
+printf "%s\n" ""
+printf "%s\n" "  /* extract the opf field: */"
+printf "%s\n" "  opf = TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, (0x1ff << 5));"
+printf "%s\n" ""
+printf "%s\n" "  /* extract the encoded rd: */"
+printf "%s\n" "  fpreg_rd_number_encoded = TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, TME_SPARC_FORMAT3_MASK_RD);"
 
-$as_echo ""
-$as_echo "#ifdef _TME_SPARC_RECODE_VERIFY"
-$as_echo "  /* clear the rd buffer: */"
-$as_echo "  memset(&fpreg_rd, 0, sizeof(fpreg_rd));"
-$as_echo "#endif /* _TME_SPARC_RECODE_VERIFY */"
+printf "%s\n" ""
+printf "%s\n" "#ifdef _TME_SPARC_RECODE_VERIFY"
+printf "%s\n" "  /* clear the rd buffer: */"
+printf "%s\n" "  memset(&fpreg_rd, 0, sizeof(fpreg_rd));"
+printf "%s\n" "#endif /* _TME_SPARC_RECODE_VERIFY */"
 
-$as_echo ""
-$as_echo "  /* dispatch on the opf field: */"
-$as_echo "  switch (opf) {"
-$as_echo "#define _TME_SPARC_FPU_FORMAT_RS1(format) fpreg_rs1 = tme_sparc_fpu_fpreg_read(ic, TME_SPARC_FORMAT3_MASK_RS1, (format))"
-$as_echo "#define _TME_SPARC_FPU_FORMAT_RS2(format) fpreg_rs2 = tme_sparc_fpu_fpreg_read(ic, TME_SPARC_FORMAT3_MASK_RS2, (format))"
-$as_echo "#define _TME_SPARC_FPU_FORMAT_RD(format) do { fpreg_rd_format = (format) | TME_IEEE754_FPREG_FORMAT_BUILTIN; fpreg_rd_number = tme_sparc_fpu_fpreg_decode(ic, fpreg_rd_number_encoded, fpreg_rd_format); } while (/* CONSTCOND */ 0)"
-$as_echo ""
+printf "%s\n" ""
+printf "%s\n" "  /* dispatch on the opf field: */"
+printf "%s\n" "  switch (opf) {"
+printf "%s\n" "#define _TME_SPARC_FPU_FORMAT_RS1(format) fpreg_rs1 = tme_sparc_fpu_fpreg_read(ic, TME_SPARC_FORMAT3_MASK_RS1, (format))"
+printf "%s\n" "#define _TME_SPARC_FPU_FORMAT_RS2(format) fpreg_rs2 = tme_sparc_fpu_fpreg_read(ic, TME_SPARC_FORMAT3_MASK_RS2, (format))"
+printf "%s\n" "#define _TME_SPARC_FPU_FORMAT_RD(format) do { fpreg_rd_format = (format) | TME_IEEE754_FPREG_FORMAT_BUILTIN; fpreg_rd_number = tme_sparc_fpu_fpreg_decode(ic, fpreg_rd_number_encoded, fpreg_rd_format); } while (/* CONSTCOND */ 0)"
+printf "%s\n" ""
 
 # permute over the opf field:
 #
@@ -376,7 +380,7 @@ while test ${opf_decimal} != 511; do
     case "${opf}" in
 
     00010???0)
-	compareopf=`$as_echo ${opf} | sed -e 's/^00010\(.*\)0$/\1/'`
+	compareopf=`printf "%s\n" ${opf} | sed -e 's/^00010\(.*\)0$/\1/'`
 	case "${compareopf}" in
 	?1?) compareopsize=32 ;;
 	?0?) compareopsize=16 ;;
@@ -387,48 +391,48 @@ while test ${opf_decimal} != 511; do
 	0?1) compareopname="NE" ; compareop="!=" ;;
 	1?1) compareopname="EQ" ; compareop="==" ;;
 	esac
-	$as_echo "  case ${opf_decimal}:  /* ${opf} FCMP${compareopname}${compareopsize}: */"
-	$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-	$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-	$as_echo "    value_fpreg_rs1 = fpreg_rs1->tme_float_value_ieee754_double.tme_value64_uint;"
-	$as_echo "    value_fpreg_rs2 = fpreg_rs2->tme_float_value_ieee754_double.tme_value64_uint;"
-	$as_echo "    compare_result = 0;"
+	printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FCMP${compareopname}${compareopsize}: */"
+	printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
+	printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
+	printf "%s\n" "    value_fpreg_rs1 = fpreg_rs1->tme_float_value_ieee754_double.tme_value64_uint;"
+	printf "%s\n" "    value_fpreg_rs2 = fpreg_rs2->tme_float_value_ieee754_double.tme_value64_uint;"
+	printf "%s\n" "    compare_result = 0;"
 	compare_off=0
 	while test ${compare_off} != 64; do
-	    $as_echo "    if (((tme_uint${compareopsize}_t) value_fpreg_rs1)"
-	    $as_echo "        ${compareop} (tme_uint${compareopsize}_t) value_fpreg_rs2) {"
-	    $as_echo "      compare_result += (1 << (${compare_off} / ${compareopsize}));"
-	    $as_echo "    }"
-	    $as_echo "    value_fpreg_rs1 >>= ${compareopsize};"
-	    $as_echo "    value_fpreg_rs2 >>= ${compareopsize};"
+	    printf "%s\n" "    if (((tme_uint${compareopsize}_t) value_fpreg_rs1)"
+	    printf "%s\n" "        ${compareop} (tme_uint${compareopsize}_t) value_fpreg_rs2) {"
+	    printf "%s\n" "      compare_result += (1 << (${compare_off} / ${compareopsize}));"
+	    printf "%s\n" "    }"
+	    printf "%s\n" "    value_fpreg_rs1 >>= ${compareopsize};"
+	    printf "%s\n" "    value_fpreg_rs2 >>= ${compareopsize};"
 	    compare_off=`expr ${compare_off} + ${compareopsize}`
 	done
-	$as_echo "    reg_rd = TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, TME_SPARC_FORMAT3_MASK_RD);"
-	$as_echo "    TME_SPARC_REG_INDEX(ic, reg_rd);"
-	$as_echo "    ic->tme_sparc_ireg_uint64(reg_rd) = compare_result;"
-	$as_echo "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
-	$as_echo "    fpreg_rd_number = 0;"
+	printf "%s\n" "    reg_rd = TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, TME_SPARC_FORMAT3_MASK_RD);"
+	printf "%s\n" "    TME_SPARC_REG_INDEX(ic, reg_rd);"
+	printf "%s\n" "    ic->tme_sparc_ireg_uint64(reg_rd) = compare_result;"
+	printf "%s\n" "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
+	printf "%s\n" "    fpreg_rd_number = 0;"
 	;;
 
     001001000)
-	$as_echo "  case ${opf_decimal}:  /* ${opf} FALIGNDATA: */"
-	$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-	$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-	$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
-	$as_echo "    fpreg_rd.tme_float_format = TME_FLOAT_FORMAT_IEEE754_DOUBLE;"
-	$as_echo "    fpreg_rd.tme_float_value_ieee754_double = fpreg_rs1->tme_float_value_ieee754_double;"
-	$as_echo "    alignaddr_off = TME_FIELD_MASK_EXTRACTU(ic->tme_sparc_vis_gsr, TME_SPARC_VIS_GSR_ALIGNADDR_OFF);"
-	$as_echo "    if (alignaddr_off) {"
-	$as_echo "      fpreg_rd.tme_float_value_ieee754_double.tme_value64_uint"
-	$as_echo "        = ((fpreg_rd.tme_float_value_ieee754_double.tme_value64_uint"
-	$as_echo "            << (8 * alignaddr_off))"
-	$as_echo "           + (fpreg_rs2->tme_float_value_ieee754_double.tme_value64_uint"
-	$as_echo "              >> (64 - (8 * alignaddr_off))));"
-	$as_echo "    }"
+	printf "%s\n" "  case ${opf_decimal}:  /* ${opf} FALIGNDATA: */"
+	printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
+	printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
+	printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_DOUBLE);"
+	printf "%s\n" "    fpreg_rd.tme_float_format = TME_FLOAT_FORMAT_IEEE754_DOUBLE;"
+	printf "%s\n" "    fpreg_rd.tme_float_value_ieee754_double = fpreg_rs1->tme_float_value_ieee754_double;"
+	printf "%s\n" "    alignaddr_off = TME_FIELD_MASK_EXTRACTU(ic->tme_sparc_vis_gsr, TME_SPARC_VIS_GSR_ALIGNADDR_OFF);"
+	printf "%s\n" "    if (alignaddr_off) {"
+	printf "%s\n" "      fpreg_rd.tme_float_value_ieee754_double.tme_value64_uint"
+	printf "%s\n" "        = ((fpreg_rd.tme_float_value_ieee754_double.tme_value64_uint"
+	printf "%s\n" "            << (8 * alignaddr_off))"
+	printf "%s\n" "           + (fpreg_rs2->tme_float_value_ieee754_double.tme_value64_uint"
+	printf "%s\n" "              >> (64 - (8 * alignaddr_off))));"
+	printf "%s\n" "    }"
 	;;
 
     0011?????)
-        logicalopf=`$as_echo ${opf} | sed -e 's/^0011\(.*\)[01]$/\1/'`
+        logicalopf=`printf "%s\n" ${opf} | sed -e 's/^0011\(.*\)[01]$/\1/'`
 	logicalopname=
 	logicalop=
         case "${logicalopf}" in
@@ -496,7 +500,7 @@ while test ${opf_decimal} != 511; do
 	    logicalopname="ANDNOT2"
 	    logicalop="(src1 & ~src2)"
 	    ;;
-	*) $as_echo "$0 internal error: unknown VIS logical op ${logicalopf}" 1>&2 ; exit 1 ;;
+	*) printf "%s\n" "$0 internal error: unknown VIS logical op ${logicalopf}" 1>&2 ; exit 1 ;;
 	esac
 
 	case "${opf}" in
@@ -504,53 +508,53 @@ while test ${opf_decimal} != 511; do
 	*0) capprecision="DOUBLE"; size="64" ; value="double.tme_value64_uint" ;;
 	esac
 
-	$as_echo "  case ${opf_decimal}:  /* ${opf} (${logicalopf}) F${logicalopname}: */"
+	printf "%s\n" "  case ${opf_decimal}:  /* ${opf} (${logicalopf}) F${logicalopname}: */"
 
-	logicalop=`$as_echo "${logicalop}" | sed -e "s/type/tme_uint${size}_t/g"`
+	logicalop=`printf "%s\n" "${logicalop}" | sed -e "s/type/tme_uint${size}_t/g"`
 
-	logicalop_next=`$as_echo "${logicalop}" | sed -e "s/src1/fpreg_rs1->tme_float_value_ieee754_${value}/"`
+	logicalop_next=`printf "%s\n" "${logicalop}" | sed -e "s/src1/fpreg_rs1->tme_float_value_ieee754_${value}/"`
 	if test "${logicalop_next}" != "${logicalop}"; then
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_${capprecision});"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS1(TME_IEEE754_FPREG_FORMAT_${capprecision});"
 		logicalop="${logicalop_next}"
 	fi
 
-	logicalop_next=`$as_echo "${logicalop}" | sed -e "s/src2/fpreg_rs2->tme_float_value_ieee754_${value}/"`
+	logicalop_next=`printf "%s\n" "${logicalop}" | sed -e "s/src2/fpreg_rs2->tme_float_value_ieee754_${value}/"`
 	if test "${logicalop_next}" != "${logicalop}"; then
-		$as_echo "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_${capprecision});"
+		printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RS2(TME_IEEE754_FPREG_FORMAT_${capprecision});"
 		logicalop="${logicalop_next}"
 	fi
 
-	$as_echo "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_${capprecision});"
-	$as_echo "    _TME_SPARC_FPU_BEGIN;"
-	$as_echo "    fpreg_rd.tme_float_format = TME_FLOAT_FORMAT_IEEE754_${capprecision};"
-	$as_echo "    fpreg_rd.tme_float_value_ieee754_${value} = ${logicalop};"
+	printf "%s\n" "    _TME_SPARC_FPU_FORMAT_RD(TME_IEEE754_FPREG_FORMAT_${capprecision});"
+	printf "%s\n" "    _TME_SPARC_FPU_BEGIN;"
+	printf "%s\n" "    fpreg_rd.tme_float_format = TME_FLOAT_FORMAT_IEEE754_${capprecision};"
+	printf "%s\n" "    fpreg_rd.tme_float_value_ieee754_${value} = ${logicalop};"
 	;;
 
     *) default=true ;;
     esac
-    if $default; then :; else $as_echo "    break;"; $as_echo ""; fi
+    if $default; then :; else printf "%s\n" "    break;"; printf "%s\n" ""; fi
 done
-$as_echo "  default:"
-$as_echo "    _TME_SPARC_FPU_UNIMPL;"
-$as_echo "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
-$as_echo "    fpreg_rd_number = 0;"
-$as_echo "    break;"
-$as_echo ""
-$as_echo "#undef _TME_SPARC_FPU_FORMAT_RS1"
-$as_echo "#undef _TME_SPARC_FPU_FORMAT_RS2"
-$as_echo "#undef _TME_SPARC_FPU_FORMAT_RD"
-$as_echo "  }"
+printf "%s\n" "  default:"
+printf "%s\n" "    _TME_SPARC_FPU_UNIMPL;"
+printf "%s\n" "    fpreg_rd_format = TME_IEEE754_FPREG_FORMAT_NULL;"
+printf "%s\n" "    fpreg_rd_number = 0;"
+printf "%s\n" "    break;"
+printf "%s\n" ""
+printf "%s\n" "#undef _TME_SPARC_FPU_FORMAT_RS1"
+printf "%s\n" "#undef _TME_SPARC_FPU_FORMAT_RS2"
+printf "%s\n" "#undef _TME_SPARC_FPU_FORMAT_RD"
+printf "%s\n" "  }"
 
-$as_echo ""
-$as_echo "  /* store any destination: */"
-$as_echo "  if (fpreg_rd_format != TME_IEEE754_FPREG_FORMAT_NULL) {"
-$as_echo "    tme_sparc_fpu_fpreg_format(ic, fpreg_rd_number, fpreg_rd_format);"
-$as_echo "    ic->tme_sparc_fpu_fpregs[fpreg_rd_number] = fpreg_rd;"
-$as_echo "    TME_SPARC_FPU_DIRTY(ic, fpreg_rd_number);"
-$as_echo "  }"
+printf "%s\n" ""
+printf "%s\n" "  /* store any destination: */"
+printf "%s\n" "  if (fpreg_rd_format != TME_IEEE754_FPREG_FORMAT_NULL) {"
+printf "%s\n" "    tme_sparc_fpu_fpreg_format(ic, fpreg_rd_number, fpreg_rd_format);"
+printf "%s\n" "    ic->tme_sparc_fpu_fpregs[fpreg_rd_number] = fpreg_rd;"
+printf "%s\n" "    TME_SPARC_FPU_DIRTY(ic, fpreg_rd_number);"
+printf "%s\n" "  }"
 
-$as_echo ""
-$as_echo "}"
+printf "%s\n" ""
+printf "%s\n" "}"
 
 # permute over architecture:
 #
@@ -562,7 +566,7 @@ for arch in 64; do
 
 	case "${arch}:${size}" in
 	*:64) insn="d" ; format="DOUBLE" ; value="double.tme_value64_uint" ;;
-	*) $as_echo "$0 internal error: unknown architecture PST word size ${arch}:${size}" 1>&2 ; exit 1 ;;
+	*) printf "%s\n" "$0 internal error: unknown architecture PST word size ${arch}:${size}" 1>&2 ; exit 1 ;;
 	esac
 
 	cat <<EOF

@@ -1,68 +1,70 @@
 #! /bin/sh
-# Generated from ../../../ic/ieee754/ieee754-ops-auto.m4 by GNU Autoconf 2.69.
+# Generated from ieee754-ops-auto.m4 by GNU Autoconf 2.72.
 ## -------------------- ##
 ## M4sh Initialization. ##
 ## -------------------- ##
 
 # Be more Bourne compatible
 DUALCASE=1; export DUALCASE # for MKS sh
-if test -n "${ZSH_VERSION+set}" && (emulate sh) >/dev/null 2>&1; then :
+if test ${ZSH_VERSION+y} && (emulate sh) >/dev/null 2>&1
+then :
   emulate sh
   NULLCMD=:
   # Pre-4.2 versions of Zsh do word splitting on ${1+"$@"}, which
   # is contrary to our usage.  Disable this feature.
   alias -g '${1+"$@"}'='"$@"'
   setopt NO_GLOB_SUBST
-else
-  case `(set -o) 2>/dev/null` in #(
+else case e in #(
+  e) case `(set -o) 2>/dev/null` in #(
   *posix*) :
     set -o posix ;; #(
   *) :
      ;;
+esac ;;
 esac
 fi
 
 
+
+# Reset variables that may have inherited troublesome values from
+# the environment.
+
+# IFS needs to be set, to space, tab, and newline, in precisely that order.
+# (If _AS_PATH_WALK were called with IFS unset, it would have the
+# side effect of setting IFS to empty, thus disabling word splitting.)
+# Quoting is to prevent editors from complaining about space-tab.
 as_nl='
 '
 export as_nl
-# Printing a long string crashes Solaris 7 /usr/bin/printf.
-as_echo='\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\'
-as_echo=$as_echo$as_echo$as_echo$as_echo$as_echo
-as_echo=$as_echo$as_echo$as_echo$as_echo$as_echo$as_echo
-# Prefer a ksh shell builtin over an external printf program on Solaris,
-# but without wasting forks for bash or zsh.
-if test -z "$BASH_VERSION$ZSH_VERSION" \
-    && (test "X`print -r -- $as_echo`" = "X$as_echo") 2>/dev/null; then
-  as_echo='print -r --'
-  as_echo_n='print -rn --'
-elif (test "X`printf %s $as_echo`" = "X$as_echo") 2>/dev/null; then
-  as_echo='printf %s\n'
-  as_echo_n='printf %s'
-else
-  if test "X`(/usr/ucb/echo -n -n $as_echo) 2>/dev/null`" = "X-n $as_echo"; then
-    as_echo_body='eval /usr/ucb/echo -n "$1$as_nl"'
-    as_echo_n='/usr/ucb/echo -n'
-  else
-    as_echo_body='eval expr "X$1" : "X\\(.*\\)"'
-    as_echo_n_body='eval
-      arg=$1;
-      case $arg in #(
-      *"$as_nl"*)
-	expr "X$arg" : "X\\(.*\\)$as_nl";
-	arg=`expr "X$arg" : ".*$as_nl\\(.*\\)"`;;
-      esac;
-      expr "X$arg" : "X\\(.*\\)" | tr -d "$as_nl"
-    '
-    export as_echo_n_body
-    as_echo_n='sh -c $as_echo_n_body as_echo'
-  fi
-  export as_echo_body
-  as_echo='sh -c $as_echo_body as_echo'
-fi
+IFS=" ""	$as_nl"
+
+PS1='$ '
+PS2='> '
+PS4='+ '
+
+# Ensure predictable behavior from utilities with locale-dependent output.
+LC_ALL=C
+export LC_ALL
+LANGUAGE=C
+export LANGUAGE
+
+# We cannot yet rely on "unset" to work, but we need these variables
+# to be unset--not just set to an empty or harmless value--now, to
+# avoid bugs in old shells (e.g. pre-3.0 UWIN ksh).  This construct
+# also avoids known problems related to "unset" and subshell syntax
+# in other old shells (e.g. bash 2.01 and pdksh 5.2.14).
+for as_var in BASH_ENV ENV MAIL MAILPATH CDPATH
+do eval test \${$as_var+y} \
+  && ( (unset $as_var) || exit 1) >/dev/null 2>&1 && unset $as_var || :
+done
+
+# Ensure that fds 0, 1, and 2 are open.
+if (exec 3>&0) 2>/dev/null; then :; else exec 0</dev/null; fi
+if (exec 3>&1) 2>/dev/null; then :; else exec 1>/dev/null; fi
+if (exec 3>&2)            ; then :; else exec 2>/dev/null; fi
 
 # The user is always right.
-if test "${PATH_SEPARATOR+set}" != set; then
+if ${PATH_SEPARATOR+false} :; then
   PATH_SEPARATOR=:
   (PATH='/bin;/bin'; FPATH=$PATH; sh -c :) >/dev/null 2>&1 && {
     (PATH='/bin:/bin'; FPATH=$PATH; sh -c :) >/dev/null 2>&1 ||
@@ -70,13 +72,6 @@ if test "${PATH_SEPARATOR+set}" != set; then
   }
 fi
 
-
-# IFS
-# We need space, tab and new line, in precisely that order.  Quoting is
-# there to prevent editors from complaining about space-tab.
-# (If _AS_PATH_WALK were called with IFS unset, it would disable word
-# splitting by setting IFS to empty value.)
-IFS=" ""	$as_nl"
 
 # Find who we are.  Look in the path if we contain no directory separator.
 as_myself=
@@ -86,58 +81,44 @@ case $0 in #((
 for as_dir in $PATH
 do
   IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    test -r "$as_dir/$0" && as_myself=$as_dir/$0 && break
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
+    test -r "$as_dir$0" && as_myself=$as_dir$0 && break
   done
 IFS=$as_save_IFS
 
      ;;
 esac
-# We did not find ourselves, most probably we were run as `sh COMMAND'
+# We did not find ourselves, most probably we were run as 'sh COMMAND'
 # in which case we are not to be found in the path.
 if test "x$as_myself" = x; then
   as_myself=$0
 fi
 if test ! -f "$as_myself"; then
-  $as_echo "$as_myself: error: cannot find myself; rerun with an absolute file name" >&2
+  printf "%s\n" "$as_myself: error: cannot find myself; rerun with an absolute file name" >&2
   exit 1
 fi
 
-# Unset variables that we do not need and which cause bugs (e.g. in
-# pre-3.0 UWIN ksh).  But do not cause bugs in bash 2.01; the "|| exit 1"
-# suppresses any "Segmentation fault" message there.  '((' could
-# trigger a bug in pdksh 5.2.14.
-for as_var in BASH_ENV ENV MAIL MAILPATH
-do eval test x\${$as_var+set} = xset \
-  && ( (unset $as_var) || exit 1) >/dev/null 2>&1 && unset $as_var || :
-done
-PS1='$ '
-PS2='> '
-PS4='+ '
-
-# NLS nuisances.
-LC_ALL=C
-export LC_ALL
-LANGUAGE=C
-export LANGUAGE
-
-# CDPATH.
-(unset CDPATH) >/dev/null 2>&1 && unset CDPATH
 
 if test "x$CONFIG_SHELL" = x; then
-  as_bourne_compatible="if test -n \"\${ZSH_VERSION+set}\" && (emulate sh) >/dev/null 2>&1; then :
+  as_bourne_compatible="if test \${ZSH_VERSION+y} && (emulate sh) >/dev/null 2>&1
+then :
   emulate sh
   NULLCMD=:
   # Pre-4.2 versions of Zsh do word splitting on \${1+\"\$@\"}, which
   # is contrary to our usage.  Disable this feature.
   alias -g '\${1+\"\$@\"}'='\"\$@\"'
   setopt NO_GLOB_SUBST
-else
-  case \`(set -o) 2>/dev/null\` in #(
+else case e in #(
+  e) case \`(set -o) 2>/dev/null\` in #(
   *posix*) :
     set -o posix ;; #(
   *) :
      ;;
+esac ;;
 esac
 fi
 "
@@ -152,36 +133,48 @@ as_fn_success || { exitcode=1; echo as_fn_success failed.; }
 as_fn_failure && { exitcode=1; echo as_fn_failure succeeded.; }
 as_fn_ret_success || { exitcode=1; echo as_fn_ret_success failed.; }
 as_fn_ret_failure && { exitcode=1; echo as_fn_ret_failure succeeded.; }
-if ( set x; as_fn_ret_success y && test x = \"\$1\" ); then :
+if ( set x; as_fn_ret_success y && test x = \"\$1\" )
+then :
 
-else
-  exitcode=1; echo positional parameters were not saved.
+else case e in #(
+  e) exitcode=1; echo positional parameters were not saved. ;;
+esac
 fi
 test x\$exitcode = x0 || exit 1
+blah=\$(echo \$(echo blah))
+test x\"\$blah\" = xblah || exit 1
 test -x / || exit 1"
   as_suggested=""
-  if (eval "$as_required") 2>/dev/null; then :
+  if (eval "$as_required") 2>/dev/null
+then :
   as_have_required=yes
-else
-  as_have_required=no
+else case e in #(
+  e) as_have_required=no ;;
+esac
 fi
-  if test x$as_have_required = xyes && (eval "$as_suggested") 2>/dev/null; then :
+  if test x$as_have_required = xyes && (eval "$as_suggested") 2>/dev/null
+then :
 
-else
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+else case e in #(
+  e) as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
 as_found=false
 for as_dir in /bin$PATH_SEPARATOR/usr/bin$PATH_SEPARATOR$PATH
 do
   IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
   as_found=:
   case $as_dir in #(
 	 /*)
 	   for as_base in sh bash ksh sh5; do
 	     # Try only shells that exist, to save several forks.
-	     as_shell=$as_dir/$as_base
+	     as_shell=$as_dir$as_base
 	     if { test -f "$as_shell" || test -f "$as_shell.exe"; } &&
-		    { $as_echo "$as_bourne_compatible""$as_required" | as_run=a "$as_shell"; } 2>/dev/null; then :
+		    as_run=a "$as_shell" -c "$as_bourne_compatible""$as_required" 2>/dev/null
+then :
   CONFIG_SHELL=$as_shell as_have_required=yes
 		   break 2
 fi
@@ -189,14 +182,22 @@ fi
        esac
   as_found=false
 done
-$as_found || { if { test -f "$SHELL" || test -f "$SHELL.exe"; } &&
-	      { $as_echo "$as_bourne_compatible""$as_required" | as_run=a "$SHELL"; } 2>/dev/null; then :
-  CONFIG_SHELL=$SHELL as_have_required=yes
-fi; }
 IFS=$as_save_IFS
+if $as_found
+then :
+
+else case e in #(
+  e) if { test -f "$SHELL" || test -f "$SHELL.exe"; } &&
+	      as_run=a "$SHELL" -c "$as_bourne_compatible""$as_required" 2>/dev/null
+then :
+  CONFIG_SHELL=$SHELL as_have_required=yes
+fi ;;
+esac
+fi
 
 
-      if test "x$CONFIG_SHELL" != x; then :
+      if test "x$CONFIG_SHELL" != x
+then :
   export CONFIG_SHELL
              # We cannot yet assume a decent shell, so we have to provide a
 # neutralization value for shells without unset; and this also
@@ -213,25 +214,27 @@ case $- in # ((((
 esac
 exec $CONFIG_SHELL $as_opts "$as_myself" ${1+"$@"}
 # Admittedly, this is quite paranoid, since all the known shells bail
-# out after a failed `exec'.
-$as_echo "$0: could not re-execute with $CONFIG_SHELL" >&2
+# out after a failed 'exec'.
+printf "%s\n" "$0: could not re-execute with $CONFIG_SHELL" >&2
 exit 255
 fi
 
-    if test x$as_have_required = xno; then :
-  $as_echo "$0: This script requires a shell more modern than all"
-  $as_echo "$0: the shells that I found on your system."
-  if test x${ZSH_VERSION+set} = xset ; then
-    $as_echo "$0: In particular, zsh $ZSH_VERSION has bugs and should"
-    $as_echo "$0: be upgraded to zsh 4.3.4 or later."
+    if test x$as_have_required = xno
+then :
+  printf "%s\n" "$0: This script requires a shell more modern than all"
+  printf "%s\n" "$0: the shells that I found on your system."
+  if test ${ZSH_VERSION+y} ; then
+    printf "%s\n" "$0: In particular, zsh $ZSH_VERSION has bugs and should"
+    printf "%s\n" "$0: be upgraded to zsh 4.3.4 or later."
   else
-    $as_echo "$0: Please tell bug-autoconf@gnu.org about your system,
+    printf "%s\n" "$0: Please tell bug-autoconf@gnu.org about your system,
 $0: including any error possibly output before this
 $0: message. Then install a modern shell, or manually run
 $0: the script under such a shell if you do have one."
   fi
   exit 1
-fi
+fi ;;
+esac
 fi
 fi
 SHELL=${CONFIG_SHELL-/bin/sh}
@@ -251,6 +254,7 @@ as_fn_unset ()
   { eval $1=; unset $1;}
 }
 as_unset=as_fn_unset
+
 ## -------------------- ##
 ## Main body of script. ##
 ## -------------------- ##
@@ -319,7 +323,7 @@ fi
 
 # the precision information helper script:
 #
-ieee754_precision_sh=`$as_echo $0 | sed -e "s/$PROG/ieee754-precision.sh/"`
+ieee754_precision_sh=`printf "%s\n" $0 | sed -e "s/$PROG/ieee754-precision.sh/"`
 
 # the different compliance levels:
 #
@@ -341,20 +345,20 @@ for level in ${levels}; do
 	    # operations struct type:
 	    #
 	    if test "${level}-${what}" = strict-funcs; then
-		$as_echo "/* the IEEE 754 operations: */"
-		$as_echo "struct tme_ieee754_ops {"
-		$as_echo ""
-		$as_echo "  /* the version of this structure: */"
-		$as_echo "  tme_uint32_t tme_ieee754_ops_version;"
+		printf "%s\n" "/* the IEEE 754 operations: */"
+		printf "%s\n" "struct tme_ieee754_ops {"
+		printf "%s\n" ""
+		printf "%s\n" "  /* the version of this structure: */"
+		printf "%s\n" "  tme_uint32_t tme_ieee754_ops_version;"
 
 
 	    # otherwise, if we're doing a set, just declare the set
 	    # and continue:
 	    #
 	    elif test ${what} = set; then
-		$as_echo ""
-		$as_echo "/* the ${level} compliance operations: */"
-		$as_echo "extern _tme_const struct tme_ieee754_ops tme_ieee754_ops_${level};"
+		printf "%s\n" ""
+		printf "%s\n" "/* the ${level} compliance operations: */"
+		printf "%s\n" "extern _tme_const struct tme_ieee754_ops tme_ieee754_ops_${level};"
 		continue
 	    fi
 
@@ -364,12 +368,12 @@ for level in ${levels}; do
 
 	    # start the operations set for this level:
 	    #
-	    $as_echo ""
-	    $as_echo "/* the ${level} compliance operations: */"
-	    $as_echo "_tme_const struct tme_ieee754_ops tme_ieee754_ops_${level} = {"
-	    $as_echo ""
-	    $as_echo "  /* the version of this structure: */"
-	    $as_echo "  TME_X_VERSION(0, 0),"
+	    printf "%s\n" ""
+	    printf "%s\n" "/* the ${level} compliance operations: */"
+	    printf "%s\n" "_tme_const struct tme_ieee754_ops tme_ieee754_ops_${level} = {"
+	    printf "%s\n" ""
+	    printf "%s\n" "  /* the version of this structure: */"
+	    printf "%s\n" "  TME_X_VERSION(0, 0),"
 	fi
 
 	# permute for the different precisions:
@@ -420,7 +424,7 @@ for level in ${levels}; do
 		from_precision=
 		case "${name}" in
 		from_*)
-		    from_precision=`$as_echo ${name} | sed -e 's/^from_//'`
+		    from_precision=`printf "%s\n" ${name} | sed -e 's/^from_//'`
 		    if test ${from_precision} = ${precision}; then
 			continue
 		    fi
@@ -435,13 +439,13 @@ for level in ${levels}; do
 		    # doing the strict level functions:
 		    #
 		    if test "${level}-${what}" = strict-funcs; then
-			$as_echo ""
-			$as_echo "  /* this does a ${precision}-precision "`$as_echo ${name} | tr _ -`": */"
-			$as_echo_n "  void (*tme_ieee754_ops_${precision}_${name}) _TME_P((struct tme_ieee754_ctl *, "
+			printf "%s\n" ""
+			printf "%s\n" "  /* this does a ${precision}-precision "`printf "%s\n" ${name} | tr _ -`": */"
+			printf %s "  void (*tme_ieee754_ops_${precision}_${name}) _TME_P((struct tme_ieee754_ctl *, "
 			if $monadic; then :; else
-			    $as_echo_n "_tme_const struct tme_float *, "
+			    printf %s "_tme_const struct tme_float *, "
 			fi
-			$as_echo "_tme_const ${src_type}, ${dst_type} *));"
+			printf "%s\n" "_tme_const ${src_type}, ${dst_type} *));"
 		    fi
 
 		    continue
@@ -577,7 +581,7 @@ for level in ${levels}; do
 		    if test "x${cond_builtin_match}" != x; then
 			cond="${cond} && (TME_FLOAT_FORMAT_IEEE754_${capprecision}_BUILTIN == TME_FLOAT_FORMAT_IEEE754_${capprecision})"
 		    fi
-		    eval "cond=\`$as_echo_n '${cond}' | sed -e 's%^1 && %%'\`"
+		    eval "cond=\`printf %s '${cond}' | sed -e 's%^1 && %%'\`"
 		    case "${cond}" in 0*) cond=0 ;; esac
 
 		    # finish the operands:
@@ -667,146 +671,146 @@ for level in ${levels}; do
 			# start any conditional:
 			#
 			if test "${cond}" != 1; then
-			    $as_echo ""
-			    $as_echo "#if ${cond}"
+			    printf "%s\n" ""
+			    printf "%s\n" "#if ${cond}"
 			fi
 
 			# start the function:
 			#
-			$as_echo ""
-			$as_echo "/* this does a ${level} compliance ${precision}-precision "`$as_echo ${name} | tr _ -`": */"
-			$as_echo "static void"
-			$as_echo_n "${func}(struct tme_ieee754_ctl *ieee754_ctl, const ${src_type}src0, "
+			printf "%s\n" ""
+			printf "%s\n" "/* this does a ${level} compliance ${precision}-precision "`printf "%s\n" ${name} | tr _ -`": */"
+			printf "%s\n" "static void"
+			printf %s "${func}(struct tme_ieee754_ctl *ieee754_ctl, const ${src_type}src0, "
 			if $monadic; then :; else
-			    $as_echo_n "const struct tme_float *src1, "
+			    printf %s "const struct tme_float *src1, "
 			fi
-			$as_echo "${dst_type} *dst)"
-			$as_echo "{"
+			printf "%s\n" "${dst_type} *dst)"
+			printf "%s\n" "{"
 
 			# emit locals:
 			#
 			if ${src0_buffer}; then
-			    $as_echo "  ${op0_integral} src0_buffer;"
+			    printf "%s\n" "  ${op0_integral} src0_buffer;"
 			fi
 			if ${src1_buffer}; then
-			    $as_echo "  ${op1_integral} src1_buffer;"
+			    printf "%s\n" "  ${op1_integral} src1_buffer;"
 			fi
-			$as_echo "  int exceptions;"
+			printf "%s\n" "  int exceptions;"
 
 			# check the operand(s):
 			#
 			if ${check_nan}; then
-			    $as_echo ""
-			    $as_echo "  /* check for a NaN operand: */"
+			    printf "%s\n" ""
+			    printf "%s\n" "  /* check for a NaN operand: */"
 			    if $monadic; then nanf=monadic; src1= ; else nanf=dyadic; src1=", src1"; fi
-			    $as_echo "  if (__tme_predict_false(tme_ieee754_${src0_precision}_check_nan_${nanf}(ieee754_ctl, src0${src1}, dst))) {"
-			    $as_echo "    return;"
-			    $as_echo "  }"
+			    printf "%s\n" "  if (__tme_predict_false(tme_ieee754_${src0_precision}_check_nan_${nanf}(ieee754_ctl, src0${src1}, dst))) {"
+			    printf "%s\n" "    return;"
+			    printf "%s\n" "  }"
 			fi
 			if test "x${check_inf_src0}" != x; then
-			    $as_echo ""
-			    $as_echo "  /* if the operand is an infinity: */"
-			    $as_echo "  if (tme_ieee754_${precision}_is_inf(src0)) {"
-			    $as_echo ""
+			    printf "%s\n" ""
+			    printf "%s\n" "  /* if the operand is an infinity: */"
+			    printf "%s\n" "  if (tme_ieee754_${precision}_is_inf(src0)) {"
+			    printf "%s\n" ""
 			    case "${check_inf_src0}" in
 			    return-nan)
-				$as_echo "    /* return a NaN: */"
-				$as_echo "    dst->tme_float_format = TME_FLOAT_FORMAT_IEEE754_${capprecision};"
-				$as_echo "    dst->tme_float_value_ieee754_${precision} = ieee754_ctl->tme_ieee754_ctl_default_nan_${precision};"
-				$as_echo "    return;"
+				printf "%s\n" "    /* return a NaN: */"
+				printf "%s\n" "    dst->tme_float_format = TME_FLOAT_FORMAT_IEEE754_${capprecision};"
+				printf "%s\n" "    dst->tme_float_value_ieee754_${precision} = ieee754_ctl->tme_ieee754_ctl_default_nan_${precision};"
+				printf "%s\n" "    return;"
 				;;
 			    esac
-			    $as_echo "  }"
+			    printf "%s\n" "  }"
 			fi
 
 			# enter the operation mode:
 			#
 			if ${enter_softfloat}; then
-			    $as_echo ""
-			    $as_echo "  /* enter softfloat operation: */"
-			    $as_echo "  tme_mutex_lock(&tme_ieee754_global_mutex);"
-			    $as_echo "  tme_ieee754_global_ctl = ieee754_ctl;"
-			    $as_echo "  tme_ieee754_global_exceptions = 0;"
-			    $as_echo "  ieee754_ctl->tme_ieee754_ctl_lock_unlock = tme_ieee754_unlock_softfloat;"
+			    printf "%s\n" ""
+			    printf "%s\n" "  /* enter softfloat operation: */"
+			    printf "%s\n" "  tme_mutex_lock(&tme_ieee754_global_mutex);"
+			    printf "%s\n" "  tme_ieee754_global_ctl = ieee754_ctl;"
+			    printf "%s\n" "  tme_ieee754_global_exceptions = 0;"
+			    printf "%s\n" "  ieee754_ctl->tme_ieee754_ctl_lock_unlock = tme_ieee754_unlock_softfloat;"
 			fi
 			if ${enter_native}; then
-			    $as_echo ""
-			    $as_echo "  /* enter native floating-point operation: */"
-			    $as_echo "  tme_float_enter(ieee754_ctl->tme_ieee754_ctl_rounding_mode, tme_ieee754_exception_float, ieee754_ctl);"
-			    $as_echo "  ieee754_ctl->tme_ieee754_ctl_lock_unlock = tme_float_leave;"
+			    printf "%s\n" ""
+			    printf "%s\n" "  /* enter native floating-point operation: */"
+			    printf "%s\n" "  tme_float_enter(ieee754_ctl->tme_ieee754_ctl_rounding_mode, tme_ieee754_exception_float, ieee754_ctl);"
+			    printf "%s\n" "  ieee754_ctl->tme_ieee754_ctl_lock_unlock = tme_float_leave;"
 			fi
 
 			# assume that this operation raises no exceptions:
 			#
-			$as_echo ""
-			$as_echo "  /* assume that this operation raises no exceptions: */"
-			$as_echo "  exceptions = 0;"
+			printf "%s\n" ""
+			printf "%s\n" "  /* assume that this operation raises no exceptions: */"
+			printf "%s\n" "  exceptions = 0;"
 
 			# the operation:
 			#
-			$as_echo ""
-			$as_echo "  /* the operation: */"
+			printf "%s\n" ""
+			printf "%s\n" "  /* the operation: */"
 			case "${type}" in
 
 			# a move operation:
 			#
 			*-move)
-			    $as_echo "  *dst = *src0;"
+			    printf "%s\n" "  *dst = *src0;"
 			    ;;
 
 			# a getexp operation:
 			#
 			strict-getexp)
-			    $as_echo ""
-			    $as_echo "  /* if the operand is a zero, return a zero: */"
-			    $as_echo "  if (tme_ieee754_${precision}_is_zero(src0)) {"
-			    $as_echo "    tme_ieee754_${precision}_value_builtin_set(dst, TME_FLOAT_FORMAT_IEEE754_${capprecision}_BUILTIN, 0);"
-			    $as_echo "  }"
-			    $as_echo ""
-			    $as_echo "  /* otherwise, return the unbiased exponent: */"
-			    $as_echo "  else {"
-			    $as_echo "    tme_ieee754_${precision}_value_builtin_set(dst, TME_FLOAT_FORMAT_IEEE754_${capprecision}_BUILTIN, TME_FIELD_MASK_EXTRACTU(${op0}${sexp}, ${mask_exp}) - ${exp_bias});"
-			    $as_echo "  }"
+			    printf "%s\n" ""
+			    printf "%s\n" "  /* if the operand is a zero, return a zero: */"
+			    printf "%s\n" "  if (tme_ieee754_${precision}_is_zero(src0)) {"
+			    printf "%s\n" "    tme_ieee754_${precision}_value_builtin_set(dst, TME_FLOAT_FORMAT_IEEE754_${capprecision}_BUILTIN, 0);"
+			    printf "%s\n" "  }"
+			    printf "%s\n" ""
+			    printf "%s\n" "  /* otherwise, return the unbiased exponent: */"
+			    printf "%s\n" "  else {"
+			    printf "%s\n" "    tme_ieee754_${precision}_value_builtin_set(dst, TME_FLOAT_FORMAT_IEEE754_${capprecision}_BUILTIN, TME_FIELD_MASK_EXTRACTU(${op0}${sexp}, ${mask_exp}) - ${exp_bias});"
+			    printf "%s\n" "  }"
 			    ;;
 
 			# a getman operation:
 			#
 			strict-getman)
-			    $as_echo ""
-			    $as_echo "  /* if the operand is a zero, return it: */"
-			    $as_echo "  if (tme_ieee754_${precision}_is_zero(src0)) {"
-			    $as_echo "    *dst = *src0;"
-			    $as_echo "  }"
-			    $as_echo ""
-			    $as_echo "  /* otherwise, return the operand, with its exponent set to biased zero: */"
-			    $as_echo "  else {"
-			    $as_echo "    tme_ieee754_${precision}_value_set(dst, ${op0});"
-			    $as_echo "    TME_FIELD_MASK_DEPOSITU(dst->tme_float_value_ieee754_${precision}${sexp}, ${mask_exp}, ${exp_bias});"
-			    $as_echo "  }"
+			    printf "%s\n" ""
+			    printf "%s\n" "  /* if the operand is a zero, return it: */"
+			    printf "%s\n" "  if (tme_ieee754_${precision}_is_zero(src0)) {"
+			    printf "%s\n" "    *dst = *src0;"
+			    printf "%s\n" "  }"
+			    printf "%s\n" ""
+			    printf "%s\n" "  /* otherwise, return the operand, with its exponent set to biased zero: */"
+			    printf "%s\n" "  else {"
+			    printf "%s\n" "    tme_ieee754_${precision}_value_set(dst, ${op0});"
+			    printf "%s\n" "    TME_FIELD_MASK_DEPOSITU(dst->tme_float_value_ieee754_${precision}${sexp}, ${mask_exp}, ${exp_bias});"
+			    printf "%s\n" "  }"
 			    ;;
 
 			# a strict to-integer conversion operation:
 			#
 			strict-to_int32 | strict-to_int64)
-			    $as_echo "  *dst = ${precision_sf}_${name}(${op0});"
+			    printf "%s\n" "  *dst = ${precision_sf}_${name}(${op0});"
 			    ;;
 
 			# a softfloat operation:
 			#
 			softfloat)
-			    $as_echo "  _tme_ieee754_${precision}_value_set(dst, ${precision_sf},"
+			    printf "%s\n" "  _tme_ieee754_${precision}_value_set(dst, ${precision_sf},"
 			    func_softfloat_raw="${func_softfloat}"
-			    func_softfloat=`$as_echo ${func_softfloat} | sed -e "s/OP0_PRECISION_SF/${op0_precision_sf}/g"`
-			    func_softfloat=`$as_echo ${func_softfloat} | sed -e "s/OP1_PRECISION_SF/${op1_precision_sf}/g"`
+			    func_softfloat=`printf "%s\n" ${func_softfloat} | sed -e "s/OP0_PRECISION_SF/${op0_precision_sf}/g"`
+			    func_softfloat=`printf "%s\n" ${func_softfloat} | sed -e "s/OP1_PRECISION_SF/${op1_precision_sf}/g"`
 			    if test "${func_softfloat}" = "${func_softfloat_raw}"; then
 				func_softfloat="${precision_sf}_${func_softfloat}"
 			    fi
-			    $as_echo_n "    ${func_softfloat}(${op0}"
+			    printf %s "    ${func_softfloat}(${op0}"
 			    if test "x${op1}" != x; then
-				$as_echo ","
-				$as_echo_n "                ${op1}"
+				printf "%s\n" ","
+				printf %s "                ${op1}"
 			    fi
-			    $as_echo "));"
+			    printf "%s\n" "));"
 			    ;;
 
 			# a libm operation:
@@ -816,24 +820,24 @@ for level in ${levels}; do
 			    # if there is a float variant of this libm function:
 			    #
 			    if ${func_libm_has_f}; then
-				$as_echo "#if (TME_FLOAT_FORMAT_IEEE754_${capprecision}_BUILTIN == TME_FLOAT_FORMAT_FLOAT)"
-				$as_echo "  tme_ieee754_${precision}_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, ${func_libm}f(${ops}));"
-				$as_echo "#else  /* (TME_FLOAT_FORMAT_IEEE754_${capprecision}_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */"
+				printf "%s\n" "#if (TME_FLOAT_FORMAT_IEEE754_${capprecision}_BUILTIN == TME_FLOAT_FORMAT_FLOAT)"
+				printf "%s\n" "  tme_ieee754_${precision}_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, ${func_libm}f(${ops}));"
+				printf "%s\n" "#else  /* (TME_FLOAT_FORMAT_IEEE754_${capprecision}_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */"
 			    fi
-			    $as_echo "  tme_ieee754_${precision}_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, ${func_libm}(${ops}));"
+			    printf "%s\n" "  tme_ieee754_${precision}_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, ${func_libm}(${ops}));"
 			    if ${func_libm_has_f}; then
-				$as_echo "#endif /* (TME_FLOAT_FORMAT_IEEE754_${capprecision}_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */"
+				printf "%s\n" "#endif /* (TME_FLOAT_FORMAT_IEEE754_${capprecision}_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */"
 			    fi
 			    ;;
 
 			# a builtin operation:
 			#
 			builtin)
-			    $as_echo "  tme_ieee754_${precision}_value_builtin_set(dst, TME_FLOAT_FORMAT_IEEE754_${capprecision}_BUILTIN, ${op0} ${op_builtin} ${op1});"
+			    printf "%s\n" "  tme_ieee754_${precision}_value_builtin_set(dst, TME_FLOAT_FORMAT_IEEE754_${capprecision}_BUILTIN, ${op0} ${op_builtin} ${op1});"
 			    ;;
 
 			*)
-			    $as_echo "$PROG internal error: don't know how to generate a ${type} type operation" 1>&2
+			    printf "%s\n" "$PROG internal error: don't know how to generate a ${type} type operation" 1>&2
 			    exit 1
 			    ;;
 			esac
@@ -841,36 +845,36 @@ for level in ${levels}; do
 			# leave the operation mode:
 			#
 			if ${enter_native}; then
-			    $as_echo ""
-			    $as_echo "  /* leave native floating-point operation: */"
-			    $as_echo "  exceptions |= tme_float_leave();"
+			    printf "%s\n" ""
+			    printf "%s\n" "  /* leave native floating-point operation: */"
+			    printf "%s\n" "  exceptions |= tme_float_leave();"
 			fi
 			if ${enter_softfloat}; then
-			    $as_echo ""
-			    $as_echo "  /* leave softfloat operation: */"
-			    $as_echo "  tme_ieee754_global_ctl = NULL;"
-			    $as_echo "  exceptions |= tme_ieee754_global_exceptions;"
-			    $as_echo "  tme_mutex_unlock(&tme_ieee754_global_mutex);"
+			    printf "%s\n" ""
+			    printf "%s\n" "  /* leave softfloat operation: */"
+			    printf "%s\n" "  tme_ieee754_global_ctl = NULL;"
+			    printf "%s\n" "  exceptions |= tme_ieee754_global_exceptions;"
+			    printf "%s\n" "  tme_mutex_unlock(&tme_ieee754_global_mutex);"
 			fi
-			$as_echo "  ieee754_ctl->tme_ieee754_ctl_lock_unlock = NULL;"
+			printf "%s\n" "  ieee754_ctl->tme_ieee754_ctl_lock_unlock = NULL;"
 
 			# signal any exceptions:
 			#
-			$as_echo ""
-			$as_echo "  /* signal any exceptions: */"
-			$as_echo "  if (exceptions != 0) {"
-			$as_echo "    (*ieee754_ctl->tme_ieee754_ctl_exception)(ieee754_ctl, exceptions);"
-			$as_echo "  }"
+			printf "%s\n" ""
+			printf "%s\n" "  /* signal any exceptions: */"
+			printf "%s\n" "  if (exceptions != 0) {"
+			printf "%s\n" "    (*ieee754_ctl->tme_ieee754_ctl_exception)(ieee754_ctl, exceptions);"
+			printf "%s\n" "  }"
 
 			# end the function:
 			#
-			$as_echo "}"
+			printf "%s\n" "}"
 
 			# close any conditional:
 			#
 			if test "${cond}" != 1; then
-			    $as_echo ""
-			    $as_echo "#endif /* ${cond} */"
+			    printf "%s\n" ""
+			    printf "%s\n" "#endif /* ${cond} */"
 			fi
 		    fi
 
@@ -892,9 +896,9 @@ for level in ${levels}; do
 		# if we're making a set:
 		#
 		if test ${what} = set; then
-		    $as_echo ""
-		    $as_echo "  /* this does a ${level} compliance ${precision}-precision ${name}: */"
-		    $as_echo "${func_set}" | tr '@' '\n'
+		    printf "%s\n" ""
+		    printf "%s\n" "  /* this does a ${level} compliance ${precision}-precision ${name}: */"
+		    printf "%s\n" "${func_set}" | tr '@' '\n'
 		fi
 
 	    done
@@ -908,7 +912,7 @@ for level in ${levels}; do
 	    # operations struct type:
 	    #
 	    if test "${level}-${what}" = strict-funcs; then
-		$as_echo "};"
+		printf "%s\n" "};"
 	    fi
 
 	# otherwise, if we're doing a set:
@@ -917,7 +921,7 @@ for level in ${levels}; do
 
 	    # close the operations set for this level:
 	    #
-	    $as_echo "};"
+	    printf "%s\n" "};"
 	fi
 
     done
@@ -928,29 +932,29 @@ done
 #
 if $header; then :; else
 
-    $as_echo ""
-    $as_echo "/* this looks up an operations structure: */"
-    $as_echo "const struct tme_ieee754_ops *"
-    $as_echo "tme_ieee754_ops_lookup(const char *compliance)"
-    $as_echo "{"
-    $as_echo ""
+    printf "%s\n" ""
+    printf "%s\n" "/* this looks up an operations structure: */"
+    printf "%s\n" "const struct tme_ieee754_ops *"
+    printf "%s\n" "tme_ieee754_ops_lookup(const char *compliance)"
+    printf "%s\n" "{"
+    printf "%s\n" ""
     for level in ${levels}; do
-	$as_echo "  if (TME_ARG_IS(compliance, \"${level}\")) { "
-	$as_echo "    return (&tme_ieee754_ops_${level});"
-	$as_echo "  }"
+	printf "%s\n" "  if (TME_ARG_IS(compliance, \"${level}\")) { "
+	printf "%s\n" "    return (&tme_ieee754_ops_${level});"
+	printf "%s\n" "  }"
     done
-    $as_echo "  return (NULL);"
-    $as_echo "}"
+    printf "%s\n" "  return (NULL);"
+    printf "%s\n" "}"
 
-    $as_echo ""
-    $as_echo "/* this is a compliance options string: */"
-    $as_echo_n "const char * const tme_ieee754_compliance_options = \"{ ";
+    printf "%s\n" ""
+    printf "%s\n" "/* this is a compliance options string: */"
+    printf %s "const char * const tme_ieee754_compliance_options = \"{ ";
     sep=
     for level in ${levels}; do
-	$as_echo_n "${sep}${level}"
+	printf %s "${sep}${level}"
 	sep=' | '
     done
-    $as_echo " }\";"
+    printf "%s\n" " }\";"
 fi
 
 # done:
