@@ -9,4 +9,4 @@ pkglib_LTLIBRARIES = tme_host_gtk.la
 tme_host_gtk_la_SOURCES = gtk-mouse.c gtk-keyboard.c gtk-display.c gtk-display.h
 tme_host_gtk_la_LIBADD = ../libtme-display.la $(GTK_LIBS) $(TME_LIBS)
 
-include $(top_srcdir)/modules
+include $(top_srcdir)/modules.mk

@@ -11,4 +11,4 @@ pkglib_LTLIBRARIES = tme_generic.la
 tme_generic_la_SOURCES = bus-el.c
 tme_generic_la_LIBADD = $(TME_LIBS)
 
-include $(top_srcdir)/modules
+include $(top_srcdir)/modules.mk

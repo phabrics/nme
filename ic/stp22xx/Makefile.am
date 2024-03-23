@@ -19,4 +19,4 @@ tme_ic_stp22xx_la_LIBADD = $(TME_LIBS)
 EXTRA_DIST = stp222x-impl.h \
 	stp22xx-impl.h
 
-include $(top_srcdir)/modules
+include $(top_srcdir)/modules.mk

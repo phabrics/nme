@@ -8,4 +8,4 @@ tme_bus_sbus_la_SOURCES = \
 	sun-fbs4.c
 tme_bus_sbus_la_LIBADD = $(top_builddir)/machine/sun/libtme-machine-sun.la $(TME_LIBS)
 
-include $(top_srcdir)/modules
+include $(top_srcdir)/modules.mk

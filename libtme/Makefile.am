@@ -49,11 +49,11 @@ noinst_SCRIPTS = memory-auto.sh
 
 BUILT_SOURCES = memory-auto.h memory-auto.c
 
-CLEANFILES = $(noinst_SCRIPTS) $(BUILT_SOURCES)
+MAINTAINERCLEANFILES = $(noinst_SCRIPTS) $(BUILT_SOURCES)
 
 EXTRA_DIST = log-prf.c \
 	misc.c \
-	$(CLEANFILES) \
+	$(MAINTAINERCLEANFILES) \
 	$(noinst_SCRIPTS:.sh=.m4) 
 
 # default rule for regenerating the portable shell scripts from m4 descriptions

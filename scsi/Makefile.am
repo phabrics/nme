@@ -23,4 +23,4 @@ tme_scsi_la_SOURCES = \
 	scsi-bus.c
 tme_scsi_la_LIBADD = $(TME_LIBS)
 
-include $(top_srcdir)/modules
+include $(top_srcdir)/modules.mk

@@ -19,11 +19,11 @@ noinst_SCRIPTS = m68k-misc-auto.sh \
 	m68k-bus-auto.sh \
 	m6888x-auto.sh
 
-BUILT_SOURCES = $(noinst_SCRIPTS) m68k-auto.h m68k-opmap.c m68k-insns-auto.c m68k-bus-auto.c m6888x-auto.c
-CLEANFILES = $(BUILT_SOURCES)
+BUILT_SOURCES = m68k-auto.h m68k-opmap.c m68k-insns-auto.c m68k-bus-auto.c m6888x-auto.c
+MAINTAINERCLEANFILES = $(noinst_SCRIPTS) $(BUILT_SOURCES)
 
 EXTRA_DIST = m68k-impl.h \
-	$(BUILT_SOURCES) \
+	$(MAINTAINERCLEANFILES) \
 	$(noinst_SCRIPTS:.sh=.m4)  \
 	m68k-execute.c \
 	m68k-iset-expand.pl \
@@ -66,4 +66,4 @@ $(pkglib_LTLIBRARIES): ../ieee754/libtme-ieee754.la
 	cd `dirname $@` && $(MAKE) `basename $@`
 force: ;
 
-include $(top_srcdir)/modules
+include $(top_srcdir)/modules.mk

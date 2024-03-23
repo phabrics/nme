@@ -66,4 +66,4 @@ tme_ic_am7990_la_LIBADD = $(TME_LIBS)
 tme_ic_lsi64854_la_SOURCES = lsi64854.c
 tme_ic_lsi64854_la_LIBADD = $(TME_LIBS)
 
-include $(top_srcdir)/modules
+include $(top_srcdir)/modules.mk

@@ -9,4 +9,4 @@ pkglib_LTLIBRARIES = tme_host_bsd.la
 tme_host_bsd_la_SOURCES = bsd-bpf.c
 tme_host_bsd_la_LIBADD = ../libtme-eth.la $(TME_LIBS)
 
-include $(top_srcdir)/modules
+include $(top_srcdir)/modules.mk

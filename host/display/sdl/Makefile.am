@@ -9,4 +9,4 @@ pkglib_LTLIBRARIES = tme_host_sdl.la
 tme_host_sdl_la_SOURCES = sdl-display.c
 tme_host_sdl_la_LIBADD = ../libtme-display.la $(SDL_LIBS) $(TME_LIBS)
 
-include $(top_srcdir)/modules
+include $(top_srcdir)/modules.mk

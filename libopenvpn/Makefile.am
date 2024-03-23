@@ -180,3 +180,7 @@ nobase_pkginclude_HEADERS = \
 	win32.h
 
 SUBDIRS = lib
+
+.PHONY: modules
+
+modules:

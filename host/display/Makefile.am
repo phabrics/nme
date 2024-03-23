@@ -20,6 +20,6 @@ keymap.h: keymap-def.h
 	  cp $< $@
 endif
 
-include $(top_srcdir)/modules
+include $(top_srcdir)/modules.mk
 
 DIST_SUBDIRS=gtk rfb sdl

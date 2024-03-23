@@ -30,4 +30,4 @@ tme-sun-idprom: tme-sun-idprom.pl
 tme-sun-eeprom: tme-sun-eeprom.pl $(top_srcdir)/tools/tme-binary-struct.pl.in
 	cat $(top_srcdir)/tools/tme-binary-struct.pl.in $(srcdir)/tme-sun-eeprom.pl | \
 	sed -e s%/usr/pkg/bin/perl%$(PERL)% > $@
-include $(top_srcdir)/modules
+include $(top_srcdir)/modules.mk

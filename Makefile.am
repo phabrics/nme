@@ -6,7 +6,7 @@ ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS = . $(subdirs) tme libltdl libtme generic ic machine host bus serial scsi tmesh tools
 
-EXTRA_DIST = modules edist
+EXTRA_DIST = modules.mk edist
 pkgdata_DATA = tmeconfig.h tmememory.h
 
 # target to hook into the distribution:

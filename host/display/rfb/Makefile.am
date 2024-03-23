@@ -17,4 +17,4 @@ tme_host_rfb_la_CPPFLAGS += $(SDL_CFLAGS)
 tme_host_rfb_la_LIBADD += $(SDL_LIBS)
 endif
 
-include $(top_srcdir)/modules
+include $(top_srcdir)/modules.mk

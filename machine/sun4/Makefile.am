@@ -19,4 +19,4 @@ tme_machine_sun4_la_LIBADD = ../sun/libtme-machine-sun.la $(TME_LIBS)
 examplesdir = $(pkgdatadir)/examples
 dist_examples_DATA = SUN4-75
 
-include $(top_srcdir)/modules
+include $(top_srcdir)/modules.mk

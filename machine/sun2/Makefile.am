@@ -15,4 +15,4 @@ tme_machine_sun2_la_LIBADD = ../sun/libtme-machine-sun.la $(TME_LIBS)
 examplesdir = $(pkgdatadir)/examples
 dist_examples_DATA = SUN2-MULTIBUS
 
-include $(top_srcdir)/modules
+include $(top_srcdir)/modules.mk

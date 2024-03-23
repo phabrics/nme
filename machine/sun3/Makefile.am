@@ -15,4 +15,4 @@ tme_machine_sun3_la_LIBADD = ../sun/libtme-machine-sun.la $(TME_LIBS)
 examplesdir = $(pkgdatadir)/examples
 dist_examples_DATA = SUN3-CARRERA sun3-carrera-eeprom.txt
 
-include $(top_srcdir)/modules
+include $(top_srcdir)/modules.mk

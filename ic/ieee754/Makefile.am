@@ -17,9 +17,9 @@ AM_CFLAGS = @CFLAGS_NO_STRICT_ALIASING@
 
 noinst_SCRIPTS = ieee754-misc-auto.sh ieee754-ops-auto.sh ieee754-precision.sh 
 BUILT_SOURCES = ieee754-auto.h ieee754-ops-auto.h ieee754-misc-auto.c
-CLEANFILES = $(noinst_SCRIPTS) $(BUILT_SOURCES) ieee754-ops-auto.c
+MAINTAINERCLEANFILES = $(noinst_SCRIPTS) $(BUILT_SOURCES) ieee754-ops-auto.c
 
-EXTRA_DIST = $(CLEANFILES) $(noinst_SCRIPTS:.sh=.m4) softfloat-tme.h
+EXTRA_DIST = $(MAINTAINERCLEANFILES) $(noinst_SCRIPTS:.sh=.m4) softfloat-tme.h
 
 # default rule for regenerating the portable shell scripts from m4 descriptions
 $(addprefix $(srcdir)/,$(noinst_SCRIPTS)): %.sh: %.m4
@@ -41,4 +41,4 @@ $(srcdir)/ieee754-ops-auto.h: ieee754-ops-auto.sh ieee754-precision.sh
 $(srcdir)/ieee754-ops-auto.c: ieee754-ops-auto.sh ieee754-precision.sh
 	$(SHELL) $< > $@
 
-include $(top_srcdir)/modules
+include $(top_srcdir)/modules.mk

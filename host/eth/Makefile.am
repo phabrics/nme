@@ -8,6 +8,6 @@ libtme_eth_la_SOURCES = eth-impl.c eth-if.h
 libtme_eth_la_LDFLAGS = -version-info 0:0:0
 libtme_eth_la_LIBADD = $(TME_LIBS)
 
-include $(top_srcdir)/modules
+include $(top_srcdir)/modules.mk
 
 DIST_SUBDIRS=bsd openvpn tun

@@ -21,11 +21,11 @@ noinst_SCRIPTS = sparc-misc-auto.sh \
 	sparc-fpu-auto.sh \
 	sparc-vis-auto.sh \
 	sparc-bus-auto.sh
-BUILT_SOURCES = $(noinst_SCRIPTS) sparc-auto.h sparc-insns-auto.c sparc-bus-auto.c sparc-fpu-auto.c sparc-vis-auto.c
-CLEANFILES = $(BUILT_SOURCES)
+BUILT_SOURCES = sparc-auto.h sparc-insns-auto.c sparc-bus-auto.c sparc-fpu-auto.c sparc-vis-auto.c
+MAINTAINERCLEANFILES = $(noinst_SCRIPTS) $(BUILT_SOURCES)
 
 EXTRA_DIST = sparc-impl.h \
-	$(BUILT_SOURCES) \
+	$(MAINTAINERCLEANFILES) \
 	$(noinst_SCRIPTS:.sh=.m4)  \
 	sparc-execute.c \
 	sparc-rc-cc.c \
@@ -66,4 +66,4 @@ $(pkglib_LTLIBRARIES): ../ieee754/libtme-ieee754.la
 	cd `dirname $@` && $(MAKE) `basename $@`
 force: ;
 
-include $(top_srcdir)/modules
+include $(top_srcdir)/modules.mk

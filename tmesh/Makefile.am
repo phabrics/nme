@@ -5,17 +5,15 @@ AUTOMAKE_OPTIONS = 1.4 gnu
 
 AM_CPPFLAGS = -I$(top_srcdir) -D_TME_IMPL @TME_HOST_CFLAGS@
 
-noinst_LTLIBRARIES = libtmesh.la
-libtmesh_la_SOURCES = \
+tmesh_SOURCES = tmesh.c \
 	tmesh-impl.h \
 	tmesh-input.y \
 	tmesh-util.c \
 	tmesh-cmds.c \
 	tmesh-threads.c
-libtmesh_la_LIBADD = $(top_builddir)/libtme/libtme.la
 
 bin_PROGRAMS = tmesh
-tmesh_LDADD = libtmesh.la $(tme_preopen) $(TME_HOST_LIBS)
+tmesh_LDADD = $(top_builddir)/libtme/libtme.la $(tme_preopen) $(TME_HOST_LIBS)
 tmesh_LDFLAGS = -dlpreopen force -dlopen self
 
 EXTRA_DIST = tmesh.sh

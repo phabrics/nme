@@ -11,6 +11,6 @@ tme_host_posix_la_SOURCES = posix-memory.c \
 
 tme_host_posix_la_LIBADD = $(TME_LIBS)
 
-include $(top_srcdir)/modules
+include $(top_srcdir)/modules.mk
 
 SUBDIRS = display eth

@@ -15,4 +15,4 @@ if WIN32
 tme_host_openvpn_la_LIBADD += -lgdi32 -lws2_32 -lwininet -lcrypt32 -liphlpapi -lwinmm
 endif
 
-include $(top_srcdir)/modules
+include $(top_srcdir)/modules.mk

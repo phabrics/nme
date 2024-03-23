@@ -18,4 +18,4 @@ tme_serial_kb_la_SOURCES = \
 	ms-mssystems.c
 tme_serial_kb_la_LIBADD = $(TME_LIBS)
 
-include $(top_srcdir)/modules
+include $(top_srcdir)/modules.mk
