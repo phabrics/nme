@@ -105,7 +105,7 @@ _tme_scsi_device_callout(struct tme_scsi_device *scsi_device,
 	/* run a target information transfer phase DMA sequence: */
 	events = TME_SCSI_EVENT_NONE;
 	actions = TME_SCSI_ACTION_DMA_TARGET;
-	dma = TME_ALIGN((uintptr_t)dma_buffer,16);
+	dma = (const struct tme_scsi_dma *)TME_ALIGN((uintptr_t)dma_buffer,16);
 	memcpy(dma, &scsi_device->tme_scsi_device_dma, sizeof(struct tme_scsi_dma));
       }
 

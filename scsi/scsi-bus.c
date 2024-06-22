@@ -193,7 +193,7 @@ _tme_scsi_bus_callout(struct tme_scsi_bus *scsi_bus, int new_callouts)
 	events_triggered = conn_int->tme_scsi_connection_int_events_triggered;
 	actions_taken = conn_int->tme_scsi_connection_int_actions_taken;
 	if (conn_int->tme_scsi_connection_int_dma != NULL) {
-	  dma = TME_ALIGN((uintptr_t)dma_buffer,16);
+	  dma = (const struct tme_scsi_dma *)TME_ALIGN((uintptr_t)dma_buffer,16);
 	  memcpy(dma, conn_int->tme_scsi_connection_int_dma, sizeof(struct tme_scsi_dma));
 	}
 	conn_int->tme_scsi_connection_int_events_triggered = 0;

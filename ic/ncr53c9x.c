@@ -1892,7 +1892,7 @@ _tme_ncr53c9x_callout(struct tme_ncr53c9x *ncr53c9x)
     return;
   }
 
-  tlb_local = TME_ALIGN((uintptr_t)tlb_buffer,16);
+  tlb_local = (struct tme_bus_tlb *)TME_ALIGN((uintptr_t)tlb_buffer,16);
   /* callouts are now running: */
   ncr53c9x->tme_ncr53c9x_callout_flags |= TME_NCR53C9X_CALLOUTS_RUNNING;
 
@@ -2269,7 +2269,7 @@ _tme_ncr53c9x_callout(struct tme_ncr53c9x *ncr53c9x)
 
 	/* start the SCSI DMA structure: */
 	/* XXX parity? */
-	scsi_dma = TME_ALIGN((uintptr_t)scsi_dma_buffer,16);
+	scsi_dma = (struct tme_scsi_dma *)TME_ALIGN((uintptr_t)scsi_dma_buffer,16);
 	scsi_dma->tme_scsi_dma_flags = TME_SCSI_DMA_8BIT;
 	scsi_dma->tme_scsi_dma_sync_offset = 0;
 	scsi_dma->tme_scsi_dma_sync_period = 0;

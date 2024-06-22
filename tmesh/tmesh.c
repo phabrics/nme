@@ -47,6 +47,7 @@ _TME_RCSID("$Id: tmesh.c,v 1.4 2009/08/30 17:06:38 fredette Exp $");
 #endif
 #include <stdio.h>
 #include <string.h>
+#include <libgen.h>
 
 /* macros: */
 
