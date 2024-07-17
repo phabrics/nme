@@ -97,7 +97,7 @@ _tme_modules_find(const char *top_name,
 		  unsigned int top_name_length,
 		  char **_modules_dir)
 {
-  unsigned int modules_dir_length, prefix_length = strlen(TME_PREFIX_PATH);
+  unsigned int modules_dir_length, prefix_length;
   int pass, i;
   const char *search_path;
   const char *p1, *p2, *p3;
@@ -146,7 +146,9 @@ _tme_modules_find(const char *top_name,
       }
 
       /* if this path is absolute: */
-      if (*p1 == '/') {
+      for (prefix_length = 0;
+	   *p1 == '/' && prefix_length <= strlen(TME_PREFIX_PATH);
+	   prefix_length += strlen(TME_PREFIX_PATH)) {
 
 	/* form the modules index pathname to try, remembering what
 	   part of it is the modules directory pathname: */
@@ -201,7 +203,6 @@ _tme_modules_find(const char *top_name,
 
 	/* keep trying: */
 	tme_free(modules_index_pathname);
-	prefix_length = strlen(TME_PREFIX_PATH);	
       }
 
       /* stop if this was the last path: */
