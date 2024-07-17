@@ -14,7 +14,7 @@ tmesh_SOURCES = tmesh.c \
 
 bin_PROGRAMS = tmesh
 tmesh_LDADD = $(top_builddir)/libtme/libtme.la $(tme_preopen) $(TME_HOST_LIBS)
-tmesh_LDFLAGS = -dlpreopen force -dlopen self
+tmesh_LDFLAGS = 
 
 EXTRA_DIST = tmesh.sh
 
