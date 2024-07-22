@@ -194,6 +194,11 @@ dnl Checks for display type support
 PKG_CHECK_MODULES([GTK], [gtk4], [have_gtk=$enable_gtk], [
    PKG_CHECK_MODULES([GTK], [gtk+-3.0], [have_gtk=$enable_gtk], [have_gtk=no])
 ])
+if test "x${have_gtk}" = xyes; then
+   AC_DEFINE([HAVE_GTK], [], [Defined if GTK is found & enabled.])
+fi
+AM_CONDITIONAL([HAVE_GTK], [test "x${have_gtk}" = xyes])
+
 PKG_CHECK_MODULES([SDL], [sdl2], [have_sdl=$enable_sdl], [have_sdl=no])
 
 AX_CHECK_COMPILE_FLAG(-sUSE_SDL=2, [have_sdl=$enable_sdl])

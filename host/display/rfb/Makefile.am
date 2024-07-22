@@ -9,7 +9,7 @@ pkglib_LTLIBRARIES = tme_host_rfb.la
 tme_host_rfb_la_SOURCES = rfb-display.c
 tme_host_rfb_la_LIBADD = ../libtme-display.la $(RFB_LIBS) $(TME_LIBS)
 
-if HAVE_GLIB
+if HAVE_GTK
 tme_host_rfb_la_CPPFLAGS += $(GTK_CFLAGS)
 tme_host_rfb_la_LIBADD += $(GTK_LIBS)
 else

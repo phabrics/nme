@@ -38,13 +38,24 @@
 /* includes: */
 #include "display.h"
 #include <rfb/rfb.h>
-#ifdef _TME_HAVE_GLIB
+#include <stdlib.h>
+#ifdef _TME_HAVE_GTK
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
 #else
 #include <SDL.h>
+
+static int _tme_sdl_keymods[] = {
+  KMOD_SHIFT,
+  KMOD_NUM | KMOD_CAPS,
+  KMOD_CTRL,
+  KMOD_ALT,
+  KMOD_GUI,
+  0,
+  0,
+  0
+};
 #endif
-#include <stdlib.h>
 
 static const int bpp=4;
 
@@ -154,7 +165,7 @@ static void _tme_keyboard_key_ev(int down, tme_keyboard_keyval_t key, rfbClientP
   _tme_keyboard_key_event(down, key, cl->clientData);
 }
 
-#ifndef _TME_HAVE_GLIB
+#ifndef _TME_HAVE_GTK
 static tme_keyboard_keyval_t sdl_to_tme_keysym(SDL_Keycode sym) {
   tme_keyboard_keyval_t k = 0;
 
@@ -329,12 +340,14 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_rfb,display) {
   
   /* start our data structure: */
   display = tme_new0(struct tme_display, 1);
-#ifdef _TME_HAVE_GLIB
+
+#ifdef _TME_HAVE_GTK
   display->tme_display_keyval_name = gdk_keyval_name;
   display->tme_display_keyval_from_name = gdk_keyval_from_name;
   display->tme_display_keyval_convert_case = gdk_keyval_convert_case;
   display->tme_display_key_void_symbol = GDK_KEY_VoidSymbol;
 #else
+  display->tme_display_keymods = _tme_sdl_keymods;
   display->tme_display_keyval_name = _tme_sdl_keyval_name;
   display->tme_display_keyval_from_name = _tme_sdl_keyval_from_name;
   display->tme_display_key_void_symbol = SDLK_UNKNOWN;
@@ -373,17 +386,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_rfb,display) {
   display->tme_screen_add = _tme_rfb_screen_new;
   display->tme_screen_resize = _tme_rfb_screen_resize;
   display->tme_screen_redraw = _tme_rfb_screen_redraw;
-
-#ifdef _TME_HAVE_GLIB
-  display->tme_display_keyval_name = gdk_keyval_name;
-  display->tme_display_keyval_from_name = gdk_keyval_from_name;
-  display->tme_display_keyval_convert_case = gdk_keyval_convert_case;
-  display->tme_display_key_void_symbol = GDK_KEY_VoidSymbol;
-#else
-  display->tme_display_keyval_name = _tme_sdl_keyval_name;
-  display->tme_display_keyval_from_name = _tme_sdl_keyval_from_name;
-  display->tme_display_key_void_symbol = SDLK_UNKNOWN;
-#endif
 
   return (TME_OK);
 }

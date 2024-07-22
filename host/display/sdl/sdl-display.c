@@ -37,12 +37,17 @@
 #include "display.h"
 #include <SDL.h>
 #include <signal.h>
+#include <stdlib.h>
 #ifdef HAVE_X11_KEYSYM_H
 #include <X11/keysym.h>
 #elif HAVE_RFB_KEYSYM_H
 #include <rfb/keysym.h>
-#else
+#elif !defined(_TME_HAVE_GTK)
 #error "No keysym header file on system."
+#endif
+#ifdef _TME_HAVE_GTK
+#include <gtk/gtk.h>
+#include <gdk/gdkkeysyms.h>
 #endif
 
 static int _tme_sdl_keymods[] = {
@@ -95,6 +100,7 @@ static int _tme_sdl_screen_resize(struct tme_sdl_screen *screen)
   int width = conn_fb->tme_fb_connection_width;
   int height = conn_fb->tme_fb_connection_height;
   int depth = SDL_BITSPERPIXEL(SDL_PIXELFORMAT_RGBA32);
+  float scaleX, scaleY;
   struct tme_display *display;
 
   if (enableResizable)
@@ -149,9 +155,15 @@ static int _tme_sdl_screen_resize(struct tme_sdl_screen *screen)
           tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
 	    (&display->tme_display_element->tme_element_log_handle,
 	     _("resize: error creating renderer: %s\n"), SDL_GetError()));
-    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");  /* make the scaled rendering look smoother. */
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");  /* make the scaled rendering look smoother. */
   }
   SDL_RenderSetLogicalSize(screen->sdlRenderer, width, height);  /* this is a departure from the SDL1.2-based version, but more in the sense of a VNC viewer in keeeping aspect ratio */
+  SDL_RenderGetScale(screen->sdlRenderer, &scaleX, &scaleY);
+  
+  tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
+	  (&display->tme_display_element->tme_element_log_handle,
+	   _("resize: renderer scale: %f %f\n"), scaleX, scaleY));
+  
   /* (re)create the texture that sits in between the surface->pixels and the renderer */
   if(screen->sdlTexture)
     SDL_DestroyTexture(screen->sdlTexture);
@@ -244,6 +256,7 @@ static tme_keyboard_keyval_t sdl_to_tme_keysym(SDL_Keycode sym) {
   return k;
 }
 
+#ifndef _TME_HAVE_GTK
 static SDL_Keycode tme_to_sdl_keysym(tme_keyboard_keyval_t sym) {
   SDL_Keycode k = 0;
 
@@ -334,6 +347,16 @@ static tme_keyboard_keyval_t utf8char2rfbKeySym(const char chr[4]) {
   }
   return codep;
 }
+
+static char *_tme_sdl_keyval_name(tme_keyboard_keyval_t sym) {
+  return SDL_GetKeyName(tme_to_sdl_keysym(sym));
+}
+
+static tme_keyboard_keyval_t _tme_sdl_keyval_from_name(const char *name) {
+  return sdl_to_tme_keysym(SDL_GetKeyFromName(name));
+}
+#endif
+
 static void
 _tme_sdl_screen_redraw(struct tme_sdl_screen *screen, int x, int y, int w, int h)
 {
@@ -463,14 +486,6 @@ _tme_sdl_display_update(struct tme_display *display) {
   return TRUE;
 }
 
-static char *_tme_sdl_keyval_name(tme_keyboard_keyval_t sym) {
-  return SDL_GetKeyName(tme_to_sdl_keysym(sym));
-}
-
-static tme_keyboard_keyval_t _tme_sdl_keyval_from_name(const char *name) {
-  return sdl_to_tme_keysym(SDL_GetKeyFromName(name));
-}
-
 /* the new SDL display function: */
 TME_ELEMENT_SUB_NEW_DECL(tme_host_sdl,display) {
   struct tme_display *display;
@@ -480,10 +495,17 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_sdl,display) {
   
   /* start our data structure: */
   display = tme_new0(struct tme_display, 1);
+#ifdef _TME_HAVE_GTK
+  display->tme_display_keyval_name = gdk_keyval_name;
+  display->tme_display_keyval_from_name = gdk_keyval_from_name;
+  display->tme_display_keyval_convert_case = gdk_keyval_convert_case;
+  display->tme_display_key_void_symbol = GDK_KEY_VoidSymbol;
+#else
   display->tme_display_keymods = _tme_sdl_keymods;
   display->tme_display_keyval_name = _tme_sdl_keyval_name;
   display->tme_display_keyval_from_name = _tme_sdl_keyval_from_name;
   display->tme_display_key_void_symbol = SDLK_UNKNOWN;
+#endif
   tme_display_init(element, display);
 
   /* recover our data structure: */
