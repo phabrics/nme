@@ -501,11 +501,11 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_sdl,display) {
   display->tme_display_keyval_convert_case = gdk_keyval_convert_case;
   display->tme_display_key_void_symbol = GDK_KEY_VoidSymbol;
 #else
-  display->tme_display_keymods = _tme_sdl_keymods;
   display->tme_display_keyval_name = _tme_sdl_keyval_name;
   display->tme_display_keyval_from_name = _tme_sdl_keyval_from_name;
   display->tme_display_key_void_symbol = SDLK_UNKNOWN;
 #endif
+  display->tme_display_keymods = _tme_sdl_keymods;
   tme_display_init(element, display);
 
   /* recover our data structure: */

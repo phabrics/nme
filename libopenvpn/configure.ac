@@ -499,9 +499,15 @@ else
   CXXFLAGS="${CXXFLAGS-} -W"
 fi
 
+if test "x${enable_shared}" = "xno" || test "x${host_cpu}" = "xi686"; then
+   lto=${GCC}
+else
+   lto=no
+fi
+
 AC_ARG_ENABLE(lto,
 [  --enable-lto      compile with link-time optimizations (default=supported)],
-[ ],[ enable_lto=yes ])
+[ ],[ enable_lto=$lto ])
 
 if test "x${enable_lto}" = "xyes"; then
   CFLAGS="${CFLAGS-} -flto"
