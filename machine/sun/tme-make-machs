@@ -47,7 +47,7 @@ firmwares="sun2-multi-rev-R sun3-carrera-rev-3.0 sun4-75-rev-2.9 SUNW,501-1415 S
 # NetBSD location/release to download
 netbsd_root=./NetBSD
 netbsd_site=https://cdn.netbsd.org/pub/NetBSD
-netbsd_rel=9.3
+netbsd_rel=10.0
 
 # NetBSD binary sets to install via tape
 # Remember, skip "etc" for an upgrade.

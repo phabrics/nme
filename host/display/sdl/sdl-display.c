@@ -72,7 +72,7 @@ struct { char mask; int bits_stored; } utf8Mapping[]= {
 
 /* TODO: odd maxx doesn't work (vncviewer bug) */
 
-static int enableResizable = 1, viewOnly, listenLoop;
+static int enableResizable = 0, viewOnly, listenLoop;
 struct tme_sdl_screen {
   /* the generic screen structure */
   struct tme_screen screen;
@@ -105,7 +105,9 @@ static int _tme_sdl_screen_resize(struct tme_sdl_screen *screen)
 
   if (enableResizable)
     screen->sdlFlags |= SDL_WINDOW_RESIZABLE;
-  
+  else
+    screen->sdlFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+
   /* (re)create the surface used as the client's framebuffer */
   if(screen->sdl) SDL_FreeSurface(screen->sdl);
   screen->sdl=SDL_CreateRGBSurface(0,
@@ -155,14 +157,14 @@ static int _tme_sdl_screen_resize(struct tme_sdl_screen *screen)
           tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
 	    (&display->tme_display_element->tme_element_log_handle,
 	     _("resize: error creating renderer: %s\n"), SDL_GetError()));
-    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");  /* make the scaled rendering look smoother. */
+    SDL_SetRelativeMouseMode(SDL_TRUE);
   }
   SDL_RenderSetLogicalSize(screen->sdlRenderer, width, height);  /* this is a departure from the SDL1.2-based version, but more in the sense of a VNC viewer in keeeping aspect ratio */
   SDL_RenderGetScale(screen->sdlRenderer, &scaleX, &scaleY);
   
   tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
 	  (&display->tme_display_element->tme_element_log_handle,
-	   _("resize: renderer scale: %f %f\n"), scaleX, scaleY));
+	   _("resize: renderer scale: %d %d\n"), width, height));
   
   /* (re)create the texture that sits in between the surface->pixels and the renderer */
   if(screen->sdlTexture)
@@ -491,7 +493,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_sdl,display) {
   struct tme_display *display;
   int arg_i = 0;
 
-  while(args[++arg_i] != NULL);
+  for(arg_i++;args[arg_i];arg_i+=2)
+    SDL_SetHint(args[arg_i], args[arg_i+1]);
   
   /* start our data structure: */
   display = tme_new0(struct tme_display, 1);

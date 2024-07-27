@@ -19,8 +19,8 @@ sbus0 controller at board0 sbus
 ##
 alias mainbus0 sbus0
 ram0 at mainbus0 addr 0x0: tme/host/posix/memory ram 16MB
-#ram1 at mainbus0 addr 0x08000000: tme/host/posix/memory ram 32MB
-#ram2 at mainbus0 addr 0x0a000000: tme/host/posix/memory ram 32MB
+ram1 at mainbus0 addr 0x08000000: tme/host/posix/memory ram 32MB
+ram2 at mainbus0 addr 0x0a000000: tme/host/posix/memory ram 32MB
 rom0 at mainbus0 addr 0xf6000000: tme/host/posix/memory rom sun4-75-rev-2.9.bin
 zs0 at mainbus0 addr 0xf1000000 ipl 12: tme/machine/sun4/zs
 zs1 at mainbus0 addr 0xf0000000 ipl 12: tme/machine/sun4/zs
@@ -77,7 +77,7 @@ le0 at sbus0 slot 0 offset 0xc00000 ipl 5 dma-offset 0xff000000: tme/ic/am7990
 # 2 ways to access a tap device: native or openvpn (respectively below)
 # both require setuid or equivalent permissions, which should be set up at build time
 #tap0 at le0: tme/host/tun/tap inet 10.0.77.1 netmask 255.255.255.0 bcast 10.0.77.255
-#tap0 at le0: tme/host/openvpn/tap --dev tap --ifconfig 10.0.77.1 255.255.255.0 --tun-ipv6 --ifconfig-ipv6 "2001:db8::1/64" "2001:db8::2"
+#tap0 at le0: tme/host/openvpn/tun/tap --dev tap --ifconfig 10.0.77.1 255.255.255.0 # --tun-ipv6 --ifconfig-ipv6 "2001:db8::1/64" "2001:db8::2"
 
 # An example of the link element that can be used to connect network elements across an IP network.
 # Here, we set up a P2P network between two machines on different hosts.  Each machine would have
@@ -136,7 +136,8 @@ cgthreerom0 at sbus0 slot 1 offset 0x0: tme/host/posix/memory rom "SUNW,501-1415
 # uncomment which display you want
 # uncomment this line for a GTK-based graphics display
 #display0: tme/host/gtk/display
-display0: tme/host/rfb/display
+display0: tme/host/sdl/display SDL_RENDER_SCALE_QUALITY best SDL_MOUSE_RELATIVE_SCALING 1 SDL_MOUSE_RELATIVE_MODE_WARP 1
+#display0: tme/host/rfb/display
 display0 at cgthree0
 #display0 at bwtwo0
 display0 at kbd0
@@ -153,6 +154,9 @@ disk0 at sd0: tme/host/posix/disk file my-sun4c-disk.img
 st0 at scsibus0: tme/scsi/tape id 4 type tme-scsi-1
 tape0 at st0: tme/host/posix/tape
 
+cd0 at scsibus0: tme/scsi/cdrom id 6 type tme-scsi-1
+cdrom0 at cd0: tme/host/posix/disk file netbsd-sun4.iso read-only
+
 ## set the idle type, so tmesh doesn't consume all of the host CPU:
 ##
 # use the appropriate type for the guest operating system:
@@ -168,4 +172,4 @@ command cpu0 idle-type netbsd32-type-1
 # uncomment this line to automatically power up the machine when
 # tmesh starts:
 #
-#command board0 power up
+command board0 power up
