@@ -335,7 +335,7 @@ _tme_isil7170_th_timer(struct tme_isil7170 *isil7170)
 	  tme_log(TME_ISIL7170_LOG_HANDLE(isil7170),
 		  0, TME_OK,
 		  (TME_ISIL7170_LOG_HANDLE(isil7170),
-		   "timer interrupt rate: %ld/sec",
+		   "timer interrupt rate: %llu/sec",
 		   (TME_TIME_SET_SEC(isil7170->tme_isil7170_int_sample)
 		    / (now - (isil7170->tme_isil7170_int_sample_time - TME_ISIL7170_TRACK_INT_RATE
 			      )))));

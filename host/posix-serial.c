@@ -635,7 +635,7 @@ _tme_posix_serial_config(struct tme_serial_connection *conn_serial, struct tme_s
       //  Handle the error.
       tme_log(&element->tme_element_log_handle, 0, TME_OK,
 	      (&element->tme_element_log_handle,
-	       "GetCommState failed with error %d.", GetLastError()));
+	       "GetCommState failed with error %ld.", GetLastError()));
       return (2);
     }
     
@@ -677,7 +677,7 @@ _tme_posix_serial_config(struct tme_serial_connection *conn_serial, struct tme_s
       //  Handle the error.
       tme_log(&element->tme_element_log_handle, 0, TME_OK,
 	      (&element->tme_element_log_handle,
-	       "SetCommState failed with error %d.", GetLastError()));
+	       "SetCommState failed with error %lu.", GetLastError()));
       return (3);
     }
 
@@ -1163,7 +1163,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
     
   tme_log(&element->tme_element_log_handle, 0, TME_OK,
 	  (&element->tme_element_log_handle,
-	   "Old Timeouts: %d %d %d %d %d",
+	   "Old Timeouts: %lu %lu %lu %lu %lu",
 	   timeouts.ReadIntervalTimeout,
 	   timeouts.ReadTotalTimeoutMultiplier,
 	   timeouts.ReadTotalTimeoutConstant,
@@ -1180,7 +1180,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
     rc = SetCommTimeouts(hand, &timeouts);
     tme_log(&element->tme_element_log_handle, 0, TME_OK,
 	    (&element->tme_element_log_handle,
-	     "New Timeouts: %d %d %d %d %d",
+	     "New Timeouts: %lu %lu %lu %lu %lu",
 	     timeouts.ReadIntervalTimeout,
 	     timeouts.ReadTotalTimeoutMultiplier,
 	     timeouts.ReadTotalTimeoutConstant,
@@ -1190,7 +1190,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
       //  Handle the error.
       tme_log(&element->tme_element_log_handle, 0, TME_OK,
 	      (&element->tme_element_log_handle,
-	       "GetCommTimeout failed with error %d.", GetLastError()));
+	       "GetCommTimeout failed with error %lu.", GetLastError()));
       return (2);
   }    
 #endif

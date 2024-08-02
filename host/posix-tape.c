@@ -539,7 +539,7 @@ _tme_posix_tape_xfer1(struct tme_posix_tape *posix_tape,
       tme_log(&posix_tape->tme_posix_tape_element->tme_element_log_handle,
 	      1, TME_OK,
 	      (&posix_tape->tme_posix_tape_element->tme_element_log_handle,
-	       _("Read %d bytes"), rc));
+	       _("Read %ld bytes"), rc));
 
       /* if this segment is not a real tape, and we're expected to
 	 transfer more bytes than the user requested, seek over the

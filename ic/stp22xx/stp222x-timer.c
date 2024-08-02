@@ -78,7 +78,7 @@ _tme_stp222x_timer_update(struct tme_stp222x_timer *timer)
       tme_log(TME_STP222X_LOG_HANDLE(timer->tme_stp222x_timer_stp222x),
 	      0, TME_OK,
 	      (TME_STP222X_LOG_HANDLE(timer->tme_stp222x_timer_stp222x),
-	       "timer %d timer interrupt rate: %ld/sec",
+	       "timer %d timer interrupt rate: %llu/sec",
 	       (timer == &timer->tme_stp222x_timer_stp222x->tme_stp222x_timers[1]),
 	       (TME_TIME_SET_SEC(timer->tme_stp222x_timer_track_ints)
 		/ (now - (timer->tme_stp222x_timer_track_sample - TME_STP222X_TIMER_TRACK_INT_RATE)))));

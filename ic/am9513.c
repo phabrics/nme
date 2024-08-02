@@ -92,7 +92,7 @@ struct tme_am9513 {
 #define tme_am9513_address_data tme_am9513_socket.tme_am9513_socket_address_data
 #define tme_am9513_port_least_lane tme_am9513_socket.tme_am9513_socket_port_least_lane
 #define tme_am9513_basic_clock tme_am9513_socket.tme_am9513_socket_basic_clock
-  tme_uint32_t tme_am9513_basic_clock_msec;
+  tme_uint32_t tme_am9513_basic_clock_usec;
 
   /* our mutex: */
   tme_mutex_t tme_am9513_mutex;
@@ -365,9 +365,9 @@ _tme_am9513_th_timer(struct tme_am9513 *am9513)
     elapsed -= then;
 
     /* calculate the number of basic ticks that have elapsed: */
-    basic_elapsed = am9513->tme_am9513_basic_clock;
-    basic_elapsed *= TME_TIME_GET_SEC(elapsed);
-    basic_elapsed += am9513->tme_am9513_basic_clock_msec * TME_TIME_GET_MSEC(elapsed % TME_FRAC_PER_SEC);
+    //    basic_elapsed = am9513->tme_am9513_basic_clock;
+    //    basic_elapsed *= TME_TIME_GET_SEC(elapsed);
+    basic_elapsed = am9513->tme_am9513_basic_clock_usec * TME_TIME_GET_USEC(elapsed); // % TME_FRAC_PER_SEC);
 
     /* assume that we will sleep for one second: */
     basic_sleep = am9513->tme_am9513_basic_clock;
@@ -475,10 +475,12 @@ _tme_am9513_th_timer(struct tme_am9513 *am9513)
 	  tme_log(TME_AM9513_LOG_HANDLE(am9513),
 		  0, TME_OK,
 		  (TME_AM9513_LOG_HANDLE(am9513),
-		   "timer %d interrupt rate: %ld %ld/sec",
+		   "timer %d interrupt rate: %ld %llu/sec [%ld,%ld,%ld,%ld]",
 		   counter_i,
 		   counter->tme_am9513_counter_int_sample,
-		   TME_TIME_GET_SEC(counter->tme_am9513_counter_int_sample_time)));
+		   TME_TIME_GET_SEC(counter->tme_am9513_counter_int_sample_time),
+		   elapsed,basic_elapsed,basic_sleep,
+		   TME_TIME_SET_USEC(basic_sleep / am9513->tme_am9513_basic_clock_usec)));
 	}
 
 	/* reset the sample: */
@@ -495,7 +497,7 @@ _tme_am9513_th_timer(struct tme_am9513 *am9513)
     }
 
     /* sleep: */
-    tme_thread_sleep_yield(TME_TIME_SET_USEC((basic_sleep * 1000) / am9513->tme_am9513_basic_clock_msec), &am9513->tme_am9513_mutex);
+    tme_thread_sleep_yield(TME_TIME_SET_USEC(basic_sleep / am9513->tme_am9513_basic_clock_usec), &am9513->tme_am9513_mutex);
   }
   /* NOTREACHED */
   tme_thread_exit(&am9513->tme_am9513_mutex);
@@ -1002,7 +1004,7 @@ TME_ELEMENT_NEW_DECL(tme_ic_am9513) {
   /* start the am9513 structure: */
   am9513 = tme_new0(struct tme_am9513, 1);
   am9513->tme_am9513_socket = socket_real;
-  am9513->tme_am9513_basic_clock_msec = am9513->tme_am9513_basic_clock / 1000;
+  am9513->tme_am9513_basic_clock_usec = am9513->tme_am9513_basic_clock / 1000000;
   am9513->tme_am9513_element = element;
   _tme_am9513_reset(am9513);
 

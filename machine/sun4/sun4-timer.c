@@ -164,7 +164,7 @@ _tme_sun4_timer_update(struct tme_sun4_timer *timer, tme_time_t *now)
       tme_log(TME_SUN4_LOG_HANDLE(timer->tme_sun4_timer_sun4),
 	      0, TME_OK,
 	      (TME_SUN4_LOG_HANDLE(timer->tme_sun4_timer_sun4),
-	       "level %d timer interrupt rate: %ld/sec",
+	       "level %d timer interrupt rate: %llu/sec",
 	       (timer == &timer->tme_sun4_timer_sun4->tme_sun4_timers[0]
 		? 10
 		: 14),

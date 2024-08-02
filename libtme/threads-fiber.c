@@ -39,10 +39,12 @@ _TME_RCSID("$Id: threads-fiber.c,v 1.18 2010/06/05 19:10:28 fredette Exp $");
 /* includes: */
 #include <tme/threads.h>
 #include <stdlib.h>
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__) && !defined(USE_SJLJ)
 #include <emscripten/fiber.h>
 #elif !defined(WIN32)
 #define USE_SJLJ
+#endif
+#ifdef USE_SJLJ
 #include <setjmp.h>
 #endif
 
@@ -68,14 +70,14 @@ typedef struct tme_fiber_thread {
   struct tme_fiber_thread *state_next;
   struct tme_fiber_thread **state_prev;
 
-  /* the thread function: */
-  tme_thread_t tme_fiber_thread_func;
-  void *tme_fiber_thread_func_private;
-
-#ifdef __EMSCRIPTEN__
+#if defined(_EMSCRIPTEN__) && !defined(USE_SJLJ)
   emscripten_fiber_t tme_fiber_context;
   char tme_fiber_asyncify_stack[1024];
   char tme_fiber_c_stack[4096]  __attribute__((aligned(16)));
+#else
+  /* the thread function: */
+  tme_thread_t tme_fiber_thread_func;
+  void *tme_fiber_thread_func_private;
 #endif  
 
   /* any condition that this thread is waiting on: */
@@ -140,21 +142,24 @@ static int tme_fiber_thread_exiting;
 /* the fiber function interface to the platform-specific implementations: */
 
 static inline void tme_fiber_convert(tme_fiber_thread_t *thread) {
-#ifdef __EMSCRIPTEN__
+#ifdef USE_SJLJ
+  thread->tme_fiber_thread_func = NULL;
+#elif defined(__EMSCRIPTEN__)
   emscripten_fiber_init_from_current_context(&thread->tme_fiber_context,
 					     thread->tme_fiber_asyncify_stack,
 					     sizeof(thread->tme_fiber_asyncify_stack));
 #elif defined(WIN32)
   thread->tme_fiber_thread_func = ConvertThreadToFiber(NULL);
-#else
-  thread->tme_fiber_thread_func = NULL;
 #endif
 }
 
 static inline void tme_fiber_create(tme_fiber_thread_t *thread,
 				    tme_thread_t func,
 				    void *func_private) {
-#ifdef __EMSCRIPTEN__
+#ifdef USE_SJLJ
+  thread->tme_fiber_thread_func_private = func_private;
+  thread->tme_fiber_thread_func = func;
+#elif defined(__EMSCRIPTEN__)
   emscripten_fiber_init(&thread->tme_fiber_context,
 			func,
 			func_private,
@@ -166,9 +171,6 @@ static inline void tme_fiber_create(tme_fiber_thread_t *thread,
   thread->tme_fiber_thread_func = CreateFiber(0,
 					      func,
 					      func_private);
-#else
-  thread->tme_fiber_thread_func_private = func_private;
-  thread->tme_fiber_thread_func = func;
 #endif
 }
 
