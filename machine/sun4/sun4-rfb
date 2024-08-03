@@ -1,0 +1,4 @@
+# A remote frame-buffer display via LibVNC
+display0: tme/host/rfb/display
+
+source sun4-fb

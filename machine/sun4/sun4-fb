@@ -1,0 +1,21 @@
+## the Sun type-4 keyboard and mouse:
+##
+kbd0 at zs1 channel A: tme/serial/keyboard type sun-type-4-us macros my-sun-macros.txt map sun-keyboards.txt rate 20
+ms0 at zs1 channel B: tme/serial/mouse type mousesystems-5
+
+## ttya:
+##
+# comment the first line, and uncomment the following line if you
+# aren't using the graphics-based display console.  this will connect ttya
+# to the master side of a pseudo-tty (in this case, /dev/ttyr0), which
+# you can connect to using tip or some other serial communications
+# program on the slave side (in this case, /dev/ptyr0):
+#
+sink1 at zs0 channel A: tme/serial/sink
+
+## the graphics-based display console:
+##
+# comment out these lines, and the bwtwo0 and cgthree0 declarations
+# above, if you don't have GTK or VNC or you don't want a display console:
+display0 at kbd0
+display0 at ms0

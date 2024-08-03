@@ -1,7 +1,7 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.71])
+AC_PREREQ([2.69])
 AC_INIT([libopenvpn], [2.3.8])
 AC_CONFIG_MACRO_DIRS([m4])
 AC_CONFIG_AUX_DIR([.])

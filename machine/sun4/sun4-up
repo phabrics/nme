@@ -1,0 +1,17 @@
+
+## set the idle type, so tmesh doesn't consume all of the host CPU:
+##
+# use the appropriate type for the guest operating system:
+#
+# NetBSD/sparc 1.6 through 4.99.19: netbsd32-type-0
+# NetBSD/sparc 4.99.20 through this writing: netbsd32-type-1
+# SunOS 4.1.x: sunos32-type-0
+#
+command cpu0 idle-type netbsd32-type-1
+
+## power up the machine:
+##
+# uncomment this line to automatically power up the machine when
+# tmesh starts:
+#
+command board0 power up

@@ -1,0 +1,4 @@
+# Graphical display based on SDL2
+display0: tme/host/sdl/display
+
+source sun4-fb

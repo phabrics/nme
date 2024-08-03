@@ -1,0 +1,50 @@
+## the SBus LANCE Ethernet:
+##
+# uncomment the bpf0 line if you have read/write permission on one
+# of your /dev/bpfN devices (on *BSD) OR have cap_net_raw+ep capability (on Linux)
+# and you want actual network access:
+#
+le0 at sbus0 slot 0 offset 0xc00000 ipl 5 dma-offset 0xff000000: tme/ic/am7990
+#bpf0 at le0: tme/host/bsd/bpf
+# OR enable tap ethernet device, an alternative method for network access
+# 2 ways to access a tap device: native or openvpn (respectively below)
+# both require setuid or equivalent permissions, which should be set up at build time
+#tap0 at le0: tme/host/tun/tap inet 10.0.77.1 netmask 255.255.255.0 bcast 10.0.77.255
+#tap0 at le0: tme/host/openvpn/tap --dev tap --ifconfig 10.0.77.1 255.255.255.0 --tun-ipv6 --ifconfig-ipv6 "2001:db8::1/64" "2001:db8::2"
+
+# An example of the link element that can be used to connect network elements across an IP network.
+# Here, we set up a P2P network between two machines on different hosts.  Each machine would have
+# one side of the connection, by uncommenting one of the lines below to complement the other one.
+#link0 at le0: tme/host/openvpn/socket/link --dev tap --local 192.168.0.1 --remote 192.168.0.2
+#link1 at le0: tme/host/openvpn/socket/link --dev tap --local 192.168.0.2 --remote 192.168.0.1
+
+# Uncomment the following lines to get debug output for each respective element (or add your own)
+#log bpf0 1
+#log tap0 1
+#log link0 1
+
+# You can enable "networking" multiple machines using the following lines,
+# removing the " at le0" from the one of the previous 2 lines that is used
+# to set up the tap device.  This might not be needed if the tap devices is
+# already connected to another element.  This creates a master configuration
+# that can be used with different slave configurations.
+#tap1: tme/host/tun/tap inet 10.0.77.1 netmask 255.255.255.0 bcast 10.0.77.255
+#tap1: tme/host/openvpn/tap --dev tap --ifconfig 10.0.77.1 255.255.255.0 --tun-ipv6 --ifconfig-ipv6 "2001:db8::1/64" "2001:db8::2"
+#tap1 at tap1
+
+# A master configuration can also include remote machines by connecting the tap
+# or bpf device to a link.  If the tap is connected, then you don't need to
+# connect it to itself first, but the tap must be connected to something.
+# Remember that each element can only connect to one other element, so the
+# network configurations must be set up carefully.
+#link2 at tap1: tme/host/openvpn/socket/link --dev tap --local 192.168.0.3 --remote 192.168.0.4
+
+# Slave configurations only need the follwing line to connect to the tap
+# network via bpf.  Note that the master requires this line, too...
+#bpf1 at le0: tme/host/bsd/bpf interface tap0
+
+# A slave configuration can also include remote machines by connecting the bpf
+# device to a link.
+#link3: tme/host/openvpn/socket/link --dev tap --local 192.168.0.5 --remote 192.168.0.6
+#bpf2 at link3: tme/host/bsd/bpf interface tap0
+

@@ -1,0 +1,4 @@
+# Graphical display based on GTK
+display0: tme/host/gtk/display
+
+source sun4-fb

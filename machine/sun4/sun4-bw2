@@ -1,0 +1,10 @@
+## an SBus bwtwo:
+##
+# uncomment these lines if you want a bwtwo either in addition to, or
+# instead of, the cgthree:
+#
+bwtwo0 at sbus0 slot 2 offset 0x0 ipl 7: tme/bus/sbus/bwtwo
+bwtworom0 at sbus0 slot 2 offset 0x0: tme/host/posix/memory rom "SUNW,501-1561.bin"
+
+display0 at bwtwo0
+

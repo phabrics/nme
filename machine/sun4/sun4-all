@@ -1,0 +1,23 @@
+# Base sun4 settings
+source sun4-base
+
+# Select either console or graphical display:
+
+# Uncomment to select console display
+#source sun4-cons
+
+# If console display not selected, select a graphical framebuffer display
+# Display options:
+
+# You can have only one front-end graphical display at a time:
+# uncomment which front-end graphical display type you want
+#source sun4-gtk
+#source sun4-rfb
+source sun4-sdl
+
+# uncomment to select back-end framebuffer display type(s) and power on
+source sun4-cg3
+#source sun4-bw2
+
+# Finalize and turn on
+source sun4-up

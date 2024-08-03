@@ -1,0 +1,6 @@
+## an SBus cgthree:
+##
+cgthree0 at sbus0 slot 1 offset 0x0 ipl 7: tme/bus/sbus/cgthree
+cgthreerom0 at sbus0 slot 1 offset 0x0: tme/host/posix/memory rom "SUNW,501-1415.bin"
+
+display0 at cgthree0
