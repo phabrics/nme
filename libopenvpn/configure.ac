@@ -10,6 +10,7 @@ AC_CONFIG_HEADERS([config.h])
 AC_CANONICAL_TARGET
 AC_CONFIG_LIBOBJ_DIR([lib])
 AM_INIT_AUTOMAKE([subdir-objects])
+AM_SILENT_RULES([yes])
 
 m4_include([version.m4])
 AC_DEFINE([OPENVPN_VERSION_RESOURCE], [PRODUCT_VERSION_RESOURCE], [Version in windows resource format])
@@ -26,6 +27,7 @@ AC_CHECK_DEFINE(__EMSCRIPTEN__, [
 				[host_type=$host_os])
 
 AC_DEFINE_UNQUOTED([TARGET_ALIAS], ["${host}"], [A string representing our host])
+lto=no
 case "${host_os}" in
 netbsd*) 
    AC_DEFINE([TARGET_NETBSD], [1], [Are we running NetBSD?])
@@ -51,6 +53,7 @@ linux*)
    AC_DEFINE([TARGET_LINUX], [1], [Are we running on Linux?])
    AC_DEFINE_UNQUOTED([TARGET_PREFIX], ["L"], [Target prefix])
    CPPFLAGS="${CPPFLAGS-}"
+   lto=yes
    ;;
 mingw* | msys*)
    AC_DEFINE([TARGET_WIN32], [1], [Are we running WIN32?])
@@ -59,6 +62,9 @@ mingw* | msys*)
    CPPFLAGS="${CPPFLAGS} -DNTDDI_VERSION=NTDDI_WINXP -D_WIN32_WINNT=_WIN32_WINNT_WINXP"
    WIN32=yes
    host_type=
+   if test "x${enable_shared}" = "xno" || test "x${host_cpu}" = "xi686"; then
+      lto=${GCC}
+   fi
    ;;
 cygwin*)   
    WIN32=cygwin
@@ -80,6 +86,19 @@ darwin*)
    host_type=
    ;;
 esac
+
+AC_MSG_CHECKING([for link-time optimization (LTO)])
+
+AC_ARG_ENABLE(lto,
+[  --enable-lto      compile with link-time optimizations (default=supported)],
+[ ],[ enable_lto=$lto ])
+
+AC_MSG_RESULT($enable_lto)
+
+if test "x${enable_lto}" = "xyes"; then
+  CFLAGS="${CFLAGS-} -flto"
+  LDFLAGS="${LDFLAGS-} -flto"
+fi
 
 AM_CONDITIONAL([WIN32], [test "${WIN32}" = "yes"])
 

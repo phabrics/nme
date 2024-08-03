@@ -33,8 +33,8 @@ dnl ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Checks that we are given a good source directory.
-AC_PREREQ([2.71])
-AC_INIT([tme],[0.12rc12])
+AC_PREREQ([2.69])
+AC_INIT([tme],[0.12.13])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIRS([m4])
 AC_CANONICAL_TARGET
@@ -44,6 +44,7 @@ AM_INIT_AUTOMAKE([subdir-objects])
 AM_EXTRA_RECURSIVE_TARGETS([modules])
 AC_PROG_CC
 AM_PROG_CC_C_O
+AM_SILENT_RULES([yes])
 AC_PREFIX_PROGRAM([tmesh])
 
 dnl Write configuration out to config.h through config.h.in.
@@ -102,7 +103,7 @@ LT_INIT([dlopen,win32-dll])
 LT_LANG([Windows Resource])
 LTDL_INIT([installable recursive])
 CPPFLAGS="${CPPFLAGS-} ${LTDLINCL}" # -DLT_DEBUG_LOADERS"
-
+lto=no
 case "${host_os}" in
 netbsd*) 
    CPPFLAGS="${CPPFLAGS-} -D_NETBSD_SOURCE"
@@ -128,6 +129,7 @@ linux*)
    CPPFLAGS="${CPPFLAGS-}"
    DEV_TAP_FILENAME='"\"/dev/net/tun\""'
    SETCAP="chmod u+s"
+   lto=yes
 #   SETCAP="setcap cap_sys_nice,cap_net_admin,cap_net_raw+ep"
    ;;
 mingw* | msys*)
@@ -137,6 +139,9 @@ mingw* | msys*)
    WIN32=yes
    SETCAP="chmod u+s"
    host_type=
+   if test "x${enable_shared}" = "xno" || test "x${host_cpu}" = "xi686"; then
+      lto=${GCC}
+   fi
    ;;
 cygwin*)   
    WIN32=cygwin
@@ -157,6 +162,19 @@ darwin*)
    host_type=
    ;;
 esac
+
+AC_MSG_CHECKING([for link-time optimization (LTO)])
+
+AC_ARG_ENABLE(lto,
+[  --enable-lto      compile with link-time optimizations (default=supported)],
+[ ],[ enable_lto=$lto ])
+
+AC_MSG_RESULT($enable_lto)
+
+if test "x${enable_lto}" = "xyes"; then
+  CFLAGS="${CFLAGS-} -flto"
+  LDFLAGS="${LDFLAGS-} -flto"
+fi
 
 AM_CONDITIONAL([WIN32], [test "${WIN32}" = "yes"])
 
@@ -717,6 +735,10 @@ xglib)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_GLIB -DUSE_GLIB_TIME ${GLIB_CFLAGS
 	 ;;
 xfiber)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_FIBER"
 	 ;;
+xgiber)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_FIBER -DUSE_GLIB_TIME ${GLIB_CFLAGS}"
+	 LDFLAGS="${LDFLAGS-} ${GLIB_LIBS}"
+	  tme_thread_types=fiber
+	 ;;
 esac
 done
 
@@ -910,21 +932,6 @@ else
      			-Wno-discarded-qualifiers -Wno-implicit-function-declaration -Wno-cpp -fno-strict-aliasing"
   fi
   CXXFLAGS="${CXXFLAGS-} -W"
-fi
-
-if test "x${enable_shared}" = "xno" || test "x${host_cpu}" = "xi686"; then
-   lto=${GCC}
-else
-   lto=no
-fi
-
-AC_ARG_ENABLE(lto,
-[  --enable-lto      compile with link-time optimizations (default=supported)],
-[ ],[ enable_lto=$lto ])
-
-if test "x${enable_lto}" = "xyes"; then
-  CFLAGS="${CFLAGS-} -flto"
-  LDFLAGS="${LDFLAGS-} -flto"
 fi
 
 dnl Some code isn't alias-clean.
