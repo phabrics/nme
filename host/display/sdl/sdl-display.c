@@ -449,8 +449,8 @@ _tme_sdl_display_update(struct tme_display *display) {
 	  button = 0; // e.motion.state;
 	}
 	else {
-	  x = e.button.x;
-	  y = e.button.y;
+	  x = 0; // e.button.x;
+	  y = 0; // e.button.y;
 	  button = e.button.button;
 	  if (e.type == SDL_MOUSEBUTTONUP)
 	    button = -button;
