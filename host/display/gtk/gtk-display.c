@@ -559,6 +559,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   display->display.tme_display_keyval_from_name = gdk_keyval_from_name;
   display->display.tme_display_keyval_convert_case = gdk_keyval_convert_case;
   display->display.tme_display_key_void_symbol = GDK_KEY_VoidSymbol;
+  display->display.tme_display_mouse_warp = TRUE;
   tme_display_init(element, display);
 
   /* recover our data structure: */

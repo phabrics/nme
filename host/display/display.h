@@ -160,6 +160,9 @@ struct tme_display {
     tme_screen_mouse_warp_x,
     tme_screen_mouse_warp_y;
 
+  /* whether display implements mouse warp functionality: */
+  int tme_display_mouse_warp;
+  
   /* a convenience pointer for any platform-specific host data: */
   void *tme_screen_data;
 

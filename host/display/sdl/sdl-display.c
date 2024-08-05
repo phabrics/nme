@@ -395,14 +395,14 @@ _tme_sdl_display_update(struct tme_display *display) {
 	if (rightAltKeyDown) {
 	  _tme_keyboard_key_event(FALSE, SDLK_RALT, display);
 	  rightAltKeyDown = FALSE;
-	  tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
+	  tme_log(&display->tme_display_element->tme_element_log_handle, 10, TME_OK,
 		  (&display->tme_display_element->tme_element_log_handle,
 		   _("released right Alt key\n")));
 	}
 	if (leftAltKeyDown) {
 	  _tme_keyboard_key_event(FALSE, SDLK_LALT, display);
 	  leftAltKeyDown = FALSE;
-	  tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
+	  tme_log(&display->tme_display_element->tme_element_log_handle, 10, TME_OK,
 		  (&display->tme_display_element->tme_element_log_handle,
 		   _("released left Alt key\n")));
 	}
@@ -444,8 +444,8 @@ _tme_sdl_display_update(struct tme_display *display) {
 	if (viewOnly)
 	  break;
 	if (e.type == SDL_MOUSEMOTION) {
-	  x = e.motion.x;
-	  y = e.motion.y;
+	  x = e.motion.xrel;
+	  y = e.motion.yrel;
 	  button = 0; // e.motion.state;
 	}
 	else {
@@ -480,7 +480,7 @@ _tme_sdl_display_update(struct tme_display *display) {
 #endif
       break;
     default:
-      tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
+      tme_log(&display->tme_display_element->tme_element_log_handle, 10, TME_OK,
 	      (&display->tme_display_element->tme_element_log_handle,
 	       _("ignore SDL event: 0x%x\n"), e.type));
     }
@@ -524,6 +524,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_sdl,display) {
   display->tme_screen_add = (void *)sizeof(struct tme_sdl_screen);
   display->tme_screen_resize = _tme_sdl_screen_resize;
   display->tme_screen_redraw = _tme_sdl_screen_redraw;
-
+  
   return (TME_OK);
 }

@@ -172,7 +172,7 @@ static _tme_inline int tme_thread_sleep _TME_P((tme_time_t sleep)) {
 
 /* A default main iterator for use in the main thread loop */
 static _tme_inline int tme_threads_main_iter _TME_P((void *usec)) {
-  g_usleep((usec) ? (unsigned long)usec : 1000000);
+  g_usleep((usec) ? (uintptr_t)usec : 1000000);
   return 0;
 }
 

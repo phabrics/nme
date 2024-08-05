@@ -37,20 +37,7 @@
 #include "display.h"
 
 /* this is for debugging only: */
-#if 0
 #include <stdio.h>
-void
-_tme_mouse_debug(const struct tme_mouse_event *event)
-{
-  fprintf(stderr,
-	  "buttons = 0x%02x dx=%d dy=%d\n",
-	  event->tme_mouse_event_buttons,
-	  event->tme_mouse_event_delta_x,
-	  event->tme_mouse_event_delta_y);
-}
-#else
-#define _tme_mouse_debug(e) do { } while (/* CONSTCOND */ 0)
-#endif
 
 /* this is a generic callback for a mouse event: */
 void
@@ -74,39 +61,42 @@ _tme_mouse_event(int button, int x, int y, struct tme_display *display)
   tme_event.tme_mouse_event_delta_units
     = TME_MOUSE_UNITS_UNKNOWN;
 
+  /* make the deltas: */
+  tme_event.tme_mouse_event_delta_x = x;
+  tme_event.tme_mouse_event_delta_y = y;
+
+  tme_event.tme_mouse_event_buttons = buttons;
+  
   /* lock the mutex: */
   tme_mutex_lock(&display->tme_display_mutex);
 
   /* set the event time: */
   tme_event.tme_mouse_event_time = tme_thread_get_time();
 
-  /* if the button mask and pointer position haven't changed, return now.
-     every time we warp the pointer we will get a motion event, and
-     this should ignore those events: */
+  if(display->tme_display_mouse_warp) {
+    /* if the button mask and pointer position haven't changed, return now.
+       every time we warp the pointer we will get a motion event, and
+       this should ignore those events: */
 
-  if (!button && x == display->tme_screen_mouse_warp_x
-      && y == display->tme_screen_mouse_warp_y) {
+    if (!button && x == display->tme_screen_mouse_warp_x
+	&& y == display->tme_screen_mouse_warp_y) {
     
-    /* unlock the mutex: */
-    tme_mutex_unlock(&display->tme_display_mutex);
+      /* unlock the mutex: */
+      tme_mutex_unlock(&display->tme_display_mutex);
     
-    /* stop propagating this event: */
-    return;
+      /* stop propagating this event: */
+      return;
+    }
+  
+    /* make the deltas: */
+    tme_event.tme_mouse_event_delta_x -= display->tme_screen_mouse_warp_x;
+    tme_event.tme_mouse_event_delta_y -= display->tme_screen_mouse_warp_y;
+
+    display->tme_screen_mouse_warp_x = x;
+    display->tme_screen_mouse_warp_y = y;
+  
   }
-  
-  tme_event.tme_mouse_event_buttons =
-    display->tme_screen_mouse_buttons_last = buttons;
-  
-  /* make the deltas: */
-  tme_event.tme_mouse_event_delta_x = 
-    (((int) x)
-     - ((int) display->tme_screen_mouse_warp_x));
-  tme_event.tme_mouse_event_delta_y = 
-    (((int) y)
-     - ((int) display->tme_screen_mouse_warp_y));
-
-  display->tme_screen_mouse_warp_x = x;
-  display->tme_screen_mouse_warp_y = y;
+  display->tme_screen_mouse_buttons_last = buttons;
   
   /* assume that we won't need any new callouts: */
   new_callouts = 0;
@@ -115,8 +105,15 @@ _tme_mouse_event(int button, int x, int y, struct tme_display *display)
   was_empty
     = tme_mouse_buffer_is_empty(display->tme_display_mouse_buffer);
 
+  /* if this translation isn't optimal, log a note: */
+  tme_log(&display->tme_display_element->tme_element_log_handle, 100, TME_OK,
+	  (&display->tme_display_element->tme_element_log_handle,
+	   _("buttons = 0x%02x dx=%d dy=%d"),
+	   tme_event.tme_mouse_event_buttons,
+	   tme_event.tme_mouse_event_delta_x,
+	   tme_event.tme_mouse_event_delta_y));
+
   /* add this tme event to the mouse buffer: */
-  _tme_mouse_debug(&tme_event);
   rc = tme_mouse_buffer_copyin(display->tme_display_mouse_buffer,
 			       &tme_event);
   assert (rc == TME_OK);

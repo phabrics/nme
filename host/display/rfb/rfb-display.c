@@ -353,6 +353,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_rfb,display) {
   display->tme_display_key_void_symbol = SDLK_UNKNOWN;
 #endif
 
+  display->tme_display_mouse_warp = TRUE;
+  
   /* start our data structure: */
   tme_display_init(element, display);
 
