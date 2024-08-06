@@ -34,7 +34,7 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.69])
-AC_INIT([tme],[0.12.13])
+AC_INIT([tme],[0.12rc13])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIRS([m4])
 AC_CANONICAL_TARGET
@@ -130,6 +130,7 @@ linux*)
    DEV_TAP_FILENAME='"\"/dev/net/tun\""'
    SETCAP="chmod u+s"
    lto=yes
+   LDFLAGS="-Wl,--copy-dt-needed-entries"
 #   SETCAP="setcap cap_sys_nice,cap_net_admin,cap_net_raw+ep"
    ;;
 mingw* | msys*)
