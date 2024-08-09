@@ -70,7 +70,7 @@ typedef struct tme_fiber_thread {
   struct tme_fiber_thread *state_next;
   struct tme_fiber_thread **state_prev;
 
-#if defined(_EMSCRIPTEN__) && !defined(USE_SJLJ)
+#if defined(__EMSCRIPTEN__) && !defined(USE_SJLJ)
   emscripten_fiber_t tme_fiber_context;
   char tme_fiber_asyncify_stack[1024];
   char tme_fiber_c_stack[4096]  __attribute__((aligned(16)));

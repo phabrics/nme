@@ -61,7 +61,7 @@ static int _tme_sdl_keymods[] = {
   0
 };
 
-struct { char mask; int bits_stored; } utf8Mapping[]= {
+static struct { char mask; int bits_stored; } utf8Mapping[]= {
         {0b00111111, 6},
         {0b01111111, 7},
         {0b00011111, 5},
@@ -84,7 +84,7 @@ struct tme_sdl_screen {
 };
 
 /* client's pointer position */
-int x,y;
+static int x,y;
 static int rightAltKeyDown, leftAltKeyDown;
 
 static void
