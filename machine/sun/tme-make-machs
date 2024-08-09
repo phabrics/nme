@@ -109,6 +109,11 @@ for mach in `ls $loc/SUN*`; do
        # if there is a site- or mach-specific config, copy those files
        [ -d "$loc/$machd" ] && cp $loc/$machd/* $machd 2>/dev/null
     fi
+    if [ ! -f $machd/run-$machd ]; then
+	echo "# tmesh startup script for machine description of $machd" > $machd/src-$machd
+	echo >> $machd/src-$machd
+	echo "source MY-$mach" >> $machd/src-$machd
+    fi
 done
 
 # Replace with absolute pathnames to avoid symlink issues
@@ -121,7 +126,7 @@ for arch in {sun2,sun3,sun4,sun-ultra}; do
     netbsd_iso=$netbsd_root/images/$netbsd_rel/NetBSD-$netbsd_rel-sparc
     netbsd=netbsd-$arch
     prom=my-$arch-eeprom.bin
-    for machd in `ls -d $arch-*/`; do
+    for machd in `ls -d $arch-*`; do
 	cd $machd
 	echo "Making $machd"
 	if [ $arch = "sun4" ]; then
@@ -163,9 +168,16 @@ for arch in {sun2,sun3,sun4,sun-ultra}; do
 		[ $arch = "sun2" ] && gzip -c -d $netbsd_path/binary/sets/kern-FOURMEG.tgz > $j
 		cd ..
 	    fi
+	    if [ ! -f run-$machd ]; then
+		mv src-$machd run-$machd
+		echo -n "command tape0 load " >> run-$machd
+		for j in `ls $netbsd.tape`; do echo -n "$netbsd.tape/$j " >> run-$machd; done
+		echo >> run-$machd
+		echo "command mainbus0 power up" >> run-$machd
+	    fi
 	    if [ $arch = "sun3" ]; then
 		macht="3/150"
-		[ -f $prom ] || tme-sun-eeprom < $(basename $machd)-eeprom.txt > $prom
+		[ -f $prom ] || tme-sun-eeprom < $machd-eeprom.txt > $prom
 	    else
 		macht="2/120"
 	    fi
