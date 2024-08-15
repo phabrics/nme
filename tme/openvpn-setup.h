@@ -35,9 +35,44 @@
 #include <tme/threads.h>
 #include <libopenvpn/tun.h>
 #include <libopenvpn/link.h>
+#include <libopenvpn/syshead.h>
+#include <libopenvpn/event.h>
 
 #define OPENVPN_CAN_WRITE 1
 #define OPENVPN_FAST_IO 2
+
+#ifndef TME_THREADS_FIBER
+/* Events: */
+typedef struct event_set tme_event_set_t;
+
+#define tme_event_set(s) (s)
+#define tme_event_set_init event_set_init
+#define tme_event_free event_free
+#define tme_event_reset event_reset
+#define tme_event_del event_del
+#define tme_event_ctl event_ctl
+
+static _tme_inline
+int tme_event_wait _TME_P((tme_event_set_t *es, const struct timeval *tv, struct event_set_return *out, int outlen, tme_mutex_t *mutex)) {
+  int rc;
+  struct timeval _tv;
+
+  _tv.tv_sec = (tv) ? (tv->tv_sec) : (BIG_TIMEOUT);
+  _tv.tv_usec = (tv) ? (tv->tv_usec) : (0);
+  
+  if(mutex) tme_mutex_unlock(mutex);
+  
+  _tme_thread_suspended();
+  
+  rc = event_wait(es, &_tv, out, outlen);
+
+  _tme_thread_resumed();
+    
+  if(mutex) tme_mutex_lock(mutex);
+
+  return rc;
+}
+#endif
 
 struct env_set *openvpn_setup _TME_P((const char *args[], int argc, struct options *options));
 

@@ -227,8 +227,11 @@ AX_APPEND_LINK_FLAGS(-sUSE_SDL=2, SDL_LIBS)
 AM_CONDITIONAL([HAVE_SDL], [test "x${have_sdl}" = xyes])
 PKG_CHECK_MODULES([RFB], [libvncclient libvncserver], [have_rfb=$enable_rfb], [have_rfb=no])
 
-if test "x${have_tap_header}" = xyes || test "x${WIN32}" != x; then
+if test "x${have_tap_header}" = xyes; then
    have_openvpn=$enable_openvpn
+fi
+
+if test "x${have_openvpn}" = xyes; then
    AC_DEFINE([HAVE_OPENVPN], [], [Defined if openvpn is found.])
 fi
 
@@ -748,6 +751,7 @@ CPPFLAGS="${CPPFLAGS-} -D_GNU_SOURCE"
 AM_CONDITIONAL([THREADS_POSIX], [test "x${tme_thread_types}" = xpthreads || test "x${tme_thread_types}" = xposix])
 AM_CONDITIONAL([THREADS_GLIB], [test "x${tme_thread_type}" = xglib])
 AM_CONDITIONAL([THREADS_FIBER], [test "x${tme_thread_types}" = xfiber])
+AM_CONDITIONAL([USE_OPENVPN], [test "x$have_openvpn" = xyes || test "x${tme_thread_types}" = xfiber || test "x${WIN32}" != x])
 AC_MSG_RESULT($tme_thread_types)
 
 dnl Configures for the system(s) to emulate.
@@ -1235,7 +1239,8 @@ bus_size_max="$bus_size_max"
 ]])
 
 dnl Writes files.
-AC_CONFIG_SUBDIRS([libopenvpn])
+AS_IF([test "x$have_openvpn" = xyes || test "x${tme_thread_types}" = xfiber || test "x${WIN32}" != x],
+	    [AC_CONFIG_SUBDIRS([libopenvpn])])
 AC_CONFIG_FILES([Makefile
 	  tme-modules.sh
 	  tme/Makefile

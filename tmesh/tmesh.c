@@ -40,7 +40,9 @@ _TME_RCSID("$Id: tmesh.c,v 1.4 2009/08/30 17:06:38 fredette Exp $");
 #include <tme/tme.h>
 #include <tme/tmesh.h>
 #include <tme/hash.h>
+#ifdef HAVE_OPENVPN
 #include <tme/openvpn-setup.h>
+#endif
 #ifdef __EMSCRIPTEN__
 #include <tme/shlibvar.h>
 #include <emscripten.h>
@@ -723,6 +725,7 @@ main(int argc, char **argv)
   
   if (!interactive && (arg_i == argc)) do_usage(argv0, NULL);
 
+#ifdef HAVE_OPENVPN
   // Initialize openvpn library
   if(init_static()) {
     es = openvpn_setup(NULL, 0, NULL);
@@ -732,7 +735,8 @@ main(int argc, char **argv)
 #endif
   } else
     exit(1);
-
+#endif
+  
   if (!strcmp(log_filename, "-")) {
     _tmesh_log = stdout;
   }

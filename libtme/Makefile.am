@@ -25,7 +25,6 @@ libtme_la_SOURCES = misc-host.c \
 	recode-ic.c \
 	recode-host.c \
 	recode-impl.h \
-        openvpn-setup.c \
 	module.c \
 	threads.c \
 	element.c \
@@ -35,11 +34,17 @@ libtme_la_SOURCES = misc-host.c \
 	runlength.c \
 	alloc.c
 
+libtme_la_LIBADD = $(LIBLTDL)
+libtme_la_LDFLAGS = -version-info 0:0:0
+
+if USE_OPENVPN
+libtme_la_SOURCES += openvpn-setup.c
+libtme_la_LIBADD += $(top_builddir)/libopenvpn/libopenvpn.la
+endif
+
 if THREADS_FIBER
 libtme_la_SOURCES += threads-fiber.c
 endif
-libtme_la_LDFLAGS = -version-info 0:0:0
-libtme_la_LIBADD = $(LIBLTDL) $(top_builddir)/libopenvpn/libopenvpn.la
 
 if THREADS_GLIB
 libtme_la_LIBADD += $(GLIB_LIBS)

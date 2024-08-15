@@ -6,8 +6,11 @@ AUTOMAKE_OPTIONS = 1.4 gnu
 pkglib_LTLIBRARIES = tme_host_posix.la
 tme_host_posix_la_SOURCES = posix-memory.c \
 	posix-disk.c \
-	posix-tape.c \
-	posix-serial.c
+	posix-tape.c
+
+if USE_OPENVPN
+tme_host_posix_la_SOURCES += posix-serial.c
+endif
 
 tme_host_posix_la_LIBADD = $(TME_LIBS)
 

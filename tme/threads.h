@@ -41,8 +41,6 @@ _TME_RCSID("$Id: threads.h,v 1.10 2010/06/05 19:36:35 fredette Exp $");
 
 /* includes: */
 #include <errno.h>
-#include <libopenvpn/syshead.h>
-#include <libopenvpn/event.h>
 
 /* setjmp/longjmp threading: */
 #ifdef TME_THREADS_POSIX
@@ -243,37 +241,6 @@ static _tme_inline void tme_thread_exit _TME_P((tme_mutex_t *mutex)) {
   _tme_thread_suspended();  
   if(mutex)
     tme_mutex_unlock(mutex);
-}
-
-/* Events: */
-typedef struct event_set tme_event_set_t;
-
-#define tme_event_set(s) (s)
-#define tme_event_set_init event_set_init
-#define tme_event_free event_free
-#define tme_event_reset event_reset
-#define tme_event_del event_del
-#define tme_event_ctl event_ctl
-
-static _tme_inline
-int tme_event_wait _TME_P((tme_event_set_t *es, const struct timeval *tv, struct event_set_return *out, int outlen, tme_mutex_t *mutex)) {
-  int rc;
-  struct timeval _tv;
-
-  _tv.tv_sec = (tv) ? (tv->tv_sec) : (BIG_TIMEOUT);
-  _tv.tv_usec = (tv) ? (tv->tv_usec) : (0);
-  
-  if(mutex) tme_mutex_unlock(mutex);
-  
-  _tme_thread_suspended();
-  
-  rc = event_wait(es, &_tv, out, outlen);
-
-  _tme_thread_resumed();
-    
-  if(mutex) tme_mutex_lock(mutex);
-
-  return rc;
 }
 #endif /* !TME_THREADS_FIBER */
 

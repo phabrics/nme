@@ -168,6 +168,7 @@ static _tme_inline void tme_thread_create _TME_P((tme_threadid_t *t, tme_thread_
 /* sleeping: */
 static _tme_inline int tme_thread_sleep _TME_P((tme_time_t sleep)) { 
   g_usleep(TME_TIME_GET_USEC(sleep));
+  return 0;
 }
 
 /* A default main iterator for use in the main thread loop */

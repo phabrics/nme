@@ -13,7 +13,6 @@ pkginclude_HEADERS = memory.h \
 	threads-posix.h \
 	threads-glib.h \
 	threads-fiber.h \
-	openvpn-setup.h \
 	module.h \
 	log.h \
 	tme.h \
@@ -24,6 +23,11 @@ pkginclude_HEADERS = memory.h \
 	completion.h \
 	tmesh.h \
 	runlength.h
+
+if USE_OPENVPN
+pkginclude_HEADERS += openvpn-setup.h
+endif
+
 info_TEXINFOS = tme.texi
 tme_TEXINFOS = fdl.texi
 

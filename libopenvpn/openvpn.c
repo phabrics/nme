@@ -107,6 +107,7 @@ tunnel_point_to_point (struct context *c)
 #undef PROCESS_SIGNAL_P2P
 
 
+#if 0
 /**************************************************************************/
 /**
  * OpenVPN's main init-run-cleanup loop.
@@ -309,7 +310,6 @@ openvpn_main (int argc, char *argv[])
   return 0;			            /* NOTREACHED */
 }
 
-#if 0
 #ifdef WIN32
 int
 wmain (int argc, wchar_t *wargv[]) {
