@@ -200,8 +200,10 @@ ssize_t tme_event_yield _TME_P((tme_event_t, void *, size_t, unsigned int, tme_m
 
 #ifdef TME_THREADS_FIBER
 
-#define tme_thread_read(hand, data, len, mutex) tme_event_yield(hand, data, len, EVENT_READ, mutex, NULL)
-#define tme_thread_write(hand, data, len, mutex) tme_event_yield(hand, data, len, EVENT_WRITE, mutex, NULL)
+ssize_t tme_fiber_read _TME_P((tme_thread_handle_t hand, void *buf, size_t len, tme_mutex_t *mutex));
+#define tme_thread_read tme_fiber_read
+ssize_t tme_fiber_write _TME_P((tme_thread_handle_t hand, const void *buf, size_t len, tme_mutex_t *mutex));
+#define tme_thread_write tme_fiber_write
 
 #else
 

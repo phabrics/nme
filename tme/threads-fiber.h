@@ -142,26 +142,9 @@ void tme_fiber_yield _TME_P((void));
 void tme_fiber_exit _TME_P((tme_mutex_t *mutex));
 #define tme_thread_exit tme_fiber_exit
 
-/* sleeping: */
+  /* sleeping: */
 void tme_fiber_sleep_yield _TME_P((tme_time_t));
 #define tme_thread_sleep tme_fiber_sleep_yield
-
-/* Events: */
-typedef struct tme_fiber_event_set tme_event_set_t;
-
-tme_event_set_t *tme_fiber_event_set_init _TME_P((int *maxevents, unsigned int flags));
-void tme_fiber_event_free _TME_P((tme_event_set_t *es));
-void tme_fiber_event_reset _TME_P((tme_event_set_t *es));
-int tme_fiber_event_del _TME_P((tme_event_set_t *es, event_t event));
-int tme_fiber_event_ctl _TME_P((tme_event_set_t *es, event_t event, unsigned int rwflags, void *arg));
-int tme_fiber_event_wait _TME_P((tme_event_set_t *es, const struct timeval *tv, struct event_set_return *out, int outlen, tme_mutex_t *mutex));
-#define tme_event_set(s) (*(struct event_set **)(s))
-#define tme_event_set_init tme_fiber_event_set_init
-#define tme_event_free tme_fiber_event_free
-#define tme_event_reset tme_fiber_event_reset
-#define tme_event_del tme_fiber_event_del
-#define tme_event_ctl tme_fiber_event_ctl
-#define tme_event_wait tme_fiber_event_wait
 
 /* time: */
 tme_time_t tme_fiber_get_time _TME_P((void));

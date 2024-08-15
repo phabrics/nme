@@ -37,7 +37,7 @@
 _TME_RCSID("$Id: threads-fiber.c,v 1.18 2010/06/05 19:10:28 fredette Exp $");
 
 /* includes: */
-#include <tme/threads.h>
+#include <tme/openvpn-setup.h>
 #include <stdlib.h>
 #if defined(__EMSCRIPTEN__) && !defined(USE_SJLJ)
 #include <emscripten/fiber.h>
@@ -933,6 +933,14 @@ tme_fiber_yield(void)
 #else
   tme_fiber_switch(thread, &tme_fiber_thread_blocked);
 #endif
+}
+
+ssize_t tme_fiber_read(tme_thread_handle_t hand, void *buf, size_t len, tme_mutex_t *mutex) {
+  return tme_event_yield(hand, buf, len, EVENT_READ, mutex, NULL);
+}
+
+ssize_t tme_fiber_write(tme_thread_handle_t hand, const void *buf, size_t len, tme_mutex_t *mutex) {
+  return tme_event_yield(hand, buf, len, EVENT_WRITE, mutex, NULL);
 }
 
 #ifndef TME_NO_DEBUG_LOCKS

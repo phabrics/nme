@@ -465,33 +465,4 @@ tme_off_t tme_thread_seek (tme_thread_handle_t hand, tme_off_t off, int where) {
   return tme_event_seek(hand->handle, &hand->writes, off, where);
 }
 #endif
-
-static _tme_inline int
-tme_event_read (tme_event_t hand, void *data, int len)
-{
-  return (hand == TME_STD_HANDLE(stdin)) ?
-    (tme_read(hand->handle, data, len)) :
-    (tme_finalize (hand->handle, &hand->reads, NULL));
-}
-
-static _tme_inline int
-tme_event_write (tme_event_t hand, void *data, int len)
-{
-  if(hand == TME_STD_HANDLE(stdout) || hand == TME_STD_HANDLE(stderr))
-    tme_write(hand->handle, data, len);
-  else {
-    struct buffer buf;
-  
-    CLEAR(buf);
-
-    buf.data = data;
-    buf.len = len;
-
-    return tme_write_win32 (hand, &buf);
-  }
-}
-
-#else // WIN32
-#define tme_event_read tme_read
-#define tme_event_write tme_write
-#endif // !WIN32
+#endif // WIN32
