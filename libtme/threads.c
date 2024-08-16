@@ -33,6 +33,9 @@
 
 /* includes: */
 #include <tme/threads.h>
+#if defined(TME_THREADS_FIBER) || defined(WIN32)
+#include <tme/openvpn-setup.h>
+#endif
 
 /* globals: */
 static tme_threads_fn1 _tme_threads_run;
@@ -465,4 +468,116 @@ tme_off_t tme_thread_seek (tme_thread_handle_t hand, tme_off_t off, int where) {
   return tme_event_seek(hand->handle, &hand->writes, off, where);
 }
 #endif
-#endif // WIN32
+
+static _tme_inline int
+tme_event_read (tme_event_t hand, void *data, int len)
+{
+  return (hand == TME_STD_HANDLE(stdin)) ?
+    (tme_read(hand->handle, data, len)) :
+    (tme_finalize (hand->handle, &hand->reads, NULL));
+}
+
+static _tme_inline int
+tme_event_write (tme_event_t hand, void *data, int len)
+{
+  if(hand == TME_STD_HANDLE(stdout) || hand == TME_STD_HANDLE(stderr))
+    tme_write(hand->handle, data, len);
+  else {
+    struct buffer buf;
+  
+    CLEAR(buf);
+
+    buf.data = data;
+    buf.len = len;
+
+    return tme_write_win32 (hand, &buf);
+  }
+}
+
+#else // WIN32
+#define tme_event_read tme_read
+#define tme_event_write tme_write
+#endif // !WIN32
+
+static _tme_inline event_t
+tme_event_handle (const tme_event_t hand)
+{
+#ifdef WIN32
+  return &hand->rw_handle;
+#else
+  return hand;
+#endif
+}
+
+/* this reads or writes, yielding if the event is not ready: */
+ssize_t
+tme_event_yield(tme_event_t hand, void *data, size_t len, unsigned int rwflags, tme_mutex_t *mutex, void **outbuf)
+{
+  int rc = 1;
+  struct event_set_return esr;
+  tme_event_set_t *tme_events = tme_event_set_init(&rc, EVENT_METHOD_FAST);
+
+#ifdef WIN32
+  int i, key_event=FALSE;
+  do {
+    if (rwflags & EVENT_READ) {
+      if (hand == TME_STD_HANDLE(stdin)) {
+	INPUT_RECORD record[128];
+	DWORD numRead;
+	key_event=TRUE;
+	if((rc = GetNumberOfConsoleInputEvents(hand->handle, &numRead)) &&
+	   numRead>0 &&
+	   (rc = PeekConsoleInput(hand->handle, record, 128, &numRead))) {
+	  for(i=0;i<numRead;i++) {
+	    if(record[i].EventType != KEY_EVENT) {
+	      // don't care about other console events
+	      continue;
+	    }
+      
+	    if(!record[i].Event.KeyEvent.bKeyDown) {
+	      // really only care about keydown
+	      continue;
+	    }
+	    break;
+	  }
+	  if(i!=numRead) break;
+	  rc = ReadConsoleInput(hand->handle, record, i, &numRead);
+	}
+	hand->reads.status = (rc) ? (rc) : (GetLastError());
+	// if you're setup for ASCII, process this:
+	//record.Event.KeyEvent.uChar.AsciiChar
+      } else {
+	if(!hand->writes.buf_init.data) {
+	  hand->reads.buf_init.data = data;
+	  hand->reads.buf_init.len = len;
+	}
+	tme_read_queue (hand, 0);
+      }
+    }
+#endif
+    tme_event_reset(tme_events);
+    tme_event_ctl(tme_events, tme_event_handle(hand), rwflags, 0);
+    rc = tme_event_wait(tme_events, NULL, &esr, 1, mutex);
+#ifdef WIN32
+  } while(key_event);
+#endif
+  tme_event_free(tme_events);
+  
+  /* do the i/o: */
+  if(esr.rwflags & EVENT_WRITE)
+    rc = tme_event_write(hand, data, len);
+  if(esr.rwflags & EVENT_READ) {
+    rc = tme_event_read(hand, data, len);
+#ifdef WIN32
+    if(hand->writes.buf_init.data)
+      if(outbuf)
+	*outbuf = hand->reads.buf.data;
+      else
+	memcpy(data, hand->reads.buf.data, rc);
+    else
+#endif
+      if(outbuf)
+	*outbuf = data;
+  }
+  return rc;
+}
