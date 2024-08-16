@@ -499,6 +499,7 @@ tme_event_write (tme_event_t hand, void *data, int len)
 #define tme_event_write tme_write
 #endif // !WIN32
 
+#if defined(TME_THREADS_FIBER) || defined(WIN32)
 static _tme_inline event_t
 tme_event_handle (const tme_event_t hand)
 {
@@ -581,3 +582,4 @@ tme_event_yield(tme_event_t hand, void *data, size_t len, unsigned int rwflags, 
   }
   return rc;
 }
+#endif // openvpn-dependent
