@@ -81,7 +81,65 @@ static _tme_inline int tme_thread_sleep_yield _TME_P((tme_time_t time, tme_mutex
 }
 
 /* I/O: */
-#ifdef WIN32
+#if defined(USE_ZLIB) && defined(_TME_HAVE_ZLIB)
+#include "zlib.h"
+typedef struct tme_zlib_handle {
+  gzFile handle;
+  int fd;
+} *tme_event_t;
+
+/* file flags: */
+#define TME_FILE_RO		O_RDONLY
+#define TME_FILE_WO		O_WRONLY
+#define TME_FILE_RW		O_RDWR
+#define TME_FILE_NB		0
+#define TME_THREAD_HANDLE(hand) hand->handle
+#define TME_EVENT_HANDLE(hand) hand
+#define TME_INVALID_HANDLE NULL
+#define TME_INVALID_EVENT NULL
+#define TME_STD_HANDLE(hand) fileno(hand)
+#define TME_STD_THREAD_HANDLE(hand) fileno(hand)
+#define TME_STD_EVENT_HANDLE(hand) fileno(hand)
+typedef tme_event_t tme_thread_handle_t;
+#define tme_thread_fd(hand, flags) hand->fd
+#define tme_read gzread
+#define tme_write gzwrite
+#define TME_SEEK_SET SEEK_SET
+#define TME_SEEK_CUR SEEK_CUR
+#define TME_SEEK_END SEEK_END
+typedef z_off_t tme_off_t;
+#define tme_thread_seek(hand,off,where) gzseek(TME_THREAD_HANDLE(hand),off,where)
+#define tme_thread_open tme_zlib_open
+static _tme_inline tme_event_t tme_zlib_open _TME_P((const char *path, int flags)) {
+  tme_event_t hand;
+  gzFile handle;
+  int fd = open(path, flags);
+  char *mode;
+  
+  if(fd == -1)
+    return TME_INVALID_HANDLE;
+  
+  switch(flags) {
+  case TME_FILE_RO: mode="rb"; break;
+  case TME_FILE_WO: mode="wb"; break;
+  case TME_FILE_RW: mode="+"; break;
+  default: mode="a"; break;
+  }
+
+  handle = gzdopen(fd, mode);
+
+  if(handle == NULL)
+    return TME_INVALID_HANDLE;
+  
+  hand = tme_new0(struct tme_zlib_handle, 1);
+  hand->fd = fd;
+  hand->handle = handle;
+  return hand;
+}
+#define tme_thread_close(hand) gzclose(TME_THREAD_HANDLE(hand))
+#define tme_event_open gzopen
+#define tme_event_close gzclose
+#elif defined(WIN32) // USE_ZLIB
 /* file flags: */
 #define TME_FILE_RO		GENERIC_READ
 #define TME_FILE_WO		GENERIC_WRITE
@@ -115,7 +173,7 @@ static _tme_inline ssize_t tme_write _TME_P((HANDLE hand, const void *buf, size_
   return (WriteFile(hand, buf, len, &ret, NULL)) ? (ret) : (-1);
 }
 
-#define tme_fd(hand, flags) _open_osfhandle((intptr_t)hand, flags);
+#define tme_thread_fd(hand, flags) _open_osfhandle((intptr_t)TME_THREAD_HANDLE(hand), flags);
 #define TME_SEEK_SET FILE_BEGIN
 #define TME_SEEK_CUR FILE_CURRENT
 #define TME_SEEK_END FILE_END
@@ -180,7 +238,7 @@ static _tme_inline tme_off_t tme_thread_seek _TME_P((tme_thread_handle_t hand, t
 #define TME_STD_EVENT_HANDLE(hand) fileno(hand)
 typedef int tme_event_t;
 typedef tme_event_t tme_thread_handle_t;
-#define tme_fd(hand, flags) hand
+#define tme_thread_fd(hand, flags) hand
 #define tme_read read
 #define tme_write write
 #define TME_SEEK_SET SEEK_SET
@@ -192,9 +250,7 @@ typedef off_t tme_off_t;
 #define tme_thread_close close
 #define tme_event_open open
 #define tme_event_close close
-#endif
-
-#define tme_thread_fd(hand,flags) tme_fd(TME_THREAD_HANDLE(hand), flags)
+#endif // !WIN32
 
 ssize_t tme_event_yield _TME_P((tme_event_t, void *, size_t, unsigned int, tme_mutex_t *, void **));
 
@@ -214,7 +270,7 @@ static _tme_inline ssize_t tme_thread_read _TME_P((tme_thread_handle_t hand, voi
 
   _tme_thread_suspended();
   
-  rc = tme_read(hand, buf, len);
+  rc = tme_read(TME_THREAD_HANDLE(hand), buf, len);
   
   _tme_thread_resumed();
 
@@ -230,7 +286,7 @@ static _tme_inline ssize_t tme_thread_write _TME_P((tme_thread_handle_t hand, co
   
   _tme_thread_suspended();
   
-  rc = tme_write(hand, buf, len);
+  rc = tme_write(TME_THREAD_HANDLE(hand), buf, len);
   
   _tme_thread_resumed();
   

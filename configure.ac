@@ -754,6 +754,14 @@ AM_CONDITIONAL([THREADS_FIBER], [test "x${tme_thread_types}" = xfiber])
 AM_CONDITIONAL([USE_OPENVPN], [test "x$have_openvpn" = xyes || test "x${tme_thread_types}" = xfiber || test "x${WIN32}" != x])
 AC_MSG_RESULT($tme_thread_types)
 
+dnl Checks for ZLIB.
+AS_IF([test "x${tme_thread_types}" != xfiber], 
+	    [PKG_CHECK_MODULES([ZLIB], [zlib], [have_zlib=yes], [])])
+if test "x${have_zlib}" = xyes; then
+   AC_DEFINE([HAVE_ZLIB], [], [Defined if ZLIB is found and can be used.])
+fi
+AM_CONDITIONAL([HAVE_ZLIB], [test "x${have_zlib}" = xyes])
+
 dnl Configures for the system(s) to emulate.
 bus_size_max=64
 recode_size_guest_max=64
