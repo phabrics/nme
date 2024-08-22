@@ -53,7 +53,9 @@ NME_DIR = $(top_builddir)$(TME_DIR)/tme
 plugins:
 	mkdir -p $(NME_DIR)
 	cp -f $(top_srcdir)/tme/*.txt $(NME_DIR)
-	[ -d $(top_srcdir)/machines ] && $(LN_S) $(top_srcdir)/machines $(top_builddir)
+	if test -d $(top_srcdir)/machines; then \
+		$(LN_S) $(top_srcdir)/machines $(top_builddir) ; \
+	fi
 #	find $(top_builddir) -type f -name '*.la' -exec cp '{}' $NME_DIR ';'
 	for mod in $(tme_preopen) $(TME_HOST_LIBS); do \
 		if test $$mod != -dlopen; then \
