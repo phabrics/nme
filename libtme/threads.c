@@ -612,6 +612,7 @@ struct tme_zlib_handle  *tme_zlib_open(const char *path, int flags) {
   return hand;
 }
 
+#ifdef TME_THREADS_FIBER
 /* this reads or writes, yielding if the event is not ready: */
 ssize_t
 tme_zlib_yield(struct tme_zlib_handle  *hand, void *data, size_t len, unsigned int rwflags, tme_mutex_t *mutex, void **outbuf)
@@ -636,4 +637,5 @@ tme_zlib_yield(struct tme_zlib_handle  *hand, void *data, size_t len, unsigned i
   return rc;
 }
 
+#endif // THREADS_FIBER
 #endif // HAVE_ZLIB

@@ -59,6 +59,7 @@ struct tme_zlib_handle {
 };
 struct tme_zlib_handle  *tme_zlib_open _TME_P((const char *path, int flags));
 #ifdef TME_THREADS_FIBER
+ssize_t tme_zlib_yield _TME_P((struct tme_zlib_handle  *, void *, size_t, unsigned int, tme_mutex_t *, void **));
 ssize_t tme_zlib_read _TME_P((struct tme_zlib_handle  *hand, void *buf, size_t len, tme_mutex_t *mutex));
 ssize_t tme_zlib_write _TME_P((struct tme_zlib_handle  *hand, const void *buf, size_t len, tme_mutex_t *mutex));
 #endif
