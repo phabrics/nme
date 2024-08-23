@@ -51,6 +51,19 @@ _TME_RCSID("$Id: threads.h,v 1.10 2010/06/05 19:36:35 fredette Exp $");
 #include "threads-fiber.h"
 #endif
 
+#ifdef _TME_HAVE_ZLIB
+#include "zlib.h"
+struct tme_zlib_handle {
+  gzFile handle;
+  int fd;
+};
+struct tme_zlib_handle  *tme_zlib_open _TME_P((const char *path, int flags));
+#ifdef TME_THREADS_FIBER
+ssize_t tme_zlib_read _TME_P((struct tme_zlib_handle  *hand, void *buf, size_t len, tme_mutex_t *mutex));
+ssize_t tme_zlib_write _TME_P((struct tme_zlib_handle  *hand, const void *buf, size_t len, tme_mutex_t *mutex));
+#endif
+#endif
+
 typedef void (*tme_threads_fn) _TME_P((void));
 typedef int (*tme_threads_fn1) _TME_P((void *));
 
@@ -81,65 +94,7 @@ static _tme_inline int tme_thread_sleep_yield _TME_P((tme_time_t time, tme_mutex
 }
 
 /* I/O: */
-#if defined(USE_ZLIB) && defined(_TME_HAVE_ZLIB)
-#include "zlib.h"
-typedef struct tme_zlib_handle {
-  gzFile handle;
-  int fd;
-} *tme_event_t;
-
-/* file flags: */
-#define TME_FILE_RO		O_RDONLY
-#define TME_FILE_WO		O_WRONLY
-#define TME_FILE_RW		O_RDWR
-#define TME_FILE_NB		0
-#define TME_THREAD_HANDLE(hand) hand->handle
-#define TME_EVENT_HANDLE(hand) hand
-#define TME_INVALID_HANDLE NULL
-#define TME_INVALID_EVENT NULL
-#define TME_STD_HANDLE(hand) fileno(hand)
-#define TME_STD_THREAD_HANDLE(hand) fileno(hand)
-#define TME_STD_EVENT_HANDLE(hand) fileno(hand)
-typedef tme_event_t tme_thread_handle_t;
-#define tme_thread_fd(hand, flags) hand->fd
-#define tme_read gzread
-#define tme_write gzwrite
-#define TME_SEEK_SET SEEK_SET
-#define TME_SEEK_CUR SEEK_CUR
-#define TME_SEEK_END SEEK_END
-typedef z_off_t tme_off_t;
-#define tme_thread_seek(hand,off,where) gzseek(TME_THREAD_HANDLE(hand),off,where)
-#define tme_thread_open tme_zlib_open
-static _tme_inline tme_event_t tme_zlib_open _TME_P((const char *path, int flags)) {
-  tme_event_t hand;
-  gzFile handle;
-  int fd = open(path, flags);
-  char *mode;
-  
-  if(fd == -1)
-    return TME_INVALID_HANDLE;
-  
-  switch(flags) {
-  case TME_FILE_RO: mode="rb"; break;
-  case TME_FILE_WO: mode="wb"; break;
-  case TME_FILE_RW: mode="+"; break;
-  default: mode="a"; break;
-  }
-
-  handle = gzdopen(fd, mode);
-
-  if(handle == NULL)
-    return TME_INVALID_HANDLE;
-  
-  hand = tme_new0(struct tme_zlib_handle, 1);
-  hand->fd = fd;
-  hand->handle = handle;
-  return hand;
-}
-#define tme_thread_close(hand) gzclose(TME_THREAD_HANDLE(hand))
-#define tme_event_open gzopen
-#define tme_event_close gzclose
-#elif defined(WIN32) // USE_ZLIB
+#ifdef WIN32
 /* file flags: */
 #define TME_FILE_RO		GENERIC_READ
 #define TME_FILE_WO		GENERIC_WRITE
@@ -192,6 +147,10 @@ typedef tme_event_t tme_thread_handle_t;
 #define tme_event_open(path, flags) tme_win32_open(path, flags, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, 1024)
 #define tme_thread_close tme_win32_close
 #define tme_event_close tme_thread_close
+#ifdef TME_THREADS_FIBER
+#define tme_thread_read tme_fiber_read
+#define tme_thread_write tme_fiber_write
+#endif
 tme_off_t tme_thread_seek _TME_P((tme_thread_handle_t hand, tme_off_t off, int where));
 
 #else /* TME_THREADS_FIBER */
@@ -223,7 +182,39 @@ static _tme_inline tme_off_t tme_thread_seek _TME_P((tme_thread_handle_t hand, t
 
 #endif /* !TME_THREADS_FIBER */
 
-#else /* WIN32 */
+#elif defined(USE_ZLIB) && defined(_TME_HAVE_ZLIB)
+/* file flags: */
+typedef struct tme_zlib_handle  *tme_event_t;
+#define TME_FILE_RO		O_RDONLY
+#define TME_FILE_WO		O_WRONLY
+#define TME_FILE_RW		O_RDWR
+#define TME_FILE_NB		0
+#define TME_THREAD_HANDLE(hand) hand->handle
+#define TME_EVENT_HANDLE(hand) hand->fd
+#define TME_INVALID_HANDLE NULL
+#define TME_INVALID_EVENT NULL
+#define TME_STD_HANDLE(hand) fileno(hand)
+#define TME_STD_THREAD_HANDLE(hand) fileno(hand)
+#define TME_STD_EVENT_HANDLE(hand) fileno(hand)
+typedef tme_event_t tme_thread_handle_t;
+#define tme_thread_fd(hand, flags) hand->fd
+#define tme_read gzread
+#define tme_write gzwrite
+#ifdef TME_THREADS_FIBER
+#define tme_thread_read tme_zlib_read
+#define tme_thread_write tme_zlib_write
+#endif
+#define TME_SEEK_SET SEEK_SET
+#define TME_SEEK_CUR SEEK_CUR
+#define TME_SEEK_END SEEK_END
+typedef z_off_t tme_off_t;
+#define tme_thread_seek(hand,off,where) gzseek(TME_THREAD_HANDLE(hand),off,where)
+#define tme_thread_open tme_zlib_open
+#define tme_thread_close(hand) gzclose(TME_THREAD_HANDLE(hand))
+#define tme_event_open gzopen
+#define tme_event_close gzclose
+
+#else // HAVE_ZLIB
 /* file flags: */
 #define TME_FILE_RO		O_RDONLY
 #define TME_FILE_WO		O_WRONLY
@@ -241,6 +232,10 @@ typedef tme_event_t tme_thread_handle_t;
 #define tme_thread_fd(hand, flags) hand
 #define tme_read read
 #define tme_write write
+#ifdef TME_THREADS_FIBER
+#define tme_thread_read tme_fiber_read
+#define tme_thread_write tme_fiber_write
+#endif
 #define TME_SEEK_SET SEEK_SET
 #define TME_SEEK_CUR SEEK_CUR
 #define TME_SEEK_END SEEK_END
@@ -257,9 +252,7 @@ ssize_t tme_event_yield _TME_P((tme_event_t, void *, size_t, unsigned int, tme_m
 #ifdef TME_THREADS_FIBER
 
 ssize_t tme_fiber_read _TME_P((tme_thread_handle_t hand, void *buf, size_t len, tme_mutex_t *mutex));
-#define tme_thread_read tme_fiber_read
 ssize_t tme_fiber_write _TME_P((tme_thread_handle_t hand, const void *buf, size_t len, tme_mutex_t *mutex));
-#define tme_thread_write tme_fiber_write
 
 #else
 

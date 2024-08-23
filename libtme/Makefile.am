@@ -8,6 +8,9 @@ AUTOM4TE = $(SHELL) $(top_srcdir)/missing --run autom4te
 SUBDIRS = host
 
 AM_CPPFLAGS = -I$(top_srcdir) -D_TME_IMPL $(LTDLINCL)
+if HAVE_ZLIB
+AM_CPPFLAGS += $(ZLIB_CFLAGS)
+endif
 
 if THREADS_GLIB
 AM_CPPFLAGS += $(GLIB_CFLAGS)
@@ -36,6 +39,10 @@ libtme_la_SOURCES = misc-host.c \
 
 libtme_la_LIBADD = $(LIBLTDL)
 libtme_la_LDFLAGS = -version-info 0:0:0
+
+if HAVE_ZLIB
+libtme_la_LIBADD += $(ZLIB_LIBS)
+endif
 
 if USE_OPENVPN
 libtme_la_SOURCES += openvpn-setup.c

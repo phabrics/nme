@@ -61,14 +61,12 @@ download_cmd() {
 # The command to make a tape segment. Run once to link, twice to decompress
 make_seg() {
     # if file already exists but is compressed, decompress it
-    if [ -s $2 ]; then
-	if cmp -s $1 $2; then
-	    rm -f $2
-	    zcat $1 > $2
-	fi
+    if cmp -s $1 $2; then
+	rm -f $2
+	zcat -f $1 > $2
     else
     # otherwise, link it if it doesn't exist
-	ln -s $1 $2
+	ln -sf $1 $2
     fi
 }
 

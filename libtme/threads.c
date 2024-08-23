@@ -583,3 +583,57 @@ tme_event_yield(tme_event_t hand, void *data, size_t len, unsigned int rwflags, 
   return rc;
 }
 #endif // openvpn-dependent
+
+#ifdef _TME_HAVE_ZLIB
+struct tme_zlib_handle  *tme_zlib_open(const char *path, int flags) {
+  struct tme_zlib_handle  *hand;
+  gzFile handle;
+  int fd = open(path, flags);
+  char *mode;
+  
+  if(fd == -1)
+    return NULL;
+  
+  switch(flags) {
+  case TME_FILE_RO: mode="rb"; break;
+  case TME_FILE_WO: mode="wb"; break;
+  case TME_FILE_RW: mode="+"; break;
+  default: mode="a"; break;
+  }
+
+  handle = gzdopen(fd, mode);
+
+  if(handle == NULL)
+    return NULL;
+  
+  hand = tme_new0(struct tme_zlib_handle, 1);
+  hand->fd = fd;
+  hand->handle = handle;
+  return hand;
+}
+
+/* this reads or writes, yielding if the event is not ready: */
+ssize_t
+tme_zlib_yield(struct tme_zlib_handle  *hand, void *data, size_t len, unsigned int rwflags, tme_mutex_t *mutex, void **outbuf)
+{
+  int rc = 1;
+  struct event_set_return esr;
+  tme_event_set_t *tme_events = tme_event_set_init(&rc, EVENT_METHOD_FAST);
+
+  tme_event_reset(tme_events);
+  tme_event_ctl(tme_events, hand->fd, rwflags, 0);
+  rc = tme_event_wait(tme_events, NULL, &esr, 1, mutex);
+  tme_event_free(tme_events);
+  
+  /* do the i/o: */
+  if(esr.rwflags & EVENT_WRITE)
+    rc = gzwrite(hand->handle, data, len);
+  if(esr.rwflags & EVENT_READ) {
+    rc = gzread(hand->handle, data, len);
+    if(outbuf)
+      *outbuf = data;
+  }
+  return rc;
+}
+
+#endif // HAVE_ZLIB

@@ -943,6 +943,16 @@ ssize_t tme_fiber_write(tme_thread_handle_t hand, const void *buf, size_t len, t
   return tme_event_yield(hand, buf, len, EVENT_WRITE, mutex, NULL);
 }
 
+#ifdef _TME_HAVE_ZLIB
+ssize_t tme_zlib_read(struct tme_zlib_handle  *hand, void *buf, size_t len, tme_mutex_t *mutex) {
+  return tme_zlib_yield(hand, buf, len, EVENT_READ, mutex, NULL);
+}
+
+ssize_t tme_zlib_write(struct tme_zlib_handle  *hand, const void *buf, size_t len, tme_mutex_t *mutex) {
+  return tme_zlib_yield(hand, buf, len, EVENT_WRITE, mutex, NULL);
+}
+#endif
+
 #ifndef TME_NO_DEBUG_LOCKS
 
 /* lock operations: */
