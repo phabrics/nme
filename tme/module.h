@@ -49,7 +49,19 @@ _TME_RCSID("$Id: module.h,v 1.1 2003/05/16 21:48:14 fredette Exp $");
 #define TME_MODULE_X_SYM(class,agg,sub,sym) _TME_CONCAT5(class,agg,_LTX_,sub,sym)
 
 /* prototypes: */
+/* this initializes modules: */
 void _tme_module_init _TME_P((void));
+static _tme_inline int tme_module_init _TME_P((void)) {
+  int rc;
+
+  _tme_module_init();
+  LTDL_SET_PRELOADED_SYMBOLS();
+  rc = lt_dlinit();
+  if (rc != 0) {
+    return (-1);
+  }
+  return (TME_OK);
+}
 
 int tme_module_open _TME_P((_tme_const char *, void **, char **));
 void *tme_module_symbol _TME_P((void *, _tme_const char *));

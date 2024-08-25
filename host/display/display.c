@@ -251,8 +251,6 @@ tme_display_update(void *disp) {
   /* unlock the mutex: */
   tme_mutex_unlock(&display->tme_display_mutex);
 
-  tme_thread_sleep_yield(TME_TIME_SET_USEC(50000), NULL);
-
   return rc;
 }
 
@@ -262,7 +260,10 @@ tme_display_th_update(void *disp)
 {
   tme_thread_enter(NULL);
 
-  for(;;) tme_display_update(disp);
+  for(;;) {
+    tme_display_update(disp);
+    tme_thread_sleep_yield(TME_TIME_SET_USEC(50000), NULL);
+  }
 
   /* NOTREACHED */
   tme_thread_exit(NULL);
@@ -704,7 +705,11 @@ int tme_display_init(struct tme_element *element,
   tme_mutex_init(&display->tme_display_mutex);
 
   /* setup the thread loop function: */
+#ifdef TME_THREADS_FIBER
   tme_thread_create(&display->tme_display_thread, tme_display_th_update, display);
+#else
+  tme_threads_set_main(tme_display_update, display, TME_TIME_SET_USEC(50000));
+#endif
   
   /* fill the element: */
   element->tme_element_private = display;

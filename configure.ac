@@ -755,7 +755,7 @@ AM_CONDITIONAL([USE_OPENVPN], [test "x$have_openvpn" = xyes || test "x${tme_thre
 AC_MSG_RESULT($tme_thread_types)
 
 dnl Checks for ZLIB.
-AS_IF([test "x${WIN32}" != xyes], [PKG_CHECK_MODULES([ZLIB], [zlib], [have_zlib=yes], [])])
+AS_IF([test "x${WIN32}" != xyes], [PKG_CHECK_MODULES([ZLIB], [zlib], [have_zlib=yes], [have_zlib=no])])
 
 if test "x${have_zlib}" = xyes; then
    AC_DEFINE([HAVE_ZLIB], [], [Defined if ZLIB is found and can be used.])

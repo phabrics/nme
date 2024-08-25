@@ -9,8 +9,7 @@ tmesh_SOURCES = tmesh.c \
 	tmesh-impl.h \
 	tmesh-input.y \
 	tmesh-util.c \
-	tmesh-cmds.c \
-	tmesh-threads.c
+	tmesh-cmds.c
 
 bin_PROGRAMS = tmesh
 tmesh_LDADD = $(top_builddir)/libtme/libtme.la $(tme_preopen) $(TME_HOST_LIBS)
@@ -21,7 +20,9 @@ EXTRA_DIST = tmesh.sh
 if HAVE_EMSCRIPTEN
 bin_SCRIPTS = tmesh.sh tmesh.js tmesh.wasm tmesh.data
 tmesh_LDADD += $(SDL_LIBS) 
+if THREADS_FIBER
 tmesh_LDFLAGS += -sASYNCIFY
+endif
 if USE_NODEFS
 AM_CPPFLAGS += -DUSE_NODEFS
 tmesh_LDADD += -lnodefs.js

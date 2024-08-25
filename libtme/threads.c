@@ -36,11 +36,16 @@
 #if defined(TME_THREADS_FIBER) || defined(WIN32)
 #include <tme/openvpn-setup.h>
 #endif
+#if defined(__EMSCRIPTEN__) && defined(TME_THREADS_POSIX)
+#include <emscripten.h>
+#endif
 
 /* globals: */
-static tme_threads_fn1 _tme_threads_run;
-static void *_tme_threads_arg;
-static int inited;
+static struct tme_threads_t {
+  tme_threads_fn1 tme_threads_run;
+  void *tme_threads_arg;
+  tme_time_t tme_threads_delay;
+} tme_threads;
 #ifdef TME_THREADS_POSIX
 static pthread_rwlock_t tme_rwlock_start;
 pthread_rwlock_t tme_rwlock_suspere;
@@ -74,40 +79,11 @@ tme_event_t win32_stdout;
 tme_event_t win32_stderr;
 #endif
 
-void tme_threads_init(tme_threads_fn1 run, void *arg) {
-  _tme_threads_run = run;
-  _tme_threads_arg = arg;
-  if(!inited) {
-    _tme_threads_init();
-    if(!tme_thread_cooperative()) {
-#ifdef TME_THREADS_POSIX
-      pthread_rwlock_init(&tme_rwlock_start, NULL);      
-      pthread_rwlock_wrlock(&tme_rwlock_start);
-#elif defined(TME_THREADS_GLIB)
-      g_rw_lock_init(&tme_rwlock_start);
-      g_rw_lock_writer_lock(&tme_rwlock_start);
-#endif
-    }
-#ifdef WIN32
-    win32_stdin = tme_new0(struct tme_win32_handle, 1);
-    win32_stdout = tme_new0(struct tme_win32_handle, 1);
-    win32_stderr = tme_new0(struct tme_win32_handle, 1);
-    win32_stdin->rw_handle.read =
-      win32_stdin->handle = GetStdHandle(STD_INPUT_HANDLE);
-    win32_stdout->rw_handle.write =
-      win32_stdout->handle = GetStdHandle(STD_OUTPUT_HANDLE);
-    win32_stderr->rw_handle.write =
-      win32_stderr->handle = GetStdHandle(STD_ERROR_HANDLE);
-    win32_stdin->reads.overlapped.hEvent =
-      win32_stdout->writes.overlapped.hEvent =
-      win32_stderr->reads.overlapped.hEvent = NULL;
-#endif
-    _tme_thread_resumed();  
-    inited=TRUE;
-  }
-}
-
-void tme_threads_run(void) {
+// Set main thread loop iteration function & argument
+void tme_threads_set_main(tme_threads_fn1 run, void *arg, tme_time_t delay) {
+  tme_threads.tme_threads_run = run;
+  tme_threads.tme_threads_arg = arg;
+  tme_threads.tme_threads_delay = delay;
   if(!tme_thread_cooperative()) {
 #ifdef TME_THREADS_POSIX
     pthread_rwlock_unlock(&tme_rwlock_start);
@@ -115,12 +91,59 @@ void tme_threads_run(void) {
     g_rw_lock_writer_unlock(&tme_rwlock_start);  
 #endif
   }
-  _tme_thread_suspended();
+}
+
+int tme_threads_init() {
+  /* initialize the threading system: */
+  tme_threads.tme_threads_run = tme_threads_main_iter;
+  tme_threads.tme_threads_arg = 0;
+  tme_threads.tme_threads_delay = 0;
+  _tme_threads_init();
+  if(!tme_thread_cooperative()) {
+#ifdef TME_THREADS_POSIX
+    pthread_rwlock_init(&tme_rwlock_start, NULL);      
+    pthread_rwlock_wrlock(&tme_rwlock_start);
+#elif defined(TME_THREADS_GLIB)
+    g_rw_lock_init(&tme_rwlock_start);
+    g_rw_lock_writer_lock(&tme_rwlock_start);
+#endif
+  }
+#ifdef WIN32
+  win32_stdin = tme_new0(struct tme_win32_handle, 1);
+  win32_stdout = tme_new0(struct tme_win32_handle, 1);
+  win32_stderr = tme_new0(struct tme_win32_handle, 1);
+  win32_stdin->rw_handle.read =
+    win32_stdin->handle = GetStdHandle(STD_INPUT_HANDLE);
+  win32_stdout->rw_handle.write =
+    win32_stdout->handle = GetStdHandle(STD_OUTPUT_HANDLE);
+  win32_stderr->rw_handle.write =
+    win32_stderr->handle = GetStdHandle(STD_ERROR_HANDLE);
+  win32_stdin->reads.overlapped.hEvent =
+    win32_stdout->writes.overlapped.hEvent =
+    win32_stderr->reads.overlapped.hEvent = NULL;
+#endif
+  _tme_thread_resumed();
+  return TME_OK;
+}
+
+void tme_threads_run(void) {
+  tme_thread_enter(NULL);
+
   /* Run the main loop */
-  if(_tme_threads_run)
-    for(;;) (*_tme_threads_run)(_tme_threads_arg);
+#if defined(__EMSCRIPTEN__) && defined(TME_THREADS_POSIX)
+  // Receives a function to call and some user data to provide it.
+  emscripten_request_animation_frame_loop(tme_threads.tme_threads_run, tme_threads.tme_threads_arg);
+#else
+  if(tme_threads.tme_threads_run)
+    for(;;) {
+      if(tme_threads.tme_threads_delay) tme_thread_sleep(tme_threads.tme_threads_delay);
+      (*tme_threads.tme_threads_run)(tme_threads.tme_threads_arg);
+    }
   else
-    (*(tme_threads_fn)_tme_threads_arg)();
+    (*(tme_threads_fn)tme_threads.tme_threads_arg)();
+#endif
+
+  tme_thread_exit(NULL);
 }
 
 void tme_thread_enter(tme_mutex_t *mutex) {
@@ -131,6 +154,7 @@ void tme_thread_enter(tme_mutex_t *mutex) {
     g_rw_lock_reader_lock(&tme_rwlock_start);
 #endif
   }
+
   _tme_thread_resumed();  
   if(mutex)
     tme_mutex_lock(mutex);
