@@ -84,6 +84,7 @@ void tme_threads_set_main(tme_threads_fn1 run, void *arg, tme_time_t delay) {
   tme_threads.tme_threads_run = run;
   tme_threads.tme_threads_arg = arg;
   tme_threads.tme_threads_delay = delay;
+  /*
   if(!tme_thread_cooperative()) {
 #ifdef TME_THREADS_POSIX
     pthread_rwlock_unlock(&tme_rwlock_start);
@@ -91,6 +92,7 @@ void tme_threads_set_main(tme_threads_fn1 run, void *arg, tme_time_t delay) {
     g_rw_lock_writer_unlock(&tme_rwlock_start);  
 #endif
   }
+  */
 }
 
 int tme_threads_init() {
@@ -99,6 +101,7 @@ int tme_threads_init() {
   tme_threads.tme_threads_arg = 0;
   tme_threads.tme_threads_delay = 0;
   _tme_threads_init();
+  /*
   if(!tme_thread_cooperative()) {
 #ifdef TME_THREADS_POSIX
     pthread_rwlock_init(&tme_rwlock_start, NULL);      
@@ -108,6 +111,7 @@ int tme_threads_init() {
     g_rw_lock_writer_lock(&tme_rwlock_start);
 #endif
   }
+  */
 #ifdef WIN32
   win32_stdin = tme_new0(struct tme_win32_handle, 1);
   win32_stdout = tme_new0(struct tme_win32_handle, 1);
@@ -127,8 +131,15 @@ int tme_threads_init() {
 }
 
 void tme_threads_run(void) {
-  tme_thread_enter(NULL);
-
+  /*
+    if(!tme_thread_cooperative()) {
+#ifdef TME_THREADS_POSIX
+    pthread_rwlock_rdlock(&tme_rwlock_start);
+#elif defined(TME_THREADS_GLIB)
+    g_rw_lock_reader_lock(&tme_rwlock_start);
+#endif
+  }
+  */
   /* Run the main loop */
 #if defined(__EMSCRIPTEN__) && defined(TME_THREADS_POSIX)
   // Receives a function to call and some user data to provide it.
@@ -136,7 +147,7 @@ void tme_threads_run(void) {
 #else
   if(tme_threads.tme_threads_run)
     for(;;) {
-      if(tme_threads.tme_threads_delay) tme_thread_sleep(tme_threads.tme_threads_delay);
+      if(tme_threads.tme_threads_delay) tme_thread_sleep_yield(tme_threads.tme_threads_delay, NULL);
       (*tme_threads.tme_threads_run)(tme_threads.tme_threads_arg);
     }
   else
@@ -147,6 +158,7 @@ void tme_threads_run(void) {
 }
 
 void tme_thread_enter(tme_mutex_t *mutex) {
+  /*
   if(!tme_thread_cooperative()) {
 #ifdef TME_THREADS_POSIX
     pthread_rwlock_rdlock(&tme_rwlock_start);
@@ -154,7 +166,7 @@ void tme_thread_enter(tme_mutex_t *mutex) {
     g_rw_lock_reader_lock(&tme_rwlock_start);
 #endif
   }
-
+  */
   _tme_thread_resumed();  
   if(mutex)
     tme_mutex_lock(mutex);
