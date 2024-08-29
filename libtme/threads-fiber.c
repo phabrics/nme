@@ -807,15 +807,15 @@ tme_fiber_yield(void)
       } else {
 	if(es->events[i].flags != thread->tme_fiber_thread_events->events[j].flags) {
 	  changed = TRUE;
-	  tme_fiber_main_events->events[(int)thread->tme_fiber_thread_events->events[j].arg].flags
+	  tme_fiber_main_events->events[(uintptr_t)thread->tme_fiber_thread_events->events[j].arg].flags
 	    &= ~thread->tme_fiber_thread_events->events[j].flags;
 	}
-	j = (int)thread->tme_fiber_thread_events->events[j].arg;
+	j = (uintptr_t)thread->tme_fiber_thread_events->events[j].arg;
       }
       tme_fiber_event_ctl(es2,
-			 es->events[i].event,
-			 es->events[i].flags,
-			 (void *)j);			      
+			  es->events[i].event,
+			  es->events[i].flags,
+			  (void *)j);			      
       if(changed) {
 	tme_fiber_main_events->events[j].flags |= es->events[i].flags;
 	event_ctl(tme_fiber_main_events->es,
@@ -840,7 +840,7 @@ tme_fiber_yield(void)
 
   if(thread->tme_fiber_thread_events) {
     for(i=0;i<=thread->tme_fiber_thread_events->max_event;i++) {
-      j = (int)thread->tme_fiber_thread_events->events[i].arg;
+      j = (uintptr_t)thread->tme_fiber_thread_events->events[i].arg;
       if(tme_fiber_main_events->events[j].flags &= ~thread->tme_fiber_thread_events->events[i].flags)
 	event_ctl(tme_fiber_main_events->es,
 		  tme_fiber_main_events->events[j].event,

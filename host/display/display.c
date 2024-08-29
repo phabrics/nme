@@ -258,15 +258,18 @@ tme_display_update(void *disp) {
 static _tme_thret
 tme_display_th_update(void *disp)
 {
-  tme_thread_enter(NULL);
+  struct tme_display *display;
+  
+  display = (struct tme_display *)disp;
+  tme_thread_enter(&display->tme_display_mutex);
 
   for(;;) {
     tme_display_update(disp);
-    tme_thread_sleep_yield(TME_TIME_SET_USEC(50000), NULL);
+    tme_thread_sleep_yield(TME_TIME_SET_USEC(16667), NULL);
   }
 
   /* NOTREACHED */
-  tme_thread_exit(NULL);
+  tme_thread_exit(&display->tme_display_mutex);
 }
 
 /* set the translation function to use for this screen */
@@ -708,7 +711,7 @@ int tme_display_init(struct tme_element *element,
 #ifdef TME_THREADS_FIBER
   tme_thread_create(&display->tme_display_thread, tme_display_th_update, display);
 #else
-  tme_threads_set_main(tme_display_update, display, TME_TIME_SET_USEC(50000));
+  tme_threads_set_main(tme_display_update, display, TME_TIME_SET_USEC(16667));
 #endif
   
   /* fill the element: */

@@ -51,6 +51,7 @@ endif
 EXTRA_tmesh_DEPENDENCIES = plugins
 
 NME_DIR = $(top_builddir)$(TME_DIR)/tme
+.PHONY: plugins
 plugins:
 	mkdir -p $(NME_DIR)
 	cp -f $(top_srcdir)/tme/*.txt $(NME_DIR)
@@ -64,7 +65,6 @@ plugins:
 			cp -f $$mod $(NME_DIR) ; \
 		fi \
 	done
-	touch plugins
 
 include $(top_srcdir)/tme-hosts.txt
 include $(top_srcdir)/tme-preopen.txt

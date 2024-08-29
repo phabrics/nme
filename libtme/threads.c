@@ -46,8 +46,8 @@ static struct tme_threads_t {
   void *tme_threads_arg;
   tme_time_t tme_threads_delay;
 } tme_threads;
+static tme_cond_t tme_cond_start;
 #ifdef TME_THREADS_POSIX
-static pthread_rwlock_t tme_rwlock_start;
 pthread_rwlock_t tme_rwlock_suspere;
 
 #ifdef HAVE_PTHREAD_SETSCHEDPARAM
@@ -61,7 +61,6 @@ pthread_attr_t *tme_thread_defattr() {
 }
 #endif // HAVE_PTHREAD_SETSCHEDPARAM
 #elif defined(TME_THREADS_GLIB)
-static GRWLock tme_rwlock_start;
 GRWLock tme_rwlock_suspere;
 #endif
 
@@ -84,15 +83,7 @@ void tme_threads_set_main(tme_threads_fn1 run, void *arg, tme_time_t delay) {
   tme_threads.tme_threads_run = run;
   tme_threads.tme_threads_arg = arg;
   tme_threads.tme_threads_delay = delay;
-  /*
-  if(!tme_thread_cooperative()) {
-#ifdef TME_THREADS_POSIX
-    pthread_rwlock_unlock(&tme_rwlock_start);
-#elif defined(TME_THREADS_GLIB)
-    g_rw_lock_writer_unlock(&tme_rwlock_start);  
-#endif
-  }
-  */
+  tme_cond_notify(&tme_cond_start,TRUE);
 }
 
 int tme_threads_init() {
@@ -101,17 +92,13 @@ int tme_threads_init() {
   tme_threads.tme_threads_arg = 0;
   tme_threads.tme_threads_delay = 0;
   _tme_threads_init();
-  /*
-  if(!tme_thread_cooperative()) {
-#ifdef TME_THREADS_POSIX
-    pthread_rwlock_init(&tme_rwlock_start, NULL);      
-    pthread_rwlock_wrlock(&tme_rwlock_start);
-#elif defined(TME_THREADS_GLIB)
-    g_rw_lock_init(&tme_rwlock_start);
-    g_rw_lock_writer_lock(&tme_rwlock_start);
-#endif
-  }
-  */
+
+  /* Synchronization primitive provided to allow sequential
+     execution of pre-thread initialization code. It is used
+     as the condition to start all threads. */
+
+  tme_cond_init(&tme_cond_start);
+
 #ifdef WIN32
   win32_stdin = tme_new0(struct tme_win32_handle, 1);
   win32_stdout = tme_new0(struct tme_win32_handle, 1);
@@ -131,15 +118,6 @@ int tme_threads_init() {
 }
 
 void tme_threads_run(void) {
-  /*
-    if(!tme_thread_cooperative()) {
-#ifdef TME_THREADS_POSIX
-    pthread_rwlock_rdlock(&tme_rwlock_start);
-#elif defined(TME_THREADS_GLIB)
-    g_rw_lock_reader_lock(&tme_rwlock_start);
-#endif
-  }
-  */
   /* Run the main loop */
 #if defined(__EMSCRIPTEN__) && defined(TME_THREADS_POSIX)
   // Receives a function to call and some user data to provide it.
@@ -153,23 +131,11 @@ void tme_threads_run(void) {
   else
     (*(tme_threads_fn)tme_threads.tme_threads_arg)();
 #endif
-
-  tme_thread_exit(NULL);
 }
 
 void tme_thread_enter(tme_mutex_t *mutex) {
-  /*
-  if(!tme_thread_cooperative()) {
-#ifdef TME_THREADS_POSIX
-    pthread_rwlock_rdlock(&tme_rwlock_start);
-#elif defined(TME_THREADS_GLIB)
-    g_rw_lock_reader_lock(&tme_rwlock_start);
-#endif
-  }
-  */
   _tme_thread_resumed();  
-  if(mutex)
-    tme_mutex_lock(mutex);
+  tme_cond_wait_yield(&tme_cond_start, mutex);
 }
 
 #ifdef WIN32
@@ -517,7 +483,7 @@ static _tme_inline int
 tme_event_write (tme_event_t hand, void *data, int len)
 {
   if(hand == TME_STD_HANDLE(stdout) || hand == TME_STD_HANDLE(stderr))
-    tme_write(hand->handle, data, len);
+    return tme_write(hand->handle, data, len);
   else {
     struct buffer buf;
   
