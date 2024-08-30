@@ -448,8 +448,7 @@ _tmesh_th(int *interactive)
   struct tmesh_io *io;
   struct _tmesh_input *input;
   
-  //  tme_thread_enter(NULL);
-  _tme_thread_resumed();  
+  tme_thread_enter(NULL);
 
   /* this command may have changed the current io, so reload: */
   io = _tmesh_io;
@@ -517,8 +516,7 @@ _tmesh_th(int *interactive)
     }
   }
   
-  _tme_thread_suspended();  
-  //  tme_thread_exit(NULL);
+  tme_thread_exit(NULL);
 }
 
 static void

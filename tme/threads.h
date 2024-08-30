@@ -68,7 +68,7 @@ ssize_t tme_zlib_write _TME_P((struct tme_zlib_handle  *hand, const void *buf, s
 typedef void (*tme_threads_fn) _TME_P((void));
 typedef int (*tme_threads_fn1) _TME_P((void *));
 
-void tme_threads_set_main _TME_P((tme_threads_fn1 run, void *arg, tme_time_t delay));
+void tme_threads_set_main _TME_P((tme_threads_fn1 run, void *arg, tme_mutex_t *mutex, tme_time_t delay));
 void tme_threads_run _TME_P((void));
 void tme_thread_enter _TME_P((tme_mutex_t *mutex));
 

@@ -44,9 +44,11 @@
 static struct tme_threads_t {
   tme_threads_fn1 tme_threads_run;
   void *tme_threads_arg;
+  tme_mutex_t *tme_threads_mutex;
   tme_time_t tme_threads_delay;
 } tme_threads;
 static tme_cond_t tme_cond_start;
+static tme_time_t tme_cond_delay = TME_TIME_SET_SEC(5);
 #ifdef TME_THREADS_POSIX
 pthread_rwlock_t tme_rwlock_suspere;
 
@@ -79,17 +81,19 @@ tme_event_t win32_stderr;
 #endif
 
 // Set main thread loop iteration function & argument
-void tme_threads_set_main(tme_threads_fn1 run, void *arg, tme_time_t delay) {
+void tme_threads_set_main(tme_threads_fn1 run, void *arg, tme_mutex_t *mutex, tme_time_t delay) {
   tme_threads.tme_threads_run = run;
   tme_threads.tme_threads_arg = arg;
+  tme_threads.tme_threads_mutex = mutex;
   tme_threads.tme_threads_delay = delay;
-  tme_cond_notify(&tme_cond_start,TRUE);
+  //  tme_cond_notify(&tme_cond_start,TRUE);
 }
 
 int tme_threads_init() {
   /* initialize the threading system: */
   tme_threads.tme_threads_run = tme_threads_main_iter;
   tme_threads.tme_threads_arg = 0;
+  tme_threads.tme_threads_mutex = NULL;
   tme_threads.tme_threads_delay = 0;
   _tme_threads_init();
 
@@ -118,6 +122,9 @@ int tme_threads_init() {
 }
 
 void tme_threads_run(void) {
+  _tme_thread_suspended();
+  tme_thread_enter(tme_threads.tme_threads_mutex);
+  
   /* Run the main loop */
 #if defined(__EMSCRIPTEN__) && defined(TME_THREADS_POSIX)
   // Receives a function to call and some user data to provide it.
@@ -125,17 +132,22 @@ void tme_threads_run(void) {
 #else
   if(tme_threads.tme_threads_run)
     for(;;) {
-      if(tme_threads.tme_threads_delay) tme_thread_sleep_yield(tme_threads.tme_threads_delay, NULL);
+      if(tme_threads.tme_threads_delay)
+	tme_thread_sleep_yield(tme_threads.tme_threads_delay, NULL);
       (*tme_threads.tme_threads_run)(tme_threads.tme_threads_arg);
     }
   else
     (*(tme_threads_fn)tme_threads.tme_threads_arg)();
 #endif
+  tme_thread_exit(tme_threads.tme_threads_mutex);
 }
 
 void tme_thread_enter(tme_mutex_t *mutex) {
-  _tme_thread_resumed();  
-  tme_cond_wait_yield(&tme_cond_start, mutex);
+  _tme_thread_resumed();
+  if(mutex) {
+     tme_mutex_lock(mutex);
+     tme_cond_sleep_yield(&tme_cond_start, mutex, tme_cond_delay);
+  }
 }
 
 #ifdef WIN32

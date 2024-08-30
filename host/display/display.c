@@ -711,7 +711,7 @@ int tme_display_init(struct tme_element *element,
 #ifdef TME_THREADS_FIBER
   tme_thread_create(&display->tme_display_thread, tme_display_th_update, display);
 #else
-  tme_threads_set_main(tme_display_update, display, TME_TIME_SET_USEC(16667));
+  tme_threads_set_main(tme_display_update, display, &display->tme_display_mutex, TME_TIME_SET_USEC(16667));
 #endif
   
   /* fill the element: */
