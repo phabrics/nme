@@ -142,7 +142,7 @@ void tme_threads_run(void) {
   tme_thread_exit(tme_threads.tme_threads_mutex);
 }
 
-void tme_thread_enter(tme_mutex_t *mutex) {
+void _tme_thread_enter(tme_mutex_t *mutex) {
   _tme_thread_resumed();
   if(mutex) {
      tme_mutex_lock(mutex);

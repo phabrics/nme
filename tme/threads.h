@@ -70,7 +70,19 @@ typedef int (*tme_threads_fn1) _TME_P((void *));
 
 void tme_threads_set_main _TME_P((tme_threads_fn1 run, void *arg, tme_mutex_t *mutex, tme_time_t delay));
 void tme_threads_run _TME_P((void));
-void tme_thread_enter _TME_P((tme_mutex_t *mutex));
+void _tme_thread_enter _TME_P((tme_mutex_t *mutex));
+
+#if defined(TME_THREADS_FIBER) && !defined(WIN32)
+static _tme_inline void tme_thread_enter _TME_P((tme_mutex_t *mutex)) {
+  static int init=TRUE;
+  if(init) {
+    init=FALSE;
+    _tme_thread_enter(mutex);
+  }
+}
+#else
+#define tme_thread_enter _tme_thread_enter
+#endif
 
 static _tme_inline void tme_mutex_lock _TME_P((tme_mutex_t *mutex)) { 
   _tme_thread_suspended();
