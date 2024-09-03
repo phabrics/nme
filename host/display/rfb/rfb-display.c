@@ -388,6 +388,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_rfb,display) {
   display->tme_screen_add = _tme_rfb_screen_new;
   display->tme_screen_resize = _tme_rfb_screen_resize;
   display->tme_screen_redraw = _tme_rfb_screen_redraw;
-
+  tme_thread_create(&display->tme_display_thread, tme_display_th_update, display);
+  //  tme_mutex_unlock(&display->tme_display_mutex);
   return (TME_OK);
 }

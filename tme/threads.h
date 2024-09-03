@@ -308,4 +308,6 @@ static _tme_inline void tme_thread_exit _TME_P((tme_mutex_t *mutex)) {
 }
 #endif /* !TME_THREADS_FIBER */
 
+_tme_thret tme_display_th_update _TME_P((void *disp));
+
 #endif /* !_TME_THREADS_H */

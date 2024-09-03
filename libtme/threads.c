@@ -94,7 +94,7 @@ int tme_threads_init() {
   tme_threads.tme_threads_run = tme_threads_main_iter;
   tme_threads.tme_threads_arg = 0;
   tme_threads.tme_threads_mutex = NULL;
-  tme_threads.tme_threads_delay = 0;
+  tme_threads.tme_threads_delay = TME_TIME_SET_SEC(10);
   _tme_threads_init();
 
   /* Synchronization primitive provided to allow sequential
@@ -133,7 +133,7 @@ void tme_threads_run(void) {
   if(tme_threads.tme_threads_run)
     for(;;) {
       if(tme_threads.tme_threads_delay)
-	tme_thread_sleep_yield(tme_threads.tme_threads_delay, NULL);
+	tme_thread_sleep_yield(tme_threads.tme_threads_delay, tme_threads.tme_threads_mutex);
       (*tme_threads.tme_threads_run)(tme_threads.tme_threads_arg);
     }
   else
@@ -146,7 +146,7 @@ void _tme_thread_enter(tme_mutex_t *mutex) {
   _tme_thread_resumed();
   if(mutex) {
      tme_mutex_lock(mutex);
-     tme_cond_sleep_yield(&tme_cond_start, mutex, tme_cond_delay);
+     //     tme_cond_sleep_yield(&tme_cond_start, mutex, tme_cond_delay);
   }
 }
 

@@ -250,8 +250,8 @@ static _tme_inline void tme_thread_sleep _TME_P((tme_time_t sleep)) {
 }
 
 /* A default main iterator for use in the main thread loop */
-static _tme_inline int tme_threads_main_iter _TME_P((void *usec)) {
-  return usleep((usec) ? (unsigned long)usec : 1000000);
+static _tme_inline void tme_threads_main_iter _TME_P((void *usec)) {
+  //  return usleep((usec) ? (unsigned long)usec : 1000000);
 }
 
 #define _tme_threads_main_iter(fn) if(fn) fn()

@@ -217,9 +217,8 @@ tme_display_update(void *disp) {
 
   //  if(rc != TME_OK) return rc;
 
-  /* lock the mutex: */
   tme_mutex_lock(&display->tme_display_mutex);
-    
+
   _tme_display_callout(display, 0);
 
   /* loop over all screens: */
@@ -248,20 +247,19 @@ tme_display_update(void *disp) {
     screen->tme_screen_update = TME_SCREEN_UPDATE_NONE;  
   }
 
-  /* unlock the mutex: */
   tme_mutex_unlock(&display->tme_display_mutex);
 
   return rc;
 }
 
 /* the display main thread: */
-static _tme_thret
+_tme_thret
 tme_display_th_update(void *disp)
 {
   struct tme_display *display;
   
   display = (struct tme_display *)disp;
-  tme_thread_enter(&display->tme_display_mutex);
+  tme_thread_enter(NULL);
 
   for(;;) {
     tme_display_update(disp);
@@ -269,7 +267,7 @@ tme_display_th_update(void *disp)
   }
 
   /* NOTREACHED */
-  tme_thread_exit(&display->tme_display_mutex);
+  tme_thread_exit(NULL);
 }
 
 /* set the translation function to use for this screen */
@@ -708,11 +706,11 @@ int tme_display_init(struct tme_element *element,
   tme_mutex_init(&display->tme_display_mutex);
 
   /* setup the thread loop function: */
-#ifdef TME_THREADS_FIBER
-  tme_thread_create(&display->tme_display_thread, tme_display_th_update, display);
-#else
+  //#ifdef TME_THREADS_FIBER
+  //tme_thread_create(&display->tme_display_thread, tme_display_th_update, display);
+  /*#else
   tme_threads_set_main(tme_display_update, display, &display->tme_display_mutex, TME_TIME_SET_USEC(16667));
-#endif
+  #endif*/
   
   /* fill the element: */
   element->tme_element_private = display;

@@ -166,15 +166,13 @@ static _tme_inline void tme_thread_create _TME_P((tme_threadid_t *t, tme_thread_
 #define tme_thread_join g_thread_join
 
 /* sleeping: */
-static _tme_inline int tme_thread_sleep _TME_P((tme_time_t sleep)) { 
+static _tme_inline void tme_thread_sleep _TME_P((tme_time_t sleep)) { 
   g_usleep(TME_TIME_GET_USEC(sleep));
-  return 0;
 }
 
 /* A default main iterator for use in the main thread loop */
-static _tme_inline int tme_threads_main_iter _TME_P((void *usec)) {
-  g_usleep((usec) ? (uintptr_t)usec : 1000000);
-  return 0;
+static _tme_inline void tme_threads_main_iter _TME_P((void *usec)) {
+  //  g_usleep((usec) ? (uintptr_t)usec : 1000000);
 }
 
 #define _tme_threads_main_iter(fn) if(fn) fn()
