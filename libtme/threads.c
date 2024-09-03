@@ -132,9 +132,11 @@ void tme_threads_run(void) {
 #else
   if(tme_threads.tme_threads_run)
     for(;;) {
+      (*tme_threads.tme_threads_run)(tme_threads.tme_threads_arg);
+#ifndef TME_THREADS_FIBER
       if(tme_threads.tme_threads_delay)
 	tme_thread_sleep_yield(tme_threads.tme_threads_delay, tme_threads.tme_threads_mutex);
-      (*tme_threads.tme_threads_run)(tme_threads.tme_threads_arg);
+#endif
     }
   else
     (*(tme_threads_fn)tme_threads.tme_threads_arg)();
