@@ -70,11 +70,7 @@ _TME_RCSID("$Id: tmesh.c,v 1.4 2009/08/30 17:06:38 fredette Exp $");
 
 /* an input buffer: */
 struct _tmesh_input {
-#ifdef WIN32
-  tme_event_t _tmesh_input_handle;
-#else
   tme_thread_handle_t _tmesh_input_handle;
-#endif
   char _tmesh_input_buffer[1024];
   unsigned int _tmesh_input_buffer_head;
   unsigned int _tmesh_input_buffer_tail;
@@ -158,11 +154,7 @@ _tmesh_close(struct tmesh_io *io_old, struct tmesh_io *io_new)
   input = io_old->tmesh_io_private;
 
   /* close the file and free the input: */
-#ifdef WIN32
-  tme_win32_close(input->_tmesh_input_handle);
-#else
   tme_thread_close(input->_tmesh_input_handle);
-#endif
   tme_free(input);
 
   /* set the new, emerging input: */
@@ -182,20 +174,10 @@ _tmesh_open(struct tmesh_io *io_new, struct tmesh_io *io_old, char **_output)
 
   /* try to open the file: */
   input->_tmesh_input_handle =
-#ifdef WIN32
-    tme_win32_open(io_new->tmesh_io_name, TME_FILE_RO, FILE_ATTRIBUTE_NORMAL, 0);
-#else
   tme_thread_open(io_new->tmesh_io_name, TME_FILE_RO);
-#endif
   
   /* if the open failed: */
-  if (input->_tmesh_input_handle ==
-#ifdef WIN32
-      NULL
-#else
-      TME_INVALID_HANDLE
-#endif
-      ) {
+  if (input->_tmesh_input_handle == TME_INVALID_HANDLE) {
     saved_errno = errno;
     tme_free(input);
     return (saved_errno);
@@ -472,21 +454,12 @@ _tmesh_th(int *interactive)
   /* loop while we have a current input buffer: */
   for (;;) {
     
-    /* try to read more input: */
-#ifdef WIN32
-    rc = tme_event_yield(input->_tmesh_input_handle,
-#else
-    rc = tme_thread_yield(input->_tmesh_input_handle,
-#endif
-		       input->_tmesh_input_buffer
-		       + input->_tmesh_input_buffer_head,
-		       sizeof(input->_tmesh_input_buffer)
-		       - input->_tmesh_input_buffer_head,
-#ifdef WIN32
-			 EVENT_READ,
-			 NULL,
-#endif
-			  NULL);
+    rc = tme_thread_read(input->_tmesh_input_handle,
+			 input->_tmesh_input_buffer
+			 + input->_tmesh_input_buffer_head,
+			 sizeof(input->_tmesh_input_buffer)
+			 - input->_tmesh_input_buffer_head,
+			 NULL);
     /*
       (tme_read(TME_THREAD_HANDLE(input->_tmesh_input_handle),
 		input->_tmesh_input_buffer

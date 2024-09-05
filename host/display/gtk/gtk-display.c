@@ -602,7 +602,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
 
   /* unlock mutex once gtk main thread is running: */
   //  g_idle_add(_tme_gtk_screens_update, display);
-  tme_thread_create(&display->display.tme_display_thread, tme_display_th_update, display);
+  //  tme_thread_create(&display->display.tme_display_thread, tme_display_th_update, display);
   //  tme_mutex_unlock(&display->display.tme_display_mutex);
   return rc;
 }

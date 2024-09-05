@@ -524,7 +524,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_sdl,display) {
   display->tme_screen_add = (void *)sizeof(struct tme_sdl_screen);
   display->tme_screen_resize = _tme_sdl_screen_resize;
   display->tme_screen_redraw = _tme_sdl_screen_redraw;
-  tme_thread_create(&display->tme_display_thread, tme_display_th_update, display);  
+  //  tme_thread_create(&display->tme_display_thread, tme_display_th_update, display);  
   //  tme_mutex_unlock(&display->tme_display_mutex);
   return (TME_OK);
 }

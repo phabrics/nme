@@ -33,9 +33,7 @@
 
 /* includes: */
 #include <tme/threads.h>
-#if defined(TME_THREADS_FIBER) || defined(WIN32)
 #include <tme/openvpn-setup.h>
-#endif
 #if defined(__EMSCRIPTEN__) && defined(TME_THREADS_POSIX)
 #include <emscripten.h>
 #endif
@@ -478,12 +476,10 @@ void tme_win32_close(tme_event_t hand) {
     }
 }
 
-#ifdef TME_THREADS_FIBER
 tme_off_t tme_thread_seek (tme_thread_handle_t hand, tme_off_t off, int where) {
   tme_event_seek(hand->handle, &hand->reads, off, where);
   return tme_event_seek(hand->handle, &hand->writes, off, where);
 }
-#endif
 
 static _tme_inline int
 tme_event_read (tme_event_t hand, void *data, int len)
@@ -515,7 +511,6 @@ tme_event_write (tme_event_t hand, void *data, int len)
 #define tme_event_write tme_write
 #endif // !WIN32
 
-#if defined(TME_THREADS_FIBER) || defined(WIN32)
 static _tme_inline event_t
 tme_event_handle (const tme_event_t hand)
 {
@@ -527,7 +522,7 @@ tme_event_handle (const tme_event_t hand)
 }
 
 /* this reads or writes, yielding if the event is not ready: */
-ssize_t
+static _tme_inline ssize_t
 tme_event_yield(tme_event_t hand, void *data, size_t len, unsigned int rwflags, tme_mutex_t *mutex, void **outbuf)
 {
   int rc = 1;
@@ -598,7 +593,15 @@ tme_event_yield(tme_event_t hand, void *data, size_t len, unsigned int rwflags, 
   }
   return rc;
 }
-#endif // openvpn-dependent
+
+
+ssize_t tme_thread_read(tme_thread_handle_t hand, void *buf, size_t len, tme_mutex_t *mutex) {
+  return tme_event_yield(hand, buf, len, EVENT_READ, mutex, NULL);
+}
+
+ssize_t tme_thread_write(tme_thread_handle_t hand, const void *buf, size_t len, tme_mutex_t *mutex) {
+  return tme_event_yield(hand, buf, len, EVENT_WRITE, mutex, NULL);
+}
 
 #ifdef _TME_HAVE_ZLIB
 struct tme_zlib_handle  *tme_zlib_open(const char *path, int flags) {
@@ -628,9 +631,8 @@ struct tme_zlib_handle  *tme_zlib_open(const char *path, int flags) {
   return hand;
 }
 
-#ifdef TME_THREADS_FIBER
 /* this reads or writes, yielding if the event is not ready: */
-ssize_t
+static _tme_inline ssize_t
 tme_zlib_yield(struct tme_zlib_handle  *hand, void *data, size_t len, unsigned int rwflags, tme_mutex_t *mutex, void **outbuf)
 {
   int rc = 1;
@@ -653,5 +655,12 @@ tme_zlib_yield(struct tme_zlib_handle  *hand, void *data, size_t len, unsigned i
   return rc;
 }
 
-#endif // THREADS_FIBER
+ssize_t tme_zlib_read(struct tme_zlib_handle  *hand, void *buf, size_t len, tme_mutex_t *mutex) {
+  return tme_zlib_yield(hand, buf, len, EVENT_READ, mutex, NULL);
+}
+
+ssize_t tme_zlib_write(struct tme_zlib_handle  *hand, const void *buf, size_t len, tme_mutex_t *mutex) {
+  return tme_zlib_yield(hand, buf, len, EVENT_WRITE, mutex, NULL);
+}
+
 #endif // HAVE_ZLIB

@@ -331,12 +331,10 @@ _tme_posix_serial_th_writer(struct tme_posix_serial *serial)
     assert(buffer_output_size > 0);
 
     /* try to write the device: */
-    rc = tme_event_yield(serial->tme_posix_serial_hand_out,
+    rc = tme_thread_write(serial->tme_posix_serial_hand_out,
 			  buffer_output,
 			  buffer_output_size,
-			  EVENT_WRITE,
-			  &serial->tme_posix_serial_mutex,
-			  NULL);
+			  &serial->tme_posix_serial_mutex);
 
     /* if the write was successful: */
     if (rc > 0) {
@@ -376,12 +374,10 @@ _tme_posix_serial_th_reader(struct tme_posix_serial *serial)
   for (;;) {
 
     /* try to read the device: */
-    rc = tme_event_yield(serial->tme_posix_serial_hand_in,
+    rc = tme_thread_read(serial->tme_posix_serial_hand_in,
 			 buffer_input,
 			 sizeof(buffer_input),
-			 EVENT_READ,
-			 &serial->tme_posix_serial_mutex,
-			 NULL);
+			 &serial->tme_posix_serial_mutex);
     
     /* if the read failed: */
     if (rc < 0) {

@@ -58,11 +58,6 @@ struct tme_zlib_handle {
   int fd;
 };
 struct tme_zlib_handle  *tme_zlib_open _TME_P((const char *path, int flags));
-#ifdef TME_THREADS_FIBER
-ssize_t tme_zlib_yield _TME_P((struct tme_zlib_handle  *, void *, size_t, unsigned int, tme_mutex_t *, void **));
-ssize_t tme_zlib_read _TME_P((struct tme_zlib_handle  *hand, void *buf, size_t len, tme_mutex_t *mutex));
-ssize_t tme_zlib_write _TME_P((struct tme_zlib_handle  *hand, const void *buf, size_t len, tme_mutex_t *mutex));
-#endif
 #endif
 
 typedef void (*tme_threads_fn) _TME_P((void));
@@ -148,8 +143,6 @@ static _tme_inline ssize_t tme_write _TME_P((HANDLE hand, const void *buf, size_
 
 #define TME_STD_HANDLE(hand) win32_##hand
 
-#ifdef TME_THREADS_FIBER
-
 typedef tme_event_t tme_thread_handle_t;
 #define TME_STD_THREAD_HANDLE TME_STD_HANDLE
 #define TME_STD_EVENT_HANDLE TME_STD_HANDLE
@@ -160,40 +153,7 @@ typedef tme_event_t tme_thread_handle_t;
 #define tme_event_open(path, flags) tme_win32_open(path, flags, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, 1024)
 #define tme_thread_close tme_win32_close
 #define tme_event_close tme_thread_close
-#ifdef TME_THREADS_FIBER
-#define tme_thread_read tme_fiber_read
-#define tme_thread_write tme_fiber_write
-#endif
 tme_off_t tme_thread_seek _TME_P((tme_thread_handle_t hand, tme_off_t off, int where));
-
-#else /* TME_THREADS_FIBER */
-
-#define TME_THREADS_DIRECTIO
-#define TME_STD_THREAD_HANDLE(hand) TME_WIN32_HANDLE(win32_##hand)
-#define TME_STD_EVENT_HANDLE TME_STD_HANDLE
-#define TME_EVENT_HANDLE TME_WIN32_HANDLE
-#define TME_THREAD_HANDLE(hand) hand
-#define TME_INVALID_HANDLE INVALID_HANDLE_VALUE
-typedef HANDLE tme_thread_handle_t;
-
-#define tme_thread_open(path,flags)		\
-  CreateFile(path, \
-	     flags, \
-	     0, /* was: FILE_SHARE_READ */ \
-	     0, \
-	     OPEN_EXISTING, \
-	     FILE_ATTRIBUTE_NORMAL, \
-	     0)
-#define tme_thread_close CloseHandle
-#define tme_event_open(path, flags) tme_win32_open(path, flags, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, 1024)
-#define tme_event_close tme_win32_close
-static _tme_inline tme_off_t tme_thread_seek _TME_P((tme_thread_handle_t hand, tme_off_t off, int where)) {
-  LARGE_INTEGER ret;
-
-  return (SetFilePointerEx(hand, (LARGE_INTEGER)off, &ret, where)) ? (ret.QuadPart) : (-1);
-}
-
-#endif /* !TME_THREADS_FIBER */
 
 #elif defined(USE_ZLIB) && defined(_TME_HAVE_ZLIB)
 /* file flags: */
@@ -213,10 +173,8 @@ typedef tme_event_t tme_thread_handle_t;
 #define tme_thread_fd(hand, flags) hand->fd
 #define tme_read gzread
 #define tme_write gzwrite
-#ifdef TME_THREADS_FIBER
 #define tme_thread_read tme_zlib_read
 #define tme_thread_write tme_zlib_write
-#endif
 #define TME_SEEK_SET SEEK_SET
 #define TME_SEEK_CUR SEEK_CUR
 #define TME_SEEK_END SEEK_END
@@ -245,10 +203,6 @@ typedef tme_event_t tme_thread_handle_t;
 #define tme_thread_fd(hand, flags) hand
 #define tme_read read
 #define tme_write write
-#ifdef TME_THREADS_FIBER
-#define tme_thread_read tme_fiber_read
-#define tme_thread_write tme_fiber_write
-#endif
 #define TME_SEEK_SET SEEK_SET
 #define TME_SEEK_CUR SEEK_CUR
 #define TME_SEEK_END SEEK_END
@@ -260,54 +214,14 @@ typedef off_t tme_off_t;
 #define tme_event_close close
 #endif // !WIN32
 
-ssize_t tme_event_yield _TME_P((tme_event_t, void *, size_t, unsigned int, tme_mutex_t *, void **));
+ssize_t tme_thread_read _TME_P((tme_thread_handle_t hand, void *buf, size_t len, tme_mutex_t *mutex));
+ssize_t tme_thread_write _TME_P((tme_thread_handle_t hand, const void *buf, size_t len, tme_mutex_t *mutex));
 
-#ifdef TME_THREADS_FIBER
-
-ssize_t tme_fiber_read _TME_P((tme_thread_handle_t hand, void *buf, size_t len, tme_mutex_t *mutex));
-ssize_t tme_fiber_write _TME_P((tme_thread_handle_t hand, const void *buf, size_t len, tme_mutex_t *mutex));
-
-#else
-
-static _tme_inline ssize_t tme_thread_read _TME_P((tme_thread_handle_t hand, void *buf, size_t len, tme_mutex_t *mutex)) {
-  int rc;
-
-  if(mutex) tme_mutex_unlock(mutex);
-
-  _tme_thread_suspended();
-  
-  rc = tme_read(TME_THREAD_HANDLE(hand), buf, len);
-  
-  _tme_thread_resumed();
-
-  if(mutex) tme_mutex_lock(mutex);
-
-  return rc;
-}
-
-static _tme_inline ssize_t tme_thread_write _TME_P((tme_thread_handle_t hand, const void *buf, size_t len, tme_mutex_t *mutex)) {
-  int rc;
-
-  if(mutex) tme_mutex_unlock(mutex);
-  
-  _tme_thread_suspended();
-  
-  rc = tme_write(TME_THREAD_HANDLE(hand), buf, len);
-  
-  _tme_thread_resumed();
-  
-  if(mutex) tme_mutex_lock(mutex);
-
-  return rc;
-}
-
+#ifndef TME_THREADS_FIBER
 static _tme_inline void tme_thread_exit _TME_P((tme_mutex_t *mutex)) {
   _tme_thread_suspended();  
   if(mutex)
     tme_mutex_unlock(mutex);
 }
 #endif /* !TME_THREADS_FIBER */
-
-_tme_thret tme_display_th_update _TME_P((void *disp));
-
 #endif /* !_TME_THREADS_H */
