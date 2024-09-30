@@ -34,19 +34,7 @@
 /* includes: */
 #include <tme/threads.h>
 #include <tme/openvpn-setup.h>
-#if defined(__EMSCRIPTEN__) && defined(TME_THREADS_POSIX)
-#include <emscripten.h>
-#endif
 
-/* globals: */
-static struct tme_threads_t {
-  tme_threads_fn1 tme_threads_run;
-  void *tme_threads_arg;
-  tme_mutex_t *tme_threads_mutex;
-  tme_time_t tme_threads_delay;
-} tme_threads;
-static tme_cond_t tme_cond_start;
-static tme_time_t tme_cond_delay = TME_TIME_SET_SEC(5);
 #ifdef TME_THREADS_POSIX
 pthread_rwlock_t tme_rwlock_suspere;
 
@@ -76,32 +64,8 @@ struct tme_win32_handle {
 tme_event_t win32_stdin;
 tme_event_t win32_stdout;
 tme_event_t win32_stderr;
-#endif
 
-// Set main thread loop iteration function & argument
-void tme_threads_set_main(tme_threads_fn1 run, void *arg, tme_mutex_t *mutex, tme_time_t delay) {
-  tme_threads.tme_threads_run = run;
-  tme_threads.tme_threads_arg = arg;
-  tme_threads.tme_threads_mutex = mutex;
-  tme_threads.tme_threads_delay = delay;
-  //  tme_cond_notify(&tme_cond_start,TRUE);
-}
-
-int tme_threads_init() {
-  /* initialize the threading system: */
-  tme_threads.tme_threads_run = tme_threads_main_iter;
-  tme_threads.tme_threads_arg = 0;
-  tme_threads.tme_threads_mutex = NULL;
-  tme_threads.tme_threads_delay = TME_TIME_SET_SEC(10);
-  _tme_threads_init();
-
-  /* Synchronization primitive provided to allow sequential
-     execution of pre-thread initialization code. It is used
-     as the condition to start all threads. */
-
-  tme_cond_init(&tme_cond_start);
-
-#ifdef WIN32
+int tme_win32_init() {
   win32_stdin = tme_new0(struct tme_win32_handle, 1);
   win32_stdout = tme_new0(struct tme_win32_handle, 1);
   win32_stderr = tme_new0(struct tme_win32_handle, 1);
@@ -114,43 +78,7 @@ int tme_threads_init() {
   win32_stdin->reads.overlapped.hEvent =
     win32_stdout->writes.overlapped.hEvent =
     win32_stderr->reads.overlapped.hEvent = NULL;
-#endif
-  _tme_thread_resumed();
-  return TME_OK;
 }
-
-void tme_threads_run(void) {
-  _tme_thread_suspended();
-  tme_thread_enter(tme_threads.tme_threads_mutex);
-  
-  /* Run the main loop */
-#if defined(__EMSCRIPTEN__) && defined(TME_THREADS_POSIX)
-  // Receives a function to call and some user data to provide it.
-  emscripten_request_animation_frame_loop(tme_threads.tme_threads_run, tme_threads.tme_threads_arg);
-#else
-  if(tme_threads.tme_threads_run)
-    for(;;) {
-      (*tme_threads.tme_threads_run)(tme_threads.tme_threads_arg);
-#ifndef TME_THREADS_FIBER
-      if(tme_threads.tme_threads_delay)
-	tme_thread_sleep_yield(tme_threads.tme_threads_delay, tme_threads.tme_threads_mutex);
-#endif
-    }
-  else
-    (*(tme_threads_fn)tme_threads.tme_threads_arg)();
-#endif
-  tme_thread_exit(tme_threads.tme_threads_mutex);
-}
-
-void _tme_thread_enter(tme_mutex_t *mutex) {
-  _tme_thread_resumed();
-  if(mutex) {
-     tme_mutex_lock(mutex);
-     //     tme_cond_sleep_yield(&tme_cond_start, mutex, tme_cond_delay);
-  }
-}
-
-#ifdef WIN32
 
 int
 tme_read_queue (tme_event_t hand, int maxsize)

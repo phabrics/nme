@@ -63,9 +63,21 @@ struct tme_zlib_handle  *tme_zlib_open _TME_P((const char *path, int flags));
 typedef void (*tme_threads_fn) _TME_P((void));
 typedef int (*tme_threads_fn1) _TME_P((void *));
 
-void tme_threads_set_main _TME_P((tme_threads_fn1 run, void *arg, tme_mutex_t *mutex, tme_time_t delay));
-void tme_threads_run _TME_P((void));
-void _tme_thread_enter _TME_P((tme_mutex_t *mutex));
+static _tme_inline void tme_mutex_lock _TME_P((tme_mutex_t *mutex)) { 
+  _tme_thread_suspended();
+  
+  _tme_mutex_lock(mutex);
+
+  _tme_thread_resumed();
+}
+
+static _tme_inline void _tme_thread_enter _TME_P((tme_mutex_t *mutex)) {
+  _tme_thread_resumed();
+  if(mutex) {
+     tme_mutex_lock(mutex);
+     //     tme_cond_sleep_yield(&tme_cond_start, mutex, tme_cond_delay);
+  }
+}
 
 #if defined(TME_THREADS_FIBER) && !defined(WIN32)
 static _tme_inline void tme_thread_enter _TME_P((tme_mutex_t *mutex)) {
@@ -78,14 +90,6 @@ static _tme_inline void tme_thread_enter _TME_P((tme_mutex_t *mutex)) {
 #else
 #define tme_thread_enter _tme_thread_enter
 #endif
-
-static _tme_inline void tme_mutex_lock _TME_P((tme_mutex_t *mutex)) { 
-  _tme_thread_suspended();
-  
-  _tme_mutex_lock(mutex);
-
-  _tme_thread_resumed();
-}
 
 static _tme_inline int tme_thread_sleep_yield _TME_P((tme_time_t time, tme_mutex_t *mutex)) { 
   if(mutex) tme_mutex_unlock(mutex);
@@ -103,6 +107,10 @@ static _tme_inline int tme_thread_sleep_yield _TME_P((tme_time_t time, tme_mutex
 
 /* I/O: */
 #ifdef WIN32
+static _tme_inline void tme_threads_init() {
+  _tme_threads_init();
+  tme_win32_init();
+}
 /* file flags: */
 #define TME_FILE_RO		GENERIC_READ
 #define TME_FILE_WO		GENERIC_WRITE
@@ -156,6 +164,7 @@ typedef tme_event_t tme_thread_handle_t;
 tme_off_t tme_thread_seek _TME_P((tme_thread_handle_t hand, tme_off_t off, int where));
 
 #elif defined(USE_ZLIB) && defined(_TME_HAVE_ZLIB)
+#define tme_threads_init _tme_threads_init
 /* file flags: */
 typedef struct tme_zlib_handle  *tme_event_t;
 #define TME_FILE_RO		O_RDONLY
@@ -186,6 +195,7 @@ typedef z_off_t tme_off_t;
 #define tme_event_close gzclose
 
 #else // HAVE_ZLIB
+#define tme_threads_init _tme_threads_init
 /* file flags: */
 #define TME_FILE_RO		O_RDONLY
 #define TME_FILE_WO		O_WRONLY

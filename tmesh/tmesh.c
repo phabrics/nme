@@ -746,7 +746,8 @@ main(int argc, char **argv)
 
   /* initialize libtme: */
   tme_module_init();
-  tme_threads_init();
+  /* initialize libtmesh: */
+  (void) tmesh_init();
 
   //  tme_thread_enter(NULL);
   
@@ -860,9 +861,6 @@ main(int argc, char **argv)
   }
 #endif // HAVE_PTHREAD_SETSCHEDPARAM  
 #endif
-
-  /* initialize libtmesh: */
-  (void) tmesh_init();
 
   /* Register a finalizer: */
   atexit(tmesh_finish);

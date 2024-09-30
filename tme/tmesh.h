@@ -45,7 +45,6 @@ _TME_RCSID("$Id: tmesh.h,v 1.1 2003/05/16 21:48:15 fredette Exp $");
 /* macros: */
 #define TMESH_C_EOF			(-1)
 #define TMESH_C_YIELD			(TMESH_C_EOF - 1)
-#define tmesh_init()			(TME_OK)
 
 /* tmesh input/output: */
 struct tmesh_io {
