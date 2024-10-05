@@ -44,52 +44,17 @@
 #ifdef TME_THREADS_FIBER
 /* Events: */
 typedef struct tme_fiber_event_set tme_event_set_t;
-
-tme_event_set_t *tme_fiber_event_set_init _TME_P((int *maxevents, unsigned int flags));
-void tme_fiber_event_free _TME_P((tme_event_set_t *es));
-void tme_fiber_event_reset _TME_P((tme_event_set_t *es));
-int tme_fiber_event_del _TME_P((tme_event_set_t *es, event_t event));
-int tme_fiber_event_ctl _TME_P((tme_event_set_t *es, event_t event, unsigned int rwflags, void *arg));
-int tme_fiber_event_wait _TME_P((tme_event_set_t *es, const struct timeval *tv, struct event_set_return *out, int outlen, tme_mutex_t *mutex));
-#define tme_event_set(s) (*(struct event_set **)(s))
-#define tme_event_set_init tme_fiber_event_set_init
-#define tme_event_free tme_fiber_event_free
-#define tme_event_reset tme_fiber_event_reset
-#define tme_event_del tme_fiber_event_del
-#define tme_event_ctl tme_fiber_event_ctl
-#define tme_event_wait tme_fiber_event_wait
 #else
 /* Events: */
 typedef struct event_set tme_event_set_t;
-
-#define tme_event_set(s) (s)
-#define tme_event_set_init event_set_init
-#define tme_event_free event_free
-#define tme_event_reset event_reset
-#define tme_event_del event_del
-#define tme_event_ctl event_ctl
-
-static _tme_inline
-int tme_event_wait _TME_P((tme_event_set_t *es, const struct timeval *tv, struct event_set_return *out, int outlen, tme_mutex_t *mutex)) {
-  int rc;
-  struct timeval _tv;
-
-  _tv.tv_sec = (tv) ? (tv->tv_sec) : (BIG_TIMEOUT);
-  _tv.tv_usec = (tv) ? (tv->tv_usec) : (0);
-  
-  if(mutex) tme_mutex_unlock(mutex);
-  
-  _tme_thread_suspended();
-  
-  rc = event_wait(es, &_tv, out, outlen);
-
-  _tme_thread_resumed();
-    
-  if(mutex) tme_mutex_lock(mutex);
-
-  return rc;
-}
 #endif
+
+extern tme_event_set_t *(*tme_event_set_init) _TME_P((int *maxevents, unsigned int flags));
+extern void (*tme_event_free) _TME_P((tme_event_set_t *es));
+extern void (*tme_event_reset) _TME_P((tme_event_set_t *es));
+extern int (*tme_event_del) _TME_P((tme_event_set_t *es, event_t event));
+extern int (*tme_event_ctl) _TME_P((tme_event_set_t *es, event_t event, unsigned int rwflags, void *arg));
+extern int (*tme_event_wait) _TME_P((tme_event_set_t *es, const struct timeval *tv, struct event_set_return *out, int outlen, tme_mutex_t *mutex));
 
 struct env_set *openvpn_setup _TME_P((const char *args[], int argc, struct options *options));
 

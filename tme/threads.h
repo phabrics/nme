@@ -105,12 +105,11 @@ static _tme_inline int tme_thread_sleep_yield _TME_P((tme_time_t time, tme_mutex
   return 0;
 }
 
+void tme_threads_init();
+
 /* I/O: */
 #ifdef WIN32
-static _tme_inline void tme_threads_init() {
-  _tme_threads_init();
-  tme_win32_init();
-}
+
 /* file flags: */
 #define TME_FILE_RO		GENERIC_READ
 #define TME_FILE_WO		GENERIC_WRITE
@@ -162,9 +161,7 @@ typedef tme_event_t tme_thread_handle_t;
 #define tme_thread_close tme_win32_close
 #define tme_event_close tme_thread_close
 tme_off_t tme_thread_seek _TME_P((tme_thread_handle_t hand, tme_off_t off, int where));
-
 #elif defined(USE_ZLIB) && defined(_TME_HAVE_ZLIB)
-#define tme_threads_init _tme_threads_init
 /* file flags: */
 typedef struct tme_zlib_handle  *tme_event_t;
 #define TME_FILE_RO		O_RDONLY
@@ -195,7 +192,6 @@ typedef z_off_t tme_off_t;
 #define tme_event_close gzclose
 
 #else // HAVE_ZLIB
-#define tme_threads_init _tme_threads_init
 /* file flags: */
 #define TME_FILE_RO		O_RDONLY
 #define TME_FILE_WO		O_WRONLY

@@ -100,14 +100,15 @@ static int _tme_openvpn_tun_read(void *data) {
   tun_show_debug(tun->tt);
 #endif
 
-  es = tme_event_set(event_set);
+  es = (tme_event_ctl != event_ctl) ?
+    (*(struct event_set **)(event_set)) : (event_set);
 
   tun_set(tun->tt, es, flags, (void*)0, NULL);
 
   if(es != event_set) {
-    tme_event_set(event_set) = NULL;
+    (*(struct event_set **)(event_set)) = NULL;
     tme_event_ctl(event_set, tun_event_handle(tun->tt), flags, 0);
-    tme_event_set(event_set) = es;
+    (*(struct event_set **)(event_set)) = es;
   }
     
   status = tme_event_wait(event_set, NULL, &esr, 1, &tun->eth->tme_eth_mutex);

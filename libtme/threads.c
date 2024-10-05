@@ -65,21 +65,6 @@ tme_event_t win32_stdin;
 tme_event_t win32_stdout;
 tme_event_t win32_stderr;
 
-int tme_win32_init() {
-  win32_stdin = tme_new0(struct tme_win32_handle, 1);
-  win32_stdout = tme_new0(struct tme_win32_handle, 1);
-  win32_stderr = tme_new0(struct tme_win32_handle, 1);
-  win32_stdin->rw_handle.read =
-    win32_stdin->handle = GetStdHandle(STD_INPUT_HANDLE);
-  win32_stdout->rw_handle.write =
-    win32_stdout->handle = GetStdHandle(STD_OUTPUT_HANDLE);
-  win32_stderr->rw_handle.write =
-    win32_stderr->handle = GetStdHandle(STD_ERROR_HANDLE);
-  win32_stdin->reads.overlapped.hEvent =
-    win32_stdout->writes.overlapped.hEvent =
-    win32_stderr->reads.overlapped.hEvent = NULL;
-}
-
 int
 tme_read_queue (tme_event_t hand, int maxsize)
 {
@@ -433,11 +418,58 @@ tme_event_write (tme_event_t hand, void *data, int len)
     return tme_write_win32 (hand, &buf);
   }
 }
-
-#else // WIN32
+#else
 #define tme_event_read tme_read
 #define tme_event_write tme_write
 #endif // !WIN32
+
+static 
+int _tme_event_wait(tme_event_set_t *es, const struct timeval *tv, struct event_set_return *out, int outlen, tme_mutex_t *mutex) {
+  int rc;
+  struct timeval _tv;
+
+  _tv.tv_sec = (tv) ? (tv->tv_sec) : (BIG_TIMEOUT);
+  _tv.tv_usec = (tv) ? (tv->tv_usec) : (0);
+  
+  if(mutex) tme_mutex_unlock(mutex);
+  
+  _tme_thread_suspended();
+  
+  rc = event_wait(es, &_tv, out, outlen);
+
+  _tme_thread_resumed();
+    
+  if(mutex) tme_mutex_lock(mutex);
+
+  return rc;
+}
+
+void tme_threads_init() {
+  /* initialize the runtime event callback handlers: */
+  tme_event_set_init = event_set_init;
+  tme_event_free = event_free;
+  tme_event_reset = event_reset;
+  tme_event_del = event_del;
+  tme_event_ctl = event_ctl;
+  tme_event_wait = _tme_event_wait;
+
+  _tme_threads_init();
+
+#ifdef WIN32
+  win32_stdin = tme_new0(struct tme_win32_handle, 1);
+  win32_stdout = tme_new0(struct tme_win32_handle, 1);
+  win32_stderr = tme_new0(struct tme_win32_handle, 1);
+  win32_stdin->rw_handle.read =
+    win32_stdin->handle = GetStdHandle(STD_INPUT_HANDLE);
+  win32_stdout->rw_handle.write =
+    win32_stdout->handle = GetStdHandle(STD_OUTPUT_HANDLE);
+  win32_stderr->rw_handle.write =
+    win32_stderr->handle = GetStdHandle(STD_ERROR_HANDLE);
+  win32_stdin->reads.overlapped.hEvent =
+    win32_stdout->writes.overlapped.hEvent =
+    win32_stderr->reads.overlapped.hEvent = NULL;
+#endif
+}
 
 static _tme_inline event_t
 tme_event_handle (const tme_event_t hand)
@@ -453,18 +485,17 @@ tme_event_handle (const tme_event_t hand)
 static _tme_inline ssize_t
 tme_event_yield(tme_event_t hand, void *data, size_t len, unsigned int rwflags, tme_mutex_t *mutex, void **outbuf)
 {
-  int rc = 1;
+  int i, rc = 1, key_event = FALSE;
   struct event_set_return esr;
   tme_event_set_t *tme_events = tme_event_set_init(&rc, EVENT_METHOD_FAST);
 
-#ifdef WIN32
-  int i, key_event=FALSE;
   do {
+#ifdef WIN32
     if (rwflags & EVENT_READ) {
       if (hand == TME_STD_HANDLE(stdin)) {
 	INPUT_RECORD record[128];
 	DWORD numRead;
-	key_event=TRUE;
+	key_event = TRUE;
 	if((rc = GetNumberOfConsoleInputEvents(hand->handle, &numRead)) &&
 	   numRead>0 &&
 	   (rc = PeekConsoleInput(hand->handle, record, 128, &numRead))) {
@@ -498,9 +529,8 @@ tme_event_yield(tme_event_t hand, void *data, size_t len, unsigned int rwflags, 
     tme_event_reset(tme_events);
     tme_event_ctl(tme_events, tme_event_handle(hand), rwflags, 0);
     rc = tme_event_wait(tme_events, NULL, &esr, 1, mutex);
-#ifdef WIN32
   } while(key_event);
-#endif
+
   tme_event_free(tme_events);
   
   /* do the i/o: */
@@ -521,7 +551,6 @@ tme_event_yield(tme_event_t hand, void *data, size_t len, unsigned int rwflags, 
   }
   return rc;
 }
-
 
 ssize_t tme_thread_read(tme_thread_handle_t hand, void *buf, size_t len, tme_mutex_t *mutex) {
   return tme_event_yield(hand, buf, len, EVENT_READ, mutex, NULL);

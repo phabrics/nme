@@ -206,31 +206,6 @@ static tme_time_t _tme_fiber_now;
 /* if nonzero, the last dispatched thread ran for only a short time: */
 int tme_fiber_thread_short;
 
-/* this initializes the threads system: */
-void
-tme_fiber_threads_init()
-{
-  int num = TME_NUM_EVENTS;
-  
-  /* there are no threads: */
-  tme_fiber_threads_all = NULL;
-  tme_fiber_threads_timeout = NULL;
-  tme_fiber_threads_runnable = NULL;
-  tme_fiber_threads_dispatching = NULL;
-  tme_fiber_thread_active = NULL;
-  tme_fiber_thread_exiting = FALSE;
-
-  /* no threads are waiting on any fds: */
-  tme_fiber_main_events = tme_fiber_event_set_init(&num, 0);
-  
-  /* initialize the thread-blocked structure: */
-  tme_fiber_convert(&tme_fiber_thread_blocked);
-  tme_fiber_thread_blocked.tme_fiber_thread_cond = NULL;
-  tme_fiber_thread_blocked.tme_fiber_thread_events = NULL;
-  tme_fiber_thread_blocked.tme_fiber_thread_sleep = 0;
-  tme_fiber_thread_blocked.tme_fiber_thread_timeout = 0;
-}
-
 /* this returns a reasonably current time: */
 tme_time_t
 tme_fiber_get_time()
@@ -635,7 +610,9 @@ tme_fiber_sleep_yield(tme_time_t time)
 
 }
 
-struct tme_fiber_event_set *tme_fiber_event_set_init(int *maxevents, unsigned int flags) {
+/* the fiber event methods: */
+
+static struct tme_fiber_event_set *tme_fiber_event_set_init(int *maxevents, unsigned int flags) {
   struct tme_fiber_event_set *tes;
   struct event_set *es;
   es = event_set_init(maxevents, flags);
@@ -646,20 +623,20 @@ struct tme_fiber_event_set *tme_fiber_event_set_init(int *maxevents, unsigned in
   return tes;
 }
 
-void tme_fiber_event_free(struct tme_fiber_event_set *es) {
+static void tme_fiber_event_free(struct tme_fiber_event_set *es) {
   if(es->es)
     event_free(es->es);
   tme_free(es);
 }
 
-void tme_fiber_event_reset(struct tme_fiber_event_set *es)
+static void tme_fiber_event_reset(struct tme_fiber_event_set *es)
 {
   if(es->es)
     event_reset(es->es);
   es->max_event = -1;
 }
 
-int tme_fiber_event_del(struct tme_fiber_event_set *es, event_t event)
+static int tme_fiber_event_del(struct tme_fiber_event_set *es, event_t event)
 {
   int i, rc;
 
@@ -679,7 +656,7 @@ int tme_fiber_event_del(struct tme_fiber_event_set *es, event_t event)
   return rc;
 }
 
-int tme_fiber_event_ctl(struct tme_fiber_event_set *es, event_t event, unsigned int rwflags, void *arg) {
+static int tme_fiber_event_ctl(struct tme_fiber_event_set *es, event_t event, unsigned int rwflags, void *arg) {
   int i = -1, min_event;
   
   if(es->es)
@@ -703,7 +680,7 @@ int tme_fiber_event_ctl(struct tme_fiber_event_set *es, event_t event, unsigned 
 }
 
 /* this selects and yields: */
-int
+static int
 tme_fiber_event_wait(struct tme_fiber_event_set *es, const struct timeval *timeout_in, struct event_set_return *out, int outlen, tme_mutex_t *mutex)
 {
   struct timeval timeout_out;
@@ -736,6 +713,39 @@ tme_fiber_event_wait(struct tme_fiber_event_set *es, const struct timeval *timeo
   /* lock the mutex: */
   if(mutex) tme_mutex_lock(mutex);
   return event_wait(es->es, &timeout_out, out, outlen);
+}
+
+/* this initializes the threads system: */
+void
+tme_fiber_threads_init()
+{
+  int num = TME_NUM_EVENTS;
+  
+  /* there are no threads: */
+  tme_fiber_threads_all = NULL;
+  tme_fiber_threads_timeout = NULL;
+  tme_fiber_threads_runnable = NULL;
+  tme_fiber_threads_dispatching = NULL;
+  tme_fiber_thread_active = NULL;
+  tme_fiber_thread_exiting = FALSE;
+
+  /* no threads are waiting on any fds: */
+  tme_fiber_main_events = tme_fiber_event_set_init(&num, 0);
+  
+  /* initialize the thread-blocked structure: */
+  tme_fiber_convert(&tme_fiber_thread_blocked);
+  tme_fiber_thread_blocked.tme_fiber_thread_cond = NULL;
+  tme_fiber_thread_blocked.tme_fiber_thread_events = NULL;
+  tme_fiber_thread_blocked.tme_fiber_thread_sleep = 0;
+  tme_fiber_thread_blocked.tme_fiber_thread_timeout = 0;
+
+  /* initialize the runtime event callback handlers: */
+  tme_event_set_init = tme_fiber_event_set_init;
+  tme_event_free = tme_fiber_event_free;
+  tme_event_reset = tme_fiber_event_reset;
+  tme_event_del = tme_fiber_event_del;
+  tme_event_ctl = tme_fiber_event_ctl;
+  tme_event_wait = tme_fiber_event_wait;
 }
 
 /* this exits a thread: */

@@ -36,6 +36,13 @@
 #include <tme/common.h>
 #include <tme/openvpn-setup.h>
 
+tme_event_set_t *(*tme_event_set_init) _TME_P((int *maxevents, unsigned int flags));
+void (*tme_event_free) _TME_P((tme_event_set_t *es));
+void (*tme_event_reset) _TME_P((tme_event_set_t *es));
+int (*tme_event_del) _TME_P((tme_event_set_t *es, event_t event));
+int (*tme_event_ctl) _TME_P((tme_event_set_t *es, event_t event, unsigned int rwflags, void *arg));
+int (*tme_event_wait) _TME_P((tme_event_set_t *es, const struct timeval *tv, struct event_set_return *out, int outlen, tme_mutex_t *mutex));
+
 static inline
 struct tuntap *setup_tuntap(struct frame *frame, struct link_socket_addr *lsa, struct options *options, struct env_set *es) {
   /* TUN/TAP specific stuff */
