@@ -51,7 +51,8 @@ netbsd_rel=10.0
 
 # NetBSD binary sets to install via tape
 # Remember, skip "etc" for an upgrade.
-netbsd_sets="etc base comp games man misc rescue text"
+#netbsd_sets="etc base comp games man misc rescue text"
+chksum=SHA512
 
 # The command to use for downloading files
 download_cmd() {
@@ -72,33 +73,40 @@ make_seg() {
 
 # Download the firmware for each machine type, if needed
 mkdir -p $firmware_root
-cd $firmware_root
+pushd $firmware_root
 for fw in $firmwares; do
     download_cmd $firmware_site $fw.bin
 done
-cd -
+popd
 
 mkdir -p $netbsd_root
-cd $netbsd_root
+pushd $netbsd_root
 # Download arch-specific NetBSD install files
 for arch in {sun2,sun3}; do
     netbsd_path=NetBSD-$netbsd_rel/$arch
     # Only download if necessary
+    download_cmd $netbsd_site $netbsd_path/INSTALL.html
+    download_cmd $netbsd_site $netbsd_path/INSTALL.more
+    download_cmd $netbsd_site $netbsd_path/INSTALL.ps
+    download_cmd $netbsd_site $netbsd_path/INSTALL.txt
     download_cmd $netbsd_site $netbsd_path/installation/tapeimage/tapeboot
     download_cmd $netbsd_site $netbsd_path/installation/miniroot/miniroot.fs.gz
-    download_cmd $netbsd_site $netbsd_path/binary/kernel/netbsd-RAMDISK.gz
-    for f in $netbsd_sets; do
-	download_cmd $netbsd_site $netbsd_path/binary/sets/${f}.tgz
+    for bin in {kernel,sets}; do
+	download_cmd $netbsd_site $netbsd_path/binary/$bin/$chksum
+	for f in `awk '{print $2}' $netbsd_path/binary/$bin/$chksum | sed -e 's%(\(.*\))%\1%'`; do
+	    download_cmd $netbsd_site $netbsd_path/binary/$bin/${f}
+	done
+	pushd $netbsd_path/binary/$bin
+	${chksum,,}sum -c $chksum
+	popd
     done
-    [ $arch = "sun2" ] && download_cmd $netbsd_site $netbsd_path/binary/sets/kern-FOURMEG.tgz
-    [ $arch = "sun3" ] && download_cmd $netbsd_site $netbsd_path/binary/sets/kern-GENERIC.tgz
 done
 
 for arch in {sparc,sparc64}; do
     # Only download if necessary
     download_cmd $netbsd_site images/$netbsd_rel/NetBSD-$netbsd_rel-$arch.iso
 done
-cd -
+popd
 
 # First, try to find installed location of tme
 if [ -z ${MINGW_PREFIX+set} ]; then
@@ -140,7 +148,7 @@ for arch in {sun2,sun3,sun4,sun-ultra}; do
     netbsd=netbsd-$arch
     prom=my-$arch-eeprom.bin
     for machd in `ls -d $arch-*`; do
-	cd $machd
+	pushd $machd
 	echo "Making $machd"
 	if [ $arch = "sun4" ]; then
 	    [ -d $firmware_root ] && ln -sf $firmware_root/$arch* .
@@ -162,7 +170,7 @@ for arch in {sun2,sun3,sun4,sun-ultra}; do
 	    if [ -d "$netbsd_path" ]; then
 		[ -d $firmware_root ] && ln -sf $firmware_root/$arch* .
 		mkdir -p $netbsd.tape
-		cd $netbsd.tape
+		pushd $netbsd.tape
 		ln -sf $netbsd_path/installation/tapeimage/tapeboot 01
 		[ $arch = "sun2" ] && touch 02
 		[ $arch = "sun3" ] && make_seg $netbsd_path/binary/kernel/netbsd-RAMDISK.gz 02
@@ -170,15 +178,12 @@ for arch in {sun2,sun3,sun4,sun-ultra}; do
 		make_seg $netbsd_path/installation/miniroot/miniroot.fs.gz 04
 		[ $arch = "sun2" ] && make_seg $netbsd_path/binary/kernel/netbsd-RAMDISK.gz 05
 		[ $arch = "sun3" ] && i=5 || i=6
-		for f in $netbsd_sets; do
+		for f in `awk '{print $2}' $netbsd_path/binary/sets/$chksum | sed -e 's%(\(.*\))%\1%'`; do
 		    j=`printf %02d $i`
-		    make_seg $netbsd_path/binary/sets/${f}.tgz $j
+		    make_seg $netbsd_path/binary/sets/${f} $j
 		    ((i+=1))
 		done
-		j=`printf %02d $i`
-		[ $arch = "sun2" ] && make_seg $netbsd_path/binary/sets/kern-FOURMEG.tgz $j
-		[ $arch = "sun3" ] && make_seg $netbsd_path/binary/sets/kern-GENERIC.tgz $j
-		cd ..
+		popd
 	    fi
 	    if [ ! -s run-$machd ]; then
 		mv src-$machd run-$machd
@@ -206,6 +211,6 @@ for arch in {sun2,sun3,sun4,sun-ultra}; do
 	    fi
 	fi
 	[ -s my-$arch-disk.img ] || dd if=/dev/zero of=my-$arch-disk.img bs=1 count=1 seek=$sz
-	cd ..
+	popd
     done
 done
