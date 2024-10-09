@@ -124,6 +124,13 @@ disk0 at sd0: tme/host/posix/disk file my-sun3-disk.img
 st0 at scsibus0: tme/scsi/tape id 4 type emulex-mt02 vendor EMULEX product "MT-02 QIC"
 tape0 at st0: tme/host/posix/tape
 
+## run tme-make-machs to generate the following tmesh tape loading scripts
+## and then uncomment the appropriate one
+# if zlib is enabled & working in tme/nme, you can choose this
+#source mt-sun3-zlib
+# otherwise if zlib is unavailable in tme/nme, you can choose this
+#source mt-sun3
+
 ## power up the machine:
 ##
 # uncomment this line to automatically power up the machine when

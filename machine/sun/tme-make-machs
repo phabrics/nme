@@ -55,14 +55,16 @@ netbsd_rel=10.0
 chksum=MD5
 #chksum=SHA512
 
+tape=tape0
+
 # The command to use for downloading files
 download_cmd() {
     [ -s $2 ] || wget -np -r -nH --cut-dirs=2 $1/$2
 }
 
 inc_tape() {
-    tape=`printf nt/%02d $num`
-    mkdir -p $tape
+    mt=`printf mt/%02d $num`
+    mkdir -p $mt
     ((num+=1))
 }
 
@@ -72,23 +74,24 @@ make_seg() {
     local suf
     
     inc_tape
-    seg=$tape/$2
+    seg=$mt/$2
     
     if [ -s $1/$2.tgz ]; then
-	ln -sf $1/$2.tgz $tape
+	ln -sf $1/$2.tgz $mt
 	seg=$seg.tgz
 	suf=.tar
     fi
     if [ -s $1/$2.gz ]; then
-	ln -sf $1/$2.gz $tape
+	ln -sf $1/$2.gz $mt
 	seg=$seg.gz
 	suf=
     fi
-    if [ -f .zlib ] && [ -s $seg ]; then
-	[ -s $tape/$2$suf ] || zcat -f $seg > $tape/$2$suf
-	seg=$tape/$2$suf
+    if [ -s $seg ]; then
+	echo -n "$seg " >> $3-zlib
+	[ -s $mt/$2$suf ] || zcat -f $seg > $mt/$2$suf
+	seg=$mt/$2$suf
+	echo -n "$seg " >> $3
     fi
-    echo -n "$seg " >> $3
 }
 
 # Download the firmware for each machine type, if needed
@@ -150,10 +153,6 @@ for mach in `ls $loc/SUN*`; do
        # if there is a site- or mach-specific config, copy those files
        [ -d "$loc/$machd" ] && cp $loc/$machd/* $machd 2>/dev/null
     fi
-    echo "# tmesh startup script for machine description of $machd" > $machd/run-$machd
-    echo >> $machd/run-$machd
-    echo "source MY-$mach" >> $machd/run-$machd
-    echo -n "command tape0 load " >> $machd/run-$machd	
 done
 
 # Replace with absolute pathnames to avoid symlink issues
@@ -187,25 +186,31 @@ for arch in {sun2,sun3,sun4,sun-ultra}; do
 	    sz=10G
 	else
 	    if [ -d "$netbsd_path" ]; then
+		echo "# tmesh script for loading tape from compressed files for $arch" > mt-$arch-zlib
+		echo "# tmesh script for loading tape for uncompressed files for $arch" > mt-$arch
 		[ -d $firmware_root ] && ln -sf $firmware_root/$arch* .
 		num=1
 		inc_tape
-		ln -sf $netbsd_path/installation/tapeimage/tapeboot $tape
-		echo -n "$tape/tapeboot " >> run-$machd
-		[ $arch = "sun2" ] && inc_tape && touch $tape/blank && echo -n "$tape/blank " >> run-$machd
-		[ $arch = "sun3" ] && make_seg $netbsd_path/binary/kernel netbsd-RAMDISK run-$machd
+		ln -sf $netbsd_path/installation/tapeimage/tapeboot $mt
+		echo -n "command $tape load $mt/tapeboot " >> mt-$arch-zlib
+		echo -n "command $tape load $mt/tapeboot " >> mt-$arch
+		if [ $arch = "sun2" ]; then
+		    inc_tape
+		    touch $mt/blank
+		    echo -n "$mt/blank " >> mt-$arch-zlib
+		    echo -n "$mt/blank " >> mt-$arch
+		fi
+		[ $arch = "sun3" ] && make_seg $netbsd_path/binary/kernel netbsd-RAMDISK mt-$arch
 		inc_tape
-		touch $tape/blank
-		echo -n "$tape/blank " >> run-$machd
-		make_seg $netbsd_path/installation/miniroot miniroot.fs run-$machd
-		[ $arch = "sun2" ] && make_seg $netbsd_path/binary/kernel netbsd-RAMDISK run-$machd
+		touch $mt/blank
+		echo -n "$mt/blank " >> mt-$arch-zlib
+		echo -n "$mt/blank " >> mt-$arch
+		make_seg $netbsd_path/installation/miniroot miniroot.fs mt-$arch
+		[ $arch = "sun2" ] && make_seg $netbsd_path/binary/kernel netbsd-RAMDISK mt-$arch
 		for f in `awk '{print $2}' $netbsd_path/binary/$bin/$chksum | sed -e 's%(\(.*\).tgz)%\1%'`; do
-		    make_seg $netbsd_path/binary/sets $f run-$machd
+		    make_seg $netbsd_path/binary/sets $f mt-$arch
 		done
 	    fi
-	    echo >> run-$machd
-	    echo "command mainbus0 power up" >> run-$machd
-	    [ -f .zlib ] && rm -f .zlib || touch .zlib
 	    if [ $arch = "sun3" ]; then
 		macht="3/150"
 		[ -s $prom ] || tme-sun-eeprom < $machd-eeprom.txt > $prom
