@@ -55,18 +55,24 @@ netbsd_rel=10.0
 chksum=MD5
 #chksum=SHA512
 
-# NetBSD tape directory
-tape=nt
-
 # The command to use for downloading files
 download_cmd() {
     [ -s $2 ] || wget -np -r -nH --cut-dirs=2 $1/$2
 }
 
+inc_tape() {
+    tape=`printf nt/%02d $num`
+    mkdir -p $tape
+    ((num+=1))
+}
+
 # The command to make a tape segment. Run once to link, twice to decompress
 make_seg() {
-    local seg=$tape/$2
-    local suf=
+    local seg
+    local suf
+    
+    inc_tape
+    seg=$tape/$2
     
     if [ -s $1/$2.tgz ]; then
 	ln -sf $1/$2.tgz $tape
@@ -76,6 +82,7 @@ make_seg() {
     if [ -s $1/$2.gz ]; then
 	ln -sf $1/$2.gz $tape
 	seg=$seg.gz
+	suf=
     fi
     if [ -f .zlib ] && [ -s $seg ]; then
 	[ -s $tape/$2$suf ] || zcat -f $seg > $tape/$2$suf
@@ -181,16 +188,17 @@ for arch in {sun2,sun3,sun4,sun-ultra}; do
 	else
 	    if [ -d "$netbsd_path" ]; then
 		[ -d $firmware_root ] && ln -sf $firmware_root/$arch* .
-		mkdir -p $tape
+		num=1
+		inc_tape
 		ln -sf $netbsd_path/installation/tapeimage/tapeboot $tape
 		echo -n "$tape/tapeboot " >> run-$machd
-		[ $arch = "sun2" ] && touch $tape/02 && echo -n "$tape/02 " >> run-$machd
+		[ $arch = "sun2" ] && inc_tape && touch $tape/blank && echo -n "$tape/blank " >> run-$machd
 		[ $arch = "sun3" ] && make_seg $netbsd_path/binary/kernel netbsd-RAMDISK run-$machd
-		touch $tape/03
-		echo -n "$tape/03 " >> run-$machd
+		inc_tape
+		touch $tape/blank
+		echo -n "$tape/blank " >> run-$machd
 		make_seg $netbsd_path/installation/miniroot miniroot.fs run-$machd
 		[ $arch = "sun2" ] && make_seg $netbsd_path/binary/kernel netbsd-RAMDISK run-$machd
-		[ $arch = "sun3" ] && i=5 || i=6
 		for f in `awk '{print $2}' $netbsd_path/binary/$bin/$chksum | sed -e 's%(\(.*\).tgz)%\1%'`; do
 		    make_seg $netbsd_path/binary/sets $f run-$machd
 		done
