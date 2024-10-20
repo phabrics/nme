@@ -156,7 +156,7 @@ typedef tme_event_t tme_thread_handle_t;
 #define TME_THREAD_HANDLE TME_WIN32_HANDLE
 #define TME_EVENT_HANDLE TME_THREAD_HANDLE
 #define TME_INVALID_HANDLE NULL
-#define tme_thread_open(path, flags) tme_win32_open(path, flags, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, 0)
+#define tme_thread_open(path, flags) tme_win32_open(path, flags, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, 65536)
 #define tme_event_open(path, flags) tme_win32_open(path, flags, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, 1024)
 #define tme_thread_close tme_win32_close
 #define tme_event_close tme_thread_close
@@ -204,7 +204,7 @@ typedef z_off_t tme_off_t;
 #define TME_STD_HANDLE(hand) fileno(hand)
 #define TME_STD_THREAD_HANDLE(hand) fileno(hand)
 #define TME_STD_EVENT_HANDLE(hand) fileno(hand)
-typedef int tme_event_t;
+typedef uintptr_t tme_event_t;
 typedef tme_event_t tme_thread_handle_t;
 #define tme_thread_fd(hand, flags) hand
 #define tme_read read

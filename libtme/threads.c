@@ -78,7 +78,7 @@ tme_read_queue (tme_event_t hand, int maxsize)
       hand->reads.buf = hand->reads.buf_init;
 
       len = maxsize ? maxsize : BLEN (&hand->reads.buf);
-      ASSERT (len <= BLEN (&hand->reads.buf));
+      //      ASSERT (len <= BLEN (&hand->reads.buf));
 
       /* the overlapped read will signal this event on I/O completion */
       ASSERT (ResetEvent (hand->reads.overlapped.hEvent));
@@ -331,6 +331,9 @@ tme_event_t tme_win32_open(const char *path, int flags, int attr, size_t size) {
 
   hand->handle = handle;
   
+  CLEAR(hand->reads);
+  CLEAR(hand->writes);
+  
   /* manual reset event, initially set according to event_state */
   hand->reads.overlapped.hEvent = CreateEvent (NULL, TRUE, FALSE, NULL);
   if(hand->reads.overlapped.hEvent == NULL)
@@ -343,17 +346,14 @@ tme_event_t tme_win32_open(const char *path, int flags, int attr, size_t size) {
   hand->rw_handle.read = hand->reads.overlapped.hEvent;
   hand->rw_handle.write = hand->writes.overlapped.hEvent;
 
-  if(size) {
-    hand->reads.buf_init = alloc_buf(size);
-    ASSERT (buf_init (&hand->reads.buf_init, 0));
-    hand->reads.buf_init.len = size;
-    ASSERT (buf_safe (&hand->reads.buf_init, 0));
+  hand->reads.buf_init = alloc_buf(size);
+  ASSERT (buf_init (&hand->reads.buf_init, 0));
+  ASSERT (buf_safe (&hand->reads.buf_init, 0));
 
-    hand->writes.buf_init = alloc_buf(size);
-    ASSERT (buf_init (&hand->writes.buf_init, 0));
-    hand->writes.buf_init.len = size;
-    ASSERT (buf_safe (&hand->writes.buf_init, 0));
-  } 
+  hand->writes.buf_init = alloc_buf(size);
+  ASSERT (buf_init (&hand->writes.buf_init, 0));
+  ASSERT (buf_safe (&hand->writes.buf_init, 0));
+  
   return hand;
 }
 
@@ -387,6 +387,9 @@ void tme_win32_close(tme_event_t hand) {
       if (!CloseHandle (hand->handle))
 	msg (M_WARN | M_ERRNO, "Warning: CloseHandle failed on TAP-Windows adapter");
     }
+
+  free_buf (&hand->reads.buf_init);
+  free_buf (&hand->writes.buf_init);
 }
 
 tme_off_t tme_thread_seek (tme_thread_handle_t hand, tme_off_t off, int where) {
@@ -397,9 +400,15 @@ tme_off_t tme_thread_seek (tme_thread_handle_t hand, tme_off_t off, int where) {
 static _tme_inline int
 tme_event_read (tme_event_t hand, void *data, int len)
 {
-  return (hand == TME_STD_HANDLE(stdin)) ?
-    (tme_read(hand->handle, data, len)) :
-    (tme_finalize (hand->handle, &hand->reads, NULL));
+  int rc;
+  
+  if (hand == TME_STD_HANDLE(stdin)) 
+    rc = tme_read(hand->handle, data, len);
+  else {
+    rc = tme_finalize (hand->handle, &hand->reads, NULL);
+    memcpy(data, hand->reads.buf.data, rc);
+  }
+  return rc;
 }
 
 static _tme_inline int
@@ -471,26 +480,18 @@ void tme_threads_init() {
 #endif
 }
 
-static _tme_inline event_t
-tme_event_handle (const tme_event_t hand)
-{
-#ifdef WIN32
-  return &hand->rw_handle;
-#else
-  return hand;
-#endif
-}
-
 /* this reads or writes, yielding if the event is not ready: */
 static _tme_inline ssize_t
-tme_event_yield(tme_event_t hand, void *data, size_t len, unsigned int rwflags, tme_mutex_t *mutex, void **outbuf)
+tme_event_yield(tme_event_t hand, void *data, size_t len, unsigned int rwflags, tme_mutex_t *mutex)
 {
   int i, rc = 1, key_event = FALSE;
   struct event_set_return esr;
   tme_event_set_t *tme_events = tme_event_set_init(&rc, EVENT_METHOD_FAST);
-
+  event_t handle = hand;
+  
   do {
 #ifdef WIN32
+    handle = &hand->rw_handle;
     if (rwflags & EVENT_READ) {
       if (hand == TME_STD_HANDLE(stdin)) {
 	INPUT_RECORD record[128];
@@ -518,16 +519,12 @@ tme_event_yield(tme_event_t hand, void *data, size_t len, unsigned int rwflags, 
 	// if you're setup for ASCII, process this:
 	//record.Event.KeyEvent.uChar.AsciiChar
       } else {
-	if(!hand->writes.buf_init.data) {
-	  hand->reads.buf_init.data = data;
-	  hand->reads.buf_init.len = len;
-	}
-	tme_read_queue (hand, 0);
+	tme_read_queue (hand, len);
       }
     }
 #endif
     tme_event_reset(tme_events);
-    tme_event_ctl(tme_events, tme_event_handle(hand), rwflags, 0);
+    tme_event_ctl(tme_events, handle, rwflags, 0);
     rc = tme_event_wait(tme_events, NULL, &esr, 1, mutex);
   } while(key_event);
 
@@ -536,28 +533,17 @@ tme_event_yield(tme_event_t hand, void *data, size_t len, unsigned int rwflags, 
   /* do the i/o: */
   if(esr.rwflags & EVENT_WRITE)
     rc = tme_event_write(hand, data, len);
-  if(esr.rwflags & EVENT_READ) {
+  if(esr.rwflags & EVENT_READ)
     rc = tme_event_read(hand, data, len);
-#ifdef WIN32
-    if(hand->writes.buf_init.data)
-      if(outbuf)
-	*outbuf = hand->reads.buf.data;
-      else
-	memcpy(data, hand->reads.buf.data, rc);
-    else
-#endif
-      if(outbuf)
-	*outbuf = data;
-  }
   return rc;
 }
 
 ssize_t tme_thread_read(tme_thread_handle_t hand, void *buf, size_t len, tme_mutex_t *mutex) {
-  return tme_event_yield(hand, buf, len, EVENT_READ, mutex, NULL);
+  return tme_event_yield(hand, buf, len, EVENT_READ, mutex);
 }
 
 ssize_t tme_thread_write(tme_thread_handle_t hand, const void *buf, size_t len, tme_mutex_t *mutex) {
-  return tme_event_yield(hand, buf, len, EVENT_WRITE, mutex, NULL);
+  return tme_event_yield(hand, buf, len, EVENT_WRITE, mutex);
 }
 
 #ifdef _TME_HAVE_ZLIB
@@ -590,7 +576,7 @@ struct tme_zlib_handle  *tme_zlib_open(const char *path, int flags) {
 
 /* this reads or writes, yielding if the event is not ready: */
 static _tme_inline ssize_t
-tme_zlib_yield(struct tme_zlib_handle  *hand, void *data, size_t len, unsigned int rwflags, tme_mutex_t *mutex, void **outbuf)
+tme_zlib_yield(struct tme_zlib_handle  *hand, void *data, size_t len, unsigned int rwflags, tme_mutex_t *mutex)
 {
   int rc = 1;
   struct event_set_return esr;
@@ -604,20 +590,17 @@ tme_zlib_yield(struct tme_zlib_handle  *hand, void *data, size_t len, unsigned i
   /* do the i/o: */
   if(esr.rwflags & EVENT_WRITE)
     rc = gzwrite(hand->handle, data, len);
-  if(esr.rwflags & EVENT_READ) {
+  if(esr.rwflags & EVENT_READ)
     rc = gzread(hand->handle, data, len);
-    if(outbuf)
-      *outbuf = data;
-  }
   return rc;
 }
 
 ssize_t tme_zlib_read(struct tme_zlib_handle  *hand, void *buf, size_t len, tme_mutex_t *mutex) {
-  return tme_zlib_yield(hand, buf, len, EVENT_READ, mutex, NULL);
+  return tme_zlib_yield(hand, buf, len, EVENT_READ, mutex);
 }
 
 ssize_t tme_zlib_write(struct tme_zlib_handle  *hand, const void *buf, size_t len, tme_mutex_t *mutex) {
-  return tme_zlib_yield(hand, buf, len, EVENT_WRITE, mutex, NULL);
+  return tme_zlib_yield(hand, buf, len, EVENT_WRITE, mutex);
 }
 
 #endif // HAVE_ZLIB
