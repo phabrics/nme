@@ -70,27 +70,30 @@ tme_read_queue (tme_event_t hand, int maxsize)
 {
   if (hand->reads.iostate == IOSTATE_INITIAL)
     {
-      DWORD len;
-      BOOL status;
+      struct buffer *buf = &hand->reads.buf;
+      DWORD len = BLEN(buf);
+      BOOL status = TRUE;
       int err;
-
-      /* reset buf to its initial state */
-      hand->reads.buf = hand->reads.buf_init;
-
-      len = maxsize ? maxsize : BLEN (&hand->reads.buf);
-      //      ASSERT (len <= BLEN (&hand->reads.buf));
 
       /* the overlapped read will signal this event on I/O completion */
       ASSERT (ResetEvent (hand->reads.overlapped.hEvent));
 
-      status = ReadFile(
-			hand->handle,
-			BPTR (&hand->reads.buf),
-			len,
-			&hand->reads.size,
-			&hand->reads.overlapped
-			);
+      hand->reads.size = 0;
 
+      if(!len) {
+	buf_reset_len(buf);
+	len = buf_forward_capacity(buf);
+	if(maxsize) 
+	  len = TME_MIN(len, maxsize);
+	status = ReadFile(
+			  hand->handle,
+			  BPTR (buf),
+			  len,
+			  &hand->reads.size,
+			  &hand->reads.overlapped
+			  );
+      }
+      
       if (status) /* operation completed immediately? */
 	{
 	  /* since we got an immediate return, we must signal the event object ourselves */
@@ -101,7 +104,8 @@ tme_read_queue (tme_event_t hand, int maxsize)
 
 	  dmsg (D_WIN32_IO, "WIN32 I/O: TME Read immediate return [%d,%d]",
 		(int) len,
-		(int) hand->reads.size);	       
+		(int) hand->reads.size);   
+	  buf_inc_len(buf, hand->reads.size);   
 	}
       else
 	{
@@ -131,25 +135,26 @@ tme_read_queue (tme_event_t hand, int maxsize)
 }
 
 int
-tme_write_queue (tme_event_t hand, struct buffer *buf)
+tme_write_queue (tme_event_t hand, struct buffer *ibuf)
 {
+  struct buffer *buf = &hand->writes.buf;
+  
   if (hand->writes.iostate == IOSTATE_INITIAL)
     {
       BOOL status;
       int err;
  
       /* make a private copy of buf */
-      hand->writes.buf = hand->writes.buf_init;
-      hand->writes.buf.len = 0;
-      ASSERT (buf_copy (&hand->writes.buf, buf));
+      buf_reset_len(buf);
+      ASSERT (buf_copy (buf, ibuf));
 
       /* the overlapped write will signal this event on I/O completion */
       ASSERT (ResetEvent (hand->writes.overlapped.hEvent));
 
       status = WriteFile(
 			 hand->handle,
-			 BPTR (&hand->writes.buf),
-			 BLEN (&hand->writes.buf),
+			 BPTR (buf),
+			 BLEN (buf),
 			 &hand->writes.size,
 			 &hand->writes.overlapped
 			 );
@@ -164,7 +169,7 @@ tme_write_queue (tme_event_t hand, struct buffer *buf)
 	  hand->writes.status = 0;
 
 	  dmsg (D_WIN32_IO, "WIN32 I/O: TME Write immediate return [%d,%d]",
-		BLEN (&hand->writes.buf),
+		BLEN (buf),
 		(int) hand->writes.size);	       
 	}
       else
@@ -175,7 +180,7 @@ tme_write_queue (tme_event_t hand, struct buffer *buf)
 	      hand->writes.iostate = IOSTATE_QUEUED;
 	      hand->writes.status = err;
 	      dmsg (D_WIN32_IO, "WIN32 I/O: TME Write queued [%d]",
-		    BLEN (&hand->writes.buf));
+		    BLEN (buf));
 	    }
 	  else /* error occurred */
 	    {
@@ -184,7 +189,7 @@ tme_write_queue (tme_event_t hand, struct buffer *buf)
 	      hand->writes.iostate = IOSTATE_IMMEDIATE_RETURN;
 	      hand->writes.status = err;
 	      dmsg (D_WIN32_IO, "WIN32 I/O: TME Write error [%d] : %s",
-		    BLEN (&hand->writes.buf),
+		    BLEN (buf),
 		    strerror_win32 (err, &gc));
 	      gc_free (&gc);
 	    }
@@ -238,9 +243,12 @@ tme_finalize (
       if (status)
 	{
 	  /* successful return for a queued operation */
-	  if (buf)
-	    *buf = io->buf;
-	  ret = io->size;
+	  buf_inc_len(&io->buf, io->size);
+	  if (buf) {
+	    ret = TME_MIN(buf_forward_capacity(buf),BLEN(&io->buf));
+	    buf_copy_n(buf, &io->buf, ret);
+	  } else
+	    ret = io->size;
 	  tme_event_seek(h, io, ret, TME_SEEK_CUR);
 	  io->iostate = IOSTATE_INITIAL;
 	  ASSERT (ResetEvent (io->overlapped.hEvent));
@@ -274,9 +282,11 @@ tme_finalize (
       else
 	{
 	  /* successful return for a non-queued operation */
-	  if (buf)
-	    *buf = io->buf;
-	  ret = io->size;
+	  if (buf) {
+	    ret = TME_MIN(buf_forward_capacity(buf), BLEN(&io->buf));
+	    buf_copy_n(buf, &io->buf, ret);
+	  } else
+	    ret = io->size;
 	  tme_event_seek(h, io, ret, TME_SEEK_CUR);
 	  dmsg (D_WIN32_IO, "WIN32 I/O: TME Completion non-queued success [%d]", ret);
 	}
@@ -346,13 +356,13 @@ tme_event_t tme_win32_open(const char *path, int flags, int attr, size_t size) {
   hand->rw_handle.read = hand->reads.overlapped.hEvent;
   hand->rw_handle.write = hand->writes.overlapped.hEvent;
 
-  hand->reads.buf_init = alloc_buf(size);
-  ASSERT (buf_init (&hand->reads.buf_init, 0));
-  ASSERT (buf_safe (&hand->reads.buf_init, 0));
+  hand->reads.buf = alloc_buf(size);
+  ASSERT (buf_init (&hand->reads.buf, 0));
+  ASSERT (buf_safe (&hand->reads.buf, 0));
 
-  hand->writes.buf_init = alloc_buf(size);
-  ASSERT (buf_init (&hand->writes.buf_init, 0));
-  ASSERT (buf_safe (&hand->writes.buf_init, 0));
+  hand->writes.buf = alloc_buf(size);
+  ASSERT (buf_init (&hand->writes.buf, 0));
+  ASSERT (buf_safe (&hand->writes.buf, 0));
   
   return hand;
 }
@@ -388,8 +398,8 @@ void tme_win32_close(tme_event_t hand) {
 	msg (M_WARN | M_ERRNO, "Warning: CloseHandle failed on TAP-Windows adapter");
     }
 
-  free_buf (&hand->reads.buf_init);
-  free_buf (&hand->writes.buf_init);
+  free_buf (&hand->reads.buf);
+  free_buf (&hand->writes.buf);
 }
 
 tme_off_t tme_thread_seek (tme_thread_handle_t hand, tme_off_t off, int where) {
@@ -401,12 +411,13 @@ static _tme_inline int
 tme_event_read (tme_event_t hand, void *data, int len)
 {
   int rc;
-  
+  struct buffer buf;
+
   if (hand == TME_STD_HANDLE(stdin)) 
     rc = tme_read(hand->handle, data, len);
   else {
-    rc = tme_finalize (hand->handle, &hand->reads, NULL);
-    memcpy(data, hand->reads.buf.data, rc);
+    buf_set_write(&buf, data, len);
+    rc = tme_finalize (hand->handle, &hand->reads, &buf);
   }
   return rc;
 }
@@ -414,18 +425,16 @@ tme_event_read (tme_event_t hand, void *data, int len)
 static _tme_inline int
 tme_event_write (tme_event_t hand, void *data, int len)
 {
+  int rc;
+  struct buffer buf;
+
   if(hand == TME_STD_HANDLE(stdout) || hand == TME_STD_HANDLE(stderr))
-    return tme_write(hand->handle, data, len);
+    rc = tme_write(hand->handle, data, len);
   else {
-    struct buffer buf;
-  
-    CLEAR(buf);
-
-    buf.data = data;
-    buf.len = len;
-
-    return tme_write_win32 (hand, &buf);
+    buf_set_read(&buf, data, len);
+    rc = tme_write_win32 (hand, &buf);
   }
+  return rc;  
 }
 #else
 #define tme_event_read tme_read
@@ -519,7 +528,7 @@ tme_event_yield(tme_event_t hand, void *data, size_t len, unsigned int rwflags, 
 	// if you're setup for ASCII, process this:
 	//record.Event.KeyEvent.uChar.AsciiChar
       } else {
-	tme_read_queue (hand, len);
+	tme_read_queue (hand, 0);
       }
     }
 #endif
