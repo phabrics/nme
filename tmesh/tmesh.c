@@ -633,7 +633,7 @@ main(int argc, char **argv)
   /* check our command line: */
   config_filename = NULL;
   config_dirname = NULL;
-  log_filename = "/dev/null";
+  log_filename = "-";
   interactive = FALSE;
   if ((argv0 = strrchr(argv[0], '/')) == NULL) argv0 = argv[0]; else argv0++;
   for (arg_i = 1;

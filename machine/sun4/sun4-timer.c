@@ -354,7 +354,7 @@ _tme_sun4_timer_cycle_control(void *_sun4, struct tme_bus_cycle *cycle_init)
       break;
     }
 
-    tme_log(TME_SUN4_LOG_HANDLE(sun4), 2000, TME_OK,
+    tme_log(TME_SUN4_LOG_HANDLE(sun4), 200, TME_OK,
 	    (TME_SUN4_LOG_HANDLE(sun4),
 	     _("timer #%d %s -> 0x%08x"),
 	     timer_i,
@@ -384,7 +384,7 @@ _tme_sun4_timer_cycle_control(void *_sun4, struct tme_bus_cycle *cycle_init)
     /* byteswap the register value: */
     value32 = tme_htobe_u32(value32);
 
-    tme_log(TME_SUN4_LOG_HANDLE(sun4), 2000, TME_OK,
+    tme_log(TME_SUN4_LOG_HANDLE(sun4), 200, TME_OK,
 	    (TME_SUN4_LOG_HANDLE(sun4),
 	     _("timer #%d %s <- 0x%08x"),
 	     timer_i,

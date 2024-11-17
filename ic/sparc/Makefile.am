@@ -59,11 +59,4 @@ $(srcdir)/sparc-fpu-auto.c: sparc-fpu-auto.sh
 $(srcdir)/sparc-vis-auto.c: sparc-vis-auto.sh
 	$(SHELL) $< > $@
 
-# dependencies on automatically-generated IEEE 754 sources:
-$(tme_ic_sparc_la_OBJECTS): ../ieee754/ieee754-auto.h ../ieee754/ieee754-ops-auto.h
-$(pkglib_LTLIBRARIES): ../ieee754/libtme-ieee754.la
-../ieee754/ieee754-auto.h ../ieee754/ieee754-ops-auto.h ../ieee754/libtme-ieee754.la: force
-	cd `dirname $@` && $(MAKE) `basename $@`
-force: ;
-
 include $(top_srcdir)/modules.mk

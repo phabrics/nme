@@ -366,6 +366,45 @@ tme_misc_cycles_scaling(tme_misc_cycles_scaling_t *scaling,
   *scaling /= denominator;
 }
 
+#ifdef WIN32
+tme_uint32_t
+tme_misc_cycles_per_ms(void)
+{
+  LARGE_INTEGER freq;
+  QueryPerformanceFrequency(&freq);
+
+#ifdef TME_HAVE_INT64_T
+  return freq.QuadPart / 1000;
+#else  /* !TME_HAVE_INT64_T */
+  union tme_value64 value, usec;
+  value.tme_value64_uint32_hi = freq.u.HighPart;
+  value.tme_value64_uint32_lo = freq.u.LowPart;
+  (void) tme_value64_set(&usec, 1000);
+  (void) tme_value64_div(&value, &usec);
+  return (value.tme_value64_uint32_lo);
+#endif /* !TME_HAVE_INT64_T */
+}
+
+union tme_value64
+tme_misc_cycles(void)
+{
+  // Gets the current number of ticks from QueryPerformanceCounter. Throws an
+  // exception if the call to QueryPerformanceCounter fails.
+  LARGE_INTEGER ticks;
+  union tme_value64 value;
+
+  QueryPerformanceCounter(&ticks);
+  
+#ifdef TME_HAVE_INT64_T
+  value.tme_value64_uint =  ticks.QuadPart;
+#else  /* !TME_HAVE_INT64_T */
+  value.tme_value64_uint32_hi = ticks.u.HighPart;
+  value.tme_value64_uint32_lo = ticks.u.LowPart;
+#endif /* !TME_HAVE_INT64_T */
+  return value;
+}
+
+#else
 #ifndef TME_HAVE_MISC_CYCLES_PER_MS
 
 /* this returns the cycle counter rate per millisecond: */
@@ -409,9 +448,9 @@ tme_misc_cycles_per_ms(void)
 union tme_value64
 tme_misc_cycles(void)
 {
+  union tme_value64 value;
 #ifdef TME_HAVE_INT64_T
   tme_time_t now;
-  union tme_value64 value;
 
   now = tme_thread_get_time();
   value.tme_value64_uint = now;
@@ -422,7 +461,6 @@ tme_misc_cycles(void)
   tme_misc_cycles_scaling_t cycles_sec;
   tme_uint32_t cycles_lo;
   tme_uint32_t usec;
-  union tme_value64 value;
 
   /* get the current time: */
   now = tme_thread_get_time();
@@ -447,6 +485,7 @@ tme_misc_cycles(void)
 }
 
 #endif /* !defined(TME_HAVE_MISC_CYCLES) */
+#endif /* !defined(WIN32) */
 
 /* this spins until the cycle counter reaches a threshold: */
 void
