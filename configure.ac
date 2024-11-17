@@ -34,7 +34,7 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.69])
-AC_INIT([tme],[0.12rc13])
+AC_INIT([tme],[0.12rc14])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIRS([m4])
 AC_CANONICAL_TARGET
@@ -227,7 +227,7 @@ AX_APPEND_LINK_FLAGS(-sUSE_SDL=2, SDL_LIBS)
 AM_CONDITIONAL([HAVE_SDL], [test "x${have_sdl}" = xyes])
 PKG_CHECK_MODULES([RFB], [libvncclient libvncserver], [have_rfb=$enable_rfb], [have_rfb=no])
 
-if test "x${have_tap_header}" = xyes; then
+if test "x${have_tap_header}" = xyes || test "x${WIN32}" != x; then
    have_openvpn=$enable_openvpn
 fi
 
