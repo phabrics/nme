@@ -9,9 +9,7 @@ pkglib_LTLIBRARIES = tme_host_sdl.la
 tme_host_sdl_la_SOURCES = sdl-display.c
 tme_host_sdl_la_LIBADD = ../libtme-display.la $(SDL_LIBS) $(TME_LIBS)
 
-if HAVE_GTK
 tme_host_sdl_la_CPPFLAGS += $(GTK_CFLAGS)
 tme_host_sdl_la_LIBADD += $(GTK_LIBS)
-endif
 
 include $(top_srcdir)/modules.mk

@@ -8,11 +8,8 @@ tme_host_posix_la_CPPFLAGS = $(AM_CPPFLAGS)
 pkglib_LTLIBRARIES = tme_host_posix.la
 tme_host_posix_la_SOURCES = posix-memory.c \
 	posix-disk.c \
-	posix-tape.c
-
-if USE_OPENVPN
-tme_host_posix_la_SOURCES += posix-serial.c
-endif
+	posix-tape.c \
+	posix-serial.c
 
 tme_host_posix_la_LIBADD = $(TME_LIBS)
 

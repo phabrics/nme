@@ -751,7 +751,6 @@ CPPFLAGS="${CPPFLAGS-} -D_GNU_SOURCE"
 AM_CONDITIONAL([THREADS_POSIX], [test "x${tme_thread_types}" = xpthreads || test "x${tme_thread_types}" = xposix])
 AM_CONDITIONAL([THREADS_GLIB], [test "x${tme_thread_type}" = xglib])
 AM_CONDITIONAL([THREADS_FIBER], [test "x${tme_thread_types}" = xfiber])
-AM_CONDITIONAL([USE_OPENVPN], [test "x$have_openvpn" = xyes || test "x${tme_thread_types}" = xfiber || test "x${WIN32}" != x])
 AC_MSG_RESULT($tme_thread_types)
 
 dnl Checks for ZLIB.
@@ -1247,8 +1246,6 @@ bus_size_max="$bus_size_max"
 ]])
 
 dnl Writes files.
-AS_IF([test "x$have_openvpn" = xyes || test "x${tme_thread_types}" = xfiber || test "x${WIN32}" != x],
-	    [AC_CONFIG_SUBDIRS([libopenvpn])])
 AC_CONFIG_FILES([Makefile
 	  tme-modules.sh
 	  tme/Makefile

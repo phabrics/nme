@@ -19,6 +19,7 @@ lib_LTLIBRARIES = libtme.la
 pkginclude_HEADERS = memory-auto.h
 libtme_la_SOURCES = misc-host.c \
 	memory-auto.c \
+	openvpn-setup.c \
 	recode-flags.c \
 	recode-conds.c \
 	recode-address.c \
@@ -42,11 +43,6 @@ libtme_la_LDFLAGS = -version-info 0:0:0
 
 if HAVE_ZLIB
 libtme_la_LIBADD += $(ZLIB_LIBS)
-endif
-
-if USE_OPENVPN
-libtme_la_SOURCES += openvpn-setup.c
-libtme_la_LIBADD += $(top_builddir)/libopenvpn/libopenvpn.la
 endif
 
 if THREADS_FIBER
