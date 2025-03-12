@@ -1,68 +1,70 @@
 #! /bin/sh
-# Generated from ../../generic/fb-xlat-auto.m4 by GNU Autoconf 2.69.
+# Generated from fb-xlat-auto.m4 by GNU Autoconf 2.72.
 ## -------------------- ##
 ## M4sh Initialization. ##
 ## -------------------- ##
 
 # Be more Bourne compatible
 DUALCASE=1; export DUALCASE # for MKS sh
-if test -n "${ZSH_VERSION+set}" && (emulate sh) >/dev/null 2>&1; then :
+if test ${ZSH_VERSION+y} && (emulate sh) >/dev/null 2>&1
+then :
   emulate sh
   NULLCMD=:
   # Pre-4.2 versions of Zsh do word splitting on ${1+"$@"}, which
   # is contrary to our usage.  Disable this feature.
   alias -g '${1+"$@"}'='"$@"'
   setopt NO_GLOB_SUBST
-else
-  case `(set -o) 2>/dev/null` in #(
+else case e in #(
+  e) case `(set -o) 2>/dev/null` in #(
   *posix*) :
     set -o posix ;; #(
   *) :
      ;;
+esac ;;
 esac
 fi
 
 
+
+# Reset variables that may have inherited troublesome values from
+# the environment.
+
+# IFS needs to be set, to space, tab, and newline, in precisely that order.
+# (If _AS_PATH_WALK were called with IFS unset, it would have the
+# side effect of setting IFS to empty, thus disabling word splitting.)
+# Quoting is to prevent editors from complaining about space-tab.
 as_nl='
 '
 export as_nl
-# Printing a long string crashes Solaris 7 /usr/bin/printf.
-as_echo='\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\'
-as_echo=$as_echo$as_echo$as_echo$as_echo$as_echo
-as_echo=$as_echo$as_echo$as_echo$as_echo$as_echo$as_echo
-# Prefer a ksh shell builtin over an external printf program on Solaris,
-# but without wasting forks for bash or zsh.
-if test -z "$BASH_VERSION$ZSH_VERSION" \
-    && (test "X`print -r -- $as_echo`" = "X$as_echo") 2>/dev/null; then
-  as_echo='print -r --'
-  as_echo_n='print -rn --'
-elif (test "X`printf %s $as_echo`" = "X$as_echo") 2>/dev/null; then
-  as_echo='printf %s\n'
-  as_echo_n='printf %s'
-else
-  if test "X`(/usr/ucb/echo -n -n $as_echo) 2>/dev/null`" = "X-n $as_echo"; then
-    as_echo_body='eval /usr/ucb/echo -n "$1$as_nl"'
-    as_echo_n='/usr/ucb/echo -n'
-  else
-    as_echo_body='eval expr "X$1" : "X\\(.*\\)"'
-    as_echo_n_body='eval
-      arg=$1;
-      case $arg in #(
-      *"$as_nl"*)
-	expr "X$arg" : "X\\(.*\\)$as_nl";
-	arg=`expr "X$arg" : ".*$as_nl\\(.*\\)"`;;
-      esac;
-      expr "X$arg" : "X\\(.*\\)" | tr -d "$as_nl"
-    '
-    export as_echo_n_body
-    as_echo_n='sh -c $as_echo_n_body as_echo'
-  fi
-  export as_echo_body
-  as_echo='sh -c $as_echo_body as_echo'
-fi
+IFS=" ""	$as_nl"
+
+PS1='$ '
+PS2='> '
+PS4='+ '
+
+# Ensure predictable behavior from utilities with locale-dependent output.
+LC_ALL=C
+export LC_ALL
+LANGUAGE=C
+export LANGUAGE
+
+# We cannot yet rely on "unset" to work, but we need these variables
+# to be unset--not just set to an empty or harmless value--now, to
+# avoid bugs in old shells (e.g. pre-3.0 UWIN ksh).  This construct
+# also avoids known problems related to "unset" and subshell syntax
+# in other old shells (e.g. bash 2.01 and pdksh 5.2.14).
+for as_var in BASH_ENV ENV MAIL MAILPATH CDPATH
+do eval test \${$as_var+y} \
+  && ( (unset $as_var) || exit 1) >/dev/null 2>&1 && unset $as_var || :
+done
+
+# Ensure that fds 0, 1, and 2 are open.
+if (exec 3>&0) 2>/dev/null; then :; else exec 0</dev/null; fi
+if (exec 3>&1) 2>/dev/null; then :; else exec 1>/dev/null; fi
+if (exec 3>&2)            ; then :; else exec 2>/dev/null; fi
 
 # The user is always right.
-if test "${PATH_SEPARATOR+set}" != set; then
+if ${PATH_SEPARATOR+false} :; then
   PATH_SEPARATOR=:
   (PATH='/bin;/bin'; FPATH=$PATH; sh -c :) >/dev/null 2>&1 && {
     (PATH='/bin:/bin'; FPATH=$PATH; sh -c :) >/dev/null 2>&1 ||
@@ -70,13 +72,6 @@ if test "${PATH_SEPARATOR+set}" != set; then
   }
 fi
 
-
-# IFS
-# We need space, tab and new line, in precisely that order.  Quoting is
-# there to prevent editors from complaining about space-tab.
-# (If _AS_PATH_WALK were called with IFS unset, it would disable word
-# splitting by setting IFS to empty value.)
-IFS=" ""	$as_nl"
 
 # Find who we are.  Look in the path if we contain no directory separator.
 as_myself=
@@ -86,58 +81,44 @@ case $0 in #((
 for as_dir in $PATH
 do
   IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    test -r "$as_dir/$0" && as_myself=$as_dir/$0 && break
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
+    test -r "$as_dir$0" && as_myself=$as_dir$0 && break
   done
 IFS=$as_save_IFS
 
      ;;
 esac
-# We did not find ourselves, most probably we were run as `sh COMMAND'
+# We did not find ourselves, most probably we were run as 'sh COMMAND'
 # in which case we are not to be found in the path.
 if test "x$as_myself" = x; then
   as_myself=$0
 fi
 if test ! -f "$as_myself"; then
-  $as_echo "$as_myself: error: cannot find myself; rerun with an absolute file name" >&2
+  printf "%s\n" "$as_myself: error: cannot find myself; rerun with an absolute file name" >&2
   exit 1
 fi
 
-# Unset variables that we do not need and which cause bugs (e.g. in
-# pre-3.0 UWIN ksh).  But do not cause bugs in bash 2.01; the "|| exit 1"
-# suppresses any "Segmentation fault" message there.  '((' could
-# trigger a bug in pdksh 5.2.14.
-for as_var in BASH_ENV ENV MAIL MAILPATH
-do eval test x\${$as_var+set} = xset \
-  && ( (unset $as_var) || exit 1) >/dev/null 2>&1 && unset $as_var || :
-done
-PS1='$ '
-PS2='> '
-PS4='+ '
-
-# NLS nuisances.
-LC_ALL=C
-export LC_ALL
-LANGUAGE=C
-export LANGUAGE
-
-# CDPATH.
-(unset CDPATH) >/dev/null 2>&1 && unset CDPATH
 
 if test "x$CONFIG_SHELL" = x; then
-  as_bourne_compatible="if test -n \"\${ZSH_VERSION+set}\" && (emulate sh) >/dev/null 2>&1; then :
+  as_bourne_compatible="if test \${ZSH_VERSION+y} && (emulate sh) >/dev/null 2>&1
+then :
   emulate sh
   NULLCMD=:
   # Pre-4.2 versions of Zsh do word splitting on \${1+\"\$@\"}, which
   # is contrary to our usage.  Disable this feature.
   alias -g '\${1+\"\$@\"}'='\"\$@\"'
   setopt NO_GLOB_SUBST
-else
-  case \`(set -o) 2>/dev/null\` in #(
+else case e in #(
+  e) case \`(set -o) 2>/dev/null\` in #(
   *posix*) :
     set -o posix ;; #(
   *) :
      ;;
+esac ;;
 esac
 fi
 "
@@ -152,36 +133,48 @@ as_fn_success || { exitcode=1; echo as_fn_success failed.; }
 as_fn_failure && { exitcode=1; echo as_fn_failure succeeded.; }
 as_fn_ret_success || { exitcode=1; echo as_fn_ret_success failed.; }
 as_fn_ret_failure && { exitcode=1; echo as_fn_ret_failure succeeded.; }
-if ( set x; as_fn_ret_success y && test x = \"\$1\" ); then :
+if ( set x; as_fn_ret_success y && test x = \"\$1\" )
+then :
 
-else
-  exitcode=1; echo positional parameters were not saved.
+else case e in #(
+  e) exitcode=1; echo positional parameters were not saved. ;;
+esac
 fi
 test x\$exitcode = x0 || exit 1
+blah=\$(echo \$(echo blah))
+test x\"\$blah\" = xblah || exit 1
 test -x / || exit 1"
   as_suggested=""
-  if (eval "$as_required") 2>/dev/null; then :
+  if (eval "$as_required") 2>/dev/null
+then :
   as_have_required=yes
-else
-  as_have_required=no
+else case e in #(
+  e) as_have_required=no ;;
+esac
 fi
-  if test x$as_have_required = xyes && (eval "$as_suggested") 2>/dev/null; then :
+  if test x$as_have_required = xyes && (eval "$as_suggested") 2>/dev/null
+then :
 
-else
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+else case e in #(
+  e) as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
 as_found=false
 for as_dir in /bin$PATH_SEPARATOR/usr/bin$PATH_SEPARATOR$PATH
 do
   IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
   as_found=:
   case $as_dir in #(
 	 /*)
 	   for as_base in sh bash ksh sh5; do
 	     # Try only shells that exist, to save several forks.
-	     as_shell=$as_dir/$as_base
+	     as_shell=$as_dir$as_base
 	     if { test -f "$as_shell" || test -f "$as_shell.exe"; } &&
-		    { $as_echo "$as_bourne_compatible""$as_required" | as_run=a "$as_shell"; } 2>/dev/null; then :
+		    as_run=a "$as_shell" -c "$as_bourne_compatible""$as_required" 2>/dev/null
+then :
   CONFIG_SHELL=$as_shell as_have_required=yes
 		   break 2
 fi
@@ -189,14 +182,22 @@ fi
        esac
   as_found=false
 done
-$as_found || { if { test -f "$SHELL" || test -f "$SHELL.exe"; } &&
-	      { $as_echo "$as_bourne_compatible""$as_required" | as_run=a "$SHELL"; } 2>/dev/null; then :
-  CONFIG_SHELL=$SHELL as_have_required=yes
-fi; }
 IFS=$as_save_IFS
+if $as_found
+then :
+
+else case e in #(
+  e) if { test -f "$SHELL" || test -f "$SHELL.exe"; } &&
+	      as_run=a "$SHELL" -c "$as_bourne_compatible""$as_required" 2>/dev/null
+then :
+  CONFIG_SHELL=$SHELL as_have_required=yes
+fi ;;
+esac
+fi
 
 
-      if test "x$CONFIG_SHELL" != x; then :
+      if test "x$CONFIG_SHELL" != x
+then :
   export CONFIG_SHELL
              # We cannot yet assume a decent shell, so we have to provide a
 # neutralization value for shells without unset; and this also
@@ -213,25 +214,27 @@ case $- in # ((((
 esac
 exec $CONFIG_SHELL $as_opts "$as_myself" ${1+"$@"}
 # Admittedly, this is quite paranoid, since all the known shells bail
-# out after a failed `exec'.
-$as_echo "$0: could not re-execute with $CONFIG_SHELL" >&2
+# out after a failed 'exec'.
+printf "%s\n" "$0: could not re-execute with $CONFIG_SHELL" >&2
 exit 255
 fi
 
-    if test x$as_have_required = xno; then :
-  $as_echo "$0: This script requires a shell more modern than all"
-  $as_echo "$0: the shells that I found on your system."
-  if test x${ZSH_VERSION+set} = xset ; then
-    $as_echo "$0: In particular, zsh $ZSH_VERSION has bugs and should"
-    $as_echo "$0: be upgraded to zsh 4.3.4 or later."
+    if test x$as_have_required = xno
+then :
+  printf "%s\n" "$0: This script requires a shell more modern than all"
+  printf "%s\n" "$0: the shells that I found on your system."
+  if test ${ZSH_VERSION+y} ; then
+    printf "%s\n" "$0: In particular, zsh $ZSH_VERSION has bugs and should"
+    printf "%s\n" "$0: be upgraded to zsh 4.3.4 or later."
   else
-    $as_echo "$0: Please tell bug-autoconf@gnu.org about your system,
+    printf "%s\n" "$0: Please tell bug-autoconf@gnu.org about your system,
 $0: including any error possibly output before this
 $0: message. Then install a modern shell, or manually run
 $0: the script under such a shell if you do have one."
   fi
   exit 1
-fi
+fi ;;
+esac
 fi
 fi
 SHELL=${CONFIG_SHELL-/bin/sh}
@@ -251,6 +254,7 @@ as_fn_unset ()
   { eval $1=; unset $1;}
 }
 as_unset=as_fn_unset
+
 ## -------------------- ##
 ## Main body of script. ##
 ## -------------------- ##
@@ -881,53 +885,53 @@ for src_key in ${src_all}; do
     src_parts=${src_key}
 
     # get the width:
-        width=`$as_echo ${src_parts} | sed -e 's/^\([0-9][0-9]*\)\(.*\)$/\1/'`
-    src_parts=`$as_echo ${src_parts} | sed -e 's/^\([0-9][0-9]*\)\(.*\)$/\2/'`
+        width=`printf "%s\n" ${src_parts} | sed -e 's/^\([0-9][0-9]*\)\(.*\)$/\1/'`
+    src_parts=`printf "%s\n" ${src_parts} | sed -e 's/^\([0-9][0-9]*\)\(.*\)$/\2/'`
 
     # get the height:
-       height=`$as_echo ${src_parts} | sed -e 's/^x\([0-9][0-9]*\)\(.*\)$/\1/'`
-    src_parts=`$as_echo ${src_parts} | sed -e 's/^x\([0-9][0-9]*\)\(.*\)$/\2/'`
+       height=`printf "%s\n" ${src_parts} | sed -e 's/^x\([0-9][0-9]*\)\(.*\)$/\1/'`
+    src_parts=`printf "%s\n" ${src_parts} | sed -e 's/^x\([0-9][0-9]*\)\(.*\)$/\2/'`
 
     # get the source depth:
-    src_depth=`$as_echo ${src_parts} | sed -e 's/^d\([0-9][0-9]*\)\(.*\)$/\1/'`
-    src_parts=`$as_echo ${src_parts} | sed -e 's/^d\([0-9][0-9]*\)\(.*\)$/\2/'`
+    src_depth=`printf "%s\n" ${src_parts} | sed -e 's/^d\([0-9][0-9]*\)\(.*\)$/\1/'`
+    src_parts=`printf "%s\n" ${src_parts} | sed -e 's/^d\([0-9][0-9]*\)\(.*\)$/\2/'`
 
     # get the source bits per pixel:
-     src_bipp=`$as_echo ${src_parts} | sed -e 's/^b\([0-9][0-9]*\)\(.*\)$/\1/'`
-    src_parts=`$as_echo ${src_parts} | sed -e 's/^b\([0-9][0-9]*\)\(.*\)$/\2/'`
+     src_bipp=`printf "%s\n" ${src_parts} | sed -e 's/^b\([0-9][0-9]*\)\(.*\)$/\1/'`
+    src_parts=`printf "%s\n" ${src_parts} | sed -e 's/^b\([0-9][0-9]*\)\(.*\)$/\2/'`
 
     # get the source skip pixel count:
-    src_skipx=`$as_echo ${src_parts} | sed -e 's/^s\([_0-9][0-9]*\)\(.*\)$/\1/'`
-    src_parts=`$as_echo ${src_parts} | sed -e 's/^s\([_0-9][0-9]*\)\(.*\)$/\2/'`
+    src_skipx=`printf "%s\n" ${src_parts} | sed -e 's/^s\([_0-9][0-9]*\)\(.*\)$/\1/'`
+    src_parts=`printf "%s\n" ${src_parts} | sed -e 's/^s\([_0-9][0-9]*\)\(.*\)$/\2/'`
 
     # get the source scanline pad:
-      src_pad=`$as_echo ${src_parts} | sed -e 's/^p\([0-9][0-9]*\)\(.*\)$/\1/'`
-    src_parts=`$as_echo ${src_parts} | sed -e 's/^p\([0-9][0-9]*\)\(.*\)$/\2/'`
+      src_pad=`printf "%s\n" ${src_parts} | sed -e 's/^p\([0-9][0-9]*\)\(.*\)$/\1/'`
+    src_parts=`printf "%s\n" ${src_parts} | sed -e 's/^p\([0-9][0-9]*\)\(.*\)$/\2/'`
 
     # get the source "order" - i.e., byte order and leftmost (first)
     # pixel significance:
-    src_order=`$as_echo ${src_parts} | sed -e 's/^o\([ml]\)\(.*\)$/\1/'`
-    src_parts=`$as_echo ${src_parts} | sed -e 's/^o\([ml]\)\(.*\)$/\2/'`
+    src_order=`printf "%s\n" ${src_parts} | sed -e 's/^o\([ml]\)\(.*\)$/\1/'`
+    src_parts=`printf "%s\n" ${src_parts} | sed -e 's/^o\([ml]\)\(.*\)$/\2/'`
 
     # get the optional source "class" - monochrome or color:
-    src_class=`$as_echo ${src_parts} | sed -e 's/^c\([mc]\)\(.*\)$/\1/'`
+    src_class=`printf "%s\n" ${src_parts} | sed -e 's/^c\([mc]\)\(.*\)$/\1/'`
     if test "x${src_class}" = "x${src_parts}"; then src_class= ; fi
-    src_parts=`$as_echo ${src_parts} | sed -e 's/^c\([mc]\)\(.*\)$/\2/'`
+    src_parts=`printf "%s\n" ${src_parts} | sed -e 's/^c\([mc]\)\(.*\)$/\2/'`
 
     # get the optional source pixel mapping - linear or indexed, and
     # the optional number of bits in the map range:
-      src_map=`$as_echo ${src_parts} | sed -e 's/^m\([li]\)\([0-9]*\)\(.*\)$/\1/'`
-    src_map_bits=`$as_echo ${src_parts} | sed -e 's/^m\([li]\)\([0-9]*\)\(.*\)$/\2/'`
+      src_map=`printf "%s\n" ${src_parts} | sed -e 's/^m\([li]\)\([0-9]*\)\(.*\)$/\1/'`
+    src_map_bits=`printf "%s\n" ${src_parts} | sed -e 's/^m\([li]\)\([0-9]*\)\(.*\)$/\2/'`
     if test "x${src_map}" = "x${src_parts}"; then src_map= ; src_map_bits= ; fi
-    src_parts=`$as_echo ${src_parts} | sed -e 's/^m\([li]\)\([0-9]*\)\(.*\)$/\3/'`
+    src_parts=`printf "%s\n" ${src_parts} | sed -e 's/^m\([li]\)\([0-9]*\)\(.*\)$/\3/'`
 
     # get the optional source pixel subfield masks:
     src_mask_g= ; src_mask_r= ; src_mask_b=
     while true; do
-	src_mask=`$as_echo ${src_parts} | sed -e 's/^\(_[rgb]\)\(0x[0-9A-Fa-f][0-9A-Fa-f]*\)\(.*\)$/src_mask\1=\2/'`
+	src_mask=`printf "%s\n" ${src_parts} | sed -e 's/^\(_[rgb]\)\(0x[0-9A-Fa-f][0-9A-Fa-f]*\)\(.*\)$/src_mask\1=\2/'`
 	if test "x${src_mask}" = "x${src_parts}"; then break; fi
 	eval ${src_mask}
-	src_parts=`$as_echo ${src_parts} | sed -e 's/^\(_[rgb]\)\(0x[0-9A-Fa-f][0-9A-Fa-f]*\)\(.*\)$/\3/'`
+	src_parts=`printf "%s\n" ${src_parts} | sed -e 's/^\(_[rgb]\)\(0x[0-9A-Fa-f][0-9A-Fa-f]*\)\(.*\)$/\3/'`
     done
 
     # get the source scaling:
@@ -999,38 +1003,38 @@ for src_key in ${src_all}; do
 	dst_parts=${dst_key}
 
 	# get the destination depth:
-	dst_depth=`$as_echo ${dst_parts} | sed -e 's/^d\([0-9][0-9]*\)\(.*\)$/\1/'`
-	dst_parts=`$as_echo ${dst_parts} | sed -e 's/^d\([0-9][0-9]*\)\(.*\)$/\2/'`
+	dst_depth=`printf "%s\n" ${dst_parts} | sed -e 's/^d\([0-9][0-9]*\)\(.*\)$/\1/'`
+	dst_parts=`printf "%s\n" ${dst_parts} | sed -e 's/^d\([0-9][0-9]*\)\(.*\)$/\2/'`
 
 	# get the destination bits per pixel:
-	 dst_bipp=`$as_echo ${dst_parts} | sed -e 's/^b\([0-9][0-9]*\)\(.*\)$/\1/'`
-	dst_parts=`$as_echo ${dst_parts} | sed -e 's/^b\([0-9][0-9]*\)\(.*\)$/\2/'`
+	 dst_bipp=`printf "%s\n" ${dst_parts} | sed -e 's/^b\([0-9][0-9]*\)\(.*\)$/\1/'`
+	dst_parts=`printf "%s\n" ${dst_parts} | sed -e 's/^b\([0-9][0-9]*\)\(.*\)$/\2/'`
 
 	# get the destination skip pixel count:
-	dst_skipx=`$as_echo ${dst_parts} | sed -e 's/^s\([_0-9][0-9]*\)\(.*\)$/\1/'`
-	dst_parts=`$as_echo ${dst_parts} | sed -e 's/^s\([_0-9][0-9]*\)\(.*\)$/\2/'`
+	dst_skipx=`printf "%s\n" ${dst_parts} | sed -e 's/^s\([_0-9][0-9]*\)\(.*\)$/\1/'`
+	dst_parts=`printf "%s\n" ${dst_parts} | sed -e 's/^s\([_0-9][0-9]*\)\(.*\)$/\2/'`
 
 	# get the destination scanline pad:
-	  dst_pad=`$as_echo ${dst_parts} | sed -e 's/^p\([0-9][0-9]*\)\(.*\)$/\1/'`
-	dst_parts=`$as_echo ${dst_parts} | sed -e 's/^p\([0-9][0-9]*\)\(.*\)$/\2/'`
+	  dst_pad=`printf "%s\n" ${dst_parts} | sed -e 's/^p\([0-9][0-9]*\)\(.*\)$/\1/'`
+	dst_parts=`printf "%s\n" ${dst_parts} | sed -e 's/^p\([0-9][0-9]*\)\(.*\)$/\2/'`
 
 	# get the destination "order" - i.e., byte order and leftmost
 	# (first) pixel significance:
-	dst_order=`$as_echo ${dst_parts} | sed -e 's/^o\([ml]\)\(.*\)$/\1/'`
-	dst_parts=`$as_echo ${dst_parts} | sed -e 's/^o\([ml]\)\(.*\)$/\2/'`
+	dst_order=`printf "%s\n" ${dst_parts} | sed -e 's/^o\([ml]\)\(.*\)$/\1/'`
+	dst_parts=`printf "%s\n" ${dst_parts} | sed -e 's/^o\([ml]\)\(.*\)$/\2/'`
 
 	# get the optional destination pixel mapping - linear or indexed:
-	  dst_map=`$as_echo ${dst_parts} | sed -e 's/^m\([li]\)\(.*\)$/\1/'`
+	  dst_map=`printf "%s\n" ${dst_parts} | sed -e 's/^m\([li]\)\(.*\)$/\1/'`
 	if test "x${dst_map}" = "x${dst_parts}"; then dst_map= ; fi
-	dst_parts=`$as_echo ${dst_parts} | sed -e 's/^m\([li]\)\(.*\)$/\2/'`
+	dst_parts=`printf "%s\n" ${dst_parts} | sed -e 's/^m\([li]\)\(.*\)$/\2/'`
 
 	# get the optional destination pixel subfield masks:
 	dst_mask_g= ; dst_mask_r= ; dst_mask_b=
 	while true; do
-	    dst_mask=`$as_echo ${dst_parts} | sed -e 's/^\(_[rgb]\)\(0x[0-9A-Fa-f][0-9A-Fa-f]*\)\(.*\)$/dst_mask\1=\2/'`
+	    dst_mask=`printf "%s\n" ${dst_parts} | sed -e 's/^\(_[rgb]\)\(0x[0-9A-Fa-f][0-9A-Fa-f]*\)\(.*\)$/dst_mask\1=\2/'`
 	    if test "x${dst_mask}" = "x${dst_parts}"; then break; fi
 	    eval ${dst_mask}
-	    dst_parts=`$as_echo ${dst_parts} | sed -e 's/^\(_[rgb]\)\(0x[0-9A-Fa-f][0-9A-Fa-f]*\)\(.*\)$/\3/'`
+	    dst_parts=`printf "%s\n" ${dst_parts} | sed -e 's/^\(_[rgb]\)\(0x[0-9A-Fa-f][0-9A-Fa-f]*\)\(.*\)$/\3/'`
 	done
 
 	# allocate the xlat number:
@@ -1039,119 +1043,119 @@ for src_key in ${src_all}; do
 	xlat_info="tme_fb_xlat${xlat}"
 
 	# start the function:
-	$as_echo ""
-	$as_echo "/* this translates frame buffer contents from this source format:"
+	printf "%s\n" ""
+	printf "%s\n" "/* this translates frame buffer contents from this source format:"
 	case "${width}x${height}" in
-	0x0) $as_echo_n "     any dimensions" ;;
-	*x0) $as_echo_n "     width $width, any height" ;;
-	0x*) $as_echo_n "     any width, height ${height}" ;;
-	*)   $as_echo_n "     ${width}x${height}" ;;
+	0x0) printf %s "     any dimensions" ;;
+	*x0) printf %s "     width $width, any height" ;;
+	0x*) printf %s "     any width, height ${height}" ;;
+	*)   printf %s "     ${width}x${height}" ;;
 	esac
 	xlat_info="${xlat_info}, ${width}, ${height}"
 	case ${scale} in
-	_h_) $as_echo " (image will be halved)" ; value="HALF" ;;
-	_d_) $as_echo " (image will be doubled)" ; value="DOUBLE" ;;
-	*) $as_echo "" ; value="NONE" ;;
+	_h_) printf "%s\n" " (image will be halved)" ; value="HALF" ;;
+	_d_) printf "%s\n" " (image will be doubled)" ; value="DOUBLE" ;;
+	*) printf "%s\n" "" ; value="NONE" ;;
 	esac
 	xlat_info="${xlat_info}, TME_FB_XLAT_SCALE_${value}"
-	$as_echo_n "     "
+	printf %s "     "
 	case ${src_depth} in
-	0)  $as_echo_n "any depth" ;;
-	1)  $as_echo_n "1 bit deep" ;;
-	*)  $as_echo_n "${src_depth} bits deep" ;;
+	0)  printf %s "any depth" ;;
+	1)  printf %s "1 bit deep" ;;
+	*)  printf %s "${src_depth} bits deep" ;;
 	esac
 	xlat_info="${xlat_info}, ${src_depth}"
 	case ${src_bipp} in
-	0)  $as_echo_n ", any bits per pixel" ;;
-	1)  $as_echo_n ", 1 bit per pixel" ;;
-	*)  $as_echo_n ", ${src_bipp} bits per pixel" ;;
+	0)  printf %s ", any bits per pixel" ;;
+	1)  printf %s ", 1 bit per pixel" ;;
+	*)  printf %s ", ${src_bipp} bits per pixel" ;;
 	esac
 	xlat_info="${xlat_info}, ${src_bipp}"
 	case ${src_skipx} in
-	_) $as_echo_n ", any number of pixels skipped" ; value="-1";;
-	*) $as_echo_n ", ${src_skipx} pixels skipped" ; value=${src_skipx} ;;
+	_) printf %s ", any number of pixels skipped" ; value="-1";;
+	*) printf %s ", ${src_skipx} pixels skipped" ; value=${src_skipx} ;;
 	esac
 	xlat_info="${xlat_info}, ${value}"
 	case ${src_pad} in
-	0)  $as_echo_n ", any scanline padding" ;;
-	*)  $as_echo_n ", ${src_pad}-bit scanline padding" ;;
+	0)  printf %s ", any scanline padding" ;;
+	*)  printf %s ", ${src_pad}-bit scanline padding" ;;
 	esac
 	xlat_info="${xlat_info}, ${src_pad}"
 	case ${src_order} in
-	m)  $as_echo_n ", MSB-first" ; value="BIG" ;;
-	l)  $as_echo_n ", LSB-first" ; value="LITTLE" ;;
+	m)  printf %s ", MSB-first" ; value="BIG" ;;
+	l)  printf %s ", LSB-first" ; value="LITTLE" ;;
 	esac
 	xlat_info="${xlat_info}, TME_ENDIAN_${value}"
 	case "x${src_class}" in
-	xm)  $as_echo_n ", monochrome" ; value="MONOCHROME" ;;
-	xc)  $as_echo_n ", color" ; value="COLOR" ;;
-	*)   $as_echo_n ", either color or monochrome" ; value="ANY" ;;
+	xm)  printf %s ", monochrome" ; value="MONOCHROME" ;;
+	xc)  printf %s ", color" ; value="COLOR" ;;
+	*)   printf %s ", either color or monochrome" ; value="ANY" ;;
 	esac
 	xlat_info="${xlat_info}, TME_FB_XLAT_CLASS_${value}"
 	case "x${src_map}" in
-	xl)  $as_echo_n ", linearly mapped pixels" ; value="LINEAR" ;;
-	xi)  $as_echo_n ", index mapped pixels" ; value="INDEX" ;;
-	*)   $as_echo_n ", any pixel mapping" ; value="ANY" ;;
+	xl)  printf %s ", linearly mapped pixels" ; value="LINEAR" ;;
+	xi)  printf %s ", index mapped pixels" ; value="INDEX" ;;
+	*)   printf %s ", any pixel mapping" ; value="ANY" ;;
 	esac
 	xlat_info="${xlat_info}, TME_FB_XLAT_MAP_${value}"
 	value=${src_map_bits}
 	case "${src_map_bits}" in
-	0)   $as_echo_n ", any bits per mapped intensity" ;;
-	1)   $as_echo_n ", 1 bit per mapped intensity" ;;
-	*)   $as_echo_n ", ${src_map_bits} bits per mapped intensity" ;;
+	0)   printf %s ", any bits per mapped intensity" ;;
+	1)   printf %s ", 1 bit per mapped intensity" ;;
+	*)   printf %s ", ${src_map_bits} bits per mapped intensity" ;;
 	esac
 	xlat_info="${xlat_info}, ${value}"
 	for primary in g r b; do
 	    eval "src_mask=\$src_mask_${primary}"
 	    case "x${src_mask}" in
-	    x)  $as_echo_n ", no ${primary} mask" ; value=0 ;;
-	    x0x0) $as_echo_n ", any ${primary} mask" ; value=TME_FB_XLAT_MASK_ANY ;;
-	    *)  $as_echo_n ", a ${primary} mask of ${src_mask}" ; value=${src_mask} ;;
+	    x)  printf %s ", no ${primary} mask" ; value=0 ;;
+	    x0x0) printf %s ", any ${primary} mask" ; value=TME_FB_XLAT_MASK_ANY ;;
+	    *)  printf %s ", a ${primary} mask of ${src_mask}" ; value=${src_mask} ;;
 	    esac
 	    xlat_info="${xlat_info}, ${value}"
 	done
-	$as_echo ""
-	$as_echo "   to this destination format:"
-	$as_echo_n "     "
+	printf "%s\n" ""
+	printf "%s\n" "   to this destination format:"
+	printf %s "     "
 	case ${dst_depth} in
-	0)  $as_echo_n "any depth" ;;
-	1)  $as_echo_n "1 bit deep" ;;
-	*)  $as_echo_n "${dst_depth} bits deep" ;;
+	0)  printf %s "any depth" ;;
+	1)  printf %s "1 bit deep" ;;
+	*)  printf %s "${dst_depth} bits deep" ;;
 	esac
 	xlat_info="${xlat_info}, ${dst_depth}"
 	case ${dst_bipp} in
-	0)  $as_echo_n ", any bits per pixel" ;;
-	1)  $as_echo_n ", 1 bit per pixel" ;;
-	*)  $as_echo_n ", ${dst_bipp} bits per pixel" ;;
+	0)  printf %s ", any bits per pixel" ;;
+	1)  printf %s ", 1 bit per pixel" ;;
+	*)  printf %s ", ${dst_bipp} bits per pixel" ;;
 	esac
 	xlat_info="${xlat_info}, ${dst_bipp}"
 	case ${dst_skipx} in
-	_) $as_echo_n ", any number of pixels skipped" ; value="-1";;
-	*) $as_echo_n ", ${dst_skipx} pixels skipped" ; value=${dst_skipx} ;;
+	_) printf %s ", any number of pixels skipped" ; value="-1";;
+	*) printf %s ", ${dst_skipx} pixels skipped" ; value=${dst_skipx} ;;
 	esac
 	xlat_info="${xlat_info}, ${value}"
 	case ${dst_pad} in
-	0)  $as_echo_n ", any scanline padding" ;;
-	*)  $as_echo_n ", ${dst_pad}-bit scanline padding" ;;
+	0)  printf %s ", any scanline padding" ;;
+	*)  printf %s ", ${dst_pad}-bit scanline padding" ;;
 	esac
 	xlat_info="${xlat_info}, ${dst_pad}"
 	case ${dst_order} in
-	m)  $as_echo_n ", MSB-first" ; value="BIG" ;;
-	l)  $as_echo_n ", LSB-first" ; value="LITTLE" ;;
+	m)  printf %s ", MSB-first" ; value="BIG" ;;
+	l)  printf %s ", LSB-first" ; value="LITTLE" ;;
 	esac
 	xlat_info="${xlat_info}, TME_ENDIAN_${value}"
 	case "x${dst_map}" in
-	xl)  $as_echo_n ", linearly mapped pixels" ; value="LINEAR" ;;
-	xi)  $as_echo_n ", index mapped pixels" ; value="INDEX" ;;
-	*)   $as_echo_n ", any pixel mapping" ; value="ANY" ;;
+	xl)  printf %s ", linearly mapped pixels" ; value="LINEAR" ;;
+	xi)  printf %s ", index mapped pixels" ; value="INDEX" ;;
+	*)   printf %s ", any pixel mapping" ; value="ANY" ;;
 	esac
 	xlat_info="${xlat_info}, TME_FB_XLAT_MAP_${value}"
 	for primary in g r b; do
 	    eval "dst_mask=\$dst_mask_${primary}"
 	    case "x${dst_mask}" in
-	    x)  $as_echo_n ", no ${primary} mask" ; value=0 ;;
-	    x0x0) $as_echo_n ", any ${primary} mask" ; value=TME_FB_XLAT_MASK_ANY ;;
-	    *)  $as_echo_n ", a ${primary} mask of ${dst_mask}" ; value=${dst_mask} ;;
+	    x)  printf %s ", no ${primary} mask" ; value=0 ;;
+	    x0x0) printf %s ", any ${primary} mask" ; value=TME_FB_XLAT_MASK_ANY ;;
+	    *)  printf %s ", a ${primary} mask of ${dst_mask}" ; value=${dst_mask} ;;
 	    esac
 	    xlat_info="${xlat_info}, ${value}"
 	done
@@ -1160,31 +1164,31 @@ for src_key in ${src_all}; do
 	xlat_array="${xlat_array}
   { $xlat_info }, "
 	IFS=$save_IFS
-	$as_echo ""
-	$as_echo "*/"
-	$as_echo "static int"
-	$as_echo "tme_fb_xlat${xlat}(struct tme_fb_connection *src,"
-	$as_echo "             struct tme_fb_connection *dst)"
-	$as_echo "{"
+	printf "%s\n" ""
+	printf "%s\n" "*/"
+	printf "%s\n" "static int"
+	printf "%s\n" "tme_fb_xlat${xlat}(struct tme_fb_connection *src,"
+	printf "%s\n" "             struct tme_fb_connection *dst)"
+	printf "%s\n" "{"
 	undef_macros=
 
-	$as_echo ""
-	$as_echo "  /* whenever possible we define macros instead of declaring"
-	$as_echo "     variables, for optimization: */"
+	printf "%s\n" ""
+	printf "%s\n" "  /* whenever possible we define macros instead of declaring"
+	printf "%s\n" "     variables, for optimization: */"
 
-	$as_echo ""
-	$as_echo "  /* declare src_x and src_y.  these are the current translation"
-	$as_echo "     coordinates in the source image: */"
-	$as_echo "  unsigned int src_x, src_y;"
+	printf "%s\n" ""
+	printf "%s\n" "  /* declare src_x and src_y.  these are the current translation"
+	printf "%s\n" "     coordinates in the source image: */"
+	printf "%s\n" "  unsigned int src_x, src_y;"
 
-	$as_echo ""
-	$as_echo "  /* declare dst_x and dst_y.  these are the current translation"
-	$as_echo "     coordinates in the destination image.  since this function"
+	printf "%s\n" ""
+	printf "%s\n" "  /* declare dst_x and dst_y.  these are the current translation"
+	printf "%s\n" "     coordinates in the destination image.  since this function"
 	if test $scale = _; then
-	    $as_echo "     does not scale the image, these coordinates are always"
-	    $as_echo "     the same as the coordinates in the source image: */"
-	    $as_echo "#define dst_x (src_x)"
-	    $as_echo "#define dst_y (src_y)"
+	    printf "%s\n" "     does not scale the image, these coordinates are always"
+	    printf "%s\n" "     the same as the coordinates in the source image: */"
+	    printf "%s\n" "#define dst_x (src_x)"
+	    printf "%s\n" "#define dst_y (src_y)"
 	    undef_macros="${undef_macros} dst_x dst_y"
 	    scale_op=
 	    scale_math=
@@ -1197,44 +1201,44 @@ for src_key in ${src_all}; do
 		scale_name='doubles'
 	    fi
 	    scale_math=" ${scale_op} 2"
-	    $as_echo "     ${scale_name} the image, the coordinates in the destination image"
-	    $as_echo "     are always the coordinates in the source image${scale_math}: */"
-	    $as_echo "  unsigned int dst_x, dst_y;"
+	    printf "%s\n" "     ${scale_name} the image, the coordinates in the destination image"
+	    printf "%s\n" "     are always the coordinates in the source image${scale_math}: */"
+	    printf "%s\n" "  unsigned int dst_x, dst_y;"
 	fi
 
-	$as_echo ""
-	$as_echo "  /* declare pixel.  this holds a single pixel value being translated"
-	$as_echo "     for the destination image: */"
-	$as_echo "  tme_uint32_t pixel;"
+	printf "%s\n" ""
+	printf "%s\n" "  /* declare pixel.  this holds a single pixel value being translated"
+	printf "%s\n" "     for the destination image: */"
+	printf "%s\n" "  tme_uint32_t pixel;"
 
-	$as_echo ""
-	$as_echo "  /* declare src_width and dst_width.  these are in terms of pixels: */"
+	printf "%s\n" ""
+	printf "%s\n" "  /* declare src_width and dst_width.  these are in terms of pixels: */"
 	value="(src_width${scale_math})"
 	if test ${width} = 0; then
-	    $as_echo "  const unsigned int src_width = src->tme_fb_connection_width;"
+	    printf "%s\n" "  const unsigned int src_width = src->tme_fb_connection_width;"
 	    if test $scale != _; then
-		$as_echo "  const unsigned int dst_width = ${value};"
+		printf "%s\n" "  const unsigned int dst_width = ${value};"
 	    else
-		$as_echo "#define dst_width ${value}"
+		printf "%s\n" "#define dst_width ${value}"
 		undef_macros="${undef_macros} dst_width"
 	    fi
 	else
-	    $as_echo "#define src_width (${width})"
-	    $as_echo "#define dst_width ${value}"
+	    printf "%s\n" "#define src_width (${width})"
+	    printf "%s\n" "#define dst_width ${value}"
 	    undef_macros="${undef_macros} src_width dst_width"
 	fi
 
-	$as_echo ""
-	$as_echo "  /* declare src_depth, the source pixel depth, which is in"
-	$as_echo "     terms of bits.  declare src_mask, which is the corresponding"
-	$as_echo "     mask of one bits: */"
+	printf "%s\n" ""
+	printf "%s\n" "  /* declare src_depth, the source pixel depth, which is in"
+	printf "%s\n" "     terms of bits.  declare src_mask, which is the corresponding"
+	printf "%s\n" "     mask of one bits: */"
 	value="(0xffffffff >> (32 - src_depth))"
 	if test ${src_depth} = 0; then
-	    $as_echo "  const unsigned int src_depth = src->tme_fb_connection_depth;"
-	    $as_echo "  const tme_uint32_t src_mask = ${value};"
+	    printf "%s\n" "  const unsigned int src_depth = src->tme_fb_connection_depth;"
+	    printf "%s\n" "  const tme_uint32_t src_mask = ${value};"
 	else
-	    $as_echo "#define src_depth (${src_depth})"
-	    $as_echo "#define src_mask ${value}"
+	    printf "%s\n" "#define src_depth (${src_depth})"
+	    printf "%s\n" "#define src_mask ${value}"
 	    undef_macros="${undef_macros} src_depth src_mask"
 	fi
 
@@ -1243,199 +1247,199 @@ for src_key in ${src_all}; do
 	#
 	if test ${scale} = _h_ || test "x${src_mask_g}" != x; then
 
-	    $as_echo ""
-	    $as_echo "  /* declare src_indexed.  this is nonzero if source pixel subfields"
-	    $as_echo "     are index-mapped into intensities: */"
+	    printf "%s\n" ""
+	    printf "%s\n" "  /* declare src_indexed.  this is nonzero if source pixel subfields"
+	    printf "%s\n" "     are index-mapped into intensities: */"
 	    if test "x${src_map}" = x; then
-		$as_echo "  const unsigned int src_indexed = (src->tme_fb_connection_map_g != NULL);"
+		printf "%s\n" "  const unsigned int src_indexed = (src->tme_fb_connection_map_g != NULL);"
 	    else
 		if test "x${src_map}" = xi; then value=TRUE; else value=FALSE; fi
-		$as_echo "#define src_indexed (${value})"
+		printf "%s\n" "#define src_indexed (${value})"
 		undef_macros="${undef_macros} src_indexed"
 	    fi
 
-	    $as_echo ""
-	    $as_echo "  /* declare src_mask_i, which is the mask for a source intensity: */"
+	    printf "%s\n" ""
+	    printf "%s\n" "  /* declare src_mask_i, which is the mask for a source intensity: */"
 	    if test "${src_map_bits}" = 0; then
-		$as_echo "  const tme_uint32_t src_mask_i = (0xffffffff >> (32 - src->tme_fb_connection_map_bits));"
+		printf "%s\n" "  const tme_uint32_t src_mask_i = (0xffffffff >> (32 - src->tme_fb_connection_map_bits));"
 	    else
-		$as_echo "#define src_mask_i (0xffffffff >> (32 - ${src_map_bits}))"
+		printf "%s\n" "#define src_mask_i (0xffffffff >> (32 - ${src_map_bits}))"
 		undef_macros="${undef_macros} src_mask_i"
 	    fi
 
 	    if test "x${src_class}" != xm; then
-		$as_echo ""
-		$as_echo "  /* declare dst_indexed.  this is nonzero if intensities are index-mapped"
-		$as_echo "     into destination pixel subfields: */"
+		printf "%s\n" ""
+		printf "%s\n" "  /* declare dst_indexed.  this is nonzero if intensities are index-mapped"
+		printf "%s\n" "     into destination pixel subfields: */"
 		if test "x${dst_map}" = x; then
-		    $as_echo "  const unsigned int dst_indexed = (dst->tme_fb_connection_map_g != NULL);"
+		    printf "%s\n" "  const unsigned int dst_indexed = (dst->tme_fb_connection_map_g != NULL);"
 		else
 		    if test "x${dst_map}" = xi; then value=TRUE; else value=FALSE; fi
-		    $as_echo "#define dst_indexed (${value})"
+		    printf "%s\n" "#define dst_indexed (${value})"
 		    undef_macros="${undef_macros} dst_indexed"
 		fi
 
-		$as_echo ""
-		$as_echo "  /* declare dst_masks_default.  this is nonzero if the destination"
-		$as_echo "     subfield masks are the default: */"
+		printf "%s\n" ""
+		printf "%s\n" "  /* declare dst_masks_default.  this is nonzero if the destination"
+		printf "%s\n" "     subfield masks are the default: */"
 		if test "x${dst_mask_g}" = "x0x0"; then
-		    $as_echo "  const unsigned int dst_masks_default = (dst->tme_fb_connection_mask_g == 0);"
+		    printf "%s\n" "  const unsigned int dst_masks_default = (dst->tme_fb_connection_mask_g == 0);"
 		else
 		    if test "x${dst_mask_g}" = x; then value=TRUE; else value=FALSE; fi
-		    $as_echo "#define dst_masks_default (${value})"
+		    printf "%s\n" "#define dst_masks_default (${value})"
 		    undef_macros="${undef_macros} dst_masks_default"
 		fi
 	    fi
 
 	    for primary in g r b; do
-		primary_cap=`$as_echo ${primary} | tr a-z A-Z`
-		$as_echo ""
-		$as_echo "  /* declare src_mask_${primary}, the mask for the ${primary} subfield in a source pixel: */"
+		primary_cap=`printf "%s\n" ${primary} | tr a-z A-Z`
+		printf "%s\n" ""
+		printf "%s\n" "  /* declare src_mask_${primary}, the mask for the ${primary} subfield in a source pixel: */"
 		eval "src_mask=\$src_mask_${primary}"
 		if test "x${src_mask}" = x0x0; then
-		    $as_echo "  const tme_uint32_t src_mask_${primary}"
-		    $as_echo "    = (src->tme_fb_connection_mask_${primary} != 0"
-		    $as_echo "       ? src->tme_fb_connection_mask_${primary}"
-		    $as_echo "       : src_mask);"
+		    printf "%s\n" "  const tme_uint32_t src_mask_${primary}"
+		    printf "%s\n" "    = (src->tme_fb_connection_mask_${primary} != 0"
+		    printf "%s\n" "       ? src->tme_fb_connection_mask_${primary}"
+		    printf "%s\n" "       : src_mask);"
 		else
 		    if test "x${src_mask}" = x; then src_mask="src_mask"; fi
-		    $as_echo "#define src_mask_${primary} (${src_mask})"
+		    printf "%s\n" "#define src_mask_${primary} (${src_mask})"
 		    undef_macros="${undef_macros} src_mask_${primary}"
 		fi
-		$as_echo ""
-		$as_echo "  /* declare value_${primary}, the intensity value for the ${primary} subfield in a pixel: */"
-		$as_echo "  tme_uint32_t value_${primary};"
+		printf "%s\n" ""
+		printf "%s\n" "  /* declare value_${primary}, the intensity value for the ${primary} subfield in a pixel: */"
+		printf "%s\n" "  tme_uint32_t value_${primary};"
 		if test "x${src_class}" = xm; then break; fi
-		$as_echo ""
-		$as_echo "  /* declare dst_mask_${primary}, the mask for the ${primary} subfield in a destination pixel: */"
+		printf "%s\n" ""
+		printf "%s\n" "  /* declare dst_mask_${primary}, the mask for the ${primary} subfield in a destination pixel: */"
 		eval "dst_mask=\$dst_mask_${primary}"
 		if test "x${dst_mask}" = x0x0; then
-		    $as_echo "  const tme_uint32_t dst_mask_${primary}"
-		    $as_echo "    = (dst->tme_fb_connection_mask_${primary} != 0"
-		    $as_echo "       ? dst->tme_fb_connection_mask_${primary}"
-		    $as_echo "       : TME_FB_XLAT_MASK_DEFAULT_${primary_cap});"
+		    printf "%s\n" "  const tme_uint32_t dst_mask_${primary}"
+		    printf "%s\n" "    = (dst->tme_fb_connection_mask_${primary} != 0"
+		    printf "%s\n" "       ? dst->tme_fb_connection_mask_${primary}"
+		    printf "%s\n" "       : TME_FB_XLAT_MASK_DEFAULT_${primary_cap});"
 		else
 		    if test "x${dst_mask}" = x; then dst_mask="TME_FB_XLAT_MASK_DEFAULT_${primary_cap}"; fi
-		    $as_echo "#define dst_mask_${primary} (${dst_mask})"
+		    printf "%s\n" "#define dst_mask_${primary} (${dst_mask})"
 		    undef_macros="${undef_macros} dst_mask_${primary}"
 		fi
 	    done
 	fi
 
-	$as_echo ""
-	$as_echo "  /* declare src_bipp and dst_bipp.  these are the bits-per-pixel"
-	$as_echo "     values for the source and destination images: */"
+	printf "%s\n" ""
+	printf "%s\n" "  /* declare src_bipp and dst_bipp.  these are the bits-per-pixel"
+	printf "%s\n" "     values for the source and destination images: */"
 	if test ${src_bipp} = 0; then
-	    $as_echo "  const unsigned int src_bipp = src->tme_fb_connection_bits_per_pixel;"
+	    printf "%s\n" "  const unsigned int src_bipp = src->tme_fb_connection_bits_per_pixel;"
 	else
-	    $as_echo "#define src_bipp (${src_bipp})"
+	    printf "%s\n" "#define src_bipp (${src_bipp})"
 	    undef_macros="${undef_macros} src_bipp"
 	fi
 	if test ${dst_bipp} = 0; then
-	    $as_echo "  const unsigned int dst_bipp = dst->tme_fb_connection_bits_per_pixel;"
+	    printf "%s\n" "  const unsigned int dst_bipp = dst->tme_fb_connection_bits_per_pixel;"
 	else
-	    $as_echo "#define dst_bipp (${dst_bipp})"
+	    printf "%s\n" "#define dst_bipp (${dst_bipp})"
 	    undef_macros="${undef_macros} dst_bipp"
 	fi
 
-	$as_echo ""
-	$as_echo "  /* declare src_skipx and dst_skipx.  these are the counts of"
-	$as_echo "     undisplayed pixels at the beginning of each scanline in the"
-	$as_echo "     source and destination images: */"
+	printf "%s\n" ""
+	printf "%s\n" "  /* declare src_skipx and dst_skipx.  these are the counts of"
+	printf "%s\n" "     undisplayed pixels at the beginning of each scanline in the"
+	printf "%s\n" "     source and destination images: */"
 	if test ${src_skipx} = _; then
-	    $as_echo "  const unsigned int src_skipx = src->tme_fb_connection_skipx;"
+	    printf "%s\n" "  const unsigned int src_skipx = src->tme_fb_connection_skipx;"
 	else
-	    $as_echo "#define src_skipx (${src_skipx})"
+	    printf "%s\n" "#define src_skipx (${src_skipx})"
 	    undef_macros="${undef_macros} src_skipx"
 	fi
 	if test ${dst_skipx} = _; then
-	    $as_echo "  const unsigned int dst_skipx = dst->tme_fb_connection_skipx;"
+	    printf "%s\n" "  const unsigned int dst_skipx = dst->tme_fb_connection_skipx;"
 	else
-	    $as_echo "#define dst_skipx (${dst_skipx})"
+	    printf "%s\n" "#define dst_skipx (${dst_skipx})"
 	    undef_macros="${undef_macros} dst_skipx"
 	fi
 
-	$as_echo ""
-	$as_echo "  /* declare src_pad and dst_pad.  these are the paddings, in bits,"
-	$as_echo "     of each scanline in the source and destination images: */"
+	printf "%s\n" ""
+	printf "%s\n" "  /* declare src_pad and dst_pad.  these are the paddings, in bits,"
+	printf "%s\n" "     of each scanline in the source and destination images: */"
 	if test ${src_pad} = 0; then
-	    $as_echo "  const unsigned int src_pad = src->tme_fb_connection_scanline_pad;"
+	    printf "%s\n" "  const unsigned int src_pad = src->tme_fb_connection_scanline_pad;"
 	else
-	    $as_echo "#define src_pad (${src_pad})"
+	    printf "%s\n" "#define src_pad (${src_pad})"
 	    undef_macros="${undef_macros} src_pad"
 	fi
 	if test ${dst_pad} = 0; then
-	    $as_echo "  const unsigned int dst_pad = dst->tme_fb_connection_scanline_pad;"
+	    printf "%s\n" "  const unsigned int dst_pad = dst->tme_fb_connection_scanline_pad;"
 	else
-	    $as_echo "#define dst_pad (${dst_pad})"
+	    printf "%s\n" "#define dst_pad (${dst_pad})"
 	    undef_macros="${undef_macros} dst_pad"
 	fi
 
-	$as_echo ""
-	$as_echo "  /* declare src_order and dst_order.  these are the bit and byte"
-	$as_echo "     orders (either TME_ENDIAN_BIG or TME_ENDIAN_LITTLE) of the"
-	$as_echo "     source and destination images.  since these values profoundly"
-	$as_echo "     affect optimization, they are always constant: */"
+	printf "%s\n" ""
+	printf "%s\n" "  /* declare src_order and dst_order.  these are the bit and byte"
+	printf "%s\n" "     orders (either TME_ENDIAN_BIG or TME_ENDIAN_LITTLE) of the"
+	printf "%s\n" "     source and destination images.  since these values profoundly"
+	printf "%s\n" "     affect optimization, they are always constant: */"
 	if test ${src_order} = m; then value=BIG; else value=LITTLE; fi
-	$as_echo "#define src_order (TME_ENDIAN_${value})"
+	printf "%s\n" "#define src_order (TME_ENDIAN_${value})"
 	undef_macros="${undef_macros} src_order"
 	if test ${dst_order} = m; then value=BIG; else value=LITTLE; fi
-	$as_echo "#define dst_order (TME_ENDIAN_${value})"
+	printf "%s\n" "#define dst_order (TME_ENDIAN_${value})"
 	undef_macros="${undef_macros} dst_order"
 
-	$as_echo ""
-	$as_echo "  /* declare src_bypl and dst_bypl.  these are the bytes per scanline"
-	$as_echo "     in the source and destination images.  these values are calculated"
-	$as_echo "     from the count of undisplayed and displayed pixels per scanline,"
-	$as_echo "     the number of bits per pixel, and the scanline padding: */"
+	printf "%s\n" ""
+	printf "%s\n" "  /* declare src_bypl and dst_bypl.  these are the bytes per scanline"
+	printf "%s\n" "     in the source and destination images.  these values are calculated"
+	printf "%s\n" "     from the count of undisplayed and displayed pixels per scanline,"
+	printf "%s\n" "     the number of bits per pixel, and the scanline padding: */"
 	value="(((((src_skipx + src_width) * src_bipp) + (src_pad - 1)) & -src_pad) / 8)"
 	if test ${src_skipx} = _ || test ${width} = 0 || test ${src_bipp} = 0 || test ${src_pad} = 0; then
-	    $as_echo "  const unsigned int src_bypl = ${value};"
+	    printf "%s\n" "  const unsigned int src_bypl = ${value};"
 	    src_bypl_var=true
 	else
-	    $as_echo "#define src_bypl ${value}"
+	    printf "%s\n" "#define src_bypl ${value}"
 	    undef_macros="${undef_macros} src_bypl"
 	    src_bypl_var=false
 	fi
 	value="(((((dst_skipx + dst_width) * dst_bipp) + (dst_pad - 1)) & -dst_pad) / 8)"
 	if test ${dst_skipx} = _ || test ${width} = 0 || test ${dst_bipp} = 0 || test ${dst_pad} = 0; then
-	    $as_echo "  const unsigned int dst_bypl = ${value};"
+	    printf "%s\n" "  const unsigned int dst_bypl = ${value};"
 	    dst_bypl_var=true
 	else
-	    $as_echo "#define dst_bypl ${value}"
+	    printf "%s\n" "#define dst_bypl ${value}"
 	    undef_macros="${undef_macros} dst_bypl"
 	    dst_bypl_var=false
 	fi
 
-	$as_echo ""
-	$as_echo "  /* declare src_packed and dst_packed.  these are nonzero iff"
-	$as_echo "     every last bit in a scanline belongs to a displayed pixel."
-	$as_echo "     put another way, this is zero iff a scanline has undisplayed"
-	$as_echo "     pixels at its beginning or padding bits at its end.  when"
-	$as_echo "     a source image or destination image is packed, translation"
-	$as_echo "     doesn't have to worry about skipping FIFO bits to get to"
-	$as_echo "     bits belonging to displayed pixels: */"
+	printf "%s\n" ""
+	printf "%s\n" "  /* declare src_packed and dst_packed.  these are nonzero iff"
+	printf "%s\n" "     every last bit in a scanline belongs to a displayed pixel."
+	printf "%s\n" "     put another way, this is zero iff a scanline has undisplayed"
+	printf "%s\n" "     pixels at its beginning or padding bits at its end.  when"
+	printf "%s\n" "     a source image or destination image is packed, translation"
+	printf "%s\n" "     doesn't have to worry about skipping FIFO bits to get to"
+	printf "%s\n" "     bits belonging to displayed pixels: */"
 	value="((src_width * src_bipp) == (src_bypl * 8))"
 	if $src_bypl_var; then
-	    $as_echo "  const unsigned int src_packed = ${value};"
+	    printf "%s\n" "  const unsigned int src_packed = ${value};"
 	else
-	    $as_echo "#define src_packed ${value}"
+	    printf "%s\n" "#define src_packed ${value}"
 	    undef_macros="${undef_macros} src_packed"
 	fi
 	value="((dst_width * dst_bipp) == (dst_bypl * 8))"
 	if $dst_bypl_var; then
-	    $as_echo "  const unsigned int dst_packed = ${value};"
+	    printf "%s\n" "  const unsigned int dst_packed = ${value};"
 	else
-	    $as_echo "#define dst_packed ${value}"
+	    printf "%s\n" "#define dst_packed ${value}"
 	    undef_macros="${undef_macros} dst_packed"
 	fi
 
-	$as_echo ""
-	$as_echo "  /* declare src_bypb and src_bypb_real.  src_bypb is the bytes"
-	$as_echo "     per source image buffer with the \"translation termination"
-	$as_echo "     overhead\" of approximately two extra scanlines.  src_bypb_real"
-	$as_echo "     is the real bytes per source image buffer with no overhead."
-	$as_echo "     both values are padded to a multiple of 4 bytes (32 bits): */"
+	printf "%s\n" ""
+	printf "%s\n" "  /* declare src_bypb and src_bypb_real.  src_bypb is the bytes"
+	printf "%s\n" "     per source image buffer with the \"translation termination"
+	printf "%s\n" "     overhead\" of approximately two extra scanlines.  src_bypb_real"
+	printf "%s\n" "     is the real bytes per source image buffer with no overhead."
+	printf "%s\n" "     both values are padded to a multiple of 4 bytes (32 bits): */"
 	if test ${height} = 0; then
 	    value="src->tme_fb_connection_height"
 	else
@@ -1444,98 +1448,98 @@ for src_key in ${src_all}; do
 	value_real="(((${value} * src_bypl) + 3) & -4)"
 	value="((src_bypb_real + (src_bypl * 2)) & -4)"
 	if test ${height} = 0 || $src_bypl_var; then
-	    $as_echo "  const unsigned int src_bypb_real = ${value_real};"
-	    $as_echo "  const unsigned int src_bypb = ${value};"
+	    printf "%s\n" "  const unsigned int src_bypb_real = ${value_real};"
+	    printf "%s\n" "  const unsigned int src_bypb = ${value};"
 	else
-	    $as_echo "#define src_bypb_real ${value_real}"
-	    $as_echo "#define src_bypb ${value}"
+	    printf "%s\n" "#define src_bypb_real ${value_real}"
+	    printf "%s\n" "#define src_bypb ${value}"
 	    undef_macros="${undef_macros} src_bypb_real src_bypb"
 	fi
 
-	$as_echo ""
-	$as_echo "  /* declare the source primary bit FIFO:"
-	$as_echo ""
-	$as_echo "     src_raw0 points to the next aligned 32-bit word to be"
-	$as_echo "     read from the image buffer."
-	$as_echo ""
-	$as_echo "     src_fifo0 is the visible part of the bit FIFO."
-	$as_echo ""
-	$as_echo "     src_fifo0_next and src_fifo0_bits are only used when the"
-	$as_echo "     visible part of the bit FIFO is not guaranteed to always"
-	$as_echo "     correspond to an aligned 32-bit word in the image buffer."
-	$as_echo "     src_fifo0_next is the invisible part of the bit FIFO,"
-	$as_echo "     and src_fifo0_bits tracks the total number of bits in the"
-	$as_echo "     visible and invisible parts of the FIFO. */"
-	$as_echo "  const tme_uint32_t *src_raw0;"
-	$as_echo "  tme_uint32_t src_fifo0, src_fifo0_next;"
-	$as_echo "  unsigned int src_fifo0_bits;"
+	printf "%s\n" ""
+	printf "%s\n" "  /* declare the source primary bit FIFO:"
+	printf "%s\n" ""
+	printf "%s\n" "     src_raw0 points to the next aligned 32-bit word to be"
+	printf "%s\n" "     read from the image buffer."
+	printf "%s\n" ""
+	printf "%s\n" "     src_fifo0 is the visible part of the bit FIFO."
+	printf "%s\n" ""
+	printf "%s\n" "     src_fifo0_next and src_fifo0_bits are only used when the"
+	printf "%s\n" "     visible part of the bit FIFO is not guaranteed to always"
+	printf "%s\n" "     correspond to an aligned 32-bit word in the image buffer."
+	printf "%s\n" "     src_fifo0_next is the invisible part of the bit FIFO,"
+	printf "%s\n" "     and src_fifo0_bits tracks the total number of bits in the"
+	printf "%s\n" "     visible and invisible parts of the FIFO. */"
+	printf "%s\n" "  const tme_uint32_t *src_raw0;"
+	printf "%s\n" "  tme_uint32_t src_fifo0, src_fifo0_next;"
+	printf "%s\n" "  unsigned int src_fifo0_bits;"
 
 	if test ${scale} = _h_; then
-	    $as_echo ""
-	    $as_echo "  /* since this function ${scale_name} the image, declare the"
-	    $as_echo "     source secondary bit FIFO.  these variables work in "
-	    $as_echo "     exactly the same way that their primary counterparts do: */"
-	    $as_echo "  const tme_uint32_t *src_raw1;"
-	    $as_echo "  tme_uint32_t src_fifo1, src_fifo1_next;"
-	    $as_echo "  unsigned int src_fifo1_bits;"
+	    printf "%s\n" ""
+	    printf "%s\n" "  /* since this function ${scale_name} the image, declare the"
+	    printf "%s\n" "     source secondary bit FIFO.  these variables work in "
+	    printf "%s\n" "     exactly the same way that their primary counterparts do: */"
+	    printf "%s\n" "  const tme_uint32_t *src_raw1;"
+	    printf "%s\n" "  tme_uint32_t src_fifo1, src_fifo1_next;"
+	    printf "%s\n" "  unsigned int src_fifo1_bits;"
 	fi
 
-	$as_echo ""
-	$as_echo "  /* declare the destination primary bit FIFO:"
-	$as_echo ""
-	$as_echo "     dst_raw0 points to the next aligned 32-bit word to be"
-	$as_echo "     written into the image buffer."
-	$as_echo ""
-	$as_echo "     dst_fifo0 is the visible part of the bit FIFO."
-	$as_echo ""
-	$as_echo "     dst_fifo0_next and dst_fifo0_bits are only used when the"
-	$as_echo "     visible part of the bit FIFO is not guaranteed to always"
-	$as_echo "     correspond to an aligned 32-bit word in the image buffer."
-	$as_echo "     dst_fifo0_next is the invisible part of the bit FIFO,"
-	$as_echo "     and dst_fifo0_bits tracks the total number of bits in the"
-	$as_echo "     invisible part of the FIFO. */"
-	$as_echo "  tme_uint32_t *dst_raw0;"
-	$as_echo "  tme_uint32_t dst_fifo0, dst_fifo0_next;"
-	$as_echo "  unsigned int dst_fifo0_bits;"
+	printf "%s\n" ""
+	printf "%s\n" "  /* declare the destination primary bit FIFO:"
+	printf "%s\n" ""
+	printf "%s\n" "     dst_raw0 points to the next aligned 32-bit word to be"
+	printf "%s\n" "     written into the image buffer."
+	printf "%s\n" ""
+	printf "%s\n" "     dst_fifo0 is the visible part of the bit FIFO."
+	printf "%s\n" ""
+	printf "%s\n" "     dst_fifo0_next and dst_fifo0_bits are only used when the"
+	printf "%s\n" "     visible part of the bit FIFO is not guaranteed to always"
+	printf "%s\n" "     correspond to an aligned 32-bit word in the image buffer."
+	printf "%s\n" "     dst_fifo0_next is the invisible part of the bit FIFO,"
+	printf "%s\n" "     and dst_fifo0_bits tracks the total number of bits in the"
+	printf "%s\n" "     invisible part of the FIFO. */"
+	printf "%s\n" "  tme_uint32_t *dst_raw0;"
+	printf "%s\n" "  tme_uint32_t dst_fifo0, dst_fifo0_next;"
+	printf "%s\n" "  unsigned int dst_fifo0_bits;"
 
 	if test ${scale} = _d_; then
-	    $as_echo ""
-	    $as_echo "  /* since this function ${scale_name} the image, declare"
-	    $as_echo "     the destination secondary bit FIFO.  these variables work"
-	    $as_echo "     in exactly the same way that their primary counterparts"
-	    $as_echo "     do: */"
-	    $as_echo "  tme_uint32_t *dst_raw1;"
-	    $as_echo "  tme_uint32_t dst_fifo1, dst_fifo1_next;"
-	    $as_echo "  unsigned int dst_fifo1_bits;"
+	    printf "%s\n" ""
+	    printf "%s\n" "  /* since this function ${scale_name} the image, declare"
+	    printf "%s\n" "     the destination secondary bit FIFO.  these variables work"
+	    printf "%s\n" "     in exactly the same way that their primary counterparts"
+	    printf "%s\n" "     do: */"
+	    printf "%s\n" "  tme_uint32_t *dst_raw1;"
+	    printf "%s\n" "  tme_uint32_t dst_fifo1, dst_fifo1_next;"
+	    printf "%s\n" "  unsigned int dst_fifo1_bits;"
 	fi
 
-	$as_echo ""
-	$as_echo "  /* declare src_off and dst_off.  these are used when priming a"
-	$as_echo "     source or destination bit FIFO, to identify an initial aligned"
-	$as_echo "     32-bit word in the source or destination image buffer, and an"
-	$as_echo "     initial bit offset within that word: */"
-	$as_echo "  unsigned int src_off, dst_off;"
+	printf "%s\n" ""
+	printf "%s\n" "  /* declare src_off and dst_off.  these are used when priming a"
+	printf "%s\n" "     source or destination bit FIFO, to identify an initial aligned"
+	printf "%s\n" "     32-bit word in the source or destination image buffer, and an"
+	printf "%s\n" "     initial bit offset within that word: */"
+	printf "%s\n" "  unsigned int src_off, dst_off;"
 
-	$as_echo ""
-	$as_echo "  /* declare src_fifo0_may_be_unaligned.  this is zero iff all"
-	$as_echo "     aligned 32-bit words in the source buffer contain a whole"
-	$as_echo "     number of displayed pixels, and at *all times during the"
-	$as_echo "     translation* the visible part of the bit FIFO is guaranteed"
-	$as_echo "     to correspond to an aligned 32-bit word in the image buffer."
-	$as_echo ""
-	$as_echo "     this is *not* so if any of the following are true:"
-	$as_echo ""
-	$as_echo "     - the source bits-per-pixel value is not known at compile"
-	$as_echo "       time.  in this case, we can't unroll the translation loop"
-	$as_echo "       for source pixels, and are forced to shift the FIFO after"
-	$as_echo "       each one."
-	$as_echo ""
-	$as_echo "     - if the source image is not packed.  in this case, there may"
-	$as_echo "       be undisplayed pixels in the FIFO, which we will need to"
-	$as_echo "       shift out."
-	$as_echo ""
-	$as_echo "     - if there are 24 bits per source pixel.  in this case, a"
-	$as_echo "       source pixel may cross a 32-bit boundary: */"
+	printf "%s\n" ""
+	printf "%s\n" "  /* declare src_fifo0_may_be_unaligned.  this is zero iff all"
+	printf "%s\n" "     aligned 32-bit words in the source buffer contain a whole"
+	printf "%s\n" "     number of displayed pixels, and at *all times during the"
+	printf "%s\n" "     translation* the visible part of the bit FIFO is guaranteed"
+	printf "%s\n" "     to correspond to an aligned 32-bit word in the image buffer."
+	printf "%s\n" ""
+	printf "%s\n" "     this is *not* so if any of the following are true:"
+	printf "%s\n" ""
+	printf "%s\n" "     - the source bits-per-pixel value is not known at compile"
+	printf "%s\n" "       time.  in this case, we can't unroll the translation loop"
+	printf "%s\n" "       for source pixels, and are forced to shift the FIFO after"
+	printf "%s\n" "       each one."
+	printf "%s\n" ""
+	printf "%s\n" "     - if the source image is not packed.  in this case, there may"
+	printf "%s\n" "       be undisplayed pixels in the FIFO, which we will need to"
+	printf "%s\n" "       shift out."
+	printf "%s\n" ""
+	printf "%s\n" "     - if there are 24 bits per source pixel.  in this case, a"
+	printf "%s\n" "       source pixel may cross a 32-bit boundary: */"
 	src_fifo0_may_be_unaligned_var=false
 	if test ${src_bipp} = 0; then
 	    value=TRUE
@@ -1544,77 +1548,77 @@ for src_key in ${src_all}; do
 	    src_fifo0_may_be_unaligned_var=${src_bypl_var}
 	fi
 	if $src_fifo0_may_be_unaligned_var; then
-	    $as_echo "  const unsigned int src_fifo0_may_be_unaligned = ${value};"
+	    printf "%s\n" "  const unsigned int src_fifo0_may_be_unaligned = ${value};"
 	else
-	    $as_echo "#define src_fifo0_may_be_unaligned ${value}"
+	    printf "%s\n" "#define src_fifo0_may_be_unaligned ${value}"
 	    undef_macros="${undef_macros} src_fifo0_may_be_unaligned"
 	fi
 
 	if test $scale = _h_; then
-	    $as_echo ""
-	    $as_echo "  /* declare src_fifo1_may_be_unaligned.  this is zero iff all"
-	    $as_echo "     aligned 32-bit words in the source buffer contain a"
-	    $as_echo "     whole number of displayed pixels, *and* for every aligned"
-	    $as_echo "     32-bit word on one scanline all other scanlines have an"
-	    $as_echo "     aligned 32-bit word corresponding to the same x coordinate: */"
+	    printf "%s\n" ""
+	    printf "%s\n" "  /* declare src_fifo1_may_be_unaligned.  this is zero iff all"
+	    printf "%s\n" "     aligned 32-bit words in the source buffer contain a"
+	    printf "%s\n" "     whole number of displayed pixels, *and* for every aligned"
+	    printf "%s\n" "     32-bit word on one scanline all other scanlines have an"
+	    printf "%s\n" "     aligned 32-bit word corresponding to the same x coordinate: */"
 	    value="(src_fifo0_may_be_unaligned || (src_bypl & 3))"
 	    if $src_bypl_var; then
-		$as_echo "  const unsigned int src_fifo1_may_be_unaligned = ${value};"
+		printf "%s\n" "  const unsigned int src_fifo1_may_be_unaligned = ${value};"
 	    else
-		$as_echo "#define src_fifo1_may_be_unaligned ${value}"
+		printf "%s\n" "#define src_fifo1_may_be_unaligned ${value}"
 		undef_macros="${undef_macros} src_fifo1_may_be_unaligned"
 	    fi
 	fi
 
-	$as_echo ""
-	$as_echo "  /* declare dst_fifo0_may_be_unaligned.  this is zero iff all"
-	$as_echo "     aligned 32-bit words in the destination buffer contain a whole"
-	$as_echo "     number of displayed pixels, and at *all times during the"
-	$as_echo "     translation* the visible part of the bit FIFO is guaranteed"
-	$as_echo "     to correspond to an aligned 32-bit word in the image buffer."
-	$as_echo ""
-	$as_echo "     this is *not* so if any of the following are true:"
-	$as_echo ""
-	$as_echo "     - the destination bits-per-pixel value is not known at compile"
-	$as_echo "       time.  in this case, we can't unroll the translation loop"
-	$as_echo "       for destination pixels, and are forced to shift the FIFO"
-	$as_echo "       after each one."
-	$as_echo ""
-	$as_echo "     - if src_fifo0_may_be_unaligned is true.  in this case, we"
-	$as_echo "       definitely can't guarantee that any initial dst_x will"
-	$as_echo "       correspond to an aligned 32-bit word in the destination buffer."
-	$as_echo ""
-	$as_echo "     - if the destination image is not packed.  in this case, there may"
-	$as_echo "       be undisplayed pixels in the FIFO, which we will need to"
-	$as_echo "       shift out."
-	$as_echo ""
-	$as_echo "     - if there are 24 bits per destination pixel.  in this case,"
-	$as_echo "       a destination pixel may cross a 32-bit boundary."
-	$as_echo ""
-	$as_echo "     - if a possible initial dst_x doesn't correspond to an aligned"
-	$as_echo "       32-bit word in the destination buffer.  for this last one:"
-	$as_echo ""
-	$as_echo "     since we require that src_fifo0_may_be_unaligned is zero, we"
-	$as_echo "     know that the initial src_x = (Z * 32) / src_bipp for "
-	$as_echo "     some Z.  we also have the initial dst_x = src_x${scale_math}."
-	$as_echo "     the initial destination bit offset will then be:"
-	$as_echo ""
-	$as_echo "     (dst_skipx + dst_x) * dst_bipp"
-	$as_echo "     = (dst_skipx * dst_bipp) + (dst_x * dst_bipp)"
-	$as_echo ""
-	$as_echo "     if we additionally require that (dst_skipx * dst_bipp)"
-	$as_echo "     be 32-bit aligned, this reduces things to:"
-	$as_echo ""
-	$as_echo "     dst_x * dst_bipp"
-	$as_echo "     = (src_x${scale_math}) * dst_bipp"
-	$as_echo "     = (((Z * 32) / src_bipp)${scale_math}) * dst_bipp"
-	$as_echo ""
-	$as_echo "     which will be a multiple of 32 iff:"
-	$as_echo ""
-	$as_echo "      ((1 / src_bipp)${scale_math}) * dst_bipp >= 1 and integral"
-	$as_echo ""
-	$as_echo "     or, equivalently:"
-	$as_echo ""
+	printf "%s\n" ""
+	printf "%s\n" "  /* declare dst_fifo0_may_be_unaligned.  this is zero iff all"
+	printf "%s\n" "     aligned 32-bit words in the destination buffer contain a whole"
+	printf "%s\n" "     number of displayed pixels, and at *all times during the"
+	printf "%s\n" "     translation* the visible part of the bit FIFO is guaranteed"
+	printf "%s\n" "     to correspond to an aligned 32-bit word in the image buffer."
+	printf "%s\n" ""
+	printf "%s\n" "     this is *not* so if any of the following are true:"
+	printf "%s\n" ""
+	printf "%s\n" "     - the destination bits-per-pixel value is not known at compile"
+	printf "%s\n" "       time.  in this case, we can't unroll the translation loop"
+	printf "%s\n" "       for destination pixels, and are forced to shift the FIFO"
+	printf "%s\n" "       after each one."
+	printf "%s\n" ""
+	printf "%s\n" "     - if src_fifo0_may_be_unaligned is true.  in this case, we"
+	printf "%s\n" "       definitely can't guarantee that any initial dst_x will"
+	printf "%s\n" "       correspond to an aligned 32-bit word in the destination buffer."
+	printf "%s\n" ""
+	printf "%s\n" "     - if the destination image is not packed.  in this case, there may"
+	printf "%s\n" "       be undisplayed pixels in the FIFO, which we will need to"
+	printf "%s\n" "       shift out."
+	printf "%s\n" ""
+	printf "%s\n" "     - if there are 24 bits per destination pixel.  in this case,"
+	printf "%s\n" "       a destination pixel may cross a 32-bit boundary."
+	printf "%s\n" ""
+	printf "%s\n" "     - if a possible initial dst_x doesn't correspond to an aligned"
+	printf "%s\n" "       32-bit word in the destination buffer.  for this last one:"
+	printf "%s\n" ""
+	printf "%s\n" "     since we require that src_fifo0_may_be_unaligned is zero, we"
+	printf "%s\n" "     know that the initial src_x = (Z * 32) / src_bipp for "
+	printf "%s\n" "     some Z.  we also have the initial dst_x = src_x${scale_math}."
+	printf "%s\n" "     the initial destination bit offset will then be:"
+	printf "%s\n" ""
+	printf "%s\n" "     (dst_skipx + dst_x) * dst_bipp"
+	printf "%s\n" "     = (dst_skipx * dst_bipp) + (dst_x * dst_bipp)"
+	printf "%s\n" ""
+	printf "%s\n" "     if we additionally require that (dst_skipx * dst_bipp)"
+	printf "%s\n" "     be 32-bit aligned, this reduces things to:"
+	printf "%s\n" ""
+	printf "%s\n" "     dst_x * dst_bipp"
+	printf "%s\n" "     = (src_x${scale_math}) * dst_bipp"
+	printf "%s\n" "     = (((Z * 32) / src_bipp)${scale_math}) * dst_bipp"
+	printf "%s\n" ""
+	printf "%s\n" "     which will be a multiple of 32 iff:"
+	printf "%s\n" ""
+	printf "%s\n" "      ((1 / src_bipp)${scale_math}) * dst_bipp >= 1 and integral"
+	printf "%s\n" ""
+	printf "%s\n" "     or, equivalently:"
+	printf "%s\n" ""
 	denom="src_bipp"
 	numer="dst_bipp"
 	case $scale in
@@ -1622,8 +1626,8 @@ for src_key in ${src_all}; do
 	_h_) denom="(${denom} * 2)" ;;
 	_d_) numer="(${numer} * 2)" ;;
 	esac
-	$as_echo "       (${numer} % ${denom}) == 0"
-	$as_echo "  */"
+	printf "%s\n" "       (${numer} % ${denom}) == 0"
+	printf "%s\n" "  */"
 	dst_fifo0_may_be_unaligned_var=false
 	if test ${dst_bipp} = 0; then
 	    value=TRUE
@@ -1634,371 +1638,371 @@ for src_key in ${src_all}; do
 	  fi
 	fi
 	if $dst_fifo0_may_be_unaligned_var; then
-	    $as_echo "  const unsigned int dst_fifo0_may_be_unaligned = ${value};"
+	    printf "%s\n" "  const unsigned int dst_fifo0_may_be_unaligned = ${value};"
 	else
-	    $as_echo "#define dst_fifo0_may_be_unaligned ${value}"
+	    printf "%s\n" "#define dst_fifo0_may_be_unaligned ${value}"
 	    undef_macros="${undef_macros} dst_fifo0_may_be_unaligned"
 	fi
 
 	if test $scale = _d_; then
-	    $as_echo ""
-	    $as_echo "  /* declare dst_fifo1_may_be_unaligned.  this is zero iff all"
-	    $as_echo "     32-bit aligned values in the destination buffer contain a"
-	    $as_echo "     whole number of displayed pixels, and for every 32-bit"
-	    $as_echo "     aligned value on one scanline all other scanlines have a"
-	    $as_echo "     32-bit aligned value corresponding to the same x coordinate: */"
+	    printf "%s\n" ""
+	    printf "%s\n" "  /* declare dst_fifo1_may_be_unaligned.  this is zero iff all"
+	    printf "%s\n" "     32-bit aligned values in the destination buffer contain a"
+	    printf "%s\n" "     whole number of displayed pixels, and for every 32-bit"
+	    printf "%s\n" "     aligned value on one scanline all other scanlines have a"
+	    printf "%s\n" "     32-bit aligned value corresponding to the same x coordinate: */"
 	    value="(dst_fifo0_may_be_unaligned || (dst_bypl & 3))"
 	    if $src_bypl_var || $dst_bypl_var; then
-		$as_echo "  const unsigned int dst_fifo1_may_be_unaligned = ${value};"
+		printf "%s\n" "  const unsigned int dst_fifo1_may_be_unaligned = ${value};"
 	    else
-		$as_echo "#define dst_fifo1_may_be_unaligned ${value}"
+		printf "%s\n" "#define dst_fifo1_may_be_unaligned ${value}"
 		undef_macros="${undef_macros} dst_fifo1_may_be_unaligned"
 	    fi
 	fi
 
-	$as_echo ""
-	$as_echo "  /* declare src_offset_updated_first and src_offset_updated_last,"
-	$as_echo "     which hold the offsets of the first and last updated bytes in"
-	$as_echo "     the source image: */"
-	$as_echo "  tme_uint32_t src_offset_updated_first;"
-	$as_echo "  tme_uint32_t src_offset_updated_last;"
+	printf "%s\n" ""
+	printf "%s\n" "  /* declare src_offset_updated_first and src_offset_updated_last,"
+	printf "%s\n" "     which hold the offsets of the first and last updated bytes in"
+	printf "%s\n" "     the source image: */"
+	printf "%s\n" "  tme_uint32_t src_offset_updated_first;"
+	printf "%s\n" "  tme_uint32_t src_offset_updated_last;"
 
-	$as_echo ""
-	$as_echo "  /* declare src_raw0_end.  when treating the source image as"
-	$as_echo "     an array of aligned 32-bit words, this variable holds the"
-	$as_echo "     address of the first word after the real source image."
-	$as_echo "     if the fast, aligned 32-bit word comparison loop passes"
-	$as_echo "     this point, the entire source image has been processed and"
- 	$as_echo "     the function terminates: */"
-	$as_echo "  const tme_uint32_t *src_raw0_end;"
+	printf "%s\n" ""
+	printf "%s\n" "  /* declare src_raw0_end.  when treating the source image as"
+	printf "%s\n" "     an array of aligned 32-bit words, this variable holds the"
+	printf "%s\n" "     address of the first word after the real source image."
+	printf "%s\n" "     if the fast, aligned 32-bit word comparison loop passes"
+	printf "%s\n" "     this point, the entire source image has been processed and"
+ 	printf "%s\n" "     the function terminates: */"
+	printf "%s\n" "  const tme_uint32_t *src_raw0_end;"
 
-	$as_echo ""
-	$as_echo "  /* declare xlat_run.  see the comment for the TME_FB_XLAT_RUN"
-	$as_echo "     macro for an explanation of what this variable does: */"
-	$as_echo "  int xlat_run;"
+	printf "%s\n" ""
+	printf "%s\n" "  /* declare xlat_run.  see the comment for the TME_FB_XLAT_RUN"
+	printf "%s\n" "     macro for an explanation of what this variable does: */"
+	printf "%s\n" "  int xlat_run;"
 
-	$as_echo ""
-	$as_echo "  /* this silences gcc -Wuninitialized: */"
-	$as_echo "  src_fifo0_next = 0;"
-	$as_echo "  src_fifo0_bits = 0;"
+	printf "%s\n" ""
+	printf "%s\n" "  /* this silences gcc -Wuninitialized: */"
+	printf "%s\n" "  src_fifo0_next = 0;"
+	printf "%s\n" "  src_fifo0_bits = 0;"
 	if test ${scale} = _h_; then
-	    $as_echo "  src_fifo1_next = 0;"
-	    $as_echo "  src_fifo1_bits = 0;"
+	    printf "%s\n" "  src_fifo1_next = 0;"
+	    printf "%s\n" "  src_fifo1_bits = 0;"
 	fi
-	$as_echo "  dst_fifo0_next = 0;"
-	$as_echo "  dst_fifo0_bits = 0;"
+	printf "%s\n" "  dst_fifo0_next = 0;"
+	printf "%s\n" "  dst_fifo0_bits = 0;"
 	if test ${scale} = _d_; then
-	    $as_echo "  dst_fifo1_next = 0;"
-	    $as_echo "  dst_fifo1_bits = 0;"
+	    printf "%s\n" "  dst_fifo1_next = 0;"
+	    printf "%s\n" "  dst_fifo1_bits = 0;"
 	fi
 
-	$as_echo ""
-	$as_echo "  /* initialize src_raw0 and src_raw0_end for the fast aligned 32-bit"
-	$as_echo "     word comparison loop.  on entry to (and when continuing) that loop,"
-	$as_echo "     src_raw0 always points to the aligned 32-bit word *before* the"
-	$as_echo "     next word to check.  src_raw0_end always points after the last"
-	$as_echo "     word to check."
-	$as_echo ""
-	$as_echo "     src_raw0 is actually part of the source primary bit FIFO, which"
-	$as_echo "     is good, because when the fast comparison fails on a word, src_raw0"
-	$as_echo "     is already primed and ready to work for that bit FIFO: */"
-	$as_echo "  src_offset_updated_first = src->tme_fb_connection_offset_updated_first;"
-	$as_echo "  src_offset_updated_last = TME_MIN(src->tme_fb_connection_offset_updated_last, src_bypb_real - 1);"
-	$as_echo "  src->tme_fb_connection_offset_updated_first = 0;"
-	$as_echo "  src->tme_fb_connection_offset_updated_last = src_bypb_real - 1;"
-	$as_echo "  if (src_offset_updated_first > src_offset_updated_last) {"
-	$as_echo "    return (FALSE);"
-	$as_echo "  }"
-	$as_echo "  src_raw0"
-	$as_echo "    = (((const tme_uint32_t *)"
-	$as_echo "        (src->tme_fb_connection_buffer"
-	$as_echo "         + (src_offset_updated_first"
-	$as_echo "            & (0 - (tme_uint32_t) sizeof(tme_uint32_t)))))"
-	$as_echo "       -1);"
-	$as_echo "  src_raw0_end"
-	$as_echo "    = ((const tme_uint32_t *)"
-	$as_echo "       (src->tme_fb_connection_buffer"
-	$as_echo "        + src_offset_updated_last"
-	$as_echo "        + 1));"
+	printf "%s\n" ""
+	printf "%s\n" "  /* initialize src_raw0 and src_raw0_end for the fast aligned 32-bit"
+	printf "%s\n" "     word comparison loop.  on entry to (and when continuing) that loop,"
+	printf "%s\n" "     src_raw0 always points to the aligned 32-bit word *before* the"
+	printf "%s\n" "     next word to check.  src_raw0_end always points after the last"
+	printf "%s\n" "     word to check."
+	printf "%s\n" ""
+	printf "%s\n" "     src_raw0 is actually part of the source primary bit FIFO, which"
+	printf "%s\n" "     is good, because when the fast comparison fails on a word, src_raw0"
+	printf "%s\n" "     is already primed and ready to work for that bit FIFO: */"
+	printf "%s\n" "  src_offset_updated_first = src->tme_fb_connection_offset_updated_first;"
+	printf "%s\n" "  src_offset_updated_last = TME_MIN(src->tme_fb_connection_offset_updated_last, src_bypb_real - 1);"
+	printf "%s\n" "  src->tme_fb_connection_offset_updated_first = 0;"
+	printf "%s\n" "  src->tme_fb_connection_offset_updated_last = src_bypb_real - 1;"
+	printf "%s\n" "  if (src_offset_updated_first > src_offset_updated_last) {"
+	printf "%s\n" "    return (FALSE);"
+	printf "%s\n" "  }"
+	printf "%s\n" "  src_raw0"
+	printf "%s\n" "    = (((const tme_uint32_t *)"
+	printf "%s\n" "        (src->tme_fb_connection_buffer"
+	printf "%s\n" "         + (src_offset_updated_first"
+	printf "%s\n" "            & (0 - (tme_uint32_t) sizeof(tme_uint32_t)))))"
+	printf "%s\n" "       -1);"
+	printf "%s\n" "  src_raw0_end"
+	printf "%s\n" "    = ((const tme_uint32_t *)"
+	printf "%s\n" "       (src->tme_fb_connection_buffer"
+	printf "%s\n" "        + src_offset_updated_last"
+	printf "%s\n" "        + 1));"
 
-	$as_echo ""
-	$as_echo "  /* initialize xlat_run to -1.  it can never go negative inside the"
-	$as_echo "     pixel translation loop, so if xlat_run stays negative for the"
-	$as_echo "     entire translation, it means that the source image hasn't changed"
-	$as_echo "     since the last translation.  this information is returned to the"
-	$as_echo "     caller to hopefully save more work in updating the display: */"
-	$as_echo "  xlat_run = -1;"
+	printf "%s\n" ""
+	printf "%s\n" "  /* initialize xlat_run to -1.  it can never go negative inside the"
+	printf "%s\n" "     pixel translation loop, so if xlat_run stays negative for the"
+	printf "%s\n" "     entire translation, it means that the source image hasn't changed"
+	printf "%s\n" "     since the last translation.  this information is returned to the"
+	printf "%s\n" "     caller to hopefully save more work in updating the display: */"
+	printf "%s\n" "  xlat_run = -1;"
 
-	$as_echo ""
-	$as_echo "  /* this is the main translation loop, which contains the fast aligned"
-	$as_echo "     32-bit word comparison loop, and the pixel translation loop: */"
-	$as_echo "  for (;;) {"
+	printf "%s\n" ""
+	printf "%s\n" "  /* this is the main translation loop, which contains the fast aligned"
+	printf "%s\n" "     32-bit word comparison loop, and the pixel translation loop: */"
+	printf "%s\n" "  for (;;) {"
 
-	$as_echo ""
-	$as_echo "    /* this is the fast aligned 32-bit word comparison loop.  it"
-	$as_echo "       terminates either when a word fails comparison, or when the"
-	$as_echo "       entire source image has been compared.  the if test that"
-	$as_echo "       follows checks for the latter case and breaks the main"
-	$as_echo "       translation loop: */"
-	$as_echo "    for (; (++src_raw0 < src_raw0_end"
-	$as_echo "            && *src_raw0 == *TME_FB_XLAT_SRC_OLD(src_raw0)); );"
-	$as_echo "    if (src_raw0 >= src_raw0_end) {"
-	$as_echo "      break;"
-	$as_echo "    }"
+	printf "%s\n" ""
+	printf "%s\n" "    /* this is the fast aligned 32-bit word comparison loop.  it"
+	printf "%s\n" "       terminates either when a word fails comparison, or when the"
+	printf "%s\n" "       entire source image has been compared.  the if test that"
+	printf "%s\n" "       follows checks for the latter case and breaks the main"
+	printf "%s\n" "       translation loop: */"
+	printf "%s\n" "    for (; (++src_raw0 < src_raw0_end"
+	printf "%s\n" "            && *src_raw0 == *TME_FB_XLAT_SRC_OLD(src_raw0)); );"
+	printf "%s\n" "    if (src_raw0 >= src_raw0_end) {"
+	printf "%s\n" "      break;"
+	printf "%s\n" "    }"
 
-	$as_echo ""
-	$as_echo "    /* calculate the byte offset into the source buffer of the"
-	$as_echo "       32-bit word that failed comparison: */"
-	$as_echo "    src_off = ((tme_uint8_t *) src_raw0) - src->tme_fb_connection_buffer;"
+	printf "%s\n" ""
+	printf "%s\n" "    /* calculate the byte offset into the source buffer of the"
+	printf "%s\n" "       32-bit word that failed comparison: */"
+	printf "%s\n" "    src_off = ((tme_uint8_t *) src_raw0) - src->tme_fb_connection_buffer;"
 
-	$as_echo ""
-	$as_echo "    /* calculate the source y pixel coordinate, and reduce"
-	$as_echo "       src_off from the byte offset into the buffer to the"
-	$as_echo "       byte offset into that scanline: */"
-	$as_echo "    src_y = src_off / src_bypl;"
-	$as_echo "    src_off = src_off % src_bypl;"
+	printf "%s\n" ""
+	printf "%s\n" "    /* calculate the source y pixel coordinate, and reduce"
+	printf "%s\n" "       src_off from the byte offset into the buffer to the"
+	printf "%s\n" "       byte offset into that scanline: */"
+	printf "%s\n" "    src_y = src_off / src_bypl;"
+	printf "%s\n" "    src_off = src_off % src_bypl;"
 
-	$as_echo ""
-	$as_echo "    /* while translating pixels, we use one or more \"bit FIFOs\","
-	$as_echo "       each composed of one or more 32-bit integers.  we load these"
-	$as_echo "       FIFOs 32 bits at a time. */"
-	$as_echo ""
-	$as_echo "    /* prime the visible part of the source primary bit FIFO: */"
-	$as_echo "    src_fifo0 = *src_raw0;"
-	$as_echo "    *TME_FB_XLAT_SRC_OLD(src_raw0) = src_fifo0;"
-	$as_echo "    src_raw0++;"
-	$as_echo "    src_fifo0 = ((src_order == TME_ENDIAN_BIG)"
-	$as_echo "                 ? tme_betoh_u32(src_fifo0)"
-	$as_echo "                 : tme_letoh_u32(src_fifo0));"
-	$as_echo ""
-	$as_echo "    /* if the source primary bit FIFO may be unaligned: */"
-	$as_echo "    if (src_fifo0_may_be_unaligned) {"
-	$as_echo ""
-	$as_echo "      /* prime the invisible part of the source primary bit FIFO and"
-	$as_echo "         assume that we will not have to shift it to finish: */"
-	$as_echo "      src_fifo0_next = *src_raw0;"
-	$as_echo "      *TME_FB_XLAT_SRC_OLD(src_raw0) = src_fifo0_next;"
-	$as_echo "      src_raw0++;"
-	$as_echo "      src_fifo0_next = ((src_order == TME_ENDIAN_BIG)"
-	$as_echo "                        ? tme_betoh_u32(src_fifo0_next)"
-	$as_echo "                        : tme_letoh_u32(src_fifo0_next));"
-	$as_echo "      src_fifo0_bits = 0;"
-	$as_echo ""
-	$as_echo "      /* if there are pixels that need to be skipped, the first 32 bits"
-	$as_echo "         we loaded into the FIFO may have first bits that belong to"
-	$as_echo "         those undisplayed (skipped) pixels.  it is *not* possible for"
-	$as_echo "         it to have first bits that belong to the scanline pad; there"
-	$as_echo "         might be pad bits in the *middle* of the first 32 bits, but any"
-	$as_echo "         first bits *must* belong to pixels, displayed or not: */"
-	$as_echo "      if (src_skipx > 0"
-	$as_echo "          && (src_off * 8) < (src_skipx * src_bipp)) {"
-	$as_echo ""
-	$as_echo "        /* see how many bits we will need to skip: */"
-	$as_echo "        src_fifo0_bits = (src_skipx * src_bipp) - (src_off * 8);"
-	$as_echo ""
-	$as_echo "        /* if it is more than 31 bits, this is an entire 32 bits of"
-	$as_echo "           undisplayed pixels.  just advance: */"
-	$as_echo "        if (src_fifo0_bits > 31) {"
-	$as_echo "          src_raw0--;"
-	$as_echo "          continue;"
-	$as_echo "        }"
-	$as_echo ""
-	$as_echo "        /* set the source x coordinate to zero: */"
-	$as_echo "        src_x = 0;"
-	$as_echo "      }"
-	$as_echo ""
-	$as_echo "      /* otherwise, the first 32 bits we load will have first bits for"
-	$as_echo "         a displayable pixel: */"
-	$as_echo "      else {"
-	$as_echo ""
-	$as_echo "        /* if the source bits per pixel is 24,  calculate the number of"
-	$as_echo "           bytes *before* the original src_raw0 of any split pixel, and"
-	$as_echo "           subtract this from src_off, to leave src_off as the byte offset"
-	$as_echo "           into the scanline of the beginning of a pixel: */"
-	$as_echo "        if (src_bipp == 24) {"
-	$as_echo "          src_fifo0_bits = (src_off % 3);"
-	$as_echo "          src_off -= src_fifo0_bits;"
-	$as_echo ""
-	$as_echo "          /* if this is a split pixel, we need to prime the source primary"
-	$as_echo "              bit FIFO starting with the part *before* the original src_raw0."
-	$as_echo "              we do not have to copy to the old; it passed comparison: */"
-	$as_echo "          if (src_fifo0_bits) {"
-	$as_echo "            src_raw0--;"
-	$as_echo "            src_fifo0_next = src_fifo0;"
-	$as_echo "            src_fifo0 = ((src_order == TME_ENDIAN_BIG)"
-	$as_echo "                         ? tme_betoh_u32(*(src_raw0 - 2))"
-	$as_echo "                         : tme_letoh_u32(*(src_raw0 - 2)));"
-	$as_echo "          }"
-	$as_echo "        }"
-	$as_echo ""
-	$as_echo "        /* calculate the source x coordinate: */"
-	$as_echo "        src_x = ((src_off * 8) / src_bipp) - src_skipx;"
-	$as_echo "      }"
-	$as_echo ""
-	$as_echo "      /* do any shifting to finish priming the source primary FIFO: */"
-	$as_echo "      if (src_fifo0_bits) {"
-	$as_echo "        if (src_order == TME_ENDIAN_BIG) {"
-	$as_echo "          src_fifo0 = (src_fifo0 << src_fifo0_bits) | (src_fifo0_next >> (32 - src_fifo0_bits));"
-	$as_echo "          src_fifo0_next <<= src_fifo0_bits;"
-	$as_echo "        }"
-	$as_echo "        else {"
-	$as_echo "          src_fifo0 = (src_fifo0 >> src_fifo0_bits) | (src_fifo0_next << (32 - src_fifo0_bits));"
-	$as_echo "          src_fifo0_next >>= src_fifo0_bits;"
-	$as_echo "        }"
-	$as_echo "      }"
-	$as_echo "      src_fifo0_bits = 64 - src_fifo0_bits;"
-	$as_echo "    }"
-	$as_echo ""
-	$as_echo "    /* otherwise, the source primary FIFO is aligned: */"
-	$as_echo "    else {"
-	$as_echo "      src_x = ((src_off * 8) / src_bipp) - src_skipx;"
-	$as_echo "    }"
+	printf "%s\n" ""
+	printf "%s\n" "    /* while translating pixels, we use one or more \"bit FIFOs\","
+	printf "%s\n" "       each composed of one or more 32-bit integers.  we load these"
+	printf "%s\n" "       FIFOs 32 bits at a time. */"
+	printf "%s\n" ""
+	printf "%s\n" "    /* prime the visible part of the source primary bit FIFO: */"
+	printf "%s\n" "    src_fifo0 = *src_raw0;"
+	printf "%s\n" "    *TME_FB_XLAT_SRC_OLD(src_raw0) = src_fifo0;"
+	printf "%s\n" "    src_raw0++;"
+	printf "%s\n" "    src_fifo0 = ((src_order == TME_ENDIAN_BIG)"
+	printf "%s\n" "                 ? tme_betoh_u32(src_fifo0)"
+	printf "%s\n" "                 : tme_letoh_u32(src_fifo0));"
+	printf "%s\n" ""
+	printf "%s\n" "    /* if the source primary bit FIFO may be unaligned: */"
+	printf "%s\n" "    if (src_fifo0_may_be_unaligned) {"
+	printf "%s\n" ""
+	printf "%s\n" "      /* prime the invisible part of the source primary bit FIFO and"
+	printf "%s\n" "         assume that we will not have to shift it to finish: */"
+	printf "%s\n" "      src_fifo0_next = *src_raw0;"
+	printf "%s\n" "      *TME_FB_XLAT_SRC_OLD(src_raw0) = src_fifo0_next;"
+	printf "%s\n" "      src_raw0++;"
+	printf "%s\n" "      src_fifo0_next = ((src_order == TME_ENDIAN_BIG)"
+	printf "%s\n" "                        ? tme_betoh_u32(src_fifo0_next)"
+	printf "%s\n" "                        : tme_letoh_u32(src_fifo0_next));"
+	printf "%s\n" "      src_fifo0_bits = 0;"
+	printf "%s\n" ""
+	printf "%s\n" "      /* if there are pixels that need to be skipped, the first 32 bits"
+	printf "%s\n" "         we loaded into the FIFO may have first bits that belong to"
+	printf "%s\n" "         those undisplayed (skipped) pixels.  it is *not* possible for"
+	printf "%s\n" "         it to have first bits that belong to the scanline pad; there"
+	printf "%s\n" "         might be pad bits in the *middle* of the first 32 bits, but any"
+	printf "%s\n" "         first bits *must* belong to pixels, displayed or not: */"
+	printf "%s\n" "      if (src_skipx > 0"
+	printf "%s\n" "          && (src_off * 8) < (src_skipx * src_bipp)) {"
+	printf "%s\n" ""
+	printf "%s\n" "        /* see how many bits we will need to skip: */"
+	printf "%s\n" "        src_fifo0_bits = (src_skipx * src_bipp) - (src_off * 8);"
+	printf "%s\n" ""
+	printf "%s\n" "        /* if it is more than 31 bits, this is an entire 32 bits of"
+	printf "%s\n" "           undisplayed pixels.  just advance: */"
+	printf "%s\n" "        if (src_fifo0_bits > 31) {"
+	printf "%s\n" "          src_raw0--;"
+	printf "%s\n" "          continue;"
+	printf "%s\n" "        }"
+	printf "%s\n" ""
+	printf "%s\n" "        /* set the source x coordinate to zero: */"
+	printf "%s\n" "        src_x = 0;"
+	printf "%s\n" "      }"
+	printf "%s\n" ""
+	printf "%s\n" "      /* otherwise, the first 32 bits we load will have first bits for"
+	printf "%s\n" "         a displayable pixel: */"
+	printf "%s\n" "      else {"
+	printf "%s\n" ""
+	printf "%s\n" "        /* if the source bits per pixel is 24,  calculate the number of"
+	printf "%s\n" "           bytes *before* the original src_raw0 of any split pixel, and"
+	printf "%s\n" "           subtract this from src_off, to leave src_off as the byte offset"
+	printf "%s\n" "           into the scanline of the beginning of a pixel: */"
+	printf "%s\n" "        if (src_bipp == 24) {"
+	printf "%s\n" "          src_fifo0_bits = (src_off % 3);"
+	printf "%s\n" "          src_off -= src_fifo0_bits;"
+	printf "%s\n" ""
+	printf "%s\n" "          /* if this is a split pixel, we need to prime the source primary"
+	printf "%s\n" "              bit FIFO starting with the part *before* the original src_raw0."
+	printf "%s\n" "              we do not have to copy to the old; it passed comparison: */"
+	printf "%s\n" "          if (src_fifo0_bits) {"
+	printf "%s\n" "            src_raw0--;"
+	printf "%s\n" "            src_fifo0_next = src_fifo0;"
+	printf "%s\n" "            src_fifo0 = ((src_order == TME_ENDIAN_BIG)"
+	printf "%s\n" "                         ? tme_betoh_u32(*(src_raw0 - 2))"
+	printf "%s\n" "                         : tme_letoh_u32(*(src_raw0 - 2)));"
+	printf "%s\n" "          }"
+	printf "%s\n" "        }"
+	printf "%s\n" ""
+	printf "%s\n" "        /* calculate the source x coordinate: */"
+	printf "%s\n" "        src_x = ((src_off * 8) / src_bipp) - src_skipx;"
+	printf "%s\n" "      }"
+	printf "%s\n" ""
+	printf "%s\n" "      /* do any shifting to finish priming the source primary FIFO: */"
+	printf "%s\n" "      if (src_fifo0_bits) {"
+	printf "%s\n" "        if (src_order == TME_ENDIAN_BIG) {"
+	printf "%s\n" "          src_fifo0 = (src_fifo0 << src_fifo0_bits) | (src_fifo0_next >> (32 - src_fifo0_bits));"
+	printf "%s\n" "          src_fifo0_next <<= src_fifo0_bits;"
+	printf "%s\n" "        }"
+	printf "%s\n" "        else {"
+	printf "%s\n" "          src_fifo0 = (src_fifo0 >> src_fifo0_bits) | (src_fifo0_next << (32 - src_fifo0_bits));"
+	printf "%s\n" "          src_fifo0_next >>= src_fifo0_bits;"
+	printf "%s\n" "        }"
+	printf "%s\n" "      }"
+	printf "%s\n" "      src_fifo0_bits = 64 - src_fifo0_bits;"
+	printf "%s\n" "    }"
+	printf "%s\n" ""
+	printf "%s\n" "    /* otherwise, the source primary FIFO is aligned: */"
+	printf "%s\n" "    else {"
+	printf "%s\n" "      src_x = ((src_off * 8) / src_bipp) - src_skipx;"
+	printf "%s\n" "    }"
 
 	if test $scale = _h_; then
-	    $as_echo ""
-	    $as_echo "    /* when halving the image, we have a source secondary bit "
-	    $as_echo "       FIFO, providing pixel values at the same source x coordinate"
-	    $as_echo "       but on the \"other\" line.  prime the source secondary"
-	    $as_echo "       bit FIFO: */"
-	    $as_echo "    if (src_fifo1_may_be_unaligned) {"
-	    $as_echo ""
-	    $as_echo "      /* calculate the bit offset into the source buffer of"
-	    $as_echo "         this exact same pixel on the other line: */"
-	    $as_echo "      src_off = ((src_y ^ 1) * src_bypl * 8) + ((src_skipx + src_x) * src_bipp);"
-	    $as_echo ""
-	    $as_echo "      /* calculate how many bits offset from a 32-bit boundary the pixel is: */"
-	    $as_echo "      src_fifo1_bits = src_off % 32;"
-	    $as_echo ""
-	    $as_echo "      /* set src_raw1: */"
-	    $as_echo "      src_raw1 = (const tme_uint32_t *)"
-	    $as_echo "        (src->tme_fb_connection_buffer"
-	    $as_echo "         + ((src_off - src_fifo1_bits) / 8));"
-	    $as_echo ""
-	    $as_echo "      /* actually prime the FIFO by loading the first two words and"
-	    $as_echo "         shifting off any offset bits: */"
-	    $as_echo "      src_fifo1 = *src_raw1;"
-	    $as_echo "      *TME_FB_XLAT_SRC_OLD(src_raw1) = src_fifo1;"
-	    $as_echo "      src_raw1++;"
-	    $as_echo "      src_fifo1_next = *src_raw1;"
-	    $as_echo "      *TME_FB_XLAT_SRC_OLD(src_raw1) = src_fifo1_next;"
-	    $as_echo "      src_raw1++;"
-	    $as_echo "      if (src_order == TME_ENDIAN_BIG) {"
-	    $as_echo "        src_fifo1 = tme_betoh_u32(src_fifo1);"
-	    $as_echo "        src_fifo1_next = tme_betoh_u32(src_fifo1_next);"
-	    $as_echo "        if (src_fifo1_bits) {"
-	    $as_echo "          src_fifo1 = (src_fifo1 << src_fifo1_bits) | (src_fifo1_next >> (32 - src_fifo1_bits));"
-	    $as_echo "          src_fifo1_next <<= src_fifo1_bits;"
-	    $as_echo "        }"
-	    $as_echo "      }"
-	    $as_echo "      else {"
-	    $as_echo "        src_fifo1 = tme_letoh_u32(src_fifo1);"
-	    $as_echo "        src_fifo1_next = tme_letoh_u32(src_fifo1_next);"
-	    $as_echo "        if (src_fifo1_bits) {"
-	    $as_echo "          src_fifo1 = (src_fifo1 >> src_fifo1_bits) | (src_fifo1_next << (32 - src_fifo1_bits));"
-	    $as_echo "          src_fifo1_next >>= src_fifo1_bits;"
-	    $as_echo "        }"
-	    $as_echo "      }"
-	    $as_echo "      src_fifo1_bits = 64 - src_fifo1_bits;"
-	    $as_echo "    }"
-	    $as_echo ""
-	    $as_echo "    /* otherwise the source secondary FIFO is aligned: */"
-	    $as_echo "    else {"
-	    $as_echo "      src_raw1 = (const tme_uint32_t *)"
-	    $as_echo "        (((tme_uint8_t *) src_raw0)"
-	    $as_echo "         + (("
-	    $as_echo "             /* if src_y is even, this addend is now src_bypl * 4,"
-	    $as_echo "                else if src_y is odd, this addend is now src_bypl * 2: */"
-	    $as_echo "             ((src_bypl * 4) >> (src_y & 1))"
-	    $as_echo "             /* if src_y is even, this addend is now src_bypl,"
-	    $as_echo "                else if src_y is odd, this addend is now -src_bypl: */"
-	    $as_echo "             - (src_bypl * 3))"
-	    $as_echo "            /* this -4 compensates for src_raw0 already having"
-	    $as_echo "               been advanced by one: */"
-	    $as_echo "            - 4));"
-	    $as_echo "      src_fifo1 = *src_raw1;"
-	    $as_echo "      *TME_FB_XLAT_SRC_OLD(src_raw1) = src_fifo1;"
-	    $as_echo "      src_raw1++;"
-	    $as_echo "      src_fifo1 = ((src_order == TME_ENDIAN_BIG)"
-	    $as_echo "                   ? tme_betoh_u32(src_fifo1)"
-	    $as_echo "                   : tme_letoh_u32(src_fifo1));"
-	    $as_echo "    }"
+	    printf "%s\n" ""
+	    printf "%s\n" "    /* when halving the image, we have a source secondary bit "
+	    printf "%s\n" "       FIFO, providing pixel values at the same source x coordinate"
+	    printf "%s\n" "       but on the \"other\" line.  prime the source secondary"
+	    printf "%s\n" "       bit FIFO: */"
+	    printf "%s\n" "    if (src_fifo1_may_be_unaligned) {"
+	    printf "%s\n" ""
+	    printf "%s\n" "      /* calculate the bit offset into the source buffer of"
+	    printf "%s\n" "         this exact same pixel on the other line: */"
+	    printf "%s\n" "      src_off = ((src_y ^ 1) * src_bypl * 8) + ((src_skipx + src_x) * src_bipp);"
+	    printf "%s\n" ""
+	    printf "%s\n" "      /* calculate how many bits offset from a 32-bit boundary the pixel is: */"
+	    printf "%s\n" "      src_fifo1_bits = src_off % 32;"
+	    printf "%s\n" ""
+	    printf "%s\n" "      /* set src_raw1: */"
+	    printf "%s\n" "      src_raw1 = (const tme_uint32_t *)"
+	    printf "%s\n" "        (src->tme_fb_connection_buffer"
+	    printf "%s\n" "         + ((src_off - src_fifo1_bits) / 8));"
+	    printf "%s\n" ""
+	    printf "%s\n" "      /* actually prime the FIFO by loading the first two words and"
+	    printf "%s\n" "         shifting off any offset bits: */"
+	    printf "%s\n" "      src_fifo1 = *src_raw1;"
+	    printf "%s\n" "      *TME_FB_XLAT_SRC_OLD(src_raw1) = src_fifo1;"
+	    printf "%s\n" "      src_raw1++;"
+	    printf "%s\n" "      src_fifo1_next = *src_raw1;"
+	    printf "%s\n" "      *TME_FB_XLAT_SRC_OLD(src_raw1) = src_fifo1_next;"
+	    printf "%s\n" "      src_raw1++;"
+	    printf "%s\n" "      if (src_order == TME_ENDIAN_BIG) {"
+	    printf "%s\n" "        src_fifo1 = tme_betoh_u32(src_fifo1);"
+	    printf "%s\n" "        src_fifo1_next = tme_betoh_u32(src_fifo1_next);"
+	    printf "%s\n" "        if (src_fifo1_bits) {"
+	    printf "%s\n" "          src_fifo1 = (src_fifo1 << src_fifo1_bits) | (src_fifo1_next >> (32 - src_fifo1_bits));"
+	    printf "%s\n" "          src_fifo1_next <<= src_fifo1_bits;"
+	    printf "%s\n" "        }"
+	    printf "%s\n" "      }"
+	    printf "%s\n" "      else {"
+	    printf "%s\n" "        src_fifo1 = tme_letoh_u32(src_fifo1);"
+	    printf "%s\n" "        src_fifo1_next = tme_letoh_u32(src_fifo1_next);"
+	    printf "%s\n" "        if (src_fifo1_bits) {"
+	    printf "%s\n" "          src_fifo1 = (src_fifo1 >> src_fifo1_bits) | (src_fifo1_next << (32 - src_fifo1_bits));"
+	    printf "%s\n" "          src_fifo1_next >>= src_fifo1_bits;"
+	    printf "%s\n" "        }"
+	    printf "%s\n" "      }"
+	    printf "%s\n" "      src_fifo1_bits = 64 - src_fifo1_bits;"
+	    printf "%s\n" "    }"
+	    printf "%s\n" ""
+	    printf "%s\n" "    /* otherwise the source secondary FIFO is aligned: */"
+	    printf "%s\n" "    else {"
+	    printf "%s\n" "      src_raw1 = (const tme_uint32_t *)"
+	    printf "%s\n" "        (((tme_uint8_t *) src_raw0)"
+	    printf "%s\n" "         + (("
+	    printf "%s\n" "             /* if src_y is even, this addend is now src_bypl * 4,"
+	    printf "%s\n" "                else if src_y is odd, this addend is now src_bypl * 2: */"
+	    printf "%s\n" "             ((src_bypl * 4) >> (src_y & 1))"
+	    printf "%s\n" "             /* if src_y is even, this addend is now src_bypl,"
+	    printf "%s\n" "                else if src_y is odd, this addend is now -src_bypl: */"
+	    printf "%s\n" "             - (src_bypl * 3))"
+	    printf "%s\n" "            /* this -4 compensates for src_raw0 already having"
+	    printf "%s\n" "               been advanced by one: */"
+	    printf "%s\n" "            - 4));"
+	    printf "%s\n" "      src_fifo1 = *src_raw1;"
+	    printf "%s\n" "      *TME_FB_XLAT_SRC_OLD(src_raw1) = src_fifo1;"
+	    printf "%s\n" "      src_raw1++;"
+	    printf "%s\n" "      src_fifo1 = ((src_order == TME_ENDIAN_BIG)"
+	    printf "%s\n" "                   ? tme_betoh_u32(src_fifo1)"
+	    printf "%s\n" "                   : tme_letoh_u32(src_fifo1));"
+	    printf "%s\n" "    }"
 	fi
 
 	if test $scale != _; then
-	    $as_echo ""
-	    $as_echo "    /* calculate the destination coordinates: */"
-	    $as_echo "    dst_y = src_y${scale_math};"
-	    $as_echo "    dst_x = src_x${scale_math};"
+	    printf "%s\n" ""
+	    printf "%s\n" "    /* calculate the destination coordinates: */"
+	    printf "%s\n" "    dst_y = src_y${scale_math};"
+	    printf "%s\n" "    dst_x = src_x${scale_math};"
 	fi
 
-	$as_echo ""
-	$as_echo "    /* prime the destination primary bit FIFO: */"
-	$as_echo "    dst_fifo0 = 0;"
-	$as_echo "    if (dst_fifo0_may_be_unaligned) {"
-	$as_echo ""
-	$as_echo "      /* calculate the bit offset into the destination buffer of"
-	$as_echo "         the destination pixel: */"
-	$as_echo "      dst_off = (dst_y * dst_bypl * 8) + ((dst_skipx + dst_x) * dst_bipp);"
-	$as_echo ""
-	$as_echo "      /* calculate the number of bits that will be in the primed FIFO: */"
-	$as_echo "      dst_fifo0_bits = dst_off % 32;"
-	$as_echo ""
-	$as_echo "      /* set dst_raw0: */"
-	$as_echo "      dst_raw0 = (tme_uint32_t *)"
-	$as_echo "        (dst->tme_fb_connection_buffer"
-	$as_echo "         + ((dst_off - dst_fifo0_bits) / 8));"
-	$as_echo ""
-	$as_echo "      /* prime the primary destination FIFO: */"
-	$as_echo "      dst_fifo0_next = 0;"
-	$as_echo "      if (dst_fifo0_bits) {"
-	$as_echo "        dst_fifo0_next = (src_order == TME_ENDIAN_BIG"
-	$as_echo "                          ? (tme_betoh_u32(*dst_raw0) & (0xffffffffUL << (32 - dst_fifo0_bits)))"
-	$as_echo "                          : (tme_letoh_u32(*dst_raw0) & (0xffffffffUL >> (32 - dst_fifo0_bits))));"
-	$as_echo "      }"
-	$as_echo "    }"
-	$as_echo ""
-	$as_echo "    /* otherwise the destination primary FIFO is aligned: */"
-	$as_echo "    else {"
-	$as_echo "      dst_off = (dst_y * dst_bypl) + (((dst_skipx + dst_x) * dst_bipp) / 8);"
-	$as_echo "      dst_raw0 = (tme_uint32_t *) (dst->tme_fb_connection_buffer + dst_off);"
-	$as_echo "    }"
+	printf "%s\n" ""
+	printf "%s\n" "    /* prime the destination primary bit FIFO: */"
+	printf "%s\n" "    dst_fifo0 = 0;"
+	printf "%s\n" "    if (dst_fifo0_may_be_unaligned) {"
+	printf "%s\n" ""
+	printf "%s\n" "      /* calculate the bit offset into the destination buffer of"
+	printf "%s\n" "         the destination pixel: */"
+	printf "%s\n" "      dst_off = (dst_y * dst_bypl * 8) + ((dst_skipx + dst_x) * dst_bipp);"
+	printf "%s\n" ""
+	printf "%s\n" "      /* calculate the number of bits that will be in the primed FIFO: */"
+	printf "%s\n" "      dst_fifo0_bits = dst_off % 32;"
+	printf "%s\n" ""
+	printf "%s\n" "      /* set dst_raw0: */"
+	printf "%s\n" "      dst_raw0 = (tme_uint32_t *)"
+	printf "%s\n" "        (dst->tme_fb_connection_buffer"
+	printf "%s\n" "         + ((dst_off - dst_fifo0_bits) / 8));"
+	printf "%s\n" ""
+	printf "%s\n" "      /* prime the primary destination FIFO: */"
+	printf "%s\n" "      dst_fifo0_next = 0;"
+	printf "%s\n" "      if (dst_fifo0_bits) {"
+	printf "%s\n" "        dst_fifo0_next = (src_order == TME_ENDIAN_BIG"
+	printf "%s\n" "                          ? (tme_betoh_u32(*dst_raw0) & (0xffffffffUL << (32 - dst_fifo0_bits)))"
+	printf "%s\n" "                          : (tme_letoh_u32(*dst_raw0) & (0xffffffffUL >> (32 - dst_fifo0_bits))));"
+	printf "%s\n" "      }"
+	printf "%s\n" "    }"
+	printf "%s\n" ""
+	printf "%s\n" "    /* otherwise the destination primary FIFO is aligned: */"
+	printf "%s\n" "    else {"
+	printf "%s\n" "      dst_off = (dst_y * dst_bypl) + (((dst_skipx + dst_x) * dst_bipp) / 8);"
+	printf "%s\n" "      dst_raw0 = (tme_uint32_t *) (dst->tme_fb_connection_buffer + dst_off);"
+	printf "%s\n" "    }"
 
 	if test $scale = _d_; then
-	    $as_echo ""
-	    $as_echo "    /* when doubling the image, we have a destination secondary bit "
-	    $as_echo "       FIFO, for pixel values at the same source x coordinate"
-	    $as_echo "       but on the \"other\" line.  prime the destination secondary"
-	    $as_echo "       bit FIFO: */"
-	    $as_echo "    dst_fifo1 = 0;"
-	    $as_echo "    if (dst_fifo1_may_be_unaligned) {"
-	    $as_echo ""
-	    $as_echo "      /* calculate the bit offset into the destination buffer of"
-	    $as_echo "         the destination pixel: */"
-	    $as_echo "      dst_off = ((dst_y + 1) * dst_bypl * 8) + ((dst_skipx + dst_x) * dst_bipp);"
-	    $as_echo ""
-	    $as_echo "      /* calculate the number of bits that will be in the primed FIFO: */"
-	    $as_echo "      dst_fifo1_bits = dst_off % 32;"
-	    $as_echo ""
-	    $as_echo "      /* set dst_raw1: */"
-	    $as_echo "      dst_raw1 = (tme_uint32_t *)"
-	    $as_echo "        (dst->tme_fb_connection_buffer"
-	    $as_echo "         + ((dst_off - dst_fifo1_bits) / 8));"
-	    $as_echo ""
-	    $as_echo "      /* prime the primary destination FIFO: */"
-	    $as_echo "      dst_fifo1_next = 0;"
-	    $as_echo "      if (dst_fifo1_bits) {"
-	    $as_echo "        dst_fifo1_next = (src_order == TME_ENDIAN_BIG"
-	    $as_echo "                          ? (tme_betoh_u32(*dst_raw1) & (0xffffffffUL << (32 - dst_fifo1_bits)))"
-	    $as_echo "                          : (tme_letoh_u32(*dst_raw1) & (0xffffffffUL >> (32 - dst_fifo1_bits))));"
-	    $as_echo "      }"
-	    $as_echo "    }"
-	    $as_echo ""
-	    $as_echo "    /* otherwise, the destination secondary FIFO is aligned: */"
-	    $as_echo "    else {"
-	    $as_echo "      dst_raw1 = (tme_uint32_t *)"
-	    $as_echo "        (((tme_uint8_t *) dst_raw0)"
-	    $as_echo "         + dst_bypl);"
-	    $as_echo "    }"
+	    printf "%s\n" ""
+	    printf "%s\n" "    /* when doubling the image, we have a destination secondary bit "
+	    printf "%s\n" "       FIFO, for pixel values at the same source x coordinate"
+	    printf "%s\n" "       but on the \"other\" line.  prime the destination secondary"
+	    printf "%s\n" "       bit FIFO: */"
+	    printf "%s\n" "    dst_fifo1 = 0;"
+	    printf "%s\n" "    if (dst_fifo1_may_be_unaligned) {"
+	    printf "%s\n" ""
+	    printf "%s\n" "      /* calculate the bit offset into the destination buffer of"
+	    printf "%s\n" "         the destination pixel: */"
+	    printf "%s\n" "      dst_off = ((dst_y + 1) * dst_bypl * 8) + ((dst_skipx + dst_x) * dst_bipp);"
+	    printf "%s\n" ""
+	    printf "%s\n" "      /* calculate the number of bits that will be in the primed FIFO: */"
+	    printf "%s\n" "      dst_fifo1_bits = dst_off % 32;"
+	    printf "%s\n" ""
+	    printf "%s\n" "      /* set dst_raw1: */"
+	    printf "%s\n" "      dst_raw1 = (tme_uint32_t *)"
+	    printf "%s\n" "        (dst->tme_fb_connection_buffer"
+	    printf "%s\n" "         + ((dst_off - dst_fifo1_bits) / 8));"
+	    printf "%s\n" ""
+	    printf "%s\n" "      /* prime the primary destination FIFO: */"
+	    printf "%s\n" "      dst_fifo1_next = 0;"
+	    printf "%s\n" "      if (dst_fifo1_bits) {"
+	    printf "%s\n" "        dst_fifo1_next = (src_order == TME_ENDIAN_BIG"
+	    printf "%s\n" "                          ? (tme_betoh_u32(*dst_raw1) & (0xffffffffUL << (32 - dst_fifo1_bits)))"
+	    printf "%s\n" "                          : (tme_letoh_u32(*dst_raw1) & (0xffffffffUL >> (32 - dst_fifo1_bits))));"
+	    printf "%s\n" "      }"
+	    printf "%s\n" "    }"
+	    printf "%s\n" ""
+	    printf "%s\n" "    /* otherwise, the destination secondary FIFO is aligned: */"
+	    printf "%s\n" "    else {"
+	    printf "%s\n" "      dst_raw1 = (tme_uint32_t *)"
+	    printf "%s\n" "        (((tme_uint8_t *) dst_raw0)"
+	    printf "%s\n" "         + dst_bypl);"
+	    printf "%s\n" "    }"
 	fi
 
 	# we want to unroll the pixel translation loop to read as many
@@ -2094,16 +2098,16 @@ for src_key in ${src_all}; do
 		src_fifo_shift=32
 	    fi
 
-	    $as_echo ""
-	    $as_echo "    /* since src_bipp is known at code-generation time, the"
-	    $as_echo "       pixel translation loop is unrolled to translate all"
-	    $as_echo "       source pixels in the 32-bit visible part of the source"
-	    $as_echo "       bit FIFO(s) before shifting."
-	    $as_echo ""
-	    $as_echo "       in this case, src_bipp is known to be ${src_bipp}, so "`expr ${src_unroll} \* ${src_iter_scale}`" pixels will"
-	    $as_echo "       be read out of the source bit FIFO(s) before shifting, and"
-	    $as_echo "       when the source bit FIFO(s) are shifted, they are shifted"
-	    $as_echo "       ${src_fifo_shift} bits at a time: */"
+	    printf "%s\n" ""
+	    printf "%s\n" "    /* since src_bipp is known at code-generation time, the"
+	    printf "%s\n" "       pixel translation loop is unrolled to translate all"
+	    printf "%s\n" "       source pixels in the 32-bit visible part of the source"
+	    printf "%s\n" "       bit FIFO(s) before shifting."
+	    printf "%s\n" ""
+	    printf "%s\n" "       in this case, src_bipp is known to be ${src_bipp}, so "`expr ${src_unroll} \* ${src_iter_scale}`" pixels will"
+	    printf "%s\n" "       be read out of the source bit FIFO(s) before shifting, and"
+	    printf "%s\n" "       when the source bit FIFO(s) are shifted, they are shifted"
+	    printf "%s\n" "       ${src_fifo_shift} bits at a time: */"
 	fi
 
 	# if dst_bipp is known now, see how many times we can unroll the
@@ -2141,16 +2145,16 @@ for src_key in ${src_all}; do
 		dst_fifo_shift=32
 	    fi
 
-	    $as_echo ""
-	    $as_echo "    /* since dst_bipp is known at code-generation time, the pixel"
-	    $as_echo "       translation loop is unrolled to translate all destination"
-	    $as_echo "       pixels in the 32-bit visible part of the destination bit"
-	    $as_echo "       FIFO(s) before shifting."
-	    $as_echo ""
-	    $as_echo "       in this case, dst_bipp is known to be ${dst_bipp}, so "`expr ${dst_unroll} \* ${dst_iter_scale}`" pixels will"
-	    $as_echo "       be written into the destination bit FIFO(s) before shifting,"
-	    $as_echo "       and when the destination bit FIFO(s) are shifted, they are"
-	    $as_echo "       shifted ${dst_fifo_shift} bits at a time: */"
+	    printf "%s\n" ""
+	    printf "%s\n" "    /* since dst_bipp is known at code-generation time, the pixel"
+	    printf "%s\n" "       translation loop is unrolled to translate all destination"
+	    printf "%s\n" "       pixels in the 32-bit visible part of the destination bit"
+	    printf "%s\n" "       FIFO(s) before shifting."
+	    printf "%s\n" ""
+	    printf "%s\n" "       in this case, dst_bipp is known to be ${dst_bipp}, so "`expr ${dst_unroll} \* ${dst_iter_scale}`" pixels will"
+	    printf "%s\n" "       be written into the destination bit FIFO(s) before shifting,"
+	    printf "%s\n" "       and when the destination bit FIFO(s) are shifted, they are"
+	    printf "%s\n" "       shifted ${dst_fifo_shift} bits at a time: */"
 	fi
 
 	# unroll the translation loop the maximum number amount of times:
@@ -2161,17 +2165,17 @@ for src_key in ${src_all}; do
 	    unroll=${dst_unroll}
 	fi
 
-	$as_echo ""
-	$as_echo "    /* src_unroll = ${src_unroll}, src_iter_scale = ${src_iter_scale}"
-	$as_echo "       dst_unroll = ${dst_unroll}, dst_iter_scale = ${dst_iter_scale} */"
-	$as_echo "    for (xlat_run = TME_FB_XLAT_RUN;"
-	$as_echo "         xlat_run > 0; ) {"
+	printf "%s\n" ""
+	printf "%s\n" "    /* src_unroll = ${src_unroll}, src_iter_scale = ${src_iter_scale}"
+	printf "%s\n" "       dst_unroll = ${dst_unroll}, dst_iter_scale = ${dst_iter_scale} */"
+	printf "%s\n" "    for (xlat_run = TME_FB_XLAT_RUN;"
+	printf "%s\n" "         xlat_run > 0; ) {"
 	iter=0
 
 	while test `expr ${iter} \< ${unroll}` = 1; do
-	    $as_echo ""
-	    $as_echo "      /* iter #${iter} */"
-	    $as_echo ""
+	    printf "%s\n" ""
+	    printf "%s\n" "      /* iter #${iter} */"
+	    printf "%s\n" ""
 	    iter_next=`expr ${iter} + 1`
 
 	    # the number of bits to skip in a source FIFO to get to
@@ -2179,41 +2183,41 @@ for src_key in ${src_all}; do
 	    src_shift=`expr ${iter} % ${src_unroll}`
 	    src_shift='('`expr ${src_shift} \* ${src_iter_scale}`' * src_bipp)'
 
-	    $as_echo "      /* get a pixel from the source primary FIFO: */"
-	    $as_echo "      pixel ="
-	    $as_echo "        ((src_fifo0"
-	    $as_echo "          >> (src_order == TME_ENDIAN_BIG"
-	    $as_echo "              ? (32 - (src_bipp + ${src_shift}))"
-	    $as_echo "              : ${src_shift})));"
+	    printf "%s\n" "      /* get a pixel from the source primary FIFO: */"
+	    printf "%s\n" "      pixel ="
+	    printf "%s\n" "        ((src_fifo0"
+	    printf "%s\n" "          >> (src_order == TME_ENDIAN_BIG"
+	    printf "%s\n" "              ? (32 - (src_bipp + ${src_shift}))"
+	    printf "%s\n" "              : ${src_shift})));"
 	    indent0=X
 
 	    if test $scale != _h_; then
 
 		if test "x${src_mask_g}" = x; then
-		    $as_echo ""
-		    $as_echo "      /* since source pixels are known at compile time to"
-		    $as_echo "         not have subfields, map the source pixel into the"
-		    $as_echo "         destination pixel: */"
-		    $as_echo "      pixel = dst->tme_fb_connection_map_pixel[pixel & src_mask];"
+		    printf "%s\n" ""
+		    printf "%s\n" "      /* since source pixels are known at compile time to"
+		    printf "%s\n" "         not have subfields, map the source pixel into the"
+		    printf "%s\n" "         destination pixel: */"
+		    printf "%s\n" "      pixel = dst->tme_fb_connection_map_pixel[pixel & src_mask];"
 		else
-		    $as_echo ""
-		    $as_echo "      /* if the source depth is within the threshold for pixel"
-		    $as_echo "         mapping, or if source pixels don't have subfields,"
-		    $as_echo "         map the source pixel into the destination pixel: */"
-		    $as_echo "      if (src_mask <= TME_FB_XLAT_MAP_INDEX_MASK_MAX"
-		    $as_echo "          || src_mask_g == src_mask) {"
-		    $as_echo "        pixel = dst->tme_fb_connection_map_pixel[pixel & src_mask];"
-		    $as_echo "      }"
-		    $as_echo ""
-		    $as_echo "      /* otherwise, we will decompose this source pixel"
-		    $as_echo "         and then compose the destination pixel: */"
-		    $as_echo "      else {"
-		    $as_echo ""
-		    $as_echo "        /* map the pixel subfields into intensities: */"
-		    $as_echo "        value_g = TME_FB_XLAT_MAP(pixel, src_mask_g, src_mask_i, src_indexed, src->tme_fb_connection_map_g);"
+		    printf "%s\n" ""
+		    printf "%s\n" "      /* if the source depth is within the threshold for pixel"
+		    printf "%s\n" "         mapping, or if source pixels don't have subfields,"
+		    printf "%s\n" "         map the source pixel into the destination pixel: */"
+		    printf "%s\n" "      if (src_mask <= TME_FB_XLAT_MAP_INDEX_MASK_MAX"
+		    printf "%s\n" "          || src_mask_g == src_mask) {"
+		    printf "%s\n" "        pixel = dst->tme_fb_connection_map_pixel[pixel & src_mask];"
+		    printf "%s\n" "      }"
+		    printf "%s\n" ""
+		    printf "%s\n" "      /* otherwise, we will decompose this source pixel"
+		    printf "%s\n" "         and then compose the destination pixel: */"
+		    printf "%s\n" "      else {"
+		    printf "%s\n" ""
+		    printf "%s\n" "        /* map the pixel subfields into intensities: */"
+		    printf "%s\n" "        value_g = TME_FB_XLAT_MAP(pixel, src_mask_g, src_mask_i, src_indexed, src->tme_fb_connection_map_g);"
 		    if test "x${src_class}" != xm; then
-			$as_echo "        value_r = TME_FB_XLAT_MAP(pixel, src_mask_r, src_mask_i, src_indexed, src->tme_fb_connection_map_r);"
-			$as_echo "        value_b = TME_FB_XLAT_MAP(pixel, src_mask_b, src_mask_i, src_indexed, src->tme_fb_connection_map_b);"
+			printf "%s\n" "        value_r = TME_FB_XLAT_MAP(pixel, src_mask_r, src_mask_i, src_indexed, src->tme_fb_connection_map_r);"
+			printf "%s\n" "        value_b = TME_FB_XLAT_MAP(pixel, src_mask_b, src_mask_i, src_indexed, src->tme_fb_connection_map_b);"
 		    fi
 		    indent0="  "
 		    src_mask_i=src_mask_i
@@ -2222,111 +2226,111 @@ for src_key in ${src_all}; do
 
 	    else
 
-		$as_echo ""
-		$as_echo "      /* map the pixel subfields into intensities: */"
-		$as_echo "      value_g = TME_FB_XLAT_MAP(pixel, src_mask_g, src_mask_i, src_indexed, src->tme_fb_connection_map_g);"
+		printf "%s\n" ""
+		printf "%s\n" "      /* map the pixel subfields into intensities: */"
+		printf "%s\n" "      value_g = TME_FB_XLAT_MAP(pixel, src_mask_g, src_mask_i, src_indexed, src->tme_fb_connection_map_g);"
 		if test "x${src_class}" != xm; then
-		    $as_echo "      value_r = TME_FB_XLAT_MAP(pixel, src_mask_r, src_mask_i, src_indexed, src->tme_fb_connection_map_r);"
-		    $as_echo "      value_b = TME_FB_XLAT_MAP(pixel, src_mask_b, src_mask_i, src_indexed, src->tme_fb_connection_map_b);"
+		    printf "%s\n" "      value_r = TME_FB_XLAT_MAP(pixel, src_mask_r, src_mask_i, src_indexed, src->tme_fb_connection_map_r);"
+		    printf "%s\n" "      value_b = TME_FB_XLAT_MAP(pixel, src_mask_b, src_mask_i, src_indexed, src->tme_fb_connection_map_b);"
 		fi
 
-		$as_echo ""
-		$as_echo "      /* get a second pixel, from the source secondary FIFO: */"
-		$as_echo "      pixel ="
-		$as_echo "        ((src_fifo1"
-		$as_echo "          >> (src_order == TME_ENDIAN_BIG"
-		$as_echo "              ? (32 - (src_bipp + ${src_shift}))"
-		$as_echo "              : ${src_shift})));"
+		printf "%s\n" ""
+		printf "%s\n" "      /* get a second pixel, from the source secondary FIFO: */"
+		printf "%s\n" "      pixel ="
+		printf "%s\n" "        ((src_fifo1"
+		printf "%s\n" "          >> (src_order == TME_ENDIAN_BIG"
+		printf "%s\n" "              ? (32 - (src_bipp + ${src_shift}))"
+		printf "%s\n" "              : ${src_shift})));"
 
-		$as_echo ""
-		$as_echo "      /* map the pixel subfields into intensities and accumulate them: */"
-		$as_echo "      value_g += TME_FB_XLAT_MAP(pixel, src_mask_g, src_mask_i, src_indexed, src->tme_fb_connection_map_g);"
+		printf "%s\n" ""
+		printf "%s\n" "      /* map the pixel subfields into intensities and accumulate them: */"
+		printf "%s\n" "      value_g += TME_FB_XLAT_MAP(pixel, src_mask_g, src_mask_i, src_indexed, src->tme_fb_connection_map_g);"
 		if test "x${src_class}" != xm; then
-		    $as_echo "      value_r += TME_FB_XLAT_MAP(pixel, src_mask_r, src_mask_i, src_indexed, src->tme_fb_connection_map_r);"
-		    $as_echo "      value_b += TME_FB_XLAT_MAP(pixel, src_mask_b, src_mask_i, src_indexed, src->tme_fb_connection_map_b);"
+		    printf "%s\n" "      value_r += TME_FB_XLAT_MAP(pixel, src_mask_r, src_mask_i, src_indexed, src->tme_fb_connection_map_r);"
+		    printf "%s\n" "      value_b += TME_FB_XLAT_MAP(pixel, src_mask_b, src_mask_i, src_indexed, src->tme_fb_connection_map_b);"
 		fi
 
-		$as_echo ""
-		$as_echo "      /* get third and fourth pixels, from the source primary"
-		$as_echo "         FIFO and source secondary FIFO, respectively.  if"
-		$as_echo "         src_bipp is 24 or greater, these pixels are not yet"
-		$as_echo "         entirely in the first parts of the FIFOs, so we need"
-		$as_echo "         to shift: */"
-		$as_echo "      if (src_bipp >= 24) {"
-		$as_echo "        TME_FB_XLAT_SHIFT_SRC(src_fifo0_may_be_unaligned,"
-		$as_echo "                              src_fifo0,"
-		$as_echo "                              src_fifo0_next,"
-		$as_echo "                              src_fifo0_bits,"
-		$as_echo "                              src_bipp,"
-		$as_echo "                              src_raw0,"
-		$as_echo "                              src_order);"
-		$as_echo "        TME_FB_XLAT_SHIFT_SRC(src_fifo1_may_be_unaligned,"
-		$as_echo "                              src_fifo1,"
-		$as_echo "                              src_fifo1_next,"
-		$as_echo "                              src_fifo1_bits,"
-		$as_echo "                              src_bipp,"
-		$as_echo "                              src_raw1,"
-		$as_echo "                              src_order);"
-		$as_echo "        pixel ="
-		$as_echo "          ((src_fifo0"
-		$as_echo "            >> (src_order == TME_ENDIAN_BIG"
-		$as_echo "                ? (32 - (src_bipp + ${src_shift}))"
-		$as_echo "                : ${src_shift})));"
+		printf "%s\n" ""
+		printf "%s\n" "      /* get third and fourth pixels, from the source primary"
+		printf "%s\n" "         FIFO and source secondary FIFO, respectively.  if"
+		printf "%s\n" "         src_bipp is 24 or greater, these pixels are not yet"
+		printf "%s\n" "         entirely in the first parts of the FIFOs, so we need"
+		printf "%s\n" "         to shift: */"
+		printf "%s\n" "      if (src_bipp >= 24) {"
+		printf "%s\n" "        TME_FB_XLAT_SHIFT_SRC(src_fifo0_may_be_unaligned,"
+		printf "%s\n" "                              src_fifo0,"
+		printf "%s\n" "                              src_fifo0_next,"
+		printf "%s\n" "                              src_fifo0_bits,"
+		printf "%s\n" "                              src_bipp,"
+		printf "%s\n" "                              src_raw0,"
+		printf "%s\n" "                              src_order);"
+		printf "%s\n" "        TME_FB_XLAT_SHIFT_SRC(src_fifo1_may_be_unaligned,"
+		printf "%s\n" "                              src_fifo1,"
+		printf "%s\n" "                              src_fifo1_next,"
+		printf "%s\n" "                              src_fifo1_bits,"
+		printf "%s\n" "                              src_bipp,"
+		printf "%s\n" "                              src_raw1,"
+		printf "%s\n" "                              src_order);"
+		printf "%s\n" "        pixel ="
+		printf "%s\n" "          ((src_fifo0"
+		printf "%s\n" "            >> (src_order == TME_ENDIAN_BIG"
+		printf "%s\n" "                ? (32 - (src_bipp + ${src_shift}))"
+		printf "%s\n" "                : ${src_shift})));"
 
-		$as_echo ""
-		$as_echo "        /* map the pixel subfields into intensities and accumulate them: */"
-		$as_echo "        value_g += TME_FB_XLAT_MAP(pixel, src_mask_g, src_mask_i, src_indexed, src->tme_fb_connection_map_g);"
+		printf "%s\n" ""
+		printf "%s\n" "        /* map the pixel subfields into intensities and accumulate them: */"
+		printf "%s\n" "        value_g += TME_FB_XLAT_MAP(pixel, src_mask_g, src_mask_i, src_indexed, src->tme_fb_connection_map_g);"
 		if test "x${src_class}" != xm; then
-		    $as_echo "        value_r += TME_FB_XLAT_MAP(pixel, src_mask_r, src_mask_i, src_indexed, src->tme_fb_connection_map_r);"
-		    $as_echo "        value_b += TME_FB_XLAT_MAP(pixel, src_mask_b, src_mask_i, src_indexed, src->tme_fb_connection_map_b);"
+		    printf "%s\n" "        value_r += TME_FB_XLAT_MAP(pixel, src_mask_r, src_mask_i, src_indexed, src->tme_fb_connection_map_r);"
+		    printf "%s\n" "        value_b += TME_FB_XLAT_MAP(pixel, src_mask_b, src_mask_i, src_indexed, src->tme_fb_connection_map_b);"
 		fi
-		$as_echo ""
+		printf "%s\n" ""
 
-		$as_echo "        pixel ="
-		$as_echo "          ((src_fifo1"
-		$as_echo "            >> (src_order == TME_ENDIAN_BIG"
-		$as_echo "                ? (32 - (src_bipp + ${src_shift}))"
-		$as_echo "                : ${src_shift})));"
+		printf "%s\n" "        pixel ="
+		printf "%s\n" "          ((src_fifo1"
+		printf "%s\n" "            >> (src_order == TME_ENDIAN_BIG"
+		printf "%s\n" "                ? (32 - (src_bipp + ${src_shift}))"
+		printf "%s\n" "                : ${src_shift})));"
 
-		$as_echo ""
-		$as_echo "        /* map the pixel subfields into intensities and accumulate them: */"
-		$as_echo "        value_g += TME_FB_XLAT_MAP(pixel, src_mask_g, src_mask_i, src_indexed, src->tme_fb_connection_map_g);"
+		printf "%s\n" ""
+		printf "%s\n" "        /* map the pixel subfields into intensities and accumulate them: */"
+		printf "%s\n" "        value_g += TME_FB_XLAT_MAP(pixel, src_mask_g, src_mask_i, src_indexed, src->tme_fb_connection_map_g);"
 		if test "x${src_class}" != xm; then
-		    $as_echo "        value_r += TME_FB_XLAT_MAP(pixel, src_mask_r, src_mask_i, src_indexed, src->tme_fb_connection_map_r);"
-		    $as_echo "        value_b += TME_FB_XLAT_MAP(pixel, src_mask_b, src_mask_i, src_indexed, src->tme_fb_connection_map_b);"
+		    printf "%s\n" "        value_r += TME_FB_XLAT_MAP(pixel, src_mask_r, src_mask_i, src_indexed, src->tme_fb_connection_map_r);"
+		    printf "%s\n" "        value_b += TME_FB_XLAT_MAP(pixel, src_mask_b, src_mask_i, src_indexed, src->tme_fb_connection_map_b);"
 		fi
-		$as_echo "      }"
-		$as_echo ""
-		$as_echo "      /* otherwise, the third and fourth pixels are already in the"
-		$as_echo "         visible parts of the source bit FIFOs; we just have to"
-		$as_echo "         reach over the pixels we already read to get at them: */"
-		$as_echo "      else {"
-		$as_echo "        pixel ="
-		$as_echo "          ((src_fifo0"
-		$as_echo "            >> (src_order == TME_ENDIAN_BIG"
-		$as_echo "                ? (32 - (src_bipp + (${src_shift} + src_bipp)))"
-		$as_echo "                : (${src_shift} + src_bipp))));"
-		$as_echo ""
-		$as_echo "        /* map the pixel subfields into intensities and accumulate them: */"
-		$as_echo "        value_g += TME_FB_XLAT_MAP(pixel, src_mask_g, src_mask_i, src_indexed, src->tme_fb_connection_map_g);"
+		printf "%s\n" "      }"
+		printf "%s\n" ""
+		printf "%s\n" "      /* otherwise, the third and fourth pixels are already in the"
+		printf "%s\n" "         visible parts of the source bit FIFOs; we just have to"
+		printf "%s\n" "         reach over the pixels we already read to get at them: */"
+		printf "%s\n" "      else {"
+		printf "%s\n" "        pixel ="
+		printf "%s\n" "          ((src_fifo0"
+		printf "%s\n" "            >> (src_order == TME_ENDIAN_BIG"
+		printf "%s\n" "                ? (32 - (src_bipp + (${src_shift} + src_bipp)))"
+		printf "%s\n" "                : (${src_shift} + src_bipp))));"
+		printf "%s\n" ""
+		printf "%s\n" "        /* map the pixel subfields into intensities and accumulate them: */"
+		printf "%s\n" "        value_g += TME_FB_XLAT_MAP(pixel, src_mask_g, src_mask_i, src_indexed, src->tme_fb_connection_map_g);"
 		if test "x${src_class}" != xm; then
-		    $as_echo "        value_r += TME_FB_XLAT_MAP(pixel, src_mask_r, src_mask_i, src_indexed, src->tme_fb_connection_map_r);"
-		    $as_echo "        value_b += TME_FB_XLAT_MAP(pixel, src_mask_b, src_mask_i, src_indexed, src->tme_fb_connection_map_b);"
+		    printf "%s\n" "        value_r += TME_FB_XLAT_MAP(pixel, src_mask_r, src_mask_i, src_indexed, src->tme_fb_connection_map_r);"
+		    printf "%s\n" "        value_b += TME_FB_XLAT_MAP(pixel, src_mask_b, src_mask_i, src_indexed, src->tme_fb_connection_map_b);"
 		fi
-		$as_echo ""
-		$as_echo "        pixel ="
-		$as_echo "          ((src_fifo1"
-		$as_echo "            >> (src_order == TME_ENDIAN_BIG"
-		$as_echo "                ? (32 - (src_bipp + (${src_shift} + src_bipp)))"
-		$as_echo "                : (${src_shift} + src_bipp))));"
-		$as_echo ""
-		$as_echo "        /* map the pixel subfields into intensities and accumulate them: */"
-		$as_echo "        value_g += TME_FB_XLAT_MAP(pixel, src_mask_g, src_mask_i, src_indexed, src->tme_fb_connection_map_g);"
+		printf "%s\n" ""
+		printf "%s\n" "        pixel ="
+		printf "%s\n" "          ((src_fifo1"
+		printf "%s\n" "            >> (src_order == TME_ENDIAN_BIG"
+		printf "%s\n" "                ? (32 - (src_bipp + (${src_shift} + src_bipp)))"
+		printf "%s\n" "                : (${src_shift} + src_bipp))));"
+		printf "%s\n" ""
+		printf "%s\n" "        /* map the pixel subfields into intensities and accumulate them: */"
+		printf "%s\n" "        value_g += TME_FB_XLAT_MAP(pixel, src_mask_g, src_mask_i, src_indexed, src->tme_fb_connection_map_g);"
 		if test "x${src_class}" != xm; then
-		    $as_echo "        value_r += TME_FB_XLAT_MAP(pixel, src_mask_r, src_mask_i, src_indexed, src->tme_fb_connection_map_r);"
-		    $as_echo "        value_b += TME_FB_XLAT_MAP(pixel, src_mask_b, src_mask_i, src_indexed, src->tme_fb_connection_map_b);"
+		    printf "%s\n" "        value_r += TME_FB_XLAT_MAP(pixel, src_mask_r, src_mask_i, src_indexed, src->tme_fb_connection_map_r);"
+		    printf "%s\n" "        value_b += TME_FB_XLAT_MAP(pixel, src_mask_b, src_mask_i, src_indexed, src->tme_fb_connection_map_b);"
 		fi
-		$as_echo "      }"
+		printf "%s\n" "      }"
 		indent0=
 		src_mask_i='((src_mask_i * 4) + 3)'
 		src_mask_i_max='(TME_FB_XLAT_MAP_INDEX_MASK_MAX / 4)'
@@ -2335,290 +2339,290 @@ for src_key in ${src_all}; do
 	    # if we may have intensities:
 	    #
 	    if test "X${indent0}" != XX; then
-		$as_echo ""
+		printf "%s\n" ""
 		indent1=X
 		case "x${src_class}" in
 		xm)
-		    $as_echo "${indent0}      /* since the source_class is known as monochrome at code-generation"
-		    $as_echo "${indent0}         time, we map the green intensity directly into a pixel.  we may have"
-		    $as_echo "${indent0}         to scale the intensity to be in the lookup range: */"
-		    $as_echo "${indent0}      if (src_mask_i > ${src_mask_i_max}) {"
-		    $as_echo "${indent0}        value_g /= TME_FB_XLAT_MAP_LINEAR_SCALE(${src_mask_i}, TME_FB_XLAT_MAP_INDEX_MASK_MAX);"
-		    $as_echo "${indent0}      }"
-		    $as_echo "${indent0}      pixel = dst->tme_fb_connection_map_pixel[value_g];"
+		    printf "%s\n" "${indent0}      /* since the source_class is known as monochrome at code-generation"
+		    printf "%s\n" "${indent0}         time, we map the green intensity directly into a pixel.  we may have"
+		    printf "%s\n" "${indent0}         to scale the intensity to be in the lookup range: */"
+		    printf "%s\n" "${indent0}      if (src_mask_i > ${src_mask_i_max}) {"
+		    printf "%s\n" "${indent0}        value_g /= TME_FB_XLAT_MAP_LINEAR_SCALE(${src_mask_i}, TME_FB_XLAT_MAP_INDEX_MASK_MAX);"
+		    printf "%s\n" "${indent0}      }"
+		    printf "%s\n" "${indent0}      pixel = dst->tme_fb_connection_map_pixel[value_g];"
 		    ;;
 		x)
-		    $as_echo "${indent0}      /* if the source class is monochrome, we map the green intensity"
-		    $as_echo "${indent0}         directly into a pixel.  we may have to scale the intensity"
-		    $as_echo "${indent0}         to be in the lookup range: */"
-		    $as_echo "${indent0}      if (src->tme_fb_connection_class == TME_FB_XLAT_CLASS_MONOCHROME) {"
-		    $as_echo "${indent0}        if (src_mask_i > ${src_mask_i_max}) {"
-		    $as_echo "${indent0}          value_g /= TME_FB_XLAT_MAP_LINEAR_SCALE(${src_mask_i}, TME_FB_XLAT_MAP_INDEX_MASK_MAX);"
-		    $as_echo "${indent0}        }"
-		    $as_echo "${indent0}        pixel = dst->tme_fb_connection_map_pixel[value_g];"
-		    $as_echo "${indent0}      }"
-		    $as_echo ""
-		    $as_echo "${indent0}      /* otherwise, we have to consider all three intensities: */"
-		    $as_echo "${indent0}      else {"
+		    printf "%s\n" "${indent0}      /* if the source class is monochrome, we map the green intensity"
+		    printf "%s\n" "${indent0}         directly into a pixel.  we may have to scale the intensity"
+		    printf "%s\n" "${indent0}         to be in the lookup range: */"
+		    printf "%s\n" "${indent0}      if (src->tme_fb_connection_class == TME_FB_XLAT_CLASS_MONOCHROME) {"
+		    printf "%s\n" "${indent0}        if (src_mask_i > ${src_mask_i_max}) {"
+		    printf "%s\n" "${indent0}          value_g /= TME_FB_XLAT_MAP_LINEAR_SCALE(${src_mask_i}, TME_FB_XLAT_MAP_INDEX_MASK_MAX);"
+		    printf "%s\n" "${indent0}        }"
+		    printf "%s\n" "${indent0}        pixel = dst->tme_fb_connection_map_pixel[value_g];"
+		    printf "%s\n" "${indent0}      }"
+		    printf "%s\n" ""
+		    printf "%s\n" "${indent0}      /* otherwise, we have to consider all three intensities: */"
+		    printf "%s\n" "${indent0}      else {"
 		    indent1="${indent0}  "
 		    ;;
 		*)
-		    $as_echo "${indent0}      /* we have to consider all three intensities: */"
+		    printf "%s\n" "${indent0}      /* we have to consider all three intensities: */"
 		    indent1="${indent0}"
 		esac
 
 		if test "X${indent1}" != "XX"; then
-		    $as_echo ""
-		    $as_echo "${indent1}      /* if destination intensities are indexed: */"
-		    $as_echo "${indent1}      if (dst_indexed) {"
-		    $as_echo ""
-		    $as_echo "${indent1}        /* we may have to scale the intensities to be in the lookup range: */"
-		    $as_echo "${indent1}        if (src_mask_i > ${src_mask_i_max}) {"
-		    $as_echo "${indent1}          value_g /= TME_FB_XLAT_MAP_LINEAR_SCALE(${src_mask_i}, TME_FB_XLAT_MAP_INDEX_MASK_MAX);"
-		    $as_echo "${indent1}          value_r /= TME_FB_XLAT_MAP_LINEAR_SCALE(${src_mask_i}, TME_FB_XLAT_MAP_INDEX_MASK_MAX);"
-		    $as_echo "${indent1}          value_b /= TME_FB_XLAT_MAP_LINEAR_SCALE(${src_mask_i}, TME_FB_XLAT_MAP_INDEX_MASK_MAX);"
-		    $as_echo "${indent1}        }"
-		    $as_echo ""
-		    $as_echo "${indent1}        /* form the pixel: */"
-		    $as_echo "${indent1}        pixel  = _TME_FB_XLAT_MAP_INDEX(value_g, dst_mask_g, dst->tme_fb_connection_map_g);"
-		    $as_echo "${indent1}        pixel |= _TME_FB_XLAT_MAP_INDEX(value_r, dst_mask_r, dst->tme_fb_connection_map_r);"
-		    $as_echo "${indent1}        pixel |= _TME_FB_XLAT_MAP_INDEX(value_b, dst_mask_b, dst->tme_fb_connection_map_b);"
-		    $as_echo "${indent1}        pixel |= 0xff000000;"
-		    $as_echo "${indent1}      }"
-		    $as_echo ""
-		    $as_echo "${indent1}      /* otherwise, destination intensities are linear: */"
-		    $as_echo "${indent1}      else {"
-		    $as_echo ""
-		    $as_echo "${indent1}        /* form the pixel: */"
-		    $as_echo "${indent1}        pixel  = _TME_FB_XLAT_MAP_LINEAR(value_g, ${src_mask_i}, dst_mask_g);"
-		    $as_echo "${indent1}        pixel |= _TME_FB_XLAT_MAP_LINEAR(value_r, ${src_mask_i}, dst_mask_r);"
-		    $as_echo "${indent1}        pixel |= _TME_FB_XLAT_MAP_LINEAR(value_b, ${src_mask_i}, dst_mask_b);"
-		    $as_echo "${indent1}        pixel |= 0xff000000;"
-		    $as_echo ""
-		    $as_echo "${indent1}        /* if destination pixels are indexed: */"
-		    $as_echo "${indent1}        if (dst_masks_default) {"
-		    $as_echo "${indent1}          pixel = dst->tme_fb_connection_map_pixel[pixel];"
-		    $as_echo "${indent1}        }"
-		    $as_echo "${indent1}      }"
+		    printf "%s\n" ""
+		    printf "%s\n" "${indent1}      /* if destination intensities are indexed: */"
+		    printf "%s\n" "${indent1}      if (dst_indexed) {"
+		    printf "%s\n" ""
+		    printf "%s\n" "${indent1}        /* we may have to scale the intensities to be in the lookup range: */"
+		    printf "%s\n" "${indent1}        if (src_mask_i > ${src_mask_i_max}) {"
+		    printf "%s\n" "${indent1}          value_g /= TME_FB_XLAT_MAP_LINEAR_SCALE(${src_mask_i}, TME_FB_XLAT_MAP_INDEX_MASK_MAX);"
+		    printf "%s\n" "${indent1}          value_r /= TME_FB_XLAT_MAP_LINEAR_SCALE(${src_mask_i}, TME_FB_XLAT_MAP_INDEX_MASK_MAX);"
+		    printf "%s\n" "${indent1}          value_b /= TME_FB_XLAT_MAP_LINEAR_SCALE(${src_mask_i}, TME_FB_XLAT_MAP_INDEX_MASK_MAX);"
+		    printf "%s\n" "${indent1}        }"
+		    printf "%s\n" ""
+		    printf "%s\n" "${indent1}        /* form the pixel: */"
+		    printf "%s\n" "${indent1}        pixel  = _TME_FB_XLAT_MAP_INDEX(value_g, dst_mask_g, dst->tme_fb_connection_map_g);"
+		    printf "%s\n" "${indent1}        pixel |= _TME_FB_XLAT_MAP_INDEX(value_r, dst_mask_r, dst->tme_fb_connection_map_r);"
+		    printf "%s\n" "${indent1}        pixel |= _TME_FB_XLAT_MAP_INDEX(value_b, dst_mask_b, dst->tme_fb_connection_map_b);"
+		    printf "%s\n" "${indent1}        pixel |= 0xff000000;"
+		    printf "%s\n" "${indent1}      }"
+		    printf "%s\n" ""
+		    printf "%s\n" "${indent1}      /* otherwise, destination intensities are linear: */"
+		    printf "%s\n" "${indent1}      else {"
+		    printf "%s\n" ""
+		    printf "%s\n" "${indent1}        /* form the pixel: */"
+		    printf "%s\n" "${indent1}        pixel  = _TME_FB_XLAT_MAP_LINEAR(value_g, ${src_mask_i}, dst_mask_g);"
+		    printf "%s\n" "${indent1}        pixel |= _TME_FB_XLAT_MAP_LINEAR(value_r, ${src_mask_i}, dst_mask_r);"
+		    printf "%s\n" "${indent1}        pixel |= _TME_FB_XLAT_MAP_LINEAR(value_b, ${src_mask_i}, dst_mask_b);"
+		    printf "%s\n" "${indent1}        pixel |= 0xff000000;"
+		    printf "%s\n" ""
+		    printf "%s\n" "${indent1}        /* if destination pixels are indexed: */"
+		    printf "%s\n" "${indent1}        if (dst_masks_default) {"
+		    printf "%s\n" "${indent1}          pixel = dst->tme_fb_connection_map_pixel[pixel];"
+		    printf "%s\n" "${indent1}        }"
+		    printf "%s\n" "${indent1}      }"
 
 		    if test "X${indent1}" != "X${indent0}"; then
-			$as_echo "${indent0}      }"
+			printf "%s\n" "${indent0}      }"
 		    fi
 		    if test "X${indent0}" != X; then
-			$as_echo "${indent0}    }"
+			printf "%s\n" "${indent0}    }"
 		    fi
 		fi
 	    fi
 
-	    $as_echo ""
+	    printf "%s\n" ""
 	    if test $scale = _h_; then
 
-		$as_echo "      /* if we just read the last pixels on these"
-		$as_echo "         source scanlines: */"
+		printf "%s\n" "      /* if we just read the last pixels on these"
+		printf "%s\n" "         source scanlines: */"
 		if test `expr ${iter_next} % ${src_unroll}` = 0; then
-		    $as_echo "      if ((src_x +="
-		    $as_echo "           (src_packed"
-		    $as_echo "            ? `expr ${src_unroll} \* 2`"
-		    $as_echo "            : 2))"
-		    $as_echo "           == src_width) {"
+		    printf "%s\n" "      if ((src_x +="
+		    printf "%s\n" "           (src_packed"
+		    printf "%s\n" "            ? `expr ${src_unroll} \* 2`"
+		    printf "%s\n" "            : 2))"
+		    printf "%s\n" "           == src_width) {"
 		else
-		    $as_echo "      if (!src_packed"
-		    $as_echo "          && (src_x += 2) == src_width) {"
+		    printf "%s\n" "      if (!src_packed"
+		    printf "%s\n" "          && (src_x += 2) == src_width) {"
 		fi
-		$as_echo ""
-		$as_echo "        /* we need to rapidly shift the source FIFOs"
-		$as_echo "           to skip not only pad bits and undisplayed"
-		$as_echo "           pixels on the next line, but actually the"
-		$as_echo "           *entire* next line."
-		$as_echo ""
-		$as_echo "           note that this sounds like when we're done,"
-		$as_echo "           the bits at the fronts of the FIFOs will be"
-		$as_echo "           the *first* pixels on the next scanlines."
-		$as_echo ""
-		$as_echo "           but the bits at the fronts of the FIFOs now"
-		$as_echo "           are the *last* pixels on the current scanlines -"
-		$as_echo "           they haven't been shifted off yet.  so when"
-		$as_echo "           we're done, we want one pixel's worth of bits"
-		$as_echo "           in the FIFOs before the first pixel on the"
-		$as_echo "           next scanlines: */"
-		$as_echo ""
-		$as_echo "        /* calculate the number of bits that we need"
-		$as_echo "           to shift the source primary FIFO, after"
-		$as_echo "           discarding any bits in it now: */"
-		$as_echo "        src_off = ((src_bypl * 8) - (src_width * src_bipp)) + (src_bypl * 8);"
-		$as_echo "        src_off -= (src_fifo0_may_be_unaligned"
-		$as_echo "                    ? src_fifo0_bits"
-		$as_echo "                    : 32);"
-		$as_echo ""
-		$as_echo "        /* rapidly advance src_raw0 by the number of"
-		$as_echo "           whole 32-bit words.  this will leave it pointing"
-		$as_echo "           to the 32-bit word that has the first bit that"
-		$as_echo "           we want to end up as the first bit in the source"
-		$as_echo "           primary FIFO: */"
-		$as_echo "        src_raw0 += (src_off / 32);"
-		$as_echo ""
-		$as_echo "        /* reprime the source primary FIFO: */"
-		$as_echo "        src_fifo0 = *src_raw0;"
-		$as_echo "        *TME_FB_XLAT_SRC_OLD(src_raw0) = src_fifo0;"
-		$as_echo "        src_raw0++;"
-		$as_echo "        src_fifo0 = ((src_order == TME_ENDIAN_BIG)"
-		$as_echo "                     ? tme_betoh_u32(src_fifo0)"
-		$as_echo "                     : tme_letoh_u32(src_fifo0));"
-		$as_echo ""
-		$as_echo "        /* if the source primary FIFO may be unaligned: */"
-		$as_echo "        if (src_fifo0_may_be_unaligned) {"
-		$as_echo ""
-		$as_echo "          /* reprime the top half of the FIFO, leaving a"
-		$as_echo "             total of 64 bits in it: */"
-		$as_echo "          src_fifo0_next = *src_raw0;"
-		$as_echo "          *TME_FB_XLAT_SRC_OLD(src_raw0) = src_fifo0_next;"
-		$as_echo "          src_raw0++;"
-		$as_echo "          src_fifo0_next = ((src_order == TME_ENDIAN_BIG)"
-		$as_echo "                            ? tme_betoh_u32(src_fifo0_next)"
-		$as_echo "                            : tme_letoh_u32(src_fifo0_next));"
-		$as_echo "          src_fifo0_bits = 64;"
-		$as_echo ""
-		$as_echo "          /* if we have to shift off bits left over"
-		$as_echo "             from rapidly advancing whole 32-bit words: */"
-		$as_echo "          src_off %= 32;"
-		$as_echo "          if (src_off > 0) {"
-		$as_echo "            TME_FB_XLAT_SHIFT_SRC(TRUE,"
-		$as_echo "                                  src_fifo0,"
-		$as_echo "                                  src_fifo0_next,"
-		$as_echo "                                  src_fifo0_bits,"
-		$as_echo "                                  src_off,"
-		$as_echo "                                  src_raw0,"
-		$as_echo "                                  src_order);"
-		$as_echo "          }"
-		$as_echo "        }"
-		$as_echo ""
-		$as_echo "        /* otherwise, the source primary FIFO is always aligned: */"
-		$as_echo "        else {"
-		$as_echo "          assert ((src_off % 32) == 0);"
-		$as_echo "        }"
-		$as_echo ""
-		$as_echo "        /* calculate the number of bits that we need"
-		$as_echo "           to shift the source secondary FIFO, after"
-		$as_echo "           discarding any bits in it now: */"
-		$as_echo "        src_off = ((src_bypl * 8) - (src_width * src_bipp)) + (src_bypl * 8);"
-		$as_echo "        src_off -= (src_fifo1_may_be_unaligned"
-		$as_echo "                    ? src_fifo1_bits"
-		$as_echo "                    : 32);"
-		$as_echo ""
-		$as_echo "        /* rapidly advance src_raw1 by the number of"
-		$as_echo "           whole 32-bit words.  this will leave it pointing"
-		$as_echo "           to the 32-bit word that has the first bit that"
-		$as_echo "           we want to end up as the first bit in the source"
-		$as_echo "           secondary FIFO: */"
-		$as_echo "        src_raw1 += (src_off / 32);"
-		$as_echo ""
-		$as_echo "        /* reprime the source secondary FIFO: */"
-		$as_echo "        src_fifo1 = *src_raw1;"
-		$as_echo "        *TME_FB_XLAT_SRC_OLD(src_raw1) = src_fifo1;"
-		$as_echo "        src_raw1++;"
-		$as_echo "        src_fifo1 = ((src_order == TME_ENDIAN_BIG)"
-		$as_echo "                     ? tme_betoh_u32(src_fifo1)"
-		$as_echo "                     : tme_letoh_u32(src_fifo1));"
-		$as_echo ""
-		$as_echo "        /* if the source secondary FIFO may be unaligned: */"
-		$as_echo "        if (src_fifo1_may_be_unaligned) {"
-		$as_echo ""
-		$as_echo "          /* reprime the top half of the FIFO, leaving a"
-		$as_echo "             total of 64 bits in it: */"
-		$as_echo "          src_fifo1_next = *src_raw1;"
-		$as_echo "          *TME_FB_XLAT_SRC_OLD(src_raw1) = src_fifo1_next;"
-		$as_echo "          src_raw1++;"
-		$as_echo "          src_fifo1_next = ((src_order == TME_ENDIAN_BIG)"
-		$as_echo "                            ? tme_betoh_u32(src_fifo1_next)"
-		$as_echo "                            : tme_letoh_u32(src_fifo1_next));"
-		$as_echo "          src_fifo1_bits = 64;"
-		$as_echo ""
-		$as_echo "          /* if we have to shift off bits left over"
-		$as_echo "             from rapidly advancing whole 32-bit words: */"
-		$as_echo "          src_off %= 32;"
-		$as_echo "          if (src_off > 0) {"
-		$as_echo "            TME_FB_XLAT_SHIFT_SRC(TRUE,"
-		$as_echo "                                  src_fifo1,"
-		$as_echo "                                  src_fifo1_next,"
-		$as_echo "                                  src_fifo1_bits,"
-		$as_echo "                                  src_off,"
-		$as_echo "                                  src_raw1,"
-		$as_echo "                                  src_order);"
-		$as_echo "          }"
-		$as_echo "        }"
-		$as_echo ""
-		$as_echo "        /* otherwise, the source secondary FIFO is always aligned: */"
-		$as_echo "        else {"
-		$as_echo "          assert ((src_off % 32) == 0);"
-		$as_echo "        }"
-		$as_echo ""
-		$as_echo "        /* we are now on the first pixel of the next scanline: */"
-		$as_echo "        src_x = 0;"
-		$as_echo "      }"
+		printf "%s\n" ""
+		printf "%s\n" "        /* we need to rapidly shift the source FIFOs"
+		printf "%s\n" "           to skip not only pad bits and undisplayed"
+		printf "%s\n" "           pixels on the next line, but actually the"
+		printf "%s\n" "           *entire* next line."
+		printf "%s\n" ""
+		printf "%s\n" "           note that this sounds like when we're done,"
+		printf "%s\n" "           the bits at the fronts of the FIFOs will be"
+		printf "%s\n" "           the *first* pixels on the next scanlines."
+		printf "%s\n" ""
+		printf "%s\n" "           but the bits at the fronts of the FIFOs now"
+		printf "%s\n" "           are the *last* pixels on the current scanlines -"
+		printf "%s\n" "           they haven't been shifted off yet.  so when"
+		printf "%s\n" "           we're done, we want one pixel's worth of bits"
+		printf "%s\n" "           in the FIFOs before the first pixel on the"
+		printf "%s\n" "           next scanlines: */"
+		printf "%s\n" ""
+		printf "%s\n" "        /* calculate the number of bits that we need"
+		printf "%s\n" "           to shift the source primary FIFO, after"
+		printf "%s\n" "           discarding any bits in it now: */"
+		printf "%s\n" "        src_off = ((src_bypl * 8) - (src_width * src_bipp)) + (src_bypl * 8);"
+		printf "%s\n" "        src_off -= (src_fifo0_may_be_unaligned"
+		printf "%s\n" "                    ? src_fifo0_bits"
+		printf "%s\n" "                    : 32);"
+		printf "%s\n" ""
+		printf "%s\n" "        /* rapidly advance src_raw0 by the number of"
+		printf "%s\n" "           whole 32-bit words.  this will leave it pointing"
+		printf "%s\n" "           to the 32-bit word that has the first bit that"
+		printf "%s\n" "           we want to end up as the first bit in the source"
+		printf "%s\n" "           primary FIFO: */"
+		printf "%s\n" "        src_raw0 += (src_off / 32);"
+		printf "%s\n" ""
+		printf "%s\n" "        /* reprime the source primary FIFO: */"
+		printf "%s\n" "        src_fifo0 = *src_raw0;"
+		printf "%s\n" "        *TME_FB_XLAT_SRC_OLD(src_raw0) = src_fifo0;"
+		printf "%s\n" "        src_raw0++;"
+		printf "%s\n" "        src_fifo0 = ((src_order == TME_ENDIAN_BIG)"
+		printf "%s\n" "                     ? tme_betoh_u32(src_fifo0)"
+		printf "%s\n" "                     : tme_letoh_u32(src_fifo0));"
+		printf "%s\n" ""
+		printf "%s\n" "        /* if the source primary FIFO may be unaligned: */"
+		printf "%s\n" "        if (src_fifo0_may_be_unaligned) {"
+		printf "%s\n" ""
+		printf "%s\n" "          /* reprime the top half of the FIFO, leaving a"
+		printf "%s\n" "             total of 64 bits in it: */"
+		printf "%s\n" "          src_fifo0_next = *src_raw0;"
+		printf "%s\n" "          *TME_FB_XLAT_SRC_OLD(src_raw0) = src_fifo0_next;"
+		printf "%s\n" "          src_raw0++;"
+		printf "%s\n" "          src_fifo0_next = ((src_order == TME_ENDIAN_BIG)"
+		printf "%s\n" "                            ? tme_betoh_u32(src_fifo0_next)"
+		printf "%s\n" "                            : tme_letoh_u32(src_fifo0_next));"
+		printf "%s\n" "          src_fifo0_bits = 64;"
+		printf "%s\n" ""
+		printf "%s\n" "          /* if we have to shift off bits left over"
+		printf "%s\n" "             from rapidly advancing whole 32-bit words: */"
+		printf "%s\n" "          src_off %= 32;"
+		printf "%s\n" "          if (src_off > 0) {"
+		printf "%s\n" "            TME_FB_XLAT_SHIFT_SRC(TRUE,"
+		printf "%s\n" "                                  src_fifo0,"
+		printf "%s\n" "                                  src_fifo0_next,"
+		printf "%s\n" "                                  src_fifo0_bits,"
+		printf "%s\n" "                                  src_off,"
+		printf "%s\n" "                                  src_raw0,"
+		printf "%s\n" "                                  src_order);"
+		printf "%s\n" "          }"
+		printf "%s\n" "        }"
+		printf "%s\n" ""
+		printf "%s\n" "        /* otherwise, the source primary FIFO is always aligned: */"
+		printf "%s\n" "        else {"
+		printf "%s\n" "          assert ((src_off % 32) == 0);"
+		printf "%s\n" "        }"
+		printf "%s\n" ""
+		printf "%s\n" "        /* calculate the number of bits that we need"
+		printf "%s\n" "           to shift the source secondary FIFO, after"
+		printf "%s\n" "           discarding any bits in it now: */"
+		printf "%s\n" "        src_off = ((src_bypl * 8) - (src_width * src_bipp)) + (src_bypl * 8);"
+		printf "%s\n" "        src_off -= (src_fifo1_may_be_unaligned"
+		printf "%s\n" "                    ? src_fifo1_bits"
+		printf "%s\n" "                    : 32);"
+		printf "%s\n" ""
+		printf "%s\n" "        /* rapidly advance src_raw1 by the number of"
+		printf "%s\n" "           whole 32-bit words.  this will leave it pointing"
+		printf "%s\n" "           to the 32-bit word that has the first bit that"
+		printf "%s\n" "           we want to end up as the first bit in the source"
+		printf "%s\n" "           secondary FIFO: */"
+		printf "%s\n" "        src_raw1 += (src_off / 32);"
+		printf "%s\n" ""
+		printf "%s\n" "        /* reprime the source secondary FIFO: */"
+		printf "%s\n" "        src_fifo1 = *src_raw1;"
+		printf "%s\n" "        *TME_FB_XLAT_SRC_OLD(src_raw1) = src_fifo1;"
+		printf "%s\n" "        src_raw1++;"
+		printf "%s\n" "        src_fifo1 = ((src_order == TME_ENDIAN_BIG)"
+		printf "%s\n" "                     ? tme_betoh_u32(src_fifo1)"
+		printf "%s\n" "                     : tme_letoh_u32(src_fifo1));"
+		printf "%s\n" ""
+		printf "%s\n" "        /* if the source secondary FIFO may be unaligned: */"
+		printf "%s\n" "        if (src_fifo1_may_be_unaligned) {"
+		printf "%s\n" ""
+		printf "%s\n" "          /* reprime the top half of the FIFO, leaving a"
+		printf "%s\n" "             total of 64 bits in it: */"
+		printf "%s\n" "          src_fifo1_next = *src_raw1;"
+		printf "%s\n" "          *TME_FB_XLAT_SRC_OLD(src_raw1) = src_fifo1_next;"
+		printf "%s\n" "          src_raw1++;"
+		printf "%s\n" "          src_fifo1_next = ((src_order == TME_ENDIAN_BIG)"
+		printf "%s\n" "                            ? tme_betoh_u32(src_fifo1_next)"
+		printf "%s\n" "                            : tme_letoh_u32(src_fifo1_next));"
+		printf "%s\n" "          src_fifo1_bits = 64;"
+		printf "%s\n" ""
+		printf "%s\n" "          /* if we have to shift off bits left over"
+		printf "%s\n" "             from rapidly advancing whole 32-bit words: */"
+		printf "%s\n" "          src_off %= 32;"
+		printf "%s\n" "          if (src_off > 0) {"
+		printf "%s\n" "            TME_FB_XLAT_SHIFT_SRC(TRUE,"
+		printf "%s\n" "                                  src_fifo1,"
+		printf "%s\n" "                                  src_fifo1_next,"
+		printf "%s\n" "                                  src_fifo1_bits,"
+		printf "%s\n" "                                  src_off,"
+		printf "%s\n" "                                  src_raw1,"
+		printf "%s\n" "                                  src_order);"
+		printf "%s\n" "          }"
+		printf "%s\n" "        }"
+		printf "%s\n" ""
+		printf "%s\n" "        /* otherwise, the source secondary FIFO is always aligned: */"
+		printf "%s\n" "        else {"
+		printf "%s\n" "          assert ((src_off % 32) == 0);"
+		printf "%s\n" "        }"
+		printf "%s\n" ""
+		printf "%s\n" "        /* we are now on the first pixel of the next scanline: */"
+		printf "%s\n" "        src_x = 0;"
+		printf "%s\n" "      }"
 	    else
-		$as_echo "      /* if the source buffer is not packed, and we just"
-		$as_echo "         read the last pixel on this source scanline: */"
-		$as_echo "      if (!src_packed"
-		$as_echo "          && ++src_x == src_width) {"
-		$as_echo ""
-		$as_echo "        /* calculate the number of bits between the"
-		$as_echo "           last bit of the last pixel and the first bit"
-		$as_echo "           of the first displayed pixel on the next"
-		$as_echo "           scanline.  this is equal to the number of"
-		$as_echo "           pad bits plus bits for undisplayed pixels: */"
-		$as_echo "        src_off = ((src_bypl * 8) - (src_width * src_bipp));"
-		$as_echo ""
-		$as_echo "        /* while there are bits to shift: */"
-		$as_echo "        for (; src_off > 0; src_off -= TME_MIN(src_off, 32)) {"
-		$as_echo ""
-		$as_echo "          /* shift the source primary FIFO: */"
-		$as_echo "          TME_FB_XLAT_SHIFT_SRC(src_fifo0_may_be_unaligned,"
-		$as_echo "                                src_fifo0,"
-		$as_echo "                                src_fifo0_next,"
-		$as_echo "                                src_fifo0_bits,"
-		$as_echo "                                TME_MIN(src_off, 32),"
-		$as_echo "                                src_raw0,"
-		$as_echo "                                src_order);"
-		$as_echo "        }"
-		$as_echo ""
-		$as_echo "        /* we are now on the first pixel of the next scanline: */"
-		$as_echo "        src_x = 0;"
-		$as_echo "      }"
+		printf "%s\n" "      /* if the source buffer is not packed, and we just"
+		printf "%s\n" "         read the last pixel on this source scanline: */"
+		printf "%s\n" "      if (!src_packed"
+		printf "%s\n" "          && ++src_x == src_width) {"
+		printf "%s\n" ""
+		printf "%s\n" "        /* calculate the number of bits between the"
+		printf "%s\n" "           last bit of the last pixel and the first bit"
+		printf "%s\n" "           of the first displayed pixel on the next"
+		printf "%s\n" "           scanline.  this is equal to the number of"
+		printf "%s\n" "           pad bits plus bits for undisplayed pixels: */"
+		printf "%s\n" "        src_off = ((src_bypl * 8) - (src_width * src_bipp));"
+		printf "%s\n" ""
+		printf "%s\n" "        /* while there are bits to shift: */"
+		printf "%s\n" "        for (; src_off > 0; src_off -= TME_MIN(src_off, 32)) {"
+		printf "%s\n" ""
+		printf "%s\n" "          /* shift the source primary FIFO: */"
+		printf "%s\n" "          TME_FB_XLAT_SHIFT_SRC(src_fifo0_may_be_unaligned,"
+		printf "%s\n" "                                src_fifo0,"
+		printf "%s\n" "                                src_fifo0_next,"
+		printf "%s\n" "                                src_fifo0_bits,"
+		printf "%s\n" "                                TME_MIN(src_off, 32),"
+		printf "%s\n" "                                src_raw0,"
+		printf "%s\n" "                                src_order);"
+		printf "%s\n" "        }"
+		printf "%s\n" ""
+		printf "%s\n" "        /* we are now on the first pixel of the next scanline: */"
+		printf "%s\n" "        src_x = 0;"
+		printf "%s\n" "      }"
 	    fi
 
 	    if test `expr ${iter_next} % ${src_unroll}` = 0; then
 
-		$as_echo ""
+		printf "%s\n" ""
 	        if test "${src_fifo_shift}" = 32; then
-		    $as_echo "      /* we've just translated another 32-bit word of the"
-		    $as_echo "         source image, so decrement xlat_run: */"
-		    $as_echo "      xlat_run--;"
+		    printf "%s\n" "      /* we've just translated another 32-bit word of the"
+		    printf "%s\n" "         source image, so decrement xlat_run: */"
+		    printf "%s\n" "      xlat_run--;"
 		else
-		    $as_echo "      /* if we've just finished translating another 32-bit"
-		    $as_echo "         word of the source image, decrement xlat_run: */"
-		    $as_echo "      if (src_fifo0_bits <= 32 + ${src_fifo_shift}) {"
-		    $as_echo "        xlat_run--;"
-		    $as_echo "      }"
+		    printf "%s\n" "      /* if we've just finished translating another 32-bit"
+		    printf "%s\n" "         word of the source image, decrement xlat_run: */"
+		    printf "%s\n" "      if (src_fifo0_bits <= 32 + ${src_fifo_shift}) {"
+		    printf "%s\n" "        xlat_run--;"
+		    printf "%s\n" "      }"
 		fi
-		$as_echo ""
-		$as_echo "      /* shift the source primary FIFO: */"
-		$as_echo "      TME_FB_XLAT_SHIFT_SRC(src_fifo0_may_be_unaligned,"
-		$as_echo "                            src_fifo0,"
-		$as_echo "                            src_fifo0_next,"
-		$as_echo "                            src_fifo0_bits,"
-		$as_echo "                            ${src_fifo_shift},"
-		$as_echo "                            src_raw0,"
-		$as_echo "                            src_order);"
+		printf "%s\n" ""
+		printf "%s\n" "      /* shift the source primary FIFO: */"
+		printf "%s\n" "      TME_FB_XLAT_SHIFT_SRC(src_fifo0_may_be_unaligned,"
+		printf "%s\n" "                            src_fifo0,"
+		printf "%s\n" "                            src_fifo0_next,"
+		printf "%s\n" "                            src_fifo0_bits,"
+		printf "%s\n" "                            ${src_fifo_shift},"
+		printf "%s\n" "                            src_raw0,"
+		printf "%s\n" "                            src_order);"
 		if test $scale = _h_; then
-		    $as_echo ""
-		    $as_echo "      /* shift the source secondary FIFO: */"
-		    $as_echo "      TME_FB_XLAT_SHIFT_SRC(src_fifo1_may_be_unaligned,"
-		    $as_echo "                            src_fifo1,"
-		    $as_echo "                            src_fifo1_next,"
-		    $as_echo "                            src_fifo1_bits,"
-		    $as_echo "                            ${src_fifo_shift},"
-		    $as_echo "                            src_raw1,"
-		    $as_echo "                            src_order);"
+		    printf "%s\n" ""
+		    printf "%s\n" "      /* shift the source secondary FIFO: */"
+		    printf "%s\n" "      TME_FB_XLAT_SHIFT_SRC(src_fifo1_may_be_unaligned,"
+		    printf "%s\n" "                            src_fifo1,"
+		    printf "%s\n" "                            src_fifo1_next,"
+		    printf "%s\n" "                            src_fifo1_bits,"
+		    printf "%s\n" "                            ${src_fifo_shift},"
+		    printf "%s\n" "                            src_raw1,"
+		    printf "%s\n" "                            src_order);"
 		fi
 	    fi
 
@@ -2627,232 +2631,231 @@ for src_key in ${src_all}; do
 	    dst_shift=`expr ${iter} % ${dst_unroll}`
 	    dst_shift='('`expr ${dst_shift} \* ${dst_iter_scale}`' * dst_bipp)'
 
-	    $as_echo ""
-	    $as_echo "      /* put the pixel into the destination primary FIFO: */"
-	    $as_echo "      dst_fifo0 |="
-	    $as_echo "        (pixel"
-	    $as_echo "         << (dst_order == TME_ENDIAN_BIG"
-	    $as_echo "             ? ((32 - dst_bipp) - ${dst_shift})"
-	    $as_echo "             : ${dst_shift}));"
+	    printf "%s\n" ""
+	    printf "%s\n" "      /* put the pixel into the destination primary FIFO: */"
+	    printf "%s\n" "      dst_fifo0 |="
+	    printf "%s\n" "        (pixel"
+	    printf "%s\n" "         << (dst_order == TME_ENDIAN_BIG"
+	    printf "%s\n" "             ? ((32 - dst_bipp) - ${dst_shift})"
+	    printf "%s\n" "             : ${dst_shift}));"
 
 	    if test $scale = _d_; then
 
-		$as_echo ""
-		$as_echo "      /* put the pixel into the destination secondary FIFO: */"
-		$as_echo "      dst_fifo1 |="
-		$as_echo "        (pixel"
-		$as_echo "         << (dst_order == TME_ENDIAN_BIG"
-		$as_echo "             ? ((32 - dst_bipp) - ${dst_shift})"
-		$as_echo "             : ${dst_shift}));"
+		printf "%s\n" ""
+		printf "%s\n" "      /* put the pixel into the destination secondary FIFO: */"
+		printf "%s\n" "      dst_fifo1 |="
+		printf "%s\n" "        (pixel"
+		printf "%s\n" "         << (dst_order == TME_ENDIAN_BIG"
+		printf "%s\n" "             ? ((32 - dst_bipp) - ${dst_shift})"
+		printf "%s\n" "             : ${dst_shift}));"
 
-		$as_echo ""
+		printf "%s\n" ""
 		if test `expr ${dst_bipp} \>= 24` = 1; then
-		    $as_echo "      /* put the pixel into both FIFOs again.  in"
-		    $as_echo "         this case, dst_bipp is known to be ${dst_bipp},"
-		    $as_echo "         meaning the FIFOs cannot entirely take these"
-		    $as_echo "         further pixels, so we need to shift the FIFOs: */"
+		    printf "%s\n" "      /* put the pixel into both FIFOs again.  in"
+		    printf "%s\n" "         this case, dst_bipp is known to be ${dst_bipp},"
+		    printf "%s\n" "         meaning the FIFOs cannot entirely take these"
+		    printf "%s\n" "         further pixels, so we need to shift the FIFOs: */"
 		    indent0=""
 		    indent1=X
 		elif test ${dst_bipp} = 0; then
-		    $as_echo "      /* put the pixel into both FIFOs again.  if"
-		    $as_echo "         dst_bipp is 24 or greater, the FIFOs can"
-		    $as_echo "         not entirely take these further pixels,"
-		    $as_echo "         so we need to shift the FIFOs: */"
-		    $as_echo "      if (dst_bipp >= 24) {"
+		    printf "%s\n" "      /* put the pixel into both FIFOs again.  if"
+		    printf "%s\n" "         dst_bipp is 24 or greater, the FIFOs can"
+		    printf "%s\n" "         not entirely take these further pixels,"
+		    printf "%s\n" "         so we need to shift the FIFOs: */"
+		    printf "%s\n" "      if (dst_bipp >= 24) {"
 		    indent0="  "
 		    indent1="  "
 		else
-		    $as_echo "      /* put the pixel into both FIFOs again.  in"
-		    $as_echo "         this case, dst_bipp is known to be ${dst_bipp},"
-		    $as_echo "         meaning the FIFOs can take these further pixels"
-		    $as_echo "         without shifting the FIFOs, as long as we shift"
-		    $as_echo "         the pixels one pixel further: */"
+		    printf "%s\n" "      /* put the pixel into both FIFOs again.  in"
+		    printf "%s\n" "         this case, dst_bipp is known to be ${dst_bipp},"
+		    printf "%s\n" "         meaning the FIFOs can take these further pixels"
+		    printf "%s\n" "         without shifting the FIFOs, as long as we shift"
+		    printf "%s\n" "         the pixels one pixel further: */"
 		    indent0=X
 		    indent1=""
 		fi
 		if test "X${indent0}" != "XX"; then
-		    $as_echo "${indent0}      TME_FB_XLAT_SHIFT_DST(dst_fifo0_may_be_unaligned,"
-		    $as_echo "${indent0}                            dst_fifo0,"
-		    $as_echo "${indent0}                            dst_fifo0_next,"
-		    $as_echo "${indent0}                            dst_fifo0_bits,"
-		    $as_echo "${indent0}                            dst_bipp,"
-		    $as_echo "${indent0}                            dst_raw0,"
-		    $as_echo "${indent0}                            dst_order);"
-		    $as_echo "${indent0}      TME_FB_XLAT_SHIFT_DST(dst_fifo1_may_be_unaligned,"
-		    $as_echo "${indent0}                            dst_fifo1,"
-		    $as_echo "${indent0}                            dst_fifo1_next,"
-		    $as_echo "${indent0}                            dst_fifo1_bits,"
-		    $as_echo "${indent0}                            dst_bipp,"
-		    $as_echo "${indent0}                            dst_raw1,"
-		    $as_echo "${indent0}                            dst_order);"
-		    $as_echo ""
-		    $as_echo "${indent0}      /* now that we've shifted by dst_bipp, we can"
-		    $as_echo "${indent0}         put the further pixels exactly where the"
-		    $as_echo "${indent0}         first pixels went in the FIFOs: */"
-		    $as_echo "${indent0}      dst_fifo0 |="
-		    $as_echo "${indent0}        (pixel"
-		    $as_echo "${indent0}         << (dst_order == TME_ENDIAN_BIG"
-		    $as_echo "${indent0}             ? ((32 - dst_bipp) - ${dst_shift})"
-		    $as_echo "${indent0}             : ${dst_shift}));"
-		    $as_echo "${indent0}      dst_fifo1 |="
-		    $as_echo "${indent0}        (pixel"
-		    $as_echo "${indent0}         << (dst_order == TME_ENDIAN_BIG"
-		    $as_echo "${indent0}             ? ((32 - dst_bipp) - ${dst_shift})"
-		    $as_echo "${indent0}             : ${dst_shift}));"
+		    printf "%s\n" "${indent0}      TME_FB_XLAT_SHIFT_DST(dst_fifo0_may_be_unaligned,"
+		    printf "%s\n" "${indent0}                            dst_fifo0,"
+		    printf "%s\n" "${indent0}                            dst_fifo0_next,"
+		    printf "%s\n" "${indent0}                            dst_fifo0_bits,"
+		    printf "%s\n" "${indent0}                            dst_bipp,"
+		    printf "%s\n" "${indent0}                            dst_raw0,"
+		    printf "%s\n" "${indent0}                            dst_order);"
+		    printf "%s\n" "${indent0}      TME_FB_XLAT_SHIFT_DST(dst_fifo1_may_be_unaligned,"
+		    printf "%s\n" "${indent0}                            dst_fifo1,"
+		    printf "%s\n" "${indent0}                            dst_fifo1_next,"
+		    printf "%s\n" "${indent0}                            dst_fifo1_bits,"
+		    printf "%s\n" "${indent0}                            dst_bipp,"
+		    printf "%s\n" "${indent0}                            dst_raw1,"
+		    printf "%s\n" "${indent0}                            dst_order);"
+		    printf "%s\n" ""
+		    printf "%s\n" "${indent0}      /* now that we've shifted by dst_bipp, we can"
+		    printf "%s\n" "${indent0}         put the further pixels exactly where the"
+		    printf "%s\n" "${indent0}         first pixels went in the FIFOs: */"
+		    printf "%s\n" "${indent0}      dst_fifo0 |="
+		    printf "%s\n" "${indent0}        (pixel"
+		    printf "%s\n" "${indent0}         << (dst_order == TME_ENDIAN_BIG"
+		    printf "%s\n" "${indent0}             ? ((32 - dst_bipp) - ${dst_shift})"
+		    printf "%s\n" "${indent0}             : ${dst_shift}));"
+		    printf "%s\n" "${indent0}      dst_fifo1 |="
+		    printf "%s\n" "${indent0}        (pixel"
+		    printf "%s\n" "${indent0}         << (dst_order == TME_ENDIAN_BIG"
+		    printf "%s\n" "${indent0}             ? ((32 - dst_bipp) - ${dst_shift})"
+		    printf "%s\n" "${indent0}             : ${dst_shift}));"
 		fi
 		if test ${dst_bipp} = 0; then
-		    $as_echo "      }"
-		    $as_echo ""
-		    $as_echo "      /* otherwise, the FIFOs can take these further pixels,"
-		    $as_echo "         as long as we shift the pixels one pixel further: */"
-		    $as_echo "      else {"
+		    printf "%s\n" "      }"
+		    printf "%s\n" ""
+		    printf "%s\n" "      /* otherwise, the FIFOs can take these further pixels,"
+		    printf "%s\n" "         as long as we shift the pixels one pixel further: */"
+		    printf "%s\n" "      else {"
 		fi
 		if test "X${indent1}" != "XX"; then
-		    $as_echo "${indent1}      dst_fifo0 |="
-		    $as_echo "${indent1}        (pixel"
-		    $as_echo "${indent1}         << (dst_order == TME_ENDIAN_BIG"
-		    $as_echo "${indent1}             ? ((32 - dst_bipp) - (${dst_shift} + dst_bipp))"
-		    $as_echo "${indent1}             : (${dst_shift} + dst_bipp)));"
-		    $as_echo "${indent1}      dst_fifo1 |="
-		    $as_echo "${indent1}        (pixel"
-		    $as_echo "${indent1}         << (dst_order == TME_ENDIAN_BIG"
-		    $as_echo "${indent1}             ? ((32 - dst_bipp) - (${dst_shift} + dst_bipp))"
-		    $as_echo "${indent1}             : (${dst_shift} + dst_bipp)));"
+		    printf "%s\n" "${indent1}      dst_fifo0 |="
+		    printf "%s\n" "${indent1}        (pixel"
+		    printf "%s\n" "${indent1}         << (dst_order == TME_ENDIAN_BIG"
+		    printf "%s\n" "${indent1}             ? ((32 - dst_bipp) - (${dst_shift} + dst_bipp))"
+		    printf "%s\n" "${indent1}             : (${dst_shift} + dst_bipp)));"
+		    printf "%s\n" "${indent1}      dst_fifo1 |="
+		    printf "%s\n" "${indent1}        (pixel"
+		    printf "%s\n" "${indent1}         << (dst_order == TME_ENDIAN_BIG"
+		    printf "%s\n" "${indent1}             ? ((32 - dst_bipp) - (${dst_shift} + dst_bipp))"
+		    printf "%s\n" "${indent1}             : (${dst_shift} + dst_bipp)));"
 		fi
 		if test ${dst_bipp} = 0; then
-		    $as_echo "      }"
+		    printf "%s\n" "      }"
 		fi
 	    fi
 
-	    $as_echo ""
-	    $as_echo "      /* if the destination buffer is not packed, and we just"
-	    $as_echo "         wrote the last pixel on this destination scanline: */"
+	    printf "%s\n" ""
+	    printf "%s\n" "      /* if the destination buffer is not packed, and we just"
+	    printf "%s\n" "         wrote the last pixel on this destination scanline: */"
 	    if test $scale = _d_; then value=2; else value=1; fi
-	    $as_echo "      if (!dst_packed"
-	    $as_echo "          && (dst_x += ${value}) == dst_width) {"
-	    $as_echo ""
-	    $as_echo "        /* calculate the number of bits between the"
-	    $as_echo "           last bit of the last pixel and the first bit"
-	    $as_echo "           of the first displayed pixel on the next"
-	    $as_echo "           scanline.  this is equal to the number of"
-	    $as_echo "           pad bits plus bits for undisplayed pixels: */"
-	    $as_echo "        dst_off = ((dst_bypl * 8) - (dst_width * dst_bipp));"
-	    $as_echo ""
-	    $as_echo "        /* while there are bits to shift: */"
-	    $as_echo "        for (; dst_off > 0; dst_off -= TME_MIN(dst_off, 32)) {"
-	    $as_echo ""
-	    $as_echo "          /* shift the destination primary FIFO: */"
-	    $as_echo "          TME_FB_XLAT_SHIFT_DST(dst_fifo0_may_be_unaligned,"
-	    $as_echo "                                dst_fifo0,"
-	    $as_echo "                                dst_fifo0_next,"
-	    $as_echo "                                dst_fifo0_bits,"
-	    $as_echo "                                TME_MIN(dst_off, 32),"
-	    $as_echo "                                dst_raw0,"
-	    $as_echo "                                dst_order);"
+	    printf "%s\n" "      if (!dst_packed"
+	    printf "%s\n" "          && (dst_x += ${value}) == dst_width) {"
+	    printf "%s\n" ""
+	    printf "%s\n" "        /* calculate the number of bits between the"
+	    printf "%s\n" "           last bit of the last pixel and the first bit"
+	    printf "%s\n" "           of the first displayed pixel on the next"
+	    printf "%s\n" "           scanline.  this is equal to the number of"
+	    printf "%s\n" "           pad bits plus bits for undisplayed pixels: */"
+	    printf "%s\n" "        dst_off = ((dst_bypl * 8) - (dst_width * dst_bipp));"
+	    printf "%s\n" ""
+	    printf "%s\n" "        /* while there are bits to shift: */"
+	    printf "%s\n" "        for (; dst_off > 0; dst_off -= TME_MIN(dst_off, 32)) {"
+	    printf "%s\n" ""
+	    printf "%s\n" "          /* shift the destination primary FIFO: */"
+	    printf "%s\n" "          TME_FB_XLAT_SHIFT_DST(dst_fifo0_may_be_unaligned,"
+	    printf "%s\n" "                                dst_fifo0,"
+	    printf "%s\n" "                                dst_fifo0_next,"
+	    printf "%s\n" "                                dst_fifo0_bits,"
+	    printf "%s\n" "                                TME_MIN(dst_off, 32),"
+	    printf "%s\n" "                                dst_raw0,"
+	    printf "%s\n" "                                dst_order);"
 	    if test $scale = _d_; then
-		$as_echo ""
-		$as_echo "          /* shift the destination secondary FIFO: */"
-		$as_echo "          TME_FB_XLAT_SHIFT_DST(dst_fifo1_may_be_unaligned,"
-		$as_echo "                                dst_fifo1,"
-		$as_echo "                                dst_fifo1_next,"
-		$as_echo "                                dst_fifo1_bits,"
-		$as_echo "                                TME_MIN(dst_off, 32),"
-		$as_echo "                                dst_raw1,"
-		$as_echo "                                dst_order);"
+		printf "%s\n" ""
+		printf "%s\n" "          /* shift the destination secondary FIFO: */"
+		printf "%s\n" "          TME_FB_XLAT_SHIFT_DST(dst_fifo1_may_be_unaligned,"
+		printf "%s\n" "                                dst_fifo1,"
+		printf "%s\n" "                                dst_fifo1_next,"
+		printf "%s\n" "                                dst_fifo1_bits,"
+		printf "%s\n" "                                TME_MIN(dst_off, 32),"
+		printf "%s\n" "                                dst_raw1,"
+		printf "%s\n" "                                dst_order);"
 	    fi
-	    $as_echo "        }"
-	    $as_echo ""
-	    $as_echo "        /* we are now on the first pixel of the next scanline: */"
-	    $as_echo "        dst_x = 0;"
-	    $as_echo "      }"
+	    printf "%s\n" "        }"
+	    printf "%s\n" ""
+	    printf "%s\n" "        /* we are now on the first pixel of the next scanline: */"
+	    printf "%s\n" "        dst_x = 0;"
+	    printf "%s\n" "      }"
 
 	    if test `expr ${iter_next} % ${dst_unroll}` = 0; then
-		$as_echo ""
-		$as_echo "      /* shift the destination primary FIFO: */"
-		$as_echo "      TME_FB_XLAT_SHIFT_DST(dst_fifo0_may_be_unaligned,"
-		$as_echo "                            dst_fifo0,"
-		$as_echo "                            dst_fifo0_next,"
-		$as_echo "                            dst_fifo0_bits,"
-		$as_echo "                            ${dst_fifo_shift},"
-		$as_echo "                            dst_raw0,"
-		$as_echo "                            dst_order);"
+		printf "%s\n" ""
+		printf "%s\n" "      /* shift the destination primary FIFO: */"
+		printf "%s\n" "      TME_FB_XLAT_SHIFT_DST(dst_fifo0_may_be_unaligned,"
+		printf "%s\n" "                            dst_fifo0,"
+		printf "%s\n" "                            dst_fifo0_next,"
+		printf "%s\n" "                            dst_fifo0_bits,"
+		printf "%s\n" "                            ${dst_fifo_shift},"
+		printf "%s\n" "                            dst_raw0,"
+		printf "%s\n" "                            dst_order);"
 		if test $scale = _d_; then
-		    $as_echo ""
-		    $as_echo "      /* shift the destination secondary FIFO: */"
-		    $as_echo "      TME_FB_XLAT_SHIFT_DST(dst_fifo1_may_be_unaligned,"
-		    $as_echo "                            dst_fifo1,"
-		    $as_echo "                            dst_fifo1_next,"
-		    $as_echo "                            dst_fifo1_bits,"
-		    $as_echo "                            ${dst_fifo_shift},"
-		    $as_echo "                            dst_raw1,"
-		    $as_echo "                            dst_order);"
+		    printf "%s\n" ""
+		    printf "%s\n" "      /* shift the destination secondary FIFO: */"
+		    printf "%s\n" "      TME_FB_XLAT_SHIFT_DST(dst_fifo1_may_be_unaligned,"
+		    printf "%s\n" "                            dst_fifo1,"
+		    printf "%s\n" "                            dst_fifo1_next,"
+		    printf "%s\n" "                            dst_fifo1_bits,"
+		    printf "%s\n" "                            ${dst_fifo_shift},"
+		    printf "%s\n" "                            dst_raw1,"
+		    printf "%s\n" "                            dst_order);"
 		fi
 	    fi
 
 	    iter=${iter_next}
 	done
-	$as_echo ""
-	$as_echo "    }"
+	printf "%s\n" ""
+	printf "%s\n" "    }"
 
 	if test `expr ${iter} % ${dst_unroll}` != 0; then
-	    $as_echo "$PROG internal error - the last iter did not shift the destination FIFOs ($iter and $dst_unroll)" 1>&2
+	    printf "%s\n" "$PROG internal error - the last iter did not shift the destination FIFOs ($iter and $dst_unroll)" 1>&2
 	    exit 1
 	fi
 
-	$as_echo ""
-	$as_echo "    /* if the destination FIFOs may be unaligned, there"
-	$as_echo "       may be bits left in the FIFO that we need to flush: */"
-	$as_echo "    if (dst_fifo0_may_be_unaligned"
-	$as_echo "        && dst_fifo0_bits > 0) {"
-	$as_echo "      dst_fifo0 = *dst_raw0;"
-	$as_echo "      if (dst_order == TME_ENDIAN_BIG) {"
-	$as_echo "        dst_fifo0_next |= (tme_betoh_u32(dst_fifo0) & (0xffffffff >> dst_fifo0_bits));"
-	$as_echo "        dst_fifo0_next = tme_htobe_u32(dst_fifo0_next);"
-	$as_echo "      }"
-	$as_echo "      else {"
-	$as_echo "        dst_fifo0_next |= (tme_letoh_u32(dst_fifo0) & (0xffffffff << dst_fifo0_bits));"
-	$as_echo "        dst_fifo0_next = tme_htole_u32(dst_fifo0_next);"
-	$as_echo "      }"
-	$as_echo "      *dst_raw0 = dst_fifo0;"
-	$as_echo "    }"
+	printf "%s\n" ""
+	printf "%s\n" "    /* if the destination FIFOs may be unaligned, there"
+	printf "%s\n" "       may be bits left in the FIFO that we need to flush: */"
+	printf "%s\n" "    if (dst_fifo0_may_be_unaligned"
+	printf "%s\n" "        && dst_fifo0_bits > 0) {"
+	printf "%s\n" "      dst_fifo0 = *dst_raw0;"
+	printf "%s\n" "      if (dst_order == TME_ENDIAN_BIG) {"
+	printf "%s\n" "        dst_fifo0_next |= (tme_betoh_u32(dst_fifo0) & (0xffffffff >> dst_fifo0_bits));"
+	printf "%s\n" "        dst_fifo0_next = tme_htobe_u32(dst_fifo0_next);"
+	printf "%s\n" "      }"
+	printf "%s\n" "      else {"
+	printf "%s\n" "        dst_fifo0_next |= (tme_letoh_u32(dst_fifo0) & (0xffffffff << dst_fifo0_bits));"
+	printf "%s\n" "        dst_fifo0_next = tme_htole_u32(dst_fifo0_next);"
+	printf "%s\n" "      }"
+	printf "%s\n" "      *dst_raw0 = dst_fifo0;"
+	printf "%s\n" "    }"
 	if test $scale = _d_; then
-	    $as_echo "    if (dst_fifo1_may_be_unaligned"
-	    $as_echo "        && dst_fifo1_bits > 0) {"
-	    $as_echo "      dst_fifo1 = *dst_raw1;"
-	    $as_echo "      if (dst_order == TME_ENDIAN_BIG) {"
-	    $as_echo "        dst_fifo1_next |= (tme_betoh_u32(dst_fifo1) & (0xffffffff >> dst_fifo1_bits));"
-	    $as_echo "        dst_fifo1_next = tme_htobe_u32(dst_fifo1_next);"
-	    $as_echo "      }"
-	    $as_echo "      else {"
-	    $as_echo "        dst_fifo1_next |= (tme_letoh_u32(dst_fifo1) & (0xffffffff << dst_fifo1_bits));"
-	    $as_echo "        dst_fifo1_next = tme_htole_u32(dst_fifo1_next);"
-	    $as_echo "      }"
-	    $as_echo "      *dst_raw1 = dst_fifo1;"
-	    $as_echo "    }"
+	    printf "%s\n" "    if (dst_fifo1_may_be_unaligned"
+	    printf "%s\n" "        && dst_fifo1_bits > 0) {"
+	    printf "%s\n" "      dst_fifo1 = *dst_raw1;"
+	    printf "%s\n" "      if (dst_order == TME_ENDIAN_BIG) {"
+	    printf "%s\n" "        dst_fifo1_next |= (tme_betoh_u32(dst_fifo1) & (0xffffffff >> dst_fifo1_bits));"
+	    printf "%s\n" "        dst_fifo1_next = tme_htobe_u32(dst_fifo1_next);"
+	    printf "%s\n" "      }"
+	    printf "%s\n" "      else {"
+	    printf "%s\n" "        dst_fifo1_next |= (tme_letoh_u32(dst_fifo1) & (0xffffffff << dst_fifo1_bits));"
+	    printf "%s\n" "        dst_fifo1_next = tme_htole_u32(dst_fifo1_next);"
+	    printf "%s\n" "      }"
+	    printf "%s\n" "      *dst_raw1 = dst_fifo1;"
+	    printf "%s\n" "    }"
 	fi
 
-	$as_echo ""
-	$as_echo "    /* loop back to compare more 32-bit words: */"
-	$as_echo "    src_raw0--;"
-	$as_echo "  }"
+	printf "%s\n" ""
+	printf "%s\n" "    /* loop back to compare more 32-bit words: */"
+	printf "%s\n" "    src_raw0--;"
+	printf "%s\n" "  }"
 
-	$as_echo ""
-	$as_echo "  /* return nonzero iff we did some translating: */"
-	$as_echo "  return (xlat_run >= 0);"
+	printf "%s\n" ""
+	printf "%s\n" "  /* return nonzero iff we did some translating: */"
+	printf "%s\n" "  return (xlat_run >= 0);"
 
-	$as_echo ""
+	printf "%s\n" ""
 	for macro in ${undef_macros}; do
-	    $as_echo "#undef ${macro}"
+	    printf "%s\n" "#undef ${macro}"
 	done
-	$as_echo "}"
+	printf "%s\n" "}"
 
     done
 done
 
-$as_echo ""
-$as_echo "/* the xlat function array: */"
-$as_echo "static const struct tme_fb_xlat tme_fb_xlats[] = {$xlat_array
-};"
+printf "%s\n" ""
+printf "%s\n" "/* the xlat function array: */"
+printf "%s\n" "static const struct tme_fb_xlat tme_fb_xlats[] = {$xlat_array};"
 
 # done:
 exit 0

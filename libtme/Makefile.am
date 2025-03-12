@@ -7,14 +7,8 @@ AUTOM4TE = $(SHELL) $(top_srcdir)/missing --run autom4te
 
 SUBDIRS = host
 
-AM_CPPFLAGS = -I$(top_srcdir) -D_TME_IMPL $(LTDLINCL)
-if HAVE_ZLIB
-AM_CPPFLAGS += $(ZLIB_CFLAGS)
-endif
+AM_CPPFLAGS = -I$(top_srcdir) -D_TME_IMPL $(LTDLINCL) $(LIBOPENVPN_CFLAGS) $(ZLIB_CFLAGS) $(GLIB_CFLAGS)
 
-if THREADS_GLIB
-AM_CPPFLAGS += $(GLIB_CFLAGS)
-endif
 lib_LTLIBRARIES = libtme.la
 pkginclude_HEADERS = memory-auto.h
 libtme_la_SOURCES = misc-host.c \
@@ -38,19 +32,11 @@ libtme_la_SOURCES = misc-host.c \
 	runlength.c \
 	alloc.c
 
-libtme_la_LIBADD = $(LIBLTDL)
+libtme_la_LIBADD = $(LIBLTDL) $(LIBOPENVPN_LIBS) $(ZLIB_LIBS) $(GLIB_LIBS)
 libtme_la_LDFLAGS = -version-info 0:0:0
-
-if HAVE_ZLIB
-libtme_la_LIBADD += $(ZLIB_LIBS)
-endif
 
 if THREADS_FIBER
 libtme_la_SOURCES += threads-fiber.c
-endif
-
-if THREADS_GLIB
-libtme_la_LIBADD += $(GLIB_LIBS)
 endif
 
 noinst_SCRIPTS = memory-auto.sh

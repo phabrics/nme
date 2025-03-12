@@ -205,6 +205,10 @@ AC_CHECK_DECLS(
 )
 CFLAGS="${old_CFLAGS}"
 
+dnl Checks for LIBOPENVPN.
+PKG_CHECK_MODULES([LIBOPENVPN], [libopenvpn], [AC_DEFINE([HAVE_LIBOPENVPN], [], [Defined if LIBOPENVPN is found.])], [have_libopenvpn=no])
+AM_CONDITIONAL([HAVE_LIBOPENVPN], [test "x${have_libopenvpn}" != xno])
+
 dnl Checks for GLIB.
 PKG_CHECK_MODULES([GLIB], [glib-2.0], [AC_DEFINE([HAVE_GLIB], [], [Defined if GLIB 2.0 is found.])], [have_glib=no])
 AM_CONDITIONAL([HAVE_GLIB], [test "x${have_glib}" != xno])
