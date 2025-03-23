@@ -222,7 +222,9 @@ if test "x${have_gtk}" = xyes; then
 fi
 AM_CONDITIONAL([HAVE_GTK], [test "x${have_gtk}" = xyes])
 
-PKG_CHECK_MODULES([SDL], [sdl2], [have_sdl=$enable_sdl], [have_sdl=no])
+PKG_CHECK_MODULES([SDL], [sdl3], [have_sdl=$enable_sdl], [
+   PKG_CHECK_MODULES([SDL], [sdl2], [have_sdl=$enable_sdl], [have_sdl=no])
+])
 
 AX_CHECK_COMPILE_FLAG(-sUSE_SDL=2, [have_sdl=$enable_sdl])
 AX_APPEND_COMPILE_FLAGS(-sUSE_SDL=2, SDL_CFLAGS)

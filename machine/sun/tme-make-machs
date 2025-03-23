@@ -37,7 +37,7 @@
 # directory is <tme_install_prefix>/share/tme/examples. 
 machine_root=./machine
 machine_dir=
-machines=
+machines={sun2,sun3,sun4,sun-ultra}
 
 # Firmware downloads for various machines
 firmware_root=./sun-fw
@@ -94,6 +94,11 @@ make_seg() {
     fi
 }
 
+if [ $1 != "" ]; then machine_root=$1; fi
+if [ $2 != "" ]; then machines=$2; fi
+
+mkdir -p $machine_root
+
 # Download the firmware for each machine type, if needed
 mkdir -p $firmware_root
 pushd $firmware_root
@@ -104,8 +109,17 @@ popd
 
 mkdir -p $netbsd_root
 pushd $netbsd_root
+
 # Download arch-specific NetBSD install files
-for arch in {sun2,sun3}; do
+for arch in $machines; do
+    # Only download if necessary
+    if [ $arch = "sun4" ]; then
+	download_cmd $netbsd_site images/$netbsd_rel/NetBSD-$netbsd_rel-sparc.iso
+    elif [ $arch = "sun-ultra" ]; then
+	download_cmd $netbsd_site images/$netbsd_rel/NetBSD-$netbsd_rel-sparc64.iso
+    else
+	continue
+    fi
     netbsd_path=NetBSD-$netbsd_rel/$arch
     # Only download if necessary
     download_cmd $netbsd_site $netbsd_path/INSTALL.html
@@ -125,10 +139,6 @@ for arch in {sun2,sun3}; do
     done
 done
 
-for arch in {sparc,sparc64}; do
-    # Only download if necessary
-    download_cmd $netbsd_site images/$netbsd_rel/NetBSD-$netbsd_rel-$arch.iso
-done
 popd
 
 # First, try to find installed location of tme
@@ -160,7 +170,7 @@ firmware_root=$(realpath $firmware_root)
 netbsd_root=$(realpath $netbsd_root)
 
 # Finally, set up the links to the NetBSD installation files and device configuration
-for arch in {sun2,sun3,sun4,sun-ultra}; do
+for arch in $machines; do
     netbsd_path=$netbsd_root/NetBSD-$netbsd_rel/$arch
     netbsd_iso=$netbsd_root/images/$netbsd_rel/NetBSD-$netbsd_rel-sparc
     netbsd=netbsd-$arch

@@ -35,7 +35,11 @@
 
 /* includes: */
 #include "display.h"
+#ifdef main
 #include <SDL.h>
+#else
+#include <SDL3/SDL.h>
+#endif
 #include <signal.h>
 #include <stdlib.h>
 #ifdef HAVE_X11_KEYSYM_H
@@ -51,11 +55,19 @@
 #endif
 
 static int _tme_sdl_keymods[] = {
+#ifdef main
   KMOD_SHIFT,
   KMOD_NUM | KMOD_CAPS,
   KMOD_CTRL,
   KMOD_ALT,
   KMOD_GUI,
+#else
+  SDL_KMOD_SHIFT,
+  SDL_KMOD_NUM | SDL_KMOD_CAPS,
+  SDL_KMOD_CTRL,
+  SDL_KMOD_ALT,
+  SDL_KMOD_GUI,
+#endif  
   0,
   0,
   0
@@ -102,19 +114,34 @@ static int _tme_sdl_screen_resize(struct tme_sdl_screen *screen)
   int depth = SDL_BITSPERPIXEL(SDL_PIXELFORMAT_RGBA32);
   float scaleX, scaleY;
   struct tme_display *display;
-
+#ifdef main
+  SDL_PixelFormat *format;
+#else
+  SDL_PixelFormatDetails *format;
+#endif
+  
   if (enableResizable)
     screen->sdlFlags |= SDL_WINDOW_RESIZABLE;
+#ifdef main
   else
     screen->sdlFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
-
+#endif
   /* (re)create the surface used as the client's framebuffer */
-  if(screen->sdl) SDL_FreeSurface(screen->sdl);
-  screen->sdl=SDL_CreateRGBSurface(0,
-				   width,
-				   height,
-				   depth,
-				   0,0,0,0);
+  if(screen->sdl)
+#ifdef main
+    SDL_FreeSurface(screen->sdl);
+  screen->sdl = SDL_CreateRGBSurface(0,
+				     width,
+				     height,
+				     depth,
+				     0,0,0,0);
+#else
+  SDL_DestroySurface(screen->sdl);
+  screen->sdl=SDL_CreateSurface(width,
+				height,
+				SDL_PIXELFORMAT_RGBA8888);
+#endif  
+  
   /* get the display: */
   display = screen->screen.tme_screen_display;
   if(!screen->sdl)
@@ -132,14 +159,21 @@ static int _tme_sdl_screen_resize(struct tme_sdl_screen *screen)
   conn_fb->tme_fb_connection_bits_per_pixel = depth;
   conn_fb->tme_fb_connection_depth = 24;
   conn_fb->tme_fb_connection_class = TME_FB_XLAT_CLASS_COLOR;
-  conn_fb->tme_fb_connection_mask_g = screen->sdl->format->Gmask;
-  conn_fb->tme_fb_connection_mask_b = screen->sdl->format->Bmask;
-  conn_fb->tme_fb_connection_mask_r = screen->sdl->format->Rmask;
+#ifdef main
+  format = screen->sdl->format;
+#else
+  format = SDL_GetPixelFormatDetails(screen->sdl->format);
+#endif
+  conn_fb->tme_fb_connection_mask_g = format->Gmask;
+  conn_fb->tme_fb_connection_mask_b = format->Bmask;
+  conn_fb->tme_fb_connection_mask_r = format->Rmask;
   /* create or resize the window */
   if(!screen->sdlWindow) {
     screen->sdlWindow = SDL_CreateWindow(display->tme_display_title,
+#ifdef main
 					 SDL_WINDOWPOS_UNDEFINED,
 					 SDL_WINDOWPOS_UNDEFINED,
+#endif
 					 width,
 					 height,
 					 screen->sdlFlags);
@@ -152,15 +186,24 @@ static int _tme_sdl_screen_resize(struct tme_sdl_screen *screen)
   }
   /* create the renderer if it does not already exist */
   if(!screen->sdlRenderer) {
-    screen->sdlRenderer = SDL_CreateRenderer(screen->sdlWindow, -1, 0);
+    screen->sdlRenderer = SDL_CreateRenderer(screen->sdlWindow, NULL);
     if(!screen->sdlRenderer)
           tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
 	    (&display->tme_display_element->tme_element_log_handle,
 	     _("resize: error creating renderer: %s\n"), SDL_GetError()));
-    SDL_SetRelativeMouseMode(SDL_TRUE);
+#ifdef main
+    SDL_SetRelativeMouseMode(true);
+#else
+    SDL_SetWindowRelativeMouseMode(screen->sdlWindow, true);
+#endif
   }
+#ifdef main
   SDL_RenderSetLogicalSize(screen->sdlRenderer, width, height);  /* this is a departure from the SDL1.2-based version, but more in the sense of a VNC viewer in keeeping aspect ratio */
   SDL_RenderGetScale(screen->sdlRenderer, &scaleX, &scaleY);
+#else
+  SDL_SetRenderLogicalPresentation(screen->sdlRenderer, width, height, SDL_LOGICAL_PRESENTATION_LETTERBOX);  /* this is a departure from the SDL1.2-based version, but more in the sense of a VNC viewer in keeeping aspect ratio */
+  SDL_GetRenderScale(screen->sdlRenderer, &scaleX, &scaleY);
+#endif
   
   tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
 	  (&display->tme_display_element->tme_element_log_handle,
@@ -367,16 +410,28 @@ _tme_sdl_screen_redraw(struct tme_sdl_screen *screen, int x, int y, int w, int h
   SDL_Rect r = {x,y,w,h};
   struct tme_display *display = screen->screen.tme_screen_display;
   
-  if(SDL_UpdateTexture(screen->sdlTexture, &r, sdl->pixels + y*sdl->pitch + x*4, sdl->pitch) < 0)
+  if(SDL_UpdateTexture(screen->sdlTexture, &r, sdl->pixels + y*sdl->pitch + x*4, sdl->pitch)
+#ifdef main
+     < 0
+#endif
+     )
     tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
 	    (&display->tme_display_element->tme_element_log_handle,
 	     _("update: failed to update texture: %s\n"), SDL_GetError()));
   /* copy texture to renderer and show */
-  if(SDL_RenderClear(screen->sdlRenderer) < 0)
+  if(SDL_RenderClear(screen->sdlRenderer)
+#ifdef main
+     < 0
+#endif
+     )
     tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
 	    (&display->tme_display_element->tme_element_log_handle,
 	     _("update: failed to clear renderer: %s\n"), SDL_GetError()));
+#ifdef main
   if(SDL_RenderCopy(screen->sdlRenderer, screen->sdlTexture, NULL, NULL) < 0)
+#else
+  if(SDL_RenderTexture(screen->sdlRenderer, screen->sdlTexture, NULL, NULL))
+#endif
     tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
 	    (&display->tme_display_element->tme_element_log_handle,
 	     _("update: failed to copy texture to renderer: %s\n"), SDL_GetError()));
@@ -385,13 +440,18 @@ _tme_sdl_screen_redraw(struct tme_sdl_screen *screen, int x, int y, int w, int h
 static int
 _tme_sdl_display_update(struct tme_display *display) {
   SDL_Event e;
-  int state;
+  int keydown = 0;
   if(SDL_PollEvent(&e)) {
 
     switch(e.type) {
+#ifdef main
     case SDL_WINDOWEVENT:
       switch (e.window.event) {
       case SDL_WINDOWEVENT_FOCUS_LOST:
+#else
+      case SDL_EVENT_WINDOW_FOCUS_LOST:
+#endif
+      
 	if (rightAltKeyDown) {
 	  _tme_keyboard_key_event(FALSE, SDLK_RALT, display);
 	  rightAltKeyDown = FALSE;
@@ -407,9 +467,15 @@ _tme_sdl_display_update(struct tme_display *display) {
 		   _("released left Alt key\n")));
 	}
 	break;
+#ifdef main
       }
       break;
+#endif
+#ifdef main
     case SDL_MOUSEWHEEL:
+#else
+    case SDL_EVENT_MOUSE_WHEEL:
+#endif      
       {
 	int steps;
 	if (viewOnly)
@@ -436,14 +502,25 @@ _tme_sdl_display_update(struct tme_display *display) {
 	  }
 	break;
       }
+#ifdef main
     case SDL_MOUSEBUTTONUP:
     case SDL_MOUSEBUTTONDOWN:
     case SDL_MOUSEMOTION:
+#else
+    case SDL_EVENT_MOUSE_BUTTON_UP:
+    case SDL_EVENT_MOUSE_BUTTON_DOWN:
+    case SDL_EVENT_MOUSE_MOTION:
+#endif
       {
 	int button, i;
 	if (viewOnly)
 	  break;
-	if (e.type == SDL_MOUSEMOTION) {
+#ifdef main
+	if (e.type == SDL_MOUSEMOTION)
+#else
+	if (e.type == SDL_EVENT_MOUSE_MOTION)
+#endif
+	  {
 	  x = e.motion.xrel;
 	  y = e.motion.yrel;
 	  button = 0; // e.motion.state;
@@ -452,25 +529,46 @@ _tme_sdl_display_update(struct tme_display *display) {
 	  x = 0; // e.button.x;
 	  y = 0; // e.button.y;
 	  button = e.button.button;
+#ifdef main
 	  if (e.type == SDL_MOUSEBUTTONUP)
+#else
+	  if (e.type == SDL_EVENT_MOUSE_BUTTON_UP)
+#endif
 	    button = -button;
 	}
 	_tme_mouse_event(button, x, y, display);
 	break;
       }
+#ifdef main
     case SDL_KEYUP:
+      keydown = 1;
     case SDL_KEYDOWN:
+#else
+    case SDL_EVENT_KEY_DOWN:
+      keydown = 1;
+    case SDL_EVENT_KEY_UP:
+#endif
       if (viewOnly)
 	break;
+#ifdef main
       SDL_Keycode sym = e.key.keysym.sym;
-      _tme_keyboard_key_event((e.type == SDL_KEYDOWN ? (1) : (0)) | e.key.keysym.mod<<1,
+      SDL_Keymod mod = e.key.keysym.mod;
+#else
+      SDL_Keycode sym = e.key.key;
+      SDL_Keymod mod = e.key.mod;
+#endif
+      _tme_keyboard_key_event(keydown | mod<<1,
 			      sdl_to_tme_keysym(sym), display);
       if (sym == SDLK_RALT)
-	rightAltKeyDown = e.type == SDL_KEYDOWN;
+	rightAltKeyDown = keydown;
       if (sym == SDLK_LALT)
-	leftAltKeyDown = e.type == SDL_KEYDOWN;
+	leftAltKeyDown = keydown;
       break;
+#ifdef main
     case SDL_TEXTINPUT:
+#else
+    case SDL_EVENT_TEXT_INPUT:
+#endif
 #if 0
       if (viewOnly)
 	break;
@@ -514,7 +612,11 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_sdl,display) {
   /* recover our data structure: */
   display = element->tme_element_private;
 
-  SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE);
+  SDL_Init(SDL_INIT_VIDEO
+#ifdef main
+	   | SDL_INIT_NOPARACHUTE
+#endif
+	   );
   atexit(SDL_Quit);
   signal(SIGINT, exit);
 
