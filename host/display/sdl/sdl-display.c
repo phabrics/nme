@@ -139,7 +139,7 @@ static int _tme_sdl_screen_resize(struct tme_sdl_screen *screen)
   SDL_DestroySurface(screen->sdl);
   screen->sdl=SDL_CreateSurface(width,
 				height,
-				SDL_PIXELFORMAT_RGBA8888);
+				SDL_PIXELFORMAT_ARGB8888);
 #endif  
   
   /* get the display: */
@@ -413,6 +413,8 @@ _tme_sdl_screen_redraw(struct tme_sdl_screen *screen, int x, int y, int w, int h
   if(SDL_UpdateTexture(screen->sdlTexture, &r, sdl->pixels + y*sdl->pitch + x*4, sdl->pitch)
 #ifdef main
      < 0
+#else
+     == false
 #endif
      )
     tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
@@ -422,6 +424,8 @@ _tme_sdl_screen_redraw(struct tme_sdl_screen *screen, int x, int y, int w, int h
   if(SDL_RenderClear(screen->sdlRenderer)
 #ifdef main
      < 0
+#else
+     == false
 #endif
      )
     tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
@@ -430,7 +434,7 @@ _tme_sdl_screen_redraw(struct tme_sdl_screen *screen, int x, int y, int w, int h
 #ifdef main
   if(SDL_RenderCopy(screen->sdlRenderer, screen->sdlTexture, NULL, NULL) < 0)
 #else
-  if(SDL_RenderTexture(screen->sdlRenderer, screen->sdlTexture, NULL, NULL))
+  if(!SDL_RenderTexture(screen->sdlRenderer, screen->sdlTexture, NULL, NULL))
 #endif
     tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
 	    (&display->tme_display_element->tme_element_log_handle,
