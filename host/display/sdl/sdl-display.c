@@ -186,7 +186,11 @@ static int _tme_sdl_screen_resize(struct tme_sdl_screen *screen)
   }
   /* create the renderer if it does not already exist */
   if(!screen->sdlRenderer) {
+#ifdef main
+    screen->sdlRenderer = SDL_CreateRenderer(screen->sdlWindow, -1, 0);
+#else
     screen->sdlRenderer = SDL_CreateRenderer(screen->sdlWindow, NULL);
+#endif
     if(!screen->sdlRenderer)
           tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
 	    (&display->tme_display_element->tme_element_log_handle,
@@ -544,9 +548,9 @@ _tme_sdl_display_update(struct tme_display *display) {
 	break;
       }
 #ifdef main
-    case SDL_KEYUP:
-      keydown = 1;
     case SDL_KEYDOWN:
+      keydown = 1;
+    case SDL_KEYUP:
 #else
     case SDL_EVENT_KEY_DOWN:
       keydown = 1;

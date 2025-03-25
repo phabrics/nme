@@ -366,7 +366,9 @@ tme_misc_cycles_scaling(tme_misc_cycles_scaling_t *scaling,
   *scaling /= denominator;
 }
 
+#ifndef USE_SDL
 #ifdef WIN32
+
 tme_uint32_t
 tme_misc_cycles_per_ms(void)
 {
@@ -486,6 +488,7 @@ tme_misc_cycles(void)
 
 #endif /* !defined(TME_HAVE_MISC_CYCLES) */
 #endif /* !defined(WIN32) */
+#endif /* !defined(USE_SDL) */
 
 /* this spins until the cycle counter reaches a threshold: */
 void
