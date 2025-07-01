@@ -42,13 +42,31 @@ _TME_RCSID("$Id: threads.h,v 1.10 2010/06/05 19:36:35 fredette Exp $");
 /* includes: */
 #include <errno.h>
 
+/* our errno convention: */
+#define TME_EDEADLK		EDEADLK
+#define TME_EBUSY		EBUSY
+#define TME_THREADS_ERRNO(rc)	(rc)
+
+/* thread suspension: */
+#define _tme_thread_suspended()	        tme_rwlock_rdunlock(&tme_rwlock_suspere)
+#define _tme_thread_resumed()	        _tme_rwlock_rdlock(&tme_rwlock_suspere)
+#define tme_thread_suspend_others()	_tme_thread_suspended();if(!tme_thread_cooperative()) _tme_rwlock_wrlock(&tme_rwlock_suspere)
+#define tme_thread_resume_others()	if(!tme_thread_cooperative()) tme_rwlock_wrunlock(&tme_rwlock_suspere);_tme_thread_resumed()
+
 /* setjmp/longjmp threading: */
 #ifdef TME_THREADS_POSIX
 #include "threads-posix.h"
+#elif defined(TME_THREADS_SDL)
+#include "threads-sdl.h"
 #elif defined(TME_THREADS_GLIB)
 #include "threads-glib.h"
 #elif defined(TME_THREADS_FIBER)
 #include "threads-fiber.h"
+#endif
+
+/* initializing and starting: */
+#ifndef _tme_threads_init
+#define _tme_threads_init() tme_rwlock_init(&tme_rwlock_suspere)
 #endif
 
 #ifdef _TME_HAVE_ZLIB

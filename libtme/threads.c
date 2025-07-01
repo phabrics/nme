@@ -36,21 +36,10 @@
 #include <tme/openvpn-setup.h>
 
 #ifdef TME_THREADS_POSIX
-pthread_rwlock_t tme_rwlock_suspere;
-
-#ifdef HAVE_PTHREAD_SETSCHEDPARAM
-static pthread_attr_t *attrp;
-
-void tme_thread_set_defattr(pthread_attr_t *attr) {
-  attrp=attr;
-}
-pthread_attr_t *tme_thread_defattr() {
-  return attrp;
-}
-#endif // HAVE_PTHREAD_SETSCHEDPARAM
-#elif defined(TME_THREADS_GLIB)
-GRWLock tme_rwlock_suspere;
+pthread_attr_t *attrp;
 #endif
+
+tme_rwlock_t tme_rwlock_suspere;
 
 #ifdef WIN32
 

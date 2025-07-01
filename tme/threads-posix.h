@@ -43,46 +43,24 @@
 /* pthreads can support cooperative threads by setting the appropriate parameters */
 #define TME_THREADS_PREEMPTIVE		(TRUE)
 
-/* our errno convention: */
-#define TME_EDEADLK		EDEADLK
-#define TME_EBUSY		EBUSY
-#define TME_THREADS_ERRNO(rc)	(rc)
-
-#ifdef HAVE_PTHREAD_SETSCHEDPARAM
-static int tme_thread_cooperative() {
-  int policy;
-  struct sched_param param;
-  if(!pthread_getschedparam(pthread_self(), &policy, &param))
-    return (policy == SCHED_FIFO);
-  return FALSE;
-}
-#else
-#define tme_thread_cooperative() FALSE
-#endif
-
-/* initializing and starting: */
-#define _tme_threads_init() pthread_rwlock_init(&tme_rwlock_suspere, NULL)
-
-/* thread suspension: */
-extern pthread_rwlock_t tme_rwlock_suspere;
-#ifdef TME_THREADS_FIBER
-#define tme_thread_suspend_others()	do { } while (/* CONSTCOND */ 0)
-#define tme_thread_resume_others()	do { } while (/* CONSTCOND */ 0)
-#define _tme_thread_suspended()	do { } while (/* CONSTCOND */ 0)
-#define _tme_thread_resumed()	do { } while (/* CONSTCOND */ 0)
-#else
-#define _tme_thread_suspended()	        pthread_rwlock_unlock(&tme_rwlock_suspere)
-#define _tme_thread_resumed()	        pthread_rwlock_rdlock(&tme_rwlock_suspere)
-#define tme_thread_suspend_others()	_tme_thread_suspended();if(!tme_thread_cooperative()) pthread_rwlock_wrlock(&tme_rwlock_suspere)
-#define tme_thread_resume_others()	if(!tme_thread_cooperative()) pthread_rwlock_unlock(&tme_rwlock_suspere);_tme_thread_resumed()
-#endif
-
 /* if we want speed over lock debugging, we can compile very simple
    rwlock operations: */
 
 typedef pthread_rwlock_t tme_rwlock_t;
+
+extern tme_rwlock_t tme_rwlock_suspere;
+
 #define tme_rwlock_init(l) pthread_rwlock_init(l, NULL)
 #define tme_rwlock_destroy pthread_rwlock_destroy
+
+#define _tme_rwlock_rdlock(l) tme_rwlock_lock(l,0)
+#define tme_rwlock_rdlock(l) tme_rwlock_lock(l,0)
+#define tme_rwlock_tryrdlock pthread_rwlock_tryrdlock
+#define tme_rwlock_rdunlock pthread_rwlock_unlock
+#define _tme_rwlock_wrlock(l) pthread_rwlock_wrlock(l)
+#define tme_rwlock_wrlock(l) tme_rwlock_lock(l,1)
+#define tme_rwlock_trywrlock pthread_rwlock_trywrlock
+#define tme_rwlock_wrunlock pthread_rwlock_unlock
 
 static _tme_inline int tme_rwlock_lock _TME_P((tme_rwlock_t *l, int write)) { 
   int rc;
@@ -98,13 +76,6 @@ static _tme_inline int tme_rwlock_lock _TME_P((tme_rwlock_t *l, int write)) {
 
   return rc;
 }
-
-#define tme_rwlock_rdlock(l) tme_rwlock_lock(l,0)
-#define tme_rwlock_tryrdlock pthread_rwlock_tryrdlock
-#define tme_rwlock_rdunlock pthread_rwlock_unlock
-#define tme_rwlock_wrlock(l) tme_rwlock_lock(l,1)
-#define tme_rwlock_trywrlock pthread_rwlock_trywrlock
-#define tme_rwlock_wrunlock pthread_rwlock_unlock
 
 #ifdef HAVE_PTHREAD_RWLOCK_TIMEDRDLOCK
 
@@ -219,9 +190,26 @@ typedef void *_tme_thret;
 typedef _tme_thret (*tme_thread_t) _TME_P((void *));
 typedef pthread_t tme_threadid_t;
 
+extern pthread_attr_t *attrp;
+
 #ifdef HAVE_PTHREAD_SETSCHEDPARAM
-void tme_thread_set_defattr _TME_P((pthread_attr_t *attr));
-pthread_attr_t *tme_thread_defattr _TME_P((void));
+
+static _tme_inline void tme_thread_set_defattr(pthread_attr_t *attr) {
+  attrp=attr;
+}
+
+static _tme_inline pthread_attr_t *tme_thread_defattr() {
+  return attrp;
+}
+
+static _tme_inline int tme_thread_cooperative() {
+  int policy;
+  struct sched_param param;
+  if(!pthread_getschedparam(pthread_self(), &policy, &param))
+    return (policy == SCHED_FIFO);
+  return FALSE;
+}
+
 static _tme_inline void tme_thread_yield _TME_P((void)) {
   if(!tme_thread_cooperative()) return;
   
@@ -232,10 +220,12 @@ static _tme_inline void tme_thread_yield _TME_P((void)) {
   _tme_thread_resumed();
 }
 #else
+#define tme_thread_cooperative() FALSE
 #define tme_thread_set_defattr(attr)
 #define tme_thread_defattr() NULL
 #define tme_thread_yield() do { } while (/* CONSTCOND */ 0)
 #endif
+
 #define tme_thread_create(t,f,a) pthread_create(t,tme_thread_defattr(),f,a)
 #define tme_thread_join(id) pthread_join(id,NULL)
 

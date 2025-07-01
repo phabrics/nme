@@ -38,11 +38,6 @@
 /* setjmp/longjmp threads are cooperative: */
 //#define TME_THREADS_PREEMPTIVE		(FALSE)
 
-/* our errno convention: */
-#define TME_EDEADLK		EBUSY
-#define TME_EBUSY		EBUSY
-#define TME_THREADS_ERRNO(rc)	(rc)
-
 #define tme_thread_cooperative() TRUE
 
 /* initializing and starting: */
@@ -50,12 +45,6 @@ void tme_fiber_threads_init _TME_P((void));
 #define _tme_threads_init tme_fiber_threads_init
 #define tme_threads_main_iter tme_fiber_threads_main_iter
 #define _tme_threads_main_iter tme_fiber_threads_main_iter
-
-/* thread suspension: */
-#define tme_thread_suspend_others()	do { } while (/* CONSTCOND */ 0)
-#define tme_thread_resume_others()	do { } while (/* CONSTCOND */ 0)
-#define _tme_thread_suspended()	do { } while (/* CONSTCOND */ 0)
-#define _tme_thread_resumed()	do { } while (/* CONSTCOND */ 0)
 
 /* if we want speed over lock debugging, we can compile very simple
    rwlock operations: */
@@ -95,9 +84,13 @@ int tme_fiber_rwlock_unlock _TME_P((struct tme_fiber_rwlock *, _tme_const char *
 
 #endif /* TME_NO_DEBUG_LOCKS */
 
+extern tme_rwlock_t tme_rwlock_suspere;
+
 /* since our thread model doesn't allow recursive locking, write locking
    is always the same as read locking: */
 #define tme_rwlock_wrlock tme_rwlock_rdlock
+#define _tme_rwlock_rdlock tme_rwlock_rdlock
+#define _tme_rwlock_wrlock tme_rwlock_rdlock
 #define tme_rwlock_wrunlock tme_rwlock_rdunlock
 #define tme_rwlock_trywrlock tme_rwlock_tryrdlock
 
