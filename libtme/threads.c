@@ -39,7 +39,154 @@
 pthread_attr_t *attrp;
 #endif
 
-tme_rwlock_t tme_rwlock_suspere;
+_tme_rwlock_t tme_rwlock_suspere;
+
+#ifdef _tme_rwlock_timedrdlock
+
+int tme_rwlock_timedlock(tme_rwlock_t *l, unsigned long sec, int write) { 
+  tme_time_t sleep;
+  struct timespec timeout;
+  int rc;
+
+  sleep = TME_TIME_SET_SEC(sec) + tme_thread_get_time();
+
+  timeout.tv_sec = TME_TIME_GET_SEC(sleep);
+  timeout.tv_nsec = TME_TIME_GET_NSEC(sleep % TME_FRAC_PER_SEC);
+  
+  _tme_thread_suspended();
+  
+  if (write)
+    rc = _tme_rwlock_timedwrlock(l, &timeout);
+  else
+    rc = _tme_rwlock_timedrdlock(l, &timeout);
+
+  _tme_thread_resumed();
+
+  return rc;
+}
+#endif
+
+#ifdef _tme_mutex_timedlock
+
+int tme_mutex_timedlock(tme_mutex_t *m, unsigned long sec) {
+  tme_time_t sleep;
+  struct timespec timeout;
+  int rc;
+
+  sleep = TME_TIME_SET_SEC(sec) + tme_thread_get_time();
+
+  timeout.tv_sec = TME_TIME_GET_SEC(sleep);
+  timeout.tv_nsec = TME_TIME_GET_NSEC(sleep % TME_FRAC_PER_SEC);
+  
+  _tme_thread_suspended();
+  
+  rc = _tme_mutex_timedlock(m, &timeout);
+
+  _tme_thread_resumed();
+
+  return rc;
+}
+
+#endif
+
+#ifndef TME_THREADS_FIBER
+
+int tme_rwlock_rdlock(tme_rwlock_t *l) {
+  if((l)->writer == tme_thread_self())
+    // simulates deadlock return when current thread has the write lock
+    return TME_EDEADLK;
+
+  _tme_thread_suspended();
+  _tme_rwlock_rdlock(&(l)->lock);
+  _tme_thread_resumed();
+  
+  /* TODO: insert some kind of timer to interrupt at the end of the timeout */
+  return TME_OK;  
+}
+
+int tme_rwlock_wrlock(tme_rwlock_t *l) {
+  if((l)->writer == tme_thread_self())
+    // simulates deadlock return when current thread has the write lock
+    return TME_EDEADLK;
+
+  _tme_thread_suspended();
+  _tme_rwlock_wrlock(&(l)->lock);
+  _tme_thread_resumed();
+  (l)->writer = tme_thread_self();
+  return TME_OK;
+}
+
+int tme_rwlock_trywrlock(tme_rwlock_t *l) {
+  if(!_tme_rwlock_trywrlock(&(l)->lock)) return TME_EBUSY;
+  (l)->writer = tme_thread_self();
+  return TME_OK;
+}
+
+int tme_rwlock_wrunlock(tme_rwlock_t *l) {
+  (l)->writer = 0;
+  _tme_rwlock_wrunlock(&(l)->lock);
+  return TME_OK;
+}
+
+int tme_cond_wait_yield(tme_cond_t *cond, tme_mutex_t *mutex) {
+  int rc = TME_OK;
+  
+  _tme_thread_suspended();
+
+  tme_cond_wait(cond, mutex);
+
+  _tme_thread_resumed();
+
+  return rc;
+}
+
+int tme_cond_sleep_yield(tme_cond_t *cond, tme_mutex_t *mutex,
+			 tme_time_t sleep) {
+  tme_timeout_t timeout;
+  int rc;
+
+  sleep += tme_thread_get_time();
+  
+  _tme_thread_suspended();
+
+  rc = tme_cond_wait_until(cond, mutex, tme_thread_get_timeout(sleep, &timeout));
+
+  _tme_thread_resumed();
+
+  return rc;
+}
+
+#endif
+
+#ifdef _tme_thread_yield
+
+void tme_thread_yield(void) {
+  if(!tme_thread_cooperative()) return;
+  
+  _tme_thread_suspended();
+
+  _tme_thread_yield();
+
+  _tme_thread_resumed();
+}
+
+#endif
+
+int tme_thread_sleep_yield _TME_P((tme_time_t sleep, tme_mutex_t *mutex)) { 
+  tme_timeout_t timeout;
+
+  if(mutex) tme_mutex_unlock(mutex);
+  
+  _tme_thread_suspended();
+
+  tme_thread_sleep(tme_thread_get_timeout(sleep, &timeout));
+  
+  if(mutex) _tme_mutex_lock(mutex);
+
+  _tme_thread_resumed();
+
+  return 0;
+}
 
 #ifdef WIN32
 
@@ -444,10 +591,10 @@ int _tme_event_wait(tme_event_set_t *es, const struct timeval *tv, struct event_
   
   rc = event_wait(es, &_tv, out, outlen);
 
+  if(mutex) _tme_mutex_lock(mutex);
+
   _tme_thread_resumed();
     
-  if(mutex) tme_mutex_lock(mutex);
-
   return rc;
 }
 

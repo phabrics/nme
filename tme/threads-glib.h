@@ -38,105 +38,42 @@
 
 #define tme_thread_cooperative() FALSE
 
-/* if we want speed over lock debugging, we can compile very simple
-   rwlock operations: */
+/* read/write locks. */
+typedef GRWLock _tme_rwlock_t;
 
-typedef struct tme_rwlock {
-  GRWLock lock;
-  GThread *writer;
-} tme_rwlock_t;
-
-extern tme_rwlock_t tme_rwlock_suspere;
-
-#define tme_rwlock_init(l) g_rw_lock_init(&(l)->lock)
-#define tme_rwlock_destroy(l) g_rw_lock_clear(&(l)->lock)
-#define tme_rwlock_tryrdlock(l) (g_rw_lock_reader_trylock(&(l)->lock) ? (TME_OK) : (TME_EBUSY))
-#define tme_rwlock_rdunlock(l) g_rw_lock_reader_unlock(&(l)->lock)
-#define _tme_rwlock_rdlock(l) g_rw_lock_reader_lock(&(l)->lock)
-#define _tme_rwlock_wrlock(l) g_rw_lock_writer_lock(&(l)->lock)
-
-static _tme_inline int tme_rwlock_rdlock _TME_P((tme_rwlock_t *l)) {
-  if((l)->writer == g_thread_self())
-    // simulates deadlock return when current thread has the write lock
-    return TME_EDEADLK;
-
-  _tme_thread_suspended();
-  g_rw_lock_reader_lock(&(l)->lock);
-  _tme_thread_resumed();
-  
-  /* TODO: insert some kind of timer to interrupt at the end of the timeout */
-  return TME_OK;  
-}
-#define tme_rwlock_timedrdlock(l,t) tme_rwlock_rdlock(l)
-
-static _tme_inline int tme_rwlock_wrlock _TME_P((tme_rwlock_t *l)) {
-  if((l)->writer == g_thread_self())
-    // simulates deadlock return when current thread has the write lock
-    return TME_EDEADLK;
-
-  _tme_thread_suspended();
-  g_rw_lock_writer_lock(&(l)->lock);
-  _tme_thread_resumed();
-  (l)->writer = g_thread_self();
-  return TME_OK;
-}
-static _tme_inline int tme_rwlock_trywrlock _TME_P((tme_rwlock_t *l)) {
-  if(!g_rw_lock_writer_trylock(&(l)->lock)) return TME_EBUSY;
-  (l)->writer = g_thread_self();
-  return TME_OK;
-}
-static _tme_inline int tme_rwlock_wrunlock _TME_P((tme_rwlock_t *l)) {
-  (l)->writer = 0;
-  g_rw_lock_writer_unlock(&(l)->lock);
-  return TME_OK;
-}
-#define tme_rwlock_timedwrlock(l,t) tme_rwlock_wrlock(l)
+#define _tme_rwlock_init g_rw_lock_init
+#define _tme_rwlock_destroy g_rw_lock_clear
+#define _tme_rwlock_rdlock g_rw_lock_reader_lock
+#define _tme_rwlock_wrlock g_rw_lock_writer_lock
+#define _tme_rwlock_rdunlock g_rw_lock_reader_unlock
+#define _tme_rwlock_wrunlock g_rw_lock_writer_unlock
+#define _tme_rwlock_tryrdlock(l) (g_rw_lock_reader_trylock(l) ? (TME_OK) : (TME_EBUSY))
+#define _tme_rwlock_trywrlock(l) (g_rw_lock_writer_trylock(l) ? (TME_OK) : (TME_EBUSY))
 
 /* mutexes. */
 typedef GMutex tme_mutex_t;
 #define tme_mutex_init g_mutex_init
 #define tme_mutex_destroy g_mutex_clear
 #define _tme_mutex_lock g_mutex_lock
-
 #define tme_mutex_trylock(m) (g_mutex_trylock(m) ? (TME_OK) : (TME_EBUSY))
-/* for now, define as trylock (same as timedlock with 0 wait) */
-#define tme_mutex_timedlock(m,t) g_mutex_trylock(m)
 #define tme_mutex_unlock g_mutex_unlock
 
 /* conditions: */
 typedef GCond tme_cond_t;
 #define tme_cond_init g_cond_init
 #define tme_cond_destroy g_cond_clear
-static _tme_inline void
-tme_cond_wait_yield _TME_P((tme_cond_t *cond, tme_mutex_t *mutex)) {
-  _tme_thread_suspended();
-
-  g_cond_wait(cond, mutex);
-
-  _tme_thread_resumed();
-}
-
-static _tme_inline int
-tme_cond_sleep_yield _TME_P((tme_cond_t *cond, tme_mutex_t *mutex,
-			     tme_time_t timeout)) {
-  int rc;
-
-  _tme_thread_suspended();
-
-  rc = g_cond_wait_until(cond, mutex, TME_TIME_GET_USEC(timeout)
-			 + g_get_monotonic_time());
-
-  _tme_thread_resumed();
-
-  return rc;
-}
+#define tme_cond_wait g_cond_wait
+#define tme_cond_wait_until g_cond_wait_until
 #define tme_cond_notifyTRUE g_cond_broadcast
 #define tme_cond_notifyFALSE g_cond_signal
-#define tme_cond_notify(cond,bc) tme_cond_notify##bc(cond)
 
 /* deadlock sleeping: */
 #define TME_THREAD_TIMEDLOCK		(0)
 #define TME_THREAD_DEADLOCK_SLEEP	abort
+
+typedef tme_time_t tme_timeout_t;
+
+#define tme_thread_get_timeout(sleep, timeout) ((*timeout) = TME_TIME_GET_USEC(sleep))
 
 /* threads: */
 typedef gpointer _tme_thret;
@@ -145,13 +82,11 @@ typedef GThread *tme_threadid_t;
 static _tme_inline void tme_thread_create _TME_P((tme_threadid_t *t, tme_thread_t f, void *a)) {
   *t = g_thread_new(NULL,f,a);
 }
-#define tme_thread_yield() 
 #define tme_thread_join g_thread_join
+#define tme_thread_self g_thread_self
 
 /* sleeping: */
-static _tme_inline void tme_thread_sleep _TME_P((tme_time_t sleep)) { 
-  g_usleep(TME_TIME_GET_USEC(sleep));
-}
+#define tme_thread_sleep g_usleep
 
 /* A default main iterator for use in the main thread loop */
 static _tme_inline void tme_threads_main_iter _TME_P((void *usec)) {

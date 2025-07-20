@@ -36,63 +36,18 @@
 #define TME_THREADS_PREEMPTIVE		(TRUE)
 
 #define tme_thread_cooperative() FALSE
-/* if we want speed over lock debugging, we can compile very simple
-   rwlock operations: */
 
-typedef struct tme_rwlock {
-  SDL_RWLock *lock;
-  GThread *writer;
-} tme_rwlock_t;
+/* read/write locks. */
+typedef SDL_RWLock _tme_rwlock_t;
 
-extern tme_rwlock_t tme_rwlock_suspere;
-
-#define tme_rwlock_init(l) ((l)->lock = SDL_CreateRWLock())
-#define tme_rwlock_destroy(l) SDL_DestroyRWLock(&(l)->lock)
-#define tme_rwlock_tryrdlock(l) (SDL_TryLockRWLockForReading(&(l)->lock) ? (TME_OK) : (TME_EBUSY))
-#define tme_rwlock_rdunlock(l) SDL_UnlockRWLock(&(l)->lock)
-#define _tme_rwlock_rdlock(l) SDL_LockRWLockForReading(&(l)->lock)
-#define _tme_rwlock_wrlock(l) SDL_LockRWLockForWriting(&(l)->lock)
-
-static _tme_inline int tme_rwlock_rdlock _TME_P((tme_rwlock_t *l)) {
-  if((l)->writer == g_thread_self())
-    // simulates deadlock return when current thread has the write lock
-    return TME_EDEADLK;
-
-  _tme_thread_suspended();
-  SDL_LockRWLockForReading(&(l)->lock);
-  _tme_thread_resumed();
-  
-  /* TODO: insert some kind of timer to interrupt at the end of the timeout */
-  return TME_OK;  
-}
-
-#define tme_rwlock_timedrdlock(l,t) tme_rwlock_rdlock(l)
-
-static _tme_inline int tme_rwlock_wrlock _TME_P((tme_rwlock_t *l)) {
-  if((l)->writer == g_thread_self())
-    // simulates deadlock return when current thread has the write lock
-    return TME_EDEADLK;
-
-  _tme_thread_suspended();
-  SDL_LockRWLockForWriting(&(l)->lock);
-  _tme_thread_resumed();
-  (l)->writer = g_thread_self();
-  return TME_OK;
-}
-
-static _tme_inline int tme_rwlock_trywrlock _TME_P((tme_rwlock_t *l)) {
-  if(!SDL_TryLockRWLockForWriting(&(l)->lock)) return TME_EBUSY;
-  (l)->writer = g_thread_self();
-  return TME_OK;
-}
-
-static _tme_inline int tme_rwlock_wrunlock _TME_P((tme_rwlock_t *l)) {
-  (l)->writer = 0;
-  SDL_UnlockRWLock(&(l)->lock);
-  return TME_OK;
-}
-
-#define tme_rwlock_timedwrlock(l,t) tme_rwlock_wrlock(l)
+#define _tme_rwlock_init(l) ((l) = SDL_CreateRWLock())
+#define _tme_rwlock_destroy SDL_DestroyRWLock
+#define _tme_rwlock_rdlock SDL_LockRWLockForReading
+#define _tme_rwlock_wrlock SDL_LockRWLockForWriting
+#define _tme_rwlock_rdunlock SDL_UnlockRWLock
+#define _tme_rwlock_wrunlock SDL_UnlockRWLock
+#define _tme_rwlock_tryrdlock(l) (SDL_TryLockRWLockForReading(l) ? (TME_OK) : (TME_EBUSY))
+#define _tme_rwlock_trywrlock(l) (SDL_TryLockRWLockForWriting(l) ? (TME_OK) : (TME_EBUSY))
 
 /* mutexes. */
 typedef GMutex tme_mutex_t;
@@ -143,7 +98,7 @@ tme_cond_sleep_yield _TME_P((tme_cond_t *cond, tme_mutex_t *mutex,
 /* threads: */
 typedef gpointer _tme_thret;
 typedef GThreadFunc tme_thread_t;
-typedef GThread *tme_threadid_t;
+typedef SDL_ThreadID tme_threadid_t;
 static _tme_inline void tme_thread_create _TME_P((tme_threadid_t *t, tme_thread_t f, void *a)) {
   *t = g_thread_new(NULL,f,a);
 }
