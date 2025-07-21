@@ -45,20 +45,17 @@ _tme_rwlock_t tme_rwlock_suspere;
 
 int tme_rwlock_timedlock(tme_rwlock_t *l, unsigned long sec, int write) { 
   tme_time_t sleep;
-  struct timespec timeout;
+  tme_timeout_t timeout;
   int rc;
 
   sleep = TME_TIME_SET_SEC(sec) + tme_thread_get_time();
 
-  timeout.tv_sec = TME_TIME_GET_SEC(sleep);
-  timeout.tv_nsec = TME_TIME_GET_NSEC(sleep % TME_FRAC_PER_SEC);
-  
   _tme_thread_suspended();
   
   if (write)
-    rc = _tme_rwlock_timedwrlock(l, &timeout);
+    rc = _tme_rwlock_timedwrlock((l)->lock, tme_thread_get_timeout(sleep, &timeout));
   else
-    rc = _tme_rwlock_timedrdlock(l, &timeout);
+    rc = _tme_rwlock_timedrdlock((l)->lock, tme_thread_get_timeout(sleep, &timeout));
 
   _tme_thread_resumed();
 
@@ -70,17 +67,14 @@ int tme_rwlock_timedlock(tme_rwlock_t *l, unsigned long sec, int write) {
 
 int tme_mutex_timedlock(tme_mutex_t *m, unsigned long sec) {
   tme_time_t sleep;
-  struct timespec timeout;
+  tme_timeout_t timeout;
   int rc;
 
   sleep = TME_TIME_SET_SEC(sec) + tme_thread_get_time();
 
-  timeout.tv_sec = TME_TIME_GET_SEC(sleep);
-  timeout.tv_nsec = TME_TIME_GET_NSEC(sleep % TME_FRAC_PER_SEC);
-  
   _tme_thread_suspended();
   
-  rc = _tme_mutex_timedlock(m, &timeout);
+  rc = _tme_mutex_timedlock(m, tme_thread_get_timeout(sleep, &timeout));
 
   _tme_thread_resumed();
 
@@ -97,7 +91,7 @@ int tme_rwlock_rdlock(tme_rwlock_t *l) {
     return TME_EDEADLK;
 
   _tme_thread_suspended();
-  _tme_rwlock_rdlock(&(l)->lock);
+  _tme_rwlock_rdlock((l)->lock);
   _tme_thread_resumed();
   
   /* TODO: insert some kind of timer to interrupt at the end of the timeout */
@@ -110,21 +104,21 @@ int tme_rwlock_wrlock(tme_rwlock_t *l) {
     return TME_EDEADLK;
 
   _tme_thread_suspended();
-  _tme_rwlock_wrlock(&(l)->lock);
+  _tme_rwlock_wrlock((l)->lock);
   _tme_thread_resumed();
   (l)->writer = tme_thread_self();
   return TME_OK;
 }
 
 int tme_rwlock_trywrlock(tme_rwlock_t *l) {
-  if(!_tme_rwlock_trywrlock(&(l)->lock)) return TME_EBUSY;
+  if(!_tme_rwlock_trywrlock((l)->lock)) return TME_EBUSY;
   (l)->writer = tme_thread_self();
   return TME_OK;
 }
 
 int tme_rwlock_wrunlock(tme_rwlock_t *l) {
   (l)->writer = 0;
-  _tme_rwlock_wrunlock(&(l)->lock);
+  _tme_rwlock_wrunlock((l)->lock);
   return TME_OK;
 }
 

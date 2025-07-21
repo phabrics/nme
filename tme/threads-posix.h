@@ -46,17 +46,17 @@
 /* read/write locks. */
 typedef pthread_rwlock_t _tme_rwlock_t;
 
-#define _tme_rwlock_init(l) pthread_rwlock_init(l, NULL)
-#define _tme_rwlock_destroy pthread_rwlock_destroy
-#define _tme_rwlock_rdlock pthread_rwlock_rdlock
-#define _tme_rwlock_wrlock pthread_rwlock_wrlock
-#define _tme_rwlock_rdunlock pthread_rwlock_unlock
-#define _tme_rwlock_wrunlock pthread_rwlock_unlock
-#define _tme_rwlock_tryrdlock pthread_rwlock_tryrdlock
-#define _tme_rwlock_trywrlock pthread_rwlock_trywrlock
+#define _tme_rwlock_init(l) pthread_rwlock_init(&l, NULL)
+#define _tme_rwlock_destroy(l) pthread_rwlock_destroy(&l)
+#define _tme_rwlock_rdlock(l) pthread_rwlock_rdlock(&l)
+#define _tme_rwlock_wrlock(l) pthread_rwlock_wrlock(&l)
+#define _tme_rwlock_rdunlock(l) pthread_rwlock_unlock(&l)
+#define _tme_rwlock_wrunlock(l) pthread_rwlock_unlock(&l)
+#define _tme_rwlock_tryrdlock(l) pthread_rwlock_tryrdlock(&l)
+#define _tme_rwlock_trywrlock(l) pthread_rwlock_trywrlock(&l)
 #ifdef HAVE_PTHREAD_RWLOCK_TIMEDRDLOCK
-#define _tme_rwlock_timedrdlock pthread_rwlock_timedrdlock
-#define _tme_rwlock_timedwrlock pthread_rwlock_timedwrlock
+#define _tme_rwlock_timedrdlock(l,t) pthread_rwlock_timedrdlock(&l,t)
+#define _tme_rwlock_timedwrlock(l,t) pthread_rwlock_timedwrlock(&l,t)
 #endif
 
 /* mutexes. */
@@ -94,7 +94,7 @@ static _tme_inline tme_timeout_t *tme_thread_get_timeout(tme_time_t sleep, tme_t
 /* threads: */
 typedef void *_tme_thret;
 typedef _tme_thret (*tme_thread_t) _TME_P((void *));
-typedef pthread_t tme_threadid_t;
+typedef pthread_t tme_threadid_t, _tme_threadid_t;
 
 extern pthread_attr_t *attrp;
 

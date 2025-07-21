@@ -41,14 +41,14 @@
 /* read/write locks. */
 typedef GRWLock _tme_rwlock_t;
 
-#define _tme_rwlock_init g_rw_lock_init
-#define _tme_rwlock_destroy g_rw_lock_clear
-#define _tme_rwlock_rdlock g_rw_lock_reader_lock
-#define _tme_rwlock_wrlock g_rw_lock_writer_lock
-#define _tme_rwlock_rdunlock g_rw_lock_reader_unlock
-#define _tme_rwlock_wrunlock g_rw_lock_writer_unlock
-#define _tme_rwlock_tryrdlock(l) (g_rw_lock_reader_trylock(l) ? (TME_OK) : (TME_EBUSY))
-#define _tme_rwlock_trywrlock(l) (g_rw_lock_writer_trylock(l) ? (TME_OK) : (TME_EBUSY))
+#define _tme_rwlock_init(l) g_rw_lock_init(&l)
+#define _tme_rwlock_destroy(l) g_rw_lock_clear(&l)
+#define _tme_rwlock_rdlock(l) g_rw_lock_reader_lock(&l)
+#define _tme_rwlock_wrlock(l) g_rw_lock_writer_lock(&l)
+#define _tme_rwlock_rdunlock(l) g_rw_lock_reader_unlock(&l)
+#define _tme_rwlock_wrunlock(l) g_rw_lock_writer_unlock(&l)
+#define _tme_rwlock_tryrdlock(l) (g_rw_lock_reader_trylock(&l) ? (TME_OK) : (TME_EBUSY))
+#define _tme_rwlock_trywrlock(l) (g_rw_lock_writer_trylock(&l) ? (TME_OK) : (TME_EBUSY))
 
 /* mutexes. */
 typedef GMutex tme_mutex_t;
@@ -78,7 +78,7 @@ typedef tme_time_t tme_timeout_t;
 /* threads: */
 typedef gpointer _tme_thret;
 typedef GThreadFunc tme_thread_t;
-typedef GThread *tme_threadid_t;
+typedef GThread *tme_threadid_t, *_tme_threadid_t;
 static _tme_inline void tme_thread_create _TME_P((tme_threadid_t *t, tme_thread_t f, void *a)) {
   *t = g_thread_new(NULL,f,a);
 }

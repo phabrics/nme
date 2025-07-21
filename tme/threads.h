@@ -60,27 +60,27 @@ _TME_RCSID("$Id: threads.h,v 1.10 2010/06/05 19:36:35 fredette Exp $");
 
 typedef struct tme_rwlock {
   _tme_rwlock_t lock;
-  tme_threadid_t writer;
+  _tme_threadid_t writer;
 } tme_rwlock_t;
 
 extern _tme_rwlock_t tme_rwlock_suspere;
 
 /* thread suspension: */
-#define _tme_thread_suspended()	        _tme_rwlock_rdunlock(&tme_rwlock_suspere)
-#define _tme_thread_resumed()	        _tme_rwlock_rdlock(&tme_rwlock_suspere)
-#define tme_thread_suspend_others()	_tme_thread_suspended();if(!tme_thread_cooperative()) _tme_rwlock_wrlock(&tme_rwlock_suspere)
-#define tme_thread_resume_others()	if(!tme_thread_cooperative()) _tme_rwlock_wrunlock(&tme_rwlock_suspere);_tme_thread_resumed()
+#define _tme_thread_suspended()	        _tme_rwlock_rdunlock(tme_rwlock_suspere)
+#define _tme_thread_resumed()	        _tme_rwlock_rdlock(tme_rwlock_suspere)
+#define tme_thread_suspend_others()	_tme_thread_suspended();if(!tme_thread_cooperative()) _tme_rwlock_wrlock(tme_rwlock_suspere)
+#define tme_thread_resume_others()	if(!tme_thread_cooperative()) _tme_rwlock_wrunlock(tme_rwlock_suspere);_tme_thread_resumed()
 
-#define tme_rwlock_init(l) _tme_rwlock_init(&(l)->lock)
-#define tme_rwlock_destroy(l) _tme_rwlock_destroy(&(l)->lock)
-#define tme_rwlock_rdunlock(l) _tme_rwlock_rdunlock(&(l)->lock)
-#define tme_rwlock_tryrdlock(l) _tme_rwlock_tryrdlock(&(l)->lock)
+#define tme_rwlock_init(l) _tme_rwlock_init((l)->lock)
+#define tme_rwlock_destroy(l) _tme_rwlock_destroy((l)->lock)
+#define tme_rwlock_rdunlock(l) _tme_rwlock_rdunlock((l)->lock)
+#define tme_rwlock_tryrdlock(l) _tme_rwlock_tryrdlock((l)->lock)
 
 #ifdef TME_THREADS_FIBER
-#define tme_rwlock_rdlock(l) _tme_rwlock_rdlock(&(l)->lock)
-#define tme_rwlock_wrlock(l) _tme_rwlock_wrlock(&(l)->lock)
-#define tme_rwlock_wrunlock(l) _tme_rwlock_wrunlock(&(l)->lock)
-#define tme_rwlock_trywrlock(l) _tme_rwlock_trywrlock(&(l)->lock)
+#define tme_rwlock_rdlock(l) _tme_rwlock_rdlock((l)->lock)
+#define tme_rwlock_wrlock(l) _tme_rwlock_wrlock((l)->lock)
+#define tme_rwlock_wrunlock(l) _tme_rwlock_wrunlock((l)->lock)
+#define tme_rwlock_trywrlock(l) _tme_rwlock_trywrlock((l)->lock)
 #else
 int tme_rwlock_rdlock _TME_P((tme_rwlock_t *l));
 int tme_rwlock_wrlock _TME_P((tme_rwlock_t *l));
@@ -119,7 +119,7 @@ void tme_thread_yield _TME_P((void));
 
   /* initializing and starting: */
 #ifndef _tme_threads_init
-#define _tme_threads_init() tme_rwlock_init(&tme_rwlock_suspere)
+#define _tme_threads_init() _tme_rwlock_init(tme_rwlock_suspere)
 #endif
 
 #ifdef _TME_HAVE_ZLIB

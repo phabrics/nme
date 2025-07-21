@@ -38,7 +38,7 @@
 #define tme_thread_cooperative() FALSE
 
 /* read/write locks. */
-typedef SDL_RWLock _tme_rwlock_t;
+typedef SDL_RWLock *_tme_rwlock_t;
 
 #define _tme_rwlock_init(l) ((l) = SDL_CreateRWLock())
 #define _tme_rwlock_destroy SDL_DestroyRWLock
@@ -50,65 +50,50 @@ typedef SDL_RWLock _tme_rwlock_t;
 #define _tme_rwlock_trywrlock(l) (SDL_TryLockRWLockForWriting(l) ? (TME_OK) : (TME_EBUSY))
 
 /* mutexes. */
-typedef GMutex tme_mutex_t;
-#define tme_mutex_init g_mutex_init
-#define tme_mutex_destroy g_mutex_clear
-#define _tme_mutex_lock g_mutex_lock
+typedef struct tme_mutex {
+  SDL_Mutex *mutex;
+} tme_mutex_t;
 
-#define tme_mutex_trylock(m) (g_mutex_trylock(m) ? (TME_OK) : (TME_EBUSY))
-/* for now, define as trylock (same as timedlock with 0 wait) */
-#define tme_mutex_timedlock(m,t) g_mutex_trylock(m)
-#define tme_mutex_unlock g_mutex_unlock
+#define tme_mutex_init(m) ((m)->mutex = SDL_CreateMutex())
+#define tme_mutex_destroy(m) SDL_DestroyMutex((m)->mutex)
+#define _tme_mutex_lock(m) SDL_LockMutex((m)->mutex)
+#define tme_mutex_trylock(m) (SDL_TryLockMutex(m)->mutex) ? (TME_OK) : (TME_EBUSY))
+#define tme_mutex_unlock SDL_UnlockMutex((m)->mutex)
 
 /* conditions: */
-typedef GCond tme_cond_t;
-#define tme_cond_init g_cond_init
-#define tme_cond_destroy g_cond_clear
-static _tme_inline void
-tme_cond_wait_yield _TME_P((tme_cond_t *cond, tme_mutex_t *mutex)) {
-  _tme_thread_suspended();
+typedef struct tme_cond {
+  SDL_Condition *cond;
+} tme_cond_t;
 
-  g_cond_wait(cond, mutex);
-
-  _tme_thread_resumed();
-}
-
-static _tme_inline int
-tme_cond_sleep_yield _TME_P((tme_cond_t *cond, tme_mutex_t *mutex,
-			     tme_time_t timeout)) {
-  int rc;
-
-  _tme_thread_suspended();
-
-  rc = g_cond_wait_until(cond, mutex, TME_TIME_GET_USEC(timeout)
-			 + g_get_monotonic_time());
-
-  _tme_thread_resumed();
-
-  return rc;
-}
-#define tme_cond_notifyTRUE g_cond_broadcast
-#define tme_cond_notifyFALSE g_cond_signal
-#define tme_cond_notify(cond,bc) tme_cond_notify##bc(cond)
+#define tme_cond_init ((c)->cond = SDL_CreateCondition())
+#define tme_cond_destroy SDL_CreateCondition((c)->cond)
+#define tme_cond_wait SDL_WaitCondition((c)->cond,(m)->mutex)
+#define tme_cond_wait_until SDL_WaitConditionTimeout((c)->cond,(m)->mutex,t)
+#define tme_cond_notifyTRUE SDL_BroadcastCondition((c)->cond)
+#define tme_cond_notifyFALSE SDL_SignalCondition((c)->cond)
 
 /* deadlock sleeping: */
 #define TME_THREAD_TIMEDLOCK		(0)
 #define TME_THREAD_DEADLOCK_SLEEP	abort
 
+typedef tme_int32_t tme_timeout_t;
+
+#define tme_thread_get_timeout(sleep, timeout) ((*timeout) = TME_TIME_GET_MSEC(sleep))
+
 /* threads: */
-typedef gpointer _tme_thret;
-typedef GThreadFunc tme_thread_t;
-typedef SDL_ThreadID tme_threadid_t;
+typedef int *_tme_thret;
+typedef SDL_ThreadFunction tme_thread_t;
+typedef SDL_Thread *tme_threadid_t;
+typedef SDL_ThreadID _tme_threadid_t;
 static _tme_inline void tme_thread_create _TME_P((tme_threadid_t *t, tme_thread_t f, void *a)) {
-  *t = g_thread_new(NULL,f,a);
+  *t = SDL_CreateThread(f,NULL,a);
 }
-#define tme_thread_yield() 
-#define tme_thread_join g_thread_join
+
+#define tme_thread_join SDL_WaitThread
+#define tme_thread_self SDL_GetCurrentThreadID
 
 /* sleeping: */
-static _tme_inline void tme_thread_sleep _TME_P((tme_time_t sleep)) { 
-  g_usleep(TME_TIME_GET_USEC(sleep));
-}
+#define tme_thread_sleep SDL_Delay
 
 /* A default main iterator for use in the main thread loop */
 static _tme_inline void tme_threads_main_iter _TME_P((void *usec)) {
