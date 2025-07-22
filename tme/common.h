@@ -83,6 +83,10 @@ typedef int bool;
 #ifdef HAVE_CURSES_H
 #include <curses.h>
 #endif
+#if defined(USE_SDL_TIME) && defined(_TME_HAVE_SDL)
+#include <SDL3/SDL_time.h>
+#include <SDL3/SDL_timer.h>
+#endif
 #if defined(USE_GLIB_TIME) && defined(_TME_HAVE_GLIB)
 #include <glib.h>
 #endif
@@ -457,7 +461,12 @@ tme_bswap_u128(tme_uint128_t x)
 typedef tme_uint64_t tme_time_t;
 
 static _tme_inline tme_time_t tme_thread_get_time _TME_P((void)) {
-#if defined(USE_GLIB_TIME) && defined(_TME_HAVE_GLIB)
+#if defined(USE_SDL_TIME) && defined(_TME_HAVE_SDL)
+#define TME_FRAC_PER_SEC SDL_NS_PER_SECOND
+  SDL_Time ticks;
+  SDL_GetCurrentTime(&ticks);
+  return ticks;
+#elif defined(USE_GLIB_TIME) && defined(_TME_HAVE_GLIB)
 #define TME_FRAC_PER_SEC G_USEC_PER_SEC
   return g_get_real_time();
 #elif defined(WIN32)

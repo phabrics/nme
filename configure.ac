@@ -230,7 +230,11 @@ AX_CHECK_COMPILE_FLAG(-sUSE_SDL=2, [have_sdl=$enable_sdl])
 AX_APPEND_COMPILE_FLAGS(-sUSE_SDL=2, SDL_CFLAGS)
 AX_APPEND_LINK_FLAGS(-sUSE_SDL=2, SDL_LIBS)
 
+if test "x${have_sdl}" = xyes; then
+   AC_DEFINE([HAVE_SDL], [], [Defined if GTK is found & enabled.])
+fi
 AM_CONDITIONAL([HAVE_SDL], [test "x${have_sdl}" = xyes])
+
 PKG_CHECK_MODULES([RFB], [libvncclient libvncserver], [have_rfb=$enable_rfb], [have_rfb=no])
 
 if test "x${have_tap_header}" = xyes || test "x${WIN32}" != x; then
@@ -740,6 +744,9 @@ xpthreads| xposix)  CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_POSIX"
 	  	    CFLAGS="${CFLAGS-} -pthread"
 		    LDFLAGS="${LDFLAGS-} -pthread"
 		     ;;
+xsdl)    CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_SDL -DUSE_SDL_TIME ${SDL_CFLAGS}"
+	 LDFLAGS="${LDFLAGS-} ${SDL_LIBS}"
+	 ;;
 xglib)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_GLIB -DUSE_GLIB_TIME ${GLIB_CFLAGS}"
 	 LDFLAGS="${LDFLAGS-} ${GLIB_LIBS}"
 	 ;;

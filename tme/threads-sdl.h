@@ -57,20 +57,20 @@ typedef struct tme_mutex {
 #define tme_mutex_init(m) ((m)->mutex = SDL_CreateMutex())
 #define tme_mutex_destroy(m) SDL_DestroyMutex((m)->mutex)
 #define _tme_mutex_lock(m) SDL_LockMutex((m)->mutex)
-#define tme_mutex_trylock(m) (SDL_TryLockMutex(m)->mutex) ? (TME_OK) : (TME_EBUSY))
-#define tme_mutex_unlock SDL_UnlockMutex((m)->mutex)
+#define tme_mutex_trylock(m) (SDL_TryLockMutex((m)->mutex) ? (TME_OK) : (TME_EBUSY))
+#define tme_mutex_unlock(m) SDL_UnlockMutex((m)->mutex)
 
 /* conditions: */
 typedef struct tme_cond {
   SDL_Condition *cond;
 } tme_cond_t;
 
-#define tme_cond_init ((c)->cond = SDL_CreateCondition())
-#define tme_cond_destroy SDL_CreateCondition((c)->cond)
-#define tme_cond_wait SDL_WaitCondition((c)->cond,(m)->mutex)
-#define tme_cond_wait_until SDL_WaitConditionTimeout((c)->cond,(m)->mutex,t)
-#define tme_cond_notifyTRUE SDL_BroadcastCondition((c)->cond)
-#define tme_cond_notifyFALSE SDL_SignalCondition((c)->cond)
+#define tme_cond_init(c) ((c)->cond = SDL_CreateCondition())
+#define tme_cond_destroy(c) SDL_CreateCondition((c)->cond)
+#define tme_cond_wait(c,m) SDL_WaitCondition((c)->cond,(m)->mutex)
+#define tme_cond_wait_until(c,m,t) SDL_WaitConditionTimeout((c)->cond,(m)->mutex,t)
+#define tme_cond_notifyTRUE(c) SDL_BroadcastCondition((c)->cond)
+#define tme_cond_notifyFALSE(c) SDL_SignalCondition((c)->cond)
 
 /* deadlock sleeping: */
 #define TME_THREAD_TIMEDLOCK		(0)
@@ -89,7 +89,11 @@ static _tme_inline void tme_thread_create _TME_P((tme_threadid_t *t, tme_thread_
   *t = SDL_CreateThread(f,NULL,a);
 }
 
-#define tme_thread_join SDL_WaitThread
+static _tme_inline int tme_thread_join _TME_P((tme_threadid_t t)) {
+  int r;
+  SDL_WaitThread(t,&r);
+  return r;
+}
 #define tme_thread_self SDL_GetCurrentThreadID
 
 /* sleeping: */
