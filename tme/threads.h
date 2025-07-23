@@ -65,12 +65,6 @@ typedef struct tme_rwlock {
 
 extern _tme_rwlock_t tme_rwlock_suspere;
 
-/* thread suspension: */
-#define _tme_thread_suspended()	        _tme_rwlock_rdunlock(tme_rwlock_suspere)
-#define _tme_thread_resumed()	        _tme_rwlock_rdlock(tme_rwlock_suspere)
-#define tme_thread_suspend_others()	_tme_thread_suspended();if(!tme_thread_cooperative()) _tme_rwlock_wrlock(tme_rwlock_suspere)
-#define tme_thread_resume_others()	if(!tme_thread_cooperative()) _tme_rwlock_wrunlock(tme_rwlock_suspere);_tme_thread_resumed()
-
 #define tme_rwlock_init(l) _tme_rwlock_init((l)->lock)
 #define tme_rwlock_destroy(l) _tme_rwlock_destroy((l)->lock)
 #define tme_rwlock_rdunlock(l) _tme_rwlock_rdunlock((l)->lock)
@@ -82,6 +76,15 @@ extern _tme_rwlock_t tme_rwlock_suspere;
 #define tme_rwlock_wrunlock(l) _tme_rwlock_wrunlock((l)->lock)
 #define tme_rwlock_trywrlock(l) _tme_rwlock_trywrlock((l)->lock)
 #else
+/* initializing and starting: */
+#ifndef _tme_threads_init
+#define _tme_threads_init() _tme_rwlock_init(tme_rwlock_suspere)
+#endif
+/* thread suspension: */
+#define _tme_thread_suspended()	        _tme_rwlock_rdunlock(tme_rwlock_suspere)
+#define _tme_thread_resumed()	        _tme_rwlock_rdlock(tme_rwlock_suspere)
+#define tme_thread_suspend_others()	_tme_thread_suspended();if(!tme_thread_cooperative()) _tme_rwlock_wrlock(tme_rwlock_suspere)
+#define tme_thread_resume_others()	if(!tme_thread_cooperative()) _tme_rwlock_wrunlock(tme_rwlock_suspere);_tme_thread_resumed()
 int tme_rwlock_rdlock _TME_P((tme_rwlock_t *l));
 int tme_rwlock_wrlock _TME_P((tme_rwlock_t *l));
 int tme_rwlock_wrunlock _TME_P((tme_rwlock_t *l));
@@ -93,8 +96,8 @@ int tme_rwlock_timedlock _TME_P((tme_rwlock_t *l, unsigned long sec, int write))
 #define tme_rwlock_timedrdlock(l,sec) tme_rwlock_timedlock(l,sec,0)
 #define tme_rwlock_timedwrlock(l,sec) tme_rwlock_timedlock(l,sec,1)
 #else
-#define tme_rwlock_timedrdlock(l,t) tme_rwlock_tryrdlock(l)
-#define tme_rwlock_timedwrlock(l,t) tme_rwlock_trywrlock(l)
+#define tme_rwlock_timedrdlock(l,t) tme_rwlock_rdlock(l)
+#define tme_rwlock_timedwrlock(l,t) tme_rwlock_wrlock(l)
 #endif
 
 #ifdef _tme_mutex_timedlock
@@ -115,11 +118,6 @@ int tme_cond_sleep_yield _TME_P((tme_cond_t *cond, tme_mutex_t *mutex, tme_time_
 void tme_thread_yield _TME_P((void));
 #else
 #define tme_thread_yield() 
-#endif
-
-  /* initializing and starting: */
-#ifndef _tme_threads_init
-#define _tme_threads_init() _tme_rwlock_init(tme_rwlock_suspere)
 #endif
 
 #ifdef _TME_HAVE_ZLIB

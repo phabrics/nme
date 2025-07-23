@@ -46,14 +46,19 @@ void tme_fiber_threads_init _TME_P((void));
 #define tme_threads_main_iter tme_fiber_threads_main_iter
 #define _tme_threads_main_iter tme_fiber_threads_main_iter
 
+#define tme_thread_suspend_others()	do { } while (/* CONSTCOND */ 0)
+#define tme_thread_resume_others()	do { } while (/* CONSTCOND */ 0)
+#define _tme_thread_suspended()	do { } while (/* CONSTCOND */ 0)
+#define _tme_thread_resumed()	do { } while (/* CONSTCOND */ 0)
+
 /* if we want speed over lock debugging, we can compile very simple
    rwlock operations: */
 #ifdef TME_NO_DEBUG_LOCKS
 typedef int _tme_rwlock_t;
-#define _tme_rwlock_init(l) (*(l) = FALSE, TME_OK)
-#define _tme_rwlock_rdlock(l) (*(l) = TRUE, TME_OK)
-#define _tme_rwlock_tryrdlock(l) (*(l) ? TME_EBUSY : _tme_rwlock_rdlock(l))
-#define _tme_rwlock_rdunlock(l) (*(l) = FALSE, TME_OK)
+#define _tme_rwlock_init(l) ((l) = FALSE, TME_OK)
+#define _tme_rwlock_rdlock(l) ((l) = TRUE, TME_OK)
+#define _tme_rwlock_tryrdlock(l) ((l) ? TME_EBUSY : _tme_rwlock_rdlock(l))
+#define _tme_rwlock_rdunlock(l) ((l) = FALSE, TME_OK)
 #else  /* !TME_NO_DEBUG_LOCKS */   
 
 /* debugging rwlocks: */
@@ -71,15 +76,15 @@ typedef struct tme_fiber_rwlock {
 int tme_fiber_rwlock_init _TME_P((struct tme_fiber_rwlock *));
 int tme_fiber_rwlock_lock _TME_P((struct tme_fiber_rwlock *, _tme_const char *, unsigned long, int));
 int tme_fiber_rwlock_unlock _TME_P((struct tme_fiber_rwlock *, _tme_const char *, unsigned long));
-#define _tme_rwlock_init tme_fiber_rwlock_init
+#define _tme_rwlock_init(l) tme_fiber_rwlock_init(&l)
 #if defined(__FILE__) && defined(__LINE__)
-#define _tme_rwlock_rdlock(l) tme_fiber_rwlock_lock(l, __FILE__, __LINE__, FALSE)
-#define _tme_rwlock_tryrdlock(l) tme_fiber_rwlock_lock(l, __FILE__, __LINE__, TRUE)
-#define _tme_rwlock_rdunlock(l) tme_fiber_rwlock_unlock(l, __FILE__, __LINE__)
+#define _tme_rwlock_rdlock(l) tme_fiber_rwlock_lock(&l, __FILE__, __LINE__, FALSE)
+#define _tme_rwlock_tryrdlock(l) tme_fiber_rwlock_lock(&l, __FILE__, __LINE__, TRUE)
+#define _tme_rwlock_rdunlock(l) tme_fiber_rwlock_unlock(&l, __FILE__, __LINE__)
 #else  /* !defined(__FILE__) || !defined(__LINE__) */
-#define _tme_rwlock_rdlock(l) tme_fiber_rwlock_lock(l, NULL, 0, FALSE)
-#define _tme_rwlock_tryrdlock(l) tme_fiber_rwlock_lock(l, NULL, 0, TRUE)
-#define _tme_rwlock_rdunlock(l) tme_fiber_rwlock_unlock(l, NULL, 0)
+#define _tme_rwlock_rdlock(l) tme_fiber_rwlock_lock(&l, NULL, 0, FALSE)
+#define _tme_rwlock_tryrdlock(l) tme_fiber_rwlock_lock(&l, NULL, 0, TRUE)
+#define _tme_rwlock_rdunlock(l) tme_fiber_rwlock_unlock(&l, NULL, 0)
 #endif /* !defined(__FILE__) || !defined(__LINE__) */
 
 #endif /* TME_NO_DEBUG_LOCKS */
@@ -91,17 +96,17 @@ int tme_fiber_rwlock_unlock _TME_P((struct tme_fiber_rwlock *, _tme_const char *
 #define _tme_rwlock_trywrlock _tme_rwlock_tryrdlock
 
 /* with cooperative threads, it doesn't make any sense to wait for locks: */
-//#define tme_rwlock_timedrdlock(l, usec) tme_rwlock_tryrdlock(l)
-//#define tme_rwlock_timedwrlock(l, usec) tme_rwlock_trywrlock(l)
+#define _tme_rwlock_timedrdlock(l, usec) _tme_rwlock_tryrdlock(l)
+#define _tme_rwlock_timedwrlock(l, usec) _tme_rwlock_trywrlock(l)
 
 /* mutexes.  we use a read/write lock to represent a mutex, and always
    lock it for writing.  we do *not* allow recursive locking: */
 #define tme_mutex_t _tme_rwlock_t
-#define tme_mutex_init _tme_rwlock_init
-#define _tme_mutex_lock _tme_rwlock_wrlock
-#define tme_mutex_trylock _tme_rwlock_trywrlock
+#define tme_mutex_init(l) _tme_rwlock_init(*l)
+#define _tme_mutex_lock(l) _tme_rwlock_wrlock(*l)
+#define tme_mutex_trylock(l) _tme_rwlock_trywrlock(*l)
 //#define tme_mutex_timedlock(t, usec) tme_mutex_trylock(t)
-#define tme_mutex_unlock _tme_rwlock_rdunlock
+#define tme_mutex_unlock(l) _tme_rwlock_rdunlock(*l)
 
 /* conditions: */
 typedef int tme_cond_t;
