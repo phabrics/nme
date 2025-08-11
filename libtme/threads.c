@@ -39,9 +39,8 @@
 pthread_attr_t *attrp;
 #endif
 
-_tme_rwlock_t tme_rwlock_suspere;
-
-#ifdef _tme_rwlock_timedrdlock
+int thread_mode;
+tme_rwlock_t tme_rwlock_suspere;
 
 int tme_rwlock_timedlock(tme_rwlock_t *l, unsigned long sec, int write) { 
   tme_time_t sleep;
@@ -50,20 +49,19 @@ int tme_rwlock_timedlock(tme_rwlock_t *l, unsigned long sec, int write) {
 
   sleep = TME_TIME_SET_SEC(sec) + tme_thread_get_time();
 
+  tme_get_timeout(sleep, &timeout);
+  
   _tme_thread_suspended();
   
   if (write)
-    rc = _tme_rwlock_timedwrlock((l)->lock, tme_thread_get_timeout(sleep, &timeout));
+    rc = tme_thread_op2(rwlock_timedwrlock, (l)->lock, timeout);
   else
-    rc = _tme_rwlock_timedrdlock((l)->lock, tme_thread_get_timeout(sleep, &timeout));
+    rc = tme_thread_op2(rwlock_timedrdlock, (l)->lock, timeout);
 
   _tme_thread_resumed();
 
   return rc;
 }
-#endif
-
-#ifdef _tme_mutex_timedlock
 
 int tme_mutex_timedlock(tme_mutex_t *m, unsigned long sec) {
   tme_time_t sleep;
@@ -72,18 +70,16 @@ int tme_mutex_timedlock(tme_mutex_t *m, unsigned long sec) {
 
   sleep = TME_TIME_SET_SEC(sec) + tme_thread_get_time();
 
+  tme_get_timeout(sleep, &timeout);
+
   _tme_thread_suspended();
   
-  rc = _tme_mutex_timedlock(m, tme_thread_get_timeout(sleep, &timeout));
+  rc = tme_thread_op2(mutex_timedlock, m, timeout);
 
   _tme_thread_resumed();
 
   return rc;
 }
-
-#endif
-
-#ifndef TME_THREADS_FIBER
 
 int tme_rwlock_rdlock(tme_rwlock_t *l) {
   if((l)->writer == tme_thread_self())
@@ -91,7 +87,7 @@ int tme_rwlock_rdlock(tme_rwlock_t *l) {
     return TME_EDEADLK;
 
   _tme_thread_suspended();
-  _tme_rwlock_rdlock((l)->lock);
+  tme_thread_op(rwlock_rdlock,(l)->lock);
   _tme_thread_resumed();
   
   /* TODO: insert some kind of timer to interrupt at the end of the timeout */
@@ -104,21 +100,22 @@ int tme_rwlock_wrlock(tme_rwlock_t *l) {
     return TME_EDEADLK;
 
   _tme_thread_suspended();
-  _tme_rwlock_wrlock((l)->lock);
+  tme_thread_op(rwlock_wrlock,(l)->lock);
   _tme_thread_resumed();
   (l)->writer = tme_thread_self();
   return TME_OK;
 }
 
 int tme_rwlock_trywrlock(tme_rwlock_t *l) {
-  if(!_tme_rwlock_trywrlock((l)->lock)) return TME_EBUSY;
+  if(!tme_thread_op(rwlock_trywrlock,(l)->lock))
+    return TME_EBUSY;
   (l)->writer = tme_thread_self();
   return TME_OK;
 }
 
 int tme_rwlock_wrunlock(tme_rwlock_t *l) {
   (l)->writer = 0;
-  _tme_rwlock_wrunlock((l)->lock);
+  tme_thread_op(rwlock_wrunlock,(l)->lock);
   return TME_OK;
 }
 
@@ -127,7 +124,7 @@ int tme_cond_wait_yield(tme_cond_t *cond, tme_mutex_t *mutex) {
   
   _tme_thread_suspended();
 
-  tme_cond_wait(cond, mutex);
+  tme_thread_op2(cond_wait, cond, mutex);
 
   _tme_thread_resumed();
 
@@ -140,42 +137,43 @@ int tme_cond_sleep_yield(tme_cond_t *cond, tme_mutex_t *mutex,
   int rc;
 
   sleep += tme_thread_get_time();
+
+  tme_get_timeout(sleep, &timeout);
   
   _tme_thread_suspended();
 
-  rc = tme_cond_wait_until(cond, mutex, tme_thread_get_timeout(sleep, &timeout));
+  rc = tme_thread_op3(cond_wait_until, cond, mutex, timeout);
 
   _tme_thread_resumed();
 
   return rc;
 }
 
-#endif
-
-#ifdef _tme_thread_yield
-
 void tme_thread_yield(void) {
   if(!tme_thread_cooperative()) return;
   
   _tme_thread_suspended();
 
-  _tme_thread_yield();
+  if(thread_mode)
+    tme_thread_yield();
+  else
+    tme_fiber_yield();
 
   _tme_thread_resumed();
 }
-
-#endif
 
 int tme_thread_sleep_yield _TME_P((tme_time_t sleep, tme_mutex_t *mutex)) { 
   tme_timeout_t timeout;
 
   if(mutex) tme_mutex_unlock(mutex);
+
+  tme_get_timeout(sleep, &timeout);
   
   _tme_thread_suspended();
 
-  tme_thread_sleep(tme_thread_get_timeout(sleep, &timeout));
+  tme_thread_op(sleep, timeout);
   
-  if(mutex) _tme_mutex_lock(mutex);
+  if(mutex) tme_thread_op(mutex_lock, mutex);
 
   _tme_thread_resumed();
 
@@ -585,23 +583,26 @@ int _tme_event_wait(tme_event_set_t *es, const struct timeval *tv, struct event_
   
   rc = event_wait(es, &_tv, out, outlen);
 
-  if(mutex) _tme_mutex_lock(mutex);
+  if(mutex) tme_thread_op(mutex_lock, mutex);
 
   _tme_thread_resumed();
     
   return rc;
 }
 
-void tme_threads_init() {
-  /* initialize the runtime event callback handlers: */
-  tme_event_set_init = event_set_init;
-  tme_event_free = event_free;
-  tme_event_reset = event_reset;
-  tme_event_del = event_del;
-  tme_event_ctl = event_ctl;
-  tme_event_wait = _tme_event_wait;
-
-  _tme_threads_init();
+void tme_threads_init(int mode) {
+  if(thread_mode=mode) {
+    /* initialize the runtime event callback handlers: */
+    tme_event_set_init = event_set_init;
+    tme_event_free = event_free;
+    tme_event_reset = event_reset;
+    tme_event_del = event_del;
+    tme_event_ctl = event_ctl;
+    tme_event_wait = _tme_event_wait;
+  } else
+    tme_fiber_threads_init();
+  
+  tme_rwlock_init(&tme_rwlock_suspere)
 
 #ifdef WIN32
   win32_stdin = tme_new0(struct tme_win32_handle, 1);

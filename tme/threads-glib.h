@@ -39,39 +39,39 @@
 #define tme_thread_cooperative() FALSE
 
 /* read/write locks. */
-typedef GRWLock _tme_rwlock_t;
+typedef GRWLock tme_thread_rwlock_t;
 
-#define _tme_rwlock_init(l) g_rw_lock_init(&l)
-#define _tme_rwlock_destroy(l) g_rw_lock_clear(&l)
-#define _tme_rwlock_rdlock(l) g_rw_lock_reader_lock(&l)
-#define _tme_rwlock_wrlock(l) g_rw_lock_writer_lock(&l)
-#define _tme_rwlock_rdunlock(l) g_rw_lock_reader_unlock(&l)
-#define _tme_rwlock_wrunlock(l) g_rw_lock_writer_unlock(&l)
-#define _tme_rwlock_tryrdlock(l) (g_rw_lock_reader_trylock(&l) ? (TME_OK) : (TME_EBUSY))
-#define _tme_rwlock_trywrlock(l) (g_rw_lock_writer_trylock(&l) ? (TME_OK) : (TME_EBUSY))
+#define tme_thread_rwlock_init(l) g_rw_lock_init(&l)
+#define tme_thread_rwlock_destroy(l) g_rw_lock_clear(&l)
+#define tme_thread_rwlock_rdlock(l) g_rw_lock_reader_lock(&l)
+#define tme_thread_rwlock_wrlock(l) g_rw_lock_writer_lock(&l)
+#define tme_thread_rwlock_rdunlock(l) g_rw_lock_reader_unlock(&l)
+#define tme_thread_rwlock_wrunlock(l) g_rw_lock_writer_unlock(&l)
+#define tme_thread_rwlock_tryrdlock(l) (g_rw_lock_reader_trylock(&l) ? (TME_OK) : (TME_EBUSY))
+#define tme_thread_rwlock_trywrlock(l) (g_rw_lock_writer_trylock(&l) ? (TME_OK) : (TME_EBUSY))
 
 /* mutexes. */
-typedef GMutex tme_mutex_t;
-#define tme_mutex_init g_mutex_init
-#define tme_mutex_destroy g_mutex_clear
-#define _tme_mutex_lock g_mutex_lock
-#define tme_mutex_trylock(m) (g_mutex_trylock(m) ? (TME_OK) : (TME_EBUSY))
-#define tme_mutex_unlock g_mutex_unlock
+typedef GMutex tme_thread_mutex_t;
+#define tme_thread_mutex_init g_mutex_init
+#define tme_thread_mutex_destroy g_mutex_clear
+#define tme_thread_thread_mutex_lock g_mutex_lock
+#define tme_thread_mutex_trylock(m) (g_mutex_trylock(m) ? (TME_OK) : (TME_EBUSY))
+#define tme_thread_mutex_unlock g_mutex_unlock
 
 /* conditions: */
-typedef GCond tme_cond_t;
-#define tme_cond_init g_cond_init
-#define tme_cond_destroy g_cond_clear
-#define tme_cond_wait g_cond_wait
-#define tme_cond_wait_until g_cond_wait_until
-#define tme_cond_notifyTRUE g_cond_broadcast
-#define tme_cond_notifyFALSE g_cond_signal
+typedef GCond tme_thread_cond_t;
+#define tme_thread_cond_init g_cond_init
+#define tme_thread_cond_destroy g_cond_clear
+#define tme_thread_cond_wait g_cond_wait
+#define tme_thread_cond_wait_until g_cond_wait_until
+#define tme_thread_cond_notifyTRUE g_cond_broadcast
+#define tme_thread_cond_notifyFALSE g_cond_signal
 
 /* deadlock sleeping: */
 #define TME_THREAD_TIMEDLOCK		(0)
 #define TME_THREAD_DEADLOCK_SLEEP	abort
 
-typedef tme_time_t tme_timeout_t;
+typedef tme_time_t tme_thread_time_t;
 
 #define tme_thread_get_timeout(sleep, timeout) ((*timeout) = TME_TIME_GET_USEC(sleep))
 
@@ -79,19 +79,13 @@ typedef tme_time_t tme_timeout_t;
 typedef gpointer _tme_thret;
 typedef GThreadFunc tme_thread_t;
 typedef GThread *tme_threadid_t, *_tme_threadid_t;
-static _tme_inline void tme_thread_create _TME_P((tme_threadid_t *t, tme_thread_t f, void *a)) {
+static _tme_inline void tme_thread_create TME_THREAD_P((tme_threadid_t *t, tme_thread_t f, void *a)) {
   *t = g_thread_new(NULL,f,a);
 }
+
 #define tme_thread_join g_thread_join
 #define tme_thread_self g_thread_self
+#define tme_thread_yield() 
 
 /* sleeping: */
 #define tme_thread_sleep g_usleep
-
-/* A default main iterator for use in the main thread loop */
-static _tme_inline void tme_threads_main_iter _TME_P((void *usec)) {
-  //  g_usleep((usec) ? (uintptr_t)usec : 1000000);
-}
-
-#define _tme_threads_main_iter(fn) if(fn) fn()
-//#define tme_thread_get_time() tme_get_time()
