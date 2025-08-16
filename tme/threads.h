@@ -70,9 +70,9 @@ typedef struct tme_rwlock {
 
 extern tme_thread_rwlock_t tme_rwlock_suspere;
 
-#define tme_thread_op(func,arg) ((thread_mode) ? (tme_thread_##func(arg.thread)) : (tme_fiber_##func(arg.fiber)))
-#define tme_thread_op2(func,arg,arg2) ((thread_mode) ? (tme_thread_##func(arg.thread,arg2.thread)) : (tme_fiber_##func(arg.fiber,arg2.fiber)))
-#define tme_thread_op3(func,arg,arg2,arg3) ((thread_mode) ? (tme_thread_##func(arg.thread,arg2.thread,arg3.thread)) : (tme_fiber_##func(arg.fiber,arg2.fiber,arg3.fiber)))
+#define tme_thread_op(func,arg) ((thread_mode) ? (tme_thread_##func((arg).thread)) : (tme_fiber_##func((arg).fiber)))
+#define tme_thread_op2(func,arg,arg2) ((thread_mode) ? (tme_thread_##func((arg).thread,(arg2).thread)) : (tme_fiber_##func((arg).fiber,(arg2).fiber)))
+#define tme_thread_op3(func,arg,arg2,arg3) ((thread_mode) ? (tme_thread_##func((arg).thread,(arg2).thread,(arg3).thread)) : (tme_fiber_##func((arg).fiber,(arg2).fiber,(arg3).fiber)))
 
 #define tme_rwlock_init(l) tme_thread_op(rwlock_init,(l)->lock)
 #define tme_rwlock_destroy(l) tme_thread_op(rwlock_destroy,(l)->lock)
@@ -133,7 +133,7 @@ typedef union {
   tme_time_t fiber;
 } tme_timeout_t;
 
-#define tme_get_timeout(s,t) ((thread_mode) ? (tme_thread_get_timeout(s,&(t.thread))) : (t.fiber=(s)))
+#define tme_get_timeout(s,t) ((thread_mode) ? (tme_thread_get_timeout(s,&((t).thread))) : ((t).fiber=(s)))
 
 void tme_thread_yield _TME_P((void));
 
@@ -290,10 +290,19 @@ typedef off_t tme_off_t;
 ssize_t tme_thread_read _TME_P((tme_thread_handle_t hand, void *buf, size_t len, tme_mutex_t *mutex));
 ssize_t tme_thread_write _TME_P((tme_thread_handle_t hand, const void *buf, size_t len, tme_mutex_t *mutex));
 
+typedef union {
+  tme_threadid_t thread;
+  void *fiber;
+} tme_timeout_t;
+
+#define tme_thread_create(t,f,a) ((thread_mode) ? (tme_thread_make((t).thread,f,a)) : (tme_fiber_make(&(t).fiber,f,a)))
+
 static _tme_inline void tme_thread_exit _TME_P((tme_mutex_t *mutex)) {
-  _tme_thread_suspended();  
-  if(mutex)
-    tme_mutex_unlock(mutex);
+  if(thread_mode) {
+    _tme_thread_suspended();  
+    if(mutex)
+      tme_thread_mutex_unlock(mutex.thread);
+  } else tme_fiber_exit(mutex.fiber);
 }
 
 /* A default main iterator for use in the main thread loop */

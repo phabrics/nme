@@ -155,7 +155,7 @@ void tme_thread_yield(void) {
   _tme_thread_suspended();
 
   if(thread_mode)
-    tme_thread_yield();
+    _tme_thread_yield();
   else
     tme_fiber_yield();
 
@@ -570,20 +570,20 @@ tme_event_write (tme_event_t hand, void *data, int len)
 #endif // !WIN32
 
 static 
-int _tme_event_wait(tme_event_set_t *es, const struct timeval *tv, struct event_set_return *out, int outlen, tme_mutex_t *mutex) {
+int tme_thread_event_wait(tme_event_set_t *es, const struct timeval *tv, struct event_set_return *out, int outlen, tme_mutex_t *mutex) {
   int rc;
   struct timeval _tv;
 
   _tv.tv_sec = (tv) ? (tv->tv_sec) : (BIG_TIMEOUT);
   _tv.tv_usec = (tv) ? (tv->tv_usec) : (0);
   
-  if(mutex) tme_mutex_unlock(mutex);
+  if(mutex) tme_thread_mutex_unlock(mutex.thread);
   
   _tme_thread_suspended();
   
   rc = event_wait(es, &_tv, out, outlen);
 
-  if(mutex) tme_thread_op(mutex_lock, mutex);
+  if(mutex) tme_thread_mutex_lock(mutex.thread);
 
   _tme_thread_resumed();
     
@@ -598,7 +598,7 @@ void tme_threads_init(int mode) {
     tme_event_reset = event_reset;
     tme_event_del = event_del;
     tme_event_ctl = event_ctl;
-    tme_event_wait = _tme_event_wait;
+    tme_event_wait = tme_thread_event_wait;
   } else
     tme_fiber_threads_init();
   

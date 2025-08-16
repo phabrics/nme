@@ -124,7 +124,7 @@ static _tme_inline int tme_thread_cooperative() {
 #define tme_thread_defattr() NULL
 #endif
 
-#define tme_thread_create(t,f,a) pthread_create(t,tme_thread_defattr(),f,a)
+#define tme_thread_make(t,f,a) pthread_create(&(t),tme_thread_defattr(),f,a)
 #define tme_thread_join(id) pthread_join(id,NULL)
 #define tme_thread_self pthread_self
 

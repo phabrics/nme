@@ -78,16 +78,15 @@ typedef struct tme_cond {
 
 typedef tme_int32_t tme_timeout_t;
 
-#define tme_thread_get_timeout(sleep, timeout) ((*timeout) = TME_TIME_GET_MSEC(sleep))
+#define tme_thread_get_timeout(sleep, timeout) (*(timeout) = TME_TIME_GET_MSEC(sleep))
 
 /* threads: */
 typedef int *_tme_thret;
 typedef SDL_ThreadFunction tme_thread_t;
 typedef SDL_Thread *tme_threadid_t;
 typedef SDL_ThreadID _tme_threadid_t;
-static _tme_inline void tme_thread_create _TME_P((tme_threadid_t *t, tme_thread_t f, void *a)) {
-  *t = SDL_CreateThread(f,NULL,a);
-}
+
+#define tme_thread_make(t,f,a) ((t) = SDL_CreateThread(f,NULL,a))
 
 static _tme_inline int tme_thread_join _TME_P((tme_threadid_t t)) {
   int r;

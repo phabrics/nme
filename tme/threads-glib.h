@@ -73,19 +73,17 @@ typedef GCond tme_thread_cond_t;
 
 typedef tme_time_t tme_thread_time_t;
 
-#define tme_thread_get_timeout(sleep, timeout) ((*timeout) = TME_TIME_GET_USEC(sleep))
+#define tme_thread_get_timeout(sleep, timeout) (*(timeout) = TME_TIME_GET_USEC(sleep))
 
 /* threads: */
 typedef gpointer _tme_thret;
 typedef GThreadFunc tme_thread_t;
 typedef GThread *tme_threadid_t, *_tme_threadid_t;
-static _tme_inline void tme_thread_create TME_THREAD_P((tme_threadid_t *t, tme_thread_t f, void *a)) {
-  *t = g_thread_new(NULL,f,a);
-}
 
+#define tme_thread_make(t,f,a) ((t) = g_thread_new(NULL,f,a))
 #define tme_thread_join g_thread_join
 #define tme_thread_self g_thread_self
-#define tme_thread_yield() 
+#define _tme_thread_yield() 
 
 /* sleeping: */
 #define tme_thread_sleep g_usleep
