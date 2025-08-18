@@ -37,6 +37,7 @@
 _TME_RCSID("$Id: threads-fiber.c,v 1.18 2010/06/05 19:10:28 fredette Exp $");
 
 /* includes: */
+#define TME_THREADS_FIBER
 #include <tme/openvpn-setup.h>
 #include <stdlib.h>
 #if defined(__EMSCRIPTEN__) && !defined(USE_SJLJ)
@@ -442,7 +443,7 @@ tme_fiber_dispatch(volatile int passes)
 
 /* this is the main loop iteration function: */
 int
-tme_fiber_threads_main_iter(void *unused)
+tme_fiber_main_iter(void *unused)
 {
   int fd;
   struct timeval timeout;
@@ -572,7 +573,7 @@ tme_fiber_cond_wait_until(tme_fiber_cond_t *cond, tme_fiber_mutex_t *mutex, cons
   tme_fiber_thread_blocked.tme_fiber_thread_cond = cond;
 
   /* sleep and yield: */
-  tme_fiber_sleep_yield(sleep, mutex);
+  tme_thread_sleep_yield(sleep, mutex);
 }
 
 /* this notifies one or more threads waiting on a condition: */
@@ -601,7 +602,7 @@ tme_fiber_cond_notify(tme_fiber_cond_t *cond, int broadcast)
 
 /* this sleeps and yields: */
 void
-tme_fiber_sleep_yield(tme_time_t time)
+tme_fiber_sleep(tme_time_t time)
 {
   tme_fiber_thread_blocked.tme_fiber_thread_sleep = time;
 
@@ -699,7 +700,7 @@ tme_fiber_event_wait(struct tme_fiber_event_set *es, const struct timeval *timeo
   }
 
   /* unlock the mutex: */
-  if(mutex) tme_fiber_mutex_unlock(mutex.fiber);
+  if(mutex) tme_fiber_mutex_unlock(mutex->fiber);
   tme_fiber_thread_blocked.tme_fiber_thread_events = es;
 
   tme_fiber_thread_blocked.tme_fiber_thread_sleep =
@@ -711,7 +712,7 @@ tme_fiber_event_wait(struct tme_fiber_event_set *es, const struct timeval *timeo
   tme_fiber_yield();
 
   /* lock the mutex: */
-  if(mutex) tme_fiber_mutex_lock(mutex.fiber);
+  if(mutex) tme_fiber_mutex_lock(mutex->fiber);
   return event_wait(es->es, &timeout_out, out, outlen);
 }
 
@@ -757,7 +758,7 @@ tme_fiber_exit(tme_fiber_mutex_t *mutex)
   tme_fiber_thread_exiting = TRUE;
 
   if(mutex)
-    tme_mutex_unlock(mutex);
+    tme_fiber_mutex_unlock(mutex);
 
   /* yield: */
   tme_fiber_yield();
@@ -949,7 +950,7 @@ tme_fiber_yield(void)
 
 /* lock operations: */
 int
-tme_fiber_rwlock_init(struct tme_fiber_rwlock *lock)
+_tme_fiber_rwlock_init(struct tme_fiber_rwlock *lock)
 {
   /* initialize the lock: */
   lock->_tme_fiber_rwlock_locked = FALSE;

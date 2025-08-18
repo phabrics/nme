@@ -526,7 +526,9 @@ do_usage(const char *prog_name, char *msg)
   fprintf(stderr, "usage: %s [OPTIONS] <INITIAL-CONFIG> \
                    \nwhere OPTIONS are:			   \
                    \n--log LOGFILE          log to LOGFILE		\
-                   \n-c, --interactive   read no commands from standard input (<INITIAL-CONFIG> not required here)\n", prog_name);
+                   \n-t, --multi_threaded      multi-threaded mode			\
+                   \n-c, --interactive      read no commands from standard input (<INITIAL-CONFIG> not required here)\n",
+	  prog_name);
   
 #define fpe(msg) fprintf(stderr, "\t%s", msg);          /* Shorter */
 
@@ -606,7 +608,7 @@ main(int argc, char **argv)
   char *config_filename;
   char *config_dirname;
   const char *log_filename;
-  int interactive;
+  int multi_threaded, interactive;
   struct tmesh_io io;
   struct tmesh_support support;
   struct _tmesh_input *input_stdin;
@@ -637,7 +639,7 @@ main(int argc, char **argv)
   config_filename = NULL;
   config_dirname = NULL;
   log_filename = "-";
-  interactive = FALSE;
+  multi_threaded = interactive = FALSE;
   if ((argv0 = strrchr(argv[0], '/')) == NULL) argv0 = argv[0]; else argv0++;
   for (arg_i = 1;
        (arg_i < argc
@@ -706,6 +708,10 @@ main(int argc, char **argv)
     }
 #endif // HAVE_PTHREAD_SETSCHEDPARAM  
 #endif // TME_THREADS_POSIX
+    else if (!strcmp(opt, "-t")
+	     || !strcmp(opt, "--multi_threaded")) {
+      multi_threaded = TRUE;
+    }
     else if (!strcmp(opt, "-c")
 	     || !strcmp(opt, "--interactive")) {
       interactive = TRUE;
@@ -750,7 +756,7 @@ main(int argc, char **argv)
   /* initialize libtme: */
   tme_module_init();
   /* initialize libtmesh: */
-  (void) tmesh_init();
+  (void) tmesh_init(multi_threaded);
 
   //  tme_thread_enter(NULL);
   
@@ -956,7 +962,7 @@ main(int argc, char **argv)
 #endif
 
   if(interactive)
-    tme_thread_join(tmesh_thread);
+    tme_thread_join(tmesh_thread.thread);
 
   /* done: */
   exit(0);

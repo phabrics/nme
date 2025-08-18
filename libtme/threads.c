@@ -45,7 +45,7 @@ tme_rwlock_t tme_rwlock_suspere;
 int tme_rwlock_timedlock(tme_rwlock_t *l, unsigned long sec, int write) { 
   tme_time_t sleep;
   tme_timeout_t timeout;
-  int rc;
+  int rc = TME_OK;
 
   sleep = TME_TIME_SET_SEC(sec) + tme_thread_get_time();
 
@@ -54,9 +54,9 @@ int tme_rwlock_timedlock(tme_rwlock_t *l, unsigned long sec, int write) {
   _tme_thread_suspended();
   
   if (write)
-    rc = tme_thread_op2(rwlock_timedwrlock, (l)->lock, timeout);
+    tme_thread_op2(rwlock_timedwrlock, &(l)->lock, &timeout);
   else
-    rc = tme_thread_op2(rwlock_timedrdlock, (l)->lock, timeout);
+    tme_thread_op2(rwlock_timedrdlock, &(l)->lock, &timeout);
 
   _tme_thread_resumed();
 
@@ -74,7 +74,7 @@ int tme_mutex_timedlock(tme_mutex_t *m, unsigned long sec) {
 
   _tme_thread_suspended();
   
-  rc = tme_thread_op2(mutex_timedlock, m, timeout);
+  rc = tme_thread_op2(mutex_timedlock, m, &timeout);
 
   _tme_thread_resumed();
 
@@ -87,7 +87,7 @@ int tme_rwlock_rdlock(tme_rwlock_t *l) {
     return TME_EDEADLK;
 
   _tme_thread_suspended();
-  tme_thread_op(rwlock_rdlock,(l)->lock);
+  tme_thread_op(rwlock_rdlock,&(l)->lock);
   _tme_thread_resumed();
   
   /* TODO: insert some kind of timer to interrupt at the end of the timeout */
@@ -100,14 +100,14 @@ int tme_rwlock_wrlock(tme_rwlock_t *l) {
     return TME_EDEADLK;
 
   _tme_thread_suspended();
-  tme_thread_op(rwlock_wrlock,(l)->lock);
+  tme_thread_op(rwlock_wrlock,&(l)->lock);
   _tme_thread_resumed();
   (l)->writer = tme_thread_self();
   return TME_OK;
 }
 
 int tme_rwlock_trywrlock(tme_rwlock_t *l) {
-  if(!tme_thread_op(rwlock_trywrlock,(l)->lock))
+  if(!tme_thread_op(rwlock_trywrlock,&(l)->lock))
     return TME_EBUSY;
   (l)->writer = tme_thread_self();
   return TME_OK;
@@ -115,7 +115,7 @@ int tme_rwlock_trywrlock(tme_rwlock_t *l) {
 
 int tme_rwlock_wrunlock(tme_rwlock_t *l) {
   (l)->writer = 0;
-  tme_thread_op(rwlock_wrunlock,(l)->lock);
+  tme_thread_op(rwlock_wrunlock,&(l)->lock);
   return TME_OK;
 }
 
@@ -134,7 +134,7 @@ int tme_cond_wait_yield(tme_cond_t *cond, tme_mutex_t *mutex) {
 int tme_cond_sleep_yield(tme_cond_t *cond, tme_mutex_t *mutex,
 			 tme_time_t sleep) {
   tme_timeout_t timeout;
-  int rc;
+  int rc = TME_OK;
 
   sleep += tme_thread_get_time();
 
@@ -142,7 +142,7 @@ int tme_cond_sleep_yield(tme_cond_t *cond, tme_mutex_t *mutex,
   
   _tme_thread_suspended();
 
-  rc = tme_thread_op3(cond_wait_until, cond, mutex, timeout);
+  tme_thread_op3(cond_wait_until, cond, mutex, &timeout);
 
   _tme_thread_resumed();
 
@@ -171,7 +171,7 @@ int tme_thread_sleep_yield _TME_P((tme_time_t sleep, tme_mutex_t *mutex)) {
   
   _tme_thread_suspended();
 
-  tme_thread_op(sleep, timeout);
+  tme_thread_op(sleep, &timeout);
   
   if(mutex) tme_thread_op(mutex_lock, mutex);
 
@@ -577,13 +577,13 @@ int tme_thread_event_wait(tme_event_set_t *es, const struct timeval *tv, struct 
   _tv.tv_sec = (tv) ? (tv->tv_sec) : (BIG_TIMEOUT);
   _tv.tv_usec = (tv) ? (tv->tv_usec) : (0);
   
-  if(mutex) tme_thread_mutex_unlock(mutex.thread);
+  if(mutex) tme_thread_mutex_unlock(&mutex->thread);
   
   _tme_thread_suspended();
   
   rc = event_wait(es, &_tv, out, outlen);
 
-  if(mutex) tme_thread_mutex_lock(mutex.thread);
+  if(mutex) tme_thread_mutex_lock(&mutex->thread);
 
   _tme_thread_resumed();
     
@@ -591,7 +591,7 @@ int tme_thread_event_wait(tme_event_set_t *es, const struct timeval *tv, struct 
 }
 
 void tme_threads_init(int mode) {
-  if(thread_mode=mode) {
+  if((thread_mode=mode)) {
     /* initialize the runtime event callback handlers: */
     tme_event_set_init = event_set_init;
     tme_event_free = event_free;
@@ -602,7 +602,7 @@ void tme_threads_init(int mode) {
   } else
     tme_fiber_threads_init();
   
-  tme_rwlock_init(&tme_rwlock_suspere)
+  tme_rwlock_init(&tme_rwlock_suspere);
 
 #ifdef WIN32
   win32_stdin = tme_new0(struct tme_win32_handle, 1);

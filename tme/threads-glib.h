@@ -36,25 +36,23 @@
 
 #define TME_THREADS_PREEMPTIVE		(TRUE)
 
-#define tme_thread_cooperative() FALSE
-
 /* read/write locks. */
 typedef GRWLock tme_thread_rwlock_t;
 
-#define tme_thread_rwlock_init(l) g_rw_lock_init(&l)
-#define tme_thread_rwlock_destroy(l) g_rw_lock_clear(&l)
-#define tme_thread_rwlock_rdlock(l) g_rw_lock_reader_lock(&l)
-#define tme_thread_rwlock_wrlock(l) g_rw_lock_writer_lock(&l)
-#define tme_thread_rwlock_rdunlock(l) g_rw_lock_reader_unlock(&l)
-#define tme_thread_rwlock_wrunlock(l) g_rw_lock_writer_unlock(&l)
-#define tme_thread_rwlock_tryrdlock(l) (g_rw_lock_reader_trylock(&l) ? (TME_OK) : (TME_EBUSY))
-#define tme_thread_rwlock_trywrlock(l) (g_rw_lock_writer_trylock(&l) ? (TME_OK) : (TME_EBUSY))
+#define tme_thread_rwlock_init g_rw_lock_init
+#define tme_thread_rwlock_destroy g_rw_lock_clear
+#define tme_thread_rwlock_rdlock g_rw_lock_reader_lock
+#define tme_thread_rwlock_wrlock g_rw_lock_writer_lock
+#define tme_thread_rwlock_rdunlock g_rw_lock_reader_unlock
+#define tme_thread_rwlock_wrunlock g_rw_lock_writer_unlock
+#define tme_thread_rwlock_tryrdlock(l) (g_rw_lock_reader_trylock(l) ? (TME_OK) : (TME_EBUSY))
+#define tme_thread_rwlock_trywrlock(l) (g_rw_lock_writer_trylock(l) ? (TME_OK) : (TME_EBUSY))
 
 /* mutexes. */
 typedef GMutex tme_thread_mutex_t;
 #define tme_thread_mutex_init g_mutex_init
 #define tme_thread_mutex_destroy g_mutex_clear
-#define tme_thread_thread_mutex_lock g_mutex_lock
+#define tme_thread_mutex_lock g_mutex_lock
 #define tme_thread_mutex_trylock(m) (g_mutex_trylock(m) ? (TME_OK) : (TME_EBUSY))
 #define tme_thread_mutex_unlock g_mutex_unlock
 
@@ -78,7 +76,7 @@ typedef tme_time_t tme_thread_time_t;
 /* threads: */
 typedef gpointer _tme_thret;
 typedef GThreadFunc tme_thread_t;
-typedef GThread *tme_threadid_t, *_tme_threadid_t;
+typedef GThread *tme_thread_threadid_t, *_tme_threadid_t;
 
 #define tme_thread_make(t,f,a) ((t) = g_thread_new(NULL,f,a))
 #define tme_thread_join g_thread_join

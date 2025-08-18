@@ -108,7 +108,7 @@ static _tme_inline pthread_attr_t *tme_thread_defattr() {
   return attrp;
 }
 
-static _tme_inline int tme_thread_cooperative() {
+static _tme_inline int _tme_thread_cooperative() {
   int policy;
   struct sched_param param;
   if(!pthread_getschedparam(pthread_self(), &policy, &param))
@@ -116,10 +116,11 @@ static _tme_inline int tme_thread_cooperative() {
   return FALSE;
 }
 
+#define tme_thread_cooperative (!thread_mode || _tme_thread_cooperative())
+
 #define _tme_thread_yield sched_yield
 
 #else
-#define tme_thread_cooperative() FALSE
 #define tme_thread_set_defattr(attr)
 #define tme_thread_defattr() NULL
 #endif

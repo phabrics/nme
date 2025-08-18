@@ -35,8 +35,6 @@
 
 #define TME_THREADS_PREEMPTIVE		(TRUE)
 
-#define tme_thread_cooperative() FALSE
-
 /* read/write locks. */
 typedef SDL_RWLock *_tme_rwlock_t;
 

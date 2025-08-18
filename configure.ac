@@ -750,12 +750,6 @@ xsdl)    CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_SDL -DUSE_SDL_TIME ${SDL_CFLAGS}"
 xglib)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_GLIB -DUSE_GLIB_TIME ${GLIB_CFLAGS}"
 	 LDFLAGS="${LDFLAGS-} ${GLIB_LIBS}"
 	 ;;
-xfiber)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_FIBER"
-	 ;;
-xgiber)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_FIBER -DUSE_GLIB_TIME ${GLIB_CFLAGS}"
-	 LDFLAGS="${LDFLAGS-} ${GLIB_LIBS}"
-	  tme_thread_types=fiber
-	 ;;
 esac
 done
 
@@ -763,7 +757,6 @@ CPPFLAGS="${CPPFLAGS-} -D_GNU_SOURCE"
 
 AM_CONDITIONAL([THREADS_POSIX], [test "x${tme_thread_types}" = xpthreads || test "x${tme_thread_types}" = xposix])
 AM_CONDITIONAL([THREADS_GLIB], [test "x${tme_thread_type}" = xglib])
-AM_CONDITIONAL([THREADS_FIBER], [test "x${tme_thread_types}" = xfiber])
 AC_MSG_RESULT($tme_thread_types)
 
 dnl Checks for ZLIB.

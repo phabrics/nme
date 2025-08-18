@@ -25,6 +25,7 @@ libtme_la_SOURCES = misc-host.c \
 	recode-impl.h \
 	module.c \
 	threads.c \
+	threads-fiber.c \
 	element.c \
 	log.c \
 	hash.c \
@@ -34,10 +35,6 @@ libtme_la_SOURCES = misc-host.c \
 
 libtme_la_LIBADD = $(LIBLTDL) $(LIBOPENVPN_LIBS) $(ZLIB_LIBS) $(GLIB_LIBS) $(SDL_LIBS)
 libtme_la_LDFLAGS = -version-info 0:0:0
-
-if THREADS_FIBER
-libtme_la_SOURCES += threads-fiber.c
-endif
 
 noinst_SCRIPTS = memory-auto.sh
 
