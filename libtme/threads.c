@@ -87,7 +87,7 @@ int tme_rwlock_rdlock(tme_rwlock_t *l) {
     return TME_EDEADLK;
 
   _tme_thread_suspended();
-  tme_thread_op(rwlock_rdlock,&(l)->lock);
+  _tme_rwlock_rdlock(l);
   _tme_thread_resumed();
   
   /* TODO: insert some kind of timer to interrupt at the end of the timeout */
@@ -100,7 +100,7 @@ int tme_rwlock_wrlock(tme_rwlock_t *l) {
     return TME_EDEADLK;
 
   _tme_thread_suspended();
-  tme_thread_op(rwlock_wrlock,&(l)->lock);
+  _tme_rwlock_wrlock(l);
   _tme_thread_resumed();
   (l)->writer = tme_thread_self();
   return TME_OK;
@@ -115,7 +115,7 @@ int tme_rwlock_trywrlock(tme_rwlock_t *l) {
 
 int tme_rwlock_wrunlock(tme_rwlock_t *l) {
   (l)->writer = 0;
-  tme_thread_op(rwlock_wrunlock,&(l)->lock);
+  _tme_rwlock_wrunlock(l);
   return TME_OK;
 }
 

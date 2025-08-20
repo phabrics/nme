@@ -76,6 +76,11 @@ extern tme_rwlock_t tme_rwlock_suspere;
 
 #define tme_rwlock_init(l) tme_thread_op(rwlock_init,&(l)->lock)
 #define tme_rwlock_destroy(l) tme_thread_op(rwlock_destroy,&(l)->lock)
+
+#define _tme_rwlock_rdlock(l)           tme_thread_op(rwlock_rdlock,&(l)->lock);
+#define _tme_rwlock_wrlock(l)           tme_thread_op(rwlock_wrlock,&(l)->lock);
+#define _tme_rwlock_wrunlock(l)         tme_thread_op(rwlock_wrunlock,&(l)->lock)
+
 #define tme_rwlock_rdunlock(l) tme_thread_op(rwlock_rdunlock,&(l)->lock)
 #define tme_rwlock_tryrdlock(l) tme_thread_op(rwlock_tryrdlock,&(l)->lock)
 int tme_rwlock_rdlock _TME_P((tme_rwlock_t *l));
@@ -89,9 +94,9 @@ int tme_rwlock_trywrlock _TME_P((tme_rwlock_t *l));
 #endif
 
 #define _tme_thread_suspended()	        tme_rwlock_rdunlock(&tme_rwlock_suspere)
-#define _tme_thread_resumed()	        tme_rwlock_rdlock(&tme_rwlock_suspere)
-#define tme_thread_suspend_others()	_tme_thread_suspended();if(!tme_thread_cooperative()) tme_rwlock_wrlock(&tme_rwlock_suspere)
-#define tme_thread_resume_others()	if(!tme_thread_cooperative()) tme_rwlock_wrunlock(&tme_rwlock_suspere);_tme_thread_resumed()
+#define _tme_thread_resumed()	        _tme_rwlock_rdlock(&tme_rwlock_suspere)
+#define tme_thread_suspend_others()	_tme_thread_suspended();if(!tme_thread_cooperative()) _tme_rwlock_wrlock(&tme_rwlock_suspere)
+#define tme_thread_resume_others()	if(!tme_thread_cooperative()) _tme_rwlock_wrunlock(&tme_rwlock_suspere);_tme_thread_resumed()
 
 #ifndef tme_thread_rwlock_timedrdlock
 #define tme_thread_rwlock_timedrdlock(l,t) tme_thread_rwlock_rdlock(l)
