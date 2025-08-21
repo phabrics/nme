@@ -921,8 +921,11 @@ have_clang=yes
 AC_ARG_ENABLE(debug,
 [  --enable-debug          compile debuggable libraries and programs (default=don't)],
 [ ], [enable_debug=no])
-if test "x${enable_debug}" = "xyes"; then
-  CPPFLAGS="${CPPFLAGS-} -DENABLE_DEBUG -DTME_NO_DEBUG_LOCKS -D_TME_SPARC_STATS -DGTK_DISABLE_SINGLE_INCLUDES -DNDEBUG" # -DTME_RECODE_DEBUG
+if test "x${enable_debug}" != "xno"; then
+  CPPFLAGS="${CPPFLAGS-} -DENABLE_DEBUG -D_TME_SPARC_STATS -DGTK_DISABLE_SINGLE_INCLUDES -DNDEBUG" # -DTME_RECODE_DEBUG
+  if test "x${enable_debug}" != "xlocks"; then
+    CPPFLAGS="${CPPFLAGS-} -DTME_NO_DEBUG_LOCKS"
+  fi
   if test "x${have_Og}" = xyes; then
      CFLAGS="${CFLAGS-} -Og"
      CXXFLAGS="${CXXFLAGS-} -g3 -Og"

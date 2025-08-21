@@ -304,7 +304,9 @@ typedef union {
   void *fiber;
 } tme_threadid_t;
 
-#define tme_thread_create(t,f,a) ((thread_mode) ? (tme_thread_make((t)->thread,f,a)) : (tme_fiber_make(&(t)->fiber,f,a)))
+#define _tme_thread_create(t,n,f,a) ((thread_mode) ? (tme_thread_make((t)->thread,n,f,a)) : (tme_fiber_make(&(t)->fiber,n,f,a)))
+
+#define tme_thread_create(t,f,a) _tme_thread_create(t,element->tme_element_args[0],f,a)
 
 static _tme_inline void tme_thread_exit _TME_P((tme_mutex_t *mutex)) {
   if(thread_mode) {

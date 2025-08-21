@@ -116,7 +116,7 @@ void tme_fiber_cond_notify _TME_P((tme_fiber_cond_t *, int));
 
 /* threads: */
 int tme_fiber_main_iter _TME_P((void *unused));
-void tme_fiber_make _TME_P((void **, tme_thread_t, void *));
+void tme_fiber_make _TME_P((void **, const char *, tme_thread_t, void *));
 void tme_fiber_yield _TME_P((void));
 #define tme_fiber_join(id) do { } while (/* CONSTCOND */ 0)
 void tme_fiber_exit _TME_P((tme_fiber_mutex_t *mutex));

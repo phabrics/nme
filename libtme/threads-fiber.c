@@ -61,6 +61,8 @@ _TME_RCSID("$Id: threads-fiber.c,v 1.18 2010/06/05 19:10:28 fredette Exp $");
 /* a thread: */
 typedef struct tme_fiber_thread {
 
+  const char *name;
+  
   /* the all-threads list: */
   struct tme_fiber_thread *next;
   struct tme_fiber_thread **prev;
@@ -516,13 +518,14 @@ tme_fiber_main_iter(void *unused)
 
 /* this creates a new thread: */
 void
-tme_fiber_make(void **thr, tme_thread_t func, void *func_private)
+tme_fiber_make(void **thr, const char *name, tme_thread_t func, void *func_private)
 {
   tme_fiber_thread_t *thread;
 
   /* allocate a new thread and put it on the all-threads list: */
   thread = tme_new(tme_fiber_thread_t, 1);
   *thr = thread;
+  thread->name = tme_strdup(name);
   thread->prev = &tme_fiber_threads_all;
   thread->next = *thread->prev;
   *thread->prev = thread;

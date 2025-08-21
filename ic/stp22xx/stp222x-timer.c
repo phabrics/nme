@@ -308,6 +308,7 @@ void
 tme_stp222x_timer_init(struct tme_stp222x *stp222x,
 		       struct tme_stp222x_timer *timer)
 {
+  struct tme_element *element = stp222x->tme_stp222x.tme_stp22xx_element;
 
   /* initialize and reset the timer: */
   timer->tme_stp222x_timer_stp222x = stp222x;

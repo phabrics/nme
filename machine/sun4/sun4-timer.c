@@ -428,6 +428,7 @@ void
 _tme_sun4_timer_new(struct tme_sun4 *sun4)
 {
   struct tme_sun4_timer *timer;
+  struct tme_element *element = sun4->tme_sun4_element;
 
   /* loop over the timers: */
   timer = &sun4->tme_sun4_timers[0];

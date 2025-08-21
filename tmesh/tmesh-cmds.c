@@ -583,6 +583,7 @@ _tmesh_command_connect(struct tmesh *tmesh, struct tmesh_parser_value *value, ch
        creation_args[0]);
     tme_free(pathname);
 
+    element0->tmesh_fs_element_element.tme_element_args = element0_args;
     /* create the element: */
     rc = tme_element_new(&element0->tmesh_fs_element_element,
 			 (const char **) creation_args,
@@ -608,7 +609,6 @@ _tmesh_command_connect(struct tmesh *tmesh, struct tmesh_parser_value *value, ch
        the creation arguments: */
     element0->tmesh_fs_element_gen = ++tmesh->tmesh_gen_last;
     element0->tmesh_fs_element_argv = value->tmesh_parser_value_argvs[2];
-    element0->tmesh_fs_element_element.tme_element_args = element0_args;
     _tmesh_gc_release_argv(tmesh, &element0->tmesh_fs_element_argv);
   }
 

@@ -918,7 +918,7 @@ main(int argc, char **argv)
       config_filename++;
       if (config_dirname == NULL) {
 	if(strlen(config_filename)) {
-	  config_dirname = strdup(argv[arg_i]);
+	  config_dirname = tme_strdup(argv[arg_i]);
 	  chdir(dirname(config_dirname));
 	  free(config_dirname);
 	} else
@@ -946,7 +946,7 @@ main(int argc, char **argv)
   _tmesh_remove_consumed(input_stdin);
 
   /* create our eval loop thread for interactive mode: */
-  tme_thread_create(&tmesh_thread, (tme_thread_t) _tmesh_th, &interactive);
+  _tme_thread_create(&tmesh_thread, "tmesh", (tme_thread_t) _tmesh_th, &interactive);
 
   /* run the threads: */
   tme_threads_run();

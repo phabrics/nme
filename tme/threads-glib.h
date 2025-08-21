@@ -61,7 +61,7 @@ typedef GCond tme_thread_cond_t;
 #define tme_thread_cond_init g_cond_init
 #define tme_thread_cond_destroy g_cond_clear
 #define tme_thread_cond_wait g_cond_wait
-#define tme_thread_cond_wait_until g_cond_wait_until
+#define tme_thread_cond_wait_until(c,m,t) g_cond_wait_until(c,m,*t)
 #define tme_thread_cond_notifyTRUE g_cond_broadcast
 #define tme_thread_cond_notifyFALSE g_cond_signal
 
@@ -78,10 +78,10 @@ typedef gpointer _tme_thret;
 typedef GThreadFunc tme_thread_t;
 typedef GThread *tme_thread_threadid_t, *_tme_threadid_t;
 
-#define tme_thread_make(t,f,a) ((t) = g_thread_new(NULL,f,a))
+#define tme_thread_make(t,n,f,a) ((t) = g_thread_new(n,f,a))
 #define tme_thread_join g_thread_join
 #define tme_thread_self g_thread_self
 #define _tme_thread_yield() 
 
 /* sleeping: */
-#define tme_thread_sleep g_usleep
+#define tme_thread_sleep(t) g_usleep(*t)
