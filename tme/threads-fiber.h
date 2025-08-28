@@ -48,10 +48,10 @@ void tme_fiber_threads_init _TME_P((void));
    rwlock operations: */
 #ifdef TME_NO_DEBUG_LOCKS
 typedef int tme_fiber_rwlock_t;
-#define tme_fiber_rwlock_init(l) ((l) = FALSE, TME_OK)
-#define tme_fiber_rwlock_rdlock(l) ((l) = TRUE, TME_OK)
-#define tme_fiber_rwlock_tryrdlock(l) ((l) ? TME_EBUSY : tme_fiber_rwlock_rdlock(l))
-#define tme_fiber_rwlock_rdunlock(l) ((l) = FALSE, TME_OK)
+#define tme_fiber_rwlock_init(l) ((*l) = FALSE, TME_OK)
+#define tme_fiber_rwlock_rdlock(l) ((*l) = TRUE, TME_OK)
+#define tme_fiber_rwlock_tryrdlock(l) ((*l) ? TME_EBUSY : tme_fiber_rwlock_rdlock(l))
+#define tme_fiber_rwlock_rdunlock(l) ((*l) = FALSE, TME_OK)
 #else  /* !TME_NO_DEBUG_LOCKS */   
 
 /* debugging rwlocks: */
@@ -66,18 +66,17 @@ typedef struct tme_fiber_rwlock {
 } tme_fiber_rwlock_t;
 
 /* lock operations: */
-int _tme_fiber_rwlock_init _TME_P((tme_fiber_rwlock_t *));
+int tme_fiber_rwlock_init _TME_P((tme_fiber_rwlock_t *));
 int tme_fiber_rwlock_lock _TME_P((tme_fiber_rwlock_t *, _tme_const char *, unsigned long, int));
 int tme_fiber_rwlock_unlock _TME_P(tme_fiber_rwlock_t *, _tme_const char *, unsigned long));
-#define tme_fiber_rwlock_init(l) _tme_fiber_rwlock_init(&l)
 #if defined(__FILE__) && defined(__LINE__)
-#define tme_fiber_rwlock_rdlock(l) tme_fiber_rwlock_lock(&l, __FILE__, __LINE__, FALSE)
-#define tme_fiber_rwlock_tryrdlock(l) tme_fiber_rwlock_lock(&l, __FILE__, __LINE__, TRUE)
-#define tme_fiber_rwlock_rdunlock(l) tme_fiber_rwlock_unlock(&l, __FILE__, __LINE__)
+#define tme_fiber_rwlock_rdlock(l) tme_fiber_rwlock_lock(l, __FILE__, __LINE__, FALSE)
+#define tme_fiber_rwlock_tryrdlock(l) tme_fiber_rwlock_lock(l, __FILE__, __LINE__, TRUE)
+#define tme_fiber_rwlock_rdunlock(l) tme_fiber_rwlock_unlock(l, __FILE__, __LINE__)
 #else  /* !defined(__FILE__) || !defined(__LINE__) */
-#define tme_fiber_rwlock_rdlock(l) tme_fiber_rwlock_lock(&l, NULL, 0, FALSE)
-#define tme_fiber_rwlock_tryrdlock(l) tme_fiber_rwlock_lock(&l, NULL, 0, TRUE)
-#define tme_fiber_rwlock_rdunlock(l) tme_fiber_rwlock_unlock(&l, NULL, 0)
+#define tme_fiber_rwlock_rdlock(l) tme_fiber_rwlock_lock(l, NULL, 0, FALSE)
+#define tme_fiber_rwlock_tryrdlock(l) tme_fiber_rwlock_lock(l, NULL, 0, TRUE)
+#define tme_fiber_rwlock_rdunlock(l) tme_fiber_rwlock_unlock(l, NULL, 0)
 #endif /* !defined(__FILE__) || !defined(__LINE__) */
 
 #endif /* TME_NO_DEBUG_LOCKS */
@@ -95,15 +94,15 @@ int tme_fiber_rwlock_unlock _TME_P(tme_fiber_rwlock_t *, _tme_const char *, unsi
 /* mutexes.  we use a read/write lock to represent a mutex, and always
    lock it for writing.  we do *not* allow recursive locking: */
 #define tme_fiber_mutex_t tme_fiber_rwlock_t
-#define tme_fiber_mutex_init(l) tme_fiber_rwlock_init(l)
-#define tme_fiber_mutex_lock(l) tme_fiber_rwlock_wrlock(l)
-#define tme_fiber_mutex_trylock(l) tme_fiber_rwlock_trywrlock(l)
+#define tme_fiber_mutex_init tme_fiber_rwlock_init
+#define tme_fiber_mutex_lock tme_fiber_rwlock_wrlock
+#define tme_fiber_mutex_trylock tme_fiber_rwlock_trywrlock
 #define tme_fiber_mutex_timedlock(t, usec) tme_fiber_mutex_trylock(t)
-#define tme_fiber_mutex_unlock(l) tme_fiber_rwlock_rdunlock(l)
+#define tme_fiber_mutex_unlock tme_fiber_rwlock_rdunlock
 
 /* conditions: */
 typedef int tme_fiber_cond_t;
-#define tme_fiber_cond_init(c) ((c)=0)
+#define tme_fiber_cond_init(c) ((*c)=0)
 void tme_fiber_cond_wait _TME_P((tme_fiber_cond_t *, tme_fiber_mutex_t *));
 void tme_fiber_cond_wait_until _TME_P((tme_fiber_cond_t *, tme_fiber_mutex_t *, const tme_time_t));
 void tme_fiber_cond_notify _TME_P((tme_fiber_cond_t *, int));
@@ -122,7 +121,7 @@ void tme_fiber_yield _TME_P((void));
 void tme_fiber_exit _TME_P((tme_fiber_mutex_t *mutex));
 
   /* sleeping: */
-void tme_fiber_sleep _TME_P((tme_time_t));
+void tme_fiber_sleep _TME_P((tme_time_t *));
 
 /* time: */
 tme_time_t tme_fiber_get_time _TME_P((void));

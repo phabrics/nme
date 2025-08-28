@@ -605,9 +605,9 @@ tme_fiber_cond_notify(tme_fiber_cond_t *cond, int broadcast)
 
 /* this sleeps and yields: */
 void
-tme_fiber_sleep(tme_time_t time)
+tme_fiber_sleep(tme_time_t *time)
 {
-  tme_fiber_thread_blocked.tme_fiber_thread_sleep = time;
+  tme_fiber_thread_blocked.tme_fiber_thread_sleep = *time;
 
   /* yield: */
   tme_fiber_yield();
@@ -703,7 +703,7 @@ tme_fiber_event_wait(struct tme_fiber_event_set *es, const struct timeval *timeo
   }
 
   /* unlock the mutex: */
-  if(mutex) tme_fiber_mutex_unlock(mutex->fiber);
+  if(mutex) tme_fiber_mutex_unlock(&mutex->fiber);
   tme_fiber_thread_blocked.tme_fiber_thread_events = es;
 
   tme_fiber_thread_blocked.tme_fiber_thread_sleep =
@@ -715,7 +715,7 @@ tme_fiber_event_wait(struct tme_fiber_event_set *es, const struct timeval *timeo
   tme_fiber_yield();
 
   /* lock the mutex: */
-  if(mutex) tme_fiber_mutex_lock(mutex->fiber);
+  if(mutex) tme_fiber_mutex_lock(&mutex->fiber);
   return event_wait(es->es, &timeout_out, out, outlen);
 }
 

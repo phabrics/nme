@@ -61,7 +61,7 @@ typedef GCond tme_thread_cond_t;
 #define tme_thread_cond_init g_cond_init
 #define tme_thread_cond_destroy g_cond_clear
 #define tme_thread_cond_wait g_cond_wait
-#define tme_thread_cond_wait_until(c,m,t) g_cond_wait_until(c,m,*t)
+#define tme_thread_cond_wait_until g_cond_wait_until
 #define tme_thread_cond_notifyTRUE g_cond_broadcast
 #define tme_thread_cond_notifyFALSE g_cond_signal
 

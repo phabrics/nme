@@ -142,7 +142,7 @@ int tme_cond_sleep_yield(tme_cond_t *cond, tme_mutex_t *mutex,
   
   _tme_thread_suspended();
 
-  tme_thread_op3(cond_wait_until, cond, mutex, &timeout);
+  tme_thread_opt(cond_wait_until, cond, mutex, &timeout);
 
   _tme_thread_resumed();
 
