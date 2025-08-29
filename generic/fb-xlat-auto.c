@@ -450,7 +450,7 @@ do {								\
      1152x900
      1 bit deep, 1 bit per pixel, 0 pixels skipped, 32-bit scanline padding, MSB-first, color, index mapped pixels, 8 bits per mapped intensity, no g mask, no r mask, no b mask
    to this destination format:
-     24 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00, a r mask of 0xff0000, a b mask of 0xff
+     32 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00ff00, a r mask of 0xffff0000, a b mask of 0xff0000ff
 */
 static int
 tme_fb_xlat0(struct tme_fb_connection *src,
@@ -3763,7 +3763,7 @@ tme_fb_xlat0(struct tme_fb_connection *src,
      1152x900
      1 bit deep, 1 bit per pixel, 0 pixels skipped, 32-bit scanline padding, MSB-first, color, index mapped pixels, 8 bits per mapped intensity, no g mask, no r mask, no b mask
    to this destination format:
-     32 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00ff00, a r mask of 0xffff0000, a b mask of 0xff0000ff
+     24 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00, a r mask of 0xff0000, a b mask of 0xff
 */
 static int
 tme_fb_xlat1(struct tme_fb_connection *src,
@@ -13672,7 +13672,7 @@ tme_fb_xlat3(struct tme_fb_connection *src,
      1152x900
      8 bits deep, 8 bits per pixel, 0 pixels skipped, 32-bit scanline padding, MSB-first, color, index mapped pixels, 8 bits per mapped intensity, no g mask, no r mask, no b mask
    to this destination format:
-     24 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00, a r mask of 0xff0000, a b mask of 0xff
+     32 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00ff00, a r mask of 0xffff0000, a b mask of 0xff0000ff
 */
 static int
 tme_fb_xlat4(struct tme_fb_connection *src,
@@ -14521,7 +14521,7 @@ tme_fb_xlat4(struct tme_fb_connection *src,
      1152x900
      8 bits deep, 8 bits per pixel, 0 pixels skipped, 32-bit scanline padding, MSB-first, color, index mapped pixels, 8 bits per mapped intensity, no g mask, no r mask, no b mask
    to this destination format:
-     32 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00ff00, a r mask of 0xffff0000, a b mask of 0xff0000ff
+     24 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00, a r mask of 0xff0000, a b mask of 0xff
 */
 static int
 tme_fb_xlat5(struct tme_fb_connection *src,
@@ -17038,7 +17038,7 @@ tme_fb_xlat7(struct tme_fb_connection *src,
      1152x900
      1 bit deep, 1 bit per pixel, 0 pixels skipped, 32-bit scanline padding, MSB-first, monochrome, linearly mapped pixels, 1 bit per mapped intensity, no g mask, no r mask, no b mask
    to this destination format:
-     24 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00, a r mask of 0xff0000, a b mask of 0xff
+     32 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00ff00, a r mask of 0xffff0000, a b mask of 0xff0000ff
 */
 static int
 tme_fb_xlat8(struct tme_fb_connection *src,
@@ -20351,7 +20351,7 @@ tme_fb_xlat8(struct tme_fb_connection *src,
      1152x900
      1 bit deep, 1 bit per pixel, 0 pixels skipped, 32-bit scanline padding, MSB-first, monochrome, linearly mapped pixels, 1 bit per mapped intensity, no g mask, no r mask, no b mask
    to this destination format:
-     32 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00ff00, a r mask of 0xffff0000, a b mask of 0xff0000ff
+     24 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00, a r mask of 0xff0000, a b mask of 0xff
 */
 static int
 tme_fb_xlat9(struct tme_fb_connection *src,
@@ -30260,7 +30260,7 @@ tme_fb_xlat11(struct tme_fb_connection *src,
      any dimensions
      any depth, any bits per pixel, any number of pixels skipped, any scanline padding, MSB-first, either color or monochrome, any pixel mapping, any bits per mapped intensity, any g mask, any r mask, any b mask
    to this destination format:
-     24 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00, a r mask of 0xff0000, a b mask of 0xff
+     32 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00ff00, a r mask of 0xffff0000, a b mask of 0xff0000ff
 */
 static int
 tme_fb_xlat12(struct tme_fb_connection *src,
@@ -30320,7 +30320,7 @@ tme_fb_xlat12(struct tme_fb_connection *src,
   tme_uint32_t value_g;
 
   /* declare dst_mask_g, the mask for the g subfield in a destination pixel: */
-#define dst_mask_g (0xff00)
+#define dst_mask_g (0xff00ff00)
 
   /* declare src_mask_r, the mask for the r subfield in a source pixel: */
   const tme_uint32_t src_mask_r
@@ -30332,7 +30332,7 @@ tme_fb_xlat12(struct tme_fb_connection *src,
   tme_uint32_t value_r;
 
   /* declare dst_mask_r, the mask for the r subfield in a destination pixel: */
-#define dst_mask_r (0xff0000)
+#define dst_mask_r (0xffff0000)
 
   /* declare src_mask_b, the mask for the b subfield in a source pixel: */
   const tme_uint32_t src_mask_b
@@ -30344,7 +30344,7 @@ tme_fb_xlat12(struct tme_fb_connection *src,
   tme_uint32_t value_b;
 
   /* declare dst_mask_b, the mask for the b subfield in a destination pixel: */
-#define dst_mask_b (0xff)
+#define dst_mask_b (0xff0000ff)
 
   /* declare src_bipp and dst_bipp.  these are the bits-per-pixel
      values for the source and destination images: */
@@ -30939,7 +30939,7 @@ tme_fb_xlat12(struct tme_fb_connection *src,
      any dimensions
      any depth, any bits per pixel, any number of pixels skipped, any scanline padding, MSB-first, either color or monochrome, any pixel mapping, any bits per mapped intensity, any g mask, any r mask, any b mask
    to this destination format:
-     32 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00ff00, a r mask of 0xffff0000, a b mask of 0xff0000ff
+     24 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00, a r mask of 0xff0000, a b mask of 0xff
 */
 static int
 tme_fb_xlat13(struct tme_fb_connection *src,
@@ -30999,7 +30999,7 @@ tme_fb_xlat13(struct tme_fb_connection *src,
   tme_uint32_t value_g;
 
   /* declare dst_mask_g, the mask for the g subfield in a destination pixel: */
-#define dst_mask_g (0xff00ff00)
+#define dst_mask_g (0xff00)
 
   /* declare src_mask_r, the mask for the r subfield in a source pixel: */
   const tme_uint32_t src_mask_r
@@ -31011,7 +31011,7 @@ tme_fb_xlat13(struct tme_fb_connection *src,
   tme_uint32_t value_r;
 
   /* declare dst_mask_r, the mask for the r subfield in a destination pixel: */
-#define dst_mask_r (0xffff0000)
+#define dst_mask_r (0xff0000)
 
   /* declare src_mask_b, the mask for the b subfield in a source pixel: */
   const tme_uint32_t src_mask_b
@@ -31023,7 +31023,7 @@ tme_fb_xlat13(struct tme_fb_connection *src,
   tme_uint32_t value_b;
 
   /* declare dst_mask_b, the mask for the b subfield in a destination pixel: */
-#define dst_mask_b (0xff0000ff)
+#define dst_mask_b (0xff)
 
   /* declare src_bipp and dst_bipp.  these are the bits-per-pixel
      values for the source and destination images: */
@@ -32960,7 +32960,7 @@ tme_fb_xlat15(struct tme_fb_connection *src,
      any dimensions (image will be halved)
      any depth, any bits per pixel, any number of pixels skipped, any scanline padding, MSB-first, either color or monochrome, any pixel mapping, any bits per mapped intensity, any g mask, any r mask, any b mask
    to this destination format:
-     24 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00, a r mask of 0xff0000, a b mask of 0xff
+     32 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00ff00, a r mask of 0xffff0000, a b mask of 0xff0000ff
 */
 static int
 tme_fb_xlat16(struct tme_fb_connection *src,
@@ -33019,7 +33019,7 @@ tme_fb_xlat16(struct tme_fb_connection *src,
   tme_uint32_t value_g;
 
   /* declare dst_mask_g, the mask for the g subfield in a destination pixel: */
-#define dst_mask_g (0xff00)
+#define dst_mask_g (0xff00ff00)
 
   /* declare src_mask_r, the mask for the r subfield in a source pixel: */
   const tme_uint32_t src_mask_r
@@ -33031,7 +33031,7 @@ tme_fb_xlat16(struct tme_fb_connection *src,
   tme_uint32_t value_r;
 
   /* declare dst_mask_r, the mask for the r subfield in a destination pixel: */
-#define dst_mask_r (0xff0000)
+#define dst_mask_r (0xffff0000)
 
   /* declare src_mask_b, the mask for the b subfield in a source pixel: */
   const tme_uint32_t src_mask_b
@@ -33043,7 +33043,7 @@ tme_fb_xlat16(struct tme_fb_connection *src,
   tme_uint32_t value_b;
 
   /* declare dst_mask_b, the mask for the b subfield in a destination pixel: */
-#define dst_mask_b (0xff)
+#define dst_mask_b (0xff0000ff)
 
   /* declare src_bipp and dst_bipp.  these are the bits-per-pixel
      values for the source and destination images: */
@@ -33909,7 +33909,7 @@ tme_fb_xlat16(struct tme_fb_connection *src,
      any dimensions (image will be halved)
      any depth, any bits per pixel, any number of pixels skipped, any scanline padding, MSB-first, either color or monochrome, any pixel mapping, any bits per mapped intensity, any g mask, any r mask, any b mask
    to this destination format:
-     32 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00ff00, a r mask of 0xffff0000, a b mask of 0xff0000ff
+     24 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00, a r mask of 0xff0000, a b mask of 0xff
 */
 static int
 tme_fb_xlat17(struct tme_fb_connection *src,
@@ -33968,7 +33968,7 @@ tme_fb_xlat17(struct tme_fb_connection *src,
   tme_uint32_t value_g;
 
   /* declare dst_mask_g, the mask for the g subfield in a destination pixel: */
-#define dst_mask_g (0xff00ff00)
+#define dst_mask_g (0xff00)
 
   /* declare src_mask_r, the mask for the r subfield in a source pixel: */
   const tme_uint32_t src_mask_r
@@ -33980,7 +33980,7 @@ tme_fb_xlat17(struct tme_fb_connection *src,
   tme_uint32_t value_r;
 
   /* declare dst_mask_r, the mask for the r subfield in a destination pixel: */
-#define dst_mask_r (0xffff0000)
+#define dst_mask_r (0xff0000)
 
   /* declare src_mask_b, the mask for the b subfield in a source pixel: */
   const tme_uint32_t src_mask_b
@@ -33992,7 +33992,7 @@ tme_fb_xlat17(struct tme_fb_connection *src,
   tme_uint32_t value_b;
 
   /* declare dst_mask_b, the mask for the b subfield in a destination pixel: */
-#define dst_mask_b (0xff0000ff)
+#define dst_mask_b (0xff)
 
   /* declare src_bipp and dst_bipp.  these are the bits-per-pixel
      values for the source and destination images: */
@@ -36740,7 +36740,7 @@ tme_fb_xlat19(struct tme_fb_connection *src,
      any dimensions (image will be doubled)
      any depth, any bits per pixel, any number of pixels skipped, any scanline padding, MSB-first, either color or monochrome, any pixel mapping, any bits per mapped intensity, any g mask, any r mask, any b mask
    to this destination format:
-     24 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00, a r mask of 0xff0000, a b mask of 0xff
+     32 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00ff00, a r mask of 0xffff0000, a b mask of 0xff0000ff
 */
 static int
 tme_fb_xlat20(struct tme_fb_connection *src,
@@ -36799,7 +36799,7 @@ tme_fb_xlat20(struct tme_fb_connection *src,
   tme_uint32_t value_g;
 
   /* declare dst_mask_g, the mask for the g subfield in a destination pixel: */
-#define dst_mask_g (0xff00)
+#define dst_mask_g (0xff00ff00)
 
   /* declare src_mask_r, the mask for the r subfield in a source pixel: */
   const tme_uint32_t src_mask_r
@@ -36811,7 +36811,7 @@ tme_fb_xlat20(struct tme_fb_connection *src,
   tme_uint32_t value_r;
 
   /* declare dst_mask_r, the mask for the r subfield in a destination pixel: */
-#define dst_mask_r (0xff0000)
+#define dst_mask_r (0xffff0000)
 
   /* declare src_mask_b, the mask for the b subfield in a source pixel: */
   const tme_uint32_t src_mask_b
@@ -36823,7 +36823,7 @@ tme_fb_xlat20(struct tme_fb_connection *src,
   tme_uint32_t value_b;
 
   /* declare dst_mask_b, the mask for the b subfield in a destination pixel: */
-#define dst_mask_b (0xff)
+#define dst_mask_b (0xff0000ff)
 
   /* declare src_bipp and dst_bipp.  these are the bits-per-pixel
      values for the source and destination images: */
@@ -37542,7 +37542,7 @@ tme_fb_xlat20(struct tme_fb_connection *src,
      any dimensions (image will be doubled)
      any depth, any bits per pixel, any number of pixels skipped, any scanline padding, MSB-first, either color or monochrome, any pixel mapping, any bits per mapped intensity, any g mask, any r mask, any b mask
    to this destination format:
-     32 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00ff00, a r mask of 0xffff0000, a b mask of 0xff0000ff
+     24 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00, a r mask of 0xff0000, a b mask of 0xff
 */
 static int
 tme_fb_xlat21(struct tme_fb_connection *src,
@@ -37601,7 +37601,7 @@ tme_fb_xlat21(struct tme_fb_connection *src,
   tme_uint32_t value_g;
 
   /* declare dst_mask_g, the mask for the g subfield in a destination pixel: */
-#define dst_mask_g (0xff00ff00)
+#define dst_mask_g (0xff00)
 
   /* declare src_mask_r, the mask for the r subfield in a source pixel: */
   const tme_uint32_t src_mask_r
@@ -37613,7 +37613,7 @@ tme_fb_xlat21(struct tme_fb_connection *src,
   tme_uint32_t value_r;
 
   /* declare dst_mask_r, the mask for the r subfield in a destination pixel: */
-#define dst_mask_r (0xffff0000)
+#define dst_mask_r (0xff0000)
 
   /* declare src_mask_b, the mask for the b subfield in a source pixel: */
   const tme_uint32_t src_mask_b
@@ -37625,7 +37625,7 @@ tme_fb_xlat21(struct tme_fb_connection *src,
   tme_uint32_t value_b;
 
   /* declare dst_mask_b, the mask for the b subfield in a destination pixel: */
-#define dst_mask_b (0xff0000ff)
+#define dst_mask_b (0xff)
 
   /* declare src_bipp and dst_bipp.  these are the bits-per-pixel
      values for the source and destination images: */
@@ -39966,7 +39966,7 @@ tme_fb_xlat23(struct tme_fb_connection *src,
      any dimensions
      any depth, any bits per pixel, any number of pixels skipped, any scanline padding, LSB-first, either color or monochrome, any pixel mapping, any bits per mapped intensity, any g mask, any r mask, any b mask
    to this destination format:
-     24 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00, a r mask of 0xff0000, a b mask of 0xff
+     32 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00ff00, a r mask of 0xffff0000, a b mask of 0xff0000ff
 */
 static int
 tme_fb_xlat24(struct tme_fb_connection *src,
@@ -40026,7 +40026,7 @@ tme_fb_xlat24(struct tme_fb_connection *src,
   tme_uint32_t value_g;
 
   /* declare dst_mask_g, the mask for the g subfield in a destination pixel: */
-#define dst_mask_g (0xff00)
+#define dst_mask_g (0xff00ff00)
 
   /* declare src_mask_r, the mask for the r subfield in a source pixel: */
   const tme_uint32_t src_mask_r
@@ -40038,7 +40038,7 @@ tme_fb_xlat24(struct tme_fb_connection *src,
   tme_uint32_t value_r;
 
   /* declare dst_mask_r, the mask for the r subfield in a destination pixel: */
-#define dst_mask_r (0xff0000)
+#define dst_mask_r (0xffff0000)
 
   /* declare src_mask_b, the mask for the b subfield in a source pixel: */
   const tme_uint32_t src_mask_b
@@ -40050,7 +40050,7 @@ tme_fb_xlat24(struct tme_fb_connection *src,
   tme_uint32_t value_b;
 
   /* declare dst_mask_b, the mask for the b subfield in a destination pixel: */
-#define dst_mask_b (0xff)
+#define dst_mask_b (0xff0000ff)
 
   /* declare src_bipp and dst_bipp.  these are the bits-per-pixel
      values for the source and destination images: */
@@ -40645,7 +40645,7 @@ tme_fb_xlat24(struct tme_fb_connection *src,
      any dimensions
      any depth, any bits per pixel, any number of pixels skipped, any scanline padding, LSB-first, either color or monochrome, any pixel mapping, any bits per mapped intensity, any g mask, any r mask, any b mask
    to this destination format:
-     32 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00ff00, a r mask of 0xffff0000, a b mask of 0xff0000ff
+     24 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00, a r mask of 0xff0000, a b mask of 0xff
 */
 static int
 tme_fb_xlat25(struct tme_fb_connection *src,
@@ -40705,7 +40705,7 @@ tme_fb_xlat25(struct tme_fb_connection *src,
   tme_uint32_t value_g;
 
   /* declare dst_mask_g, the mask for the g subfield in a destination pixel: */
-#define dst_mask_g (0xff00ff00)
+#define dst_mask_g (0xff00)
 
   /* declare src_mask_r, the mask for the r subfield in a source pixel: */
   const tme_uint32_t src_mask_r
@@ -40717,7 +40717,7 @@ tme_fb_xlat25(struct tme_fb_connection *src,
   tme_uint32_t value_r;
 
   /* declare dst_mask_r, the mask for the r subfield in a destination pixel: */
-#define dst_mask_r (0xffff0000)
+#define dst_mask_r (0xff0000)
 
   /* declare src_mask_b, the mask for the b subfield in a source pixel: */
   const tme_uint32_t src_mask_b
@@ -40729,7 +40729,7 @@ tme_fb_xlat25(struct tme_fb_connection *src,
   tme_uint32_t value_b;
 
   /* declare dst_mask_b, the mask for the b subfield in a destination pixel: */
-#define dst_mask_b (0xff0000ff)
+#define dst_mask_b (0xff)
 
   /* declare src_bipp and dst_bipp.  these are the bits-per-pixel
      values for the source and destination images: */
@@ -42666,7 +42666,7 @@ tme_fb_xlat27(struct tme_fb_connection *src,
      any dimensions (image will be halved)
      any depth, any bits per pixel, any number of pixels skipped, any scanline padding, LSB-first, either color or monochrome, any pixel mapping, any bits per mapped intensity, any g mask, any r mask, any b mask
    to this destination format:
-     24 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00, a r mask of 0xff0000, a b mask of 0xff
+     32 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00ff00, a r mask of 0xffff0000, a b mask of 0xff0000ff
 */
 static int
 tme_fb_xlat28(struct tme_fb_connection *src,
@@ -42725,7 +42725,7 @@ tme_fb_xlat28(struct tme_fb_connection *src,
   tme_uint32_t value_g;
 
   /* declare dst_mask_g, the mask for the g subfield in a destination pixel: */
-#define dst_mask_g (0xff00)
+#define dst_mask_g (0xff00ff00)
 
   /* declare src_mask_r, the mask for the r subfield in a source pixel: */
   const tme_uint32_t src_mask_r
@@ -42737,7 +42737,7 @@ tme_fb_xlat28(struct tme_fb_connection *src,
   tme_uint32_t value_r;
 
   /* declare dst_mask_r, the mask for the r subfield in a destination pixel: */
-#define dst_mask_r (0xff0000)
+#define dst_mask_r (0xffff0000)
 
   /* declare src_mask_b, the mask for the b subfield in a source pixel: */
   const tme_uint32_t src_mask_b
@@ -42749,7 +42749,7 @@ tme_fb_xlat28(struct tme_fb_connection *src,
   tme_uint32_t value_b;
 
   /* declare dst_mask_b, the mask for the b subfield in a destination pixel: */
-#define dst_mask_b (0xff)
+#define dst_mask_b (0xff0000ff)
 
   /* declare src_bipp and dst_bipp.  these are the bits-per-pixel
      values for the source and destination images: */
@@ -43615,7 +43615,7 @@ tme_fb_xlat28(struct tme_fb_connection *src,
      any dimensions (image will be halved)
      any depth, any bits per pixel, any number of pixels skipped, any scanline padding, LSB-first, either color or monochrome, any pixel mapping, any bits per mapped intensity, any g mask, any r mask, any b mask
    to this destination format:
-     32 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00ff00, a r mask of 0xffff0000, a b mask of 0xff0000ff
+     24 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00, a r mask of 0xff0000, a b mask of 0xff
 */
 static int
 tme_fb_xlat29(struct tme_fb_connection *src,
@@ -43674,7 +43674,7 @@ tme_fb_xlat29(struct tme_fb_connection *src,
   tme_uint32_t value_g;
 
   /* declare dst_mask_g, the mask for the g subfield in a destination pixel: */
-#define dst_mask_g (0xff00ff00)
+#define dst_mask_g (0xff00)
 
   /* declare src_mask_r, the mask for the r subfield in a source pixel: */
   const tme_uint32_t src_mask_r
@@ -43686,7 +43686,7 @@ tme_fb_xlat29(struct tme_fb_connection *src,
   tme_uint32_t value_r;
 
   /* declare dst_mask_r, the mask for the r subfield in a destination pixel: */
-#define dst_mask_r (0xffff0000)
+#define dst_mask_r (0xff0000)
 
   /* declare src_mask_b, the mask for the b subfield in a source pixel: */
   const tme_uint32_t src_mask_b
@@ -43698,7 +43698,7 @@ tme_fb_xlat29(struct tme_fb_connection *src,
   tme_uint32_t value_b;
 
   /* declare dst_mask_b, the mask for the b subfield in a destination pixel: */
-#define dst_mask_b (0xff0000ff)
+#define dst_mask_b (0xff)
 
   /* declare src_bipp and dst_bipp.  these are the bits-per-pixel
      values for the source and destination images: */
@@ -46446,7 +46446,7 @@ tme_fb_xlat31(struct tme_fb_connection *src,
      any dimensions (image will be doubled)
      any depth, any bits per pixel, any number of pixels skipped, any scanline padding, LSB-first, either color or monochrome, any pixel mapping, any bits per mapped intensity, any g mask, any r mask, any b mask
    to this destination format:
-     24 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00, a r mask of 0xff0000, a b mask of 0xff
+     32 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00ff00, a r mask of 0xffff0000, a b mask of 0xff0000ff
 */
 static int
 tme_fb_xlat32(struct tme_fb_connection *src,
@@ -46505,7 +46505,7 @@ tme_fb_xlat32(struct tme_fb_connection *src,
   tme_uint32_t value_g;
 
   /* declare dst_mask_g, the mask for the g subfield in a destination pixel: */
-#define dst_mask_g (0xff00)
+#define dst_mask_g (0xff00ff00)
 
   /* declare src_mask_r, the mask for the r subfield in a source pixel: */
   const tme_uint32_t src_mask_r
@@ -46517,7 +46517,7 @@ tme_fb_xlat32(struct tme_fb_connection *src,
   tme_uint32_t value_r;
 
   /* declare dst_mask_r, the mask for the r subfield in a destination pixel: */
-#define dst_mask_r (0xff0000)
+#define dst_mask_r (0xffff0000)
 
   /* declare src_mask_b, the mask for the b subfield in a source pixel: */
   const tme_uint32_t src_mask_b
@@ -46529,7 +46529,7 @@ tme_fb_xlat32(struct tme_fb_connection *src,
   tme_uint32_t value_b;
 
   /* declare dst_mask_b, the mask for the b subfield in a destination pixel: */
-#define dst_mask_b (0xff)
+#define dst_mask_b (0xff0000ff)
 
   /* declare src_bipp and dst_bipp.  these are the bits-per-pixel
      values for the source and destination images: */
@@ -47248,7 +47248,7 @@ tme_fb_xlat32(struct tme_fb_connection *src,
      any dimensions (image will be doubled)
      any depth, any bits per pixel, any number of pixels skipped, any scanline padding, LSB-first, either color or monochrome, any pixel mapping, any bits per mapped intensity, any g mask, any r mask, any b mask
    to this destination format:
-     32 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00ff00, a r mask of 0xffff0000, a b mask of 0xff0000ff
+     24 bits deep, 32 bits per pixel, 0 pixels skipped, 32-bit scanline padding, LSB-first, linearly mapped pixels, a g mask of 0xff00, a r mask of 0xff0000, a b mask of 0xff
 */
 static int
 tme_fb_xlat33(struct tme_fb_connection *src,
@@ -47307,7 +47307,7 @@ tme_fb_xlat33(struct tme_fb_connection *src,
   tme_uint32_t value_g;
 
   /* declare dst_mask_g, the mask for the g subfield in a destination pixel: */
-#define dst_mask_g (0xff00ff00)
+#define dst_mask_g (0xff00)
 
   /* declare src_mask_r, the mask for the r subfield in a source pixel: */
   const tme_uint32_t src_mask_r
@@ -47319,7 +47319,7 @@ tme_fb_xlat33(struct tme_fb_connection *src,
   tme_uint32_t value_r;
 
   /* declare dst_mask_r, the mask for the r subfield in a destination pixel: */
-#define dst_mask_r (0xffff0000)
+#define dst_mask_r (0xff0000)
 
   /* declare src_mask_b, the mask for the b subfield in a source pixel: */
   const tme_uint32_t src_mask_b
@@ -47331,7 +47331,7 @@ tme_fb_xlat33(struct tme_fb_connection *src,
   tme_uint32_t value_b;
 
   /* declare dst_mask_b, the mask for the b subfield in a destination pixel: */
-#define dst_mask_b (0xff0000ff)
+#define dst_mask_b (0xff)
 
   /* declare src_bipp and dst_bipp.  these are the bits-per-pixel
      values for the source and destination images: */
@@ -49670,39 +49670,39 @@ tme_fb_xlat35(struct tme_fb_connection *src,
 
 /* the xlat function array: */
 static const struct tme_fb_xlat tme_fb_xlats[] = {
-  { tme_fb_xlat0, 1152, 900, TME_FB_XLAT_SCALE_NONE, 1, 1, 0, 32, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_COLOR, TME_FB_XLAT_MAP_INDEX, 8, 0, 0, 0, 24, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00, 0xff0000, 0xff }, 
-  { tme_fb_xlat1, 1152, 900, TME_FB_XLAT_SCALE_NONE, 1, 1, 0, 32, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_COLOR, TME_FB_XLAT_MAP_INDEX, 8, 0, 0, 0, 32, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00ff00, 0xffff0000, 0xff0000ff }, 
+  { tme_fb_xlat0, 1152, 900, TME_FB_XLAT_SCALE_NONE, 1, 1, 0, 32, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_COLOR, TME_FB_XLAT_MAP_INDEX, 8, 0, 0, 0, 32, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00ff00, 0xffff0000, 0xff0000ff }, 
+  { tme_fb_xlat1, 1152, 900, TME_FB_XLAT_SCALE_NONE, 1, 1, 0, 32, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_COLOR, TME_FB_XLAT_MAP_INDEX, 8, 0, 0, 0, 24, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00, 0xff0000, 0xff }, 
   { tme_fb_xlat2, 1152, 900, TME_FB_XLAT_SCALE_NONE, 1, 1, 0, 32, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_COLOR, TME_FB_XLAT_MAP_INDEX, 8, 0, 0, 0, 0, 0, -1, 0, TME_ENDIAN_BIG, TME_FB_XLAT_MAP_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY }, 
   { tme_fb_xlat3, 1152, 900, TME_FB_XLAT_SCALE_NONE, 1, 1, 0, 32, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_COLOR, TME_FB_XLAT_MAP_INDEX, 8, 0, 0, 0, 0, 0, -1, 0, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY }, 
-  { tme_fb_xlat4, 1152, 900, TME_FB_XLAT_SCALE_NONE, 8, 8, 0, 32, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_COLOR, TME_FB_XLAT_MAP_INDEX, 8, 0, 0, 0, 24, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00, 0xff0000, 0xff }, 
-  { tme_fb_xlat5, 1152, 900, TME_FB_XLAT_SCALE_NONE, 8, 8, 0, 32, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_COLOR, TME_FB_XLAT_MAP_INDEX, 8, 0, 0, 0, 32, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00ff00, 0xffff0000, 0xff0000ff }, 
+  { tme_fb_xlat4, 1152, 900, TME_FB_XLAT_SCALE_NONE, 8, 8, 0, 32, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_COLOR, TME_FB_XLAT_MAP_INDEX, 8, 0, 0, 0, 32, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00ff00, 0xffff0000, 0xff0000ff }, 
+  { tme_fb_xlat5, 1152, 900, TME_FB_XLAT_SCALE_NONE, 8, 8, 0, 32, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_COLOR, TME_FB_XLAT_MAP_INDEX, 8, 0, 0, 0, 24, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00, 0xff0000, 0xff }, 
   { tme_fb_xlat6, 1152, 900, TME_FB_XLAT_SCALE_NONE, 8, 8, 0, 32, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_COLOR, TME_FB_XLAT_MAP_INDEX, 8, 0, 0, 0, 0, 0, -1, 0, TME_ENDIAN_BIG, TME_FB_XLAT_MAP_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY }, 
   { tme_fb_xlat7, 1152, 900, TME_FB_XLAT_SCALE_NONE, 8, 8, 0, 32, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_COLOR, TME_FB_XLAT_MAP_INDEX, 8, 0, 0, 0, 0, 0, -1, 0, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY }, 
-  { tme_fb_xlat8, 1152, 900, TME_FB_XLAT_SCALE_NONE, 1, 1, 0, 32, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_MONOCHROME, TME_FB_XLAT_MAP_LINEAR, 1, 0, 0, 0, 24, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00, 0xff0000, 0xff }, 
-  { tme_fb_xlat9, 1152, 900, TME_FB_XLAT_SCALE_NONE, 1, 1, 0, 32, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_MONOCHROME, TME_FB_XLAT_MAP_LINEAR, 1, 0, 0, 0, 32, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00ff00, 0xffff0000, 0xff0000ff }, 
+  { tme_fb_xlat8, 1152, 900, TME_FB_XLAT_SCALE_NONE, 1, 1, 0, 32, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_MONOCHROME, TME_FB_XLAT_MAP_LINEAR, 1, 0, 0, 0, 32, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00ff00, 0xffff0000, 0xff0000ff }, 
+  { tme_fb_xlat9, 1152, 900, TME_FB_XLAT_SCALE_NONE, 1, 1, 0, 32, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_MONOCHROME, TME_FB_XLAT_MAP_LINEAR, 1, 0, 0, 0, 24, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00, 0xff0000, 0xff }, 
   { tme_fb_xlat10, 1152, 900, TME_FB_XLAT_SCALE_NONE, 1, 1, 0, 32, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_MONOCHROME, TME_FB_XLAT_MAP_LINEAR, 1, 0, 0, 0, 0, 0, -1, 0, TME_ENDIAN_BIG, TME_FB_XLAT_MAP_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY }, 
   { tme_fb_xlat11, 1152, 900, TME_FB_XLAT_SCALE_NONE, 1, 1, 0, 32, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_MONOCHROME, TME_FB_XLAT_MAP_LINEAR, 1, 0, 0, 0, 0, 0, -1, 0, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY }, 
-  { tme_fb_xlat12, 0, 0, TME_FB_XLAT_SCALE_NONE, 0, 0, -1, 0, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 24, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00, 0xff0000, 0xff }, 
-  { tme_fb_xlat13, 0, 0, TME_FB_XLAT_SCALE_NONE, 0, 0, -1, 0, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 32, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00ff00, 0xffff0000, 0xff0000ff }, 
+  { tme_fb_xlat12, 0, 0, TME_FB_XLAT_SCALE_NONE, 0, 0, -1, 0, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 32, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00ff00, 0xffff0000, 0xff0000ff }, 
+  { tme_fb_xlat13, 0, 0, TME_FB_XLAT_SCALE_NONE, 0, 0, -1, 0, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 24, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00, 0xff0000, 0xff }, 
   { tme_fb_xlat14, 0, 0, TME_FB_XLAT_SCALE_NONE, 0, 0, -1, 0, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 0, 0, -1, 0, TME_ENDIAN_BIG, TME_FB_XLAT_MAP_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY }, 
   { tme_fb_xlat15, 0, 0, TME_FB_XLAT_SCALE_NONE, 0, 0, -1, 0, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 0, 0, -1, 0, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY }, 
-  { tme_fb_xlat16, 0, 0, TME_FB_XLAT_SCALE_HALF, 0, 0, -1, 0, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 24, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00, 0xff0000, 0xff }, 
-  { tme_fb_xlat17, 0, 0, TME_FB_XLAT_SCALE_HALF, 0, 0, -1, 0, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 32, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00ff00, 0xffff0000, 0xff0000ff }, 
+  { tme_fb_xlat16, 0, 0, TME_FB_XLAT_SCALE_HALF, 0, 0, -1, 0, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 32, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00ff00, 0xffff0000, 0xff0000ff }, 
+  { tme_fb_xlat17, 0, 0, TME_FB_XLAT_SCALE_HALF, 0, 0, -1, 0, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 24, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00, 0xff0000, 0xff }, 
   { tme_fb_xlat18, 0, 0, TME_FB_XLAT_SCALE_HALF, 0, 0, -1, 0, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 0, 0, -1, 0, TME_ENDIAN_BIG, TME_FB_XLAT_MAP_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY }, 
   { tme_fb_xlat19, 0, 0, TME_FB_XLAT_SCALE_HALF, 0, 0, -1, 0, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 0, 0, -1, 0, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY }, 
-  { tme_fb_xlat20, 0, 0, TME_FB_XLAT_SCALE_DOUBLE, 0, 0, -1, 0, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 24, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00, 0xff0000, 0xff }, 
-  { tme_fb_xlat21, 0, 0, TME_FB_XLAT_SCALE_DOUBLE, 0, 0, -1, 0, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 32, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00ff00, 0xffff0000, 0xff0000ff }, 
+  { tme_fb_xlat20, 0, 0, TME_FB_XLAT_SCALE_DOUBLE, 0, 0, -1, 0, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 32, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00ff00, 0xffff0000, 0xff0000ff }, 
+  { tme_fb_xlat21, 0, 0, TME_FB_XLAT_SCALE_DOUBLE, 0, 0, -1, 0, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 24, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00, 0xff0000, 0xff }, 
   { tme_fb_xlat22, 0, 0, TME_FB_XLAT_SCALE_DOUBLE, 0, 0, -1, 0, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 0, 0, -1, 0, TME_ENDIAN_BIG, TME_FB_XLAT_MAP_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY }, 
   { tme_fb_xlat23, 0, 0, TME_FB_XLAT_SCALE_DOUBLE, 0, 0, -1, 0, TME_ENDIAN_BIG, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 0, 0, -1, 0, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY }, 
-  { tme_fb_xlat24, 0, 0, TME_FB_XLAT_SCALE_NONE, 0, 0, -1, 0, TME_ENDIAN_LITTLE, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 24, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00, 0xff0000, 0xff }, 
-  { tme_fb_xlat25, 0, 0, TME_FB_XLAT_SCALE_NONE, 0, 0, -1, 0, TME_ENDIAN_LITTLE, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 32, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00ff00, 0xffff0000, 0xff0000ff }, 
+  { tme_fb_xlat24, 0, 0, TME_FB_XLAT_SCALE_NONE, 0, 0, -1, 0, TME_ENDIAN_LITTLE, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 32, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00ff00, 0xffff0000, 0xff0000ff }, 
+  { tme_fb_xlat25, 0, 0, TME_FB_XLAT_SCALE_NONE, 0, 0, -1, 0, TME_ENDIAN_LITTLE, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 24, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00, 0xff0000, 0xff }, 
   { tme_fb_xlat26, 0, 0, TME_FB_XLAT_SCALE_NONE, 0, 0, -1, 0, TME_ENDIAN_LITTLE, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 0, 0, -1, 0, TME_ENDIAN_BIG, TME_FB_XLAT_MAP_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY }, 
   { tme_fb_xlat27, 0, 0, TME_FB_XLAT_SCALE_NONE, 0, 0, -1, 0, TME_ENDIAN_LITTLE, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 0, 0, -1, 0, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY }, 
-  { tme_fb_xlat28, 0, 0, TME_FB_XLAT_SCALE_HALF, 0, 0, -1, 0, TME_ENDIAN_LITTLE, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 24, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00, 0xff0000, 0xff }, 
-  { tme_fb_xlat29, 0, 0, TME_FB_XLAT_SCALE_HALF, 0, 0, -1, 0, TME_ENDIAN_LITTLE, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 32, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00ff00, 0xffff0000, 0xff0000ff }, 
+  { tme_fb_xlat28, 0, 0, TME_FB_XLAT_SCALE_HALF, 0, 0, -1, 0, TME_ENDIAN_LITTLE, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 32, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00ff00, 0xffff0000, 0xff0000ff }, 
+  { tme_fb_xlat29, 0, 0, TME_FB_XLAT_SCALE_HALF, 0, 0, -1, 0, TME_ENDIAN_LITTLE, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 24, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00, 0xff0000, 0xff }, 
   { tme_fb_xlat30, 0, 0, TME_FB_XLAT_SCALE_HALF, 0, 0, -1, 0, TME_ENDIAN_LITTLE, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 0, 0, -1, 0, TME_ENDIAN_BIG, TME_FB_XLAT_MAP_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY }, 
   { tme_fb_xlat31, 0, 0, TME_FB_XLAT_SCALE_HALF, 0, 0, -1, 0, TME_ENDIAN_LITTLE, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 0, 0, -1, 0, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY }, 
-  { tme_fb_xlat32, 0, 0, TME_FB_XLAT_SCALE_DOUBLE, 0, 0, -1, 0, TME_ENDIAN_LITTLE, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 24, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00, 0xff0000, 0xff }, 
-  { tme_fb_xlat33, 0, 0, TME_FB_XLAT_SCALE_DOUBLE, 0, 0, -1, 0, TME_ENDIAN_LITTLE, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 32, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00ff00, 0xffff0000, 0xff0000ff }, 
+  { tme_fb_xlat32, 0, 0, TME_FB_XLAT_SCALE_DOUBLE, 0, 0, -1, 0, TME_ENDIAN_LITTLE, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 32, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00ff00, 0xffff0000, 0xff0000ff }, 
+  { tme_fb_xlat33, 0, 0, TME_FB_XLAT_SCALE_DOUBLE, 0, 0, -1, 0, TME_ENDIAN_LITTLE, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 24, 32, 0, 32, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_LINEAR, 0xff00, 0xff0000, 0xff }, 
   { tme_fb_xlat34, 0, 0, TME_FB_XLAT_SCALE_DOUBLE, 0, 0, -1, 0, TME_ENDIAN_LITTLE, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 0, 0, -1, 0, TME_ENDIAN_BIG, TME_FB_XLAT_MAP_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY }, 
   { tme_fb_xlat35, 0, 0, TME_FB_XLAT_SCALE_DOUBLE, 0, 0, -1, 0, TME_ENDIAN_LITTLE, TME_FB_XLAT_CLASS_ANY, TME_FB_XLAT_MAP_ANY, 0, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, 0, 0, -1, 0, TME_ENDIAN_LITTLE, TME_FB_XLAT_MAP_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY, TME_FB_XLAT_MASK_ANY }, };

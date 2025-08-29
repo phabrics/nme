@@ -42,6 +42,7 @@ pthread_attr_t *attrp;
 int thread_mode;
 tme_rwlock_t tme_rwlock_suspere;
 
+#ifdef tme_thread_rwlock_timedrdlock
 int tme_rwlock_timedlock(tme_rwlock_t *l, unsigned long sec, int write) { 
   tme_time_t sleep;
   tme_timeout_t timeout;
@@ -54,15 +55,17 @@ int tme_rwlock_timedlock(tme_rwlock_t *l, unsigned long sec, int write) {
   _tme_thread_suspended();
   
   if (write)
-    tme_thread_op2(rwlock_timedwrlock, &(l)->lock, &timeout);
+    rc = tme_thread_op2(rwlock_timedwrlock, &(l)->lock, &timeout);
   else
-    tme_thread_op2(rwlock_timedrdlock, &(l)->lock, &timeout);
+    rc = tme_thread_op2(rwlock_timedrdlock, &(l)->lock, &timeout);
 
   _tme_thread_resumed();
 
   return rc;
 }
+#endif
 
+#ifdef tme_thread_mutex_timedlock
 int tme_mutex_timedlock(tme_mutex_t *m, unsigned long sec) {
   tme_time_t sleep;
   tme_timeout_t timeout;
@@ -80,6 +83,7 @@ int tme_mutex_timedlock(tme_mutex_t *m, unsigned long sec) {
 
   return rc;
 }
+#endif
 
 int tme_rwlock_rdlock(tme_rwlock_t *l) {
   if((l)->writer == tme_thread_self())

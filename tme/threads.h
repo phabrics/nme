@@ -98,14 +98,15 @@ int tme_rwlock_trywrlock _TME_P((tme_rwlock_t *l));
 #define tme_thread_suspend_others()	_tme_thread_suspended();if(!tme_thread_cooperative()) _tme_rwlock_wrlock(&tme_rwlock_suspere)
 #define tme_thread_resume_others()	if(!tme_thread_cooperative()) _tme_rwlock_wrunlock(&tme_rwlock_suspere);_tme_thread_resumed()
 
-#ifndef tme_thread_rwlock_timedrdlock
-#define tme_thread_rwlock_timedrdlock(l,t) tme_thread_rwlock_rdlock(l)
-#define tme_thread_rwlock_timedwrlock(l,t) tme_thread_rwlock_wrlock(l)
-#endif
-
+#ifdef tme_thread_rwlock_timedrdlock
 int tme_rwlock_timedlock _TME_P((tme_rwlock_t *l, unsigned long sec, int write));
 #define tme_rwlock_timedrdlock(l,sec) tme_rwlock_timedlock(l,sec,0)
 #define tme_rwlock_timedwrlock(l,sec) tme_rwlock_timedlock(l,sec,1)
+#else
+// does fiber require trylock here?
+#define tme_rwlock_timedrdlock(l,sec)     tme_rwlock_rdlock(l)
+#define tme_rwlock_timedwrlock(l,sec)     tme_rwlock_wrlock(l)
+#endif
 
 /* mutexes: */
 typedef union {
@@ -118,11 +119,11 @@ typedef union {
 #define tme_mutex_trylock(m) (tme_thread_op(mutex_trylock,m) ? (TME_OK) : (TME_EBUSY))
 #define tme_mutex_unlock(m) tme_thread_op(mutex_unlock,m)
 
-#ifndef tme_thread_mutex_timedlock
-#define tme_thread_mutex_timedlock(m,t) tme_thread_mutex_trylock(m)
-#endif
-
+#ifdef tme_thread_mutex_timedlock
 int tme_mutex_timedlock _TME_P((tme_mutex_t *m, unsigned long sec));
+#else
+#define tme_mutex_timedlock(m,t) tme_mutex_trylock(m)
+#endif
 
 /* conditions: */
 typedef union {
