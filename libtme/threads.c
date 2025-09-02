@@ -140,12 +140,12 @@ int tme_cond_sleep_yield(tme_cond_t *cond, tme_mutex_t *mutex,
   tme_timeout_t timeout;
   int rc = TME_OK;
 
-  sleep += tme_thread_get_time();
-
   tme_get_timeout(sleep, &timeout);
   
-  _tme_thread_suspended();
+  sleep += tme_thread_get_time();
 
+  _tme_thread_suspended();
+  
   tme_thread_opt(cond_wait_until, cond, mutex, &timeout);
 
   _tme_thread_resumed();

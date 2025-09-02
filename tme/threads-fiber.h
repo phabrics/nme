@@ -68,7 +68,7 @@ typedef struct tme_fiber_rwlock {
 /* lock operations: */
 int tme_fiber_rwlock_init _TME_P((tme_fiber_rwlock_t *));
 int tme_fiber_rwlock_lock _TME_P((tme_fiber_rwlock_t *, _tme_const char *, unsigned long, int));
-int tme_fiber_rwlock_unlock _TME_P(tme_fiber_rwlock_t *, _tme_const char *, unsigned long));
+int tme_fiber_rwlock_unlock _TME_P((tme_fiber_rwlock_t *, _tme_const char *, unsigned long));
 #if defined(__FILE__) && defined(__LINE__)
 #define tme_fiber_rwlock_rdlock(l) tme_fiber_rwlock_lock(l, __FILE__, __LINE__, FALSE)
 #define tme_fiber_rwlock_tryrdlock(l) tme_fiber_rwlock_lock(l, __FILE__, __LINE__, TRUE)

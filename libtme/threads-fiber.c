@@ -953,7 +953,7 @@ tme_fiber_yield(void)
 
 /* lock operations: */
 int
-_tme_fiber_rwlock_init(struct tme_fiber_rwlock *lock)
+tme_fiber_rwlock_init(struct tme_fiber_rwlock *lock)
 {
   /* initialize the lock: */
   lock->_tme_fiber_rwlock_locked = FALSE;
