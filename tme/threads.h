@@ -97,8 +97,8 @@ int tme_rwlock_trywrlock _TME_P((tme_rwlock_t *l));
 #define tme_thread_cooperative() (thread_mode == FALSE)
 #endif
 
-#define _tme_thread_suspended()	        tme_rwlock_rdunlock(&tme_rwlock_suspere)
-#define _tme_thread_resumed()	        _tme_rwlock_rdlock(&tme_rwlock_suspere)
+#define _tme_thread_suspended()	        if(!tme_thread_cooperative()) tme_rwlock_rdunlock(&tme_rwlock_suspere)
+#define _tme_thread_resumed()	        if(!tme_thread_cooperative()) _tme_rwlock_rdlock(&tme_rwlock_suspere)
 #define tme_thread_suspend_others()	_tme_thread_suspended();if(!tme_thread_cooperative()) _tme_rwlock_wrlock(&tme_rwlock_suspere)
 #define tme_thread_resume_others()	if(!tme_thread_cooperative()) _tme_rwlock_wrunlock(&tme_rwlock_suspere);_tme_thread_resumed()
 
