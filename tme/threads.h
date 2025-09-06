@@ -74,7 +74,11 @@ extern tme_rwlock_t tme_rwlock_suspere;
 #define tme_thread_op2(func,arg,arg2) ((thread_mode) ? (tme_thread_##func(&(arg)->thread,&(arg2)->thread)) : (tme_fiber_##func(&(arg)->fiber,&(arg2)->fiber)))
 #define tme_thread_opt(func,arg,arg2,arg3) ((thread_mode) ? (tme_thread_##func(&(arg)->thread,&(arg2)->thread,(arg3)->thread)) : (tme_fiber_##func(&(arg)->fiber,&(arg2)->fiber,(arg3)->fiber)))
 
-#define tme_rwlock_init(l) tme_thread_op(rwlock_init,&(l)->lock)
+static _tme_inline int tme_rwlock_init _TME_P((tme_rwlock_t *l)) {
+  (l)->writer = (thread_mode) ? (0) : (tme_thread_self());  
+  tme_thread_op(rwlock_init,&(l)->lock);
+}
+
 #define tme_rwlock_destroy(l) tme_thread_op(rwlock_destroy,&(l)->lock)
 
 #define _tme_rwlock_rdlock(l)           tme_thread_op(rwlock_rdlock,&(l)->lock);
@@ -104,8 +108,8 @@ int tme_rwlock_timedlock _TME_P((tme_rwlock_t *l, unsigned long sec, int write))
 #define tme_rwlock_timedwrlock(l,sec) tme_rwlock_timedlock(l,sec,1)
 #else
 // does fiber require trylock here?
-#define tme_rwlock_timedrdlock(l,sec)     tme_rwlock_rdlock(l)
-#define tme_rwlock_timedwrlock(l,sec)     tme_rwlock_wrlock(l)
+#define tme_rwlock_timedrdlock(l,sec)     tme_rwlock_tryrdlock(l)
+#define tme_rwlock_timedwrlock(l,sec)     tme_rwlock_trywrlock(l)
 #endif
 
 /* mutexes: */
@@ -116,7 +120,7 @@ typedef union {
   
 #define tme_mutex_init(m) tme_thread_op(mutex_init,m)
 #define tme_mutex_destroy(m) tme_thread_op(mutex_clear,m)
-#define tme_mutex_trylock(m) (tme_thread_op(mutex_trylock,m) ? (TME_OK) : (TME_EBUSY))
+#define tme_mutex_trylock(m) tme_thread_op(mutex_trylock,m)
 #define tme_mutex_unlock(m) tme_thread_op(mutex_unlock,m)
 
 #ifdef tme_thread_mutex_timedlock
