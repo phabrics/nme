@@ -38,7 +38,7 @@
 
 #include <tme/common.h>
 #ifdef USE_SDL
-#ifdef main
+#ifdef HAVE_SDL
 #include <SDL.h>
 #else
 #include <SDL3/SDL.h>

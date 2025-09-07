@@ -223,15 +223,16 @@ fi
 AM_CONDITIONAL([HAVE_GTK], [test "x${have_gtk}" = xyes])
 
 PKG_CHECK_MODULES([SDL], [sdl3], [have_sdl=$enable_sdl], [
-   PKG_CHECK_MODULES([SDL], [sdl2], [have_sdl=$enable_sdl], [have_sdl=no])
+   PKG_CHECK_MODULES([SDL], [sdl2], [have_sdl2=$enable_sdl], [have_sdl=no])
 ])
 
-AX_CHECK_COMPILE_FLAG(-sUSE_SDL=2, [have_sdl=$enable_sdl])
+AX_CHECK_COMPILE_FLAG(-sUSE_SDL=2, [have_sdl2=$enable_sdl])
 AX_APPEND_COMPILE_FLAGS(-sUSE_SDL=2, SDL_CFLAGS)
 AX_APPEND_LINK_FLAGS(-sUSE_SDL=2, SDL_LIBS)
 
-if test "x${have_sdl}" = xyes; then
-   AC_DEFINE([HAVE_SDL], [], [Defined if GTK is found & enabled.])
+if test "x${have_sdl2}" = xyes; then
+   AC_DEFINE([HAVE_SDL], [], [Defined if SDL2 is found & enabled.])
+   have_sdl=yes
 fi
 AM_CONDITIONAL([HAVE_SDL], [test "x${have_sdl}" = xyes])
 

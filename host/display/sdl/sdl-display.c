@@ -32,7 +32,7 @@
  */
 
 #include <tme/common.h>
-#undef HAVE_SDL
+
 /* includes: */
 #include "display.h"
 #ifdef HAVE_SDL
