@@ -105,20 +105,22 @@ int tme_rwlock_wrlock(tme_rwlock_t *l) {
 
   _tme_thread_suspended();
   _tme_rwlock_wrlock(l);
+
+  if(thread_mode) (l)->writer = tme_thread_self();
   _tme_thread_resumed();
-  (l)->writer = tme_thread_self();
+
   return TME_OK;
 }
 
 int tme_rwlock_trywrlock(tme_rwlock_t *l) {
   int rc = tme_thread_op(rwlock_trywrlock,&(l)->lock);
 
-  if(rc==TME_OK) (l)->writer = tme_thread_self();
+  if(rc==TME_OK && thread_mode) (l)->writer = tme_thread_self();
   return rc;
 }
 
 int tme_rwlock_wrunlock(tme_rwlock_t *l) {
-  if(thread_mode) (l)->writer = 0;
+  (l)->writer = 0;
   _tme_rwlock_wrunlock(l);
   return TME_OK;
 }

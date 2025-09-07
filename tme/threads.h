@@ -75,7 +75,7 @@ extern tme_rwlock_t tme_rwlock_suspere;
 #define tme_thread_opt(func,arg,arg2,arg3) ((thread_mode) ? (tme_thread_##func(&(arg)->thread,&(arg2)->thread,(arg3)->thread)) : (tme_fiber_##func(&(arg)->fiber,&(arg2)->fiber,(arg3)->fiber)))
 
 static _tme_inline int tme_rwlock_init _TME_P((tme_rwlock_t *l)) {
-  (l)->writer = (thread_mode) ? (0) : (tme_thread_self());  
+  (l)->writer = 0;
   tme_thread_op(rwlock_init,&(l)->lock);
 }
 
@@ -107,9 +107,9 @@ int tme_rwlock_timedlock _TME_P((tme_rwlock_t *l, unsigned long sec, int write))
 #define tme_rwlock_timedrdlock(l,sec) tme_rwlock_timedlock(l,sec,0)
 #define tme_rwlock_timedwrlock(l,sec) tme_rwlock_timedlock(l,sec,1)
 #else
-// does fiber require trylock here?
-#define tme_rwlock_timedrdlock(l,sec)     tme_rwlock_tryrdlock(l)
-#define tme_rwlock_timedwrlock(l,sec)     tme_rwlock_trywrlock(l)
+// TODO: why do thread_mode trylocks not work here?
+#define tme_rwlock_timedrdlock(l,sec)     ((thread_mode) ? (tme_rwlock_rdlock(l)) : (tme_rwlock_tryrdlock(l)))
+#define tme_rwlock_timedwrlock(l,sec)     ((thread_mode) ? (tme_rwlock_wrlock(l)) : (tme_rwlock_trywrlock(l)))
 #endif
 
 /* mutexes: */
