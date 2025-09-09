@@ -74,17 +74,27 @@ typedef struct tme_cond {
 #define TME_THREAD_TIMEDLOCK		(0)
 #define TME_THREAD_DEADLOCK_SLEEP	abort
 
+/* time: */
+#define TME_FRAC_PER_SEC SDL_NS_PER_SECOND
+
+static _tme_inline tme_time_t tme_thread_time _TME_P((void)) {
+  SDL_Time ticks;
+  SDL_GetCurrentTime(&ticks);
+  return ticks;
+}
+
 typedef tme_int32_t tme_timeout_t;
 
-#define tme_thread_get_timeout(sleep, timeout) (*(timeout) = TME_TIME_GET_MSEC(sleep))
+/* ignore abs argument as we SDL API assumes relative time: */
+#define tme_thread_get_timeout(sleep, timeout, abs) (*(timeout) = TME_TIME_GET_MSEC(sleep))
 
 /* threads: */
 typedef int *_tme_thret;
 typedef SDL_ThreadFunction tme_thread_t;
-typedef SDL_Thread *tme_threadid_t;
+typedef SDL_Thread *tme_thread_threadid_t;
 typedef SDL_ThreadID _tme_threadid_t;
 
-#define tme_thread_make(t,f,a) ((t) = SDL_CreateThread(f,NULL,a))
+#define tme_thread_new(t,n,f,a) ((*t) = SDL_CreateThread(f,n,a))
 
 static _tme_inline int tme_thread_join _TME_P((tme_threadid_t t)) {
   int r;

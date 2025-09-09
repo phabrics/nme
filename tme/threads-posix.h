@@ -44,57 +44,86 @@
 #define TME_THREADS_PREEMPTIVE		(TRUE)
 
 /* read/write locks. */
-typedef pthread_rwlock_t _tme_rwlock_t;
+typedef pthread_rwlock_t tme_thread_rwlock_t;
 
-#define _tme_rwlock_init(l) pthread_rwlock_init(&l, NULL)
-#define _tme_rwlock_destroy(l) pthread_rwlock_destroy(&l)
-#define _tme_rwlock_rdlock(l) pthread_rwlock_rdlock(&l)
-#define _tme_rwlock_wrlock(l) pthread_rwlock_wrlock(&l)
-#define _tme_rwlock_rdunlock(l) pthread_rwlock_unlock(&l)
-#define _tme_rwlock_wrunlock(l) pthread_rwlock_unlock(&l)
-#define _tme_rwlock_tryrdlock(l) pthread_rwlock_tryrdlock(&l)
-#define _tme_rwlock_trywrlock(l) pthread_rwlock_trywrlock(&l)
+#define tme_thread_rwlock_init(l) pthread_rwlock_init(l, NULL)
+#define tme_thread_rwlock_destroy pthread_rwlock_destroy
+#define tme_thread_rwlock_rdlock pthread_rwlock_rdlock
+#define tme_thread_rwlock_wrlock pthread_rwlock_wrlock
+#define tme_thread_rwlock_rdunlock pthread_rwlock_unlock
+#define tme_thread_rwlock_wrunlock pthread_rwlock_unlock
+#define tme_thread_rwlock_tryrdlock pthread_rwlock_tryrdlock
+#define tme_thread_rwlock_trywrlock pthread_rwlock_trywrlock
 #ifdef HAVE_PTHREAD_RWLOCK_TIMEDRDLOCK
-#define _tme_rwlock_timedrdlock(l,t) pthread_rwlock_timedrdlock(&l,t)
-#define _tme_rwlock_timedwrlock(l,t) pthread_rwlock_timedwrlock(&l,t)
+#define tme_thread_rwlock_timedrdlock pthread_rwlock_timedrdlock
+#define tme_thread_rwlock_timedwrlock pthread_rwlock_timedwrlock
 #endif
 
 /* mutexes. */
-typedef pthread_mutex_t tme_mutex_t;
-#define tme_mutex_init(m) pthread_mutex_init(m,NULL)
-#define tme_mutex_destroy pthread_mutex_destroy
-#define _tme_mutex_lock pthread_mutex_lock
-#define tme_mutex_trylock pthread_mutex_trylock
-#define tme_mutex_unlock pthread_mutex_unlock
+typedef pthread_mutex_t tme_thread_mutex_t;
+#define tme_thread_mutex_init(m) pthread_mutex_init(m,NULL)
+#define tme_thread_mutex_destroy pthread_mutex_destroy
+#define tme_thread_mutex_lock pthread_mutex_lock
+#define tme_thread_mutex_trylock pthread_mutex_trylock
+#define tme_thread_mutex_unlock pthread_mutex_unlock
 #ifdef HAVE_PTHREAD_MUTEX_TIMEDLOCK
-#define _tme_mutex_timedlock pthread_mutex_timedlock
+#define tme_thread_mutex_timedlock pthread_mutex_timedlock
 #endif
 
 /* conditions: */
-typedef pthread_cond_t tme_cond_t;
-#define tme_cond_init(c) pthread_cond_init(c,NULL)
-#define tme_cond_destroy pthread_cond_destroy
-#define tme_cond_wait pthread_cond_wait
-#define tme_cond_wait_until pthread_cond_timedwait
-#define tme_cond_notifyTRUE pthread_cond_broadcast
-#define tme_cond_notifyFALSE pthread_cond_signal
+typedef pthread_cond_t tme_thread_cond_t;
+#define tme_thread_cond_init(c) pthread_cond_init(c,NULL)
+#define tme_thread_cond_destroy pthread_cond_destroy
+#define tme_thread_cond_wait pthread_cond_wait
+#define tme_thread_cond_wait_until(c,m,t) pthread_cond_timedwait(c,m,&t)
+#define tme_thread_cond_notifyTRUE pthread_cond_broadcast
+#define tme_thread_cond_notifyFALSE pthread_cond_signal
 
 /* deadlock sleeping: */
 #define TME_THREAD_TIMEDLOCK		(1000)
 #define TME_THREAD_DEADLOCK_SLEEP	abort
 
-typedef struct timespec tme_timeout_t;
+/* time: */
+static _tme_inline tme_time_t tme_thread_time _TME_P((void)) {
+#ifdef WIN32
+  #define TME_FRAC_PER_SEC 10000000
+  FILETIME filetime;
+  ULARGE_INTEGER _time;
+  GetSystemTimeAsFileTime(&filetime);
+  _time.u.HighPart = filetime.dwHighDateTime;
+  _time.u.LowPart = filetime.dwLowDateTime;
+#ifdef TME_HAVE_INT64_T
+  return _time.QuadPart;
+#else
+  return (_time.u.LowPart) | (_time.u.HighPart << 32);
+#endif
+#elif defined(USE_GETTIMEOFDAY) || !defined(_TME_HAVE_CLOCK_GETTIME)
+#define TME_FRAC_PER_SEC 1000000
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  return TME_TIME_SET_SEC(tv.tv_sec)
+    +TME_TIME_SET_USEC(tv.tv_usec);
+#else
+#define TME_FRAC_PER_SEC 1000000000
+  struct timespec ts;
+  clock_gettime(CLOCK_REALTIME, &ts);
+  return TME_TIME_SET_SEC(ts.tv_sec)
+    +TME_TIME_SET_NSEC(ts.tv_nsec);
+#endif
+}
 
-static _tme_inline tme_timeout_t *tme_thread_get_timeout(tme_time_t sleep, tme_timeout_t *timeout) {
+typedef struct timespec tme_thread_time_t;
+
+static _tme_inline void tme_thread_get_timeout(tme_time_t sleep, tme_thread_time_t *timeout, int abs) {
+  if(abs) sleep += tme_thread_time();
   timeout->tv_sec = TME_TIME_GET_SEC(sleep);
   timeout->tv_nsec = TME_TIME_GET_NSEC(sleep % TME_FRAC_PER_SEC);
-  return timeout;
 }
 
 /* threads: */
 typedef void *_tme_thret;
 typedef _tme_thret (*tme_thread_t) _TME_P((void *));
-typedef pthread_t tme_threadid_t, _tme_threadid_t;
+typedef pthread_t _tme_threadid_t, tme_thread_threadid_t;
 
 extern pthread_attr_t *attrp;
 
@@ -115,8 +144,7 @@ static _tme_inline int _tme_thread_cooperative() {
     return (policy == SCHED_FIFO);
   return FALSE;
 }
-
-#define tme_thread_cooperative (!thread_mode || _tme_thread_cooperative())
+#define tme_thread_cooperative() (!thread_mode || _tme_thread_cooperative())
 
 #define _tme_thread_yield sched_yield
 
@@ -125,20 +153,21 @@ static _tme_inline int _tme_thread_cooperative() {
 #define tme_thread_defattr() NULL
 #endif
 
-#define tme_thread_make(t,f,a) pthread_create(&(t),tme_thread_defattr(),f,a)
+static _tme_inline tme_thread_threadid_t
+tme_thread_new _TME_P((const char *name, tme_thread_t func, void *arg)) {
+  tme_thread_threadid_t thr;
+  pthread_create(&thr,tme_thread_defattr(),func,arg);
+#ifdef HAVE_PTHREAD_SETNAME_NP
+  pthread_setname_np(thr,name);
+#endif
+  return thr;
+}
+
 #define tme_thread_join(id) pthread_join(id,NULL)
 #define tme_thread_self pthread_self
 
 /* sleeping: */
 #define tme_thread_sleep(timeout) nanosleep(timeout, NULL)
-
-/* A default main iterator for use in the main thread loop */
-static _tme_inline void tme_threads_main_iter _TME_P((void *usec)) {
-  //  return usleep((usec) ? (unsigned long)usec : 1000000);
-}
-
-#define _tme_threads_main_iter(fn) if(fn) fn()
-//#define tme_thread_get_time() tme_get_time()
 
 #ifdef HAVE_CPUSET_CREATE
 typedef cpuset_t *tme_cpuset_t;

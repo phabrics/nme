@@ -609,6 +609,10 @@ AC_SEARCH_LIBS([pthread_setaffinity_np], [pthread], [
 AC_DEFINE(HAVE_PTHREAD_SETAFFINITY_NP, [], [Define if you have pthread_setaffinity_np.])
 ])
 
+AC_SEARCH_LIBS([pthread_setname_np], [pthread], [
+AC_DEFINE(HAVE_PTHREAD_SETNAME_NP, [], [Define if you have pthread_setname_np.])
+])
+
 AC_SEARCH_LIBS([pthread_setschedparam], [pthread], [
 AC_DEFINE(HAVE_PTHREAD_SETSCHEDPARAM, [], [Define if you have pthread_setschedparam.])
 ])
@@ -745,10 +749,10 @@ xpthreads| xposix)  CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_POSIX"
 	  	    CFLAGS="${CFLAGS-} -pthread"
 		    LDFLAGS="${LDFLAGS-} -pthread"
 		     ;;
-xsdl)    CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_SDL -DUSE_SDL_TIME ${SDL_CFLAGS}"
+xsdl)    CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_SDL ${SDL_CFLAGS}"
 	 LDFLAGS="${LDFLAGS-} ${SDL_LIBS}"
 	 ;;
-xglib)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_GLIB -DUSE_GLIB_TIME ${GLIB_CFLAGS}"
+xglib)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_GLIB ${GLIB_CFLAGS}"
 	 LDFLAGS="${LDFLAGS-} ${GLIB_LIBS}"
 	 ;;
 esac

@@ -69,19 +69,26 @@ typedef GCond tme_thread_cond_t;
 #define TME_THREAD_TIMEDLOCK		(0)
 #define TME_THREAD_DEADLOCK_SLEEP	abort
 
-typedef tme_time_t tme_thread_time_t;
+/* time: */
+#define TME_FRAC_PER_SEC G_USEC_PER_SEC
 
-#define tme_thread_get_timeout(sleep, timeout) (*(timeout) = TME_TIME_GET_USEC(sleep))
+#define tme_thread_time g_get_monotonic_time
+
+typedef gint64 tme_thread_time_t;
+
+static _tme_inline void tme_thread_get_timeout(tme_time_t sleep, tme_thread_time_t *timeout, int abs) {
+  if(abs) sleep += tme_thread_time();
+  *(timeout) = TME_TIME_GET_USEC(sleep);
+}
 
 /* threads: */
 typedef gpointer _tme_thret;
 typedef GThreadFunc tme_thread_t;
 typedef GThread *tme_thread_threadid_t, *_tme_threadid_t;
 
-#define tme_thread_make(t,n,f,a) ((t) = g_thread_new(n,f,a))
+#define tme_thread_new g_thread_new
 #define tme_thread_join g_thread_join
 #define tme_thread_self g_thread_self
-#define _tme_thread_yield() 
 
 /* sleeping: */
 #define tme_thread_sleep(t) g_usleep(*t)

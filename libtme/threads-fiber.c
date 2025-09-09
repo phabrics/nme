@@ -59,7 +59,7 @@ _TME_RCSID("$Id: threads-fiber.c,v 1.18 2010/06/05 19:10:28 fredette Exp $");
 /* types: */
 
 /* a thread: */
-typedef struct tme_fiber_thread {
+struct tme_fiber_thread {
 
   const char *name;
   
@@ -99,7 +99,7 @@ typedef struct tme_fiber_thread {
 
   /* the last dispatch number for this thread: */
   tme_uint32_t tme_fiber_thread_dispatch_number;
-} tme_fiber_thread_t;
+};
 
 /* event envelope */
 struct tme_fiber_event {
@@ -215,8 +215,8 @@ tme_fiber_get_time()
 {
 
   /* if we need to, call tme_fiber_get_time(): */
-  if (__tme_predict_false(!tme_fiber_thread_short)) {
-    _tme_fiber_now = tme_thread_get_time();
+  if (__tme_predict_false(tme_fiber_thread_short)) {
+    _tme_fiber_now = tme_thread_time();
     tme_fiber_thread_short = TRUE;
   }
 
@@ -517,14 +517,13 @@ tme_fiber_main_iter(void *unused)
 }
 
 /* this creates a new thread: */
-void
-tme_fiber_make(void **thr, const char *name, tme_thread_t func, void *func_private)
+tme_fiber_thread_t *
+tme_fiber_new(const char *name, tme_thread_t func, void *func_private)
 {
   tme_fiber_thread_t *thread;
 
   /* allocate a new thread and put it on the all-threads list: */
   thread = tme_new(tme_fiber_thread_t, 1);
-  *thr = thread;
   thread->name = tme_strdup(name);
   thread->prev = &tme_fiber_threads_all;
   thread->next = *thread->prev;
@@ -547,6 +546,7 @@ tme_fiber_make(void **thr, const char *name, tme_thread_t func, void *func_priva
   thread->tme_fiber_thread_dispatch_number = _tme_fiber_thread_dispatch_number - 1;
   _tme_fiber_change_state(thread,
 			 TME_FIBER_THREAD_STATE_RUNNABLE);
+  return thread;
 }
 
 /* this makes a thread wait on a condition: */

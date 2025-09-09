@@ -47,6 +47,20 @@ _TME_RCSID("$Id: threads.h,v 1.10 2010/06/05 19:36:35 fredette Exp $");
 #define TME_EBUSY		EBUSY
 #define TME_THREADS_ERRNO(rc)	(rc)
 
+typedef tme_uint64_t tme_time_t;
+#define TME_NSEC_PER_TICK (1000000000 / TME_FRAC_PER_SEC)
+#define TME_FRAC_PER_MSEC (TME_FRAC_PER_SEC / 1000)
+#define TME_FRAC_PER_USEC (TME_FRAC_PER_SEC / 1000000)
+
+#define TME_TIME_GET_SEC(a) ((a) / TME_FRAC_PER_SEC)
+#define TME_TIME_GET_MSEC(a) ((a) / TME_FRAC_PER_MSEC)
+#define TME_TIME_GET_USEC(a) ((a) / TME_FRAC_PER_USEC)
+#define TME_TIME_GET_NSEC(a) ((a) * TME_NSEC_PER_TICK)
+#define TME_TIME_SET_SEC(a) ((tme_time_t)(a) * TME_FRAC_PER_SEC)
+#define TME_TIME_SET_MSEC(a) ((tme_time_t)(a) * TME_FRAC_PER_MSEC)
+#define TME_TIME_SET_USEC(a) ((tme_time_t)(a) * TME_FRAC_PER_USEC)
+#define TME_TIME_SET_NSEC(a) ((tme_time_t)(a) / TME_NSEC_PER_TICK)
+
 /* setjmp/longjmp threading: */
 #ifdef TME_THREADS_POSIX
 #include "threads-posix.h"
@@ -72,9 +86,9 @@ extern tme_rwlock_t tme_rwlock_suspere;
 
 #define tme_thread_op(func,arg) ((thread_mode) ? (tme_thread_##func(&(arg)->thread)) : (tme_fiber_##func(&(arg)->fiber)))
 #define tme_thread_op2(func,arg,arg2) ((thread_mode) ? (tme_thread_##func(&(arg)->thread,&(arg2)->thread)) : (tme_fiber_##func(&(arg)->fiber,&(arg2)->fiber)))
-#define tme_thread_opt(func,arg,arg2,arg3) ((thread_mode) ? (tme_thread_##func(&(arg)->thread,&(arg2)->thread,(arg3)->thread)) : (tme_fiber_##func(&(arg)->fiber,&(arg2)->fiber,(arg3)->fiber)))
+#define tme_thread_opt(func,arg,arg2,arg3) ((thread_mode) ? (tme_thread_##func(&(arg)->thread,&(arg2)->thread,(arg3).thread)) : (tme_fiber_##func(&(arg)->fiber,&(arg2)->fiber,(arg3).fiber)))
 
-static _tme_inline int tme_rwlock_init _TME_P((tme_rwlock_t *l)) {
+static _tme_inline void tme_rwlock_init _TME_P((tme_rwlock_t *l)) {
   (l)->writer = 0;
   tme_thread_op(rwlock_init,&(l)->lock);
 }
@@ -147,7 +161,7 @@ typedef union {
   tme_time_t fiber;
 } tme_timeout_t;
 
-#define tme_get_timeout(s,t) ((thread_mode) ? (tme_thread_get_timeout(s,&((t)->thread))) : ((t)->fiber=(s)))
+#define tme_get_timeout(s,t,a) ((thread_mode) ? (tme_thread_get_timeout(s,&((t).thread),a)) : ((t).fiber=(s)))
 
 void tme_thread_yield _TME_P((void));
 
@@ -187,6 +201,31 @@ static _tme_inline void tme_thread_enter _TME_P((tme_mutex_t *mutex)) {
 int tme_thread_sleep_yield _TME_P((tme_time_t time, tme_mutex_t *mutex));
 
 void tme_threads_init(int mode);
+
+/* time: */
+#define tme_thread_get_time() ((thread_mode) ? (tme_thread_time()) : (tme_fiber_get_time()))
+
+#if defined(_TME_HAVE_GMTIME_R) || defined(_TME_HAVE_GMTIME_S) || defined(_TME_HAVE_GMTIME)
+typedef struct tm tme_date_t;
+static _tme_inline tme_date_t *tme_time_get_date _TME_P((tme_time_t time, tme_date_t *date)) {
+  time_t sec = TME_TIME_GET_SEC(time);
+#ifdef _TME_HAVE_GMTIME_S
+  gmtime_s(date, &sec);
+  return date;
+#elif defined(_TME_HAVE_GMTIME_R)
+  return gmtime_r(&sec, date);
+#else
+  return date = gmtime(&sec);
+#endif
+}
+#define TME_DATE_SEC(date) ((date)->tm_sec)
+#define TME_DATE_MIN(date) ((date)->tm_min)
+#define TME_DATE_HOUR(date) ((date)->tm_hour)
+#define TME_DATE_WDAY(date) ((date)->tm_wday)
+#define TME_DATE_MDAY(date) ((date)->tm_mday)
+#define TME_DATE_MONTH(date) ((date)->tm_mon + 1)
+#define TME_DATE_YEAR(date) ((date)->tm_year)
+#endif
 
 /* I/O: */
 #ifdef WIN32
@@ -306,12 +345,18 @@ ssize_t tme_thread_write _TME_P((tme_thread_handle_t hand, const void *buf, size
 
 typedef union {
   tme_thread_threadid_t thread;
-  void *fiber;
+  tme_fiber_thread_t *fiber;
 } tme_threadid_t;
 
-#define _tme_thread_create(t,n,f,a) ((thread_mode) ? (tme_thread_make((t)->thread,n,f,a)) : (tme_fiber_make(&(t)->fiber,n,f,a)))
+static _tme_inline void
+tme_thread_create_named _TME_P((tme_threadid_t *thr, const char *name, tme_thread_t func, void *arg)) {
+  if(thread_mode) 
+    (thr)->thread = tme_thread_new(name,func,arg);
+  else
+    (thr)->fiber = tme_fiber_new(name,func,arg);
+}
 
-#define tme_thread_create(t,f,a) _tme_thread_create(t,element->tme_element_args[0],f,a)
+#define tme_thread_create(t,f,a) tme_thread_create_named(t,element->tme_element_args[0],f,a)
 
 static _tme_inline void tme_thread_exit _TME_P((tme_mutex_t *mutex)) {
   if(thread_mode) {

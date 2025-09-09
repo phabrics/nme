@@ -43,14 +43,11 @@ int thread_mode;
 tme_rwlock_t tme_rwlock_suspere;
 
 #ifdef tme_thread_rwlock_timedrdlock
-int tme_rwlock_timedlock(tme_rwlock_t *l, unsigned long sec, int write) { 
-  tme_time_t sleep;
+int tme_rwlock_timedlock(tme_rwlock_t *l, tme_time_t abstime, int write) { 
   tme_timeout_t timeout;
   int rc = TME_OK;
 
-  sleep = TME_TIME_SET_SEC(sec) + tme_thread_get_time();
-
-  tme_get_timeout(sleep, &timeout);
+  tme_get_timeout(abstime, timeout, 0);
   
   _tme_thread_suspended();
   
@@ -66,14 +63,11 @@ int tme_rwlock_timedlock(tme_rwlock_t *l, unsigned long sec, int write) {
 #endif
 
 #ifdef tme_thread_mutex_timedlock
-int tme_mutex_timedlock(tme_mutex_t *m, unsigned long sec) {
-  tme_time_t sleep;
+int tme_mutex_timedlock(tme_mutex_t *m, tme_time_t abstime) {
   tme_timeout_t timeout;
   int rc;
 
-  sleep = TME_TIME_SET_SEC(sec) + tme_thread_get_time();
-
-  tme_get_timeout(sleep, &timeout);
+  tme_get_timeout(abstime, timeout, 0);
 
   _tme_thread_suspended();
   
@@ -142,13 +136,11 @@ int tme_cond_sleep_yield(tme_cond_t *cond, tme_mutex_t *mutex,
   tme_timeout_t timeout;
   int rc = TME_OK;
 
-  tme_get_timeout(sleep, &timeout);
+  tme_get_timeout(sleep, timeout, 1);
   
-  sleep += tme_thread_get_time();
-
   _tme_thread_suspended();
   
-  tme_thread_opt(cond_wait_until, cond, mutex, &timeout);
+  tme_thread_opt(cond_wait_until, cond, mutex, timeout);
 
   _tme_thread_resumed();
 
@@ -160,9 +152,11 @@ void tme_thread_yield(void) {
   
   _tme_thread_suspended();
 
+#ifdef _tme_thread_yield 
   if(thread_mode)
     _tme_thread_yield();
   else
+#endif
     tme_fiber_yield();
 
   _tme_thread_resumed();
@@ -173,7 +167,7 @@ int tme_thread_sleep_yield _TME_P((tme_time_t sleep, tme_mutex_t *mutex)) {
 
   if(mutex) tme_mutex_unlock(mutex);
 
-  tme_get_timeout(sleep, &timeout);
+  tme_get_timeout(sleep, timeout, 0);
   
   _tme_thread_suspended();
 

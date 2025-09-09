@@ -54,6 +54,24 @@ _TME_RCSID("$Id: bsd-bpf.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #define TME_BSD_BPF_LEN(x) x.bf_len
 #endif
 
+#define _TME_TIME_EQ(x,y,sec,frac) ((x).sec == (y).sec	\
+			  && (x).frac == (y).frac)
+#define _TME_TIME_EQV(a,x,y,sec,frac) ((a).sec == (x)	\
+			     && (a).frac == (y))
+#define _TME_TIME_GT(x,y,sec,frac) ((x).sec > (y).sec		\
+			  || ((x).sec == (y).sec		\
+			      && (x).frac > (y).frac))
+#define _TME_TIME_GET_FRAC(a,frac) (a).frac
+#define _TME_TIME_SET_FRAC(a,x,frac) ((a).frac = (x))
+#define _TME_TIME_INC_FRAC(a,x,frac) ((a).frac += (x))
+#define _TME_TIME_FRAC_LT(x,y,frac) ((x).frac < (y).frac)
+#define _TME_TIME_SETV(a,s,u,sec,frac) (a).sec = (s); (a).frac = (u);
+#define _TME_TIME_ADD(a,x,y,sec,frac) (a).sec = (x).sec + (y).sec; (a).frac = (x).frac + (y).frac;
+#define _TME_TIME_ADDV(a,s,u,sec,frac) (a).sec += (s); (a).frac += (u);
+#define _TME_TIME_INC(a,x,sec,frac) (a).sec += (x).sec; (a).frac += (x).frac;
+#define _TME_TIME_SUB(a,x,y,sec,frac) (a).sec = (x).sec - (y).sec; (a).frac = (x).frac - (y).frac;
+#define _TME_TIME_DEC(a,x,sec,frac) (a).sec -= (x).sec; (a).frac -= (x).frac;
+
 /* the accept and reject packet insns: */
 static const TME_BSD_BPF_INSN _tme_bsd_bpf_insn_accept = BPF_STMT(BPF_RET + BPF_K, (u_int) -1);
 static const TME_BSD_BPF_INSN _tme_bsd_bpf_insn_reject = BPF_STMT(BPF_RET + BPF_K, 0);

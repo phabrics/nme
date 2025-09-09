@@ -946,7 +946,7 @@ main(int argc, char **argv)
   _tmesh_remove_consumed(input_stdin);
 
   /* create our eval loop thread for interactive mode: */
-  _tme_thread_create(&tmesh_thread, "tmesh", (tme_thread_t) _tmesh_th, &interactive);
+  tme_thread_create_named(&tmesh_thread, "tmesh", (tme_thread_t) _tmesh_th, &interactive);
 
   /* run the threads: */
   tme_threads_run();
