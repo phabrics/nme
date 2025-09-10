@@ -91,4 +91,4 @@ typedef GThread *tme_thread_threadid_t, *_tme_threadid_t;
 #define tme_thread_self g_thread_self
 
 /* sleeping: */
-#define tme_thread_sleep(t) g_usleep(*t)
+#define tme_thread_sleep g_usleep

@@ -48,10 +48,10 @@ void tme_fiber_threads_init _TME_P((void));
    rwlock operations: */
 #ifdef TME_NO_DEBUG_LOCKS
 typedef int tme_fiber_rwlock_t;
-#define tme_fiber_rwlock_init(l) ((*l) = FALSE, TME_OK)
-#define tme_fiber_rwlock_rdlock(l) ((*l) = TRUE, TME_OK)
-#define tme_fiber_rwlock_tryrdlock(l) ((*l) ? TME_EBUSY : tme_fiber_rwlock_rdlock(l))
-#define tme_fiber_rwlock_rdunlock(l) ((*l) = FALSE, TME_OK)
+#define tme_fiber_rwlock_init(l) (*(l) = FALSE, TME_OK)
+#define tme_fiber_rwlock_rdlock(l) (*(l) = TRUE, TME_OK)
+#define tme_fiber_rwlock_tryrdlock(l) (*(l) ? TME_EBUSY : tme_fiber_rwlock_rdlock(l))
+#define tme_fiber_rwlock_rdunlock(l) (*(l) = FALSE, TME_OK)
 #else  /* !TME_NO_DEBUG_LOCKS */   
 
 /* debugging rwlocks: */
@@ -102,7 +102,7 @@ int tme_fiber_rwlock_unlock _TME_P((tme_fiber_rwlock_t *, _tme_const char *, uns
 
 /* conditions: */
 typedef int tme_fiber_cond_t;
-#define tme_fiber_cond_init(c) ((*c)=0)
+#define tme_fiber_cond_init(c) (*(c)=0,TME_OK)
 void tme_fiber_cond_wait _TME_P((tme_fiber_cond_t *, tme_fiber_mutex_t *));
 void tme_fiber_cond_wait_until _TME_P((tme_fiber_cond_t *, tme_fiber_mutex_t *, const tme_time_t));
 void tme_fiber_cond_notify _TME_P((tme_fiber_cond_t *, int));
@@ -122,7 +122,7 @@ void tme_fiber_yield _TME_P((void));
 void tme_fiber_exit _TME_P((tme_fiber_mutex_t *mutex));
 
   /* sleeping: */
-void tme_fiber_sleep _TME_P((tme_time_t *));
+void tme_fiber_sleep _TME_P((tme_time_t));
 
 /* time: */
 tme_time_t tme_fiber_get_time _TME_P((void));

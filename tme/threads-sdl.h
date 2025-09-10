@@ -32,39 +32,41 @@
  */
 #include <SDL3/SDL_thread.h>
 #include <SDL3/SDL_mutex.h>
+#include <SDL3/SDL_time.h>
+#include <SDL3/SDL_timer.h>
 
 #define TME_THREADS_PREEMPTIVE		(TRUE)
 
 /* read/write locks. */
 typedef SDL_RWLock *tme_thread_rwlock_t;
 
-#define tme_thread_rwlock_init(l) ((l) = SDL_CreateRWLock(*(l)))
-#define tme_thread_rwlock_destroy(l) = SDL_DestroyRWLock(*(l))
-#define tme_thread_rwlock_rdlock(l) = SDL_LockRWLockForReading(*(l))
-#define tme_thread_rwlock_wrlock(l) = SDL_LockRWLockForWriting(*(l))
-#define tme_thread_rwlock_rdunlock(l) = SDL_UnlockRWLock(*(l))
-#define tme_thread_rwlock_wrunlock(l) = SDL_UnlockRWLock(*(l))
+#define tme_thread_rwlock_init(l) (*(l) = SDL_CreateRWLock(),TME_OK)
+#define tme_thread_rwlock_destroy(l) SDL_DestroyRWLock(*(l))
+#define tme_thread_rwlock_rdlock(l) SDL_LockRWLockForReading(*(l))
+#define tme_thread_rwlock_wrlock(l) SDL_LockRWLockForWriting(*(l))
+#define tme_thread_rwlock_rdunlock(l) SDL_UnlockRWLock(*(l))
+#define tme_thread_rwlock_wrunlock(l) SDL_UnlockRWLock(*(l))
 #define tme_thread_rwlock_tryrdlock(l) (SDL_TryLockRWLockForReading(*(l)) ? (TME_OK) : (TME_EBUSY))
 #define tme_thread_rwlock_trywrlock(l) (SDL_TryLockRWLockForWriting(*(l)) ? (TME_OK) : (TME_EBUSY))
 
 /* mutexes. */
 typedef SDL_Mutex *tme_thread_mutex_t;
 
-#define tme_thread_mutex_init(m) (*(m) = SDL_CreateMutex())
-#define tme_thread_mutex_destroy(m) = SDL_DestroyMutex(*(m))
-#define tme_thread_mutex_lock(m) = SDL_LockMutex(*(m))
+#define tme_thread_mutex_init(m) (*(m) = SDL_CreateMutex(),TME_OK)
+#define tme_thread_mutex_destroy(m) SDL_DestroyMutex(*(m))
+#define tme_thread_mutex_lock(m) SDL_LockMutex(*(m))
 #define tme_thread_mutex_trylock(m) (SDL_TryLockMutex(*(m)) ? (TME_OK) : (TME_EBUSY))
-#define tme_thread_mutex_unlock(m) = SDL_UnlockMutex(*(m))
+#define tme_thread_mutex_unlock(m) SDL_UnlockMutex(*(m))
 
 /* conditions: */
 typedef SDL_Condition *tme_thread_cond_t;
 
-#define tme_thread_cond_init(c) (*(c) = SDL_CreateCondition())
-#define tme_thread_cond_destroy(c) = SDL_CreateCondition(*(c))
-#define tme_thread_cond_wait(c,m) = SDL_WaitCondition(*(c),*(m))
-#define tme_thread_cond_wait_until(c,m,t) = SDL_WaitConditionTimeout(*(c),*(m),t)
-#define tme_thread_cond_notifyTRUE(c) = SDL_BroadcastCondition(*(c))
-#define tme_thread_cond_notifyFALSE(c) = SDL_SignalCondition(*(c))
+#define tme_thread_cond_init(c) (*(c) = SDL_CreateCondition(),TME_OK)
+#define tme_thread_cond_destroy(c) SDL_CreateCondition(*(c))
+#define tme_thread_cond_wait(c,m) SDL_WaitCondition(*(c),*(m))
+#define tme_thread_cond_wait_until(c,m,t) SDL_WaitConditionTimeout(*(c),*(m),t)
+#define tme_thread_cond_notifyTRUE(c) SDL_BroadcastCondition(*(c))
+#define tme_thread_cond_notifyFALSE(c) SDL_SignalCondition(*(c))
 
 /* deadlock sleeping: */
 #define TME_THREAD_TIMEDLOCK		(0)
@@ -79,7 +81,7 @@ static _tme_inline tme_time_t tme_thread_time _TME_P((void)) {
   return ticks;
 }
 
-typedef tme_int32_t tme_timeout_t;
+typedef tme_int32_t tme_thread_time_t;
 
 /* ignore abs argument as we SDL API assumes relative time: */
 #define tme_thread_get_timeout(sleep, timeout, abs) (*(timeout) = TME_TIME_GET_MSEC(sleep))

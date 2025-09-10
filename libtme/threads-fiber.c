@@ -605,9 +605,9 @@ tme_fiber_cond_notify(tme_fiber_cond_t *cond, int broadcast)
 
 /* this sleeps and yields: */
 void
-tme_fiber_sleep(tme_time_t *time)
+tme_fiber_sleep(tme_time_t time)
 {
-  tme_fiber_thread_blocked.tme_fiber_thread_sleep = *time;
+  tme_fiber_thread_blocked.tme_fiber_thread_sleep = time;
 
   /* yield: */
   tme_fiber_yield();

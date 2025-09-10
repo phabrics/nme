@@ -85,8 +85,9 @@ typedef struct tme_rwlock {
 extern tme_rwlock_t tme_rwlock_suspere;
 
 #define tme_thread_op(func,arg) ((thread_mode) ? (tme_thread_##func(&(arg)->thread)) : (tme_fiber_##func(&(arg)->fiber)))
+#define tme_thread_opt(func,arg) ((thread_mode) ? (tme_thread_##func((arg).thread)) : (tme_fiber_##func((arg).fiber)))
 #define tme_thread_op2(func,arg,arg2) ((thread_mode) ? (tme_thread_##func(&(arg)->thread,&(arg2)->thread)) : (tme_fiber_##func(&(arg)->fiber,&(arg2)->fiber)))
-#define tme_thread_opt(func,arg,arg2,arg3) ((thread_mode) ? (tme_thread_##func(&(arg)->thread,&(arg2)->thread,(arg3).thread)) : (tme_fiber_##func(&(arg)->fiber,&(arg2)->fiber,(arg3).fiber)))
+#define tme_thread_opt3(func,arg,arg2,arg3) ((thread_mode) ? (tme_thread_##func(&(arg)->thread,&(arg2)->thread,(arg3).thread)) : (tme_fiber_##func(&(arg)->fiber,&(arg2)->fiber,(arg3).fiber)))
 
 static _tme_inline void tme_rwlock_init _TME_P((tme_rwlock_t *l)) {
   (l)->writer = 0;

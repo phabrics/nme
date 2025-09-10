@@ -167,7 +167,7 @@ tme_thread_new _TME_P((const char *name, tme_thread_t func, void *arg)) {
 #define tme_thread_self pthread_self
 
 /* sleeping: */
-#define tme_thread_sleep(timeout) nanosleep(timeout, NULL)
+#define tme_thread_sleep(timeout) nanosleep(&timeout, NULL)
 
 #ifdef HAVE_CPUSET_CREATE
 typedef cpuset_t *tme_cpuset_t;
