@@ -215,7 +215,7 @@ tme_fiber_get_time()
 {
 
   /* if we need to, call tme_fiber_get_time(): */
-  if (__tme_predict_false(tme_fiber_thread_short)) {
+  if (__tme_predict_false(!tme_fiber_thread_short)) {
     _tme_fiber_now = tme_thread_time();
     tme_fiber_thread_short = TRUE;
   }
