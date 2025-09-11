@@ -232,7 +232,7 @@ AX_APPEND_LINK_FLAGS(-sUSE_SDL=2, SDL_LIBS)
 
 if test "x${have_sdl3}" = xyes; then
    have_sdl=yes
-if test "x${have_sdl2}" = xyes; then
+elif test "x${have_sdl2}" = xyes; then
    AC_DEFINE([HAVE_SDL], [], [Defined if SDL2 is found & enabled.])
    have_sdl=yes
 else
@@ -710,8 +710,7 @@ AC_MSG_CHECKING([for available threading models])
 dnl Checks for default thread support
 if test "x${have_sdl3}" = xyes; then
    tme_thread_type=sdl
-fi
-elif test "x${have_glib}" = xyes; then
+elif test "x${have_glib}" != xno; then
    tme_thread_type=glib
 else
    tme_thread_type=posix
