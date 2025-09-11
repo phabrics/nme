@@ -832,10 +832,13 @@ static int
 _tme_suncg2_update(struct tme_fb_connection *conn_fb)
 {
   struct tme_suncg2 *suncg2;
+  struct tme_element *element;
 
   /* recover our data structure: */
   suncg2 = conn_fb->tme_fb_connection.tme_connection_element->tme_element_private;
 
+  element = suncg2->tme_suncg2_element;
+ 
   /* lock the mutex: */
   tme_mutex_lock(&suncg2->tme_suncg2_mutex);
 

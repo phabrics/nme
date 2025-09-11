@@ -56,13 +56,13 @@ void tme_threads_set_main(tme_threads_fn1 run, void *arg, tme_mutex_t *mutex, tm
   //  tme_cond_notify(&tme_cond_start,TRUE);
 }
 
-int tmesh_init() {
+int tmesh_init(int mode) {
   /* initialize the threading system: */
-  tme_threads.tme_threads_run = tme_threads_main_iter;
+  tme_threads.tme_threads_run = (mode) ? (tme_threads_main_iter) : (tme_fiber_main_iter);
   tme_threads.tme_threads_arg = 0;
   tme_threads.tme_threads_mutex = NULL;
-  tme_threads.tme_threads_delay = TME_TIME_SET_SEC(10);
-  tme_threads_init();
+  tme_threads.tme_threads_delay = (mode) ? (TME_TIME_SET_SEC(10)) : (0);
+  tme_threads_init(mode);
 
   /* Synchronization primitive provided to allow sequential
      execution of pre-thread initialization code. It is used
@@ -86,10 +86,8 @@ void tme_threads_run(void) {
   if(tme_threads.tme_threads_run)
     for(;;) {
       (*tme_threads.tme_threads_run)(tme_threads.tme_threads_arg);
-#ifndef TME_THREADS_FIBER
       if(tme_threads.tme_threads_delay)
 	tme_thread_sleep_yield(tme_threads.tme_threads_delay, tme_threads.tme_threads_mutex);
-#endif
     }
   else
     (*(tme_threads_fn)tme_threads.tme_threads_arg)();

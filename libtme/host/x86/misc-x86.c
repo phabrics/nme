@@ -46,7 +46,7 @@ _TME_RCSID("$Id: misc-x86.c,v 1.2 2009/11/08 17:21:18 fredette Exp $");
 #endif
 #endif
 
-#if !defined(USE_SDL) && !defined(WIN32)
+#if !defined(TME_THREADS_SDL) && !defined(WIN32)
 #if defined(_TME_HAVE___RDTSC) || defined(__GNUC__) && !defined(__EMSCRIPTEN__)
 
 /* this returns the cycle counter: */
@@ -70,4 +70,4 @@ tme_misc_cycles(void)
 }
 #define TME_HAVE_MISC_CYCLES
 #endif /* def _TME_HAVE___RDTSC */
-#endif /* !defined(USE_SDL||WIN32) */
+#endif /* !defined(TME_THREADS_SDL||WIN32) */

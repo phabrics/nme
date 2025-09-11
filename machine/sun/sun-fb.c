@@ -1355,6 +1355,7 @@ tme_sunfb_new(struct tme_sunfb *sunfb,
   tme_uint8_t sunfb_s4_status;
   int arg_i;
   int usage;
+  struct tme_element *element;
 
   /* check our arguments: */
   usage = 0;
@@ -1652,6 +1653,7 @@ tme_sunfb_new(struct tme_sunfb *sunfb,
   sunfb->tme_sunfb_device.tme_bus_device_tlb_fill = _tme_sunfb_tlb_fill;
 
   /* fill the element: */
+  element = sunfb->tme_sunfb_element;
   sunfb->tme_sunfb_element->tme_element_private = sunfb;
   sunfb->tme_sunfb_element->tme_element_connections_new = _tme_sunfb_connections_new;
 

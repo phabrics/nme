@@ -22,9 +22,7 @@ EXTRA_DIST = tmesh.sh
 if HAVE_EMSCRIPTEN
 bin_SCRIPTS = tmesh.sh tmesh.js tmesh.wasm tmesh.data
 tmesh_LDADD += $(SDL_LIBS) 
-if THREADS_FIBER
 tmesh_LDFLAGS += -sASYNCIFY
-endif
 if USE_NODEFS
 AM_CPPFLAGS += -DUSE_NODEFS
 tmesh_LDADD += -lnodefs.js

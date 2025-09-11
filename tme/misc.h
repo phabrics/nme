@@ -37,8 +37,8 @@
 #define _TME_MISC_H
 
 #include <tme/common.h>
-#ifdef USE_SDL
-#ifdef main
+#ifdef TME_THREADS_SDL
+#ifdef HAVE_SDL
 #include <SDL.h>
 #else
 #include <SDL3/SDL.h>
@@ -73,7 +73,7 @@ _tme_number_t tme_misc_number_parse _TME_P((_tme_const char *, _tme_number_t));
 #undef _tme_number_t
 union tme_value64 tme_misc_cycles_scaled _TME_P((const tme_misc_cycles_scaling_t *, const union tme_value64 *));
 void tme_misc_cycles_scaling _TME_P((tme_misc_cycles_scaling_t *, tme_uint32_t, tme_uint32_t));
-#ifdef USE_SDL
+#ifdef TME_THREADS_SDL
 #define tme_misc_cycles_per_ms() ((tme_uint32_t)SDL_GetPerformanceFrequency()/1000)
 #define tme_misc_cycles() ((union tme_value64)SDL_GetPerformanceCounter())
 #else

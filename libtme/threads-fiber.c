@@ -37,6 +37,7 @@
 _TME_RCSID("$Id: threads-fiber.c,v 1.18 2010/06/05 19:10:28 fredette Exp $");
 
 /* includes: */
+#define TME_THREADS_FIBER
 #include <tme/openvpn-setup.h>
 #include <stdlib.h>
 #if defined(__EMSCRIPTEN__) && !defined(USE_SJLJ)
@@ -58,8 +59,10 @@ _TME_RCSID("$Id: threads-fiber.c,v 1.18 2010/06/05 19:10:28 fredette Exp $");
 /* types: */
 
 /* a thread: */
-typedef struct tme_fiber_thread {
+struct tme_fiber_thread {
 
+  const char *name;
+  
   /* the all-threads list: */
   struct tme_fiber_thread *next;
   struct tme_fiber_thread **prev;
@@ -81,7 +84,7 @@ typedef struct tme_fiber_thread {
 #endif  
 
   /* any condition that this thread is waiting on: */
-  tme_cond_t *tme_fiber_thread_cond;
+  tme_fiber_cond_t *tme_fiber_thread_cond;
 
   /* any events that this thread is waiting on: */
   struct tme_fiber_event_set *tme_fiber_thread_events;
@@ -96,7 +99,7 @@ typedef struct tme_fiber_thread {
 
   /* the last dispatch number for this thread: */
   tme_uint32_t tme_fiber_thread_dispatch_number;
-} tme_fiber_thread_t;
+};
 
 /* event envelope */
 struct tme_fiber_event {
@@ -211,9 +214,9 @@ tme_time_t
 tme_fiber_get_time()
 {
 
-  /* if we need to, call tme_thread_get_time(): */
+  /* if we need to, call tme_fiber_get_time(): */
   if (__tme_predict_false(!tme_fiber_thread_short)) {
-    _tme_fiber_now = tme_thread_get_time();
+    _tme_fiber_now = tme_thread_time();
     tme_fiber_thread_short = TRUE;
   }
 
@@ -326,7 +329,7 @@ _tme_fiber_threads_dispatching_timeout(void)
   tme_fiber_thread_t *thread_timeout;
 
   /* get the current time: */
-  now = tme_thread_get_time();
+  now = tme_fiber_get_time();
 
   /* loop over the timeout list: */
   for (thread_timeout = tme_fiber_threads_timeout;
@@ -442,7 +445,7 @@ tme_fiber_dispatch(volatile int passes)
 
 /* this is the main loop iteration function: */
 int
-tme_fiber_threads_main_iter(void *unused)
+tme_fiber_main_iter(void *unused)
 {
   int fd;
   struct timeval timeout;
@@ -466,7 +469,7 @@ tme_fiber_threads_main_iter(void *unused)
 
   /* otherwise, the timeout list is not empty: */
   else if(tme_fiber_thread_blocked.tme_fiber_thread_timeout >
-	  (now = tme_thread_get_time())) {
+	  (now = tme_fiber_get_time())) {
     now = tme_fiber_thread_blocked.tme_fiber_thread_timeout - now;
     /* set the timeout time: */
     timeout.tv_sec = TME_TIME_GET_SEC(now);
@@ -514,14 +517,14 @@ tme_fiber_threads_main_iter(void *unused)
 }
 
 /* this creates a new thread: */
-void
-tme_fiber_thread_create(tme_threadid_t *thr, tme_thread_t func, void *func_private)
+tme_fiber_thread_t *
+tme_fiber_new(const char *name, tme_thread_t func, void *func_private)
 {
   tme_fiber_thread_t *thread;
 
   /* allocate a new thread and put it on the all-threads list: */
   thread = tme_new(tme_fiber_thread_t, 1);
-  *thr = thread;
+  thread->name = tme_strdup(name);
   thread->prev = &tme_fiber_threads_all;
   thread->next = *thread->prev;
   *thread->prev = thread;
@@ -543,29 +546,30 @@ tme_fiber_thread_create(tme_threadid_t *thr, tme_thread_t func, void *func_priva
   thread->tme_fiber_thread_dispatch_number = _tme_fiber_thread_dispatch_number - 1;
   _tme_fiber_change_state(thread,
 			 TME_FIBER_THREAD_STATE_RUNNABLE);
+  return thread;
 }
 
 /* this makes a thread wait on a condition: */
 void
-tme_fiber_cond_wait_yield(tme_cond_t *cond, tme_mutex_t *mutex)
+tme_fiber_cond_wait(tme_fiber_cond_t *cond, tme_fiber_mutex_t *mutex)
 {
 
   /* unlock the mutex: */
-  tme_mutex_unlock(mutex);
+  tme_fiber_mutex_unlock(mutex);
 
   /* remember that this thread is waiting on this condition: */
   tme_fiber_thread_blocked.tme_fiber_thread_cond = cond;
 
   /* yield: */
-  tme_thread_yield();
+  tme_fiber_yield();
 
   /* lock the mutex: */
-  tme_mutex_lock(mutex);
+  tme_fiber_mutex_lock(mutex);
 }
 
 /* this makes a thread sleep on a condition: */
 void
-tme_fiber_cond_sleep_yield(tme_cond_t *cond, tme_mutex_t *mutex, const tme_time_t sleep)
+tme_fiber_cond_wait_until(tme_fiber_cond_t *cond, tme_fiber_mutex_t *mutex, const tme_time_t sleep)
 {
 
   /* remember that this thread is waiting on this condition: */
@@ -577,7 +581,7 @@ tme_fiber_cond_sleep_yield(tme_cond_t *cond, tme_mutex_t *mutex, const tme_time_
 
 /* this notifies one or more threads waiting on a condition: */
 void
-tme_fiber_cond_notify(tme_cond_t *cond, int broadcast)
+tme_fiber_cond_notify(tme_fiber_cond_t *cond, int broadcast)
 {
   tme_fiber_thread_t *thread;
 
@@ -601,12 +605,12 @@ tme_fiber_cond_notify(tme_cond_t *cond, int broadcast)
 
 /* this sleeps and yields: */
 void
-tme_fiber_sleep_yield(tme_time_t time)
+tme_fiber_sleep(tme_time_t time)
 {
   tme_fiber_thread_blocked.tme_fiber_thread_sleep = time;
 
   /* yield: */
-  tme_thread_yield();
+  tme_fiber_yield();
 
 }
 
@@ -699,7 +703,7 @@ tme_fiber_event_wait(struct tme_fiber_event_set *es, const struct timeval *timeo
   }
 
   /* unlock the mutex: */
-  if(mutex) tme_mutex_unlock(mutex);
+  if(mutex) tme_fiber_mutex_unlock(&mutex->fiber);
   tme_fiber_thread_blocked.tme_fiber_thread_events = es;
 
   tme_fiber_thread_blocked.tme_fiber_thread_sleep =
@@ -708,10 +712,10 @@ tme_fiber_event_wait(struct tme_fiber_event_set *es, const struct timeval *timeo
     TME_TIME_SET_SEC(BIG_TIMEOUT);
   
   /* yield: */
-  tme_thread_yield();
+  tme_fiber_yield();
 
   /* lock the mutex: */
-  if(mutex) tme_mutex_lock(mutex);
+  if(mutex) tme_fiber_mutex_lock(&mutex->fiber);
   return event_wait(es->es, &timeout_out, out, outlen);
 }
 
@@ -750,17 +754,17 @@ tme_fiber_threads_init()
 
 /* this exits a thread: */
 void
-tme_fiber_exit(tme_mutex_t *mutex)
+tme_fiber_exit(tme_fiber_mutex_t *mutex)
 {
   
   /* mark that this thread is exiting: */
   tme_fiber_thread_exiting = TRUE;
 
   if(mutex)
-    tme_mutex_unlock(mutex);
+    tme_fiber_mutex_unlock(mutex);
 
   /* yield: */
-  tme_thread_yield();
+  tme_fiber_yield();
 }
        
 /* this yields the current thread: */
@@ -881,7 +885,7 @@ tme_fiber_yield(void)
     blocked = TRUE;
 
     /* set the timeout for this thread: */
-    thread->tme_fiber_thread_timeout = tme_thread_get_time()
+    thread->tme_fiber_thread_timeout = tme_fiber_get_time()
       + tme_fiber_thread_blocked.tme_fiber_thread_sleep;
     
     /* insert this thread into the timeout list: */

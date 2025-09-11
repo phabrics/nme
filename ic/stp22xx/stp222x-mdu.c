@@ -1066,6 +1066,7 @@ tme_stp222x_mdu_ign_update(struct tme_stp222x *stp222x,
 void
 tme_stp222x_mdu_init(struct tme_stp222x *stp222x)
 {
+  struct tme_element *element = stp222x->tme_stp222x.tme_stp22xx_element;
 
   /* initialize the IMRs: */
   memset(stp222x->tme_stp222x_mdu_imrs, 0, sizeof(stp222x->tme_stp222x_mdu_imrs));

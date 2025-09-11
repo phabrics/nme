@@ -47,6 +47,20 @@ _TME_RCSID("$Id: threads.h,v 1.10 2010/06/05 19:36:35 fredette Exp $");
 #define TME_EBUSY		EBUSY
 #define TME_THREADS_ERRNO(rc)	(rc)
 
+typedef tme_uint64_t tme_time_t;
+#define TME_NSEC_PER_TICK (1000000000 / TME_FRAC_PER_SEC)
+#define TME_FRAC_PER_MSEC (TME_FRAC_PER_SEC / 1000)
+#define TME_FRAC_PER_USEC (TME_FRAC_PER_SEC / 1000000)
+
+#define TME_TIME_GET_SEC(a) ((a) / TME_FRAC_PER_SEC)
+#define TME_TIME_GET_MSEC(a) ((a) / TME_FRAC_PER_MSEC)
+#define TME_TIME_GET_USEC(a) ((a) / TME_FRAC_PER_USEC)
+#define TME_TIME_GET_NSEC(a) ((a) * TME_NSEC_PER_TICK)
+#define TME_TIME_SET_SEC(a) ((tme_time_t)(a) * TME_FRAC_PER_SEC)
+#define TME_TIME_SET_MSEC(a) ((tme_time_t)(a) * TME_FRAC_PER_MSEC)
+#define TME_TIME_SET_USEC(a) ((tme_time_t)(a) * TME_FRAC_PER_USEC)
+#define TME_TIME_SET_NSEC(a) ((tme_time_t)(a) / TME_NSEC_PER_TICK)
+
 /* setjmp/longjmp threading: */
 #ifdef TME_THREADS_POSIX
 #include "threads-posix.h"
@@ -54,71 +68,103 @@ _TME_RCSID("$Id: threads.h,v 1.10 2010/06/05 19:36:35 fredette Exp $");
 #include "threads-sdl.h"
 #elif defined(TME_THREADS_GLIB)
 #include "threads-glib.h"
-#elif defined(TME_THREADS_FIBER)
-#include "threads-fiber.h"
 #endif
 
+#include "threads-fiber.h"
+
+extern int thread_mode;
+
 typedef struct tme_rwlock {
-  _tme_rwlock_t lock;
+  union {
+    tme_thread_rwlock_t thread;
+    tme_fiber_rwlock_t fiber;
+  } lock;
   _tme_threadid_t writer;
 } tme_rwlock_t;
 
-extern _tme_rwlock_t tme_rwlock_suspere;
+extern tme_rwlock_t tme_rwlock_suspere;
 
-#define tme_rwlock_init(l) _tme_rwlock_init((l)->lock)
-#define tme_rwlock_destroy(l) _tme_rwlock_destroy((l)->lock)
-#define tme_rwlock_rdunlock(l) _tme_rwlock_rdunlock((l)->lock)
-#define tme_rwlock_tryrdlock(l) _tme_rwlock_tryrdlock((l)->lock)
+#define tme_thread_op(func,arg) ((thread_mode) ? (tme_thread_##func(&(arg)->thread)) : (tme_fiber_##func(&(arg)->fiber)))
+#define tme_thread_opt(func,arg) ((thread_mode) ? (tme_thread_##func((arg).thread)) : (tme_fiber_##func((arg).fiber)))
+#define tme_thread_op2(func,arg,arg2) ((thread_mode) ? (tme_thread_##func(&(arg)->thread,&(arg2)->thread)) : (tme_fiber_##func(&(arg)->fiber,&(arg2)->fiber)))
+#define tme_thread_opt3(func,arg,arg2,arg3) ((thread_mode) ? (tme_thread_##func(&(arg)->thread,&(arg2)->thread,(arg3).thread)) : (tme_fiber_##func(&(arg)->fiber,&(arg2)->fiber,(arg3).fiber)))
 
-#ifdef TME_THREADS_FIBER
-#define tme_rwlock_rdlock(l) _tme_rwlock_rdlock((l)->lock)
-#define tme_rwlock_wrlock(l) _tme_rwlock_wrlock((l)->lock)
-#define tme_rwlock_wrunlock(l) _tme_rwlock_wrunlock((l)->lock)
-#define tme_rwlock_trywrlock(l) _tme_rwlock_trywrlock((l)->lock)
-#else
-/* initializing and starting: */
-#ifndef _tme_threads_init
-#define _tme_threads_init() _tme_rwlock_init(tme_rwlock_suspere)
-#endif
-/* thread suspension: */
-#define _tme_thread_suspended()	        _tme_rwlock_rdunlock(tme_rwlock_suspere)
-#define _tme_thread_resumed()	        _tme_rwlock_rdlock(tme_rwlock_suspere)
-#define tme_thread_suspend_others()	_tme_thread_suspended();if(!tme_thread_cooperative()) _tme_rwlock_wrlock(tme_rwlock_suspere)
-#define tme_thread_resume_others()	if(!tme_thread_cooperative()) _tme_rwlock_wrunlock(tme_rwlock_suspere);_tme_thread_resumed()
+static _tme_inline void tme_rwlock_init _TME_P((tme_rwlock_t *l)) {
+  (l)->writer = 0;
+  tme_thread_op(rwlock_init,&(l)->lock);
+}
+
+#define tme_rwlock_destroy(l) tme_thread_op(rwlock_destroy,&(l)->lock)
+
+#define _tme_rwlock_rdlock(l)           tme_thread_op(rwlock_rdlock,&(l)->lock);
+#define _tme_rwlock_wrlock(l)           tme_thread_op(rwlock_wrlock,&(l)->lock);
+#define _tme_rwlock_wrunlock(l)         tme_thread_op(rwlock_wrunlock,&(l)->lock)
+
+#define tme_rwlock_rdunlock(l) tme_thread_op(rwlock_rdunlock,&(l)->lock)
+#define tme_rwlock_tryrdlock(l) tme_thread_op(rwlock_tryrdlock,&(l)->lock)
 int tme_rwlock_rdlock _TME_P((tme_rwlock_t *l));
 int tme_rwlock_wrlock _TME_P((tme_rwlock_t *l));
 int tme_rwlock_wrunlock _TME_P((tme_rwlock_t *l));
 int tme_rwlock_trywrlock _TME_P((tme_rwlock_t *l));
+
+/* thread suspension: */
+#ifndef tme_thread_cooperative
+#define tme_thread_cooperative() (thread_mode == FALSE)
 #endif
 
-#ifdef _tme_rwlock_timedrdlock
-int tme_rwlock_timedlock _TME_P((tme_rwlock_t *l, unsigned long sec, int write));
+#define _tme_thread_suspended()	        if(!tme_thread_cooperative()) tme_rwlock_rdunlock(&tme_rwlock_suspere)
+#define _tme_thread_resumed()	        if(!tme_thread_cooperative()) _tme_rwlock_rdlock(&tme_rwlock_suspere)
+#define tme_thread_suspend_others()	_tme_thread_suspended();if(!tme_thread_cooperative()) _tme_rwlock_wrlock(&tme_rwlock_suspere)
+#define tme_thread_resume_others()	if(!tme_thread_cooperative()) _tme_rwlock_wrunlock(&tme_rwlock_suspere);_tme_thread_resumed()
+
+#ifdef tme_thread_rwlock_timedrdlock
+int tme_rwlock_timedlock _TME_P((tme_rwlock_t *l, tme_time_t abstime, int write));
 #define tme_rwlock_timedrdlock(l,sec) tme_rwlock_timedlock(l,sec,0)
 #define tme_rwlock_timedwrlock(l,sec) tme_rwlock_timedlock(l,sec,1)
 #else
-#define tme_rwlock_timedrdlock(l,t) tme_rwlock_rdlock(l)
-#define tme_rwlock_timedwrlock(l,t) tme_rwlock_wrlock(l)
+// TODO: why do thread_mode trylocks not work here?
+#define tme_rwlock_timedrdlock(l,sec)     ((thread_mode) ? (tme_rwlock_rdlock(l)) : (tme_rwlock_tryrdlock(l)))
+#define tme_rwlock_timedwrlock(l,sec)     ((thread_mode) ? (tme_rwlock_wrlock(l)) : (tme_rwlock_trywrlock(l)))
 #endif
 
-#ifdef _tme_mutex_timedlock
-int tme_mutex_timedlock _TME_P((tme_mutex_t *m, unsigned long sec));
+/* mutexes: */
+typedef union {
+  tme_thread_mutex_t thread;
+  tme_fiber_mutex_t fiber;
+} tme_mutex_t;
+  
+#define tme_mutex_init(m) tme_thread_op(mutex_init,m)
+#define tme_mutex_destroy(m) tme_thread_op(mutex_clear,m)
+#define tme_mutex_trylock(m) tme_thread_op(mutex_trylock,m)
+#define tme_mutex_unlock(m) tme_thread_op(mutex_unlock,m)
+
+#ifdef tme_thread_mutex_timedlock
+int tme_mutex_timedlock _TME_P((tme_mutex_t *m, tme_time_t abstime));
 #else
 #define tme_mutex_timedlock(m,t) tme_mutex_trylock(m)
 #endif
 
-#ifndef TME_THREADS_FIBER
+/* conditions: */
+typedef union {
+  tme_thread_cond_t thread;
+  tme_fiber_cond_t fiber;
+} tme_cond_t;
 
-#define tme_cond_notify(cond,bc) tme_cond_notify##bc(cond)
+#define tme_cond_init(c) tme_thread_op(cond_init, c)
+#define tme_cond_destroy(c) tme_thread_op(cond_clear, c)
+#define tme_cond_wait(c) tme_thread_op(cond_wait, c)
+#define tme_cond_notify(cond,bc) tme_thread_op(cond_notify##bc, cond)
 int tme_cond_wait_yield _TME_P((tme_cond_t *cond, tme_mutex_t *mutex));
 int tme_cond_sleep_yield _TME_P((tme_cond_t *cond, tme_mutex_t *mutex, tme_time_t sleep));
 
-#endif
+typedef union {
+  tme_thread_time_t thread;
+  tme_time_t fiber;
+} tme_timeout_t;
 
-#ifdef _tme_thread_yield
+#define tme_get_timeout(s,t,a) ((thread_mode) ? (tme_thread_get_timeout(s,&((t).thread),a)) : ((t).fiber=(s)))
+
 void tme_thread_yield _TME_P((void));
-#else
-#define tme_thread_yield() 
-#endif
 
 #ifdef _TME_HAVE_ZLIB
 #include "zlib.h"
@@ -135,34 +181,52 @@ typedef int (*tme_threads_fn1) _TME_P((void *));
 static _tme_inline void tme_mutex_lock _TME_P((tme_mutex_t *mutex)) { 
   _tme_thread_suspended();
   
-  _tme_mutex_lock(mutex);
+  tme_thread_op(mutex_lock, mutex);
 
   _tme_thread_resumed();
 }
 
-static _tme_inline void _tme_thread_enter _TME_P((tme_mutex_t *mutex)) {
-  _tme_thread_resumed();
-  if(mutex) {
-     tme_mutex_lock(mutex);
-     //     tme_cond_sleep_yield(&tme_cond_start, mutex, tme_cond_delay);
-  }
-}
-
-#if defined(TME_THREADS_FIBER) && !defined(WIN32)
 static _tme_inline void tme_thread_enter _TME_P((tme_mutex_t *mutex)) {
+#ifndef WIN32
   static int init=TRUE;
-  if(init) {
-    init=FALSE;
-    _tme_thread_enter(mutex);
+  if(!init) {
+    return;
   }
-}
-#else
-#define tme_thread_enter _tme_thread_enter
+  init=thread_mode;
 #endif
+  _tme_thread_resumed();
+  if(mutex)
+    tme_thread_op(mutex_lock, mutex);
+}
 
 int tme_thread_sleep_yield _TME_P((tme_time_t time, tme_mutex_t *mutex));
 
-void tme_threads_init();
+void tme_threads_init(int mode);
+
+/* time: */
+#define tme_thread_get_time() ((thread_mode) ? (tme_thread_time()) : (tme_fiber_get_time()))
+
+#if defined(_TME_HAVE_GMTIME_R) || defined(_TME_HAVE_GMTIME_S) || defined(_TME_HAVE_GMTIME)
+typedef struct tm tme_date_t;
+static _tme_inline tme_date_t *tme_time_get_date _TME_P((tme_time_t time, tme_date_t *date)) {
+  time_t sec = TME_TIME_GET_SEC(time);
+#ifdef _TME_HAVE_GMTIME_S
+  gmtime_s(date, &sec);
+  return date;
+#elif defined(_TME_HAVE_GMTIME_R)
+  return gmtime_r(&sec, date);
+#else
+  return date = gmtime(&sec);
+#endif
+}
+#define TME_DATE_SEC(date) ((date)->tm_sec)
+#define TME_DATE_MIN(date) ((date)->tm_min)
+#define TME_DATE_HOUR(date) ((date)->tm_hour)
+#define TME_DATE_WDAY(date) ((date)->tm_wday)
+#define TME_DATE_MDAY(date) ((date)->tm_mday)
+#define TME_DATE_MONTH(date) ((date)->tm_mon + 1)
+#define TME_DATE_YEAR(date) ((date)->tm_year)
+#endif
 
 /* I/O: */
 #ifdef WIN32
@@ -280,11 +344,34 @@ typedef off_t tme_off_t;
 ssize_t tme_thread_read _TME_P((tme_thread_handle_t hand, void *buf, size_t len, tme_mutex_t *mutex));
 ssize_t tme_thread_write _TME_P((tme_thread_handle_t hand, const void *buf, size_t len, tme_mutex_t *mutex));
 
-#ifndef TME_THREADS_FIBER
-static _tme_inline void tme_thread_exit _TME_P((tme_mutex_t *mutex)) {
-  _tme_thread_suspended();  
-  if(mutex)
-    tme_mutex_unlock(mutex);
+typedef union {
+  tme_thread_threadid_t thread;
+  tme_fiber_thread_t *fiber;
+} tme_threadid_t;
+
+static _tme_inline void
+tme_thread_create_named _TME_P((tme_threadid_t *thr, const char *name, tme_thread_t func, void *arg)) {
+  if(thread_mode) 
+    (thr)->thread = tme_thread_new(name,func,arg);
+  else
+    (thr)->fiber = tme_fiber_new(name,func,arg);
 }
-#endif /* !TME_THREADS_FIBER */
+
+#define tme_thread_create(t,f,a) tme_thread_create_named(t,element->tme_element_args[0],f,a)
+
+static _tme_inline void tme_thread_exit _TME_P((tme_mutex_t *mutex)) {
+  if(thread_mode) {
+    _tme_thread_suspended();  
+    if(mutex)
+      tme_thread_mutex_unlock(&mutex->thread);
+  } else tme_fiber_exit(&mutex->fiber);
+}
+
+/* A default main iterator for use in the main thread loop */
+static _tme_inline void tme_threads_main_iter _TME_P((void *usec)) {
+  if(!thread_mode) tme_fiber_main_iter(usec);
+  //  g_usleep((usec) ? (uintptr_t)usec : 1000000);
+}
+
+#define _tme_threads_main_iter(fn) if(fn) fn()
 #endif /* !_TME_THREADS_H */

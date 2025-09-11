@@ -35,7 +35,7 @@
 
 /* includes: */
 #include "display.h"
-#ifdef main
+#ifdef HAVE_SDL
 #include <SDL.h>
 #else
 #include <SDL3/SDL.h>
@@ -55,7 +55,7 @@
 #endif
 
 static int _tme_sdl_keymods[] = {
-#ifdef main
+#ifdef HAVE_SDL
   KMOD_SHIFT,
   KMOD_NUM | KMOD_CAPS,
   KMOD_CTRL,
@@ -114,7 +114,7 @@ static int _tme_sdl_screen_resize(struct tme_sdl_screen *screen)
   int depth = SDL_BITSPERPIXEL(SDL_PIXELFORMAT_RGBA32);
   float scaleX, scaleY;
   struct tme_display *display;
-#ifdef main
+#ifdef HAVE_SDL
   SDL_PixelFormat *format;
 #else
   SDL_PixelFormatDetails *format;
@@ -122,13 +122,13 @@ static int _tme_sdl_screen_resize(struct tme_sdl_screen *screen)
   
   if (enableResizable)
     screen->sdlFlags |= SDL_WINDOW_RESIZABLE;
-#ifdef main
+#ifdef HAVE_SDL
   else
     screen->sdlFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 #endif
   /* (re)create the surface used as the client's framebuffer */
   if(screen->sdl)
-#ifdef main
+#ifdef HAVE_SDL
     SDL_FreeSurface(screen->sdl);
   screen->sdl = SDL_CreateRGBSurface(0,
 				     width,
@@ -159,7 +159,7 @@ static int _tme_sdl_screen_resize(struct tme_sdl_screen *screen)
   conn_fb->tme_fb_connection_bits_per_pixel = depth;
   conn_fb->tme_fb_connection_depth = 24;
   conn_fb->tme_fb_connection_class = TME_FB_XLAT_CLASS_COLOR;
-#ifdef main
+#ifdef HAVE_SDL
   format = screen->sdl->format;
 #else
   format = SDL_GetPixelFormatDetails(screen->sdl->format);
@@ -170,7 +170,7 @@ static int _tme_sdl_screen_resize(struct tme_sdl_screen *screen)
   /* create or resize the window */
   if(!screen->sdlWindow) {
     screen->sdlWindow = SDL_CreateWindow(display->tme_display_title,
-#ifdef main
+#ifdef HAVE_SDL
 					 SDL_WINDOWPOS_UNDEFINED,
 					 SDL_WINDOWPOS_UNDEFINED,
 #endif
@@ -186,7 +186,7 @@ static int _tme_sdl_screen_resize(struct tme_sdl_screen *screen)
   }
   /* create the renderer if it does not already exist */
   if(!screen->sdlRenderer) {
-#ifdef main
+#ifdef HAVE_SDL
     screen->sdlRenderer = SDL_CreateRenderer(screen->sdlWindow, -1, 0);
 #else
     screen->sdlRenderer = SDL_CreateRenderer(screen->sdlWindow, NULL);
@@ -195,13 +195,13 @@ static int _tme_sdl_screen_resize(struct tme_sdl_screen *screen)
           tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
 	    (&display->tme_display_element->tme_element_log_handle,
 	     _("resize: error creating renderer: %s\n"), SDL_GetError()));
-#ifdef main
+#ifdef HAVE_SDL
     SDL_SetRelativeMouseMode(true);
 #else
     SDL_SetWindowRelativeMouseMode(screen->sdlWindow, true);
 #endif
   }
-#ifdef main
+#ifdef HAVE_SDL
   SDL_RenderSetLogicalSize(screen->sdlRenderer, width, height);  /* this is a departure from the SDL1.2-based version, but more in the sense of a VNC viewer in keeeping aspect ratio */
   SDL_RenderGetScale(screen->sdlRenderer, &scaleX, &scaleY);
 #else
@@ -415,7 +415,7 @@ _tme_sdl_screen_redraw(struct tme_sdl_screen *screen, int x, int y, int w, int h
   struct tme_display *display = screen->screen.tme_screen_display;
   
   if(SDL_UpdateTexture(screen->sdlTexture, &r, sdl->pixels + y*sdl->pitch + x*4, sdl->pitch)
-#ifdef main
+#ifdef HAVE_SDL
      < 0
 #else
      == false
@@ -426,7 +426,7 @@ _tme_sdl_screen_redraw(struct tme_sdl_screen *screen, int x, int y, int w, int h
 	     _("update: failed to update texture: %s\n"), SDL_GetError()));
   /* copy texture to renderer and show */
   if(SDL_RenderClear(screen->sdlRenderer)
-#ifdef main
+#ifdef HAVE_SDL
      < 0
 #else
      == false
@@ -435,7 +435,7 @@ _tme_sdl_screen_redraw(struct tme_sdl_screen *screen, int x, int y, int w, int h
     tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
 	    (&display->tme_display_element->tme_element_log_handle,
 	     _("update: failed to clear renderer: %s\n"), SDL_GetError()));
-#ifdef main
+#ifdef HAVE_SDL
   if(SDL_RenderCopy(screen->sdlRenderer, screen->sdlTexture, NULL, NULL) < 0)
 #else
   if(!SDL_RenderTexture(screen->sdlRenderer, screen->sdlTexture, NULL, NULL))
@@ -452,7 +452,7 @@ _tme_sdl_display_update(struct tme_display *display) {
   if(SDL_PollEvent(&e)) {
 
     switch(e.type) {
-#ifdef main
+#ifdef HAVE_SDL
     case SDL_WINDOWEVENT:
       switch (e.window.event) {
       case SDL_WINDOWEVENT_FOCUS_LOST:
@@ -475,11 +475,11 @@ _tme_sdl_display_update(struct tme_display *display) {
 		   _("released left Alt key\n")));
 	}
 	break;
-#ifdef main
+#ifdef HAVE_SDL
       }
       break;
 #endif
-#ifdef main
+#ifdef HAVE_SDL
     case SDL_MOUSEWHEEL:
 #else
     case SDL_EVENT_MOUSE_WHEEL:
@@ -510,7 +510,7 @@ _tme_sdl_display_update(struct tme_display *display) {
 	  }
 	break;
       }
-#ifdef main
+#ifdef HAVE_SDL
     case SDL_MOUSEBUTTONUP:
     case SDL_MOUSEBUTTONDOWN:
     case SDL_MOUSEMOTION:
@@ -523,7 +523,7 @@ _tme_sdl_display_update(struct tme_display *display) {
 	int button, i;
 	if (viewOnly)
 	  break;
-#ifdef main
+#ifdef HAVE_SDL
 	if (e.type == SDL_MOUSEMOTION)
 #else
 	if (e.type == SDL_EVENT_MOUSE_MOTION)
@@ -537,7 +537,7 @@ _tme_sdl_display_update(struct tme_display *display) {
 	  x = 0; // e.button.x;
 	  y = 0; // e.button.y;
 	  button = e.button.button;
-#ifdef main
+#ifdef HAVE_SDL
 	  if (e.type == SDL_MOUSEBUTTONUP)
 #else
 	  if (e.type == SDL_EVENT_MOUSE_BUTTON_UP)
@@ -547,7 +547,7 @@ _tme_sdl_display_update(struct tme_display *display) {
 	_tme_mouse_event(button, x, y, display);
 	break;
       }
-#ifdef main
+#ifdef HAVE_SDL
     case SDL_KEYDOWN:
       keydown = 1;
     case SDL_KEYUP:
@@ -558,7 +558,7 @@ _tme_sdl_display_update(struct tme_display *display) {
 #endif
       if (viewOnly)
 	break;
-#ifdef main
+#ifdef HAVE_SDL
       SDL_Keycode sym = e.key.keysym.sym;
       SDL_Keymod mod = e.key.keysym.mod;
 #else
@@ -572,7 +572,7 @@ _tme_sdl_display_update(struct tme_display *display) {
       if (sym == SDLK_LALT)
 	leftAltKeyDown = keydown;
       break;
-#ifdef main
+#ifdef HAVE_SDL
     case SDL_TEXTINPUT:
 #else
     case SDL_EVENT_TEXT_INPUT:
@@ -621,7 +621,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_sdl,display) {
   display = element->tme_element_private;
 
   SDL_Init(SDL_INIT_VIDEO
-#ifdef main
+#ifdef HAVE_SDL
 	   | SDL_INIT_NOPARACHUTE
 #endif
 	   );
