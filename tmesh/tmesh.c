@@ -526,9 +526,9 @@ do_usage(const char *prog_name, char *msg)
   fprintf(stderr, "usage: %s [OPTIONS] <INITIAL-CONFIG> \
                    \nwhere OPTIONS are:			   \
                    \n--log LOGFILE          log to LOGFILE		\
-                   \n-t, --multi_threaded      multi-threaded mode			\
+                   \n-t, --multi_threaded      multi-threaded mode ('%s')			\
                    \n-c, --interactive      read no commands from standard input (<INITIAL-CONFIG> not required here)\n",
-	  prog_name);
+	  prog_name,THREAD_TYPE);
   
 #define fpe(msg) fprintf(stderr, "\t%s", msg);          /* Shorter */
 

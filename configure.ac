@@ -222,18 +222,23 @@ if test "x${have_gtk}" = xyes; then
 fi
 AM_CONDITIONAL([HAVE_GTK], [test "x${have_gtk}" = xyes])
 
-PKG_CHECK_MODULES([SDL], [sdl3], [have_sdl=$enable_sdl], [
-   PKG_CHECK_MODULES([SDL], [sdl2], [have_sdl2=$enable_sdl], [have_sdl=no])
+PKG_CHECK_MODULES([SDL], [sdl3], [have_sdl3=$enable_sdl], [
+   PKG_CHECK_MODULES([SDL], [sdl2], [have_sdl2=$enable_sdl], [])
 ])
 
 AX_CHECK_COMPILE_FLAG(-sUSE_SDL=2, [have_sdl2=$enable_sdl])
 AX_APPEND_COMPILE_FLAGS(-sUSE_SDL=2, SDL_CFLAGS)
 AX_APPEND_LINK_FLAGS(-sUSE_SDL=2, SDL_LIBS)
 
+if test "x${have_sdl3}" = xyes; then
+   have_sdl=yes
 if test "x${have_sdl2}" = xyes; then
    AC_DEFINE([HAVE_SDL], [], [Defined if SDL2 is found & enabled.])
    have_sdl=yes
+else
+   have_sdl=no
 fi
+
 AM_CONDITIONAL([HAVE_SDL], [test "x${have_sdl}" = xyes])
 
 PKG_CHECK_MODULES([RFB], [libvncclient libvncserver], [have_rfb=$enable_rfb], [have_rfb=no])
@@ -700,50 +705,21 @@ AC_SUBST(NATINC)
 
 AC_MSG_CHECKING([for available threading models])
 
-# specify whether preemptive thread support should be enabled & with what thread models
+# specify thread model to use as thread mode in a dual dynamic setup along with fiber mode
 
-AC_ARG_ENABLE(threads,
-[  --enable-threads=THRs  Enable preemptive thread support utilizing the given threading models (compiled-in order of usage by platform availability: 'pthreads (or posix)','glib').  Defaults to 'no'; this will use a singled thread with setjmp/longjmp or fibers on platforms that support them.  Turn on threads with --enable-threads=<thr>; no value given is 'yes' which defaults to best threading model for platform.], [tme_thread_types=${enableval}], [enable_threads=no])
-
-if test "x${enable_threads}" = xyes; then
-   dnl Make brackets safe to use.
-   changequote(<<, >>)dnl
-
-   dnl set the default threads based on platform
-   case "${host_os}" in
-   mingw* | msys* | cygwin*) 
-	tme_thread_types=glib
-   	;;
-   *) 
-	tme_thread_types=pthreads
-   	;;
-   esac
-
-   dnl Make brackets the quote characters again.
-   changequote([, ])dnl
-   recode=no
+dnl Checks for default thread support
+if test "x${have_sdl3}" = xyes; then
+   tme_thread_type=sdl
+fi
+elif test "x${have_glib}" = xyes; then
+   tme_thread_type=glib
+else
+   tme_thread_type=posix
 fi
 
-if test "x${enable_threads}" = xno; then
-   dnl Make brackets safe to use.
-   changequote(<<, >>)dnl
+AC_ARG_WITH(threads,
+[  --with-threads=THR Selects threading model to use as the thread mode in dual dynamic setup along with original single-threaded fiber mode. Defaults in order of usage by platform availability: 'sdl', 'glib', 'pthreads (or posix)'. ], [tme_thread_type=${withval}], [])
 
-   dnl set the default threads based on platform
-   case "${host_os}" in
-   emscripten)
-	recode=no
-   	;;
-   *) 
-   	recode=i686
-   	;;
-   esac
-
-   dnl Make brackets the quote characters again.
-   changequote([, ])dnl
-   tme_thread_types=fiber
-fi
-
-for tme_thread_type in ${tme_thread_types}; do
 case "x${tme_thread_type}" in
 xpthreads| xposix)  CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_POSIX"
 	  	    CFLAGS="${CFLAGS-} -pthread"
@@ -756,13 +732,14 @@ xglib)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_GLIB ${GLIB_CFLAGS}"
 	 LDFLAGS="${LDFLAGS-} ${GLIB_LIBS}"
 	 ;;
 esac
-done
 
 CPPFLAGS="${CPPFLAGS-} -D_GNU_SOURCE" 
 
-AM_CONDITIONAL([THREADS_POSIX], [test "x${tme_thread_types}" = xpthreads || test "x${tme_thread_types}" = xposix])
+AM_CONDITIONAL([THREADS_POSIX], [test "x${tme_thread_type}" = xpthreads || test "x${tme_thread_type}" = xposix])
 AM_CONDITIONAL([THREADS_GLIB], [test "x${tme_thread_type}" = xglib])
-AC_MSG_RESULT($tme_thread_types)
+AM_CONDITIONAL([THREADS_SDL], [test "x${tme_thread_type}" = xsdl])
+AC_DEFINE_UNQUOTED([THREAD_TYPE], ["${tme_thread_type}"], [Threading model in use])
+AC_MSG_RESULT($tme_thread_type)
 
 dnl Checks for ZLIB.
 AS_IF([test "x${WIN32}" != xyes], [PKG_CHECK_MODULES([ZLIB], [zlib], [have_zlib=yes], [have_zlib=no])])

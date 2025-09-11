@@ -118,7 +118,7 @@ int tme_rwlock_trywrlock _TME_P((tme_rwlock_t *l));
 #define tme_thread_resume_others()	if(!tme_thread_cooperative()) _tme_rwlock_wrunlock(&tme_rwlock_suspere);_tme_thread_resumed()
 
 #ifdef tme_thread_rwlock_timedrdlock
-int tme_rwlock_timedlock _TME_P((tme_rwlock_t *l, unsigned long sec, int write));
+int tme_rwlock_timedlock _TME_P((tme_rwlock_t *l, tme_time_t abstime, int write));
 #define tme_rwlock_timedrdlock(l,sec) tme_rwlock_timedlock(l,sec,0)
 #define tme_rwlock_timedwrlock(l,sec) tme_rwlock_timedlock(l,sec,1)
 #else
@@ -139,7 +139,7 @@ typedef union {
 #define tme_mutex_unlock(m) tme_thread_op(mutex_unlock,m)
 
 #ifdef tme_thread_mutex_timedlock
-int tme_mutex_timedlock _TME_P((tme_mutex_t *m, unsigned long sec));
+int tme_mutex_timedlock _TME_P((tme_mutex_t *m, tme_time_t abstime));
 #else
 #define tme_mutex_timedlock(m,t) tme_mutex_trylock(m)
 #endif
