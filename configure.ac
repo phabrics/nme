@@ -737,7 +737,7 @@ CPPFLAGS="${CPPFLAGS-} -D_GNU_SOURCE"
 AM_CONDITIONAL([THREADS_POSIX], [test "x${tme_thread_type}" = xpthreads || test "x${tme_thread_type}" = xposix])
 AM_CONDITIONAL([THREADS_GLIB], [test "x${tme_thread_type}" = xglib])
 AM_CONDITIONAL([THREADS_SDL], [test "x${tme_thread_type}" = xsdl])
-AC_DEFINE_UNQUOTED([THREAD_TYPE], ["${tme_thread_type}"], [Threading model in use])
+AC_DEFINE_UNQUOTED([TME_THREAD_TYPE], ["${tme_thread_type}"], [Threading model in use])
 AC_MSG_RESULT($tme_thread_type)
 
 dnl Checks for ZLIB.

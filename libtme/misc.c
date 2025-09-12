@@ -366,11 +366,10 @@ tme_misc_cycles_scaling(tme_misc_cycles_scaling_t *scaling,
   *scaling /= denominator;
 }
 
-#ifndef TME_THREADS_SDL
 #ifdef WIN32
 
 tme_uint32_t
-tme_misc_cycles_per_ms(void)
+tme_misc_win32_cycles_per_ms(void)
 {
   LARGE_INTEGER freq;
   QueryPerformanceFrequency(&freq);
@@ -388,7 +387,7 @@ tme_misc_cycles_per_ms(void)
 }
 
 union tme_value64
-tme_misc_cycles(void)
+tme_misc_win32_cycles(void)
 {
   // Gets the current number of ticks from QueryPerformanceCounter. Throws an
   // exception if the call to QueryPerformanceCounter fails.
@@ -406,8 +405,9 @@ tme_misc_cycles(void)
   return value;
 }
 
-#else
-#ifndef TME_HAVE_MISC_CYCLES_PER_MS
+#endif /* defined(WIN32) */
+
+#ifndef tme_misc_cycles_per_ms
 
 /* this returns the cycle counter rate per millisecond: */
 int tme_misc_cycles_per_ms_spin;
@@ -442,9 +442,9 @@ tme_misc_cycles_per_ms(void)
   return (cycles_elapsed / ms_elapsed);
 }
 
-#endif /* !TME_HAVE_MISC_CYCLES_PER_MS */
+#endif /* !tme_misc_cycles_per_ms */
 
-#ifndef TME_HAVE_MISC_CYCLES
+#ifndef tme_misc_cycles
 
 /* this returns the cycle counter: */
 union tme_value64
@@ -486,9 +486,7 @@ tme_misc_cycles(void)
 #endif /* !TME_HAVE_INT64_T */
 }
 
-#endif /* !defined(TME_HAVE_MISC_CYCLES) */
-#endif /* !defined(WIN32) */
-#endif /* !defined(TME_THREADS_SDL) */
+#endif /* !defined(tme_misc_cycles) */
 
 /* this spins until the cycle counter reaches a threshold: */
 void

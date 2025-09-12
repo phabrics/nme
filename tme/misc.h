@@ -73,13 +73,20 @@ _tme_number_t tme_misc_number_parse _TME_P((_tme_const char *, _tme_number_t));
 #undef _tme_number_t
 union tme_value64 tme_misc_cycles_scaled _TME_P((const tme_misc_cycles_scaling_t *, const union tme_value64 *));
 void tme_misc_cycles_scaling _TME_P((tme_misc_cycles_scaling_t *, tme_uint32_t, tme_uint32_t));
-#ifdef TME_THREADS_SDL
+
+#if defined(TME_THREADS_SDL) || defined(_TME_HAVE_SDL) && !defined(WIN32)
 #define tme_misc_cycles_per_ms() ((tme_uint32_t)SDL_GetPerformanceFrequency()/1000)
-#define tme_misc_cycles() ((union tme_value64)SDL_GetPerformanceCounter())
+#define tme_misc_cycles() ((union tme_value64)(tme_uint64_t)SDL_GetPerformanceCounter())
+#elif defined(WIN32)
+tme_uint32_t tme_misc_win32_cycles_per_ms _TME_P((void));
+union tme_value64 tme_misc_win32_cycles _TME_P((void));
+#define tme_misc_cycles_per_ms tme_misc_win32_cycles_per_ms 
+#define tme_misc_cycles tme_misc_win32_cycles 
 #else
-tme_uint32_t tme_misc_cycles_per_ms _TME_P((void));
 union tme_value64 tme_misc_cycles _TME_P((void));
+tme_uint32_t tme_misc_cycles_per_ms _TME_P((void));
 #endif
+
 void tme_misc_cycles_spin_until _TME_P((const union tme_value64 *));
 
 #endif /* !_TME_MISC_H */

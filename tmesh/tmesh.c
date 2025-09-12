@@ -528,7 +528,7 @@ do_usage(const char *prog_name, char *msg)
                    \n--log LOGFILE          log to LOGFILE		\
                    \n-t, --multi_threaded      multi-threaded mode ('%s')			\
                    \n-c, --interactive      read no commands from standard input (<INITIAL-CONFIG> not required here)\n",
-	  prog_name,THREAD_TYPE);
+	  prog_name,TME_THREAD_TYPE);
   
 #define fpe(msg) fprintf(stderr, "\t%s", msg);          /* Shorter */
 
