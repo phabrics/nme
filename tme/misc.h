@@ -37,6 +37,9 @@
 #define _TME_MISC_H
 
 #include <tme/common.h>
+#ifdef _TME_HAVE_CPUCYCLES_H
+#include <cpucycles.h>
+#endif
 #ifdef TME_THREADS_SDL
 #ifdef HAVE_SDL
 #include <SDL.h>
@@ -74,7 +77,10 @@ _tme_number_t tme_misc_number_parse _TME_P((_tme_const char *, _tme_number_t));
 union tme_value64 tme_misc_cycles_scaled _TME_P((const tme_misc_cycles_scaling_t *, const union tme_value64 *));
 void tme_misc_cycles_scaling _TME_P((tme_misc_cycles_scaling_t *, tme_uint32_t, tme_uint32_t));
 
-#if defined(TME_THREADS_SDL) || defined(_TME_HAVE_SDL) && !defined(WIN32)
+#if defined(_TME_HAVE_CPUCYCLES) && defined(_TME_HAVE_CPUCYCLES_PERSECOND)
+#define tme_misc_cycles_per_ms() ((tme_uint32_t)cpucycles_persecond()/1000)
+#define tme_misc_cycles() ((union tme_value64)(tme_uint64_t)cpucycles())
+#elif defined(TME_THREADS_SDL) || defined(_TME_HAVE_SDL) && !defined(WIN32)
 #define tme_misc_cycles_per_ms() ((tme_uint32_t)SDL_GetPerformanceFrequency()/1000)
 #define tme_misc_cycles() ((union tme_value64)(tme_uint64_t)SDL_GetPerformanceCounter())
 #elif defined(WIN32)

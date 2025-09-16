@@ -322,7 +322,7 @@ AC_CHECK_HEADERS([sys/ioctl.h sys/sockio.h sys/socketio.h net/if_dl.h ioctls.h n
 AC_CHECK_HEADERS([byteswap.h sys/endian.h])
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h poll.h sys/socket.h sys/select.h sys/time.h time.h errno.h sys/mman.h sys/uio.h])
 AC_CHECK_HEADERS([linux/netfilter/nf_tables.h libmnl/libmnl.h libnftnl/table.h libnftnl/chain.h libnftnl/rule.h libnftnl/expr.h])
-AC_CHECK_HEADERS([pthread_np.h sched.h])
+AC_CHECK_HEADERS([pthread_np.h sched.h cpucycles.h])
 AC_CHECK_HEADERS([X11/keysym.h rfb/keysym.h])
 AC_CHECK_HEADERS([sys/param.h sys/linker.h sys/sysctl.h sys/module.h npf.h net/npf_ncode.h pcap/pcap.h], [], [],
 [#ifdef HAVE_SYS_PARAM_H
@@ -620,6 +620,14 @@ AC_DEFINE(HAVE_PTHREAD_SETNAME_NP, [], [Define if you have pthread_setname_np.])
 
 AC_SEARCH_LIBS([pthread_setschedparam], [pthread], [
 AC_DEFINE(HAVE_PTHREAD_SETSCHEDPARAM, [], [Define if you have pthread_setschedparam.])
+])
+
+AC_SEARCH_LIBS([cpucycles_persecond], [cpucycles], [
+AC_DEFINE(HAVE_CPUCYCLES_PERSECOND, [], [Define if you have pthread_setschedparam.])
+])
+
+AC_SEARCH_LIBS([cpucycles], [cpucycles], [
+AC_DEFINE(HAVE_CPUCYCLES, [], [Define if you have pthread_setschedparam.])
 ])
 
 dnl Invoke compatibility library in LIBOBJDIR

@@ -46,6 +46,9 @@ _TME_RCSID("$Id: tmesh.c,v 1.4 2009/08/30 17:06:38 fredette Exp $");
 #ifdef HAVE_OPENVPN
 #include <tme/openvpn-setup.h>
 #endif
+#ifdef HAVE_CPUCYCLES_H
+#include <cpucycles.h>
+#endif
 #ifdef __EMSCRIPTEN__
 #include <tme/shlibvar.h>
 #include <emscripten.h>
@@ -752,6 +755,11 @@ main(int argc, char **argv)
       exit(1);
     }
   }
+
+#ifdef HAVE_CPUCYCLES
+  printf("Using cpucycles version %s with %s counter.\n",
+	 cpucycles_version(), cpucycles_implementation());
+#endif
 
   /* initialize libtme: */
   tme_module_init();
