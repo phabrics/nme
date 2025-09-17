@@ -246,14 +246,17 @@ static void
 _tme_sparc_runlength(struct tme_sparc *ic,
 		     tme_uint32_t instruction_burst_msec)
 {
-  union tme_value64 runlength_target_cycles;
+  union tme_value64 runlength_target_cycles, value;
   unsigned int runlength_update_hz;
 
   /* set the run length target cycles: */
-  runlength_target_cycles.tme_value64_uint32_lo
-    = (tme_misc_cycles_per_ms()
-       * instruction_burst_msec);
-  runlength_target_cycles.tme_value64_uint32_hi = 0;
+  runlength_target_cycles = tme_misc_cycles_per_sec();
+
+  (void) tme_value64_set(&value, 1000);
+  (void) tme_value64_div(&runlength_target_cycles, &value);
+  (void) tme_value64_set(&value, instruction_burst_msec);
+  (void) tme_value64_mul(&runlength_target_cycles, &value);
+
   tme_runlength_target_cycles(&ic->tme_sparc_runlength, runlength_target_cycles);
 
   /* set the run length update period: */
@@ -685,9 +688,9 @@ tme_sparc_new(struct tme_sparc *ic, const char * const *args, const void *extra,
   struct tme_element *element;
   int arg_i;
   int usage;
-  tme_uint32_t cycles_per_ms;
-  tme_uint32_t cycles_scaled_per_ms;
-  const char *cycles_scaled_per_ms_arg;
+  union tme_value64 cycles_per_sec;
+  union tme_value64 cycles_scaled_per_sec;
+  const char *cycles_scaled_per_sec_arg;
   unsigned int cwp;
   unsigned int cwp_offset;
   tme_uint32_t asi;
@@ -713,16 +716,16 @@ tme_sparc_new(struct tme_sparc *ic, const char * const *args, const void *extra,
   /* check our arguments: */
   arg_i = 1;
   usage = FALSE;
-  cycles_per_ms = tme_misc_cycles_per_ms();
-  cycles_scaled_per_ms = cycles_per_ms;
-  cycles_scaled_per_ms_arg = NULL;
+  cycles_per_sec = tme_misc_cycles_per_sec();
+  cycles_scaled_per_sec = cycles_per_sec;
+  cycles_scaled_per_sec_arg = NULL;
   ic->tme_sparc_prom_delay_factor = TME_SPARC_PROM_DELAY_FACTOR_BEST;
   for (;;) {
 
     /* if this is a cycles scaling argument: */
     if (TME_ARG_IS(args[arg_i + 0], "tick-frequency")) {
-      cycles_scaled_per_ms_arg = args[arg_i + 0];
-      cycles_scaled_per_ms = tme_misc_unumber_parse_any(args[arg_i + 1], &usage) / 1000;
+      cycles_scaled_per_sec_arg = args[arg_i + 0];
+      cycles_scaled_per_sec = (union tme_value64)tme_misc_unumber_parse_any(args[arg_i + 1], &usage);
       if (usage) {
 	break;
       }
@@ -753,23 +756,26 @@ tme_sparc_new(struct tme_sparc *ic, const char * const *args, const void *extra,
   }
 
   /* set the cycles scaling: */
-  if (cycles_scaled_per_ms == 0) {
+  if (cycles_scaled_per_sec.tme_value64_uint32_hi == 0 &&
+      cycles_scaled_per_sec.tme_value64_uint32_lo == 0) {
     if (!usage) {
       tme_output_append_error(_output,
 			      "tick-frequency %s %s, ",
-			      cycles_scaled_per_ms_arg,
+			      cycles_scaled_per_sec_arg,
 			      _("too small"));
       usage = TRUE;
     }
   }
   else {
     tme_misc_cycles_scaling(&ic->tme_sparc_cycles_scaling,
-			    cycles_scaled_per_ms,
-			    cycles_per_ms);
+			    cycles_scaled_per_sec,
+			    cycles_per_sec);
     tme_misc_cycles_scaling(&ic->tme_sparc_cycles_unscaling,
-			    cycles_per_ms,
-			    cycles_scaled_per_ms);
-    ic->tme_sparc_cycles_scaled_per_usec = (cycles_scaled_per_ms + 999) / 1000;
+			    cycles_per_sec,
+			    cycles_scaled_per_sec);
+    (void) tme_value64_set(&cycles_per_sec, 1000000);
+    (void) tme_value64_div(&cycles_scaled_per_sec, &cycles_per_sec);
+    ic->tme_sparc_cycles_scaled_per_usec = cycles_scaled_per_sec.tme_value64_uint32_lo;
   }
 
   if (usage) {

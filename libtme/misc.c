@@ -359,66 +359,38 @@ tme_misc_cycles_scaled(const tme_misc_cycles_scaling_t *scaling,
 /* this returns a scaling factor for the cycle counter: */
 void
 tme_misc_cycles_scaling(tme_misc_cycles_scaling_t *scaling,
-			tme_uint32_t numerator,
-			tme_uint32_t denominator)
+			union tme_value64 numerator,
+			union tme_value64 denominator)
 {
-  *scaling = numerator;
-  *scaling /= denominator;
-}
-
-#ifdef WIN32
-
-tme_uint32_t
-tme_misc_win32_cycles_per_ms(void)
-{
-  LARGE_INTEGER freq;
-  QueryPerformanceFrequency(&freq);
-
 #ifdef TME_HAVE_INT64_T
-  return freq.QuadPart / 1000;
+  *scaling = numerator.tme_value64_uint;
+  *scaling /= denominator.tme_value64_uint;
 #else  /* !TME_HAVE_INT64_T */
-  union tme_value64 value, usec;
-  value.tme_value64_uint32_hi = freq.u.HighPart;
-  value.tme_value64_uint32_lo = freq.u.LowPart;
-  (void) tme_value64_set(&usec, 1000);
-  (void) tme_value64_div(&value, &usec);
-  return (value.tme_value64_uint32_lo);
-#endif /* !TME_HAVE_INT64_T */
-}
-
-union tme_value64
-tme_misc_win32_cycles(void)
-{
-  // Gets the current number of ticks from QueryPerformanceCounter. Throws an
-  // exception if the call to QueryPerformanceCounter fails.
-  LARGE_INTEGER ticks;
-  union tme_value64 value;
-
-  QueryPerformanceCounter(&ticks);
+  tme_misc_cycles_scaling_t den;
   
-#ifdef TME_HAVE_INT64_T
-  value.tme_value64_uint =  ticks.QuadPart;
-#else  /* !TME_HAVE_INT64_T */
-  value.tme_value64_uint32_hi = ticks.u.HighPart;
-  value.tme_value64_uint32_lo = ticks.u.LowPart;
+  /* make 2^32: */
+  den = 65536;
+  den *= 65536;
+
+  *scaling = numerator.tme_value64_uint32_hi * den;
+  *scaling += numerator.tme_value64_uint32_lo;
+  den *= denominator.tme_value64_uint32_hi;
+  den += denominator.tme_value64_uint32_lo;
+  *scaling /= den;
 #endif /* !TME_HAVE_INT64_T */
-  return value;
 }
 
-#endif /* defined(WIN32) */
-
-#ifndef tme_misc_cycles_per_ms
+#ifndef tme_misc_cycles_per_sec
 
 /* this returns the cycle counter rate per millisecond: */
-int tme_misc_cycles_per_ms_spin;
-tme_uint32_t
-tme_misc_cycles_per_ms(void)
+int tme_misc_cycles_per_sec_spin;
+union tme_value64
+tme_misc_cycles_per_sec(void)
 {
   union tme_value64 cycles_start;
   tme_time_t timeval_start;
   union tme_value64 cycles_finish;
   tme_time_t timeval_finish;
-  tme_uint32_t ms_elapsed;
   tme_misc_cycles_scaling_t cycles_elapsed;
 
   /* sample the cycle counter and the current time: */
@@ -427,22 +399,20 @@ tme_misc_cycles_per_ms(void)
 
   /* spin until at least a second has passed: */
   do {
-    tme_misc_cycles_per_ms_spin++;
+    tme_misc_cycles_per_sec_spin++;
     cycles_finish = tme_misc_cycles();
     timeval_finish = tme_thread_get_time();
   } while (TME_TIME_GET_SEC(timeval_finish - timeval_start) < 1);
 
-  /* return the approximate cycle counter rate per millisecond: */
-  ms_elapsed = TME_TIME_GET_MSEC(timeval_finish - timeval_start);
   (void) tme_value64_sub(&cycles_finish, &cycles_start);
   cycles_elapsed = cycles_finish.tme_value64_uint32_hi;
   cycles_elapsed *= 65536;
   cycles_elapsed *= 65536;
   cycles_elapsed += cycles_finish.tme_value64_uint32_lo;
-  return (cycles_elapsed / ms_elapsed);
+  return cycles_elapsed;
 }
 
-#endif /* !tme_misc_cycles_per_ms */
+#endif /* !tme_misc_cycles_per_sec */
 
 #ifndef tme_misc_cycles
 

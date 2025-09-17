@@ -75,22 +75,35 @@ _tme_number_t tme_misc_number_parse _TME_P((_tme_const char *, _tme_number_t));
 #undef _tme_unumber_t
 #undef _tme_number_t
 union tme_value64 tme_misc_cycles_scaled _TME_P((const tme_misc_cycles_scaling_t *, const union tme_value64 *));
-void tme_misc_cycles_scaling _TME_P((tme_misc_cycles_scaling_t *, tme_uint32_t, tme_uint32_t));
+void tme_misc_cycles_scaling _TME_P((tme_misc_cycles_scaling_t *, union tme_value64, union tme_value64));
 
 #if defined(_TME_HAVE_CPUCYCLES) && defined(_TME_HAVE_CPUCYCLES_PERSECOND)
-#define tme_misc_cycles_per_ms() ((tme_uint32_t)cpucycles_persecond()/1000)
+#define tme_misc_cycles_per_sec() ((union tme_value64)(tme_uint64_t)cpucycles_persecond())
 #define tme_misc_cycles() ((union tme_value64)(tme_uint64_t)cpucycles())
 #elif defined(TME_THREADS_SDL) || defined(_TME_HAVE_SDL) && !defined(WIN32)
-#define tme_misc_cycles_per_ms() ((tme_uint32_t)SDL_GetPerformanceFrequency()/1000)
+#define tme_misc_cycles_per_sec() ((union tme_value64)(tme_uint64_t)SDL_GetPerformanceFrequency())
 #define tme_misc_cycles() ((union tme_value64)(tme_uint64_t)SDL_GetPerformanceCounter())
 #elif defined(WIN32)
-tme_uint32_t tme_misc_win32_cycles_per_ms _TME_P((void));
-union tme_value64 tme_misc_win32_cycles _TME_P((void));
-#define tme_misc_cycles_per_ms tme_misc_win32_cycles_per_ms 
-#define tme_misc_cycles tme_misc_win32_cycles 
+static _tme_inline union tme_value64
+tme_misc_win32_cycles_per_sec(void)
+{
+  LARGE_INTEGER freq;
+  QueryPerformanceFrequency(&freq);
+  return freq;
+}
+
+static _tme_inline union tme_value64
+tme_misc_win32_cycles(void)
+{
+  // Gets the current number of ticks from QueryPerformanceCounter. Throws an
+  // exception if the call to QueryPerformanceCounter fails.
+  LARGE_INTEGER ticks;
+  QueryPerformanceCounter(&ticks);
+  return ticks;
+}
 #else
 union tme_value64 tme_misc_cycles _TME_P((void));
-tme_uint32_t tme_misc_cycles_per_ms _TME_P((void));
+union tme_value64 tme_misc_cycles_per_sec _TME_P((void));
 #endif
 
 void tme_misc_cycles_spin_until _TME_P((const union tme_value64 *));
