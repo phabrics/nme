@@ -41,6 +41,16 @@ _TME_RCSID("$Id: misc.c,v 1.8 2010/06/05 19:02:38 fredette Exp $");
 #include <tme/misc.h>
 #include <ctype.h>
 #include <errno.h>
+#ifdef _TME_HAVE_CPUCYCLES_H
+#include <cpucycles.h>
+#endif
+#ifdef TME_THREADS_SDL
+#ifdef HAVE_SDL
+#include <SDL.h>
+#else
+#include <SDL3/SDL.h>
+#endif
+#endif
 
 /* this tokenizes a string by whitespace: */
 char **
@@ -380,18 +390,56 @@ tme_misc_cycles_scaling(tme_misc_cycles_scaling_t *scaling,
 #endif /* !TME_HAVE_INT64_T */
 }
 
-#ifndef tme_misc_cycles_per_sec
+#ifdef WIN32
+static union tme_value64
+tme_misc_win32_cycles_per_sec(void)
+{
+  LARGE_INTEGER freq;
+  union tme_value64 value;
+
+  QueryPerformanceFrequency(&freq);
+
+#ifdef TME_HAVE_INT64_T
+  value.tme_value64_uint =  freq.QuadPart;
+#else  /* !TME_HAVE_INT64_T */
+  union tme_value64 usec;
+  value.tme_value64_uint32_hi = freq.u.HighPart;
+  value.tme_value64_uint32_lo = freq.u.LowPart;
+  (void) tme_value64_set(&usec, 1000);
+  (void) tme_value64_div(&value, &usec);
+#endif /* !TME_HAVE_INT64_T */
+  return value;
+}
+
+static union tme_value64
+tme_misc_win32_cycles(void)
+{
+  // Gets the current number of ticks from QueryPerformanceCounter. Throws an
+  // exception if the call to QueryPerformanceCounter fails.
+  LARGE_INTEGER ticks;
+  union tme_value64 value;
+
+  QueryPerformanceCounter(&ticks);
+
+#ifdef TME_HAVE_INT64_T
+  value.tme_value64_uint =  ticks.QuadPart;
+#else  /* !TME_HAVE_INT64_T */
+  value.tme_value64_uint32_hi = ticks.u.HighPart;
+  value.tme_value64_uint32_lo = ticks.u.LowPart;
+#endif /* !TME_HAVE_INT64_T */
+  return value;  
+}
+#endif
 
 /* this returns the cycle counter rate per millisecond: */
 int tme_misc_cycles_per_sec_spin;
-union tme_value64
-tme_misc_cycles_per_sec(void)
+static union tme_value64
+tme_misc_def_cycles_per_sec(void)
 {
   union tme_value64 cycles_start;
   tme_time_t timeval_start;
   union tme_value64 cycles_finish;
   tme_time_t timeval_finish;
-  tme_misc_cycles_scaling_t cycles_elapsed;
 
   /* sample the cycle counter and the current time: */
   cycles_start = tme_misc_cycles();
@@ -405,20 +453,12 @@ tme_misc_cycles_per_sec(void)
   } while (TME_TIME_GET_SEC(timeval_finish - timeval_start) < 1);
 
   (void) tme_value64_sub(&cycles_finish, &cycles_start);
-  cycles_elapsed = cycles_finish.tme_value64_uint32_hi;
-  cycles_elapsed *= 65536;
-  cycles_elapsed *= 65536;
-  cycles_elapsed += cycles_finish.tme_value64_uint32_lo;
-  return cycles_elapsed;
+  return cycles_finish;
 }
 
-#endif /* !tme_misc_cycles_per_sec */
-
-#ifndef tme_misc_cycles
-
 /* this returns the cycle counter: */
-union tme_value64
-tme_misc_cycles(void)
+static union tme_value64
+tme_misc_def_cycles(void)
 {
   union tme_value64 value;
 #ifdef TME_HAVE_INT64_T
@@ -456,7 +496,56 @@ tme_misc_cycles(void)
 #endif /* !TME_HAVE_INT64_T */
 }
 
-#endif /* !defined(tme_misc_cycles) */
+tme_misc_get_cycles tme_misc_cycles;
+tme_misc_cycle_freq tme_misc_cycles_per_sec;
+
+void tme_misc_set_cycles(const char *impl) {
+  int i = 1;
+  int def = !strcmp(impl,"def");
+  
+#if defined(_TME_HAVE_CPUCYCLES) && defined(_TME_HAVE_CPUCYCLES_PERSECOND)
+  if(def || !strcmp(impl,"cpu")) {
+    printf("Using cpucycles version %s with %s counter.\n",
+	   cpucycles_version(), cpucycles_implementation());
+    tme_misc_cycles = (tme_misc_get_cycles)cpucycles;
+    tme_misc_cycles_per_sec = (tme_misc_cycle_freq)cpucycles_persecond;
+    return;
+  }
+#endif
+
+#if defined(TME_THREADS_SDL) || defined(_TME_HAVE_SDL)
+  if(def || !strcmp(impl,"sdl")) {
+    printf("Using SDL counter.\n");
+    tme_misc_cycles = (tme_misc_get_cycles)SDL_GetPerformanceCounter;
+    tme_misc_cycles_per_sec = (tme_misc_cycle_freq)SDL_GetPerformanceFrequency;
+    return;
+  }
+#endif
+
+#ifdef WIN32
+  if(def || !strcmp(impl,"win")) {
+    printf("Using Win32 counter.\n");
+    tme_misc_cycles = tme_misc_win32_cycles;
+    tme_misc_cycles_per_sec = tme_misc_win32_cycles_per_sec;
+    return;
+  }
+#endif
+
+#if defined(_TME_HAVE___RDTSC) || defined(__GNUC__) && !defined(__EMSCRIPTEN__)
+  if(def || !strcmp(impl,"x86")) {
+    printf("Using x86 RDTSC counter.\n");
+    tme_misc_cycles = tme_misc_x86_cycles;
+  }
+  else
+#endif
+    {
+      printf("Using default built-in counter.\n");
+      tme_misc_cycles = tme_misc_def_cycles;
+    }
+  tme_misc_cycles_per_sec = tme_misc_def_cycles_per_sec;
+
+  return;
+}
 
 /* this spins until the cycle counter reaches a threshold: */
 void

@@ -46,9 +46,6 @@ _TME_RCSID("$Id: tmesh.c,v 1.4 2009/08/30 17:06:38 fredette Exp $");
 #ifdef HAVE_OPENVPN
 #include <tme/openvpn-setup.h>
 #endif
-#ifdef HAVE_CPUCYCLES_H
-#include <cpucycles.h>
-#endif
 #ifdef __EMSCRIPTEN__
 #include <tme/shlibvar.h>
 #include <emscripten.h>
@@ -529,7 +526,8 @@ do_usage(const char *prog_name, char *msg)
   fprintf(stderr, "usage: %s [OPTIONS] <INITIAL-CONFIG> \
                    \nwhere OPTIONS are:			   \
                    \n--log LOGFILE          log to LOGFILE		\
-                   \n-t, --multi_threaded      multi-threaded mode ('%s')			\
+                   \n-p, --perf_counter     processor performance counter ('cpu','sdl','win','def')			\
+                   \n-t, --multi_threaded   multi-threaded mode ('%s')			\
                    \n-c, --interactive      read no commands from standard input (<INITIAL-CONFIG> not required here)\n",
 	  prog_name,TME_THREAD_TYPE);
   
@@ -630,13 +628,14 @@ main(int argc, char **argv)
   pthread_attr_t attr, *attrp;
   char *attr_sched_str, *main_sched_str, *inheritsched_str;
   struct sched_param param;
-
+  
   use_null_attrib = 0;
   attr_sched_str = NULL;
   main_sched_str = NULL;
   inheritsched_str = NULL;
 #endif // HAVE_PTHREAD_SETSCHEDPARAM
 #endif // TME_THREADS_POSIX
+  const char *cycles_impl="def";
 
   /* check our command line: */
   config_filename = NULL;
@@ -711,6 +710,14 @@ main(int argc, char **argv)
     }
 #endif // HAVE_PTHREAD_SETSCHEDPARAM  
 #endif // TME_THREADS_POSIX
+    else if (!strcmp(opt, "-p")) {
+      if (++arg_i < argc) {
+	cycles_impl=argv[arg_i];
+      } else {
+	arg_i = argc;
+	break;
+      }
+    }
     else if (!strcmp(opt, "-t")
 	     || !strcmp(opt, "--multi_threaded")) {
       multi_threaded = TRUE;
@@ -756,11 +763,8 @@ main(int argc, char **argv)
     }
   }
 
-#ifdef HAVE_CPUCYCLES
-  printf("Using cpucycles version %s with %s counter.\n",
-	 cpucycles_version(), cpucycles_implementation());
-#endif
-
+  tme_misc_set_cycles(cycles_impl);
+  
   /* initialize libtme: */
   tme_module_init();
   /* initialize libtmesh: */
