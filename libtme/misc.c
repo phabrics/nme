@@ -44,12 +44,10 @@ _TME_RCSID("$Id: misc.c,v 1.8 2010/06/05 19:02:38 fredette Exp $");
 #ifdef _TME_HAVE_CPUCYCLES_H
 #include <cpucycles.h>
 #endif
-#ifdef TME_THREADS_SDL
-#ifdef HAVE_SDL
-#include <SDL.h>
-#else
-#include <SDL3/SDL.h>
-#endif
+#ifdef _TME_HAVE_SDL3
+#include <SDL3/SDL_timer.h>
+#elif defined(_TME_HAVE_SDL)
+#include <SDL_timer.h>
 #endif
 
 /* this tokenizes a string by whitespace: */
@@ -513,7 +511,7 @@ void tme_misc_set_cycles(const char *impl) {
   }
 #endif
 
-#if defined(TME_THREADS_SDL) || defined(_TME_HAVE_SDL)
+#if defined(_TME_HAVE_SDL3) || defined(_TME_HAVE_SDL)
   if(def || !strcmp(impl,"sdl")) {
     printf("Using SDL counter.\n");
     tme_misc_cycles = (tme_misc_get_cycles)SDL_GetPerformanceCounter;

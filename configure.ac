@@ -231,6 +231,7 @@ AX_APPEND_COMPILE_FLAGS(-sUSE_SDL=2, SDL_CFLAGS)
 AX_APPEND_LINK_FLAGS(-sUSE_SDL=2, SDL_LIBS)
 
 if test "x${have_sdl3}" = xyes; then
+   AC_DEFINE([HAVE_SDL3], [], [Defined if SDL3 is found & enabled.])
    have_sdl=yes
 elif test "x${have_sdl2}" = xyes; then
    AC_DEFINE([HAVE_SDL], [], [Defined if SDL2 is found & enabled.])
