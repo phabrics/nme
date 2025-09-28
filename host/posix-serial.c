@@ -38,6 +38,7 @@ _TME_RCSID("$Id: posix-serial.c,v 1.11 2007/08/24 00:57:01 fredette Exp $");
 /* includes: */
 #include <tme/generic/serial.h>
 #include <tme/openvpn-setup.h>
+#include <tme/threads.h>
 #ifndef WIN32
 #include <termios.h>
 #include <sys/ioctl.h>

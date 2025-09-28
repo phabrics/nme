@@ -38,7 +38,7 @@ _TME_RCSID("$Id: threads-fiber.c,v 1.18 2010/06/05 19:10:28 fredette Exp $");
 
 /* includes: */
 #define TME_THREADS_FIBER
-#include <tme/openvpn-setup.h>
+#include <tme/threads.h>
 #include <stdlib.h>
 #if defined(__EMSCRIPTEN__) && !defined(USE_SJLJ)
 #include <emscripten/fiber.h>

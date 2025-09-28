@@ -37,7 +37,7 @@
 #define _TME_THREADS_H
 
 #include <tme/common.h>
-_TME_RCSID("$Id: threads.h,v 1.10 2010/06/05 19:36:35 fredette Exp $");
+#include <tme/openvpn-setup.h>
 
 /* includes: */
 #include <errno.h>
@@ -300,6 +300,7 @@ typedef tme_event_t tme_thread_handle_t;
 #define tme_thread_fd(hand, flags) hand->fd
 #define tme_read gzread
 #define tme_write gzwrite
+#define tme_event_yield tme_zlib_yield
 #define tme_thread_read tme_zlib_read
 #define tme_thread_write tme_zlib_write
 #define TME_SEEK_SET SEEK_SET
@@ -341,8 +342,10 @@ typedef off_t tme_off_t;
 #define tme_event_close close
 #endif // !WIN32
 
-ssize_t tme_thread_read _TME_P((tme_thread_handle_t hand, void *buf, size_t len, tme_mutex_t *mutex));
-ssize_t tme_thread_write _TME_P((tme_thread_handle_t hand, const void *buf, size_t len, tme_mutex_t *mutex));
+ssize_t tme_event_yield _TME_P((tme_event_t hand, void *data, size_t len, unsigned int rwflags, tme_mutex_t *mutex));
+
+#define tme_thread_read(hand, buf, len, mutex) tme_event_yield(hand, buf, len, EVENT_READ, mutex)
+#define tme_thread_write(hand, buf, len, mutex) tme_event_yield(hand, buf, len, EVENT_WRITE, mutex)
 
 typedef union {
   tme_thread_threadid_t thread;

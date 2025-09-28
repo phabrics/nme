@@ -526,9 +526,9 @@ do_usage(const char *prog_name, char *msg)
   fprintf(stderr, "usage: %s [OPTIONS] <INITIAL-CONFIG> \
                    \nwhere OPTIONS are:			   \
                    \n--log LOGFILE          log to LOGFILE		\
-                   \n-p, --perf_counter     processor performance counter ('cpu','sdl','win','def')			\
-                   \n-t, --multi_threaded   multi-threaded mode ('%s')			\
-                   \n-c, --interactive      read no commands from standard input (<INITIAL-CONFIG> not required here)\n",
+                   \n-c, --cycle_counter    cycle counter implementation (default 'def' gives order: 'cpu','sdl','win','x86','def')  \
+                   \n-m, --multi_threaded   multi-threaded mode (using %s threads or single-threaded fibers if not given) \
+                   \n-i, --interactive      interactive command-line interface (<INITIAL-CONFIG> optional here)\n",
 	  prog_name,TME_THREAD_TYPE);
   
 #define fpe(msg) fprintf(stderr, "\t%s", msg);          /* Shorter */
@@ -545,9 +545,9 @@ do_usage(const char *prog_name, char *msg)
   fpe("                     r  SCHED_RR\n");
   fpe("                     o  SCHED_OTHER\n");
   fpe("-A                Use default thread attributes object\n");
-  fpe("-i {e|i}          Set inherit scheduler attribute to\n");
+  fpe("-I {e|i}          Set inherit scheduler attribute to\n");
   fpe("                  'explicit' or 'inherit'\n");
-  fpe("-m <policy><prio> Set scheduling policy and priority on\n");
+  fpe("-M <policy><prio> Set scheduling policy and priority on\n");
   fpe("                  main thread before pthread_create() call\n");
 #endif // HAVE_PTHREAD_SETSCHEDPARAM  
 #endif // TME_THREADS_POSIX
@@ -681,7 +681,7 @@ main(int argc, char **argv)
     }
 #endif // HAVE_PTHREAD_SETAFFINITY_NP
 #ifdef HAVE_PTHREAD_SETSCHEDPARAM  
-    else if (!strcmp(opt, "-m")) {
+    else if (!strcmp(opt, "-M")) {
       if (++arg_i < argc) {
 	main_sched_str=argv[arg_i];
       } else {
@@ -700,7 +700,7 @@ main(int argc, char **argv)
     else if (!strcmp(opt, "-A")) {
       use_null_attrib = 1;
     }
-    else if (!strcmp(opt, "-i")) {
+    else if (!strcmp(opt, "-I")) {
       if (++arg_i < argc) {
 	inheritsched_str=argv[arg_i];
       } else {
@@ -710,7 +710,8 @@ main(int argc, char **argv)
     }
 #endif // HAVE_PTHREAD_SETSCHEDPARAM  
 #endif // TME_THREADS_POSIX
-    else if (!strcmp(opt, "-p")) {
+    else if (!strcmp(opt, "-c")
+	     || !strcmp(opt, "--cycle_counter")) {
       if (++arg_i < argc) {
 	cycles_impl=argv[arg_i];
       } else {
@@ -718,11 +719,11 @@ main(int argc, char **argv)
 	break;
       }
     }
-    else if (!strcmp(opt, "-t")
+    else if (!strcmp(opt, "-m")
 	     || !strcmp(opt, "--multi_threaded")) {
       multi_threaded = TRUE;
     }
-    else if (!strcmp(opt, "-c")
+    else if (!strcmp(opt, "-i")
 	     || !strcmp(opt, "--interactive")) {
       interactive = TRUE;
     }
@@ -739,18 +740,6 @@ main(int argc, char **argv)
   }
   
   if (!interactive && (arg_i == argc)) do_usage(argv0, NULL);
-
-#ifdef HAVE_OPENVPN
-  // Initialize openvpn library
-  if(init_static()) {
-    es = openvpn_setup(NULL, 0, NULL);
-#ifdef WIN32
-    set_win_sys_path_via_env(es);
-    win32_signal_close(&win32_signal);
-#endif
-  } else
-    exit(1);
-#endif
   
   if (!strcmp(log_filename, "-")) {
     _tmesh_log = stdout;
@@ -765,12 +754,24 @@ main(int argc, char **argv)
 
   tme_misc_set_cycles(cycles_impl);
   
-  /* initialize libtme: */
-  tme_module_init();
   /* initialize libtmesh: */
   (void) tmesh_init(multi_threaded);
 
+  /* initialize libtme: */
+  tme_module_init();
+
   //  tme_thread_enter(NULL);
+#ifdef HAVE_OPENVPN
+  // Initialize openvpn library
+  if(init_static()) {
+    es = openvpn_setup(NULL, 0, NULL);
+#ifdef WIN32
+    set_win_sys_path_via_env(es);
+    win32_signal_close(&win32_signal);
+#endif
+  } else
+    exit(1);
+#endif
   
 #ifdef TME_THREADS_POSIX
   thread = pthread_self();
@@ -803,12 +804,12 @@ main(int argc, char **argv)
 #ifdef HAVE_PTHREAD_SETSCHEDPARAM  
   if (use_null_attrib &&
       (inheritsched_str != NULL || attr_sched_str != NULL)) {
-    do_usage(argv0, "Can't specify -A with -i or -a\n");
+    do_usage(argv0, "Can't specify -A with -I or -a\n");
   }
 
   if (main_sched_str != NULL) {
     if (!get_policy(main_sched_str[0], &policy))
-      do_usage(argv0, "Bad policy for main thread (-m)\n");
+      do_usage(argv0, "Bad policy for main thread (-M)\n");
     param.sched_priority = strtol(&main_sched_str[1], NULL, 0);
     
     rc = pthread_setschedparam(pthread_self(), policy, &param);
@@ -836,7 +837,7 @@ main(int argc, char **argv)
     else if (inheritsched_str[0] == 'i')
       inheritsched = PTHREAD_INHERIT_SCHED;
     else
-      do_usage(argv0, "Value for -i must be 'e' or 'i'\n");
+      do_usage(argv0, "Value for -I must be 'e' or 'i'\n");
 
     rc = pthread_attr_setinheritsched(&attr, inheritsched);
     if (rc != 0)
