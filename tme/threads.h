@@ -243,48 +243,39 @@ typedef tme_int64_t tme_off_t;
 #error "No support for 32-bit file offsets on Windows"
 #endif
 
-typedef struct tme_win32_handle *tme_event_t;
-#define TME_INVALID_EVENT NULL
+typedef struct tme_win32_handle {
+  HANDLE handle;
+  struct overlapped_io reads;
+  struct overlapped_io writes;
+  struct rw_handle rw_handle;
+} *tme_thread_handle_t;
 
-#define TME_WIN32_HANDLE(hand) (*(HANDLE *)(hand))
+extern tme_thread_handle_t win32_stdin;
+extern tme_thread_handle_t win32_stdout;
+extern tme_thread_handle_t win32_stderr;
 
-extern tme_event_t win32_stdin;
-extern tme_event_t win32_stdout;
-extern tme_event_t win32_stderr;
-tme_event_t tme_win32_open _TME_P((const char *path, int flags, int attr, size_t size));
-void tme_win32_close _TME_P((tme_event_t));
+tme_thread_handle_t tme_thread_open _TME_P((const char *path, int flags));
+void tme_thread_close _TME_P((tme_thread_handle_t));
 
-static _tme_inline ssize_t tme_read _TME_P((HANDLE hand, void *buf, size_t len)) {
-  int ret;
-  return (ReadFile(hand, buf, len, &ret, NULL)) ? (ret) : (-1);
-}
-
-static _tme_inline ssize_t tme_write _TME_P((HANDLE hand, const void *buf, size_t len)) {
-  int ret;
-  return (WriteFile(hand, buf, len, &ret, NULL)) ? (ret) : (-1);
-}
+int tme_read _TME_P((tme_thread_handle_t hand, void *data, int len));
+int tme_write _TME_P((tme_thread_handle_t hand, void *data, int len));
 
 #define tme_thread_fd(hand, flags) _open_osfhandle((intptr_t)TME_THREAD_HANDLE(hand), flags);
 #define TME_SEEK_SET FILE_BEGIN
 #define TME_SEEK_CUR FILE_CURRENT
 #define TME_SEEK_END FILE_END
 
+typedef tme_thread_handle_t tme_event_t;
+
 #define TME_STD_HANDLE(hand) win32_##hand
 
-typedef tme_event_t tme_thread_handle_t;
-#define TME_STD_THREAD_HANDLE TME_STD_HANDLE
-#define TME_STD_EVENT_HANDLE TME_STD_HANDLE
-#define TME_THREAD_HANDLE TME_WIN32_HANDLE
-#define TME_EVENT_HANDLE TME_THREAD_HANDLE
+#define TME_THREAD_HANDLE(hand) hand->handle
+#define TME_EVENT_HANDLE(hand) hand
 #define TME_INVALID_HANDLE NULL
-#define tme_thread_open(path, flags) tme_win32_open(path, flags, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, 65536)
-#define tme_event_open(path, flags) tme_win32_open(path, flags, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, 1024)
-#define tme_thread_close tme_win32_close
-#define tme_event_close tme_thread_close
 tme_off_t tme_thread_seek _TME_P((tme_thread_handle_t hand, tme_off_t off, int where));
 #elif defined(USE_ZLIB) && defined(_TME_HAVE_ZLIB)
 /* file flags: */
-typedef struct tme_zlib_handle  *tme_event_t;
+typedef struct tme_zlib_handle  *tme_thread_handle_t;
 #define TME_FILE_RO		O_RDONLY
 #define TME_FILE_WO		O_WRONLY
 #define TME_FILE_RW		O_RDWR
@@ -292,17 +283,11 @@ typedef struct tme_zlib_handle  *tme_event_t;
 #define TME_THREAD_HANDLE(hand) hand->handle
 #define TME_EVENT_HANDLE(hand) hand->fd
 #define TME_INVALID_HANDLE NULL
-#define TME_INVALID_EVENT NULL
 #define TME_STD_HANDLE(hand) fileno(hand)
-#define TME_STD_THREAD_HANDLE(hand) fileno(hand)
-#define TME_STD_EVENT_HANDLE(hand) fileno(hand)
-typedef tme_event_t tme_thread_handle_t;
-#define tme_thread_fd(hand, flags) hand->fd
-#define tme_read gzread
-#define tme_write gzwrite
-#define tme_event_yield tme_zlib_yield
-#define tme_thread_read tme_zlib_read
-#define tme_thread_write tme_zlib_write
+typedef uintptr_t tme_event_t;
+#define tme_thread_fd(hand, flags) TME_EVENT_HANDLE(hand)
+#define tme_read(hand,buf,len) gzread(TME_THREAD_HANDLE(hand),buf,len)
+#define tme_write(hand,buf,len) gzwrite(TME_THREAD_HANDLE(hand),buf,len)
 #define TME_SEEK_SET SEEK_SET
 #define TME_SEEK_CUR SEEK_CUR
 #define TME_SEEK_END SEEK_END
@@ -310,8 +295,6 @@ typedef z_off_t tme_off_t;
 #define tme_thread_seek(hand,off,where) gzseek(TME_THREAD_HANDLE(hand),off,where)
 #define tme_thread_open tme_zlib_open
 #define tme_thread_close(hand) gzclose(TME_THREAD_HANDLE(hand))
-#define tme_event_open gzopen
-#define tme_event_close gzclose
 
 #else // HAVE_ZLIB
 /* file flags: */
@@ -322,10 +305,7 @@ typedef z_off_t tme_off_t;
 #define TME_THREAD_HANDLE(hand) hand
 #define TME_EVENT_HANDLE(hand) hand
 #define TME_INVALID_HANDLE -1
-#define TME_INVALID_EVENT -1
 #define TME_STD_HANDLE(hand) fileno(hand)
-#define TME_STD_THREAD_HANDLE(hand) fileno(hand)
-#define TME_STD_EVENT_HANDLE(hand) fileno(hand)
 typedef uintptr_t tme_event_t;
 typedef tme_event_t tme_thread_handle_t;
 #define tme_thread_fd(hand, flags) hand
@@ -338,22 +318,29 @@ typedef off_t tme_off_t;
 #define tme_thread_seek lseek
 #define tme_thread_open open
 #define tme_thread_close close
-#define tme_event_open open
-#define tme_event_close close
 #endif // !WIN32
 
-ssize_t tme_event_yield _TME_P((tme_event_t hand, void *data, size_t len, unsigned int rwflags, tme_mutex_t *mutex));
+int tme_event_yield _TME_P((tme_event_t hand, void *data, size_t len, unsigned int rwflags, tme_mutex_t *mutex));
 
-#define tme_thread_read(hand, buf, len, mutex) tme_event_yield(hand, buf, len, EVENT_READ, mutex)
-#define tme_thread_write(hand, buf, len, mutex) tme_event_yield(hand, buf, len, EVENT_WRITE, mutex)
+static _tme_inline
+int tme_thread_read(tme_thread_handle_t hand, void *data, size_t len, tme_mutex_t *mutex) {
+  tme_event_yield(TME_EVENT_HANDLE(hand), data, len, EVENT_READ, mutex);
+  return tme_read(hand, data, len);
+}
+
+static _tme_inline
+int tme_thread_write(tme_thread_handle_t hand, void *data, size_t len, tme_mutex_t *mutex) {
+  tme_event_yield(TME_EVENT_HANDLE(hand), data, len, EVENT_WRITE, mutex);
+  return tme_write(hand, data, len);
+}
 
 typedef union {
   tme_thread_threadid_t thread;
   tme_fiber_thread_t *fiber;
 } tme_threadid_t;
 
-static _tme_inline void
-tme_thread_create_named _TME_P((tme_threadid_t *thr, const char *name, tme_thread_t func, void *arg)) {
+static _tme_inline
+void tme_thread_create_named _TME_P((tme_threadid_t *thr, const char *name, tme_thread_t func, void *arg)) {
   if(thread_mode) 
     (thr)->thread = tme_thread_new(name,func,arg);
   else

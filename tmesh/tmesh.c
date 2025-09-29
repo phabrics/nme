@@ -463,13 +463,6 @@ _tmesh_th(int *interactive)
 			 sizeof(input->_tmesh_input_buffer)
 			 - input->_tmesh_input_buffer_head,
 			 NULL);
-    /*
-      (tme_read(TME_THREAD_HANDLE(input->_tmesh_input_handle),
-		input->_tmesh_input_buffer
-		+ input->_tmesh_input_buffer_head,
-		sizeof(input->_tmesh_input_buffer)
-		- input->_tmesh_input_buffer_head));
-    */
     /* if the read failed: */
     if (rc < 0) {
       fprintf(stderr, "%s(%d): %s\n",
@@ -498,7 +491,7 @@ _tmesh_th(int *interactive)
     input = io->tmesh_io_private;
 
     /* If return to console & running interactive, then put up the next prompt, else exit thread: */
-    if(input->_tmesh_input_handle == TME_STD_EVENT_HANDLE(stdin)) {
+    if(input->_tmesh_input_handle == TME_STD_HANDLE(stdin)) {
       if(!*interactive) break;
       printf("%s> ", argv0);
       fflush(stdout);
@@ -894,7 +887,7 @@ main(int argc, char **argv)
 
   /* create our stdin input buffer */
   input_stdin = tme_new0(struct _tmesh_input, 1);
-  input_stdin->_tmesh_input_handle = TME_STD_EVENT_HANDLE(stdin);
+  input_stdin->_tmesh_input_handle = TME_STD_HANDLE(stdin);
 
   input_stdin->_tmesh_input_buffer[sizeof(input_stdin->_tmesh_input_buffer) - 1] = '\0';
   
