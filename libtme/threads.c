@@ -488,7 +488,7 @@ tme_thread_handle_t tme_thread_open(const char *path, int flags) {
   return hand;
 }
 
-void tme_win32_close(tme_thread_handle_t hand) {
+void tme_thread_close(tme_thread_handle_t hand) {
   if (hand->handle != NULL)
     {
       dmsg (D_WIN32_IO_LOW, "Attempting CancelIO on TAP-Windows adapter");
@@ -534,7 +534,7 @@ int tme_read (tme_thread_handle_t hand, void *data, int len)
   struct buffer buf;
 
   if (hand == TME_STD_HANDLE(stdin)) {
-    ReadFile(hand->handle, buf, len, &rc, NULL);
+    ReadFile(hand->handle, data, len, &rc, NULL);
     if(!rc) rc=-1;
   }
   else {
@@ -550,7 +550,7 @@ int tme_write (tme_thread_handle_t hand, void *data, int len)
   struct buffer buf;
 
   if(hand == TME_STD_HANDLE(stdout) || hand == TME_STD_HANDLE(stderr)) {
-    WriteFile(hand->handle, buf, len, &rc, NULL);
+    WriteFile(hand->handle, data, len, &rc, NULL);
     if(!rc) rc=-1;
   } else {
     buf_set_read(&buf, data, len);
