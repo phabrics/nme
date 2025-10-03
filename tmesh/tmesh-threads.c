@@ -64,6 +64,8 @@ int tmesh_init(int mode) {
   tme_threads.tme_threads_delay = (mode) ? (TME_TIME_SET_SEC(10)) : (0);
   tme_threads_init(mode);
 
+  fprintf(stderr, "Using %s threads.\n", (mode) ? (TME_THREAD_TYPE) : "fiber");
+  
   /* Synchronization primitive provided to allow sequential
      execution of pre-thread initialization code. It is used
      as the condition to start all threads. */

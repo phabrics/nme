@@ -59,10 +59,10 @@ static int gtk_keymods[] = {
 #endif
 };
 
-#if GTK_MAJOR_VERSION == 4
-#define _tme_gtk_init gtk_init_check
-#else
-static gboolean _tme_gtk_init(void) {
+static bool
+_tme_gtk_display_init(struct tme_display *display) {
+#if GTK_MAJOR_VERSION == 3
+  GdkRectangle workarea;
   char **argv;
   char *argv_buffer[3];
   int argc;
@@ -75,16 +75,38 @@ static gboolean _tme_gtk_init(void) {
   argv[argc++] = "--gtk-debug=signals";
 #endif
   argv[argc] = NULL;
-  return gtk_init_check(&argc, &argv);
-}
 #endif
 
-static void
-_tme_gtk_display_bell(_tme_gtk_display *display) {
-  gdk_display_beep(display->tme_gdk_display);
+  if(!gtk_init_check(&argc, &argv)) return false;
+  
+  display->tme_gtk_application = gtk_application_new("org.phabrics.tme", G_APPLICATION_DEFAULT_FLAGS);
+  
+  display->tme_gdk_display = gdk_display_get_default();
+
+  display->tme_gdk_display_seat = gdk_display_get_default_seat(display->tme_gdk_display);
+
+  display->tme_gdk_display_cursor =
+#if GTK_MAJOR_VERSION == 4
+    // GDK_BLANK_CURSOR;
+    gdk_cursor_new_from_name("none", NULL);
+#elif GTK_MAJOR_VERSION == 3
+    gdk_cursor_new_for_display(display->tme_gdk_display, GDK_BLANK_CURSOR);
+
+  display->tme_gdk_display_monitor = gdk_display_get_primary_monitor(display->tme_gdk_display);
+
+  gdk_monitor_get_workarea(display->tme_gdk_display_monitor, &workarea);
+
+  if(GDK_IS_MONITOR(display->tme_gdk_display_monitor) &&
+     workarea.width &&
+     workarea.height) {
+    display->display.tme_screen_width = workarea.width;    
+    display->display.tme_screen_height = workarea.height;
+  }
+#endif
+  return true;
 }
 
-static int
+static bool
 _tme_gtk_display_update(struct tme_display *display) {
   int rc;
   
@@ -93,6 +115,11 @@ _tme_gtk_display_update(struct tme_display *display) {
   
   if(rc) rc = (gtk_window_list_toplevels() != NULL);
   return !rc;
+}
+
+static void
+_tme_gtk_display_bell(_tme_gtk_display *display) {
+  gdk_display_beep(display->tme_gdk_display);
 }
 
 #if GTK_MAJOR_VERSION == 3
@@ -540,17 +567,12 @@ _tme_display_menu_radio(_tme_gtk_screen *screen,
 /* the new GTK display function: */
 TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   _tme_gtk_display *display;
-#if GTK_MAJOR_VERSION == 3
-  GdkRectangle workarea;
-#endif
   int rc;
   
   /* GTK requires program to be running non-setuid */
 #ifdef HAVE_SETUID
   setuid(getuid());
 #endif
-  
-  if(rc = !_tme_gtk_init()) return rc;
   
   /* start our data structure: */
   display = tme_new0(_tme_gtk_display, 1);
@@ -565,44 +587,13 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   /* recover our data structure: */
   display = element->tme_element_private;
 
-  //  display->tme_gtk_application = gtk_application_new("org.phabrics.tme", G_APPLICATION_DEFAULT_FLAGS);
-  
-  display->tme_gdk_display = gdk_display_get_default();
-
-  display->tme_gdk_display_seat = gdk_display_get_default_seat(display->tme_gdk_display);
-
-  display->tme_gdk_display_cursor =
-#if GTK_MAJOR_VERSION == 4
-    // GDK_BLANK_CURSOR;
-    gdk_cursor_new_from_name("none", NULL);
-#elif GTK_MAJOR_VERSION == 3
-    gdk_cursor_new_for_display(display->tme_gdk_display, GDK_BLANK_CURSOR);
-
-  display->tme_gdk_display_monitor = gdk_display_get_primary_monitor(display->tme_gdk_display);
-
-  gdk_monitor_get_workarea(display->tme_gdk_display_monitor, &workarea);
-
-  if(GDK_IS_MONITOR(display->tme_gdk_display_monitor) &&
-     workarea.width &&
-     workarea.height) {
-    display->display.tme_screen_width = workarea.width;    
-    display->display.tme_screen_height = workarea.height;
-  }
-#endif
-
   /* set the display-specific functions: */
-  display->display.tme_display_bell = _tme_gtk_display_bell;
+  display->display.tme_display_init = _tme_gtk_display_init;
   display->display.tme_display_update = _tme_gtk_display_update;
-  display->display.tme_screen_add = _tme_gtk_screen_new;
+  display->display.tme_display_bell = _tme_gtk_display_bell;
   display->display.tme_screen_resize = _tme_gtk_screen_resize;
   display->display.tme_screen_redraw = _tme_gtk_screen_redraw;
+  display->display.tme_screen_add = _tme_gtk_screen_new;
 
-  /* setup the thread loop function: */
-  //tme_threads_init(NULL, gtk_main);
-
-  /* unlock mutex once gtk main thread is running: */
-  //  g_idle_add(_tme_gtk_screens_update, display);
-  //  tme_thread_create(&display->display.tme_display_thread, tme_display_th_update, display);
-  //  tme_mutex_unlock(&display->display.tme_display_mutex);
   return rc;
 }

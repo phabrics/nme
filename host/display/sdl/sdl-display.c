@@ -99,132 +99,38 @@ struct tme_sdl_screen {
 static int x,y;
 static int rightAltKeyDown, leftAltKeyDown;
 
-static void
-_tme_sdl_display_bell(struct tme_display *display) {
-  tme_beep();
-}
+static bool
+_tme_sdl_display_init(struct tme_display *display) {
+  bool rc; 
+  SDL_SetAppMetadata(PACKAGE_NAME, PACKAGE_VERSION, PACKAGE_URL);
+  
+#ifdef HAVE_SDL
+  rc = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE);
+#else
+  if((rc = SDL_InitSubSystem(SDL_INIT_VIDEO))) {
+    int i, num_displays = 0;
+    SDL_DisplayjID *displays = SDL_GetDisplays(&num_displays);
+    if (displays) {
+      for (i = 0; i < num_displays; ++i) {
+	SDL_DisplayID instance_id = displays[i];
+	const char *name = SDL_GetDisplayName(instance_id);
 
-/* switch to new framebuffer contents */
-static int _tme_sdl_screen_resize(struct tme_sdl_screen *screen)
-{
-  unsigned char *oldfb, *newfb;
-  struct tme_fb_connection *conn_fb = screen->screen.tme_screen_fb;
-  int width = conn_fb->tme_fb_connection_width;
-  int height = conn_fb->tme_fb_connection_height;
-  int depth = SDL_BITSPERPIXEL(SDL_PIXELFORMAT_RGBA32);
-  float scaleX, scaleY;
-  struct tme_display *display;
-#ifdef HAVE_SDL
-  SDL_PixelFormat *format;
-#else
-  SDL_PixelFormatDetails *format;
-#endif
-  
-  if (enableResizable)
-    screen->sdlFlags |= SDL_WINDOW_RESIZABLE;
-#ifdef HAVE_SDL
-  else
-    screen->sdlFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
-#endif
-  /* (re)create the surface used as the client's framebuffer */
-  if(screen->sdl)
-#ifdef HAVE_SDL
-    SDL_FreeSurface(screen->sdl);
-  screen->sdl = SDL_CreateRGBSurface(0,
-				     width,
-				     height,
-				     depth,
-				     0,0,0,0);
-#else
-  SDL_DestroySurface(screen->sdl);
-  screen->sdl=SDL_CreateSurface(width,
-				height,
-				SDL_PIXELFORMAT_ARGB8888);
-#endif  
-  
-  /* get the display: */
-  display = screen->screen.tme_screen_display;
-  if(!screen->sdl)
-        tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
-	    (&display->tme_display_element->tme_element_log_handle,
-	     _("resize: error creating surface: %s\n"), SDL_GetError()));
+	SDL_Log("Display %" SDL_PRIu32 ": %s", instance_id, name ? name : "Unknown");
+      }
+      SDL_free(displays);
+    }
 
-  /* update our framebuffer connection: */
-  conn_fb->tme_fb_connection_width = screen->sdl->pitch / (depth / 8);
-  conn_fb->tme_fb_connection_buffer = screen->sdl->pixels;
-  conn_fb->tme_fb_connection_buffsz = screen->sdl->pitch * height;   
-  conn_fb->tme_fb_connection_skipx = 0;
-  conn_fb->tme_fb_connection_scanline_pad = _tme_scanline_pad(screen->sdl->pitch);
-  conn_fb->tme_fb_connection_order = TME_ENDIAN_LITTLE;
-  conn_fb->tme_fb_connection_bits_per_pixel = depth;
-  conn_fb->tme_fb_connection_depth = 24;
-  conn_fb->tme_fb_connection_class = TME_FB_XLAT_CLASS_COLOR;
-#ifdef HAVE_SDL
-  format = screen->sdl->format;
-#else
-  format = SDL_GetPixelFormatDetails(screen->sdl->format);
-#endif
-  conn_fb->tme_fb_connection_mask_g = format->Gmask;
-  conn_fb->tme_fb_connection_mask_b = format->Bmask;
-  conn_fb->tme_fb_connection_mask_r = format->Rmask;
-  /* create or resize the window */
-  if(!screen->sdlWindow) {
-    screen->sdlWindow = SDL_CreateWindow(display->tme_display_title,
-#ifdef HAVE_SDL
-					 SDL_WINDOWPOS_UNDEFINED,
-					 SDL_WINDOWPOS_UNDEFINED,
-#endif
-					 width,
-					 height,
-					 screen->sdlFlags);
-    if(!screen->sdlWindow)
-          tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
-	    (&display->tme_display_element->tme_element_log_handle,
-	     _("resize: error creating window: %s\n"), SDL_GetError()));
-  } else {
-    SDL_SetWindowSize(screen->sdlWindow, width, height);
+    SDL_DisplayMode *mode = SDL_GetDesktopDisplayMode(SDL_GetPrimaryDisplay());
+    SDL_Log("Primary Display Desktop mode: %dx%d@%gx %gHz",
+	    mode->w, mode->h, mode->pixel_density, mode->refresh_rate);
+    display->tme_screen_width = mode->w;
+    display->tme_screen_height = mode->h;
   }
-  /* create the renderer if it does not already exist */
-  if(!screen->sdlRenderer) {
-#ifdef HAVE_SDL
-    screen->sdlRenderer = SDL_CreateRenderer(screen->sdlWindow, -1, 0);
-#else
-    screen->sdlRenderer = SDL_CreateRenderer(screen->sdlWindow, NULL);
 #endif
-    if(!screen->sdlRenderer)
-          tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
-	    (&display->tme_display_element->tme_element_log_handle,
-	     _("resize: error creating renderer: %s\n"), SDL_GetError()));
-#ifdef HAVE_SDL
-    SDL_SetRelativeMouseMode(true);
-#else
-    SDL_SetWindowRelativeMouseMode(screen->sdlWindow, true);
-#endif
-  }
-#ifdef HAVE_SDL
-  SDL_RenderSetLogicalSize(screen->sdlRenderer, width, height);  /* this is a departure from the SDL1.2-based version, but more in the sense of a VNC viewer in keeeping aspect ratio */
-  SDL_RenderGetScale(screen->sdlRenderer, &scaleX, &scaleY);
-#else
-  SDL_SetRenderLogicalPresentation(screen->sdlRenderer, width, height, SDL_LOGICAL_PRESENTATION_LETTERBOX);  /* this is a departure from the SDL1.2-based version, but more in the sense of a VNC viewer in keeeping aspect ratio */
-  SDL_GetRenderScale(screen->sdlRenderer, &scaleX, &scaleY);
-#endif
-  
-  tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
-	  (&display->tme_display_element->tme_element_log_handle,
-	   _("resize: renderer scale: %d %d\n"), width, height));
-  
-  /* (re)create the texture that sits in between the surface->pixels and the renderer */
-  if(screen->sdlTexture)
-    SDL_DestroyTexture(screen->sdlTexture);
-  screen->sdlTexture = SDL_CreateTexture(screen->sdlRenderer,
-					 SDL_PIXELFORMAT_ARGB8888,
-					 SDL_TEXTUREACCESS_STREAMING,
-					 width, height);
-  if(!screen->sdlTexture)
-        tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
-	    (&display->tme_display_element->tme_element_log_handle,
-	     _("resize: error creating texture: %s\n"), SDL_GetError()));
-  return TRUE;
+  atexit(SDL_Quit);
+  signal(SIGINT, exit);
+
+  return rc;
 }
 
 static tme_keyboard_keyval_t sdl_to_tme_keysym(SDL_Keycode sym) {
@@ -406,52 +312,17 @@ static tme_keyboard_keyval_t _tme_sdl_keyval_from_name(const char *name) {
 }
 #endif
 
-static void
-_tme_sdl_screen_redraw(struct tme_sdl_screen *screen, int x, int y, int w, int h)
-{
-  SDL_Surface *sdl = screen->sdl;
-  /* update texture from surface->pixels */
-  SDL_Rect r = {x,y,w,h};
-  struct tme_display *display = screen->screen.tme_screen_display;
-  
-  if(SDL_UpdateTexture(screen->sdlTexture, &r, sdl->pixels + y*sdl->pitch + x*4, sdl->pitch)
-#ifdef HAVE_SDL
-     < 0
-#else
-     == false
-#endif
-     )
-    tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
-	    (&display->tme_display_element->tme_element_log_handle,
-	     _("update: failed to update texture: %s\n"), SDL_GetError()));
-  /* copy texture to renderer and show */
-  if(SDL_RenderClear(screen->sdlRenderer)
-#ifdef HAVE_SDL
-     < 0
-#else
-     == false
-#endif
-     )
-    tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
-	    (&display->tme_display_element->tme_element_log_handle,
-	     _("update: failed to clear renderer: %s\n"), SDL_GetError()));
-#ifdef HAVE_SDL
-  if(SDL_RenderCopy(screen->sdlRenderer, screen->sdlTexture, NULL, NULL) < 0)
-#else
-  if(!SDL_RenderTexture(screen->sdlRenderer, screen->sdlTexture, NULL, NULL))
-#endif
-    tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
-	    (&display->tme_display_element->tme_element_log_handle,
-	     _("update: failed to copy texture to renderer: %s\n"), SDL_GetError()));
-  SDL_RenderPresent(screen->sdlRenderer);
-}
-static int
+static bool
 _tme_sdl_display_update(struct tme_display *display) {
   SDL_Event e;
   int keydown = 0;
+  bool rc = true;
+  
   if(SDL_PollEvent(&e)) {
-
     switch(e.type) {
+    case SDL_EVENT_QUIT:
+      rc = false;
+      break;
 #ifdef HAVE_SDL
     case SDL_WINDOWEVENT:
       switch (e.window.event) {
@@ -591,7 +462,176 @@ _tme_sdl_display_update(struct tme_display *display) {
 	       _("ignore SDL event: 0x%x\n"), e.type));
     }
   }
+  return rc;
+}
+
+static void
+_tme_sdl_display_bell(struct tme_display *display) {
+  tme_beep();
+}
+
+/* switch to new framebuffer contents */
+static int _tme_sdl_screen_resize(struct tme_sdl_screen *screen)
+{
+  unsigned char *oldfb, *newfb;
+  struct tme_fb_connection *conn_fb = screen->screen.tme_screen_fb;
+  int width = conn_fb->tme_fb_connection_width;
+  int height = conn_fb->tme_fb_connection_height;
+  int depth = SDL_BITSPERPIXEL(SDL_PIXELFORMAT_RGBA32);
+  float scaleX, scaleY;
+  struct tme_display *display;
+#ifdef HAVE_SDL
+  SDL_PixelFormat *format;
+#else
+  SDL_PixelFormatDetails *format;
+#endif
+  
+  if (enableResizable)
+    screen->sdlFlags |= SDL_WINDOW_RESIZABLE;
+#ifdef HAVE_SDL
+  else
+    screen->sdlFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+#endif
+  /* (re)create the surface used as the client's framebuffer */
+  if(screen->sdl)
+#ifdef HAVE_SDL
+    SDL_FreeSurface(screen->sdl);
+  screen->sdl = SDL_CreateRGBSurface(0,
+				     width,
+				     height,
+				     depth,
+				     0,0,0,0);
+#else
+  SDL_DestroySurface(screen->sdl);
+  screen->sdl=SDL_CreateSurface(width,
+				height,
+				SDL_PIXELFORMAT_ARGB8888);
+#endif  
+  
+  /* get the display: */
+  display = screen->screen.tme_screen_display;
+  if(!screen->sdl)
+        tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
+	    (&display->tme_display_element->tme_element_log_handle,
+	     _("resize: error creating surface: %s\n"), SDL_GetError()));
+
+  /* update our framebuffer connection: */
+  conn_fb->tme_fb_connection_width = screen->sdl->pitch / (depth / 8);
+  conn_fb->tme_fb_connection_buffer = screen->sdl->pixels;
+  conn_fb->tme_fb_connection_buffsz = screen->sdl->pitch * height;   
+  conn_fb->tme_fb_connection_skipx = 0;
+  conn_fb->tme_fb_connection_scanline_pad = _tme_scanline_pad(screen->sdl->pitch);
+  conn_fb->tme_fb_connection_order = TME_ENDIAN_LITTLE;
+  conn_fb->tme_fb_connection_bits_per_pixel = depth;
+  conn_fb->tme_fb_connection_depth = 24;
+  conn_fb->tme_fb_connection_class = TME_FB_XLAT_CLASS_COLOR;
+#ifdef HAVE_SDL
+  format = screen->sdl->format;
+#else
+  format = SDL_GetPixelFormatDetails(screen->sdl->format);
+#endif
+  conn_fb->tme_fb_connection_mask_g = format->Gmask;
+  conn_fb->tme_fb_connection_mask_b = format->Bmask;
+  conn_fb->tme_fb_connection_mask_r = format->Rmask;
+  /* create or resize the window */
+  if(!screen->sdlWindow) {
+    screen->sdlWindow = SDL_CreateWindow(display->tme_display_title,
+#ifdef HAVE_SDL
+					 SDL_WINDOWPOS_UNDEFINED,
+					 SDL_WINDOWPOS_UNDEFINED,
+#endif
+					 width,
+					 height,
+					 screen->sdlFlags);
+    if(!screen->sdlWindow)
+          tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
+	    (&display->tme_display_element->tme_element_log_handle,
+	     _("resize: error creating window: %s\n"), SDL_GetError()));
+  } else {
+    SDL_SetWindowSize(screen->sdlWindow, width, height);
+  }
+  
+  /* create the renderer if it does not already exist */
+  if(!screen->sdlRenderer) {
+#ifdef HAVE_SDL
+    screen->sdlRenderer = SDL_CreateRenderer(screen->sdlWindow, -1, 0);
+#else
+    screen->sdlRenderer = SDL_CreateRenderer(screen->sdlWindow, NULL);
+#endif
+    if(!screen->sdlRenderer)
+          tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
+	    (&display->tme_display_element->tme_element_log_handle,
+	     _("resize: error creating renderer: %s\n"), SDL_GetError()));
+#ifdef HAVE_SDL
+    SDL_SetRelativeMouseMode(true);
+#else
+    SDL_SetWindowRelativeMouseMode(screen->sdlWindow, true);
+#endif
+  }
+#ifdef HAVE_SDL
+  SDL_RenderSetLogicalSize(screen->sdlRenderer, width, height);  /* this is a departure from the SDL1.2-based version, but more in the sense of a VNC viewer in keeeping aspect ratio */
+  SDL_RenderGetScale(screen->sdlRenderer, &scaleX, &scaleY);
+#else
+  SDL_SetRenderLogicalPresentation(screen->sdlRenderer, width, height, SDL_LOGICAL_PRESENTATION_LETTERBOX);  /* this is a departure from the SDL1.2-based version, but more in the sense of a VNC viewer in keeeping aspect ratio */
+  SDL_GetRenderScale(screen->sdlRenderer, &scaleX, &scaleY);
+#endif
+  
+  tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
+	  (&display->tme_display_element->tme_element_log_handle,
+	   _("resize: renderer scale: %d %d\n"), width, height));
+  
+  /* (re)create the texture that sits in between the surface->pixels and the renderer */
+  if(screen->sdlTexture)
+    SDL_DestroyTexture(screen->sdlTexture);
+  screen->sdlTexture = SDL_CreateTexture(screen->sdlRenderer,
+					 SDL_PIXELFORMAT_ARGB8888,
+					 SDL_TEXTUREACCESS_STREAMING,
+					 width, height);
+  if(!screen->sdlTexture)
+        tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
+	    (&display->tme_display_element->tme_element_log_handle,
+	     _("resize: error creating texture: %s\n"), SDL_GetError()));
   return TRUE;
+}
+
+static void
+_tme_sdl_screen_redraw(struct tme_sdl_screen *screen, int x, int y, int w, int h)
+{
+  SDL_Surface *sdl = screen->sdl;
+  /* update texture from surface->pixels */
+  SDL_Rect r = {x,y,w,h};
+  struct tme_display *display = screen->screen.tme_screen_display;
+  
+  if(SDL_UpdateTexture(screen->sdlTexture, &r, sdl->pixels + y*sdl->pitch + x*4, sdl->pitch)
+#ifdef HAVE_SDL
+     < 0
+#else
+     == false
+#endif
+     )
+    tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
+	    (&display->tme_display_element->tme_element_log_handle,
+	     _("update: failed to update texture: %s\n"), SDL_GetError()));
+  /* copy texture to renderer and show */
+  if(SDL_RenderClear(screen->sdlRenderer)
+#ifdef HAVE_SDL
+     < 0
+#else
+     == false
+#endif
+     )
+    tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
+	    (&display->tme_display_element->tme_element_log_handle,
+	     _("update: failed to clear renderer: %s\n"), SDL_GetError()));
+#ifdef HAVE_SDL
+  if(SDL_RenderCopy(screen->sdlRenderer, screen->sdlTexture, NULL, NULL) < 0)
+#else
+  if(!SDL_RenderTexture(screen->sdlRenderer, screen->sdlTexture, NULL, NULL))
+#endif
+    tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
+	    (&display->tme_display_element->tme_element_log_handle,
+	     _("update: failed to copy texture to renderer: %s\n"), SDL_GetError()));
+  SDL_RenderPresent(screen->sdlRenderer);
 }
 
 /* the new SDL display function: */
@@ -620,21 +660,13 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_sdl,display) {
   /* recover our data structure: */
   display = element->tme_element_private;
 
-  SDL_Init(SDL_INIT_VIDEO
-#ifdef HAVE_SDL
-	   | SDL_INIT_NOPARACHUTE
-#endif
-	   );
-  atexit(SDL_Quit);
-  signal(SIGINT, exit);
-
   /* set the display-specific functions: */
-  display->tme_display_bell = _tme_sdl_display_bell;
+  display->tme_display_init = _tme_sdl_display_init;
   display->tme_display_update = _tme_sdl_display_update;
-  display->tme_screen_add = (void *)sizeof(struct tme_sdl_screen);
+  display->tme_display_bell = _tme_sdl_display_bell;
   display->tme_screen_resize = _tme_sdl_screen_resize;
   display->tme_screen_redraw = _tme_sdl_screen_redraw;
-  //  tme_thread_create(&display->tme_display_thread, tme_display_th_update, display);  
-  //  tme_mutex_unlock(&display->tme_display_mutex);
+  display->tme_screen_add = (void *)sizeof(struct tme_sdl_screen);
+
   return (TME_OK);
 }

@@ -257,15 +257,18 @@ _tme_thret
 tme_display_th_update(void *disp)
 {
   struct tme_display *display;
+  bool rc;
   
   display = (struct tme_display *)disp;
   tme_thread_enter(NULL);
 
-  for(;;) {
-    tme_display_update(disp);
+  rc = (*display->tme_display_init)(display);
+  
+  for(rc &&= tme_display_update(disp);
+      rc;
+      rc = tme_display_update(disp))
     tme_thread_sleep_yield(TME_TIME_SET_USEC(16667), NULL);
-  }
-
+  
   /* NOTREACHED */
   tme_thread_exit(NULL);
 }

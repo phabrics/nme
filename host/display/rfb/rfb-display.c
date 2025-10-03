@@ -58,34 +58,79 @@ static int _tme_sdl_keymods[] = {
 #endif
 
 static const int bpp=4;
+static void *data;
+
+static void _tme_rfb_clientgone(rfbClientPtr cl)
+{
+  cl->clientData = NULL;
+}
+
+static enum rfbNewClientAction _tme_rfb_newclient(rfbClientPtr cl)
+{
+  cl->clientData = data;
+  cl->clientGoneHook = _tme_rfb_clientgone;
+  return RFB_CLIENT_ACCEPT;
+}
+
+static void _tme_mouse_ev(int buttons, int x, int y, rfbClientPtr cl) { 
+  struct tme_display *display = cl->clientData;
+
+  /* make the buttons mask: */
+  display->tme_screen_mouse_buttons_last = buttons;
+  _tme_mouse_event(0,x,y,display);
+}
+
+static void _tme_keyboard_key_ev(int down, tme_keyboard_keyval_t key, rfbClientPtr cl) {
+  _tme_keyboard_key_event(down, key, cl->clientData);
+}
 
 /* TODO: odd maxx doesn't work (vncviewer bug) */
 
-static void
-_tme_rfb_display_bell(struct tme_display *display) {
-  rfbSendBell(display->tme_screen_data);
+static bool
+_tme_rfb_display_init(struct tme_display *display) {
+  rfbScreenInfoPtr server;
+
+  data = display;
+  
+  /* allocate initial screen structure of the given size: */
+  //  rfbProcessSizeArguments(&maxx, &maxy, &bpp, &arg_i, args);
+  server=rfbGetScreen(&arg_i,args,
+		      display->tme_screen_width,
+		      display->tme_screen_height,
+		      8,3,bpp);
+  if(!server)
+    return false;
+
+  server->frameBuffer = (char*)tme_malloc(display->tme_screen_width *
+					  display->tme_screen_height *
+					  bpp);
+  server->alwaysShared = TRUE;
+  server->ptrAddEvent = _tme_mouse_ev;
+  server->kbdAddEvent = _tme_keyboard_key_ev;
+  server->newClientHook = _tme_rfb_newclient;
+  //  server->httpDir = "../webclients";
+  //  server->httpEnableProxyConnect = TRUE;
+  rfbInitServer(server);
+  
+  display->tme_screen_data = server;
+  return true;
 }
 
-static int
+static bool
 _tme_rfb_display_update(struct tme_display *display) {
   long usec;
   rfbScreenInfoPtr server = display->tme_screen_data;
   
-  if(!rfbIsActive(server)) return 1;
+  if(!rfbIsActive(server)) return false;
 
   usec = server->deferUpdateTime*1000;
   rfbProcessEvents(server, usec);
-  return TME_OK;
+  return true;
 }
 
-/* this is called before the screen's display is updated: */
 static void
-_tme_rfb_screen_redraw(struct tme_screen *screen, int x, int y, int w, int h)
-{
-  rfbScreenInfoPtr server = screen->tme_screen_display->tme_screen_data;
-  
-  if((char *)screen->tme_screen_fb->tme_fb_connection_buffer == server->frameBuffer)
-    rfbMarkRectAsModified(server, x, y, w, h);
+_tme_rfb_display_bell(struct tme_display *display) {
+  rfbSendBell(display->tme_screen_data);
 }
 
 /* switch to new framebuffer contents */
@@ -107,6 +152,16 @@ static void _tme_rfb_screen_resize(struct tme_screen *screen)
   free(conn_fb->tme_fb_connection_buffer);
   conn_fb->tme_fb_connection_buffer = newfb;  
   /*** FIXME: Re-install cursor. ***/
+}
+
+/* this is called before the screen's display is updated: */
+static void
+_tme_rfb_screen_redraw(struct tme_screen *screen, int x, int y, int w, int h)
+{
+  rfbScreenInfoPtr server = screen->tme_screen_display->tme_screen_data;
+  
+  if((char *)screen->tme_screen_fb->tme_fb_connection_buffer == server->frameBuffer)
+    rfbMarkRectAsModified(server, x, y, w, h);
 }
 
 /* this makes a new screen: */
@@ -137,32 +192,6 @@ _tme_rfb_screen_new(struct tme_display *display,
   
   /* We've handled the configure event, no need for further processing. */
   return (screen);
-}
-
-static struct tme_display *display;
-
-static void _tme_rfb_clientgone(rfbClientPtr cl)
-{
-  cl->clientData = NULL;
-}
-
-static enum rfbNewClientAction _tme_rfb_newclient(rfbClientPtr cl)
-{
-  cl->clientData = display;
-  cl->clientGoneHook = _tme_rfb_clientgone;
-  return RFB_CLIENT_ACCEPT;
-}
-
-static void _tme_mouse_ev(int buttons, int x, int y, rfbClientPtr cl) { 
-  struct tme_display *display = cl->clientData;
-
-  /* make the buttons mask: */
-  display->tme_screen_mouse_buttons_last = buttons;
-  _tme_mouse_event(0,x,y,display);
-}
-
-static void _tme_keyboard_key_ev(int down, tme_keyboard_keyval_t key, rfbClientPtr cl) {
-  _tme_keyboard_key_event(down, key, cl->clientData);
 }
 
 #ifndef _TME_HAVE_GTK
@@ -333,7 +362,6 @@ static tme_keyboard_keyval_t _tme_sdl_keyval_from_name(const char *name) {
 
 /* the new RFB display function: */
 TME_ELEMENT_SUB_NEW_DECL(tme_host_rfb,display) {
-  rfbScreenInfoPtr server;
   int arg_i = 0;
 
   while(args[++arg_i] != NULL);
@@ -361,34 +389,13 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_rfb,display) {
   /* recover our data structure: */
   display = element->tme_element_private;
 
-  /* allocate initial screen structure of the given size: */
-  //  rfbProcessSizeArguments(&maxx, &maxy, &bpp, &arg_i, args);
-  server=rfbGetScreen(&arg_i,args,
-		      display->tme_screen_width,
-		      display->tme_screen_height,
-		      8,3,bpp);
-  if(!server)
-    return 1;
-  server->frameBuffer = (char*)tme_malloc(display->tme_screen_width *
-					  display->tme_screen_height *
-					  bpp);
-  server->alwaysShared = TRUE;
-  server->ptrAddEvent = _tme_mouse_ev;
-  server->kbdAddEvent = _tme_keyboard_key_ev;
-  server->newClientHook = _tme_rfb_newclient;
-  //  server->httpDir = "../webclients";
-  //  server->httpEnableProxyConnect = TRUE;
-  rfbInitServer(server);
-  
-  display->tme_screen_data = server;
-
   /* set the display-specific functions: */
-  display->tme_display_bell = _tme_rfb_display_bell;
+  display->tme_display_init = _tme_rfb_display_init;
   display->tme_display_update = _tme_rfb_display_update;
-  display->tme_screen_add = _tme_rfb_screen_new;
+  display->tme_display_bell = _tme_rfb_display_bell;
   display->tme_screen_resize = _tme_rfb_screen_resize;
   display->tme_screen_redraw = _tme_rfb_screen_redraw;
-  //  tme_thread_create(&display->tme_display_thread, tme_display_th_update, display);
-  //  tme_mutex_unlock(&display->tme_display_mutex);
+  display->tme_screen_add = _tme_rfb_screen_new;
+
   return (TME_OK);
 }

@@ -176,12 +176,13 @@ struct tme_display {
   tme_keyboard_keyval_t tme_display_key_void_symbol;
   
   /* implementation-specific callback functions: */
-  int (*tme_display_bell) _TME_P((struct tme_display *));
-  int (*tme_display_update) _TME_P((struct tme_display *));
-  struct tme_screen *(*tme_screen_add) _TME_P((struct tme_display *, struct tme_connection *));
+  bool (*tme_display_init) _TME_P((struct tme_display *));
+  bool (*tme_display_update) _TME_P((struct tme_display *));
+  void (*tme_display_bell) _TME_P((struct tme_display *));
   int (*tme_screen_resize) _TME_P((struct tme_screen *));
   int (*tme_screen_redraw) _TME_P((struct tme_screen *, int x, int y, int w, int h));
   int (*tme_screen_update) _TME_P((struct tme_screen *));
+  struct tme_screen *(*tme_screen_add) _TME_P((struct tme_display *, struct tme_connection *));
 };
 
 /* prototypes: */
