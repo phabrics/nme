@@ -60,7 +60,7 @@ static int gtk_keymods[] = {
 };
 
 static bool
-_tme_gtk_display_init(struct tme_display *display) {
+_tme_gtk_display_init(_tme_gtk_display *display) {
 #if GTK_MAJOR_VERSION == 3
   GdkRectangle workarea;
   char **argv;
@@ -79,7 +79,7 @@ _tme_gtk_display_init(struct tme_display *display) {
 
   if(!gtk_init_check(&argc, &argv)) return false;
   
-  display->tme_gtk_application = gtk_application_new("org.phabrics.tme", G_APPLICATION_DEFAULT_FLAGS);
+  //  display->tme_gtk_application = gtk_application_new("org.phabrics.tme", G_APPLICATION_DEFAULT_FLAGS);
   
   display->tme_gdk_display = gdk_display_get_default();
 
@@ -566,7 +566,7 @@ _tme_display_menu_radio(_tme_gtk_screen *screen,
 
 /* the new GTK display function: */
 TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
-  _tme_gtk_display *display;
+  struct tme_display *display;
   int rc;
   
   /* GTK requires program to be running non-setuid */
@@ -576,24 +576,24 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   
   /* start our data structure: */
   display = tme_new0(_tme_gtk_display, 1);
-  display->display.tme_display_keymods = gtk_keymods;
-  display->display.tme_display_keyval_name = gdk_keyval_name;
-  display->display.tme_display_keyval_from_name = gdk_keyval_from_name;
-  display->display.tme_display_keyval_convert_case = gdk_keyval_convert_case;
-  display->display.tme_display_key_void_symbol = GDK_KEY_VoidSymbol;
-  display->display.tme_display_mouse_warp = TRUE;
+  display->tme_display_keymods = gtk_keymods;
+  display->tme_display_keyval_name = gdk_keyval_name;
+  display->tme_display_keyval_from_name = gdk_keyval_from_name;
+  display->tme_display_keyval_convert_case = gdk_keyval_convert_case;
+  display->tme_display_key_void_symbol = GDK_KEY_VoidSymbol;
+  display->tme_display_mouse_warp = TRUE;
   tme_display_init(element, display);
 
   /* recover our data structure: */
   display = element->tme_element_private;
 
   /* set the display-specific functions: */
-  display->display.tme_display_init = _tme_gtk_display_init;
-  display->display.tme_display_update = _tme_gtk_display_update;
-  display->display.tme_display_bell = _tme_gtk_display_bell;
-  display->display.tme_screen_resize = _tme_gtk_screen_resize;
-  display->display.tme_screen_redraw = _tme_gtk_screen_redraw;
-  display->display.tme_screen_add = _tme_gtk_screen_new;
+  display->tme_display_init = _tme_gtk_display_init;
+  display->tme_display_update = _tme_gtk_display_update;
+  display->tme_display_bell = _tme_gtk_display_bell;
+  display->tme_screen_resize = _tme_gtk_screen_resize;
+  display->tme_screen_redraw = _tme_gtk_screen_redraw;
+  display->tme_screen_add = _tme_gtk_screen_new;
 
   return rc;
 }

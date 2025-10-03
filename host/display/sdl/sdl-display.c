@@ -102,11 +102,11 @@ static int rightAltKeyDown, leftAltKeyDown;
 static bool
 _tme_sdl_display_init(struct tme_display *display) {
   bool rc; 
-  SDL_SetAppMetadata(PACKAGE_NAME, PACKAGE_VERSION, PACKAGE_URL);
   
 #ifdef HAVE_SDL
-  rc = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE);
+  rc = (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE)) ? (false) : (true);
 #else
+  SDL_SetAppMetadata(PACKAGE_NAME, PACKAGE_VERSION, PACKAGE_URL);
   if((rc = SDL_InitSubSystem(SDL_INIT_VIDEO))) {
     int i, num_displays = 0;
     SDL_DisplayjID *displays = SDL_GetDisplays(&num_displays);
@@ -320,14 +320,14 @@ _tme_sdl_display_update(struct tme_display *display) {
   
   if(SDL_PollEvent(&e)) {
     switch(e.type) {
-    case SDL_EVENT_QUIT:
-      rc = false;
-      break;
 #ifdef HAVE_SDL
     case SDL_WINDOWEVENT:
       switch (e.window.event) {
       case SDL_WINDOWEVENT_FOCUS_LOST:
 #else
+    case SDL_EVENT_QUIT:
+      rc = false;
+      break;
       case SDL_EVENT_WINDOW_FOCUS_LOST:
 #endif
       

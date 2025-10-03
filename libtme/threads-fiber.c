@@ -829,7 +829,7 @@ tme_fiber_yield(void)
       tme_fiber_event_ctl(es2,
 			  es->events[i].event,
 			  es->events[i].flags,
-			  (void *)j);			      
+			  (void *)(uintptr_t)j);			      
       if(changed) {
 	tme_fiber_main_events->events[j].flags |= es->events[i].flags;
 	event_ctl(tme_fiber_main_events->es,

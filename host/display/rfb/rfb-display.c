@@ -94,7 +94,7 @@ _tme_rfb_display_init(struct tme_display *display) {
   
   /* allocate initial screen structure of the given size: */
   //  rfbProcessSizeArguments(&maxx, &maxy, &bpp, &arg_i, args);
-  server=rfbGetScreen(&arg_i,args,
+  server=rfbGetScreen(NULL,NULL,
 		      display->tme_screen_width,
 		      display->tme_screen_height,
 		      8,3,bpp);
@@ -362,6 +362,7 @@ static tme_keyboard_keyval_t _tme_sdl_keyval_from_name(const char *name) {
 
 /* the new RFB display function: */
 TME_ELEMENT_SUB_NEW_DECL(tme_host_rfb,display) {
+  struct tme_display *display;
   int arg_i = 0;
 
   while(args[++arg_i] != NULL);
