@@ -109,7 +109,7 @@ _tme_sdl_display_init(struct tme_display *display) {
   SDL_SetAppMetadata(PACKAGE_NAME, PACKAGE_VERSION, PACKAGE_URL);
   if((rc = SDL_InitSubSystem(SDL_INIT_VIDEO))) {
     int i, num_displays = 0;
-    SDL_DisplayjID *displays = SDL_GetDisplays(&num_displays);
+    SDL_DisplayID *displays = SDL_GetDisplays(&num_displays);
     if (displays) {
       for (i = 0; i < num_displays; ++i) {
 	SDL_DisplayID instance_id = displays[i];
@@ -655,11 +655,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_sdl,display) {
   display->tme_display_key_void_symbol = SDLK_UNKNOWN;
 #endif
   display->tme_display_keymods = _tme_sdl_keymods;
-  tme_display_init(element, display);
-
-  /* recover our data structure: */
-  display = element->tme_element_private;
-
   /* set the display-specific functions: */
   display->tme_display_init = _tme_sdl_display_init;
   display->tme_display_update = _tme_sdl_display_update;
@@ -667,6 +662,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_sdl,display) {
   display->tme_screen_resize = _tme_sdl_screen_resize;
   display->tme_screen_redraw = _tme_sdl_screen_redraw;
   display->tme_screen_add = (void *)sizeof(struct tme_sdl_screen);
+  tme_display_init(element, display);
 
   return (TME_OK);
 }

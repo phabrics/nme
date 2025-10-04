@@ -334,6 +334,9 @@ int tme_thread_write(tme_thread_handle_t hand, void *data, size_t len, tme_mutex
   return tme_write(hand, data, len);
 }
 
+#define tme_tun_set(tt,es,flags,arg,per) ((thread_mode) ? (tun_set(tt,es,flags,arg,per)) : (tme_fiber_tun_set(tt,es,flags,arg,per)))
+#define tme_socket_set(s,es,flags,arg,per) ((thread_mode) ? (socket_set(s,es,flags,arg,per)) : (tme_fiber_socket_set(s,es,flags,arg,per)))
+
 typedef union {
   tme_thread_threadid_t thread;
   tme_fiber_thread_t *fiber;

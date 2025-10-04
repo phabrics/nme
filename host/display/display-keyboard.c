@@ -131,10 +131,10 @@ _tme_keyboard_disp_new(struct tme_display *display)
 	  /* if there is a keycode associated with this keysym,
 	     remove it if it's different from this keycode: */
 	  if (tme_hash_lookup(display->tme_display_keyboard_keysym_to_keycode,
-			      (tme_hash_data_t) keysym)
+			      (tme_hash_data_t)(uintptr_t) keysym)
 	      != tme_keyboard_hash_data_from_keyval((tme_uint32_t) keycode)) {
 	    tme_hash_remove(display->tme_display_keyboard_keysym_to_keycode,
-			    (tme_hash_data_t) keysym);
+			    (tme_hash_data_t)(uintptr_t) keysym);
 	  }
 
 	  continue;
@@ -196,7 +196,7 @@ _tme_keyboard_disp_new(struct tme_display *display)
 			(tme_hash_data_t) string,
 			(tme_hash_data_t) _keysym);
 	tme_hash_insert(display->tme_display_keyboard_keysym_to_keycode,
-			(tme_hash_data_t) keysym,
+			(tme_hash_data_t)(uintptr_t) keysym,
 			tme_keyboard_hash_data_from_keyval((tme_uint32_t) keycode));
       }
     }

@@ -86,13 +86,12 @@ static int _tme_openvpn_tun_write(void *data) {
 
 static int _tme_openvpn_tun_read(void *data) {
   unsigned int flags;
-  struct event_set *es;
   struct event_set_return esr;
   tme_openvpn_tun *tun = data;
   int status = 1;
-  tme_event_set_t *event_set = tme_event_set_init(&status, EVENT_METHOD_FAST);
+  tme_event_set_t *es = tme_event_set_init(&status, EVENT_METHOD_FAST);
 
-  tme_event_reset(event_set);
+  tme_event_reset(es);
     
   flags = EVENT_READ;
     
@@ -100,19 +99,10 @@ static int _tme_openvpn_tun_read(void *data) {
   tun_show_debug(tun->tt);
 #endif
 
-  es = (tme_event_ctl != event_ctl) ?
-    (*(struct event_set **)(event_set)) : (event_set);
-
-  tun_set(tun->tt, es, flags, (void*)0, NULL);
-
-  if(es != event_set) {
-    (*(struct event_set **)(event_set)) = NULL;
-    tme_event_ctl(event_set, tun_event_handle(tun->tt), flags, 0);
-    (*(struct event_set **)(event_set)) = es;
-  }
+  tme_tun_set(tun->tt, es, flags, (void*)0, NULL);
     
-  status = tme_event_wait(event_set, NULL, &esr, flags, &tun->eth->tme_eth_mutex);
-  tme_event_free(event_set);
+  status = tme_event_wait(es, NULL, &esr, flags, &tun->eth->tme_eth_mutex);
+  tme_event_free(es);
 
   check_status (status, "event_wait", NULL, NULL);
   if(status<=0) return status;

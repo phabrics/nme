@@ -84,40 +84,31 @@ static int _tme_openvpn_sock_write(void *data) {
 
 static int _tme_openvpn_sock_read(void *data) {
   unsigned int flags;
-  struct event_set *es;
   struct event_set_return esr;
   tme_openvpn_sock *sock = data;
   struct link_socket_actual from;               /* address of incoming datagram */
   int status = 1;
-  tme_event_set_t *event_set;
+  tme_event_set_t *es;
   
   if(socket_read_residual(sock->ls))
     esr.rwflags = EVENT_READ;
   else {
-    event_set = tme_event_set_init(&status, EVENT_METHOD_FAST);
+    es = tme_event_set_init(&status, EVENT_METHOD_FAST);
   
-    tme_event_reset(event_set);
+    tme_event_reset(es);
   
     /*
      * On win32 we use the keyboard or an event object as a source
      * of asynchronous signals.
      */
-    //    wait_signal(event_set, (void*)&err_shift);
+    //    wait_signal(es, (void*)&err_shift);
   
     flags = EVENT_READ;
   
-    es = (tme_event_ctl != event_ctl) ?
-      (*(struct event_set **)(event_set)) : (event_set);
+    tme_socket_set(sock->ls, es, flags, (void*)0, NULL);
 
-    socket_set(sock->ls, es, flags, (void*)0, NULL);
-
-    if(es != event_set) {
-      (*(struct event_set **)(event_set)) = NULL;
-      tme_event_ctl(event_set, socket_event_handle(sock->ls), flags, 0);
-      (*(struct event_set **)(event_set)) = es;
-    }
-    status = tme_event_wait(event_set, NULL, &esr, flags, &sock->eth->tme_eth_mutex);
-    tme_event_free(event_set);
+    status = tme_event_wait(es, NULL, &esr, flags, &sock->eth->tme_eth_mutex);
+    tme_event_free(es);
     if(status<0) return status;
   }
     

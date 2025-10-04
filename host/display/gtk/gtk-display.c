@@ -61,7 +61,11 @@ static int gtk_keymods[] = {
 
 static bool
 _tme_gtk_display_init(_tme_gtk_display *display) {
-#if GTK_MAJOR_VERSION == 3
+  int rc;
+  
+#if GTK_MAJOR_VERSION == 4
+  rc = gtk_init_check();
+#elif GTK_MAJOR_VERSION == 3
   GdkRectangle workarea;
   char **argv;
   char *argv_buffer[3];
@@ -75,9 +79,10 @@ _tme_gtk_display_init(_tme_gtk_display *display) {
   argv[argc++] = "--gtk-debug=signals";
 #endif
   argv[argc] = NULL;
+  rc = gtk_init_check(&argc, &argv);
 #endif
 
-  if(!gtk_init_check(&argc, &argv)) return false;
+  if(!rc) return false;
   
   //  display->tme_gtk_application = gtk_application_new("org.phabrics.tme", G_APPLICATION_DEFAULT_FLAGS);
   
@@ -87,10 +92,10 @@ _tme_gtk_display_init(_tme_gtk_display *display) {
 
   display->tme_gdk_display_cursor =
 #if GTK_MAJOR_VERSION == 4
-    // GDK_BLANK_CURSOR;
-    gdk_cursor_new_from_name("none", NULL);
+  // GDK_BLANK_CURSOR;
+  gdk_cursor_new_from_name("none", NULL);
 #elif GTK_MAJOR_VERSION == 3
-    gdk_cursor_new_for_display(display->tme_gdk_display, GDK_BLANK_CURSOR);
+  gdk_cursor_new_for_display(display->tme_gdk_display, GDK_BLANK_CURSOR);
 
   display->tme_gdk_display_monitor = gdk_display_get_primary_monitor(display->tme_gdk_display);
 
@@ -582,11 +587,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   display->tme_display_keyval_convert_case = gdk_keyval_convert_case;
   display->tme_display_key_void_symbol = GDK_KEY_VoidSymbol;
   display->tme_display_mouse_warp = TRUE;
-  tme_display_init(element, display);
-
-  /* recover our data structure: */
-  display = element->tme_element_private;
-
   /* set the display-specific functions: */
   display->tme_display_init = _tme_gtk_display_init;
   display->tme_display_update = _tme_gtk_display_update;
@@ -594,6 +594,10 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   display->tme_screen_resize = _tme_gtk_screen_resize;
   display->tme_screen_redraw = _tme_gtk_screen_redraw;
   display->tme_screen_add = _tme_gtk_screen_new;
+  tme_display_init(element, display);
+
+  /* recover our data structure: */
+  display = element->tme_element_private;
 
   return rc;
 }

@@ -384,12 +384,6 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_rfb,display) {
 
   display->tme_display_mouse_warp = TRUE;
   
-  /* start our data structure: */
-  tme_display_init(element, display);
-
-  /* recover our data structure: */
-  display = element->tme_element_private;
-
   /* set the display-specific functions: */
   display->tme_display_init = _tme_rfb_display_init;
   display->tme_display_update = _tme_rfb_display_update;
@@ -397,6 +391,9 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_rfb,display) {
   display->tme_screen_resize = _tme_rfb_screen_resize;
   display->tme_screen_redraw = _tme_rfb_screen_redraw;
   display->tme_screen_add = _tme_rfb_screen_new;
+
+  /* start our data structure: */
+  tme_display_init(element, display);
 
   return (TME_OK);
 }

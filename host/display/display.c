@@ -703,7 +703,8 @@ int tme_display_init(struct tme_element *element,
   /* default display values: */
   display->tme_screen_width = 1920;
   display->tme_screen_height = 1080;
-  display->tme_screen_add = (void *)sizeof(struct tme_screen);
+  if(!display->tme_screen_add)
+    display->tme_screen_add = (void *)sizeof(struct tme_screen);
   
   /* start the threads: */
   tme_mutex_init(&display->tme_display_mutex);

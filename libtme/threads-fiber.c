@@ -719,6 +719,38 @@ tme_fiber_event_wait(struct tme_fiber_event_set *es, const struct timeval *timeo
   return event_wait(es->es, &timeout_out, out, outlen);
 }
 
+unsigned int
+tme_fiber_tun_set (struct tuntap *tt,
+		   struct tme_fiber_event_set *es,
+		   unsigned int rwflags,
+		   void *arg,
+		   unsigned int *persistent)
+{
+  struct event_set *_es = es->es;
+  unsigned int rc = tun_set(tt, _es, rwflags, (void*)0, NULL);
+
+  es->es = 0;
+  tme_fiber_event_ctl(es, tun_event_handle(tt), rwflags, 0);
+  es->es = _es;
+  return rc;
+}
+
+unsigned int
+tme_fiber_socket_set (struct link_socket *s,
+		      struct tme_fiber_event_set *es,
+		      unsigned int rwflags,
+		      void *arg,
+		      unsigned int *persistent)
+{
+  struct event_set *_es = es->es;
+  unsigned int rc = socket_set(s, _es, rwflags, (void*)0, NULL);
+
+  es->es = 0;
+  tme_fiber_event_ctl(es, socket_event_handle(s), rwflags, 0);
+  es->es = _es;
+  return rc;
+}
+
 /* this initializes the threads system: */
 void
 tme_fiber_threads_init()
