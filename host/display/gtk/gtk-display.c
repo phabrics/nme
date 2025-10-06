@@ -179,7 +179,8 @@ _tme_screen_format_set(_tme_gtk_screen *screen,
 		       cairo_format_t format)
 {
   screen->tme_gtk_screen_format = format;
-  _tme_screen_configure(screen);
+  screen->tme_screen_fb_xlat = NULL;  
+  //  _tme_screen_configure(screen);
 }
 
 /* this sets the screen format to that indicated by the Format menu: */
@@ -399,12 +400,11 @@ _tme_gtk_screen_close(_tme_gtk_screen *screen)
     cairo_surface_destroy (screen->tme_gtk_screen_surface);
 }
 
-/* this makes a new screen: */
-_tme_gtk_screen *
-_tme_gtk_screen_new(_tme_gtk_display *display,
-		    struct tme_connection *conn)
+/* this initializes a new screen: */
+static void
+_tme_gtk_screen_init(_tme_gtk_screen *screen)
 {
-  _tme_gtk_screen *screen;
+  _tme_gtk_display *display;  
   GtkWidget *vbox;
 #if GTK_MAJOR_VERSION == 3
   GtkWidget *menu_bar;
@@ -412,8 +412,9 @@ _tme_gtk_screen_new(_tme_gtk_display *display,
   GtkWidget *submenu;
   GtkWidget *menu_item;
 #endif
-  
-  screen = tme_screen_new(display, _tme_gtk_screen, conn);
+
+  /* get the display: */
+  display = screen->screen.tme_screen_display;
 
   /* create the header bar: */
   screen->tme_gtk_screen_header = gtk_header_bar_new();
@@ -529,8 +530,6 @@ _tme_gtk_screen_new(_tme_gtk_display *display,
 #endif
   /* lock our mutex: */
   tme_mutex_lock(&display->display.tme_display_mutex);
-
-  return (screen);
 }
 
 #if GTK_MAJOR_VERSION == 3
@@ -593,7 +592,8 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   display->tme_display_bell = _tme_gtk_display_bell;
   display->tme_screen_resize = _tme_gtk_screen_resize;
   display->tme_screen_redraw = _tme_gtk_screen_redraw;
-  display->tme_screen_add = _tme_gtk_screen_new;
+  display->tme_screen_init = _tme_gtk_screen_init;
+  display->tme_screen_size = sizeof(struct tme_gtk_screen);
   tme_display_init(element, display);
 
   /* recover our data structure: */

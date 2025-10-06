@@ -164,19 +164,16 @@ _tme_rfb_screen_redraw(struct tme_screen *screen, int x, int y, int w, int h)
     rfbMarkRectAsModified(server, x, y, w, h);
 }
 
-/* this makes a new screen: */
-struct tme_screen *
-_tme_rfb_screen_new(struct tme_display *display,
-		    struct tme_connection *conn)
+/* this initializes a new screen: */
+static void
+_tme_rfb_screen_init(struct tme_screen *screen)
 {
-  struct tme_screen *screen;
-  struct tme_fb_connection *conn_fb;
+  struct tme_display *display = screen->tme_screen_display;
+  struct tme_fb_connection *conn_fb = screen->tme_screen_fb;
   rfbScreenInfoPtr server = display->tme_screen_data;
   rfbPixelFormat* format=&server->serverFormat;
 
   server->desktopName = display->tme_display_title;
-
-  screen = tme_screen_new(display, struct tme_screen, conn);
 
   conn_fb = screen->tme_screen_fb;
 
@@ -190,8 +187,6 @@ _tme_rfb_screen_new(struct tme_display *display,
   conn_fb->tme_fb_connection_mask_b = format->blueMax << format->blueShift;
   conn_fb->tme_fb_connection_mask_r = format->redMax << format->redShift;
   
-  /* We've handled the configure event, no need for further processing. */
-  return (screen);
 }
 
 #ifndef _TME_HAVE_GTK
@@ -390,7 +385,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_rfb,display) {
   display->tme_display_bell = _tme_rfb_display_bell;
   display->tme_screen_resize = _tme_rfb_screen_resize;
   display->tme_screen_redraw = _tme_rfb_screen_redraw;
-  display->tme_screen_add = _tme_rfb_screen_new;
+  display->tme_screen_init = _tme_rfb_screen_init;
 
   /* start our data structure: */
   tme_display_init(element, display);

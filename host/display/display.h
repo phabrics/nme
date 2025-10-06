@@ -55,6 +55,7 @@
 #define TME_SCREEN_UPDATE_NONE                  (0)
 #define TME_SCREEN_UPDATE_REDRAW                (1)
 #define TME_SCREEN_UPDATE_RESIZE                (2)
+#define TME_SCREEN_UPDATE_INIT                  (3)
 #define TME_SCREEN_MAXSIZE                   (1024)
 /* types: */
 
@@ -154,6 +155,7 @@ struct tme_display {
   /* available screen dimensions: */
   int tme_screen_width;
   int tme_screen_height;
+  size_t tme_screen_size;
   
   /* screen mouse data: */
   int tme_screen_mouse_buttons_last,
@@ -179,10 +181,9 @@ struct tme_display {
   bool (*tme_display_init) _TME_P((struct tme_display *));
   bool (*tme_display_update) _TME_P((struct tme_display *));
   void (*tme_display_bell) _TME_P((struct tme_display *));
-  int (*tme_screen_resize) _TME_P((struct tme_screen *));
-  int (*tme_screen_redraw) _TME_P((struct tme_screen *, int x, int y, int w, int h));
-  int (*tme_screen_update) _TME_P((struct tme_screen *));
-  struct tme_screen *(*tme_screen_add) _TME_P((struct tme_display *, struct tme_connection *));
+  void (*tme_screen_resize) _TME_P((struct tme_screen *));
+  void (*tme_screen_redraw) _TME_P((struct tme_screen *, int x, int y, int w, int h));
+  void (*tme_screen_init) _TME_P((struct tme_screen *));
 };
 
 /* prototypes: */
@@ -200,9 +201,7 @@ _tme_scanline_pad(int bpl)
 }
 
 struct tme_screen *_tme_screen_add _TME_P((struct tme_display *,
-					   size_t,
 					   struct tme_connection *));
-#define tme_screen_new(display, screen, conn) ((screen *)_tme_screen_add(display,sizeof(screen),conn))
 void _tme_screen_scale_set _TME_P((struct tme_screen *screen,
 				   int scale_new));
 void _tme_screen_xlat_set _TME_P((struct tme_screen *screen));

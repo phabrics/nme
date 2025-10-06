@@ -37,6 +37,80 @@
 unsigned int _tme_scanline_pad(int bpl);
 #include "display.h"
 
+/* this is called for a configuration request: */
+static void
+_tme_screen_configure(struct tme_screen *screen)
+{
+  struct tme_display *display;
+  struct tme_fb_connection *conn_fb_other, *conn_fb;
+  unsigned long fb_area, percentage;
+  int width, height;
+  int height_extra, scale;
+
+  /* recover our data structures: */
+  display = screen->tme_screen_display;
+  conn_fb = screen->tme_screen_fb;
+  conn_fb_other = (struct tme_fb_connection *) conn_fb->tme_fb_connection.tme_connection_other;
+
+  /* if the user hasn't specified a scaling, pick one: */
+  scale = screen->tme_screen_fb_scale;
+  if (scale < 0) {
+
+    /* calulate the areas, in square pixels, of the emulated
+       framebuffer and the host's screen: */
+    fb_area = (conn_fb_other->tme_fb_connection_width
+	       * conn_fb_other->tme_fb_connection_height);
+
+    /* see what percentage of the host's screen would be taken up by
+       an unscaled emulated framebuffer: */
+    percentage = (fb_area * 100) /
+      ( display->tme_screen_width * screen-> tme_screen_scale *
+	display->tme_screen_height * screen-> tme_screen_scale );
+
+    /* if this is at least 70%, halve the emulated framebuffer, else
+       if this is 30% or less, double the emulated framebuffer: */
+    if (percentage >= 70) {
+      scale = TME_FB_XLAT_SCALE_HALF;
+    }
+    else if (percentage <= 30) {
+      scale = TME_FB_XLAT_SCALE_DOUBLE;
+    }
+    else {
+      scale = TME_FB_XLAT_SCALE_NONE;
+    }
+
+    screen->tme_screen_fb_scale = -scale;
+  }
+
+  /* get the required dimensions for the frame: */
+  width = ((conn_fb_other->tme_fb_connection_width
+	    * scale)
+	   / TME_FB_XLAT_SCALE_NONE);
+  height = ((conn_fb_other->tme_fb_connection_height
+	     * scale)
+	    / TME_FB_XLAT_SCALE_NONE);
+  /* NB: we need to allocate an extra scanline's worth (or, if we're
+     doubling, an extra two scanlines' worth) of image, because the
+     framebuffer translation functions can sometimes overtranslate
+     (see the explanation of TME_FB_XLAT_RUN in fb-xlat-auto.sh): */
+  height_extra
+    = (scale == TME_FB_XLAT_SCALE_DOUBLE
+       ? 2
+       : 1);
+  
+  height += height_extra;
+
+  /* set the size & translation function */
+  screen->tme_screen_fb_xlat = NULL;  
+  if(conn_fb->tme_fb_connection_width != width ||
+     conn_fb->tme_fb_connection_height != height) {
+    screen->tme_screen_update = TME_SCREEN_UPDATE_RESIZE;
+    conn_fb->tme_fb_connection_width = width;
+    conn_fb->tme_fb_connection_height = height;
+    conn_fb->tme_fb_connection_buffsz = 0;
+  }
+}
+
 static void
 _tme_screen_update(struct tme_screen *screen) {
   struct tme_fb_connection *conn_fb;
@@ -200,7 +274,7 @@ _tme_display_callout(struct tme_display *display,
 }
 
 /* this is the display main loop iteration function: */
-int
+static int
 tme_display_update(void *disp) {
   struct tme_display *display;
   struct tme_screen *screen;
@@ -229,20 +303,24 @@ tme_display_update(void *disp) {
     width = screen->tme_screen_fb->tme_fb_connection_width;
     height = screen->tme_screen_fb->tme_fb_connection_height;
     switch(screen->tme_screen_update) {
-    case TME_SCREEN_UPDATE_REDRAW:
-      if(display->tme_screen_redraw)
-	display->tme_screen_redraw(screen, 0, 0, width, height);
-      break;
+    case TME_SCREEN_UPDATE_INIT:
+      if(display->tme_screen_init) 
+	display->tme_screen_init(screen);
+      _tme_screen_configure(screen);
+      if(screen->tme_screen_update != TME_SCREEN_UPDATE_RESIZE)
+	break;
     case TME_SCREEN_UPDATE_RESIZE:
       if(display->tme_screen_resize)
 	display->tme_screen_resize(screen);
       break;
+    case TME_SCREEN_UPDATE_REDRAW:
+      if(display->tme_screen_redraw)
+	display->tme_screen_redraw(screen, 0, 0, width, height);
+      break;
     case TME_SCREEN_UPDATE_NONE:
       break;
     default:
-      // custom update conditions here
-      if(display->tme_screen_update)
-	display->tme_screen_update(screen);
+      break;
     }
     screen->tme_screen_update = TME_SCREEN_UPDATE_NONE;  
   }
@@ -406,81 +484,6 @@ _tme_screen_xlat_set(struct tme_screen *screen) {
   screen->tme_screen_fb_xlat = fb_xlat_a->tme_fb_xlat_func;
 }
 
-/* this is called for a configuration request: */
-int
-_tme_screen_configure(struct tme_screen *screen)
-{
-  struct tme_display *display;
-  struct tme_fb_connection *conn_fb_other, *conn_fb;
-  unsigned long fb_area, percentage;
-  int width, height;
-  int height_extra, scale;
-
-  /* recover our data structures: */
-  display = screen->tme_screen_display;
-  conn_fb = screen->tme_screen_fb;
-  conn_fb_other = (struct tme_fb_connection *) conn_fb->tme_fb_connection.tme_connection_other;
-
-  /* if the user hasn't specified a scaling, pick one: */
-  scale = screen->tme_screen_fb_scale;
-  if (scale < 0) {
-
-    /* calulate the areas, in square pixels, of the emulated
-       framebuffer and the host's screen: */
-    fb_area = (conn_fb_other->tme_fb_connection_width
-	       * conn_fb_other->tme_fb_connection_height);
-
-    /* see what percentage of the host's screen would be taken up by
-       an unscaled emulated framebuffer: */
-    percentage = (fb_area * 100) /
-      ( display->tme_screen_width * screen-> tme_screen_scale *
-	display->tme_screen_height * screen-> tme_screen_scale );
-
-    /* if this is at least 70%, halve the emulated framebuffer, else
-       if this is 30% or less, double the emulated framebuffer: */
-    if (percentage >= 70) {
-      scale = TME_FB_XLAT_SCALE_HALF;
-    }
-    else if (percentage <= 30) {
-      scale = TME_FB_XLAT_SCALE_DOUBLE;
-    }
-    else {
-      scale = TME_FB_XLAT_SCALE_NONE;
-    }
-
-    screen->tme_screen_fb_scale = -scale;
-  }
-
-  /* get the required dimensions for the frame: */
-  width = ((conn_fb_other->tme_fb_connection_width
-	    * scale)
-	   / TME_FB_XLAT_SCALE_NONE);
-  height = ((conn_fb_other->tme_fb_connection_height
-	     * scale)
-	    / TME_FB_XLAT_SCALE_NONE);
-  /* NB: we need to allocate an extra scanline's worth (or, if we're
-     doubling, an extra two scanlines' worth) of image, because the
-     framebuffer translation functions can sometimes overtranslate
-     (see the explanation of TME_FB_XLAT_RUN in fb-xlat-auto.sh): */
-  height_extra
-    = (scale == TME_FB_XLAT_SCALE_DOUBLE
-       ? 2
-       : 1);
-  
-  height += height_extra;
-
-  /* set the size & translation function */
-  screen->tme_screen_fb_xlat = NULL;  
-  if(conn_fb->tme_fb_connection_width != width ||
-     conn_fb->tme_fb_connection_height != height) {
-    screen->tme_screen_update = TME_SCREEN_UPDATE_RESIZE;
-    conn_fb->tme_fb_connection_width = width;
-    conn_fb->tme_fb_connection_height = height;
-    conn_fb->tme_fb_connection_buffsz = 0;
-  }
-  return (TME_OK);
-}
-
 /* this is called for a mode change: */
 static int
 _tme_screen_mode_change(struct tme_fb_connection *conn_fb)
@@ -535,10 +538,8 @@ _tme_screen_scale_set(struct tme_screen *screen,
   screen->tme_screen_fb_scale = scale_new;
 
   /* call the configuration function if the scaling has changed: */
-  if (scale_new != scale_old) {
-    rc = _tme_screen_configure(screen);
-    assert (rc == TME_OK);
-  }
+  if (scale_new != scale_old)
+    _tme_screen_configure(screen);
 
   /* unlock our mutex: */
   tme_mutex_unlock(&display->tme_display_mutex);
@@ -548,13 +549,12 @@ _tme_screen_scale_set(struct tme_screen *screen,
 /* this adds a new screen: */
 struct tme_screen *
 _tme_screen_add(struct tme_display *display,
-		size_t sz,
 		struct tme_connection *conn)
 {
   struct tme_screen *screen;
 
   /* allocate screen structure of the given size: */
-  screen = tme_malloc0(sz);
+  screen = tme_malloc0(display->tme_screen_size);
   
   /* create the new screen and link it in: */
   screen->tme_screen_next = display->tme_display_screens;
@@ -579,6 +579,9 @@ _tme_screen_add(struct tme_display *display,
   /* there is no translation function: */
   screen->tme_screen_fb_xlat = NULL;
 
+  /* schedule the screen initialization: */
+  screen->tme_screen_update = TME_SCREEN_UPDATE_INIT;
+  
   return (screen);
 }
 
@@ -621,15 +624,10 @@ _tme_display_connection_make(struct tme_connection *conn,
 	     conn->tme_connection_other->tme_connection_element->tme_element_args[0]);
 
     /* if our initial screen is already connected, make a new screen: */
-    screen = ((uintptr_t)display->tme_screen_add>TME_SCREEN_MAXSIZE) ?
-      display->tme_screen_add(display, conn) :
-      _tme_screen_add(display, (uintptr_t)display->tme_screen_add, conn);
+    screen = _tme_screen_add(display, conn);
 
     /* unlock our mutex: */
     tme_mutex_unlock(&display->tme_display_mutex);
-
-    /* call our mode change function: */
-    _tme_screen_mode_change((struct tme_fb_connection *) conn);
   }
 
   return (TME_OK);
@@ -689,8 +687,6 @@ _tme_display_connections_new(struct tme_element *element,
 int tme_display_init(struct tme_element *element,
 		     struct tme_display *display) {
 
-  if(!display) display = tme_new0(struct tme_display, 1);
-  
   /* start our data structure: */
   display->tme_display_element = element;
 
@@ -700,11 +696,11 @@ int tme_display_init(struct tme_element *element,
   /* create the mouse: */
   _tme_mouse_new(display);
 
-  /* default display values: */
+  /* default display values for configure; should be overriden by specific display init as needed: */
   display->tme_screen_width = 1920;
   display->tme_screen_height = 1080;
-  if(!display->tme_screen_add)
-    display->tme_screen_add = (void *)sizeof(struct tme_screen);
+  if(!display->tme_screen_size)
+    display->tme_screen_size = sizeof(struct tme_screen);
   
   /* start the threads: */
   tme_mutex_init(&display->tme_display_mutex);

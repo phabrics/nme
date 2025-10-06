@@ -471,7 +471,7 @@ _tme_sdl_display_bell(struct tme_display *display) {
 }
 
 /* switch to new framebuffer contents */
-static int _tme_sdl_screen_resize(struct tme_sdl_screen *screen)
+static void _tme_sdl_screen_resize(struct tme_sdl_screen *screen)
 {
   unsigned char *oldfb, *newfb;
   struct tme_fb_connection *conn_fb = screen->screen.tme_screen_fb;
@@ -591,7 +591,6 @@ static int _tme_sdl_screen_resize(struct tme_sdl_screen *screen)
         tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
 	    (&display->tme_display_element->tme_element_log_handle,
 	     _("resize: error creating texture: %s\n"), SDL_GetError()));
-  return TRUE;
 }
 
 static void
@@ -661,7 +660,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_sdl,display) {
   display->tme_display_bell = _tme_sdl_display_bell;
   display->tme_screen_resize = _tme_sdl_screen_resize;
   display->tme_screen_redraw = _tme_sdl_screen_redraw;
-  display->tme_screen_add = (void *)sizeof(struct tme_sdl_screen);
+  display->tme_screen_size = sizeof(struct tme_sdl_screen);
   tme_display_init(element, display);
 
   return (TME_OK);
