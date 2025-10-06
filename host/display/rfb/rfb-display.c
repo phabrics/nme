@@ -388,7 +388,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_rfb,display) {
   display->tme_screen_init = _tme_rfb_screen_init;
 
   /* start our data structure: */
-  tme_display_init(element, display);
+  tme_display_init(element, display, 0);
 
   return (TME_OK);
 }

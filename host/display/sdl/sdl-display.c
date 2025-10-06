@@ -660,8 +660,9 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_sdl,display) {
   display->tme_display_bell = _tme_sdl_display_bell;
   display->tme_screen_resize = _tme_sdl_screen_resize;
   display->tme_screen_redraw = _tme_sdl_screen_redraw;
-  display->tme_screen_size = sizeof(struct tme_sdl_screen);
-  tme_display_init(element, display);
+
+  /* start our data structure: */
+  tme_display_init(element, display, sizeof(struct tme_sdl_screen));
 
   return (TME_OK);
 }

@@ -200,6 +200,11 @@ _tme_scanline_pad(int bpl)
   return (8);
 }
 
+/* the new generic display function: */
+void tme_display_init _TME_P((struct tme_element *element,
+			      struct tme_display *display,
+			      size_t screen_size));
+
 struct tme_screen *_tme_screen_add _TME_P((struct tme_display *,
 					   struct tme_connection *));
 void _tme_screen_scale_set _TME_P((struct tme_screen *screen,

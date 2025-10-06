@@ -684,8 +684,9 @@ _tme_display_connections_new(struct tme_element *element,
 }
 
 /* the new generic display function: */
-int tme_display_init(struct tme_element *element,
-		     struct tme_display *display) {
+void tme_display_init(struct tme_element *element,
+		      struct tme_display *display,
+		      size_t screen_size) {
 
   /* start our data structure: */
   display->tme_display_element = element;
@@ -699,8 +700,7 @@ int tme_display_init(struct tme_element *element,
   /* default display values for configure; should be overriden by specific display init as needed: */
   display->tme_screen_width = 1920;
   display->tme_screen_height = 1080;
-  if(!display->tme_screen_size)
-    display->tme_screen_size = sizeof(struct tme_screen);
+  display->tme_screen_size = (screen_size) ? (screen_size) : (sizeof(struct tme_screen));
   
   /* start the threads: */
   tme_mutex_init(&display->tme_display_mutex);
@@ -715,6 +715,4 @@ int tme_display_init(struct tme_element *element,
   /* fill the element: */
   element->tme_element_private = display;
   element->tme_element_connections_new = _tme_display_connections_new;
-
-  return (TME_OK);
 }

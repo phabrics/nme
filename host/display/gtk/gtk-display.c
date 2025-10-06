@@ -179,7 +179,7 @@ _tme_screen_format_set(_tme_gtk_screen *screen,
 		       cairo_format_t format)
 {
   screen->tme_gtk_screen_format = format;
-  screen->tme_screen_fb_xlat = NULL;  
+  screen->screen.tme_screen_fb_xlat = NULL;  
   //  _tme_screen_configure(screen);
 }
 
@@ -593,8 +593,9 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   display->tme_screen_resize = _tme_gtk_screen_resize;
   display->tme_screen_redraw = _tme_gtk_screen_redraw;
   display->tme_screen_init = _tme_gtk_screen_init;
-  display->tme_screen_size = sizeof(struct tme_gtk_screen);
-  tme_display_init(element, display);
+  
+  /* start our data structure: */
+  tme_display_init(element, display, sizeof(struct tme_gtk_screen));
 
   /* recover our data structure: */
   display = element->tme_element_private;
