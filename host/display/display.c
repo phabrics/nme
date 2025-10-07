@@ -284,13 +284,6 @@ tme_display_update(void *disp) {
   
   display = (struct tme_display *)disp;
   
-  /* if the display has an update function, call it: */
-  rc = (display->tme_display_update) ?
-    (*display->tme_display_update)(display) :
-    (TME_OK);
-
-  //  if(rc != TME_OK) return rc;
-
   tme_mutex_lock(&display->tme_display_mutex);
 
   _tme_display_callout(display, 0);
@@ -326,6 +319,11 @@ tme_display_update(void *disp) {
   }
 
   tme_mutex_unlock(&display->tme_display_mutex);
+
+  /* if the display has an update function, call it: */
+  rc = (display->tme_display_update) ?
+    (*display->tme_display_update)(display) :
+    (TME_OK);
 
   return rc;
 }

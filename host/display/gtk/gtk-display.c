@@ -119,7 +119,7 @@ _tme_gtk_display_update(struct tme_display *display) {
       rc = g_main_context_iteration(NULL, TRUE));
   
   if(rc) rc = (gtk_window_list_toplevels() != NULL);
-  return !rc;
+  return rc;
 }
 
 static void
@@ -571,7 +571,6 @@ _tme_display_menu_radio(_tme_gtk_screen *screen,
 /* the new GTK display function: */
 TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   struct tme_display *display;
-  int rc;
   
   /* GTK requires program to be running non-setuid */
 #ifdef HAVE_SETUID
@@ -600,5 +599,5 @@ TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
   /* recover our data structure: */
   display = element->tme_element_private;
 
-  return rc;
+  return (TME_OK);
 }
