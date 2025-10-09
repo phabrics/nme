@@ -17,7 +17,7 @@ keymap.h: keymap-make.pl keymap-def.h
 	  $(PERL) $< > $@ || cp $(srcdir)/keymap-def.h $@
 else
 keymap.h: keymap-def.h
-	  cp $< $@
+	  $(LN_S) $< $@
 endif
 
 include $(top_srcdir)/modules.mk

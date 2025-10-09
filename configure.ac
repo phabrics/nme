@@ -34,7 +34,7 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.69])
-AC_INIT([tme],[0.12rc14])
+AC_INIT([nme],[0.12rc14],[phabrics@phabrics.com],[],[phabrics.org])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIRS([m4])
 AC_CANONICAL_TARGET
@@ -59,7 +59,7 @@ AC_PROG_MAKE_SET
 AC_PROG_EGREP
 AC_PROG_LN_S
 
-TME_HOST_TYPES="gtk rfb sdl tun bsd openvpn"
+TME_HOST_TYPES="gtk rfb sdl tun bsd openvpn"	
 AC_SUBST(TME_HOST_TYPES)
 
 AC_ARG_ENABLE(hosts,
@@ -716,38 +716,14 @@ AC_MSG_CHECKING([for available threading models])
 
 # specify thread model to use as thread mode in a dual dynamic setup along with fiber mode
 
-dnl Checks for default thread support
-if test "x${have_sdl3}" = xyes; then
-   tme_thread_type=sdl
-elif test "x${have_glib}" != xno; then
-   tme_thread_type=glib
-else
-   tme_thread_type=posix
-fi
+AC_ARG_ENABLE(threads,
+[  --enable-threads    Prefer use of threads given as argument (default 'glib'). If disabled or unavailable, then defaults to 'posix'. Other current possibilities include 'sdl'.], [], [enable_threads=glib])
 
-AC_ARG_WITH(threads,
-[  --with-threads=THR Selects threading model to use as the thread mode in dual dynamic setup along with original single-threaded fiber mode. Defaults in order of usage by platform availability: 'sdl', 'glib', 'pthreads (or posix)'. ], [tme_thread_type=${withval}], [])
+CPPFLAGS="${CPPFLAGS-} -D_GNU_SOURCE ${GLIB_CFLAGS} ${SDL_CFLAGS}" 
 
-case "x${tme_thread_type}" in
-xpthreads| xposix)  CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_POSIX"
-	  	    CFLAGS="${CFLAGS-} -pthread"
-		    LDFLAGS="${LDFLAGS-} -pthread"
-		     ;;
-xsdl)    CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_SDL ${SDL_CFLAGS}"
-	 LDFLAGS="${LDFLAGS-} ${SDL_LIBS}"
-	 ;;
-xglib)   CPPFLAGS="${CPPFLAGS-} -DTME_THREADS_GLIB ${GLIB_CFLAGS}"
-	 LDFLAGS="${LDFLAGS-} ${GLIB_LIBS}"
-	 ;;
-esac
+AC_DEFINE_UNQUOTED([TME_THREADS_TYPE], [${enable_threads}], [Set to value of threads argument.])
 
-CPPFLAGS="${CPPFLAGS-} -D_GNU_SOURCE" 
-
-AM_CONDITIONAL([THREADS_POSIX], [test "x${tme_thread_type}" = xpthreads || test "x${tme_thread_type}" = xposix])
-AM_CONDITIONAL([THREADS_GLIB], [test "x${tme_thread_type}" = xglib])
-AM_CONDITIONAL([THREADS_SDL], [test "x${tme_thread_type}" = xsdl])
-AC_DEFINE_UNQUOTED([TME_THREAD_TYPE], ["${tme_thread_type}"], [Threading model in use])
-AC_MSG_RESULT($tme_thread_type)
+AC_MSG_RESULT($enable_threads)
 
 dnl Checks for ZLIB.
 AS_IF([test "x${WIN32}" != xyes], [PKG_CHECK_MODULES([ZLIB], [zlib], [have_zlib=yes], [have_zlib=no])])

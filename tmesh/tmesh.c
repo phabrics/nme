@@ -522,7 +522,7 @@ do_usage(const char *prog_name, char *msg)
                    \n-c, --cycle_counter    cycle counter implementation (default 'def' gives order: 'cpu','sdl','win','x86','def')  \
                    \n-m, --multi_threaded   multi-threaded mode (using %s threads or single-threaded fibers if not given) \
                    \n-i, --interactive      interactive command-line interface (<INITIAL-CONFIG> optional here)\n",
-	  prog_name,TME_THREAD_TYPE);
+	  prog_name,TME_THREADS_NAME);
   
 #define fpe(msg) fprintf(stderr, "\t%s", msg);          /* Shorter */
 

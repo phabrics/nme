@@ -33,7 +33,7 @@
 
 /* includes: */
 #include <tme/threads.h>
-#if defined(__EMSCRIPTEN__) && defined(TME_THREADS_POSIX)
+#ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #endif
 
@@ -64,7 +64,7 @@ int tmesh_init(int mode) {
   tme_threads.tme_threads_delay = (mode) ? (TME_TIME_SET_SEC(10)) : (0);
   tme_threads_init(mode);
 
-  fprintf(stderr, "Using %s threads.\n", (mode) ? (TME_THREAD_TYPE) : "fiber");
+  fprintf(stderr, "Using %s threads.\n", (mode) ? (TME_THREADS_NAME) : "fiber");
   
   /* Synchronization primitive provided to allow sequential
      execution of pre-thread initialization code. It is used
@@ -81,9 +81,11 @@ void tme_threads_run(void) {
   tme_thread_enter(tme_threads.tme_threads_mutex);
   
   /* Run the main loop */
-#if defined(__EMSCRIPTEN__) && defined(TME_THREADS_POSIX)
-  // Receives a function to call and some user data to provide it.
-  emscripten_request_animation_frame_loop(tme_threads.tme_threads_run, tme_threads.tme_threads_arg);
+#ifdef __EMSCRIPTEN__
+  if(thread_mode)
+    // Receives a function to call and some user data to provide it.
+    emscripten_request_animation_frame_loop(tme_threads.tme_threads_run, tme_threads.tme_threads_arg);
+  else
 #else
   if(tme_threads.tme_threads_run)
     for(;;) {

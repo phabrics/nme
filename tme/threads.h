@@ -62,13 +62,28 @@ typedef tme_uint64_t tme_time_t;
 #define TME_TIME_SET_NSEC(a) ((tme_time_t)(a) / TME_NSEC_PER_TICK)
 
 /* setjmp/longjmp threading: */
-#ifdef TME_THREADS_POSIX
-#include "threads-posix.h"
-#elif defined(TME_THREADS_SDL)
-#include "threads-sdl.h"
-#elif defined(TME_THREADS_GLIB)
+
+#define glib 0
+#define sdl 1
+
+#if TME_THREADS_TYPE == glib && defined(_TME_HAVE_GLIB)
 #include "threads-glib.h"
+#define TME_THREADS_NAME "glib"
 #endif
+
+#if TME_THREADS_TYPE == sdl && defined(_TME_HAVE_SDL3)
+#include "threads-sdl.h"
+#define TME_THREADS_NAME "sdl"
+#endif
+
+#ifndef TME_THREADS_NAME
+#include "threads-posix.h"
+#define TME_THREADS_NAME "posix"
+#define TME_THREADS_POSIX
+#endif
+
+#undef glib
+#undef sdl
 
 #include "threads-fiber.h"
 
