@@ -3,8 +3,8 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
-pkglib_LTLIBRARIES = tme_ic_stp22xx.la
-tme_ic_stp22xx_la_SOURCES = \
+pkglib_LTLIBRARIES = @PACKAGE@_@SUB_DIR@.la
+@PACKAGE@_@SUB_DIR@_la_SOURCES = \
   stp220x.c \
   stp222x-main.c \
   stp222x-asearch.c \
@@ -14,7 +14,7 @@ tme_ic_stp22xx_la_SOURCES = \
   stp222x-iommu.c \
   stp222x-stc.c \
   stp22xx.c
-tme_ic_stp22xx_la_LIBADD = $(TME_LIBS)
+@PACKAGE@_@SUB_DIR@_la_LIBADD = $(TME_LIBS)
 
 EXTRA_DIST = stp222x-impl.h \
 	stp22xx-impl.h

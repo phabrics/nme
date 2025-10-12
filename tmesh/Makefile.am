@@ -34,11 +34,11 @@ tmesh.js tmesh.wasm tmesh.data: tmesh.html
 install-exec-hook:
 	test -f $(DESTDIR)$(bindir)/tmesh.sh && \
 	mv -f $(DESTDIR)$(bindir)/tmesh.sh $(DESTDIR)$(bindir)/tmesh
-	mkdir -p $(DESTDIR)$(pkgdatadir)$(TME_DIR)/tme
-	cp -f $(DESTDIR)$(libdir)/libtme*.la $(DESTDIR)$(pkgdatadir)$(TME_DIR)
-	cp -f $(DESTDIR)$(libdir)/libltdl.la $(DESTDIR)$(pkgdatadir)$(TME_DIR)
-	cp -f $(DESTDIR)$(pkglibdir)/*.la $(DESTDIR)$(pkgdatadir)$(TME_DIR)/tme
-	cp -f $(DESTDIR)$(pkglibdir)/*.txt $(DESTDIR)$(pkgdatadir)$(TME_DIR)/tme
+	mkdir -p $(DESTDIR)$(pkgdatadir)$(PKG_LIB_DIR)
+	cp -f $(DESTDIR)$(libdir)/libtme*.la $(DESTDIR)$(pkgdatadir)$(LIB_DIR)
+	cp -f $(DESTDIR)$(libdir)/libltdl.la $(DESTDIR)$(pkgdatadir)$(LIB_DIR)
+	cp -f $(DESTDIR)$(pkglibdir)/*.la $(DESTDIR)$(pkgdatadir)$(PKG_LIB_DIR)
+	cp -f $(DESTDIR)$(pkglibdir)/*.txt $(DESTDIR)$(pkgdatadir)$(PKG_LIB_DIR)
 	$(SETCAP) $(DESTDIR)$(bindir)/$(TGTPFX)tmesh$(EXEEXT)
 else
 if WIN32
@@ -50,7 +50,7 @@ endif
 
 EXTRA_tmesh_DEPENDENCIES = plugins
 
-NME_DIR = $(top_builddir)$(TME_DIR)/tme
+NME_DIR = $(top_builddir)$(PKG_LIB_DIR)
 .PHONY: plugins
 plugins:
 	mkdir -p $(NME_DIR)

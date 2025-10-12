@@ -3,10 +3,10 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
-tme_host_tun_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/.. -DDEV_TAP_FILENAME=@DEV_TAP_FILENAME@ $(NATINC)
+@PACKAGE@_@SUB_DIR@_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/.. -DDEV_TAP_FILENAME=@DEV_TAP_FILENAME@ $(NATINC)
 
-pkglib_LTLIBRARIES = tme_host_tun.la
-tme_host_tun_la_SOURCES = tun-tap.c
-tme_host_tun_la_LIBADD = ../libtme-eth.la $(NATLIBS) $(TME_LIBS)
+pkglib_LTLIBRARIES = @PACKAGE@_@SUB_DIR@.la
+@PACKAGE@_@SUB_DIR@_la_SOURCES = tun-tap.c
+@PACKAGE@_@SUB_DIR@_la_LIBADD = ../libtme-eth.la $(NATLIBS) $(TME_LIBS)
 
 include $(top_srcdir)/modules.mk

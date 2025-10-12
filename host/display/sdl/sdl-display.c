@@ -318,7 +318,7 @@ _tme_sdl_display_update(struct tme_display *display) {
   int keydown = 0;
   bool rc = true;
   
-  if(SDL_PollEvent(&e)) {
+  while(SDL_PollEvent(&e)) {
     switch(e.type) {
 #ifdef HAVE_SDL
     case SDL_WINDOWEVENT:

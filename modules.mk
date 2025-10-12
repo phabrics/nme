@@ -76,7 +76,7 @@ modules-local:
 # 
 # Note: this works differently now - please see comment in top Makefile for modules target
 	$(top_builddir)/tme-modules.sh $(subdir) $(top_srcdir) $(pkglib_LTLIBRARIES)
-	
+
 # additionally, libtool, at least through version 1.5, has a
 # limitation in that the pseudo-library (the .la file) must be present
 # even for a preloaded module.  if we aren't debugging, everything is

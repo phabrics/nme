@@ -34,7 +34,7 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.69])
-AC_INIT([nme],[0.12rc14],[phabrics@phabrics.com],[],[phabrics.org])
+AC_INIT([nme],[0.12rc14],[phabrics@phabrics.com],[],[http://phabrics.org])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIRS([m4])
 AC_CANONICAL_TARGET
@@ -87,13 +87,17 @@ AC_CHECK_PROG([CYGPATH_M], [cygpath], [cygpath -m], [echo])
 AC_CHECK_PROG([CYGPATH_U], [cygpath], [cygpath -u], [echo])
 
 if test "${host_os}" = emscripten; then
-   ROOT_DIR="\$(abs_top_builddir)" # /
+   ROOT_DIR="\$(abs_top_builddir)" 
    EXEEXT=.html
 else
    ROOT_DIR=$(${CYGPATH_M} /)
 fi
-TME_DIR="\`\${CYGPATH_U} \${libdir}\`"
-AC_SUBST(TME_DIR)
+SUB_DIR="\${subdir////_}" 
+LIB_DIR="\`\${CYGPATH_U} \${libdir}\`"
+PKG_LIB_DIR="\`\${CYGPATH_U} \${pkglibdir}\`"
+AC_SUBST(SUB_DIR)
+AC_SUBST(LIB_DIR)
+AC_SUBST(PKG_LIB_DIR)
 AC_SUBST(ROOT_DIR)
 
 dnl Configure for libtool.

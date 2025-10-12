@@ -5,10 +5,10 @@ AUTOMAKE_OPTIONS = 1.4 gnu
 
 AUTOM4TE = $(SHELL) $(top_srcdir)/missing --run autom4te
 
-tme_generic_la_CPPFLAGS = $(AM_CPPFLAGS) -DLIBTME_GENERIC_BUILD
+@PACKAGE@_@SUB_DIR@_la_CPPFLAGS = $(AM_CPPFLAGS) -DLIBTME_GENERIC_BUILD
 
-pkglib_LTLIBRARIES = tme_generic.la
-tme_generic_la_SOURCES = bus-el.c
-tme_generic_la_LIBADD = $(TME_LIBS)
+pkglib_LTLIBRARIES = @PACKAGE@_@SUB_DIR@.la
+@PACKAGE@_@SUB_DIR@_la_SOURCES = bus-el.c
+@PACKAGE@_@SUB_DIR@_la_LIBADD = $(TME_LIBS)
 
 include $(top_srcdir)/modules.mk

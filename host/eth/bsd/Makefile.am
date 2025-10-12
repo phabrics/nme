@@ -3,10 +3,10 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
-tme_host_bsd_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/..
+@PACKAGE@_@SUB_DIR@_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/..
 
-pkglib_LTLIBRARIES = tme_host_bsd.la
-tme_host_bsd_la_SOURCES = bsd-bpf.c
-tme_host_bsd_la_LIBADD = ../libtme-eth.la $(TME_LIBS)
+pkglib_LTLIBRARIES = @PACKAGE@_@SUB_DIR@.la
+@PACKAGE@_@SUB_DIR@_la_SOURCES = bsd-bpf.c
+@PACKAGE@_@SUB_DIR@_la_LIBADD = ../libtme-eth.la $(TME_LIBS)
 
 include $(top_srcdir)/modules.mk

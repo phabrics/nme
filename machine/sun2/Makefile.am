@@ -3,14 +3,14 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
-pkglib_LTLIBRARIES = tme_machine_sun2.la
-tme_machine_sun2_la_SOURCES =	\
+pkglib_LTLIBRARIES = @PACKAGE@_@SUB_DIR@.la
+@PACKAGE@_@SUB_DIR@_la_SOURCES =	\
 	sun2-mainbus.c		\
 	sun2-mmu.c		\
 	sun2-control.c		\
 	sun2-impl.h
 
-tme_machine_sun2_la_LIBADD = ../sun/libtme-machine-sun.la $(TME_LIBS)
+@PACKAGE@_@SUB_DIR@_la_LIBADD = ../sun/libtme-machine-sun.la $(TME_LIBS)
 
 examplesdir = $(pkgdatadir)/examples
 dist_examples_DATA = SUN2-MULTIBUS
