@@ -5,7 +5,9 @@ AUTOMAKE_OPTIONS = 1.4 gnu
 
 @PACKAGE@_@SUB_DIR@_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/.. $(SDL_CFLAGS)
 
+if HAVE_SDL
 pkglib_LTLIBRARIES = @PACKAGE@_@SUB_DIR@.la
+endif
 @PACKAGE@_@SUB_DIR@_la_SOURCES = sdl-display.c
 @PACKAGE@_@SUB_DIR@_la_LIBADD = ../libtme-display.la $(SDL_LIBS) $(TME_LIBS)
 

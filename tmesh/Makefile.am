@@ -3,7 +3,7 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
-AM_CPPFLAGS = -I$(top_srcdir) -D_TME_IMPL @TME_HOST_CFLAGS@
+AM_CPPFLAGS = -I$(top_srcdir) -D_TME_IMPL $(@PACKAGE@_HOST_CFLAGS)
 
 lib_LTLIBRARIES = libtmesh.la
 libtmesh_la_SOURCES = tmesh-impl.h \
@@ -14,7 +14,7 @@ libtmesh_la_LIBADD = $(top_builddir)/libtme/libtme.la
 
 tmesh_SOURCES = tmesh.c tmesh-threads.c
 bin_PROGRAMS = tmesh
-tmesh_LDADD = libtmesh.la $(tme_preopen) $(TME_HOST_LIBS)
+tmesh_LDADD = libtmesh.la $(@PACKAGE@_PREOPEN)
 tmesh_LDFLAGS = 
 
 EXTRA_DIST = tmesh.sh
@@ -59,14 +59,11 @@ plugins:
 		$(LN_S) $(top_srcdir)/machines $(top_builddir) ; \
 	fi
 #	find $(top_builddir) -type f -name '*.la' -exec cp '{}' $NME_DIR ';'
-	for mod in $(tme_preopen) $(TME_HOST_LIBS); do \
+	for mod in $(@PACKAGE@_PREOPEN); do \
 		if test $$mod != -dlopen; then \
 			echo $$mod ; \
 			cp -f $$mod $(NME_DIR) ; \
 		fi \
 	done
 
-include $(top_srcdir)/tme-hosts.txt
 include $(top_srcdir)/tme-preopen.txt
-
-SUBDIRS = @TME_HOST_DIRS@

@@ -92,7 +92,7 @@ if test "${host_os}" = emscripten; then
 else
    ROOT_DIR=$(${CYGPATH_M} /)
 fi
-SUB_DIR="\${subdir////_}" 
+SUB_DIR="\${moddir}"
 LIB_DIR="\`\${CYGPATH_U} \${libdir}\`"
 PKG_LIB_DIR="\`\${CYGPATH_U} \${pkglibdir}\`"
 AC_SUBST(SUB_DIR)
@@ -248,6 +248,8 @@ AM_CONDITIONAL([HAVE_SDL], [test "x${have_sdl}" = xyes])
 
 PKG_CHECK_MODULES([RFB], [libvncclient libvncserver], [have_rfb=$enable_rfb], [have_rfb=no])
 
+AM_CONDITIONAL([HAVE_RFB], [test "x${have_rfb}" = xyes])
+
 if test "x${have_tap_header}" = xyes || test "x${WIN32}" != x; then
    have_openvpn=$enable_openvpn
 fi
@@ -256,8 +258,12 @@ if test "x${have_openvpn}" = xyes; then
    AC_DEFINE([HAVE_OPENVPN], [], [Defined if openvpn is found.])
 fi
 
+AM_CONDITIONAL([HAVE_OPENVPN], [test "x${have_openvpn}" = xyes])
+
 AC_CHECK_HEADERS([linux/if_tun.h net/if_tap.h net/tap/if_tap.h net/if_tun.h],
 		 [have_tun=$enable_tun])
+
+AM_CONDITIONAL([HAVE_TUN], [test "x${have_tun}" = xyes])
 
 AC_CHECK_HEADERS([linux/filter.h net/bpf.h])
 
@@ -274,24 +280,18 @@ found_BPFVERSION
 ],
 [have_bsd=$enable_bsd])
 
-for tme_host in $TME_HOST_TYPES; do
-    if eval test "x\$have_${tme_host}" = xyes; then
-       TME_HOST=`echo ${tme_host} | tr '[a-z]' '[A-Z]'`
-       TME_HOST_CFLAGS="\$(${TME_HOST}_CFLAGS) ${TME_HOST_CFLAGS}"
-       TME_HOST_LIBS="-dlopen \$(tme_host_${tme_host})/tme_host_${tme_host}.la ${TME_HOST_LIBS}"
-       TME_HOST_DIRS="\$(tme_host_${tme_host}) ${TME_HOST_DIRS}"
-    fi
-done
+AM_CONDITIONAL([HAVE_BSD], [test "x${have_bsd}" = xyes])
 
 dnl Checks for host support.
 AC_MSG_CHECKING([for enabled host types])
 
-dnl The list of ethernet host support is finished.
-AC_SUBST(TME_HOST_CFLAGS)
-AC_SUBST(TME_HOST_LIBS)
-AC_SUBST(TME_HOST_DIRS)
+for tme_host in $TME_HOST_TYPES; do
+    if eval test "x\$have_${tme_host}" = xyes; then
+       TME_HOSTS="${tme_host} ${TME_HOSTS}"
+    fi
+done
 
-AC_MSG_RESULT($TME_HOST_DIRS)
+AC_MSG_RESULT($TME_HOSTS)
 
 # Checks for libraries.
 # FIXME: Replace `main' with a function in `-lm':

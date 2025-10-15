@@ -1,0 +1,1 @@
+moddir=ic_sparc

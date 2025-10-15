@@ -5,7 +5,9 @@ AUTOMAKE_OPTIONS = 1.4 gnu
 
 @PACKAGE@_@SUB_DIR@_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/.. $(RFB_CFLAGS)
 
+if HAVE_RFB
 pkglib_LTLIBRARIES = @PACKAGE@_@SUB_DIR@.la
+endif
 @PACKAGE@_@SUB_DIR@_la_SOURCES = rfb-display.c
 @PACKAGE@_@SUB_DIR@_la_LIBADD = ../libtme-display.la $(RFB_LIBS) $(TME_LIBS)
 

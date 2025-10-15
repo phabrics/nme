@@ -106,7 +106,7 @@ _tme_sdl_display_init(struct tme_display *display) {
 #ifdef HAVE_SDL
   rc = (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE)) ? (false) : (true);
 #else
-  SDL_SetAppMetadata(PACKAGE_NAME, PACKAGE_VERSION, PACKAGE_URL);
+  SDL_SetAppMetadata(PACKAGE_NAME, PACKAGE_VERSION, "com.phabrics.nme");
   if((rc = SDL_InitSubSystem(SDL_INIT_VIDEO))) {
     int i, num_displays = 0;
     SDL_DisplayID *displays = SDL_GetDisplays(&num_displays);

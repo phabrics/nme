@@ -1,0 +1,1 @@
+moddir=machine_sun2

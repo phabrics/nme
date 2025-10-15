@@ -5,7 +5,9 @@ AUTOMAKE_OPTIONS = 1.4 gnu
 
 @PACKAGE@_@SUB_DIR@_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/..
 
+if HAVE_OPENVPN
 pkglib_LTLIBRARIES = @PACKAGE@_@SUB_DIR@.la
+endif
 @PACKAGE@_@SUB_DIR@_la_SOURCES = \
 	openvpn-link.c \
 	openvpn-tap.c

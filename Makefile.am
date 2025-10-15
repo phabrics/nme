@@ -20,9 +20,6 @@ dist-hook:
 # so that future builds will track all module dependencies.
 # If new modules are added, "make modules" must be run to update this list in the source.
 modules-local:
-	@if test ! -e .modules; then \
-		rm -f ${top_srcdir}/tme/tme-plugins.txt ${top_srcdir}/tme-hosts.txt ${top_srcdir}/tme-modules.txt ; \
-		echo -n tme_preopen=> $(top_srcdir)/tme-preopen.txt ; \
-		chmod +x tme-modules.sh ; \
-		touch .modules ; \
-	fi
+	rm -f ${top_srcdir}/tme/tme-plugins.txt
+	echo @PACKAGE@_PREOPEN => $(top_srcdir)/tme-preopen.txt
+	chmod +x tme-modules.sh

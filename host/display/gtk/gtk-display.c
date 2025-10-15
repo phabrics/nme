@@ -84,7 +84,7 @@ _tme_gtk_display_init(_tme_gtk_display *display) {
 
   if(!rc) return false;
   
-  display->tme_gtk_application = gtk_application_new(PACKAGE_URL, G_APPLICATION_DEFAULT_FLAGS);
+  //  display->tme_gtk_application = gtk_application_new(PACKAGE_URL, G_APPLICATION_FLAGS_NONE);
   
   display->tme_gdk_display = gdk_display_get_default();
 
