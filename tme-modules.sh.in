@@ -21,13 +21,12 @@ pardir=$(basename $subdir)
 if test $topsub = host &&
 	test $topsub != $subdir; then
     echo if HAVE_${@PACKAGE@_HOST} >> $topdir/tme-preopen.txt 
-    echo @PACKAGE@_HOST_CFLAGS += \$(${@PACKAGE@_HOST}_CFLAGS)
-    echo @PACKAGE@_PREOPEN += -dlopen \${top_builddir}/${subdir}/@PACKAGE@_${moddir}.la >> $topdir/tme-preopen.txt 
+#    echo @PACKAGE@_HOST_CFLAGS += \$(${@PACKAGE@_HOST}_CFLAGS)
+    echo @PACKAGE@_PREOPEN += -dlopen \${top_builddir}/${subdir}/tme_host_${pardir}.la >> $topdir/tme-preopen.txt 
     echo endif >> $topdir/tme-preopen.txt
 else
     for num; do
 	if test $num = $1 || test $num = $2; then continue; fi
 	echo @PACKAGE@_PREOPEN += -dlopen \${top_builddir}/${subdir}/$num >> $topdir/tme-preopen.txt
-    fi
     done
 fi

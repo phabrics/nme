@@ -3,18 +3,18 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
-@PACKAGE@_@SUB_DIR@_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/..
+tme_host_openvpn_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/..
 
 if HAVE_OPENVPN
-pkglib_LTLIBRARIES = @PACKAGE@_@SUB_DIR@.la
+pkglib_LTLIBRARIES = tme_host_openvpn.la
 endif
-@PACKAGE@_@SUB_DIR@_la_SOURCES = \
+tme_host_openvpn_la_SOURCES = \
 	openvpn-link.c \
 	openvpn-tap.c
-@PACKAGE@_@SUB_DIR@_la_LIBADD = ../libtme-eth.la $(TME_LIBS)
+tme_host_openvpn_la_LIBADD = ../libtme-eth.la $(TME_LIBS)
 
 if WIN32
-@PACKAGE@_@SUB_DIR@_la_LIBADD += -lgdi32 -lws2_32 -lwininet -lcrypt32 -liphlpapi -lwinmm
+tme_host_openvpn_la_LIBADD += -lgdi32 -lws2_32 -lwininet -lcrypt32 -liphlpapi -lwinmm
 endif
 
 include $(top_srcdir)/modules.mk

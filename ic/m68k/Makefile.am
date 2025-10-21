@@ -5,14 +5,14 @@ AUTOMAKE_OPTIONS = 1.4 gnu
 
 AUTOM4TE = $(SHELL) $(top_srcdir)/missing --run autom4te
 
-pkglib_LTLIBRARIES = @PACKAGE@_@SUB_DIR@.la
-@PACKAGE@_@SUB_DIR@_la_SOURCES = m68k-opmap.c \
+pkglib_LTLIBRARIES = tme_ic_m68k.la
+tme_ic_m68k_la_SOURCES = m68k-opmap.c \
 	m68k-insns.c \
 	m68k-misc.c \
 	m68010.c \
 	m68020.c \
 	m6888x.c
-@PACKAGE@_@SUB_DIR@_la_LIBADD = ../ieee754/libtme-ieee754.la $(TME_LIBS)
+tme_ic_m68k_la_LIBADD = ../ieee754/libtme-ieee754.la $(TME_LIBS)
 
 noinst_SCRIPTS = m68k-misc-auto.sh \
 	m68k-insns-auto.sh \

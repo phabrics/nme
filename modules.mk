@@ -93,5 +93,3 @@ modules-local:
 AM_CPPFLAGS = -I$(top_srcdir) -D_TME_IMPL
 AM_LDFLAGS = -module -version-info 0:0:0
 TME_LIBS = $(top_builddir)/generic/libtme-generic.la $(top_builddir)/libtme/libtme.la
-
-include moddir.mk

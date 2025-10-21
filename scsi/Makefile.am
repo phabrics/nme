@@ -3,12 +3,12 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
-##SUBDIRS = @@PACKAGE@_@SUB_DIR@_SUBDIRS@
+##SUBDIRS = @tme_scsi_SUBDIRS@
 ##DIST_SUBDIRS = 
 
-pkglib_LTLIBRARIES = @PACKAGE@_@SUB_DIR@.la
+pkglib_LTLIBRARIES = tme_scsi.la
 
-@PACKAGE@_@SUB_DIR@_la_SOURCES = \
+tme_scsi_la_SOURCES = \
 	acb4000.c \
 	emulexmt02.c \
 	disk-tme.c \
@@ -21,6 +21,6 @@ pkglib_LTLIBRARIES = @PACKAGE@_@SUB_DIR@.la
 	scsi-msg.c \
 	scsi-device.c \
 	scsi-bus.c
-@PACKAGE@_@SUB_DIR@_la_LIBADD = $(TME_LIBS)
+tme_scsi_la_LIBADD = $(TME_LIBS)
 
 include $(top_srcdir)/modules.mk
