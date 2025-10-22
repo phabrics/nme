@@ -5,8 +5,8 @@ AUTOMAKE_OPTIONS = 1.4 gnu
 
 AUTOM4TE = $(SHELL) $(top_srcdir)/missing --run autom4te
 
-pkglib_LTLIBRARIES = tme_ic_sparc.la
-tme_ic_sparc_la_SOURCES = \
+pkglib_LTLIBRARIES = @PACKAGE@_ic_sparc.la
+@PACKAGE@_ic_sparc_la_SOURCES = \
 	sparc-insns.c \
 	sparc-misc.c \
 	sparc-fpu.c \
@@ -15,7 +15,7 @@ tme_ic_sparc_la_SOURCES = \
 	stp103x.c \
 	cy7c601.c \
 	mb86900.c
-tme_ic_sparc_la_LIBADD = ../ieee754/libtme-ieee754.la $(TME_LIBS)
+@PACKAGE@_ic_sparc_la_LIBADD = ../ieee754/lib@PACKAGE@-ieee754.la $(@PACKAGE@_LIBS)
 noinst_SCRIPTS = sparc-misc-auto.sh \
 	sparc-insns-auto.sh \
 	sparc-fpu-auto.sh \

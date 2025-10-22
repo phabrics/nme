@@ -3,16 +3,16 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
-lib_LTLIBRARIES = libtme-machine-sun.la
-libtme_machine_sun_la_SOURCES = sun-mmu.c \
+lib_LTLIBRARIES = lib@PACKAGE@-machine-sun.la
+lib@PACKAGE@_machine_sun_la_SOURCES = sun-mmu.c \
 	sun-bwtwo.c \
 	sun-cgtwo.c \
 	sun-cgsix.c \
 	sun-fb.c sun-fb.h \
 	sun-si.c \
 	sun-obie.c
-libtme_machine_sun_la_LDFLAGS = -version-info 0:0:0
-libtme_machine_sun_la_LIBADD = $(TME_LIBS)
+lib@PACKAGE@_machine_sun_la_LDFLAGS = -version-info 0:0:0
+lib@PACKAGE@_machine_sun_la_LIBADD = $(@PACKAGE@_LIBS)
 
 bin_SCRIPTS = tme-sun-idprom tme-sun-eeprom
 dist_bin_SCRIPTS = tme-make-machs

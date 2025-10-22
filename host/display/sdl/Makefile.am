@@ -3,15 +3,15 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
-tme_host_sdl_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/.. $(SDL_CFLAGS)
+@PACKAGE@_host_sdl_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/.. $(SDL_CFLAGS)
 
 if HAVE_SDL
-pkglib_LTLIBRARIES = tme_host_sdl.la
+pkglib_LTLIBRARIES = @PACKAGE@_host_sdl.la
 endif
-tme_host_sdl_la_SOURCES = sdl-display.c
-tme_host_sdl_la_LIBADD = ../libtme-display.la $(SDL_LIBS) $(TME_LIBS)
+@PACKAGE@_host_sdl_la_SOURCES = sdl-display.c
+@PACKAGE@_host_sdl_la_LIBADD = ../lib@PACKAGE@-display.la $(SDL_LIBS) $(@PACKAGE@_LIBS)
 
-tme_host_sdl_la_CPPFLAGS += $(GTK_CFLAGS)
-tme_host_sdl_la_LIBADD += $(GTK_LIBS)
+@PACKAGE@_host_sdl_la_CPPFLAGS += $(GTK_CFLAGS)
+@PACKAGE@_host_sdl_la_LIBADD += $(GTK_LIBS)
 
 include $(top_srcdir)/modules.mk

@@ -3,12 +3,12 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
-##SUBDIRS = @tme_serial_SUBDIRS@
+##SUBDIRS = @@PACKAGE@_serial_SUBDIRS@
 ##DIST_SUBDIRS = 
 
-pkglib_LTLIBRARIES = tme_serial_kb.la
+pkglib_LTLIBRARIES = @PACKAGE@_serial_kb.la
 
-tme_serial_kb_la_SOURCES = \
+@PACKAGE@_serial_kb_la_SOURCES = \
 	serial-sink.c \
 	serial-kb.h \
 	serial-kb.c \
@@ -16,6 +16,6 @@ tme_serial_kb_la_SOURCES = \
 	serial-ms.h \
 	serial-ms.c \
 	ms-mssystems.c
-tme_serial_kb_la_LIBADD = $(TME_LIBS)
+@PACKAGE@_serial_kb_la_LIBADD = $(@PACKAGE@_LIBS)
 
 include $(top_srcdir)/modules.mk

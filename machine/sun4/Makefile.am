@@ -3,8 +3,8 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
-pkglib_LTLIBRARIES = tme_machine_sun4.la
-tme_machine_sun4_la_SOURCES =	\
+pkglib_LTLIBRARIES = @PACKAGE@_machine_sun4.la
+@PACKAGE@_machine_sun4_la_SOURCES =	\
 	sun4-mainbus.c		\
 	sun4-timer.c		\
 	sun4-fdc.c		\
@@ -14,7 +14,7 @@ tme_machine_sun4_la_SOURCES =	\
 	sun44c-memerr.c		\
 	sun4-impl.h
 
-tme_machine_sun4_la_LIBADD = ../sun/libtme-machine-sun.la $(TME_LIBS)
+@PACKAGE@_machine_sun4_la_LIBADD = ../sun/lib@PACKAGE@-machine-sun.la $(@PACKAGE@_LIBS)
 
 examplesdir = $(pkgdatadir)/examples
 dist_examples_DATA = SUN4-75

@@ -3,9 +3,9 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
-pkglib_LTLIBRARIES = tme_bus_sbus.la
-tme_bus_sbus_la_SOURCES = \
+pkglib_LTLIBRARIES = @PACKAGE@_bus_sbus.la
+@PACKAGE@_bus_sbus_la_SOURCES = \
 	sun-fbs4.c
-tme_bus_sbus_la_LIBADD = $(top_builddir)/machine/sun/libtme-machine-sun.la $(TME_LIBS)
+@PACKAGE@_bus_sbus_la_LIBADD = $(top_builddir)/machine/sun/lib@PACKAGE@-machine-sun.la $(@PACKAGE@_LIBS)
 
 include $(top_srcdir)/modules.mk

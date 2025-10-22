@@ -3,10 +3,10 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
-pkglib_LTLIBRARIES = tme_bus_multibus.la
-tme_bus_multibus_la_SOURCES = 3c400.c \
+pkglib_LTLIBRARIES = @PACKAGE@_bus_multibus.la
+@PACKAGE@_bus_multibus_la_SOURCES = 3c400.c \
 	sun-mie.c \
 	sun-sc.c
-tme_bus_multibus_la_LIBADD = $(TME_LIBS)
+@PACKAGE@_bus_multibus_la_LIBADD = $(@PACKAGE@_LIBS)
 
 include $(top_srcdir)/modules.mk

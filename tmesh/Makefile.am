@@ -10,7 +10,7 @@ libtmesh_la_SOURCES = tmesh-impl.h \
 	tmesh-input.y \
 	tmesh-util.c \
 	tmesh-cmds.c
-libtmesh_la_LIBADD = $(top_builddir)/libtme/libtme.la
+libtmesh_la_LIBADD = $(top_builddir)/libtme/lib@PACKAGE@.la
 
 tmesh_SOURCES = tmesh.c tmesh-threads.c
 bin_PROGRAMS = tmesh
@@ -35,7 +35,7 @@ install-exec-hook:
 	test -f $(DESTDIR)$(bindir)/tmesh.sh && \
 	mv -f $(DESTDIR)$(bindir)/tmesh.sh $(DESTDIR)$(bindir)/tmesh
 	mkdir -p $(DESTDIR)$(pkgdatadir)$(PKG_LIB_DIR)
-	cp -f $(DESTDIR)$(libdir)/libtme*.la $(DESTDIR)$(pkgdatadir)$(LIB_DIR)
+	cp -f $(DESTDIR)$(libdir)/lib@PACKAGE@*.la $(DESTDIR)$(pkgdatadir)$(LIB_DIR)
 	cp -f $(DESTDIR)$(libdir)/libltdl.la $(DESTDIR)$(pkgdatadir)$(LIB_DIR)
 	cp -f $(DESTDIR)$(pkglibdir)/*.la $(DESTDIR)$(pkgdatadir)$(PKG_LIB_DIR)
 	cp -f $(DESTDIR)$(pkglibdir)/*.txt $(DESTDIR)$(pkgdatadir)$(PKG_LIB_DIR)
@@ -66,4 +66,4 @@ plugins:
 		fi \
 	done
 
-include $(top_srcdir)/tme-preopen.txt
+include $(top_srcdir)/nme-preopen.txt

@@ -119,8 +119,8 @@ _tme_modules_find(const char *top_name,
       search_path = getenv(LT_MODULE_PATH_VAR);
 #endif
       break;
-    case 3: search_path = getenv("TME_MODULE_PATH"); break;
-    case 4: search_path = TME_PACKAGE_PATH; break;
+    case 3: search_path = getenv("NME_MODULE_PATH"); break;
+    case 4: search_path = nme_PACKAGE_PATH; break;
     case 5: search_path = LT_DLSEARCH_PATH; break;
     default: assert(FALSE);
     }
@@ -147,8 +147,8 @@ _tme_modules_find(const char *top_name,
 
       /* if this path is absolute: */
       for (prefix_length = 0;
-	   *p1 == '/' && prefix_length <= strlen(TME_PREFIX_PATH);
-	   prefix_length += strlen(TME_PREFIX_PATH)) {
+	   *p1 == '/' && prefix_length <= strlen(nme_PREFIX_PATH);
+	   prefix_length += strlen(nme_PREFIX_PATH)) {
 
 	/* form the modules index pathname to try, remembering what
 	   part of it is the modules directory pathname: */
@@ -171,7 +171,7 @@ _tme_modules_find(const char *top_name,
 		  /* a NUL: */
 		  + 1);
 	if(prefix_length) {
-	  strcpy(modules_index_pathname, TME_PREFIX_PATH);
+	  strcpy(modules_index_pathname, nme_PREFIX_PATH);
 	  if(modules_index_pathname[prefix_length-1] == '/') {
 	    prefix_length--;
 	    modules_dir_length--;	  

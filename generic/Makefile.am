@@ -7,8 +7,8 @@ AUTOM4TE = $(SHELL) $(top_srcdir)/missing --run autom4te
 
 AM_CPPFLAGS = -I$(top_srcdir) -D_TME_IMPL -DLIBTME_GENERIC_BUILD
 
-lib_LTLIBRARIES = libtme-generic.la
-libtme_generic_la_SOURCES = bus.c \
+lib_LTLIBRARIES = lib@PACKAGE@-generic.la
+lib@PACKAGE@_generic_la_SOURCES = bus.c \
 	bus-device.c \
 	serial.c \
 	ethernet.c \
@@ -19,8 +19,8 @@ libtme_generic_la_SOURCES = bus.c \
 	mouse.c \
 	float.c \
 	keyboard.c
-libtme_generic_la_LDFLAGS = -version-info 0:0:0
-libtme_generic_la_LIBADD = $(top_builddir)/libtme/libtme.la
+lib@PACKAGE@_generic_la_LDFLAGS = -version-info 0:0:0
+lib@PACKAGE@_generic_la_LIBADD = $(top_builddir)/libtme/lib@PACKAGE@.la
 
 noinst_SCRIPTS = float-auto.sh \
 		bus-device-auto.sh \
@@ -49,11 +49,11 @@ $(srcdir)/fb-xlat-auto.c: fb-xlat-auto.sh fb-xlat-auto.in
 	cat $*.in | xargs $(SHELL) $< > $@
 
 $(srcdir)/fb-xlat-auto.in: fb-xlat-auto.pl
-	$(PERL) $< src $(TME_FB_XLAT_SRC) dst $(TME_FB_XLAT_DST) > $@ || \
-	echo "src $(TME_FB_XLAT_SRC) dst $(TME_FB_XLAT_DST)" > $@
+	$(PERL) $< src $(NME_FB_XLAT_SRC) dst $(NME_FB_XLAT_DST) > $@ || \
+	echo "src $(NME_FB_XLAT_SRC) dst $(NME_FB_XLAT_DST)" > $@
 else
 $(srcdir)/fb-xlat-auto.c: fb-xlat-auto.sh
-	$(SHELL) $< src $(TME_FB_XLAT_SRC) dst $(TME_FB_XLAT_DST) > $@
+	$(SHELL) $< src $(NME_FB_XLAT_SRC) dst $(NME_FB_XLAT_DST) > $@
 endif
 
 SUBDIRS = . bus

@@ -1,5 +1,5 @@
 ## Process this file with automake to produce Makefile.in
-# Makefile.am for The Machine Emulator libtme/:
+# Makefile.am for The Machine Emulator lib@PACKAGE@/:
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
@@ -9,9 +9,9 @@ SUBDIRS = host
 
 AM_CPPFLAGS = -I$(top_srcdir) -D_TME_IMPL $(LTDLINCL) $(LIBOPENVPN_CFLAGS) $(ZLIB_CFLAGS) $(GLIB_CFLAGS) $(SDL_CFLAGS)
 
-lib_LTLIBRARIES = libtme.la
+lib_LTLIBRARIES = lib@PACKAGE@.la
 pkginclude_HEADERS = memory-auto.h
-libtme_la_SOURCES = misc-host.c \
+lib@PACKAGE@_la_SOURCES = misc-host.c \
 	memory-auto.c \
 	openvpn-setup.c \
 	recode-flags.c \
@@ -33,8 +33,8 @@ libtme_la_SOURCES = misc-host.c \
 	runlength.c \
 	alloc.c
 
-libtme_la_LIBADD = $(LIBLTDL) $(LIBOPENVPN_LIBS) $(ZLIB_LIBS) $(GLIB_LIBS) $(SDL_LIBS)
-libtme_la_LDFLAGS = -version-info 0:0:0
+lib@PACKAGE@_la_LIBADD = $(LIBLTDL) $(LIBOPENVPN_LIBS) $(ZLIB_LIBS) $(GLIB_LIBS) $(SDL_LIBS)
+lib@PACKAGE@_la_LDFLAGS = -version-info 0:0:0
 
 noinst_SCRIPTS = memory-auto.sh
 

@@ -674,14 +674,14 @@ AC_MSG_RESULT(no)
 ])
 
 dnl Start the list of display host support.
-TME_FB_XLAT_DST="d32b32s0p32olml_r0xffff0000_g0xff00ff00_b0xff0000ff d24b32s0p32olml_r0xff0000_g0xff00_b0xff"
+NME_FB_XLAT_DST="d32b32s0p32olml_r0xffff0000_g0xff00ff00_b0xff0000ff d24b32s0p32olml_r0xff0000_g0xff00_b0xff"
 
 # if --with-tme-host-displays is given, characterize those given displays:
 AC_ARG_WITH(tme-host-displays,
 [  --with-tme-host-displays=DISPLAYS  support host displays with these display formats],
-[ TME_FB_XLAT_DST=$withval $TME_FB_XLAT_DST], [])
+[ NME_FB_XLAT_DST=$withval $NME_FB_XLAT_DST], [])
 
-AC_SUBST(TME_FB_XLAT_DST)
+AC_SUBST(NME_FB_XLAT_DST)
 
 AC_SYS_POSIX_TERMIOS
 
@@ -741,8 +741,8 @@ dnl Configures for the system(s) to emulate.
 bus_size_max=64
 recode_size_guest_max=64
 
-TME_FB_XLAT_SRC="1152x900d1b1s0p32om 1152x900d8b8s0p32ommi8 1152x900d1b1s0p32omccmi8"
-AC_SUBST(TME_FB_XLAT_SRC)
+NME_FB_XLAT_SRC="1152x900d1b1s0p32om 1152x900d8b8s0p32ommi8 1152x900d1b1s0p32omccmi8"
+AC_SUBST(NME_FB_XLAT_SRC)
 
 dnl Checks for X11.
 AC_PATH_XTRA
@@ -1226,7 +1226,7 @@ bus_size_max="$bus_size_max"
 
 dnl Writes files.
 AC_CONFIG_FILES([Makefile
-	  tme-modules.sh
+	  nme-modules.sh
 	  tme/Makefile
 	  tme/ic/Makefile
 	  tme/machine/Makefile

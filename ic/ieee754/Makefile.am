@@ -5,13 +5,13 @@ AUTOMAKE_OPTIONS = 1.4 gnu
 
 AUTOM4TE = $(SHELL) $(top_srcdir)/missing --run autom4te
 
-tmeicincludedir = $(pkgincludedir)/ic
-tmeicinclude_HEADERS = ieee754-auto.h ieee754-ops-auto.h
+@PACKAGE@icincludedir = $(pkgincludedir)/ic
+@PACKAGE@icinclude_HEADERS = ieee754-auto.h ieee754-ops-auto.h
 
-lib_LTLIBRARIES = libtme-ieee754.la
-libtme_ieee754_la_SOURCES = ieee754-ops-auto.c ieee754-misc.c softfloat-tme.c
-libtme_ieee754_la_LDFLAGS = -lm -version-info 0:0:0
-libtme_ieee754_la_LIBADD = $(TME_LIBS)
+lib_LTLIBRARIES = lib@PACKAGE@-ieee754.la
+lib@PACKAGE@_ieee754_la_SOURCES = ieee754-ops-auto.c ieee754-misc.c softfloat-tme.c
+lib@PACKAGE@_ieee754_la_LDFLAGS = -lm -version-info 0:0:0
+lib@PACKAGE@_ieee754_la_LIBADD = $(@PACKAGE@_LIBS)
 
 AM_CFLAGS = @CFLAGS_NO_STRICT_ALIASING@
 

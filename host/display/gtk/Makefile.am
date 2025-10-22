@@ -3,12 +3,12 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
-tme_host_gtk_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/.. $(GTK_CFLAGS)
+@PACKAGE@_host_gtk_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/.. $(GTK_CFLAGS)
 
 if HAVE_GTK
-pkglib_LTLIBRARIES = tme_host_gtk.la
+pkglib_LTLIBRARIES = @PACKAGE@_host_gtk.la
 endif
-tme_host_gtk_la_SOURCES = gtk-mouse.c gtk-keyboard.c gtk-display.c gtk-display.h
-tme_host_gtk_la_LIBADD = ../libtme-display.la $(GTK_LIBS) $(TME_LIBS)
+@PACKAGE@_host_gtk_la_SOURCES = gtk-mouse.c gtk-keyboard.c gtk-display.c gtk-display.h
+@PACKAGE@_host_gtk_la_LIBADD = ../lib@PACKAGE@-display.la $(GTK_LIBS) $(@PACKAGE@_LIBS)
 
 include $(top_srcdir)/modules.mk

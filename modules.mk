@@ -41,18 +41,18 @@
 # element "new" function declarations.  these declarations provide
 # enough information to determine the published module name, the
 # libtool module name, and "submodule" name.  this information is
-# appended to a tme-plugins.txt file, which will be installed in
+# appended to a @PACKAGE@-plugins.txt file, which will be installed in
 # $(pkglibdir).
 #
-# the choice of $(top_builddir)/tme/tme-plugins.txt is important.
+# the choice of $(top_builddir)/@PACKAGE@/@PACKAGE@-plugins.txt is important.
 # when debugging, the person doing the debugging is expected to have
 # the good sense to set LTDL_LIBRARY_PATH to $(top_builddir), so
 # module.c will correctly use the uninstalled plugins list for all
-# "tme/" modules.
+# "@PACKAGE@/" modules.
 #
-# this is abuse of the $(top_builddir)/tme directory, yes, since
+# this is abuse of the $(top_builddir)/@PACKAGE@ directory, yes, since
 # this directory was originally just for include files and to make
-# #include <tme/FOO.h> work right when building:
+# #include <@PACKAGE@/FOO.h> work right when building:
 modules-local:
 
 #
@@ -66,16 +66,16 @@ modules-local:
 #
 # so we append suitable -dlopen options for all modules built in
 # this directory to a file, in this case
-# $(top_builddir)/tme-preopen.txt.  when building statically,
-# configure.ac will then substitute @TME_PREOPEN@ with: 
+# $(top_builddir)/@PACKAGE@-preopen.txt.  when building statically,
+# configure.ac will then substitute @@PACKAGE@_PREOPEN@ with: 
 #
-#  `cat $(top_builddir)/tme-preopen.txt`
+#  `cat $(top_builddir)/@PACKAGE@-preopen.txt`
 #
 # else it will substitute the empty string.  when linking programs,
-# @TME_PREOPEN@ is then used on the program's link command line.
+# @@PACKAGE@_PREOPEN@ is then used on the program's link command line.
 # 
 # Note: this works differently now - please see comment in top Makefile for modules target
-	$(top_builddir)/tme-modules.sh $(subdir) $(top_srcdir) $(pkglib_LTLIBRARIES)
+	$(top_builddir)/@PACKAGE@-modules.sh $(subdir) $(top_srcdir) $(pkglib_LTLIBRARIES)
 
 # additionally, libtool, at least through version 1.5, has a
 # limitation in that the pseudo-library (the .la file) must be present
@@ -87,9 +87,9 @@ modules-local:
 #
 # the person doing the debugging is already expected to set
 # LTDL_LIBRARY_PATH to the top of the build directory, so that
-# module.c can find the uninstalled tme-plugins.txt file, and libtool
+# module.c can find the uninstalled @PACKAGE@-plugins.txt file, and libtool
 # will want to look in this directory for .la files, so we simply copy
 # all of the .la files into that same directory:
 AM_CPPFLAGS = -I$(top_srcdir) -D_TME_IMPL
 AM_LDFLAGS = -module -version-info 0:0:0
-TME_LIBS = $(top_builddir)/generic/libtme-generic.la $(top_builddir)/libtme/libtme.la
+@PACKAGE@_LIBS = $(top_builddir)/generic/lib@PACKAGE@-generic.la $(top_builddir)/libtme/lib@PACKAGE@.la

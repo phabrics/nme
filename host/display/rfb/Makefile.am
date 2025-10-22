@@ -3,20 +3,20 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
-tme_host_rfb_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/.. $(RFB_CFLAGS)
+@PACKAGE@_host_rfb_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/.. $(RFB_CFLAGS)
 
 if HAVE_RFB
-pkglib_LTLIBRARIES = tme_host_rfb.la
+pkglib_LTLIBRARIES = @PACKAGE@_host_rfb.la
 endif
-tme_host_rfb_la_SOURCES = rfb-display.c
-tme_host_rfb_la_LIBADD = ../libtme-display.la $(RFB_LIBS) $(TME_LIBS)
+@PACKAGE@_host_rfb_la_SOURCES = rfb-display.c
+@PACKAGE@_host_rfb_la_LIBADD = ../lib@PACKAGE@-display.la $(RFB_LIBS) $(@PACKAGE@_LIBS)
 
 if HAVE_GTK
-tme_host_rfb_la_CPPFLAGS += $(GTK_CFLAGS)
-tme_host_rfb_la_LIBADD += $(GTK_LIBS)
+@PACKAGE@_host_rfb_la_CPPFLAGS += $(GTK_CFLAGS)
+@PACKAGE@_host_rfb_la_LIBADD += $(GTK_LIBS)
 else
-tme_host_rfb_la_CPPFLAGS += $(SDL_CFLAGS)
-tme_host_rfb_la_LIBADD += $(SDL_LIBS)
+@PACKAGE@_host_rfb_la_CPPFLAGS += $(SDL_CFLAGS)
+@PACKAGE@_host_rfb_la_LIBADD += $(SDL_LIBS)
 endif
 
 include $(top_srcdir)/modules.mk

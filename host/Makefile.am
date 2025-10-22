@@ -3,15 +3,15 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
-tme_host_posix_la_CPPFLAGS = $(AM_CPPFLAGS)
+@PACKAGE@_host_posix_la_CPPFLAGS = $(AM_CPPFLAGS)
 
-pkglib_LTLIBRARIES = tme_host_posix.la
-tme_host_posix_la_SOURCES = posix-memory.c \
+pkglib_LTLIBRARIES = @PACKAGE@_host_posix.la
+@PACKAGE@_host_posix_la_SOURCES = posix-memory.c \
 	posix-disk.c \
 	posix-tape.c \
 	posix-serial.c
 
-tme_host_posix_la_LIBADD = $(TME_LIBS)
+@PACKAGE@_host_posix_la_LIBADD = $(@PACKAGE@_LIBS)
 
 include $(top_srcdir)/modules.mk
 

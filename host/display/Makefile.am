@@ -4,12 +4,12 @@
 AUTOMAKE_OPTIONS = 1.4 gnu
 
 AM_CPPFLAGS = -I$(top_srcdir) -D_TME_IMPL
-TME_LIBS = $(top_builddir)/generic/libtme-generic.la $(top_builddir)/libtme/libtme.la
+@PACKAGE@_LIBS = $(top_builddir)/generic/lib@PACKAGE@-generic.la $(top_builddir)/libtme/lib@PACKAGE@.la
 
-lib_LTLIBRARIES = libtme-display.la
-libtme_display_la_SOURCES = display-mouse.c display-keyboard.c display.c display.h
-libtme_display_la_LDFLAGS = -version-info 0:0:0
-libtme_display_la_LIBADD = $(TME_LIBS)
+lib_LTLIBRARIES = lib@PACKAGE@-display.la
+lib@PACKAGE@_display_la_SOURCES = display-mouse.c display-keyboard.c display.c display.h
+lib@PACKAGE@_display_la_LDFLAGS = -version-info 0:0:0
+lib@PACKAGE@_display_la_LIBADD = $(@PACKAGE@_LIBS)
 
 EXTRA_DIST = keymap-make.pl keymap-def.h
 
