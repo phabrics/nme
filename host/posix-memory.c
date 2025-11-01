@@ -367,7 +367,7 @@ _tme_posix_memory_valids_set(void *_memory,
 }
 
 /* the new memory function: */
-TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,memory) {
+NME_ELEMENT_SUB_NEW_DECL(host_posix,memory) {
   unsigned int memory_type;
   unsigned long memory_size;
   const char *filename;

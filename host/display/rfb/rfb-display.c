@@ -356,7 +356,7 @@ static tme_keyboard_keyval_t _tme_sdl_keyval_from_name(const char *name) {
 #endif
 
 /* the new RFB display function: */
-TME_ELEMENT_SUB_NEW_DECL(tme_host_rfb,display) {
+NME_ELEMENT_SUB_NEW_DECL(host_rfb,display) {
   struct tme_display *display;
   int arg_i = 0;
 

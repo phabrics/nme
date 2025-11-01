@@ -33,8 +33,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _TME_MODULE_H
-#define _TME_MODULE_H
+#ifndef _NME_MODULE_H
+#define _NME_MODULE_H
 
 #include <tme/common.h>
 _TME_RCSID("$Id: module.h,v 1.1 2003/05/16 21:48:14 fredette Exp $");
@@ -44,9 +44,9 @@ _TME_RCSID("$Id: module.h,v 1.1 2003/05/16 21:48:14 fredette Exp $");
 /* macros: */
 
 /* these make exported symbol names: */
-#define TME_MODULE_SYM(module,sym) _TME_CONCAT3(module,_LTX_,sym)
-#define TME_MODULE_SUB_SYM(module,sub,sym) _TME_CONCAT4(module,_LTX_,sub,sym)
-#define TME_MODULE_X_SYM(class,agg,sub,sym) _TME_CONCAT5(class,agg,_LTX_,sub,sym)
+#define NME_MODULE_SYM(module,sym) _TME_CONCAT3(nme_##module,_LTX_,sym)
+#define NME_MODULE_SUB_SYM(module,sub,sym) _TME_CONCAT4(nme_##module,_LTX_,sub,sym)
+#define NME_MODULE_X_SYM(class,agg,sub,sym) _TME_CONCAT5(nme_##class,agg,_LTX_,sub,sym)
 
 /* prototypes: */
 /* this initializes modules: */
@@ -67,4 +67,4 @@ int tme_module_open _TME_P((_tme_const char *, void **, char **));
 void *tme_module_symbol _TME_P((void *, _tme_const char *));
 int tme_module_close _TME_P((void *));
 
-#endif /* !_TME_MODULE_H */
+#endif /* !_NME_MODULE_H */

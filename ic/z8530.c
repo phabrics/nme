@@ -1717,7 +1717,7 @@ _tme_z8530_connections_new(struct tme_element *element,
 }
 
 /* the new z8530 function: */
-TME_ELEMENT_NEW_DECL(tme_ic_z8530) {
+NME_ELEMENT_NEW_DECL(ic_z8530) {
   const struct tme_z8530_socket *socket;
   struct tme_z8530 *z8530;
   struct tme_z8530_socket socket_real;

@@ -688,7 +688,7 @@ _tme_sun4_connections_new(struct tme_element *element, const char * const *args,
 }
 
 /* this creates a new sun4 element: */
-TME_ELEMENT_NEW_DECL(tme_machine_sun4) {
+NME_ELEMENT_NEW_DECL(machine_sun4) {
   int usage;
   struct tme_sun4 *sun4;
   const char *idprom_filename;
@@ -822,7 +822,7 @@ TME_ELEMENT_NEW_DECL(tme_machine_sun4) {
 }
 
 /* this creates a new Sun-4 isil7170: */
-TME_ELEMENT_SUB_NEW_DECL(tme_machine_sun4,oclock) {
+NME_ELEMENT_SUB_NEW_DECL(machine_sun4,oclock) {
   struct tme_isil7170_socket socket;
   const char *sub_args[4];
   int arg_i;
@@ -837,7 +837,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_machine_sun4,oclock) {
 
   /* create the isil7170.  we allow at most two arguments to pass
      through, which is an awful hack: */
-  sub_args[0] = "tme/ic/isil7170";
+  sub_args[0] = "nme/ic/isil7170";
   for (arg_i = 1;; arg_i++) {
     if (arg_i == TME_ARRAY_ELS(sub_args)) {
       abort();
@@ -851,7 +851,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_machine_sun4,oclock) {
 }
 
 /* this creates a new Sun-4 mk48txx: */
-TME_ELEMENT_SUB_NEW_DECL(tme_machine_sun4,clock) {
+NME_ELEMENT_SUB_NEW_DECL(machine_sun4,clock) {
   struct tme_mk48txx_socket socket;
 
   /* create the mk48txx socket: */
@@ -875,12 +875,12 @@ TME_ELEMENT_SUB_NEW_DECL(tme_machine_sun4,clock) {
 }
 
 /* this creates a new Sun-4 z8530: */
-TME_ELEMENT_SUB_NEW_DECL(tme_machine_sun4,zs) {
+NME_ELEMENT_SUB_NEW_DECL(machine_sun4,zs) {
   struct tme_z8530_socket socket = TME_SUN_Z8530_SOCKET_INIT;
   char *sub_args[2];
 
   /* create the z8530: */
-  sub_args[0] = "tme/ic/z8530";
+  sub_args[0] = "nme/ic/z8530";
   sub_args[1] = NULL;
   return (tme_element_new(element, (const char * const *) sub_args, &socket, _output));
 }

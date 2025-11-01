@@ -446,6 +446,6 @@ _tme_ad184x_new(struct tme_element *element,
   return (TME_OK);
 }
 
-TME_ELEMENT_X_NEW_DECL(tme_ic_,ad184x,cs4231A) {
+NME_ELEMENT_X_NEW_DECL(ic_,ad184x,cs4231A) {
   return (_tme_ad184x_new(element, args, extra, _output, TME_AD184X_PART_CS4231A));
 }

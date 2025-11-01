@@ -5,12 +5,12 @@ topdir=$2
 srcdir=$2/$1
 
 echo updating @PACKAGE@ modules list..
-grep TME_ELEMENT_NEW_DECL $srcdir/*.c |	
-    sed -e 's%.*TME_ELEMENT_NEW_DECL(\(.*\)).*%\1%' >> $topdir/tme/@PACKAGE@-plugins.txt
-grep TME_ELEMENT_SUB_NEW_DECL $srcdir/*.c |		
-    sed -e 's%.*TME_ELEMENT_SUB_NEW_DECL(\(.*\),\(.*\)).*%\1_\2 \1 \2%' >> $topdir/tme/@PACKAGE@-plugins.txt
-grep TME_ELEMENT_X_NEW_DECL $srcdir/*.c |		
-    sed -e 's%.*TME_ELEMENT_X_NEW_DECL(\(.*\),\(.*\),\(.*\)).*%\1\3 \1\2 \3%' >> $topdir/tme/@PACKAGE@-plugins.txt
+grep NME_ELEMENT_NEW_DECL $srcdir/*.c |	
+    sed -e 's%.*NME_ELEMENT_NEW_DECL(\(.*\)).*%@PACKAGE@_\1%' >> $topdir/tme/@PACKAGE@-plugins.txt
+grep NME_ELEMENT_SUB_NEW_DECL $srcdir/*.c |		
+    sed -e 's%.*NME_ELEMENT_SUB_NEW_DECL(\(.*\),\(.*\)).*%@PACKAGE@_\1_\2 @PACKAGE@_\1 \2%' >> $topdir/tme/@PACKAGE@-plugins.txt
+grep NME_ELEMENT_X_NEW_DECL $srcdir/*.c |		
+X    sed -e 's%.*NME_ELEMENT_X_NEW_DECL(\(.*\),\(.*\),\(.*\)).*%@PACKAGE@_\1\3 @PACKAGE@_\1\2 \3%' >> $topdir/tme/@PACKAGE@-plugins.txt
 
 moddir=`echo ${subdir} | tr '/' '_'`
 echo moddir=${moddir} > $srcdir/moddir.mk

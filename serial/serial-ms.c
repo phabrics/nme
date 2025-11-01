@@ -664,7 +664,7 @@ _tme_serial_ms_connections_new(struct tme_element *element,
 }
 
 /* the new serial mouse function: */
-TME_ELEMENT_X_NEW_DECL(tme_serial_,kb,mouse) {
+NME_ELEMENT_X_NEW_DECL(serial_,kb,mouse) {
   struct tme_serial_ms *serial_ms;
   const char *ms_type;
   int (*ms_init) _TME_P((struct tme_serial_ms *));

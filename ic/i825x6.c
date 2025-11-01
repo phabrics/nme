@@ -2187,7 +2187,7 @@ _tme_i825x6_connections_new(struct tme_element *element,
 }
 
 /* the new i82586 function: */
-TME_ELEMENT_X_NEW_DECL(tme_ic_,i825x6,i82586) {
+NME_ELEMENT_X_NEW_DECL(ic_,i825x6,i82586) {
   struct tme_i825x6 *i825x6;
   int arg_i;
   int usage;

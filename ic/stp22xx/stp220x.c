@@ -1622,6 +1622,6 @@ _tme_stp220x_new(struct tme_element *element,
 }
 
 /* this creates a new stp2200 element: */
-TME_ELEMENT_X_NEW_DECL(tme_ic_,stp22xx,stp2200) {
+NME_ELEMENT_X_NEW_DECL(ic_,stp22xx,stp2200) {
   return (_tme_stp220x_new(element, args, extra, _output, TRUE));
 }

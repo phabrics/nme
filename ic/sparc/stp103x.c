@@ -4336,7 +4336,7 @@ _tme_stp103x_new(struct tme_element *element,
 }
 
 /* this creates and returns a new stp1030: */
-TME_ELEMENT_X_NEW_DECL(tme_ic_,sparc,stp1030) {
+NME_ELEMENT_X_NEW_DECL(ic_,sparc,stp1030) {
   return (_tme_stp103x_new(element, args, extra, _output, TRUE));
 }
 

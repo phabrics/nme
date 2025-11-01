@@ -242,18 +242,18 @@ _tme_ncr89c105_new(struct tme_element *element,
 }
 
 /* this creates a new ncr89c105 z85c30: */
-TME_ELEMENT_SUB_NEW_DECL(tme_ic_ncr89c105,z85c30) {
+NME_ELEMENT_SUB_NEW_DECL(ic_ncr89c105,z85c30) {
   struct tme_z8530_socket socket = TME_SUN_Z8530_SOCKET_INIT;
   const char *sub_args[2];
 
   /* create the z8530: */
-  sub_args[0] = "tme/ic/z8530";
+  sub_args[0] = "nme/ic/z8530";
   sub_args[1] = NULL;
   return (tme_element_new(element, sub_args, &socket, _output));
 }
 
 /* this creates a new ncr89c105 fdtwo: */
-TME_ELEMENT_SUB_NEW_DECL(tme_ic_ncr89c105,i82077) {
+NME_ELEMENT_SUB_NEW_DECL(ic_ncr89c105,i82077) {
   struct tme_nec765_socket socket;
   const char *sub_args[2];
 
@@ -262,12 +262,12 @@ TME_ELEMENT_SUB_NEW_DECL(tme_ic_ncr89c105,i82077) {
   socket.tme_nec765_socket_version = TME_NEC765_SOCKET_0;
 
   /* create the i82077: */
-  sub_args[0] = "tme/ic/i82077";
+  sub_args[0] = "nme/ic/i82077";
   sub_args[1] = NULL;
   return (tme_element_new(element, sub_args, &socket, _output));
 }
 
 /* this creates a new ncr89c105 auxio: */
-TME_ELEMENT_SUB_NEW_DECL(tme_ic_ncr89c105,auxio) {
+NME_ELEMENT_SUB_NEW_DECL(ic_ncr89c105,auxio) {
   return (_tme_ncr89c105_new(element, args, extra, _output, TME_NCR89C105_SECTION_AUXIO));
 }

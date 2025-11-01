@@ -983,7 +983,7 @@ _tme_sun_mie_connections_new(struct tme_element *element,
 }
 
 /* the new sun_mie function: */
-TME_ELEMENT_SUB_NEW_DECL(tme_bus_multibus,sun_mie) {
+NME_ELEMENT_SUB_NEW_DECL(bus_multibus,sun_mie) {
   struct tme_sun_mie *sun_mie;
   int arg_i;
   int usage;

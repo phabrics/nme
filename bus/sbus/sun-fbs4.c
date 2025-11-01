@@ -40,7 +40,7 @@ _TME_RCSID("$Id: sun-fbs4.c,v 1.2 2009/08/29 21:27:00 fredette Exp $");
 #include <tme/machine/sun.h>
 
 /* this creates a new SBus bwtwo: */
-TME_ELEMENT_SUB_NEW_DECL(tme_bus_sbus,bwtwo) {
+NME_ELEMENT_SUB_NEW_DECL(bus_sbus,bwtwo) {
   const char *sub_args[4];
 
   /* the bwtwo implementation requires an explicit type: */
@@ -63,11 +63,11 @@ TME_ELEMENT_SUB_NEW_DECL(tme_bus_sbus,bwtwo) {
 }
 
 /* this creates a new Sbus cgthree: */
-TME_ELEMENT_SUB_NEW_DECL(tme_bus_sbus,cgthree) {
+NME_ELEMENT_SUB_NEW_DECL(bus_sbus,cgthree) {
   return (tme_sun_cgthree(element, args, _output));
 }
 
 /* this creates a new Sbus cgsix: */
-TME_ELEMENT_SUB_NEW_DECL(tme_bus_sbus,cgsix) {
+NME_ELEMENT_SUB_NEW_DECL(bus_sbus,cgsix) {
   return (tme_sun_cgsix(element, args, _output));
 }

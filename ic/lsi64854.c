@@ -1370,7 +1370,7 @@ _tme_lsi64854_connections_new(struct tme_element *element,
 }
 
 /* this creates one independent channel of an LSI 64854: */
-TME_ELEMENT_NEW_DECL(tme_ic_lsi64854) {
+NME_ELEMENT_NEW_DECL(ic_lsi64854) {
   struct tme_lsi64854 *lsi64854;
   int arg_i;
   int usage;

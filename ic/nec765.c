@@ -553,10 +553,10 @@ _tme_nec765_new(struct tme_element *element,
   return (TME_OK);
 }
 
-TME_ELEMENT_X_NEW_DECL(tme_ic_,nec765,i82072) {
+NME_ELEMENT_X_NEW_DECL(ic_,nec765,i82072) {
   return (_tme_nec765_new(element, args, extra, _output, TME_NEC765_PART_I82072));
 }
 
-TME_ELEMENT_X_NEW_DECL(tme_ic_,nec765,i82077) {
+NME_ELEMENT_X_NEW_DECL(ic_,nec765,i82077) {
   return (_tme_nec765_new(element, args, extra, _output, TME_NEC765_PART_I82077));
 }

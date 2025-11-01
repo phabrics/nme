@@ -303,7 +303,7 @@ _tme_serial_sink_connections_new(struct tme_element *element,
 }
 
 /* the new serial sink function: */
-TME_ELEMENT_X_NEW_DECL(tme_serial_,kb,sink) {
+NME_ELEMENT_X_NEW_DECL(serial_,kb,sink) {
   struct tme_serial_sink *serial_sink;
   int usage;
   int arg_i;

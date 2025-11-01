@@ -660,7 +660,7 @@ do {						\
 }
 
 /* this creates and returns a new m68020: */
-TME_ELEMENT_X_NEW_DECL(tme_ic_,m68k,m68020) {
+NME_ELEMENT_X_NEW_DECL(ic_,m68k,m68020) {
   struct tme_m68k *ic;
 
   /* allocate the m68k structure: */

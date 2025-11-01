@@ -1028,7 +1028,7 @@ _tme_stp2024_connections_new(struct tme_element *element,
 }
 
 /* the new stp2024 function: */
-TME_ELEMENT_NEW_DECL(tme_ic_stp2024) {
+NME_ELEMENT_NEW_DECL(ic_stp2024) {
   int usage;
   int arg_i;
   tme_bus_addr_t power_fanctl;

@@ -59,7 +59,7 @@ void sym _TME_P((struct tme_scsi_device *,	\
 #define _TME_SCSI_DEVICE_MSG_DECL(sym)		\
 void sym(struct tme_scsi_device *scsi_device, tme_scsi_control_t control_old, tme_scsi_control_t control_new)
 #else  /* !__STDC__ */
-#define _TME_ELEMENT_NEW_DECL(sym)		\
+#define _NME_ELEMENT_NEW_DECL(sym)		\
 void sym(scsi_device, control_old, control_new)	\
   struct tme_scsi_device *scsi_device;		\
   tme_scsi_control_t control_old;		\

@@ -661,7 +661,7 @@ _tme_isil7170_tlb_fill(void *_isil7170, struct tme_bus_tlb *tlb,
 }
 
 /* the new isil7170 element function: */
-TME_ELEMENT_NEW_DECL(tme_ic_isil7170) {
+NME_ELEMENT_NEW_DECL(ic_isil7170) {
   const struct tme_isil7170_socket *socket;
   struct tme_isil7170 *isil7170;
   struct tme_isil7170_socket socket_real;

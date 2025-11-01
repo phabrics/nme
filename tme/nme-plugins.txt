@@ -1,69 +1,69 @@
-tme_generic_bus tme_generic bus
-tme_ic_m68010 tme_ic_m68k m68010
-tme_ic_m68020 tme_ic_m68k m68020
-tme_ic_cy7c601 tme_ic_sparc cy7c601
-tme_ic_mb86900 tme_ic_sparc mb86900
-tme_ic_stp1030 tme_ic_sparc stp1030
-tme_ic_stp2200 tme_ic_stp22xx stp2200
-tme_ic_stp2220 tme_ic_stp22xx stp2220
-tme_ic_am9513
-tme_ic_isil7170
-tme_ic_lsi64854
-tme_ic_mm58167
-tme_ic_ncr5380
-tme_ic_ncr53c9x
-tme_ic_stp2024
-tme_ic_z8530
-tme_ic_ncr89c105_z85c30 tme_ic_ncr89c105 z85c30
-tme_ic_ncr89c105_i82077 tme_ic_ncr89c105 i82077
-tme_ic_ncr89c105_auxio tme_ic_ncr89c105 auxio
-tme_ic_cs4231A tme_ic_ad184x cs4231A
-tme_ic_am7930 tme_ic_am7930 am7930
-tme_ic_am7990 tme_ic_am7990 am7990
-tme_ic_i82586 tme_ic_i825x6 i82586
-tme_ic_mk48t02 tme_ic_mk48txx mk48t02
-tme_ic_mk48t59 tme_ic_mk48txx mk48t59
-tme_ic_i82072 tme_ic_nec765 i82072
-tme_ic_i82077 tme_ic_nec765 i82077
-tme_machine_sun2
-tme_machine_sun2_clock tme_machine_sun2 clock
-tme_machine_sun2_tod tme_machine_sun2 tod
-tme_machine_sun2_zs tme_machine_sun2 zs
-tme_machine_sun2_bwtwo tme_machine_sun2 bwtwo
-tme_machine_sun3
-tme_machine_sun3_clock tme_machine_sun3 clock
-tme_machine_sun3_zs tme_machine_sun3 zs
-tme_machine_sun3_obie tme_machine_sun3 obie
-tme_machine_sun3_bwtwo tme_machine_sun3 bwtwo
-tme_machine_sun3_si tme_machine_sun3 si
-tme_machine_sun3_cgtwo tme_machine_sun3 cgtwo
-tme_machine_sun4
-tme_machine_sun4_fdc tme_machine_sun4 fdc
-tme_machine_sun4_oclock tme_machine_sun4 oclock
-tme_machine_sun4_clock tme_machine_sun4 clock
-tme_machine_sun4_zs tme_machine_sun4 zs
-tme_host_gtk_display tme_host_gtk display
-tme_host_rfb_display tme_host_rfb display
-tme_host_sdl_display tme_host_sdl display
-tme_host_bsd_bpf tme_host_bsd bpf
-tme_host_openvpn_socket_link tme_host_openvpn socket_link
-tme_host_openvpn_socket_server tme_host_openvpn_socket server
-tme_host_openvpn_tun_tap tme_host_openvpn tun_tap
-tme_host_tun_tap tme_host_tun tap
-tme_host_posix_disk tme_host_posix disk
-tme_host_posix_memory tme_host_posix memory
-tme_host_posix_serial tme_host_posix serial
-tme_host_posix_tape tme_host_posix tape
-tme_bus_multibus_3c400 tme_bus_multibus 3c400
-tme_bus_multibus_sun_mie tme_bus_multibus sun_mie
-tme_bus_multibus_sun_sc tme_bus_multibus sun_sc
-tme_bus_sbus_bwtwo tme_bus_sbus bwtwo
-tme_bus_sbus_cgthree tme_bus_sbus cgthree
-tme_bus_sbus_cgsix tme_bus_sbus cgsix
-tme_serial_keyboard tme_serial_kb keyboard
-tme_serial_mouse tme_serial_kb mouse
-tme_serial_sink tme_serial_kb sink
-tme_scsi_bus tme_scsi bus
-tme_scsi_cdrom tme_scsi cdrom
-tme_scsi_disk tme_scsi disk
-tme_scsi_tape tme_scsi tape
+nme_generic_bus nme_generic bus
+nme_ic_m68010 nme_ic_m68k m68010
+nme_ic_m68020 nme_ic_m68k m68020
+nme_ic_cy7c601 nme_ic_sparc cy7c601
+nme_ic_mb86900 nme_ic_sparc mb86900
+nme_ic_stp1030 nme_ic_sparc stp1030
+nme_ic_stp2200 nme_ic_stp22xx stp2200
+nme_ic_stp2220 nme_ic_stp22xx stp2220
+nme_ic_am9513
+nme_ic_isil7170
+nme_ic_lsi64854
+nme_ic_mm58167
+nme_ic_ncr5380
+nme_ic_ncr53c9x
+nme_ic_stp2024
+nme_ic_z8530
+nme_ic_ncr89c105_z85c30 nme_ic_ncr89c105 z85c30
+nme_ic_ncr89c105_i82077 nme_ic_ncr89c105 i82077
+nme_ic_ncr89c105_auxio nme_ic_ncr89c105 auxio
+nme_ic_cs4231A nme_ic_ad184x cs4231A
+nme_ic_am7930 nme_ic_am7930 am7930
+nme_ic_am7990 nme_ic_am7990 am7990
+nme_ic_i82586 nme_ic_i825x6 i82586
+nme_ic_mk48t02 nme_ic_mk48txx mk48t02
+nme_ic_mk48t59 nme_ic_mk48txx mk48t59
+nme_ic_i82072 nme_ic_nec765 i82072
+nme_ic_i82077 nme_ic_nec765 i82077
+nme_machine_sun2
+nme_machine_sun2_clock nme_machine_sun2 clock
+nme_machine_sun2_tod nme_machine_sun2 tod
+nme_machine_sun2_zs nme_machine_sun2 zs
+nme_machine_sun2_bwtwo nme_machine_sun2 bwtwo
+nme_machine_sun3
+nme_machine_sun3_clock nme_machine_sun3 clock
+nme_machine_sun3_zs nme_machine_sun3 zs
+nme_machine_sun3_obie nme_machine_sun3 obie
+nme_machine_sun3_bwtwo nme_machine_sun3 bwtwo
+nme_machine_sun3_si nme_machine_sun3 si
+nme_machine_sun3_cgtwo nme_machine_sun3 cgtwo
+nme_machine_sun4
+nme_machine_sun4_fdc nme_machine_sun4 fdc
+nme_machine_sun4_oclock nme_machine_sun4 oclock
+nme_machine_sun4_clock nme_machine_sun4 clock
+nme_machine_sun4_zs nme_machine_sun4 zs
+nme_host_gtk_display nme_host_gtk display
+nme_host_rfb_display nme_host_rfb display
+nme_host_sdl_display nme_host_sdl display
+nme_host_bsd_bpf nme_host_bsd bpf
+nme_host_openvpn_socket_link nme_host_openvpn socket_link
+nme_host_openvpn_socket_server nme_host_openvpn_socket server
+nme_host_openvpn_tun_tap nme_host_openvpn tun_tap
+nme_host_tun_tap nme_host_tun tap
+nme_host_posix_disk nme_host_posix disk
+nme_host_posix_memory nme_host_posix memory
+nme_host_posix_serial nme_host_posix serial
+nme_host_posix_tape nme_host_posix tape
+nme_bus_multibus_3c400 nme_bus_multibus 3c400
+nme_bus_multibus_sun_mie nme_bus_multibus sun_mie
+nme_bus_multibus_sun_sc nme_bus_multibus sun_sc
+nme_bus_sbus_bwtwo nme_bus_sbus bwtwo
+nme_bus_sbus_cgthree nme_bus_sbus cgthree
+nme_bus_sbus_cgsix nme_bus_sbus cgsix
+nme_serial_keyboard nme_serial_kb keyboard
+nme_serial_mouse nme_serial_kb mouse
+nme_serial_sink nme_serial_kb sink
+nme_scsi_bus nme_scsi bus
+nme_scsi_cdrom nme_scsi cdrom
+nme_scsi_disk nme_scsi disk
+nme_scsi_tape nme_scsi tape

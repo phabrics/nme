@@ -3492,7 +3492,7 @@ _tme_ncr53c9x_connections_new(struct tme_element *element,
 }
 
 /* the new NCR 53c9x function: */
-TME_ELEMENT_NEW_DECL(tme_ic_ncr53c9x) {
+NME_ELEMENT_NEW_DECL(ic_ncr53c9x) {
   struct tme_ncr53c9x *ncr53c9x;
   unsigned int variant;
   int arg_i;

@@ -1315,7 +1315,7 @@ _tme_posix_tape_connections_new(struct tme_element *element,
 }
 
 /* the new posix tape function: */
-TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,tape) {
+NME_ELEMENT_SUB_NEW_DECL(host_posix,tape) {
   struct tme_posix_tape *posix_tape;
   int flags;
   int arg_i;

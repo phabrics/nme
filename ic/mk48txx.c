@@ -467,10 +467,10 @@ _tme_mk48txx_new(struct tme_element *element,
   return (TME_OK);
 }
 
-TME_ELEMENT_X_NEW_DECL(tme_ic_,mk48txx,mk48t02) {
+NME_ELEMENT_X_NEW_DECL(ic_,mk48txx,mk48t02) {
   return (_tme_mk48txx_new(element, args, extra, _output, TME_MK48TXX_PART_02));
 }
 
-TME_ELEMENT_X_NEW_DECL(tme_ic_,mk48txx,mk48t59) {
+NME_ELEMENT_X_NEW_DECL(ic_,mk48txx,mk48t59) {
   return (_tme_mk48txx_new(element, args, extra, _output, TME_MK48TXX_PART_59));
 }

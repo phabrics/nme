@@ -634,7 +634,7 @@ _tme_sdl_screen_redraw(struct tme_sdl_screen *screen, int x, int y, int w, int h
 }
 
 /* the new SDL display function: */
-TME_ELEMENT_SUB_NEW_DECL(tme_host_sdl,display) {
+NME_ELEMENT_SUB_NEW_DECL(host_sdl,display) {
   struct tme_display *display;
   int arg_i = 0;
 

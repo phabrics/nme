@@ -1015,7 +1015,7 @@ _tme_posix_disk_connections_new(struct tme_element *element,
 }
 
 /* the new posix disk function: */
-TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,disk) {
+NME_ELEMENT_SUB_NEW_DECL(host_posix,disk) {
   const char *filename;
   int flags;
   unsigned long agg_pre;

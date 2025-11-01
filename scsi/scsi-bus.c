@@ -1071,7 +1071,7 @@ _tme_scsi_bus_connections_new(struct tme_element *element,
 }
 
 /* this creates a new SCSI bus element: */
-TME_ELEMENT_SUB_NEW_DECL(tme_scsi,bus) {
+NME_ELEMENT_SUB_NEW_DECL(scsi,bus) {
   struct tme_scsi_bus *scsi_bus;
   int usage;
   int arg_i;

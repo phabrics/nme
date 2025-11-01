@@ -1618,7 +1618,7 @@ _tme_sun_sc_connections_new(struct tme_element *element,
 }
 
 /* the new Sun sc function: */
-TME_ELEMENT_SUB_NEW_DECL(tme_bus_multibus,sun_sc) {
+NME_ELEMENT_SUB_NEW_DECL(bus_multibus,sun_sc) {
   struct tme_sun_sc *sun_sc;
   int arg_i;
   int usage;

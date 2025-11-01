@@ -788,7 +788,7 @@ _tme_bus_connections_new(struct tme_element *element,
 }
 
 /* this creates a new bus element: */
-TME_ELEMENT_SUB_NEW_DECL(tme_generic,bus) {
+NME_ELEMENT_SUB_NEW_DECL(generic,bus) {
   struct tme_bus *bus;
   tme_bus_addr_t bus_size_mask;
   tme_bus_addr_t bus_slot_size;

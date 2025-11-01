@@ -33,8 +33,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _TME_ELEMENT_H
-#define _TME_ELEMENT_H
+#ifndef _NME_ELEMENT_H
+#define _NME_ELEMENT_H
 
 #include <tme/common.h>
 _TME_RCSID("$Id: element.h,v 1.5 2003/05/16 21:48:14 fredette Exp $");
@@ -47,40 +47,40 @@ _TME_RCSID("$Id: element.h,v 1.5 2003/05/16 21:48:14 fredette Exp $");
 /* macros: */
 
 /* these make exported element new function symbol names: */
-#define TME_ELEMENT_NEW_SYM(module) TME_MODULE_SYM(module,new)
-#define TME_ELEMENT_SUB_NEW_SYM(module,sub) TME_MODULE_SUB_SYM(module,sub,_new)
-#define TME_ELEMENT_X_NEW_SYM(class,agg,sub) TME_MODULE_X_SYM(class,agg,sub,_new)
+#define NME_ELEMENT_NEW_SYM(module) NME_MODULE_SYM(module,new)
+#define NME_ELEMENT_SUB_NEW_SYM(module,sub) NME_MODULE_SUB_SYM(module,sub,_new)
+#define NME_ELEMENT_X_NEW_SYM(class,agg,sub) NME_MODULE_X_SYM(class,agg,sub,_new)
 
 /* these make exported element new function prototypes: */
-#define _TME_ELEMENT_NEW_P(sym)				\
+#define _NME_ELEMENT_NEW_P(sym)				\
 int sym _TME_P((struct tme_element *, _tme_const char * _tme_const *, const void *, char **))
-#define TME_ELEMENT_NEW_P(module)			\
-_TME_ELEMENT_NEW_P(TME_ELEMENT_NEW_SYM(module))
-#define TME_ELEMENT_SUB_NEW_P(module,sub)		\
-_TME_ELEMENT_NEW_P(TME_ELEMENT_SUB_NEW_SYM(module,sub))
-#define TME_ELEMENT_X_NEW_P(class,agg,sub)		\
-_TME_ELEMENT_NEW_P(TME_ELEMENT_X_NEW_SYM(class,agg,sub))
+#define NME_ELEMENT_NEW_P(module)			\
+_NME_ELEMENT_NEW_P(NME_ELEMENT_NEW_SYM(module))
+#define NME_ELEMENT_SUB_NEW_P(module,sub)		\
+_NME_ELEMENT_NEW_P(NME_ELEMENT_SUB_NEW_SYM(module,sub))
+#define NME_ELEMENT_X_NEW_P(class,agg,sub)		\
+_NME_ELEMENT_NEW_P(NME_ELEMENT_X_NEW_SYM(class,agg,sub))
 
 /* these declare exported new functions: */
 #ifdef __STDC__
-#define _TME_ELEMENT_NEW_DECL(sym)			\
-_TME_ELEMENT_NEW_P(sym);				\
+#define _NME_ELEMENT_NEW_DECL(sym)			\
+_NME_ELEMENT_NEW_P(sym);				\
 int sym(struct tme_element *element, const char * const *args, const void *extra, char **_output)
 #else  /* !__STDC__ */
-#define _TME_ELEMENT_NEW_DECL(sym)			\
-_TME_ELEMENT_NEW_P(sym);				\
+#define _NME_ELEMENT_NEW_DECL(sym)			\
+_NME_ELEMENT_NEW_P(sym);				\
 int sym(element, args, extra, _output)			\
   struct tme_element *element;				\
   const char **args;					\
   const void *extra;					\
   char **_output;
 #endif /* !__STDC__ */
-#define TME_ELEMENT_NEW_DECL(module)			\
-_TME_ELEMENT_NEW_DECL(TME_ELEMENT_NEW_SYM(module))
-#define TME_ELEMENT_SUB_NEW_DECL(module,sub)		\
-_TME_ELEMENT_NEW_DECL(TME_ELEMENT_SUB_NEW_SYM(module,sub))
-#define TME_ELEMENT_X_NEW_DECL(class,agg,sub)		\
-_TME_ELEMENT_NEW_DECL(TME_ELEMENT_X_NEW_SYM(class,agg,sub))
+#define NME_ELEMENT_NEW_DECL(module)			\
+_NME_ELEMENT_NEW_DECL(NME_ELEMENT_NEW_SYM(module))
+#define NME_ELEMENT_SUB_NEW_DECL(module,sub)		\
+_NME_ELEMENT_NEW_DECL(NME_ELEMENT_SUB_NEW_SYM(module,sub))
+#define NME_ELEMENT_X_NEW_DECL(class,agg,sub)		\
+_NME_ELEMENT_NEW_DECL(NME_ELEMENT_X_NEW_SYM(class,agg,sub))
 
 /* structures: */
 struct tme_connection;
@@ -127,4 +127,4 @@ int tme_element_connect _TME_P((struct tme_element *,
 				_tme_const char * _tme_const *,
 				char **, int *));
 
-#endif /* !_TME_ELEMENT_H */
+#endif /* !_NME_ELEMENT_H */

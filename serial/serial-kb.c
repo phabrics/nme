@@ -815,7 +815,7 @@ _tme_serial_kb_lookup_dummy(void *_keysym,
 }
 
 /* the new serial keyboard function: */
-TME_ELEMENT_X_NEW_DECL(tme_serial_,kb,keyboard) {
+NME_ELEMENT_X_NEW_DECL(serial_,kb,keyboard) {
   struct tme_serial_kb *serial_kb;
   const char *kb_type;
   int (*kb_init) _TME_P((struct tme_serial_kb *));

@@ -1020,7 +1020,7 @@ _tme_posix_serial_new(struct tme_element *element,
 }
 
 /* the new serial function: */
-TME_ELEMENT_SUB_NEW_DECL(tme_host_posix,serial) {
+NME_ELEMENT_SUB_NEW_DECL(host_posix,serial) {
   struct tme_posix_serial *serial;
   const char *filename_in;
   const char *filename_out;

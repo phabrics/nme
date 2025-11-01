@@ -160,7 +160,7 @@ tme_element_new(struct tme_element *element,
 		char **_output)
 {
   void *module;
-  _TME_ELEMENT_NEW_P((*new));
+  _NME_ELEMENT_NEW_P((*new));
   int rc;
 
   /* we must have at least one argument: */
@@ -174,7 +174,7 @@ tme_element_new(struct tme_element *element,
   element->tme_element_module = module;
 
   /* look up the "new" function: */
-  new = (_TME_ELEMENT_NEW_P((*))) tme_module_symbol(module, "new");
+  new = (_NME_ELEMENT_NEW_P((*))) tme_module_symbol(module, "new");
   if (new == NULL) {
     return (ENOENT);
   }

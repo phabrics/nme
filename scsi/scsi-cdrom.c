@@ -441,7 +441,7 @@ _TME_SCSI_DEVICE_CDB_DECL(tme_scsi_cdrom_cdb_mode_select)
 }
 
 /* the new SCSI CD-ROM function: */
-TME_ELEMENT_SUB_NEW_DECL(tme_scsi,cdrom) {
+NME_ELEMENT_SUB_NEW_DECL(scsi,cdrom) {
   int id;
   const char *cdrom_type;
   const char *vendor;

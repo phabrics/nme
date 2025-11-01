@@ -736,7 +736,7 @@ tme_scsi_disk_connections_new(struct tme_element *element,
 }
 
 /* the new SCSI disk function: */
-TME_ELEMENT_SUB_NEW_DECL(tme_scsi,disk) {
+NME_ELEMENT_SUB_NEW_DECL(scsi,disk) {
   int id;
   const char *disk_type;
   const char *vendor;

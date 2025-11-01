@@ -622,7 +622,7 @@ _tme_npf_print_error(const nl_error_t *ne, char **_output)
 #endif // _TME_DO_NPF
 
 /* the new TAP function: */
-TME_ELEMENT_SUB_NEW_DECL(tme_host_tun,tap) {
+NME_ELEMENT_SUB_NEW_DECL(host_tun,tap) {
   int tap_fd, dummy_fd;
   int saved_errno, i, rc;
   char dev_tap_filename[sizeof(DEV_TAP_FILENAME) + 9];

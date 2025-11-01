@@ -223,7 +223,7 @@ _tme_sparc_fpu_ver_cy7c601(struct tme_sparc *ic, const char *fpu_name, char **_o
 }
 
 /* this creates and returns a new cy7c601: */
-TME_ELEMENT_X_NEW_DECL(tme_ic_,sparc,cy7c601) {
+NME_ELEMENT_X_NEW_DECL(ic_,sparc,cy7c601) {
   struct tme_sparc *ic;
   tme_uint32_t psr;
 

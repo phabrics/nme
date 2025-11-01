@@ -44,7 +44,7 @@ _TME_RCSID("$Id: sun4-fdc.c,v 1.1 2006/11/15 22:54:33 fredette Exp $");
 #include "sun4-impl.h"
 
 /* this creates a new Sun-4 fdc: */
-TME_ELEMENT_SUB_NEW_DECL(tme_machine_sun4,fdc) {
+NME_ELEMENT_SUB_NEW_DECL(machine_sun4,fdc) {
   struct tme_nec765_socket socket;
 
   /* create the nec765 socket: */

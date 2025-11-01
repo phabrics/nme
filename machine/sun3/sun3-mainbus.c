@@ -671,7 +671,7 @@ _tme_sun3_connections_new(struct tme_element *element, const char * const *args,
 }
 
 /* this creates a new sun3 element: */
-TME_ELEMENT_NEW_DECL(tme_machine_sun3) {
+NME_ELEMENT_NEW_DECL(machine_sun3) {
   int usage;
   struct tme_sun3 *sun3;
   const char *idprom_filename;
@@ -766,7 +766,7 @@ TME_ELEMENT_NEW_DECL(tme_machine_sun3) {
 }
 
 /* this creates a new Sun-3 isil7170: */
-TME_ELEMENT_SUB_NEW_DECL(tme_machine_sun3,clock) {
+NME_ELEMENT_SUB_NEW_DECL(machine_sun3,clock) {
   struct tme_isil7170_socket socket;
   const char *sub_args[4];
   int arg_i;
@@ -781,7 +781,7 @@ TME_ELEMENT_SUB_NEW_DECL(tme_machine_sun3,clock) {
 
   /* create the isil7170.  we allow at most two arguments to pass
      through, which is an awful hack: */
-  sub_args[0] = "tme/ic/isil7170";
+  sub_args[0] = "nme/ic/isil7170";
   for (arg_i = 1;; arg_i++) {
     if (arg_i == TME_ARRAY_ELS(sub_args)) {
       abort();
@@ -795,32 +795,32 @@ TME_ELEMENT_SUB_NEW_DECL(tme_machine_sun3,clock) {
 }
 
 /* this creates a new Sun-3 z8530: */
-TME_ELEMENT_SUB_NEW_DECL(tme_machine_sun3,zs) {
+NME_ELEMENT_SUB_NEW_DECL(machine_sun3,zs) {
   struct tme_z8530_socket socket = TME_SUN_Z8530_SOCKET_INIT;
   char *sub_args[2];
 
   /* create the z8530: */
-  sub_args[0] = "tme/ic/z8530";
+  sub_args[0] = "nme/ic/z8530";
   sub_args[1] = NULL;
   return (tme_element_new(element, (const char * const *) sub_args, &socket, _output));
 }
 
 /* this creates a new Sun-3 obie: */
-TME_ELEMENT_SUB_NEW_DECL(tme_machine_sun3,obie) {
+NME_ELEMENT_SUB_NEW_DECL(machine_sun3,obie) {
   return (tme_sun_obie(element, args, _output));
 }
 
 /* this creates a new Sun-3 bwtwo: */
-TME_ELEMENT_SUB_NEW_DECL(tme_machine_sun3,bwtwo) {
+NME_ELEMENT_SUB_NEW_DECL(machine_sun3,bwtwo) {
   return (tme_sun_bwtwo(element, args, _output));
 }
 
 /* this creates a new Sun-3 si: */
-TME_ELEMENT_SUB_NEW_DECL(tme_machine_sun3,si) {
+NME_ELEMENT_SUB_NEW_DECL(machine_sun3,si) {
   return (tme_sun_si(element, args, _output));
 }
 
 /* this creates a new Sun-3 cgtwo: */
-TME_ELEMENT_SUB_NEW_DECL(tme_machine_sun3,cgtwo) {
+NME_ELEMENT_SUB_NEW_DECL(machine_sun3,cgtwo) {
   return (tme_sun_cgtwo(element, args, _output));
 }

@@ -563,7 +563,7 @@ _tme_sun2_connections_new(struct tme_element *element, const char * const *args,
 }
 
 /* this creates a new sun2 element: */
-TME_ELEMENT_NEW_DECL(tme_machine_sun2) {
+NME_ELEMENT_NEW_DECL(machine_sun2) {
   int usage;
   struct tme_sun2 *sun2;
   int sun2_has_vme;
@@ -671,7 +671,7 @@ TME_ELEMENT_NEW_DECL(tme_machine_sun2) {
 }
 
 /* this creates a new Sun-2 am9513: */
-TME_ELEMENT_SUB_NEW_DECL(tme_machine_sun2,clock) {
+NME_ELEMENT_SUB_NEW_DECL(machine_sun2,clock) {
   struct tme_am9513_socket socket;
   char *sub_args[2];
 
@@ -700,13 +700,13 @@ TME_ELEMENT_SUB_NEW_DECL(tme_machine_sun2,clock) {
   socket.tme_am9513_socket_counter_signals[4] = TME_BUS_SIGNAL_ABORT;
 
   /* create the am9513: */
-  sub_args[0] = "tme/ic/am9513";
+  sub_args[0] = "nme/ic/am9513";
   sub_args[1] = NULL;
   return (tme_element_new(element, (const char * const *) sub_args, &socket, _output));
 }
 
 /* this creates a new Sun-2 mm58167: */
-TME_ELEMENT_SUB_NEW_DECL(tme_machine_sun2,tod) {
+NME_ELEMENT_SUB_NEW_DECL(machine_sun2,tod) {
   struct tme_mm58167_socket socket;
   char *sub_args[2];
 
@@ -716,13 +716,13 @@ TME_ELEMENT_SUB_NEW_DECL(tme_machine_sun2,tod) {
   socket.tme_mm58167_socket_port_least_lane = 1; /* D15-D8 */
 
   /* create the mm58167: */
-  sub_args[0] = "tme/ic/mm58167";
+  sub_args[0] = "nme/ic/mm58167";
   sub_args[1] = NULL;
   return (tme_element_new(element, (const char * const *) sub_args, &socket, _output));
 }
 
 /* this creates a new Sun-2 z8530: */
-TME_ELEMENT_SUB_NEW_DECL(tme_machine_sun2,zs) {
+NME_ELEMENT_SUB_NEW_DECL(machine_sun2,zs) {
   struct tme_z8530_socket socket = TME_SUN_Z8530_SOCKET_INIT;
   char *sub_args[2];
 
@@ -733,12 +733,12 @@ TME_ELEMENT_SUB_NEW_DECL(tme_machine_sun2,zs) {
   socket.tme_z8530_socket_flags |= TME_Z8530_SOCKET_FLAG_IEI_TIED_LOW;
 
   /* create the z8530: */
-  sub_args[0] = "tme/ic/z8530";
+  sub_args[0] = "nme/ic/z8530";
   sub_args[1] = NULL;
   return (tme_element_new(element, (const char * const *) sub_args, &socket, _output));
 }
 
 /* this creates a new Sun-2 bwtwo: */
-TME_ELEMENT_SUB_NEW_DECL(tme_machine_sun2,bwtwo) {
+NME_ELEMENT_SUB_NEW_DECL(machine_sun2,bwtwo) {
   return (tme_sun_bwtwo(element, args, _output));
 }

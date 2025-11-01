@@ -283,7 +283,7 @@ _tme_mm58167_tlb_fill(void *_mm58167, struct tme_bus_tlb *tlb,
 }
 
 /* the new mm58167 function: */
-TME_ELEMENT_NEW_DECL(tme_ic_mm58167) {
+NME_ELEMENT_NEW_DECL(ic_mm58167) {
   const struct tme_mm58167_socket *socket;
   struct tme_mm58167 *mm58167;
   struct tme_mm58167_socket socket_real;

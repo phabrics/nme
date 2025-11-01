@@ -332,7 +332,7 @@ _tme_am7930_connections_new(struct tme_element *element,
 }
 
 /* the new am7930 function: */
-TME_ELEMENT_X_NEW_DECL(tme_ic_,am7930,am7930) {
+NME_ELEMENT_X_NEW_DECL(ic_,am7930,am7930) {
   struct tme_am7930 *am7930;
   int arg_i;
   int usage;

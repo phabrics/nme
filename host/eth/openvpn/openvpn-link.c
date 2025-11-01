@@ -144,7 +144,7 @@ static int _tme_openvpn_sock_read(void *data) {
 }
 
 /* the new TAP function: */
-TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn,socket_link) {
+NME_ELEMENT_SUB_NEW_DECL(host_openvpn,socket_link) {
   int rc;
   void *data = NULL;
   struct link_socket *ls;

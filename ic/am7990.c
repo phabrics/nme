@@ -1849,7 +1849,7 @@ _tme_am7990_connections_new(struct tme_element *element,
 }
 
 /* the new am7990 function: */
-TME_ELEMENT_X_NEW_DECL(tme_ic_,am7990,am7990) {
+NME_ELEMENT_X_NEW_DECL(ic_,am7990,am7990) {
   struct tme_am7990 *am7990;
   int arg_i;
   int usage;

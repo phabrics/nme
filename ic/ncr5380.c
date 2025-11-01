@@ -1610,7 +1610,7 @@ _tme_ncr5380_connections_new(struct tme_element *element,
 }
 
 /* the new NCR 5380 function: */
-TME_ELEMENT_NEW_DECL(tme_ic_ncr5380) {
+NME_ELEMENT_NEW_DECL(ic_ncr5380) {
   struct tme_ncr5380 *ncr5380;
   int arg_i;
   int usage;

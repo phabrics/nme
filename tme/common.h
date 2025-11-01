@@ -113,6 +113,7 @@ _TME_RCSID("$Id: common.h,v 1.16 2010/02/18 01:23:20 fredette Exp $");
 #else
 #define _TME_CONCAT(a,b) a/**/b
 #endif
+#define _TME_CONCAT6(a,b,c,d,e,f) _TME_CONCAT(a,_TME_CONCAT(b,_TME_CONCAT(c,_TME_CONCAT(d,_TME_CONCAT(e,f)))))
 #define _TME_CONCAT5(a,b,c,d,e) _TME_CONCAT(a,_TME_CONCAT(b,_TME_CONCAT(c,_TME_CONCAT(d,e))))
 #define _TME_CONCAT4(a,b,c,d) _TME_CONCAT(a,_TME_CONCAT(b,_TME_CONCAT(c,d)))
 #define _TME_CONCAT3(a,b,c) _TME_CONCAT(a,_TME_CONCAT(b,c))

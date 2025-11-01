@@ -969,7 +969,7 @@ _tme_am9513_tlb_fill(void *_am9513, struct tme_bus_tlb *tlb,
 }
 
 /* the new am9513 element function: */
-TME_ELEMENT_NEW_DECL(tme_ic_am9513) {
+NME_ELEMENT_NEW_DECL(ic_am9513) {
   const struct tme_am9513_socket *socket;
   struct tme_am9513 *am9513;
   struct tme_am9513_socket socket_real;

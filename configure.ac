@@ -138,7 +138,7 @@ linux*)
 #   SETCAP="setcap cap_sys_nice,cap_net_admin,cap_net_raw+ep"
    ;;
 mingw* | msys*)
-   AC_DEFINE([TME_MODULE_PATH_VAR], ["PKG_CONFIG_SYSTEM_LIBRARY_PATH"], [Use pkgconf environment variable to determine lib path in MSYS2.])
+   AC_DEFINE([NME_MODULE_PATH_VAR], ["PKG_CONFIG_SYSTEM_LIBRARY_PATH"], [Use pkgconf environment variable to determine lib path in MSYS2.])
    CPPFLAGS="${CPPFLAGS} -DWIN32_LEAN_AND_MEAN"
    CPPFLAGS="${CPPFLAGS} -DNTDDI_VERSION=NTDDI_WINXP -D_WIN32_WINNT=_WIN32_WINNT_WINXP"
    WIN32=yes

@@ -569,7 +569,7 @@ _tme_display_menu_radio(_tme_gtk_screen *screen,
 #endif
 
 /* the new GTK display function: */
-TME_ELEMENT_SUB_NEW_DECL(tme_host_gtk,display) {
+NME_ELEMENT_SUB_NEW_DECL(host_gtk,display) {
   struct tme_display *display;
   
   /* GTK requires program to be running non-setuid */

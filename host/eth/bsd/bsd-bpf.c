@@ -585,7 +585,7 @@ int _tme_bsd_bpf_args(const char * const args[],
 }
 
 /* the new BPF function: */
-TME_ELEMENT_SUB_NEW_DECL(tme_host_bsd,bpf) {
+NME_ELEMENT_SUB_NEW_DECL(host_bsd,bpf) {
   int bpf_fd;
 #ifdef HAVE_LSF
   struct sockaddr_ll sll;

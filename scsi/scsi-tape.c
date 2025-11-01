@@ -1163,7 +1163,7 @@ _tme_scsi_tape_connections_new(struct tme_element *element,
 }
 
 /* the new SCSI tape function: */
-TME_ELEMENT_SUB_NEW_DECL(tme_scsi,tape) {
+NME_ELEMENT_SUB_NEW_DECL(scsi,tape) {
   int id;
   const char *tape_type;
   const char *vendor;

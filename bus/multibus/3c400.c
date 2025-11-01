@@ -836,7 +836,7 @@ _tme_3c400_connections_new(struct tme_element *element,
 }
 
 /* the new _3c400 function: */
-TME_ELEMENT_SUB_NEW_DECL(tme_bus_multibus,3c400) {
+NME_ELEMENT_SUB_NEW_DECL(bus_multibus,3c400) {
   struct tme_3c400 *_3c400;
   tme_uint8_t arom[TME_ETHERNET_ADDR_SIZE];
   int arom_ok;

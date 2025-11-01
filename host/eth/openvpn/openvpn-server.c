@@ -40,7 +40,7 @@
 #include "options.h"
 
 /* the new TAP function: */
-TME_ELEMENT_SUB_NEW_DECL(tme_host_openvpn_socket,server) {
+NME_ELEMENT_SUB_NEW_DECL(host_openvpn_socket,server) {
   int rc, sz;
   unsigned char *hwaddr;
   unsigned int hwaddr_len;
