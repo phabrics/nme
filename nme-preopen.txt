@@ -1,5 +1,5 @@
 nme_PREOPEN =
-nme_PREOPEN += -dlopen ${top_builddir}/generic/bus/nme_generic_bus.la
+nme_PREOPEN += -dlopen ${top_builddir}/generic/bus/nme_generic.la
 nme_PREOPEN += -dlopen ${top_builddir}/ic/m68k/nme_ic_m68k.la
 nme_PREOPEN += -dlopen ${top_builddir}/ic/sparc/nme_ic_sparc.la
 nme_PREOPEN += -dlopen ${top_builddir}/ic/stp22xx/nme_ic_stp22xx.la

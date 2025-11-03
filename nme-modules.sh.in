@@ -10,7 +10,7 @@ grep NME_ELEMENT_NEW_DECL $srcdir/*.c |
 grep NME_ELEMENT_SUB_NEW_DECL $srcdir/*.c |		
     sed -e 's%.*NME_ELEMENT_SUB_NEW_DECL(\(.*\),\(.*\)).*%@PACKAGE@_\1_\2 @PACKAGE@_\1 \2%' >> $topdir/tme/@PACKAGE@-plugins.txt
 grep NME_ELEMENT_X_NEW_DECL $srcdir/*.c |		
-X    sed -e 's%.*NME_ELEMENT_X_NEW_DECL(\(.*\),\(.*\),\(.*\)).*%@PACKAGE@_\1\3 @PACKAGE@_\1\2 \3%' >> $topdir/tme/@PACKAGE@-plugins.txt
+    sed -e 's%.*NME_ELEMENT_X_NEW_DECL(\(.*\),\(.*\),\(.*\)).*%@PACKAGE@_\1\3 @PACKAGE@_\1\2 \3%' >> $topdir/tme/@PACKAGE@-plugins.txt
 
 moddir=`echo ${subdir} | tr '/' '_'`
 echo moddir=${moddir} > $srcdir/moddir.mk
