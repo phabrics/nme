@@ -1,6 +1,6 @@
-/* $Id: tmesh.c,v 1.4 2009/08/30 17:06:38 fredette Exp $ */
+/* $Id: nmesh.c,v 1.4 2009/08/30 17:06:38 fredette Exp $ */
 
-/* tmesh/tmesh.c - the tme shell: */
+/* nmesh/nmesh.c - the tme shell: */
 
 /*
  * Copyright (c) 2003 Matt Fredette
@@ -34,11 +34,11 @@
  */
 
 #include <tme/common.h>
-_TME_RCSID("$Id: tmesh.c,v 1.4 2009/08/30 17:06:38 fredette Exp $");
+_TME_RCSID("$Id: nmesh.c,v 1.4 2009/08/30 17:06:38 fredette Exp $");
 
 /* includes: */
 #include <tme/tme.h>
-#include <tme/tmesh.h>
+#include <tme/nmesh.h>
 #include <tme/hash.h>
 #ifdef HAVE_SDL3
 #include <SDL3/SDL_main.h>
@@ -747,8 +747,8 @@ main(int argc, char **argv)
 
   tme_misc_set_cycles(cycles_impl);
   
-  /* initialize libtmesh: */
-  (void) tmesh_init(multi_threaded);
+  /* initialize libnmesh: */
+  (void) nmesh_init(multi_threaded);
 
   /* initialize libtme: */
   tme_module_init();

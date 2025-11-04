@@ -1,7 +1,7 @@
 %{
-/* $Id: tmesh-input.y,v 1.4 2006/11/15 23:11:31 fredette Exp $ */
+/* $Id: nmesh-input.y,v 1.4 2006/11/15 23:11:31 fredette Exp $ */
 
-/* tmesh/tmesh-input.y - the tme shell scanner and parser: */
+/* nmesh/nmesh-input.y - the tme shell scanner and parser: */
 
 /*
  * Copyright (c) 2003 Matt Fredette
@@ -35,14 +35,14 @@
  */
 
 #include <tme/common.h>
-_TME_RCSID("$Id: tmesh-input.y,v 1.4 2006/11/15 23:11:31 fredette Exp $");
+_TME_RCSID("$Id: nmesh-input.y,v 1.4 2006/11/15 23:11:31 fredette Exp $");
 
 /* includes: */
 #include <tme/threads.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include "tmesh-impl.h"
+#include "nmesh-impl.h"
 
 /* macros: */
 

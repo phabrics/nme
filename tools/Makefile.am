@@ -3,4 +3,4 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
-EXTRA_DIST = tme-binary-struct.pl.in
+EXTRA_DIST = nme-binary-struct.pl.in

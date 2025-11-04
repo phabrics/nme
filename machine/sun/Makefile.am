@@ -14,20 +14,20 @@ lib@PACKAGE@_machine_sun_la_SOURCES = sun-mmu.c \
 lib@PACKAGE@_machine_sun_la_LDFLAGS = -version-info 0:0:0
 lib@PACKAGE@_machine_sun_la_LIBADD = $(@PACKAGE@_LIBS)
 
-bin_SCRIPTS = tme-sun-idprom tme-sun-eeprom
-dist_bin_SCRIPTS = tme-make-machs
+bin_SCRIPTS = nme-sun-idprom nme-sun-eeprom
+dist_bin_SCRIPTS = nme-make-machs
 
 examplesdir = $(pkgdatadir)/examples
 dist_examples_DATA = sun-keyboards.txt my-sun-macros.txt
 
-EXTRA_DIST = tme-sun-idprom.pl tme-sun-eeprom.pl
+EXTRA_DIST = nme-sun-idprom.pl nme-sun-eeprom.pl
 
-# target to make tme-sun-idprom:
-tme-sun-idprom: tme-sun-idprom.pl
-	sed -e s%/usr/pkg/bin/perl%$(PERL)% < $(srcdir)/tme-sun-idprom.pl > $@
+# target to make nme-sun-idprom:
+nme-sun-idprom: nme-sun-idprom.pl
+	sed -e s%/usr/pkg/bin/perl%$(PERL)% < $(srcdir)/nme-sun-idprom.pl > $@
 
-# target to make tme-sun-eeprom:
-tme-sun-eeprom: tme-sun-eeprom.pl $(top_srcdir)/tools/tme-binary-struct.pl.in
-	cat $(top_srcdir)/tools/tme-binary-struct.pl.in $(srcdir)/tme-sun-eeprom.pl | \
+# target to make nme-sun-eeprom:
+nme-sun-eeprom: nme-sun-eeprom.pl $(top_srcdir)/tools/nme-binary-struct.pl.in
+	cat $(top_srcdir)/tools/nme-binary-struct.pl.in $(srcdir)/nme-sun-eeprom.pl | \
 	sed -e s%/usr/pkg/bin/perl%$(PERL)% > $@
 include $(top_srcdir)/modules.mk

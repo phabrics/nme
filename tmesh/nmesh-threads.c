@@ -1,4 +1,4 @@
-/* tmesh/tmesh-threads.c - tmesh threads initialization: */
+/* nmesh/nmesh-threads.c - nmesh threads initialization: */
 
 /*
  * Copyright (c) 2015 Ruben Agin
@@ -56,7 +56,7 @@ void tme_threads_set_main(tme_threads_fn1 run, void *arg, tme_mutex_t *mutex, tm
   //  tme_cond_notify(&tme_cond_start,TRUE);
 }
 
-int tmesh_init(int mode) {
+int nmesh_init(int mode) {
   /* initialize the threading system: */
   tme_threads.tme_threads_run = (mode) ? (tme_threads_main_iter) : (tme_fiber_main_iter);
   tme_threads.tme_threads_arg = 0;

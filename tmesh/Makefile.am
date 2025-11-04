@@ -1,54 +1,54 @@
 ## Process this file with automake to produce Makefile.in
-# Makefile.am for The Machine Emulator tmesh/:
+# Makefile.am for The Machine Emulator @PACKAGE@sh/:
 
 AUTOMAKE_OPTIONS = 1.4 gnu
 
 AM_CPPFLAGS = -I$(top_srcdir) -D_TME_IMPL $(@PACKAGE@_HOST_CFLAGS)
 
-lib_LTLIBRARIES = libtmesh.la
-libtmesh_la_SOURCES = tmesh-impl.h \
-	tmesh-input.y \
-	tmesh-util.c \
-	tmesh-cmds.c
-libtmesh_la_LIBADD = $(top_builddir)/libtme/lib@PACKAGE@.la
+lib_LTLIBRARIES = lib@PACKAGE@sh.la
+lib@PACKAGE@sh_la_SOURCES = @PACKAGE@sh-impl.h \
+	@PACKAGE@sh-input.y \
+	@PACKAGE@sh-util.c \
+	@PACKAGE@sh-cmds.c
+lib@PACKAGE@sh_la_LIBADD = $(top_builddir)/libtme/lib@PACKAGE@.la
 
-tmesh_SOURCES = tmesh.c tmesh-threads.c
-bin_PROGRAMS = tmesh
-tmesh_LDADD = libtmesh.la $(@PACKAGE@_PREOPEN)
-tmesh_LDFLAGS = 
+@PACKAGE@sh_SOURCES = @PACKAGE@sh.c @PACKAGE@sh-threads.c
+bin_PROGRAMS = @PACKAGE@sh
+@PACKAGE@sh_LDADD = lib@PACKAGE@sh.la $(@PACKAGE@_PREOPEN)
+@PACKAGE@sh_LDFLAGS = 
 
-EXTRA_DIST = tmesh.sh
+EXTRA_DIST = @PACKAGE@sh.sh
 
 if HAVE_EMSCRIPTEN
-bin_SCRIPTS = tmesh.sh tmesh.js tmesh.wasm tmesh.data
-tmesh_LDADD += $(SDL_LIBS) 
-tmesh_LDFLAGS += -sASYNCIFY
+bin_SCRIPTS = @PACKAGE@sh.sh @PACKAGE@sh.js @PACKAGE@sh.wasm @PACKAGE@sh.data
+@PACKAGE@sh_LDADD += $(SDL_LIBS) 
+@PACKAGE@sh_LDFLAGS += -sASYNCIFY
 if USE_NODEFS
 AM_CPPFLAGS += -DUSE_NODEFS
-tmesh_LDADD += -lnodefs.js
+@PACKAGE@sh_LDADD += -lnodefs.js
 else
-tmesh_LDFLAGS += --emrun --preload-file $(top_builddir)@$(ROOT_DIR)
+@PACKAGE@sh_LDFLAGS += --emrun --preload-file $(top_builddir)@$(ROOT_DIR)
 endif
-tmesh.js tmesh.wasm tmesh.data: tmesh.html
+@PACKAGE@sh.js @PACKAGE@sh.wasm @PACKAGE@sh.data: @PACKAGE@sh.html
 	@test -f $@ || $(LN_S) .libs/$@ .
 install-exec-hook:
-	test -f $(DESTDIR)$(bindir)/tmesh.sh && \
-	mv -f $(DESTDIR)$(bindir)/tmesh.sh $(DESTDIR)$(bindir)/tmesh
+	test -f $(DESTDIR)$(bindir)/@PACKAGE@sh.sh && \
+	mv -f $(DESTDIR)$(bindir)/@PACKAGE@sh.sh $(DESTDIR)$(bindir)/@PACKAGE@sh
 	mkdir -p $(DESTDIR)$(pkgdatadir)$(PKG_LIB_DIR)
 	cp -f $(DESTDIR)$(libdir)/lib@PACKAGE@*.la $(DESTDIR)$(pkgdatadir)$(LIB_DIR)
 	cp -f $(DESTDIR)$(libdir)/libltdl.la $(DESTDIR)$(pkgdatadir)$(LIB_DIR)
 	cp -f $(DESTDIR)$(pkglibdir)/*.la $(DESTDIR)$(pkgdatadir)$(PKG_LIB_DIR)
 	cp -f $(DESTDIR)$(pkglibdir)/*.txt $(DESTDIR)$(pkgdatadir)$(PKG_LIB_DIR)
-	$(SETCAP) $(DESTDIR)$(bindir)/$(TGTPFX)tmesh$(EXEEXT)
+	$(SETCAP) $(DESTDIR)$(bindir)/$(TGTPFX)@PACKAGE@sh$(EXEEXT)
 else
 if WIN32
 if HAVE_SDL
-	tmesh_LDFLAGS += -mwindows
+	@PACKAGE@sh_LDFLAGS += -mwindows
 endif
 endif
 endif
 
-EXTRA_tmesh_DEPENDENCIES = plugins
+EXTRA_@PACKAGE@sh_DEPENDENCIES = plugins
 
 NME_DIR = $(top_builddir)$(PKG_LIB_DIR)
 .PHONY: plugins

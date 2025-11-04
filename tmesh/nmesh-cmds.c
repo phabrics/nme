@@ -1,6 +1,6 @@
-/* $Id: tmesh-cmds.c,v 1.6 2006/11/15 23:12:30 fredette Exp $ */
+/* $Id: nmesh-cmds.c,v 1.6 2006/11/15 23:12:30 fredette Exp $ */
 
-/* tmesh/tmesh-cmds.c - functions implementing the tmesh commands: */
+/* nmesh/nmesh-cmds.c - functions implementing the nmesh commands: */
 
 /*
  * Copyright (c) 2003 Matt Fredette
@@ -34,12 +34,12 @@
  */
 
 #include <tme/common.h>
-_TME_RCSID("$Id: tmesh-cmds.c,v 1.6 2006/11/15 23:12:30 fredette Exp $");
+_TME_RCSID("$Id: nmesh-cmds.c,v 1.6 2006/11/15 23:12:30 fredette Exp $");
 
 /* includes: */
 #include <tme/threads.h>
 #include <stdlib.h>
-#include "tmesh-impl.h"
+#include "nmesh-impl.h"
 
 /* macros: */
 

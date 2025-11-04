@@ -23,7 +23,7 @@ pkginclude_HEADERS = memory.h \
 	recode.h \
 	token.h \
 	completion.h \
-	tmesh.h \
+	nmesh.h \
 	runlength.h
 
 info_TEXINFOS = nme.texi

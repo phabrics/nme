@@ -1,6 +1,6 @@
-/* $Id: tmesh-impl.h,v 1.3 2006/11/15 23:11:56 fredette Exp $ */
+/* $Id: nmesh-impl.h,v 1.3 2006/11/15 23:11:56 fredette Exp $ */
 
-/* tmesh/tmesh-impl.h - private header file for the tmesh implementation: */
+/* nmesh/nmesh-impl.h - private header file for the nmesh implementation: */
 
 /*
  * Copyright (c) 2003 Matt Fredette
@@ -33,15 +33,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _TMESH_IMPL_H
-#define _TMESH_IMPL_H
+#ifndef _NMESH_IMPL_H
+#define _NMESH_IMPL_H
 
 #include <tme/common.h>
-_TME_RCSID("$Id: tmesh-impl.h,v 1.3 2006/11/15 23:11:56 fredette Exp $");
+_TME_RCSID("$Id: nmesh-impl.h,v 1.3 2006/11/15 23:11:56 fredette Exp $");
 
 /* includes: */
 #include <tme/element.h>
-#include <tme/tmesh.h>
+#include <tme/nmesh.h>
 #include <errno.h>
 
 /* macros: */
