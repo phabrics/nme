@@ -521,6 +521,7 @@ do_usage(const char *prog_name, char *msg)
                    \n--log LOGFILE          log to LOGFILE		\
                    \n-c, --cycle_counter    cycle counter implementation (default 'def' gives order: 'cpu','sdl','win','x86','def')  \
                    \n-m, --multi_threaded   multi-threaded mode (using %s threads or single-threaded fibers if not given) \
+                   \n-f, --fullscreen       start in fullscreen mode (toggle with F11) when available (only SDL currently)   \
                    \n-i, --interactive      interactive command-line interface (<INITIAL-CONFIG> optional here)\n",
 	  prog_name,TME_THREADS_NAME);
   
@@ -715,6 +716,10 @@ main(int argc, char **argv)
     else if (!strcmp(opt, "-m")
 	     || !strcmp(opt, "--multi_threaded")) {
       multi_threaded = TRUE;
+    }
+    else if (!strcmp(opt, "-f")
+	     || !strcmp(opt, "--fullscreen")) {
+      enable_fullscreen = true;
     }
     else if (!strcmp(opt, "-i")
 	     || !strcmp(opt, "--interactive")) {

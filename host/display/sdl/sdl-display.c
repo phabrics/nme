@@ -1,4 +1,4 @@
-/* host/sdl/sdl-display.c - SDL2 support: */
+/* host/sdl/sdl-display.c - SDL2/3 support: */
 
 /*
  * Copyright (c) 2022 Ruben Agin
@@ -89,6 +89,7 @@ struct tme_sdl_screen {
   /* the generic screen structure */
   struct tme_screen screen;
   int sdlFlags;
+  bool fullscreen;
   SDL_Surface* sdl;
   SDL_Texture *sdlTexture;
   SDL_Renderer *sdlRenderer;
@@ -109,27 +110,32 @@ _tme_sdl_display_init(struct tme_display *display) {
   SDL_SetAppMetadata(PACKAGE_NAME, PACKAGE_VERSION, "com.phabrics.nme");
   if((rc = SDL_InitSubSystem(SDL_INIT_VIDEO))) {
     int i, num_displays = 0;
+    SDL_DisplayMode *mode;
+    SDL_DisplayID prim_id = SDL_GetPrimaryDisplay();
     SDL_DisplayID *displays = SDL_GetDisplays(&num_displays);
     if (displays) {
       for (i = 0; i < num_displays; ++i) {
 	SDL_DisplayID instance_id = displays[i];
 	const char *name = SDL_GetDisplayName(instance_id);
 
-	SDL_Log("Display %" SDL_PRIu32 ": %s", instance_id, name ? name : "Unknown");
+	mode = SDL_GetDesktopDisplayMode(instance_id);
+
+	if(instance_id == prim_id) {
+	  display->tme_screen_width = mode->w;
+	  display->tme_screen_height = mode->h;
+	}
+	SDL_Log("%sDisplay Desktop %" SDL_PRIu32 ": %s, default mode: %dx%d@%gx %gHz",
+		(instance_id == prim_id) ? "*" : "",
+		instance_id, name ? name : "Unknown",
+		mode->w, mode->h, mode->pixel_density, mode->refresh_rate);
       }
       SDL_free(displays);
     }
-
-    SDL_DisplayMode *mode = SDL_GetDesktopDisplayMode(SDL_GetPrimaryDisplay());
-    SDL_Log("Primary Display Desktop mode: %dx%d@%gx %gHz",
-	    mode->w, mode->h, mode->pixel_density, mode->refresh_rate);
-    display->tme_screen_width = mode->w;
-    display->tme_screen_height = mode->h;
   }
 #endif
   atexit(SDL_Quit);
   signal(SIGINT, exit);
-
+  
   return rc;
 }
 
@@ -325,9 +331,9 @@ _tme_sdl_display_update(struct tme_display *display) {
       switch (e.window.event) {
       case SDL_WINDOWEVENT_FOCUS_LOST:
 #else
-    case SDL_EVENT_QUIT:
-      rc = false;
-      break;
+      case SDL_EVENT_QUIT:
+	rc = false;
+	break;
       case SDL_EVENT_WINDOW_FOCUS_LOST:
 #endif
       
@@ -397,24 +403,24 @@ _tme_sdl_display_update(struct tme_display *display) {
 #ifdef HAVE_SDL
 	if (e.type == SDL_MOUSEMOTION)
 #else
-	if (e.type == SDL_EVENT_MOUSE_MOTION)
+	  if (e.type == SDL_EVENT_MOUSE_MOTION)
 #endif
-	  {
-	  x = e.motion.xrel;
-	  y = e.motion.yrel;
-	  button = 0; // e.motion.state;
-	}
-	else {
-	  x = 0; // e.button.x;
-	  y = 0; // e.button.y;
-	  button = e.button.button;
+	    {
+	      x = e.motion.xrel;
+	      y = e.motion.yrel;
+	      button = 0; // e.motion.state;
+	    }
+	  else {
+	    x = 0; // e.button.x;
+	    y = 0; // e.button.y;
+	    button = e.button.button;
 #ifdef HAVE_SDL
-	  if (e.type == SDL_MOUSEBUTTONUP)
+	    if (e.type == SDL_MOUSEBUTTONUP)
 #else
-	  if (e.type == SDL_EVENT_MOUSE_BUTTON_UP)
+	      if (e.type == SDL_EVENT_MOUSE_BUTTON_UP)
 #endif
-	    button = -button;
-	}
+		button = -button;
+	  }
 	_tme_mouse_event(button, x, y, display);
 	break;
       }
@@ -425,6 +431,15 @@ _tme_sdl_display_update(struct tme_display *display) {
 #else
     case SDL_EVENT_KEY_DOWN:
       keydown = 1;
+      if (e.key.key == SDLK_F11) {
+	for (struct tme_sdl_screen *screen = display->tme_display_screens;
+	     screen != NULL;
+	     screen = screen->screen.tme_screen_next) {
+	  screen->fullscreen = !screen->fullscreen;
+	  if(SDL_GetWindowID(screen->sdlWindow) == e.key.windowID)
+	    SDL_SetWindowFullscreen(screen->sdlWindow, screen->fullscreen);
+	}
+      }
     case SDL_EVENT_KEY_UP:
 #endif
       if (viewOnly)
@@ -478,18 +493,19 @@ static void _tme_sdl_screen_resize(struct tme_sdl_screen *screen)
   int width = conn_fb->tme_fb_connection_width;
   int height = conn_fb->tme_fb_connection_height;
   int depth = SDL_BITSPERPIXEL(SDL_PIXELFORMAT_RGBA32);
-  float scaleX, scaleY;
+  float scaleX, scaleY, refresh_rate = 60;
   struct tme_display *display;
 #ifdef HAVE_SDL
   SDL_PixelFormat *format;
 #else
   SDL_PixelFormatDetails *format;
+  SDL_DisplayMode closest;
 #endif
   
   if (enableResizable)
     screen->sdlFlags |= SDL_WINDOW_RESIZABLE;
 #ifdef HAVE_SDL
-  else
+  if (enable_fullscreen)
     screen->sdlFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 #endif
   /* (re)create the surface used as the client's framebuffer */
@@ -511,7 +527,7 @@ static void _tme_sdl_screen_resize(struct tme_sdl_screen *screen)
   /* get the display: */
   display = screen->screen.tme_screen_display;
   if(!screen->sdl)
-        tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
+    tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
 	    (&display->tme_display_element->tme_element_log_handle,
 	     _("resize: error creating surface: %s\n"), SDL_GetError()));
 
@@ -544,9 +560,9 @@ static void _tme_sdl_screen_resize(struct tme_sdl_screen *screen)
 					 height,
 					 screen->sdlFlags);
     if(!screen->sdlWindow)
-          tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
-	    (&display->tme_display_element->tme_element_log_handle,
-	     _("resize: error creating window: %s\n"), SDL_GetError()));
+      tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
+	      (&display->tme_display_element->tme_element_log_handle,
+	       _("resize: error creating window: %s\n"), SDL_GetError()));
   } else {
     SDL_SetWindowSize(screen->sdlWindow, width, height);
   }
@@ -574,6 +590,19 @@ static void _tme_sdl_screen_resize(struct tme_sdl_screen *screen)
 #else
   SDL_SetRenderLogicalPresentation(screen->sdlRenderer, width, height, SDL_LOGICAL_PRESENTATION_LETTERBOX);  /* this is a departure from the SDL1.2-based version, but more in the sense of a VNC viewer in keeeping aspect ratio */
   SDL_GetRenderScale(screen->sdlRenderer, &scaleX, &scaleY);
+
+  SDL_DisplayID disp_id = SDL_GetDisplayForWindow(screen->sdlWindow);
+
+  /* record the display mode to use for fullscreen: */
+  if(SDL_GetClosestFullscreenDisplayMode(disp_id, width, height, refresh_rate, true, &closest)) {
+    SDL_Log("Setting closest fullscreen mode for window display [%" SDL_PRIu32 "] (%dx%d %gHz): %dx%d@%gx %gHz",
+	    disp_id, width, height, refresh_rate, 
+	    closest.w, closest.h, closest.pixel_density, closest.refresh_rate);
+    SDL_SetWindowFullscreenMode(screen->sdlWindow, &closest);
+  }
+  screen->fullscreen=enable_fullscreen;
+  SDL_SetWindowFullscreen(screen->sdlWindow, enable_fullscreen);
+
 #endif
   
   tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,

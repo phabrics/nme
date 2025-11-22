@@ -420,6 +420,9 @@ tme_bswap_u128(tme_uint128_t x)
 #define TME_ARG_IS(s, x)	((s) != NULL && !strcmp(s, x))
 #define TME_OK			(0)
 
+/* a hint to display to use fullscreen mode if available: */
+extern bool enable_fullscreen;
+
 static _tme_inline void tme_beep _TME_P((void)) {
 #ifdef HAVE_CURSES_H
   beep();
