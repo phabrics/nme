@@ -434,11 +434,12 @@ _tme_sdl_display_update(struct tme_display *display) {
       if (e.key.key == SDLK_F11) {
 	for (struct tme_sdl_screen *screen = display->tme_display_screens;
 	     screen != NULL;
-	     screen = screen->screen.tme_screen_next) {
-	  screen->fullscreen = !screen->fullscreen;
-	  if(SDL_GetWindowID(screen->sdlWindow) == e.key.windowID)
-	    SDL_SetWindowFullscreen(screen->sdlWindow, screen->fullscreen);
-	}
+	     screen = screen->screen.tme_screen_next)
+	  if(SDL_GetWindowID(screen->sdlWindow) == e.key.windowID &&
+	     SDL_SetWindowFullscreen(screen->sdlWindow, !screen->fullscreen)) {
+	    screen->screen.tme_screen_fb_xlat = NULL;
+	    screen->fullscreen = !screen->fullscreen;
+	  }
       }
     case SDL_EVENT_KEY_UP:
 #endif
