@@ -37,9 +37,6 @@
 unsigned int _tme_scanline_pad(int bpl);
 #include "display.h"
 
-/* a hint to display to use fullscreen mode if available: */
-bool enable_fullscreen = false;
-
 /* this is called for a configuration request: */
 static void
 _tme_screen_configure(struct tme_screen *screen)

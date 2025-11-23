@@ -4,4 +4,4 @@
 AUTOMAKE_OPTIONS = 1.4 gnu
 
 examplesdir = $(pkgdatadir)/examples
-dist_examples_DATA = SUN-ULTRA-1
+dist_examples_DATA = SUN-ULTRA-1.in

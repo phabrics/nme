@@ -1246,9 +1246,13 @@ AC_CONFIG_FILES([Makefile
 	  machine/Makefile
 	  machine/sun/Makefile
 	  machine/sun2/Makefile
+	  machine/sun2/SUN2-MULTIBUS
 	  machine/sun3/Makefile
+	  machine/sun3/SUN3-CARRERA
 	  machine/sun4/Makefile
+	  machine/sun4/SUN4-75
 	  machine/sun4u/Makefile
+	  machine/sun4u/SUN-ULTRA-1
           host/Makefile
           host/display/Makefile
           host/display/gtk/Makefile

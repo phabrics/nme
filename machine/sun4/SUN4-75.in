@@ -5,9 +5,9 @@
 
 ## the basic Sun 4/75 "Calvin" board, CPU, and sbus:
 ##
-board0: tme/machine/sun4 name Calvin
-cpu0 at board0: tme/ic/cy7c601 fpu-type tms390-c602A fpu-compliance partial fpu-incomplete trap
-sbus0: tme/generic/bus size 4GB slot-addr 0xf8000000 slot-size 32MB slot 0 slot 1 slot 2 slot 3
+board0: @PACKAGE@/machine/sun4 name Calvin
+cpu0 at board0: @PACKAGE@/ic/cy7c601 fpu-type tms390-c602A fpu-compliance partial fpu-incomplete trap
+sbus0: @PACKAGE@/generic/bus size 4GB slot-addr 0xf8000000 slot-size 32MB slot 0 slot 1 slot 2 slot 3
 sbus0 controller at board0 sbus
 
 ## the sun4c mainbus RAM, ROM, and devices:
@@ -18,31 +18,31 @@ sbus0 controller at board0 sbus
 ## total memory, and then the ram2 line for 128MB of total memory:
 ##
 alias mainbus0 sbus0
-ram0 at mainbus0 addr 0x0: tme/host/posix/memory ram 16MB
-ram1 at mainbus0 addr 0x08000000: tme/host/posix/memory ram 32MB
-ram2 at mainbus0 addr 0x0a000000: tme/host/posix/memory ram 32MB
-rom0 at mainbus0 addr 0xf6000000: tme/host/posix/memory rom sun4-75-rev-2.9.bin
-zs0 at mainbus0 addr 0xf1000000 ipl 12: tme/machine/sun4/zs
-zs1 at mainbus0 addr 0xf0000000 ipl 12: tme/machine/sun4/zs
-nvram0 at mainbus0 addr 0xf2000000: tme/host/posix/memory persistent my-sun4c-nvram.bin
-clock0 at mainbus0 addr 0xf20007f8: tme/machine/sun4/clock type tme/ic/mk48t02
+ram0 at mainbus0 addr 0x0: @PACKAGE@/host/posix/memory ram 16MB
+ram1 at mainbus0 addr 0x08000000: @PACKAGE@/host/posix/memory ram 32MB
+ram2 at mainbus0 addr 0x0a000000: @PACKAGE@/host/posix/memory ram 32MB
+rom0 at mainbus0 addr 0xf6000000: @PACKAGE@/host/posix/memory rom sun4-75-rev-2.9.bin
+zs0 at mainbus0 addr 0xf1000000 ipl 12: @PACKAGE@/machine/sun4/zs
+zs1 at mainbus0 addr 0xf0000000 ipl 12: @PACKAGE@/machine/sun4/zs
+nvram0 at mainbus0 addr 0xf2000000: @PACKAGE@/host/posix/memory persistent my-sun4c-nvram.bin
+clock0 at mainbus0 addr 0xf20007f8: @PACKAGE@/machine/sun4/clock type @PACKAGE@/ic/mk48t02
 board0 timer at mainbus0 addr 0xf3000000
 board0 memerr at mainbus0 addr 0xf4000000
 board0 intreg at mainbus0 addr 0xf5000000
-fdc0 at mainbus0 addr 0xf7200000 ipl 11: tme/machine/sun4/fdc type tme/ic/i82072
-audioamd0 at mainbus0 addr 0xf7201000 ipl 13: tme/ic/am7930
+fdc0 at mainbus0 addr 0xf7200000 ipl 11: @PACKAGE@/machine/sun4/fdc type @PACKAGE@/ic/i82072
+audioamd0 at mainbus0 addr 0xf7201000 ipl 13: @PACKAGE@/ic/am7930
 board0 auxreg at mainbus0 addr 0xf7400003
 
 ## the Sun type-4 keyboard and mouse:
 ##
-kbd0 at zs1 channel A: tme/serial/keyboard type sun-type-4-us macros my-sun-macros.txt map sun-keyboards.txt rate 20
-ms0 at zs1 channel B: tme/serial/mouse type mousesystems-5
+kbd0 at zs1 channel A: @PACKAGE@/serial/keyboard type sun-type-4-us macros my-sun-macros.txt map sun-keyboards.txt rate 20
+ms0 at zs1 channel B: @PACKAGE@/serial/mouse type mousesystems-5
 
 ## IF YOU DO NOT ATTACH kbd0 at zs1 channel A, THEN YOU MUST ATTACH
 ## sink0 at zs1 channel A, otherwise the PROM's keyboard poll never
 ## finishes:
 ##
-#sink0 at zs1 channel A: tme/serial/sink
+#sink0 at zs1 channel A: @PACKAGE@/serial/sink
 
 ## ttya:
 ##
@@ -52,18 +52,18 @@ ms0 at zs1 channel B: tme/serial/mouse type mousesystems-5
 # you can connect to using tip or some other serial communications
 # program on the slave side (in this case, /dev/ptyr0):
 #
-sink1 at zs0 channel A: tme/serial/sink
-#console0 at zs0 channel A: tme/host/posix/serial device /dev/ttyr0 break-carats
+sink1 at zs0 channel A: @PACKAGE@/serial/sink
+#console0 at zs0 channel A: @PACKAGE@/host/posix/serial device /dev/ttyr0 break-carats
 # OR enable POSIX pseudo-terminal master (if available) using the ptmx clone device:
 # the tmesh console will display the slave device to connect to (e.g., /dev/pts/3)
-#console0 at zs0 channel A: tme/host/posix/serial device /dev/ptmx break-carats
+#console0 at zs0 channel A: @PACKAGE@/host/posix/serial device /dev/ptmx break-carats
 
 ## the SBus esp SCSI:
 ##
-esp0 at sbus0 slot 0 offset 0x800000 ipl 3: tme/ic/lsi64854 revision "1+" channel scsi
+esp0 at sbus0 slot 0 offset 0x800000 ipl 3: @PACKAGE@/ic/lsi64854 revision "1+" channel scsi
 esp0 dma at sbus0 slot 0 offset 0x400000
-ncr0 at esp0 master: tme/ic/ncr53c9x variant esp100
-scsibus0 at ncr0: tme/scsi/bus
+ncr0 at esp0 master: @PACKAGE@/ic/ncr53c9x variant esp100
+scsibus0 at ncr0: @PACKAGE@/scsi/bus
 
 ## the SBus LANCE Ethernet:
 ##
@@ -71,19 +71,19 @@ scsibus0 at ncr0: tme/scsi/bus
 # of your /dev/bpfN devices (on *BSD) OR have cap_net_raw+ep capability (on Linux)
 # and you want actual network access:
 #
-le0 at sbus0 slot 0 offset 0xc00000 ipl 5 dma-offset 0xff000000: tme/ic/am7990
-#bpf0 at le0: tme/host/bsd/bpf
+le0 at sbus0 slot 0 offset 0xc00000 ipl 5 dma-offset 0xff000000: @PACKAGE@/ic/am7990
+#bpf0 at le0: @PACKAGE@/host/bsd/bpf
 # OR enable tap ethernet device, an alternative method for network access
 # 2 ways to access a tap device: native or openvpn (respectively below)
 # both require setuid or equivalent permissions, which should be set up at build time
-#tap0 at le0: tme/host/tun/tap inet 10.0.77.1 netmask 255.255.255.0 bcast 10.0.77.255
-#tap0 at le0: tme/host/openvpn/tun/tap --dev tap --ifconfig 10.0.77.1 255.255.255.0 # --tun-ipv6 --ifconfig-ipv6 "2001:db8::1/64" "2001:db8::2"
+#tap0 at le0: @PACKAGE@/host/tun/tap inet 10.0.77.1 netmask 255.255.255.0 bcast 10.0.77.255
+#tap0 at le0: @PACKAGE@/host/openvpn/tun/tap --dev tap --ifconfig 10.0.77.1 255.255.255.0 # --tun-ipv6 --ifconfig-ipv6 "2001:db8::1/64" "2001:db8::2"
 
 # An example of the link element that can be used to connect network elements across an IP network.
 # Here, we set up a P2P network between two machines on different hosts.  Each machine would have
 # one side of the connection, by uncommenting one of the lines below to complement the other one.
-#link0 at le0: tme/host/openvpn/socket/link --dev tap --local 192.168.0.1 --remote 192.168.0.2
-#link1 at le0: tme/host/openvpn/socket/link --dev tap --local 192.168.0.2 --remote 192.168.0.1
+#link0 at le0: @PACKAGE@/host/openvpn/socket/link --dev tap --local 192.168.0.1 --remote 192.168.0.2
+#link1 at le0: @PACKAGE@/host/openvpn/socket/link --dev tap --local 192.168.0.2 --remote 192.168.0.1
 
 # Uncomment the following lines to get debug output for each respective element (or add your own)
 #log bpf0 1
@@ -95,8 +95,8 @@ le0 at sbus0 slot 0 offset 0xc00000 ipl 5 dma-offset 0xff000000: tme/ic/am7990
 # to set up the tap device.  This might not be needed if the tap devices is
 # already connected to another element.  This creates a master configuration
 # that can be used with different slave configurations.
-#tap1: tme/host/tun/tap inet 10.0.77.1 netmask 255.255.255.0 bcast 10.0.77.255
-#tap1: tme/host/openvpn/tap --dev tap --ifconfig 10.0.77.1 255.255.255.0 --tun-ipv6 --ifconfig-ipv6 "2001:db8::1/64" "2001:db8::2"
+#tap1: @PACKAGE@/host/tun/tap inet 10.0.77.1 netmask 255.255.255.0 bcast 10.0.77.255
+#tap1: @PACKAGE@/host/openvpn/tap --dev tap --ifconfig 10.0.77.1 255.255.255.0 --tun-ipv6 --ifconfig-ipv6 "2001:db8::1/64" "2001:db8::2"
 #tap1 at tap1
 
 # A master configuration can also include remote machines by connecting the tap
@@ -104,29 +104,29 @@ le0 at sbus0 slot 0 offset 0xc00000 ipl 5 dma-offset 0xff000000: tme/ic/am7990
 # connect it to itself first, but the tap must be connected to something.
 # Remember that each element can only connect to one other element, so the
 # network configurations must be set up carefully.
-#link2 at tap1: tme/host/openvpn/socket/link --dev tap --local 192.168.0.3 --remote 192.168.0.4
+#link2 at tap1: @PACKAGE@/host/openvpn/socket/link --dev tap --local 192.168.0.3 --remote 192.168.0.4
 
 # Slave configurations only need the follwing line to connect to the tap
 # network via bpf.  Note that the master requires this line, too...
-#bpf1 at le0: tme/host/bsd/bpf interface tap0
+#bpf1 at le0: @PACKAGE@/host/bsd/bpf interface tap0
 
 # A slave configuration can also include remote machines by connecting the bpf
 # device to a link.
-#link3: tme/host/openvpn/socket/link --dev tap --local 192.168.0.5 --remote 192.168.0.6
-#bpf2 at link3: tme/host/bsd/bpf interface tap0
+#link3: @PACKAGE@/host/openvpn/socket/link --dev tap --local 192.168.0.5 --remote 192.168.0.6
+#bpf2 at link3: @PACKAGE@/host/bsd/bpf interface tap0
 
 ## an SBus cgthree:
 ##
-cgthree0 at sbus0 slot 1 offset 0x0 ipl 7: tme/bus/sbus/cgthree
-cgthreerom0 at sbus0 slot 1 offset 0x0: tme/host/posix/memory rom "SUNW,501-1415.bin"
+cgthree0 at sbus0 slot 1 offset 0x0 ipl 7: @PACKAGE@/bus/sbus/cgthree
+cgthreerom0 at sbus0 slot 1 offset 0x0: @PACKAGE@/host/posix/memory rom "SUNW,501-1415.bin"
 
 ## an SBus bwtwo:
 ##
 # uncomment these lines if you want a bwtwo either in addition to, or
 # instead of, the cgthree:
 #
-#bwtwo0 at sbus0 slot 2 offset 0x0 ipl 7: tme/bus/sbus/bwtwo
-#bwtworom0 at sbus0 slot 2 offset 0x0: tme/host/posix/memory rom "SUNW,501-1561.bin"
+#bwtwo0 at sbus0 slot 2 offset 0x0 ipl 7: @PACKAGE@/bus/sbus/bwtwo
+#bwtworom0 at sbus0 slot 2 offset 0x0: @PACKAGE@/host/posix/memory rom "SUNW,501-1561.bin"
 
 ## the graphics-based display console:
 ##
@@ -135,9 +135,9 @@ cgthreerom0 at sbus0 slot 1 offset 0x0: tme/host/posix/memory rom "SUNW,501-1415
 # You can have only one graphics-based display at a time:
 # uncomment which display you want
 # uncomment this line for a GTK-based graphics display
-#display0: tme/host/gtk/display
-display0: tme/host/sdl/display SDL_RENDER_SCALE_QUALITY best SDL_MOUSE_RELATIVE_SCALING 1 SDL_MOUSE_RELATIVE_MODE_WARP 1
-#display0: tme/host/rfb/display
+#display0: @PACKAGE@/host/gtk/display
+display0: @PACKAGE@/host/sdl/display SDL_RENDER_SCALE_QUALITY best SDL_MOUSE_RELATIVE_SCALING 1 SDL_MOUSE_RELATIVE_MODE_WARP 1
+#display0: @PACKAGE@/host/rfb/display
 display0 at cgthree0
 #display0 at bwtwo0
 display0 at kbd0
@@ -146,16 +146,16 @@ display0 at ms0
 ## a SCSI disk:
 ##
 #
-sd0 at scsibus0: tme/scsi/disk id 3 type tme-scsi-1
-disk0 at sd0: tme/host/posix/disk file my-sun4c-disk.img
+sd0 at scsibus0: @PACKAGE@/scsi/disk id 3 type tme-scsi-1
+disk0 at sd0: @PACKAGE@/host/posix/disk file my-sun4c-disk.img
 
 ## a SCSI tape:
 ##
-st0 at scsibus0: tme/scsi/tape id 4 type tme-scsi-1
-tape0 at st0: tme/host/posix/tape
+st0 at scsibus0: @PACKAGE@/scsi/tape id 4 type tme-scsi-1
+tape0 at st0: @PACKAGE@/host/posix/tape
 
-cd0 at scsibus0: tme/scsi/cdrom id 6 type tme-scsi-1
-cdrom0 at cd0: tme/host/posix/disk file netbsd-sun4.iso read-only
+cd0 at scsibus0: @PACKAGE@/scsi/cdrom id 6 type tme-scsi-1
+cdrom0 at cd0: @PACKAGE@/host/posix/disk file netbsd-sun4.iso read-only
 
 ## set the idle type, so tmesh doesn't consume all of the host CPU:
 ##

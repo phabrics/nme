@@ -5,40 +5,40 @@
 
 ## the Multibus and VME sun2 common buses and devices:
 ##
-mainbus0: tme/machine/sun2 multibus my-sun2-idprom.bin
-cpu0 at mainbus0: tme/ic/m68010
-obio0 at mainbus0 obio: tme/generic/bus size 8MB
-obmem0 at mainbus0 obmem: tme/generic/bus size 16MB
-ram0 at obmem0 addr 0x0: tme/host/posix/memory ram 4MB
-rom0 at obmem0 addr 0xef0000: tme/host/posix/memory rom sun2-multi-rev-R.bin
+mainbus0: @PACKAGE@/machine/sun2 multibus my-sun2-idprom.bin
+cpu0 at mainbus0: @PACKAGE@/ic/m68010
+obio0 at mainbus0 obio: @PACKAGE@/generic/bus size 8MB
+obmem0 at mainbus0 obmem: @PACKAGE@/generic/bus size 16MB
+ram0 at obmem0 addr 0x0: @PACKAGE@/host/posix/memory ram 4MB
+rom0 at obmem0 addr 0xef0000: @PACKAGE@/host/posix/memory rom sun2-multi-rev-R.bin
 rom0 at obmem0 addr 0xef8000
 
 ## the Multibus sun2 obio devices:
 ##
-clock0 at obio0 addr 0x2800: tme/machine/sun2/clock
-tod0 at obio0 addr 0x3800: tme/machine/sun2/tod
-zs0 at obio0 addr 0x2000 ipl 6: tme/machine/sun2/zs
+clock0 at obio0 addr 0x2800: @PACKAGE@/machine/sun2/clock
+tod0 at obio0 addr 0x3800: @PACKAGE@/machine/sun2/tod
+zs0 at obio0 addr 0x2000 ipl 6: @PACKAGE@/machine/sun2/zs
 
 ## the Multibus sun2 Multibus buses:
 ##
-mbio0 at mainbus0 mbio: tme/generic/bus size 8MB
-mbmem0: tme/generic/bus size 8MB
+mbio0 at mainbus0 mbio: @PACKAGE@/generic/bus size 8MB
+mbmem0: @PACKAGE@/generic/bus size 8MB
 mainbus0 mbmem at mbmem0 addr 0x00000
 
 ## the Sun "SCSI-2" Multibus board:
 ##
-sc0 at mbmem0 addr 0x80000 ipl 2: tme/bus/multibus/sun-sc
-scsibus0 at sc0: tme/scsi/bus
-#zs2 at mbmem0 addr 0x80800 ipl 6: tme/machine/sun2/zs
-#zs3 at mbmem0 addr 0x81000 ipl 6: tme/machine/sun2/zs
+sc0 at mbmem0 addr 0x80000 ipl 2: @PACKAGE@/bus/multibus/sun-sc
+scsibus0 at sc0: @PACKAGE@/scsi/bus
+#zs2 at mbmem0 addr 0x80800 ipl 6: @PACKAGE@/machine/sun2/zs
+#zs3 at mbmem0 addr 0x81000 ipl 6: @PACKAGE@/machine/sun2/zs
 
 ## the 3Com 3C400 Ethernet Multibus board:
 ##
 # uncomment these two lines if you have read/write permission on one
 # of your /dev/bpfN devices and you want an Ethernet device:
 #
-#ec0 at mbmem0 addr 0xe0000 ipl 3: tme/bus/multibus/3c400 ether "00:01:02:03:04:05"
-#bpf0 at ec0: tme/host/bsd/bpf
+#ec0 at mbmem0 addr 0xe0000 ipl 3: @PACKAGE@/bus/multibus/3c400 ether "00:01:02:03:04:05"
+#bpf0 at ec0: @PACKAGE@/host/bsd/bpf
 
 ## the Sun Intel Ethernet Multibus board:
 ##
@@ -49,17 +49,17 @@ scsibus0 at sc0: tme/scsi/bus
 # of your /dev/bpfN devices (on *BSD) OR have cap_net_raw+ep capability (on Linux)
 # and you want an Ethernet device:
 #
-#mie0: tme/bus/multibus/sun-mie
+#mie0: @PACKAGE@/bus/multibus/sun-mie
 #mie0 csr at mbmem0 addr 0x88000 ipl 3
 #mie0 memory 0xa0000 at mbmem0 addr 0xa0000
-#ie0 at mie0: tme/ic/i82586
-#bpf1 at ie0: tme/host/bsd/bpf delay 10000
+#ie0 at mie0: @PACKAGE@/ic/i82586
+#bpf1 at ie0: @PACKAGE@/host/bsd/bpf delay 10000
 
 # OR enable tap ethernet device, an alternative method for network access
 # 2 ways to access a tap device: native or openvpn (respectively below)
 # both require setuid or equivalent permissions, which should be set up at build time
-#tap1 at ie0: tme/host/tun/tap inet 10.0.77.1 netmask 255.255.255.0 bcast 10.0.77.255
-#tap1 at ie0: tme/host/openvpn/tap --dev tap --ifconfig 10.0.77.1 255.255.255.0 --tun-ipv6 --ifconfig-ipv6 "2001:db8::1/64" "2001:db8::2"
+#tap1 at ie0: @PACKAGE@/host/tun/tap inet 10.0.77.1 netmask 255.255.255.0 bcast 10.0.77.255
+#tap1 at ie0: @PACKAGE@/host/openvpn/tap --dev tap --ifconfig 10.0.77.1 255.255.255.0 --tun-ipv6 --ifconfig-ipv6 "2001:db8::1/64" "2001:db8::2"
 
 # You can enable "networking" multiple machines using the following line,
 # while removing the " at ie0" from the one of the previous 2 lines that is used
@@ -69,7 +69,7 @@ scsibus0 at sc0: tme/scsi/bus
 # This creates a master configuration that can be used with different slave
 # configurations that only need the second line below to connect to the tap network
 # via bpf.  Note that the master requires this line, too...
-#bpf1 at ie0: tme/host/bsd/bpf interface tap0
+#bpf1 at ie0: @PACKAGE@/host/bsd/bpf interface tap0
 
 ## the Sun bwtwo Multibus board, Sun type-2 keyboard and mouse, and
 ## the graphics-based display to drive them all:
@@ -77,17 +77,17 @@ scsibus0 at sc0: tme/scsi/bus
 # comment out these eight lines if you don't have graphics or you don't
 # want a display console:
 #
-bwtwo0 at obmem0 addr 0x700000 ipl 4: tme/machine/sun2/bwtwo type multibus
-zs1 at obmem0 addr 0x780000 ipl 6: tme/machine/sun2/zs
-kbd0 at zs1 channel A: tme/serial/keyboard type sun-type-2 macros my-sun-macros.txt map sun-keyboards.txt rate 20
-ms0 at zs1 channel B: tme/serial/mouse type mousesystems-5
+bwtwo0 at obmem0 addr 0x700000 ipl 4: @PACKAGE@/machine/sun2/bwtwo type multibus
+zs1 at obmem0 addr 0x780000 ipl 6: @PACKAGE@/machine/sun2/zs
+kbd0 at zs1 channel A: @PACKAGE@/serial/keyboard type sun-type-2 macros my-sun-macros.txt map sun-keyboards.txt rate 20
+ms0 at zs1 channel B: @PACKAGE@/serial/mouse type mousesystems-5
 
 # You can have only one graphics-based display at a time:
 # uncomment which display you want
 # uncomment this line for a GTK-based graphics display
-display0: tme/host/gtk/display
+display0: @PACKAGE@/host/gtk/display
 # uncomment this line for a VNC-based graphics display
-#display0: tme/host/rfb/display
+#display0: @PACKAGE@/host/rfb/display
 display0 at bwtwo0
 display0 at kbd0
 display0 at ms0
@@ -100,32 +100,32 @@ display0 at ms0
 # using tip or some other serial communications program on the slave
 # side (in this case, /dev/ptyr0):
 #
-#console0 at zs0 channel A: tme/host/posix/serial device /dev/ttyr0 break-carats
+#console0 at zs0 channel A: @PACKAGE@/host/posix/serial device /dev/ttyr0 break-carats
 # OR enable POSIX pseudo-terminal master (if available) using the ptmx clone device:
 # the tmesh console will display the slave device to connect to (e.g., /dev/pts/3)
-#console0 at zs0 channel A: tme/host/posix/serial device /dev/ptmx break-carats
+#console0 at zs0 channel A: @PACKAGE@/host/posix/serial device /dev/ptmx break-carats
 
 ## a SCSI disk:
 ##
 # if you're using SunOS, change the disk type from tme-scsi-1 to
 # acb4000, to get an Adaptec ACB-4000 compatible disk:
 #
-sd0 at scsibus0: tme/scsi/disk id 0 type tme-scsi-1
-disk0 at sd0: tme/host/posix/disk file my-sun2-disk.img
+sd0 at scsibus0: @PACKAGE@/scsi/disk id 0 type tme-scsi-1
+disk0 at sd0: @PACKAGE@/host/posix/disk file my-sun2-disk.img
 
 ## a SCSI tape:
 ##
 # if you're using SunOS, remove the vendor EMULEX and product "MT-02 QIC" 
 # to get a 100% Emulex MT-02 compatible tape:
 #
-st0 at scsibus0: tme/scsi/tape id 4 type emulex-mt02 vendor EMULEX product "MT-02 QIC"
-tape0 at st0: tme/host/posix/tape
+st0 at scsibus0: @PACKAGE@/scsi/tape id 4 type emulex-mt02 vendor EMULEX product "MT-02 QIC"
+tape0 at st0: @PACKAGE@/host/posix/tape
 
 ## run tme-make-machs to generate the following tmesh tape loading scripts
 ## and then uncomment the appropriate one
-# if zlib is enabled & working in tme/nme, you can choose this
+# if zlib is enabled & working in @PACKAGE@/nme, you can choose this
 #source mt-sun2-zlib
-# otherwise if zlib is unavailable in tme/nme, you can choose this
+# otherwise if zlib is unavailable in @PACKAGE@/nme, you can choose this
 #source mt-sun2
 
 ## power up the machine:
