@@ -16,7 +16,7 @@ pkginclude_HEADERS = memory.h \
 	threads-fiber.h \
 	module.h \
 	log.h \
-	openvpn-setup.h \
+	events.h \
 	tme.h \
 	misc.h \
 	hash.h \

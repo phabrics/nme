@@ -109,20 +109,6 @@ void tme_fiber_cond_notify _TME_P((tme_fiber_cond_t *, int));
 #define tme_fiber_cond_notifyTRUE(c) tme_fiber_cond_notify(c, TRUE)
 #define tme_fiber_cond_notifyFALSE(c) tme_fiber_cond_notify(c, FALSE)
 
-unsigned int
-tme_fiber_tun_set _TME_P((struct tuntap *tt,
-			  tme_event_set_t *es,
-			  unsigned int rwflags,
-			  void *arg,
-			  unsigned int *persistent));
-
-unsigned int
-tme_fiber_socket_set _TME_P((struct link_socket *s,
-			     tme_event_set_t *es,
-			     unsigned int rwflags,
-			     void *arg,
-			     unsigned int *persistent));
-
 /* deadlock sleeping: */
 //#define TME_THREAD_TIMEDLOCK		(0)
 //#define TME_THREAD_DEADLOCK_SLEEP	abort

@@ -13,7 +13,7 @@ lib_LTLIBRARIES = lib@PACKAGE@.la
 pkginclude_HEADERS = memory-auto.h
 lib@PACKAGE@_la_SOURCES = misc-host.c \
 	memory-auto.c \
-	openvpn-setup.c \
+	events.c \
 	recode-flags.c \
 	recode-conds.c \
 	recode-address.c \

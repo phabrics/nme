@@ -1,7 +1,7 @@
-/* host/openvpn/openvpn-setup.h - OpenVPN Ethernet setup: */
+/* tme/events.h - header file for events: */
 
 /*
- * Copyright (c) 2016 Ruben Agin
+ * Copyright (c) 2025 Ruben Agin
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,14 +31,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef _TME_EVENTS_H
+#define _TME_EVENTS_H
+
 #include <tme/common.h>
 #include <libopenvpn/syshead.h>
 #include <libopenvpn/event.h>
 #include <libopenvpn/tun.h>
-#include <libopenvpn/link.h>
-
-#define OPENVPN_CAN_WRITE 1
-#define OPENVPN_FAST_IO 2
+#include <libopenvpn/options.h>
+#include <libopenvpn/openvpn-setup.h>
 
 #ifdef TME_THREADS_FIBER
 /* Events: */
@@ -55,6 +56,18 @@ extern int (*tme_event_del) _TME_P((tme_event_set_t *es, event_t event));
 extern int (*tme_event_ctl) _TME_P((tme_event_set_t *es, event_t event, unsigned int rwflags, void *arg));
 extern int (*tme_event_wait) _TME_P((tme_event_set_t *es, const struct timeval *tv, struct event_set_return *out, int outlen, void *mutex));
 
-struct env_set *openvpn_setup _TME_P((const char *args[], int argc, struct options *options));
+extern unsigned int
+(*tme_tun_set) _TME_P((struct tuntap *tt,
+		       tme_event_set_t *es,
+		       unsigned int rwflags,
+		       void *arg,
+		       unsigned int *persistent));
 
-struct frame *openvpn_setup_frame _TME_P((struct options *options, struct tuntap **tt, struct link_socket **sock, struct env_set *es, u_char *flags, tme_event_set_t **event_set));
+extern unsigned int
+(*tme_socket_set) _TME_P((struct link_socket *s,
+			  tme_event_set_t *es,
+			  unsigned int rwflags,
+			  void *arg,
+			  unsigned int *persistent));
+
+#endif /* !_TME_EVENTS_H */

@@ -35,7 +35,7 @@
 
 /* includes: */
 #include "eth-if.h"
-#include <tme/openvpn-setup.h>
+#include <tme/events.h>
 
 typedef struct _tme_openvpn_tun {
   struct tme_ethernet *eth;
@@ -64,7 +64,7 @@ static int _tme_openvpn_tun_write(void *data) {
 
   tme_event_ctl(event_set, tun_event_handle(tun->tt), flags, 0);
     
-  status = tme_event_wait(event_set, NULL, &esr, flags, &tun->eth->tme_eth_mutex);
+  status = tme_event_wait(event_set, NULL, &esr, status, &tun->eth->tme_eth_mutex);
   tme_event_free(event_set);
 
   check_status (status, "event_wait", NULL, NULL);
@@ -101,7 +101,7 @@ static int _tme_openvpn_tun_read(void *data) {
 
   tme_tun_set(tun->tt, es, flags, (void*)0, NULL);
     
-  status = tme_event_wait(es, NULL, &esr, flags, &tun->eth->tme_eth_mutex);
+  status = tme_event_wait(es, NULL, &esr, status, &tun->eth->tme_eth_mutex);
   tme_event_free(es);
 
   check_status (status, "event_wait", NULL, NULL);
@@ -139,7 +139,7 @@ NME_ELEMENT_SUB_NEW_DECL(host_openvpn,tun_tap) {
   while(args[++arg_i] != NULL);
   
   es = openvpn_setup(args, arg_i, options);
-  frame = openvpn_setup_frame(options, &tt, NULL, es, &flags, NULL);
+  frame = openvpn_setup_frame(options, &tt, NULL, es, &flags);
   free(options);
 
   sz = BUF_SIZE(frame);

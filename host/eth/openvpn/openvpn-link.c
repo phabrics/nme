@@ -35,7 +35,7 @@
 
 /* includes: */
 #include "eth-if.h"
-#include <tme/openvpn-setup.h>
+#include <tme/events.h>
 
 typedef struct _tme_openvpn_sock {
   struct tme_ethernet *eth;
@@ -70,7 +70,7 @@ static int _tme_openvpn_sock_write(void *data) {
     
   tme_event_ctl(event_set, socket_event_handle(sock->ls), flags, 0);
     
-  status = tme_event_wait(event_set, NULL, &esr, flags, &sock->eth->tme_eth_mutex);
+  status = tme_event_wait(event_set, NULL, &esr, status, &sock->eth->tme_eth_mutex);
   tme_event_free(event_set);
   if(status<0) return status;
 
@@ -107,7 +107,7 @@ static int _tme_openvpn_sock_read(void *data) {
   
     tme_socket_set(sock->ls, es, flags, (void*)0, NULL);
 
-    status = tme_event_wait(es, NULL, &esr, flags, &sock->eth->tme_eth_mutex);
+    status = tme_event_wait(es, NULL, &esr, status, &sock->eth->tme_eth_mutex);
     tme_event_free(es);
     if(status<0) return status;
   }
@@ -152,14 +152,16 @@ NME_ELEMENT_SUB_NEW_DECL(host_openvpn,socket_link) {
   u_char flags = 0;
   struct frame *frame;
   int sz;
-  struct options options;
+  struct options *options = options_new();
   tme_openvpn_sock *sock = data = tme_new0(tme_openvpn_sock, 1);
   int arg_i = 0;
 
   while(args[++arg_i] != NULL);
 
-  es = openvpn_setup(args, arg_i, &options);
-  frame = openvpn_setup_frame(&options, NULL, &ls, es, &flags, NULL);
+  es = openvpn_setup(args, arg_i, options);
+  frame = openvpn_setup_frame(options, NULL, &ls, es, &flags);
+  free(options);
+
   sz = BUF_SIZE(frame);
   
   sock->ls = ls;

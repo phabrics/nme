@@ -33,6 +33,7 @@
 
 /* includes: */
 #include <tme/threads.h>
+#include <tme/events.h>
 
 #ifdef TME_THREADS_POSIX
 pthread_attr_t *attrp;
@@ -593,6 +594,8 @@ void tme_threads_init(int mode) {
     tme_event_del = event_del;
     tme_event_ctl = event_ctl;
     tme_event_wait = tme_thread_event_wait;
+    tme_tun_set = tun_set;
+    tme_socket_set = socket_set;
   } else
     tme_fiber_threads_init();
   
@@ -616,7 +619,7 @@ void tme_threads_init(int mode) {
 
 /* this reads or writes, yielding if the event is not ready: */
 int
-tme_event_yield(tme_event_t hand, void *data, size_t len, unsigned int rwflags, tme_mutex_t *mutex)
+tme_event_yield(tme_event_t hand, void *data, size_t len, bool read, tme_mutex_t *mutex)
 {
   int i, rc = 1, key_event = FALSE;
   struct event_set_return esr;
@@ -629,7 +632,7 @@ tme_event_yield(tme_event_t hand, void *data, size_t len, unsigned int rwflags, 
   
   do {
 #ifdef WIN32
-    if (rwflags & EVENT_READ) {
+    if (read) {
       if (hand == TME_STD_HANDLE(stdin)) {
 	INPUT_RECORD record[128];
 	DWORD numRead;
@@ -661,7 +664,7 @@ tme_event_yield(tme_event_t hand, void *data, size_t len, unsigned int rwflags, 
     }
 #endif
     tme_event_reset(tme_events);
-    tme_event_ctl(tme_events, handle, rwflags, 0);
+    tme_event_ctl(tme_events, handle, (read) ? (EVENT_READ) : (EVENT_WRITE), 0);
     rc = tme_event_wait(tme_events, NULL, &esr, 1, mutex);
   } while(key_event);
 

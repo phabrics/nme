@@ -39,6 +39,7 @@ _TME_RCSID("$Id: threads-fiber.c,v 1.18 2010/06/05 19:10:28 fredette Exp $");
 /* includes: */
 #define TME_THREADS_FIBER
 #include <tme/threads.h>
+#include <tme/events.h>
 #include <stdlib.h>
 #if defined(__EMSCRIPTEN__) && !defined(USE_SJLJ)
 #include <emscripten/fiber.h>
@@ -719,7 +720,7 @@ tme_fiber_event_wait(struct tme_fiber_event_set *es, const struct timeval *timeo
   return event_wait(es->es, &timeout_out, out, outlen);
 }
 
-unsigned int
+static unsigned int
 tme_fiber_tun_set (struct tuntap *tt,
 		   struct tme_fiber_event_set *es,
 		   unsigned int rwflags,
@@ -735,7 +736,7 @@ tme_fiber_tun_set (struct tuntap *tt,
   return rc;
 }
 
-unsigned int
+static unsigned int
 tme_fiber_socket_set (struct link_socket *s,
 		      struct tme_fiber_event_set *es,
 		      unsigned int rwflags,
@@ -782,6 +783,8 @@ tme_fiber_threads_init()
   tme_event_del = tme_fiber_event_del;
   tme_event_ctl = tme_fiber_event_ctl;
   tme_event_wait = tme_fiber_event_wait;
+  tme_tun_set = tme_fiber_tun_set;
+  tme_socket_set = tme_fiber_socket_set;
 }
 
 /* this exits a thread: */

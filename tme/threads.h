@@ -37,7 +37,6 @@
 #define _TME_THREADS_H
 
 #include <tme/common.h>
-#include <tme/openvpn-setup.h>
 
 /* includes: */
 #include <errno.h>
@@ -335,22 +334,19 @@ typedef off_t tme_off_t;
 #define tme_thread_close close
 #endif // !WIN32
 
-int tme_event_yield _TME_P((tme_event_t hand, void *data, size_t len, unsigned int rwflags, tme_mutex_t *mutex));
+int tme_event_yield _TME_P((tme_event_t hand, void *data, size_t len, bool read, tme_mutex_t *mutex));
 
 static _tme_inline
 int tme_thread_read(tme_thread_handle_t hand, void *data, size_t len, tme_mutex_t *mutex) {
-  tme_event_yield(TME_EVENT_HANDLE(hand), data, len, EVENT_READ, mutex);
+  tme_event_yield(TME_EVENT_HANDLE(hand), data, len, true, mutex);
   return tme_read(hand, data, len);
 }
 
 static _tme_inline
 int tme_thread_write(tme_thread_handle_t hand, void *data, size_t len, tme_mutex_t *mutex) {
-  tme_event_yield(TME_EVENT_HANDLE(hand), data, len, EVENT_WRITE, mutex);
+  tme_event_yield(TME_EVENT_HANDLE(hand), data, len, false, mutex);
   return tme_write(hand, data, len);
 }
-
-#define tme_tun_set(tt,es,flags,arg,per) ((thread_mode) ? (tun_set(tt,es,flags,arg,per)) : (tme_fiber_tun_set(tt,es,flags,arg,per)))
-#define tme_socket_set(s,es,flags,arg,per) ((thread_mode) ? (socket_set(s,es,flags,arg,per)) : (tme_fiber_socket_set(s,es,flags,arg,per)))
 
 typedef union {
   tme_thread_threadid_t thread;
