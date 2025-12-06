@@ -257,12 +257,7 @@ typedef tme_int64_t tme_off_t;
 #error "No support for 32-bit file offsets on Windows"
 #endif
 
-typedef struct tme_win32_handle {
-  HANDLE handle;
-  struct overlapped_io reads;
-  struct overlapped_io writes;
-  struct rw_handle rw_handle;
-} *tme_thread_handle_t;
+typedef struct tme_win32_handle *tme_thread_handle_t;
 
 extern tme_thread_handle_t win32_stdin;
 extern tme_thread_handle_t win32_stdout;
@@ -283,7 +278,7 @@ typedef tme_thread_handle_t tme_event_t;
 
 #define TME_STD_HANDLE(hand) win32_##hand
 
-#define TME_THREAD_HANDLE(hand) hand->handle
+#define TME_THREAD_HANDLE(hand) (*(HANDLE *)(hand))
 #define TME_EVENT_HANDLE(hand) hand
 #define TME_INVALID_HANDLE NULL
 tme_off_t tme_thread_seek _TME_P((tme_thread_handle_t hand, tme_off_t off, int where));

@@ -53,7 +53,7 @@ static int _tme_openvpn_sock_write(void *data) {
   tme_openvpn_sock *sock = data;
   struct link_socket_actual *to_addr;	/* IP address of remote */
   int status = 1;
-  tme_event_set_t *event_set = tme_event_set_init(&status, EVENT_METHOD_FAST);
+  struct tme_event_set *event_set = tme_event_set_init(&status, EVENT_METHOD_FAST);
   
   ASSERT(buf_init(&sock->outbuf, FRAME_HEADROOM(sock->frame)));
 
@@ -88,7 +88,7 @@ static int _tme_openvpn_sock_read(void *data) {
   tme_openvpn_sock *sock = data;
   struct link_socket_actual from;               /* address of incoming datagram */
   int status = 1;
-  tme_event_set_t *es;
+  struct tme_event_set *es;
   
   if(socket_read_residual(sock->ls))
     esr.rwflags = EVENT_READ;

@@ -33,23 +33,23 @@
 
 #include <tme/events.h>
 
-tme_event_set_t *(*tme_event_set_init) _TME_P((int *maxevents, unsigned int flags));
-void (*tme_event_free) _TME_P((tme_event_set_t *es));
-void (*tme_event_reset) _TME_P((tme_event_set_t *es));
-int (*tme_event_del) _TME_P((tme_event_set_t *es, event_t event));
-int (*tme_event_ctl) _TME_P((tme_event_set_t *es, event_t event, unsigned int rwflags, void *arg));
-int (*tme_event_wait) _TME_P((tme_event_set_t *es, const struct timeval *tv, struct event_set_return *out, int outlen, void *mutex));
+struct tme_event_set *(*tme_event_set_init) _TME_P((int *maxevents, unsigned int flags));
+void (*tme_event_free) _TME_P((struct tme_event_set *es));
+void (*tme_event_reset) _TME_P((struct tme_event_set *es));
+int (*tme_event_del) _TME_P((struct tme_event_set *es, event_t event));
+int (*tme_event_ctl) _TME_P((struct tme_event_set *es, event_t event, unsigned int rwflags, void *arg));
+int (*tme_event_wait) _TME_P((struct tme_event_set *es, const struct timeval *tv, struct event_set_return *out, int outlen, void *mutex));
 
 unsigned int
 (*tme_tun_set) _TME_P((struct tuntap *tt,
-		       tme_event_set_t *es,
+		       struct tme_event_set *es,
 		       unsigned int rwflags,
 		       void *arg,
 		       unsigned int *persistent));
 
 unsigned int
 (*tme_socket_set) _TME_P((struct link_socket *s,
-			  tme_event_set_t *es,
+			  struct tme_event_set *es,
 			  unsigned int rwflags,
 			  void *arg,
 			  unsigned int *persistent));

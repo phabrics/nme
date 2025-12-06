@@ -51,7 +51,7 @@ static int _tme_openvpn_tun_write(void *data) {
   struct event_set_return esr;
   tme_openvpn_tun *tun = data;
   int status = 1;
-  tme_event_set_t *event_set = tme_event_set_init(&status, EVENT_METHOD_FAST);
+  struct tme_event_set *event_set = tme_event_set_init(&status, EVENT_METHOD_FAST);
   
   tun->outbuf.len = tun->eth->tme_eth_data_length;
   tme_event_reset(event_set);
@@ -89,7 +89,7 @@ static int _tme_openvpn_tun_read(void *data) {
   struct event_set_return esr;
   tme_openvpn_tun *tun = data;
   int status = 1;
-  tme_event_set_t *es = tme_event_set_init(&status, EVENT_METHOD_FAST);
+  struct tme_event_set *es = tme_event_set_init(&status, EVENT_METHOD_FAST);
 
   tme_event_reset(es);
     

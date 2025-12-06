@@ -43,9 +43,7 @@ _TME_RCSID("$Id: nmesh.c,v 1.4 2009/08/30 17:06:38 fredette Exp $");
 #ifdef HAVE_SDL3
 #include <SDL3/SDL_main.h>
 #endif
-#ifdef HAVE_OPENVPN
-#include <libopenvpn/openvpn-setup.h>
-#endif
+#include <tme/events.h>
 #ifdef __EMSCRIPTEN__
 #include <tme/shlibvar.h>
 #include <emscripten.h>

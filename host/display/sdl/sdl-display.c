@@ -608,7 +608,7 @@ static void _tme_sdl_screen_resize(struct tme_sdl_screen *screen)
   
   tme_log(&display->tme_display_element->tme_element_log_handle, 0, TME_OK,
 	  (&display->tme_display_element->tme_element_log_handle,
-	   _("resize: renderer scale: %d %d\n"), width, height));
+	   _("resize: renderer scaled size: %d %d\n"), scaleX * width, height * scaleY));
   
   /* (re)create the texture that sits in between the surface->pixels and the renderer */
   if(screen->sdlTexture)

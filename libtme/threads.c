@@ -185,6 +185,13 @@ int tme_thread_sleep_yield(tme_time_t sleep, tme_mutex_t *mutex) {
 
 #ifdef WIN32
 
+struct tme_win32_handle {
+  HANDLE handle;
+  struct overlapped_io reads;
+  struct overlapped_io writes;
+  struct rw_handle rw_handle;
+};
+
 tme_thread_handle_t win32_stdin;
 tme_thread_handle_t win32_stdout;
 tme_thread_handle_t win32_stderr;
@@ -565,7 +572,7 @@ int tme_write (tme_thread_handle_t hand, void *data, int len)
 #endif // !WIN32
 
 static 
-int tme_thread_event_wait(tme_event_set_t *es, const struct timeval *tv, struct event_set_return *out, int outlen, tme_mutex_t *mutex) {
+int tme_thread_event_wait(struct tme_event_set *es, const struct timeval *tv, struct event_set_return *out, int outlen, tme_mutex_t *mutex) {
   int rc;
   struct timeval _tv;
 
@@ -623,7 +630,7 @@ tme_event_yield(tme_event_t hand, void *data, size_t len, bool read, tme_mutex_t
 {
   int i, rc = 1, key_event = FALSE;
   struct event_set_return esr;
-  tme_event_set_t *tme_events = tme_event_set_init(&rc, EVENT_METHOD_FAST);
+  struct tme_event_set *tme_events = tme_event_set_init(&rc, EVENT_METHOD_FAST);
 #ifdef WIN32
   event_t handle = &hand->rw_handle;
 #else
