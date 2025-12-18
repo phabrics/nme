@@ -763,7 +763,7 @@ main(int argc, char **argv)
     es = openvpn_setup(NULL, 0, NULL);
 #ifdef WIN32
     set_win_sys_path_via_env(es);
-    win32_signal_close(&win32_signal);
+    //    win32_signal_close(&win32_signal);
 #endif
   } else
     exit(1);

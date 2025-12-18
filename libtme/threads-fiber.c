@@ -444,7 +444,7 @@ tme_fiber_dispatch(volatile int passes)
 }
 
 /* this is the main loop iteration function: */
-int
+void
 tme_fiber_main_iter(void *unused)
 {
   int fd;
@@ -513,7 +513,6 @@ tme_fiber_main_iter(void *unused)
   /* dispatch: */
   tme_fiber_dispatch(1);
 
-  return TME_OK;
 }
 
 /* this creates a new thread: */

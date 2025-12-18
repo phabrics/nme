@@ -824,7 +824,7 @@ for level in ${levels}; do
 				printf "%s\n" "  tme_ieee754_${precision}_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, ${func_libm}f(${ops}));"
 				printf "%s\n" "#else  /* (TME_FLOAT_FORMAT_IEEE754_${capprecision}_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */"
 			    fi
-			    printf "%s\n" "  tme_ieee754_${precision}_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, ${func_libm}(${ops}));"
+			    printf "%s\n" "  tme_ieee754_${precision}_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, ${func_libm}l(${ops}));"
 			    if ${func_libm_has_f}; then
 				printf "%s\n" "#endif /* (TME_FLOAT_FORMAT_IEEE754_${capprecision}_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */"
 			    fi

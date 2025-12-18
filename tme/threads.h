@@ -190,7 +190,7 @@ struct tme_zlib_handle  *tme_zlib_open _TME_P((const char *path, int flags));
 #endif
 
 typedef void (*tme_threads_fn) _TME_P((void));
-typedef int (*tme_threads_fn1) _TME_P((void *));
+typedef void (*tme_threads_fn1) _TME_P((void *));
 
 static _tme_inline void tme_mutex_lock _TME_P((tme_mutex_t *mutex)) { 
   _tme_thread_suspended();
@@ -357,13 +357,15 @@ void tme_thread_create_named _TME_P((tme_threadid_t *thr, const char *name, tme_
 }
 
 #define tme_thread_create(t,f,a) tme_thread_create_named(t,element->tme_element_args[0],f,a)
+#define tme_thread_exit(m) return _tme_thread_exit(m)
 
-static _tme_inline void tme_thread_exit _TME_P((tme_mutex_t *mutex)) {
+static _tme_inline _tme_thret _tme_thread_exit _TME_P((tme_mutex_t *mutex)) {
   if(thread_mode) {
     _tme_thread_suspended();  
     if(mutex)
       tme_thread_mutex_unlock(&mutex->thread);
   } else tme_fiber_exit(&mutex->fiber);
+  return NULL;
 }
 
 /* A default main iterator for use in the main thread loop */

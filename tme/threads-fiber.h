@@ -115,7 +115,7 @@ void tme_fiber_cond_notify _TME_P((tme_fiber_cond_t *, int));
 
 /* threads: */
 typedef struct tme_fiber_thread tme_fiber_thread_t;
-int tme_fiber_main_iter _TME_P((void *unused));
+void tme_fiber_main_iter _TME_P((void *unused));
 tme_fiber_thread_t *tme_fiber_new _TME_P((const char *, tme_thread_t, void *));
 void tme_fiber_yield _TME_P((void));
 #define tme_fiber_join(id) do { } while (/* CONSTCOND */ 0)

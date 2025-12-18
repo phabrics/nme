@@ -106,7 +106,7 @@
       }
 
       /* reset all flags, precisions, etc., and enter state two: */
-      prf_flag_ls = "ll" + 2;
+      prf_flag_ls = &"ll"[2];
       prf_flag_0 = FALSE;
       prf_width = -1;
       prf_state = 2;

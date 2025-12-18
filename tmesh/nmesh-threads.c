@@ -76,7 +76,7 @@ int nmesh_init(int mode) {
   return TME_OK;
 }
 
-void tme_threads_run(void) {
+_tme_thret tme_threads_run(void) {
   _tme_thread_suspended();
   tme_thread_enter(tme_threads.tme_threads_mutex);
   

@@ -3308,7 +3308,7 @@ _tme_ieee754_partial_single_sqrt(struct tme_ieee754_ctl *ieee754_ctl, const stru
 #if (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, sqrtf(tme_ieee754_single_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, sqrt(tme_ieee754_single_value_builtin_get(src0)));
+  tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, sqrtl(tme_ieee754_single_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
 
   /* leave native floating-point operation: */
@@ -3347,7 +3347,7 @@ _tme_ieee754_partial_single_abs(struct tme_ieee754_ctl *ieee754_ctl, const struc
 #if (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, fabsf(tme_ieee754_single_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, fabs(tme_ieee754_single_value_builtin_get(src0)));
+  tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, fabsl(tme_ieee754_single_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
 
   /* leave native floating-point operation: */
@@ -3456,7 +3456,7 @@ _tme_ieee754_partial_single_exp(struct tme_ieee754_ctl *ieee754_ctl, const struc
 #if (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, expf(tme_ieee754_single_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, exp(tme_ieee754_single_value_builtin_get(src0)));
+  tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, expl(tme_ieee754_single_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
 
   /* leave native floating-point operation: */
@@ -3495,7 +3495,7 @@ _tme_ieee754_partial_single_log10(struct tme_ieee754_ctl *ieee754_ctl, const str
 #if (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, log10f(tme_ieee754_single_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, log10(tme_ieee754_single_value_builtin_get(src0)));
+  tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, log10l(tme_ieee754_single_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
 
   /* leave native floating-point operation: */
@@ -3534,7 +3534,7 @@ _tme_ieee754_partial_single_log(struct tme_ieee754_ctl *ieee754_ctl, const struc
 #if (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, logf(tme_ieee754_single_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, log(tme_ieee754_single_value_builtin_get(src0)));
+  tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, logl(tme_ieee754_single_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
 
   /* leave native floating-point operation: */
@@ -3573,7 +3573,7 @@ _tme_ieee754_partial_single_scale(struct tme_ieee754_ctl *ieee754_ctl, const str
 #if (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, scalbnf(tme_ieee754_single_value_builtin_get(src0), tme_ieee754_single_value_builtin_get(src1)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, scalbn(tme_ieee754_single_value_builtin_get(src0), tme_ieee754_single_value_builtin_get(src1)));
+  tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, scalbnl(tme_ieee754_single_value_builtin_get(src0), tme_ieee754_single_value_builtin_get(src1)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
 
   /* leave native floating-point operation: */
@@ -3612,7 +3612,7 @@ _tme_ieee754_partial_single_pow(struct tme_ieee754_ctl *ieee754_ctl, const struc
 #if (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, powf(tme_ieee754_single_value_builtin_get(src0), tme_ieee754_single_value_builtin_get(src1)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, pow(tme_ieee754_single_value_builtin_get(src0), tme_ieee754_single_value_builtin_get(src1)));
+  tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, powl(tme_ieee754_single_value_builtin_get(src0), tme_ieee754_single_value_builtin_get(src1)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
 
   /* leave native floating-point operation: */
@@ -3791,7 +3791,7 @@ _tme_ieee754_partial_double_sqrt(struct tme_ieee754_ctl *ieee754_ctl, const stru
 #if (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, sqrtf(tme_ieee754_double_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, sqrt(tme_ieee754_double_value_builtin_get(src0)));
+  tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, sqrtl(tme_ieee754_double_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
 
   /* leave native floating-point operation: */
@@ -3830,7 +3830,7 @@ _tme_ieee754_partial_double_abs(struct tme_ieee754_ctl *ieee754_ctl, const struc
 #if (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, fabsf(tme_ieee754_double_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, fabs(tme_ieee754_double_value_builtin_get(src0)));
+  tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, fabsl(tme_ieee754_double_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
 
   /* leave native floating-point operation: */
@@ -3939,7 +3939,7 @@ _tme_ieee754_partial_double_exp(struct tme_ieee754_ctl *ieee754_ctl, const struc
 #if (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, expf(tme_ieee754_double_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, exp(tme_ieee754_double_value_builtin_get(src0)));
+  tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, expl(tme_ieee754_double_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
 
   /* leave native floating-point operation: */
@@ -3978,7 +3978,7 @@ _tme_ieee754_partial_double_log10(struct tme_ieee754_ctl *ieee754_ctl, const str
 #if (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, log10f(tme_ieee754_double_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, log10(tme_ieee754_double_value_builtin_get(src0)));
+  tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, log10l(tme_ieee754_double_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
 
   /* leave native floating-point operation: */
@@ -4017,7 +4017,7 @@ _tme_ieee754_partial_double_log(struct tme_ieee754_ctl *ieee754_ctl, const struc
 #if (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, logf(tme_ieee754_double_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, log(tme_ieee754_double_value_builtin_get(src0)));
+  tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, logl(tme_ieee754_double_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
 
   /* leave native floating-point operation: */
@@ -4056,7 +4056,7 @@ _tme_ieee754_partial_double_scale(struct tme_ieee754_ctl *ieee754_ctl, const str
 #if (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, scalbnf(tme_ieee754_double_value_builtin_get(src0), tme_ieee754_double_value_builtin_get(src1)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, scalbn(tme_ieee754_double_value_builtin_get(src0), tme_ieee754_double_value_builtin_get(src1)));
+  tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, scalbnl(tme_ieee754_double_value_builtin_get(src0), tme_ieee754_double_value_builtin_get(src1)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
 
   /* leave native floating-point operation: */
@@ -4095,7 +4095,7 @@ _tme_ieee754_partial_double_pow(struct tme_ieee754_ctl *ieee754_ctl, const struc
 #if (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, powf(tme_ieee754_double_value_builtin_get(src0), tme_ieee754_double_value_builtin_get(src1)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, pow(tme_ieee754_double_value_builtin_get(src0), tme_ieee754_double_value_builtin_get(src1)));
+  tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, powl(tme_ieee754_double_value_builtin_get(src0), tme_ieee754_double_value_builtin_get(src1)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
 
   /* leave native floating-point operation: */
@@ -4274,7 +4274,7 @@ _tme_ieee754_partial_extended80_sqrt(struct tme_ieee754_ctl *ieee754_ctl, const 
 #if (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, sqrtf(tme_ieee754_extended80_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, sqrt(tme_ieee754_extended80_value_builtin_get(src0)));
+  tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, sqrtl(tme_ieee754_extended80_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
 
   /* leave native floating-point operation: */
@@ -4313,7 +4313,7 @@ _tme_ieee754_partial_extended80_abs(struct tme_ieee754_ctl *ieee754_ctl, const s
 #if (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, fabsf(tme_ieee754_extended80_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, fabs(tme_ieee754_extended80_value_builtin_get(src0)));
+  tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, fabsl(tme_ieee754_extended80_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
 
   /* leave native floating-point operation: */
@@ -4422,7 +4422,7 @@ _tme_ieee754_partial_extended80_exp(struct tme_ieee754_ctl *ieee754_ctl, const s
 #if (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, expf(tme_ieee754_extended80_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, exp(tme_ieee754_extended80_value_builtin_get(src0)));
+  tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, expl(tme_ieee754_extended80_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
 
   /* leave native floating-point operation: */
@@ -4461,7 +4461,7 @@ _tme_ieee754_partial_extended80_log10(struct tme_ieee754_ctl *ieee754_ctl, const
 #if (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, log10f(tme_ieee754_extended80_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, log10(tme_ieee754_extended80_value_builtin_get(src0)));
+  tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, log10l(tme_ieee754_extended80_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
 
   /* leave native floating-point operation: */
@@ -4500,7 +4500,7 @@ _tme_ieee754_partial_extended80_log(struct tme_ieee754_ctl *ieee754_ctl, const s
 #if (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, logf(tme_ieee754_extended80_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, log(tme_ieee754_extended80_value_builtin_get(src0)));
+  tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, logl(tme_ieee754_extended80_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
 
   /* leave native floating-point operation: */
@@ -4539,7 +4539,7 @@ _tme_ieee754_partial_extended80_scale(struct tme_ieee754_ctl *ieee754_ctl, const
 #if (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, scalbnf(tme_ieee754_extended80_value_builtin_get(src0), tme_ieee754_extended80_value_builtin_get(src1)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, scalbn(tme_ieee754_extended80_value_builtin_get(src0), tme_ieee754_extended80_value_builtin_get(src1)));
+  tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, scalbnl(tme_ieee754_extended80_value_builtin_get(src0), tme_ieee754_extended80_value_builtin_get(src1)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
 
   /* leave native floating-point operation: */
@@ -4578,7 +4578,7 @@ _tme_ieee754_partial_extended80_pow(struct tme_ieee754_ctl *ieee754_ctl, const s
 #if (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, powf(tme_ieee754_extended80_value_builtin_get(src0), tme_ieee754_extended80_value_builtin_get(src1)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, pow(tme_ieee754_extended80_value_builtin_get(src0), tme_ieee754_extended80_value_builtin_get(src1)));
+  tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, powl(tme_ieee754_extended80_value_builtin_get(src0), tme_ieee754_extended80_value_builtin_get(src1)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
 
   /* leave native floating-point operation: */
@@ -4757,7 +4757,7 @@ _tme_ieee754_partial_quad_sqrt(struct tme_ieee754_ctl *ieee754_ctl, const struct
 #if (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, sqrtf(tme_ieee754_quad_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, sqrt(tme_ieee754_quad_value_builtin_get(src0)));
+  tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, sqrtl(tme_ieee754_quad_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
 
   /* leave native floating-point operation: */
@@ -4796,7 +4796,7 @@ _tme_ieee754_partial_quad_abs(struct tme_ieee754_ctl *ieee754_ctl, const struct 
 #if (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, fabsf(tme_ieee754_quad_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, fabs(tme_ieee754_quad_value_builtin_get(src0)));
+  tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, fabsl(tme_ieee754_quad_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
 
   /* leave native floating-point operation: */
@@ -4905,7 +4905,7 @@ _tme_ieee754_partial_quad_exp(struct tme_ieee754_ctl *ieee754_ctl, const struct 
 #if (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, expf(tme_ieee754_quad_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, exp(tme_ieee754_quad_value_builtin_get(src0)));
+  tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, expl(tme_ieee754_quad_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
 
   /* leave native floating-point operation: */
@@ -4944,7 +4944,7 @@ _tme_ieee754_partial_quad_log10(struct tme_ieee754_ctl *ieee754_ctl, const struc
 #if (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, log10f(tme_ieee754_quad_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, log10(tme_ieee754_quad_value_builtin_get(src0)));
+  tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, log10l(tme_ieee754_quad_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
 
   /* leave native floating-point operation: */
@@ -4983,7 +4983,7 @@ _tme_ieee754_partial_quad_log(struct tme_ieee754_ctl *ieee754_ctl, const struct 
 #if (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, logf(tme_ieee754_quad_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, log(tme_ieee754_quad_value_builtin_get(src0)));
+  tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, logl(tme_ieee754_quad_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
 
   /* leave native floating-point operation: */
@@ -5022,7 +5022,7 @@ _tme_ieee754_partial_quad_scale(struct tme_ieee754_ctl *ieee754_ctl, const struc
 #if (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, scalbnf(tme_ieee754_quad_value_builtin_get(src0), tme_ieee754_quad_value_builtin_get(src1)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, scalbn(tme_ieee754_quad_value_builtin_get(src0), tme_ieee754_quad_value_builtin_get(src1)));
+  tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, scalbnl(tme_ieee754_quad_value_builtin_get(src0), tme_ieee754_quad_value_builtin_get(src1)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
 
   /* leave native floating-point operation: */
@@ -5061,7 +5061,7 @@ _tme_ieee754_partial_quad_pow(struct tme_ieee754_ctl *ieee754_ctl, const struct 
 #if (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, powf(tme_ieee754_quad_value_builtin_get(src0), tme_ieee754_quad_value_builtin_get(src1)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, pow(tme_ieee754_quad_value_builtin_get(src0), tme_ieee754_quad_value_builtin_get(src1)));
+  tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, powl(tme_ieee754_quad_value_builtin_get(src0), tme_ieee754_quad_value_builtin_get(src1)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
 
   /* leave native floating-point operation: */
@@ -5948,7 +5948,7 @@ _tme_ieee754_unknown_single_sqrt(struct tme_ieee754_ctl *ieee754_ctl, const stru
 #if (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, sqrtf(tme_ieee754_single_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, sqrt(tme_ieee754_single_value_builtin_get(src0)));
+  tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, sqrtl(tme_ieee754_single_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
   ieee754_ctl->tme_ieee754_ctl_lock_unlock = NULL;
 
@@ -5971,7 +5971,7 @@ _tme_ieee754_unknown_single_abs(struct tme_ieee754_ctl *ieee754_ctl, const struc
 #if (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, fabsf(tme_ieee754_single_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, fabs(tme_ieee754_single_value_builtin_get(src0)));
+  tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, fabsl(tme_ieee754_single_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
   ieee754_ctl->tme_ieee754_ctl_lock_unlock = NULL;
 
@@ -6032,7 +6032,7 @@ _tme_ieee754_unknown_single_exp(struct tme_ieee754_ctl *ieee754_ctl, const struc
 #if (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, expf(tme_ieee754_single_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, exp(tme_ieee754_single_value_builtin_get(src0)));
+  tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, expl(tme_ieee754_single_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
   ieee754_ctl->tme_ieee754_ctl_lock_unlock = NULL;
 
@@ -6055,7 +6055,7 @@ _tme_ieee754_unknown_single_log10(struct tme_ieee754_ctl *ieee754_ctl, const str
 #if (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, log10f(tme_ieee754_single_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, log10(tme_ieee754_single_value_builtin_get(src0)));
+  tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, log10l(tme_ieee754_single_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
   ieee754_ctl->tme_ieee754_ctl_lock_unlock = NULL;
 
@@ -6078,7 +6078,7 @@ _tme_ieee754_unknown_single_log(struct tme_ieee754_ctl *ieee754_ctl, const struc
 #if (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, logf(tme_ieee754_single_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, log(tme_ieee754_single_value_builtin_get(src0)));
+  tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, logl(tme_ieee754_single_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
   ieee754_ctl->tme_ieee754_ctl_lock_unlock = NULL;
 
@@ -6101,7 +6101,7 @@ _tme_ieee754_unknown_single_scale(struct tme_ieee754_ctl *ieee754_ctl, const str
 #if (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, scalbnf(tme_ieee754_single_value_builtin_get(src0), tme_ieee754_single_value_builtin_get(src1)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, scalbn(tme_ieee754_single_value_builtin_get(src0), tme_ieee754_single_value_builtin_get(src1)));
+  tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, scalbnl(tme_ieee754_single_value_builtin_get(src0), tme_ieee754_single_value_builtin_get(src1)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
   ieee754_ctl->tme_ieee754_ctl_lock_unlock = NULL;
 
@@ -6124,7 +6124,7 @@ _tme_ieee754_unknown_single_pow(struct tme_ieee754_ctl *ieee754_ctl, const struc
 #if (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, powf(tme_ieee754_single_value_builtin_get(src0), tme_ieee754_single_value_builtin_get(src1)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, pow(tme_ieee754_single_value_builtin_get(src0), tme_ieee754_single_value_builtin_get(src1)));
+  tme_ieee754_single_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, powl(tme_ieee754_single_value_builtin_get(src0), tme_ieee754_single_value_builtin_get(src1)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_SINGLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
   ieee754_ctl->tme_ieee754_ctl_lock_unlock = NULL;
 
@@ -6223,7 +6223,7 @@ _tme_ieee754_unknown_double_sqrt(struct tme_ieee754_ctl *ieee754_ctl, const stru
 #if (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, sqrtf(tme_ieee754_double_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, sqrt(tme_ieee754_double_value_builtin_get(src0)));
+  tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, sqrtl(tme_ieee754_double_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
   ieee754_ctl->tme_ieee754_ctl_lock_unlock = NULL;
 
@@ -6246,7 +6246,7 @@ _tme_ieee754_unknown_double_abs(struct tme_ieee754_ctl *ieee754_ctl, const struc
 #if (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, fabsf(tme_ieee754_double_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, fabs(tme_ieee754_double_value_builtin_get(src0)));
+  tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, fabsl(tme_ieee754_double_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
   ieee754_ctl->tme_ieee754_ctl_lock_unlock = NULL;
 
@@ -6307,7 +6307,7 @@ _tme_ieee754_unknown_double_exp(struct tme_ieee754_ctl *ieee754_ctl, const struc
 #if (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, expf(tme_ieee754_double_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, exp(tme_ieee754_double_value_builtin_get(src0)));
+  tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, expl(tme_ieee754_double_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
   ieee754_ctl->tme_ieee754_ctl_lock_unlock = NULL;
 
@@ -6330,7 +6330,7 @@ _tme_ieee754_unknown_double_log10(struct tme_ieee754_ctl *ieee754_ctl, const str
 #if (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, log10f(tme_ieee754_double_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, log10(tme_ieee754_double_value_builtin_get(src0)));
+  tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, log10l(tme_ieee754_double_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
   ieee754_ctl->tme_ieee754_ctl_lock_unlock = NULL;
 
@@ -6353,7 +6353,7 @@ _tme_ieee754_unknown_double_log(struct tme_ieee754_ctl *ieee754_ctl, const struc
 #if (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, logf(tme_ieee754_double_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, log(tme_ieee754_double_value_builtin_get(src0)));
+  tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, logl(tme_ieee754_double_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
   ieee754_ctl->tme_ieee754_ctl_lock_unlock = NULL;
 
@@ -6376,7 +6376,7 @@ _tme_ieee754_unknown_double_scale(struct tme_ieee754_ctl *ieee754_ctl, const str
 #if (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, scalbnf(tme_ieee754_double_value_builtin_get(src0), tme_ieee754_double_value_builtin_get(src1)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, scalbn(tme_ieee754_double_value_builtin_get(src0), tme_ieee754_double_value_builtin_get(src1)));
+  tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, scalbnl(tme_ieee754_double_value_builtin_get(src0), tme_ieee754_double_value_builtin_get(src1)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
   ieee754_ctl->tme_ieee754_ctl_lock_unlock = NULL;
 
@@ -6399,7 +6399,7 @@ _tme_ieee754_unknown_double_pow(struct tme_ieee754_ctl *ieee754_ctl, const struc
 #if (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, powf(tme_ieee754_double_value_builtin_get(src0), tme_ieee754_double_value_builtin_get(src1)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, pow(tme_ieee754_double_value_builtin_get(src0), tme_ieee754_double_value_builtin_get(src1)));
+  tme_ieee754_double_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, powl(tme_ieee754_double_value_builtin_get(src0), tme_ieee754_double_value_builtin_get(src1)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_DOUBLE_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
   ieee754_ctl->tme_ieee754_ctl_lock_unlock = NULL;
 
@@ -6498,7 +6498,7 @@ _tme_ieee754_unknown_extended80_sqrt(struct tme_ieee754_ctl *ieee754_ctl, const 
 #if (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, sqrtf(tme_ieee754_extended80_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, sqrt(tme_ieee754_extended80_value_builtin_get(src0)));
+  tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, sqrtl(tme_ieee754_extended80_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
   ieee754_ctl->tme_ieee754_ctl_lock_unlock = NULL;
 
@@ -6521,7 +6521,7 @@ _tme_ieee754_unknown_extended80_abs(struct tme_ieee754_ctl *ieee754_ctl, const s
 #if (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, fabsf(tme_ieee754_extended80_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, fabs(tme_ieee754_extended80_value_builtin_get(src0)));
+  tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, fabsl(tme_ieee754_extended80_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
   ieee754_ctl->tme_ieee754_ctl_lock_unlock = NULL;
 
@@ -6582,7 +6582,7 @@ _tme_ieee754_unknown_extended80_exp(struct tme_ieee754_ctl *ieee754_ctl, const s
 #if (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, expf(tme_ieee754_extended80_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, exp(tme_ieee754_extended80_value_builtin_get(src0)));
+  tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, expl(tme_ieee754_extended80_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
   ieee754_ctl->tme_ieee754_ctl_lock_unlock = NULL;
 
@@ -6605,7 +6605,7 @@ _tme_ieee754_unknown_extended80_log10(struct tme_ieee754_ctl *ieee754_ctl, const
 #if (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, log10f(tme_ieee754_extended80_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, log10(tme_ieee754_extended80_value_builtin_get(src0)));
+  tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, log10l(tme_ieee754_extended80_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
   ieee754_ctl->tme_ieee754_ctl_lock_unlock = NULL;
 
@@ -6628,7 +6628,7 @@ _tme_ieee754_unknown_extended80_log(struct tme_ieee754_ctl *ieee754_ctl, const s
 #if (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, logf(tme_ieee754_extended80_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, log(tme_ieee754_extended80_value_builtin_get(src0)));
+  tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, logl(tme_ieee754_extended80_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
   ieee754_ctl->tme_ieee754_ctl_lock_unlock = NULL;
 
@@ -6651,7 +6651,7 @@ _tme_ieee754_unknown_extended80_scale(struct tme_ieee754_ctl *ieee754_ctl, const
 #if (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, scalbnf(tme_ieee754_extended80_value_builtin_get(src0), tme_ieee754_extended80_value_builtin_get(src1)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, scalbn(tme_ieee754_extended80_value_builtin_get(src0), tme_ieee754_extended80_value_builtin_get(src1)));
+  tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, scalbnl(tme_ieee754_extended80_value_builtin_get(src0), tme_ieee754_extended80_value_builtin_get(src1)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
   ieee754_ctl->tme_ieee754_ctl_lock_unlock = NULL;
 
@@ -6674,7 +6674,7 @@ _tme_ieee754_unknown_extended80_pow(struct tme_ieee754_ctl *ieee754_ctl, const s
 #if (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, powf(tme_ieee754_extended80_value_builtin_get(src0), tme_ieee754_extended80_value_builtin_get(src1)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, pow(tme_ieee754_extended80_value_builtin_get(src0), tme_ieee754_extended80_value_builtin_get(src1)));
+  tme_ieee754_extended80_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, powl(tme_ieee754_extended80_value_builtin_get(src0), tme_ieee754_extended80_value_builtin_get(src1)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_EXTENDED80_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
   ieee754_ctl->tme_ieee754_ctl_lock_unlock = NULL;
 
@@ -6773,7 +6773,7 @@ _tme_ieee754_unknown_quad_sqrt(struct tme_ieee754_ctl *ieee754_ctl, const struct
 #if (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, sqrtf(tme_ieee754_quad_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, sqrt(tme_ieee754_quad_value_builtin_get(src0)));
+  tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, sqrtl(tme_ieee754_quad_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
   ieee754_ctl->tme_ieee754_ctl_lock_unlock = NULL;
 
@@ -6796,7 +6796,7 @@ _tme_ieee754_unknown_quad_abs(struct tme_ieee754_ctl *ieee754_ctl, const struct 
 #if (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, fabsf(tme_ieee754_quad_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, fabs(tme_ieee754_quad_value_builtin_get(src0)));
+  tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, fabsl(tme_ieee754_quad_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
   ieee754_ctl->tme_ieee754_ctl_lock_unlock = NULL;
 
@@ -6857,7 +6857,7 @@ _tme_ieee754_unknown_quad_exp(struct tme_ieee754_ctl *ieee754_ctl, const struct 
 #if (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, expf(tme_ieee754_quad_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, exp(tme_ieee754_quad_value_builtin_get(src0)));
+  tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, expl(tme_ieee754_quad_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
   ieee754_ctl->tme_ieee754_ctl_lock_unlock = NULL;
 
@@ -6880,7 +6880,7 @@ _tme_ieee754_unknown_quad_log10(struct tme_ieee754_ctl *ieee754_ctl, const struc
 #if (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, log10f(tme_ieee754_quad_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, log10(tme_ieee754_quad_value_builtin_get(src0)));
+  tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, log10l(tme_ieee754_quad_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
   ieee754_ctl->tme_ieee754_ctl_lock_unlock = NULL;
 
@@ -6903,7 +6903,7 @@ _tme_ieee754_unknown_quad_log(struct tme_ieee754_ctl *ieee754_ctl, const struct 
 #if (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, logf(tme_ieee754_quad_value_builtin_get(src0)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, log(tme_ieee754_quad_value_builtin_get(src0)));
+  tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, logl(tme_ieee754_quad_value_builtin_get(src0)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
   ieee754_ctl->tme_ieee754_ctl_lock_unlock = NULL;
 
@@ -6926,7 +6926,7 @@ _tme_ieee754_unknown_quad_scale(struct tme_ieee754_ctl *ieee754_ctl, const struc
 #if (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, scalbnf(tme_ieee754_quad_value_builtin_get(src0), tme_ieee754_quad_value_builtin_get(src1)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, scalbn(tme_ieee754_quad_value_builtin_get(src0), tme_ieee754_quad_value_builtin_get(src1)));
+  tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, scalbnl(tme_ieee754_quad_value_builtin_get(src0), tme_ieee754_quad_value_builtin_get(src1)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
   ieee754_ctl->tme_ieee754_ctl_lock_unlock = NULL;
 
@@ -6949,7 +6949,7 @@ _tme_ieee754_unknown_quad_pow(struct tme_ieee754_ctl *ieee754_ctl, const struct 
 #if (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN == TME_FLOAT_FORMAT_FLOAT)
   tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, powf(tme_ieee754_quad_value_builtin_get(src0), tme_ieee754_quad_value_builtin_get(src1)));
 #else  /* (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
-  tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, pow(tme_ieee754_quad_value_builtin_get(src0), tme_ieee754_quad_value_builtin_get(src1)));
+  tme_ieee754_quad_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, powl(tme_ieee754_quad_value_builtin_get(src0), tme_ieee754_quad_value_builtin_get(src1)));
 #endif /* (TME_FLOAT_FORMAT_IEEE754_QUAD_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */
   ieee754_ctl->tme_ieee754_ctl_lock_unlock = NULL;
 

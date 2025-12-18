@@ -564,7 +564,7 @@ for level in ${levels}; do
 				AS_ECHO(["  tme_ieee754_${precision}_value_builtin_set(dst, TME_FLOAT_FORMAT_FLOAT, ${func_libm}f(${ops}));"])
 				AS_ECHO(["#else  /* (TME_FLOAT_FORMAT_IEEE754_${capprecision}_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */"])
 			    fi
-			    AS_ECHO(["  tme_ieee754_${precision}_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, ${func_libm}(${ops}));"])
+			    AS_ECHO(["  tme_ieee754_${precision}_value_builtin_set(dst, TME_FLOAT_FORMAT_DOUBLE, ${func_libm}l(${ops}));"])
 			    if ${func_libm_has_f}; then
 				AS_ECHO(["#endif /* (TME_FLOAT_FORMAT_IEEE754_${capprecision}_BUILTIN != TME_FLOAT_FORMAT_FLOAT) */"])
 			    fi

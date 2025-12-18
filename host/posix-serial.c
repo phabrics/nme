@@ -975,7 +975,7 @@ _tme_posix_serial_connections_new(struct tme_element *element,
 /* this opens a serial device: */
 static tme_thread_handle_t
 _tme_posix_serial_new(struct tme_element *element,
-		      const char * const *filename,
+		      const char * filename,
 		      char **_output,
 		      int flags)
 {
