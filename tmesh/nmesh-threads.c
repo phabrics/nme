@@ -48,7 +48,7 @@ static tme_cond_t tme_cond_start;
 static tme_time_t tme_cond_delay = TME_TIME_SET_SEC(5);
 
 // Set main thread loop iteration function & argument
-void tme_threads_set_main(tme_threads_fn1 run, void *arg, tme_mutex_t *mutex, tme_time_t delay) {
+void nmesh_threads_set_main(tme_threads_fn1 run, void *arg, tme_mutex_t *mutex, tme_time_t delay) {
   tme_threads.tme_threads_run = run;
   tme_threads.tme_threads_arg = arg;
   tme_threads.tme_threads_mutex = mutex;
@@ -76,7 +76,7 @@ int nmesh_init(int mode) {
   return TME_OK;
 }
 
-_tme_thret tme_threads_run(void) {
+_tme_thret nmesh_threads_run(void) {
   _tme_thread_suspended();
   tme_thread_enter(tme_threads.tme_threads_mutex);
   

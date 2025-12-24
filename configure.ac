@@ -905,9 +905,9 @@ else
 fi
 
 AC_ARG_ENABLE(warnings,
-[  --disable-warnings      don't compile with warnings turned on (default=don't)],
+[  --enable-warnings      don't compile with warnings turned on (default=don't)],
 [ ], [enable_warnings=no])
-if test "x${enable_warnings}" = "xyes" -a "x${GCC}" = "xyes"; then
+if test "x${enable_warnings}" != "xno" -a "x${GCC}" = "xyes"; then
   CFLAGS="${CFLAGS-} -Wno-unused -Wno-sign-compare -Wundef -Wall -Wextra"
   CXXFLAGS="${CXXFLAGS-} -W"
 else

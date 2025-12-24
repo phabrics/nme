@@ -53,6 +53,7 @@ _TME_RCSID("$Id: nmesh.c,v 1.4 2009/08/30 17:06:38 fredette Exp $");
 #include <libgen.h>
 
 /* macros: */
+_tme_thret nmesh_threads_run _TME_P((void));
 
 /* the binary log message buffer size: */
 #define _TMESH_LOG_MESSAGE_BINARY_BUFFER_SIZE	(5 * TME_LOG_MESSAGE_SIZE_MAX_BINARY)
@@ -958,7 +959,7 @@ main(int argc, char **argv)
   tme_thread_create_named(&tmesh_thread, "tmesh", (tme_thread_t) _tmesh_th, &interactive);
 
   /* run the threads: */
-  tme_threads_run();
+  nmesh_threads_run();
 
 #if defined(TME_THREADS_POSIX) && defined(HAVE_PTHREAD_SETSCHEDPARAM)
   /* Destroy unneeded thread attributes object */
