@@ -17,6 +17,6 @@ pkglib_LTLIBRARIES = @PACKAGE@_machine_sun4.la
 @PACKAGE@_machine_sun4_la_LIBADD = ../sun/lib@PACKAGE@-machine-sun.la $(@PACKAGE@_LIBS)
 
 examplesdir = $(pkgdatadir)/examples
-dist_examples_DATA = SUN4-75.in
+examples_DATA = SUN4-75
 
 include $(top_srcdir)/modules.mk
