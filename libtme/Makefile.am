@@ -34,6 +34,11 @@ lib@PACKAGE@_la_SOURCES = misc-host.c \
 	alloc.c
 
 lib@PACKAGE@_la_LIBADD = $(LIBLTDL) $(LIBOPENVPN_LIBS) $(ZLIB_LIBS) $(GLIB_LIBS) $(SDL_LIBS)
+
+if !HAVE_LIBOPENVPN
+lib@PACKAGE@_la_LIBADD += $(top_builddir)/libopenvpn/libopenvpn.la
+endif
+
 lib@PACKAGE@_la_LDFLAGS = -version-info 0:0:0
 
 noinst_SCRIPTS = memory-auto.sh

@@ -34,7 +34,7 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.69])
-AC_INIT([nme],[0.12rc14],[phabrics@phabrics.com],[],[http://phabrics.org])
+AC_INIT([nme],[0.12],[phabrics@phabrics.com],[],[http://phabrics.org])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIRS([m4])
 AC_CANONICAL_TARGET
@@ -1223,6 +1223,10 @@ ac_cv_sizeof_long_long_int="$ac_cv_sizeof_long_long_int"
 ac_cv_sizeof_short="$ac_cv_sizeof_short"
 bus_size_max="$bus_size_max"
 ]])
+
+AS_IF([test "x${have_libopenvpn}" != xno], [],
+	    [test -d "$srcdir/libopenvpn"], [AC_CONFIG_SUBDIRS([libopenvpn])],
+	    [AC_MSG_ERROR([libopenvpn package not found installed or in libopenvpn subdir])])
 
 dnl Writes files.
 AC_CONFIG_FILES([Makefile

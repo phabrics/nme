@@ -113,8 +113,8 @@ _tme_keyboard_disp_new(struct tme_display *display)
       if(display->tme_display_keyval_convert_case)
 	display->tme_display_keyval_convert_case(keysym, &keysym_cases[0], &keysym_cases[1]);
       else {
-	keysym_cases[0]=tolower(keysym);
-	keysym_cases[1]=toupper(keysym);	
+	keysym_cases[0]=tolower((int)keysym);
+	keysym_cases[1]=toupper((int)keysym);	
       }
       for (keysym_j = 0;
 	   keysym_j < (int) TME_ARRAY_ELS(keysym_cases);
