@@ -1,5 +1,5 @@
 #!/bin/bash
-# machine/sun/tme-make-machs - downloads firmware & OS setup files and makes Sun machines:
+# machine/sun/nme-make-machs - downloads firmware & OS setup files and makes Sun machines:
 
 # Copyright (c) 2023 Ruben Agin
 # All rights reserved.
@@ -34,7 +34,7 @@
 
 # Machines to build in machine_root. Templates come from machine_dir and are
 # put in directories named after the template files. If unset, default template
-# directory is <tme_install_prefix>/share/tme/examples. 
+# directory is <nme_install_prefix>/share/nme/examples. 
 machine_root=./machine
 machine_dir=
 machines={sun2,sun3,sun4,sun-ultra}
@@ -141,14 +141,14 @@ done
 
 popd
 
-# First, try to find installed location of tme
+# First, try to find installed location of nme
 if [ -z ${MINGW_PREFIX+set} ]; then
-   prefix=$(dirname `which tmesh`)/..
+   prefix=$(dirname `which nmesh`)/..
 else
    prefix=${MINGW_PREFIX}
 fi
 
-loc=`realpath $prefix/share/tme/examples`
+loc=`realpath $prefix/share/nme/examples`
 
 # Next, key off of the machine descriptions in the examples dir to create config dirs
 for mach in `ls $loc/SUN*`; do
@@ -196,8 +196,8 @@ for arch in $machines; do
 	    sz=10G
 	else
 	    if [ -d "$netbsd_path" ]; then
-		echo "# tmesh script for loading tape from compressed files for $arch" > mt-$arch-zlib
-		echo "# tmesh script for loading tape for uncompressed files for $arch" > mt-$arch
+		echo "# nmesh script for loading tape from compressed files for $arch" > mt-$arch-zlib
+		echo "# nmesh script for loading tape for uncompressed files for $arch" > mt-$arch
 		[ -d $firmware_root ] && ln -sf $firmware_root/$arch* .
 		num=1
 		inc_tape
@@ -223,7 +223,7 @@ for arch in $machines; do
 	    fi
 	    if [ $arch = "sun3" ]; then
 		macht="3/150"
-		[ -s $prom ] || tme-sun-eeprom < $machd-eeprom.txt > $prom
+		[ -s $prom ] || nme-sun-eeprom < $machd-eeprom.txt > $prom
 	    else
 		macht="2/120"
 	    fi
@@ -236,7 +236,7 @@ for arch in $machines; do
 	    if [ $arch != "sun4u" ]; then
 		macaddr=`printf 8:0:20:%02X:%02X:%02X $[RANDOM%256] $[RANDOM%256] $[RANDOM%256]`
 		echo "$macht $macaddr"
-		tme-sun-idprom $macht $macaddr >> $prom
+		nme-sun-idprom $macht $macaddr >> $prom
 	    fi
 	fi
 	[ -s my-$arch-disk.img ] || dd if=/dev/zero of=my-$arch-disk.img bs=1 count=1 seek=$sz

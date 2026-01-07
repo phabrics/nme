@@ -27,7 +27,7 @@ pkginclude_HEADERS = memory.h \
 	runlength.h
 
 info_TEXINFOS = nme.texi
-@PACKAGE@_TEXINFOS = fdl.texi
+nme_TEXINFOS = fdl.texi
 
 @PACKAGE@dir = $(pkglibdir)
 dist_@PACKAGE@_DATA = @PACKAGE@-plugins.txt
