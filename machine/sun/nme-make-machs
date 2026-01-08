@@ -30,24 +30,33 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-# Default values of various locations to download from/to. 
+# Variables and default values that can be specified with command-line arguments
+netbsd_rel=10.0
+machine_root=.
+machines="sun2 sun3 sun4 sun-ultra"
+if [ $1 = "-h" ] || [ $1 = "--help" ]; then
+    echo "$0 [<netbsd_release>] [<machine_root>] [<machines>]"
+    echo "Default arguments: $netbsd_rel $machine_root $machines"
+    exit
+fi
+
+# NetBSD location/release to download
+netbsd_root=NetBSD
+netbsd_site=https://cdn.netbsd.org/pub/NetBSD
+if [ $# -gt 0 ]; then netbsd_rel=$1; fi
 
 # Machines to build in machine_root. Templates come from machine_dir and are
 # put in directories named after the template files. If unset, default template
 # directory is <nme_install_prefix>/share/nme/examples. 
-machine_root=./machine
-machine_dir=
-machines={sun2,sun3,sun4,sun-ultra}
+if [ $# -gt 1 ]; then machine_root=$2; fi
+if [ $# -gt 2 ]; then machines=$3; fi
+
+echo "Specified arguments: $netbsd_rel $machine_root $machines"
 
 # Firmware downloads for various machines
-firmware_root=./sun-fw
+firmware_root=sun-fw
 firmware_site=https://people.csail.mit.edu/~fredette/tme
 firmwares="sun2-multi-rev-R sun3-carrera-rev-3.0 sun4-75-rev-2.9 SUNW,501-1415 SUNW,501-1561 SUNW,501-2325 SUNW,501-3082-update7"
-
-# NetBSD location/release to download
-netbsd_root=./NetBSD
-netbsd_site=https://cdn.netbsd.org/pub/NetBSD
-netbsd_rel=10.0
 
 # NetBSD binary sets to install via tape
 # Remember, skip "etc" for an upgrade.
@@ -94,10 +103,8 @@ make_seg() {
     fi
 }
 
-if [ $1 != "" ]; then machine_root=$1; fi
-if [ $2 != "" ]; then machines=$2; fi
-
 mkdir -p $machine_root
+pushd $machine_root
 
 # Download the firmware for each machine type, if needed
 mkdir -p $firmware_root
@@ -118,28 +125,27 @@ for arch in $machines; do
     elif [ $arch = "sun-ultra" ]; then
 	download_cmd $netbsd_site images/$netbsd_rel/NetBSD-$netbsd_rel-sparc64.iso
     else
-	continue
-    fi
-    netbsd_path=NetBSD-$netbsd_rel/$arch
-    # Only download if necessary
-    download_cmd $netbsd_site $netbsd_path/INSTALL.html
-    download_cmd $netbsd_site $netbsd_path/INSTALL.more
-    download_cmd $netbsd_site $netbsd_path/INSTALL.ps
-    download_cmd $netbsd_site $netbsd_path/INSTALL.txt
-    download_cmd $netbsd_site $netbsd_path/installation/tapeimage/tapeboot
-    download_cmd $netbsd_site $netbsd_path/installation/miniroot/miniroot.fs.gz
-    for bin in {kernel,sets}; do
-	download_cmd $netbsd_site $netbsd_path/binary/$bin/$chksum
-	for f in `awk '{print $2}' $netbsd_path/binary/$bin/$chksum | sed -e 's%(\(.*\))%\1%'`; do
-	    download_cmd $netbsd_site $netbsd_path/binary/$bin/$f
+	netbsd_path=NetBSD-$netbsd_rel/$arch
+	# Only download if necessary
+	download_cmd $netbsd_site $netbsd_path/INSTALL.html
+	download_cmd $netbsd_site $netbsd_path/INSTALL.more
+	download_cmd $netbsd_site $netbsd_path/INSTALL.ps
+	download_cmd $netbsd_site $netbsd_path/INSTALL.txt
+	download_cmd $netbsd_site $netbsd_path/installation/tapeimage/tapeboot
+	download_cmd $netbsd_site $netbsd_path/installation/miniroot/miniroot.fs.gz
+	for bin in {kernel,sets}; do
+	    download_cmd $netbsd_site $netbsd_path/binary/$bin/$chksum
+	    for f in `awk '{print $2}' $netbsd_path/binary/$bin/$chksum | sed -e 's%(\(.*\))%\1%'`; do
+		download_cmd $netbsd_site $netbsd_path/binary/$bin/$f
+	    done
+	    pushd $netbsd_path/binary/$bin
+	    ${chksum,,}sum -c $chksum
+	    popd
 	done
-	pushd $netbsd_path/binary/$bin
-	${chksum,,}sum -c $chksum
-	popd
-    done
+    fi
 done
 
-popd
+popd # netbsd_root
 
 # First, try to find installed location of nme
 if [ -z ${MINGW_PREFIX+set} ]; then
@@ -240,6 +246,8 @@ for arch in $machines; do
 	    fi
 	fi
 	[ -s my-$arch-disk.img ] || dd if=/dev/zero of=my-$arch-disk.img bs=1 count=1 seek=$sz
-	popd
+	popd # machd
     done
 done
+
+popd # machine_root
