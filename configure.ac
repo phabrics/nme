@@ -107,7 +107,7 @@ LT_INIT([dlopen,win32-dll])
 LT_LANG([Windows Resource])
 LTDL_INIT([installable recursive])
 CPPFLAGS="${CPPFLAGS-} ${LTDLINCL}" # -DLT_DEBUG_LOADERS"
-lto=no
+lto=yes
 case "${host_os}" in
 netbsd*) 
    CPPFLAGS="${CPPFLAGS-} -D_NETBSD_SOURCE"
@@ -133,7 +133,6 @@ linux*)
    CPPFLAGS="${CPPFLAGS-}"
    DEV_TAP_FILENAME='"\"/dev/net/tun\""'
    SETCAP="chmod u+s"
-   lto=yes
    LDFLAGS="-Wl,--copy-dt-needed-entries"
 #   SETCAP="setcap cap_sys_nice,cap_net_admin,cap_net_raw+ep"
    ;;
@@ -146,6 +145,8 @@ mingw* | msys*)
    host_type=
    if test "x${enable_shared}" = "xno" || test "x${host_cpu}" = "xi686"; then
       lto=${GCC}
+   else
+      lto=no
    fi
    ;;
 cygwin*)   
@@ -167,19 +168,6 @@ darwin*)
    host_type=
    ;;
 esac
-
-AC_MSG_CHECKING([for link-time optimization (LTO)])
-
-AC_ARG_ENABLE(lto,
-[  --enable-lto      compile with link-time optimizations (default=supported)],
-[ ],[ enable_lto=$lto ])
-
-AC_MSG_RESULT($enable_lto)
-
-if test "x${enable_lto}" = "xyes"; then
-  CFLAGS="${CFLAGS-} -flto"
-  LDFLAGS="${LDFLAGS-} -flto"
-fi
 
 AM_CONDITIONAL([WIN32], [test "${WIN32}" = "yes"])
 
@@ -227,10 +215,11 @@ fi
 AM_CONDITIONAL([HAVE_GTK], [test "x${have_gtk}" = xyes])
 
 PKG_CHECK_MODULES([SDL], [sdl3], [have_sdl3=$enable_sdl], [
-   PKG_CHECK_MODULES([SDL], [sdl2], [have_sdl2=$enable_sdl], [])
+   PKG_CHECK_MODULES([SDL], [sdl2], [have_sdl2=$enable_sdl],
+   [AX_CHECK_COMPILE_FLAG(-sUSE_SDL=2, [have_sdl2=$enable_sdl])
+   ])
 ])
 
-AX_CHECK_COMPILE_FLAG(-sUSE_SDL=2, [have_sdl2=$enable_sdl])
 AX_APPEND_COMPILE_FLAGS(-sUSE_SDL=2, SDL_CFLAGS)
 AX_APPEND_LINK_FLAGS(-sUSE_SDL=2, SDL_LIBS)
 
@@ -897,19 +886,36 @@ if test "x${enable_debug}" != "xno"; then
     CPPFLAGS="${CPPFLAGS-} -DTME_NO_DEBUG_LOCKS"
   fi
   if test "x${have_Og}" = xyes; then
-     CFLAGS="${CFLAGS-} -Og"
-     CXXFLAGS="${CXXFLAGS-} -g3 -Og"
-  fi			   
+    CFLAGS="-g3 -Og"
+  else
+    CFLAGS="-g3 -O2"
+  fi
 else
+  CFLAGS="-O3"
   CPPFLAGS="${CPPFLAGS-} -DTME_NO_LOG -DTME_NO_DEBUG_LOCKS -DTME_NO_AUDIT_ATOMICS -DNDEBUG"
 fi
+
+AC_MSG_CHECKING([for link-time optimization (LTO)])
+
+AC_ARG_ENABLE(lto,
+[  --enable-lto      optimize with link-time optimizer (default=yes if supported)],
+[ ],[ enable_lto=$lto ])
+
+if test "x${enable_lto}" = "xyes"; then
+  if test "x${have_Og}" = xyes || test "x${have_clang}" = xyes; then
+     CFLAGS="${CFLAGS-} -flto=auto"
+  else
+     enable_lto=no  
+  fi
+fi
+
+AC_MSG_RESULT($enable_lto)
 
 AC_ARG_ENABLE(warnings,
 [  --enable-warnings      don't compile with warnings turned on (default=don't)],
 [ ], [enable_warnings=no])
 if test "x${enable_warnings}" != "xno" -a "x${GCC}" = "xyes"; then
   CFLAGS="${CFLAGS-} -Wno-unused -Wno-sign-compare -Wundef -Wall -Wextra"
-  CXXFLAGS="${CXXFLAGS-} -W"
 else
   CFLAGS="${CFLAGS-} -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable"
   if test "x${have_clang}" = xyes; then
@@ -922,7 +928,6 @@ else
      CFLAGS="${CFLAGS-} -Wno-unused-but-set-variable -Wno-array-bounds -Wno-type-limits -Wno-incompatible-pointer-types \
      			-Wno-discarded-qualifiers -Wno-implicit-function-declaration -Wno-cpp -fno-strict-aliasing"
   fi
-  CXXFLAGS="${CXXFLAGS-} -W"
 fi
 
 dnl Some code isn't alias-clean.
@@ -933,7 +938,9 @@ fi
 AC_SUBST(CFLAGS_NO_STRICT_ALIASING)
 
 dnl For platforms, like Windows, where libraries must have all their symbols resolved
-LDFLAGS="${LDFLAGS-} -no-undefined"
+if test "x${WIN32}" != x; then
+   LDFLAGS="${LDFLAGS-} -no-undefined"
+fi
 
 dnl Generate tmeconfig.h.  The whether-to-generate logic is cribbed 
 dnl from glib-1.2.1's configure.ac.

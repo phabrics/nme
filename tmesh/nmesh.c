@@ -919,7 +919,7 @@ main(int argc, char **argv)
 	 FS.mount(NODEFS, { root: '.' }, '/nme');
 	 );
 #endif
-  chdir(TME_PREFIX_PATH);
+  chdir(nme_PREFIX_PATH);
 #endif
 
   for(rc = 0;arg_i<argc;arg_i++) {
