@@ -601,8 +601,10 @@ void tme_threads_init(int mode) {
     tme_event_del = event_del;
     tme_event_ctl = event_ctl;
     tme_event_wait = tme_thread_event_wait;
+#ifdef HAVE_OPENVPN
     tme_tun_set = tun_set;
     tme_socket_set = socket_set;
+#endif
   } else
     tme_fiber_threads_init();
   

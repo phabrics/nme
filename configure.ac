@@ -106,7 +106,10 @@ LT_CONFIG_LTDL_DIR([libltdl])
 LT_INIT([dlopen,win32-dll])
 LT_LANG([Windows Resource])
 LTDL_INIT([installable recursive])
-CPPFLAGS="${CPPFLAGS-} ${LTDLINCL}" # -DLT_DEBUG_LOADERS"
+CPPFLAGS="${CPPFLAGS-} -I${ac_default_prefix}/include ${LTDLINCL}" # -DLT_DEBUG_LOADERS"
+LDFLAGS="${LDFLAGS-} -L${ac_default_prefix}/lib"
+
+dnl Configure for libopenvpn.
 lto=yes
 case "${host_os}" in
 netbsd*) 
@@ -115,31 +118,27 @@ netbsd*)
    SETCAP="chmod u+s"
    ;;
 openbsd*) 
-   CPPFLAGS="${CPPFLAGS-}"
    DEV_TAP_FILENAME='"\"/dev/tun\""'
    SETCAP="chmod u+s"
    ;;
 freebsd*) 
-   CPPFLAGS="${CPPFLAGS-}"
    DEV_TAP_FILENAME='"\"/dev/tap\""'
    SETCAP="chmod u+s"
    ;;
 dragonfly*) 
-   CPPFLAGS="${CPPFLAGS-}"
    DEV_TAP_FILENAME='"\"/dev/tap\""'
    SETCAP="chmod u+s"
    ;;
 linux*) 
-   CPPFLAGS="${CPPFLAGS-}"
    DEV_TAP_FILENAME='"\"/dev/net/tun\""'
    SETCAP="chmod u+s"
-   LDFLAGS="-Wl,--copy-dt-needed-entries"
+   LDFLAGS="${LDFLAGS-} -Wl,--copy-dt-needed-entries"
 #   SETCAP="setcap cap_sys_nice,cap_net_admin,cap_net_raw+ep"
    ;;
 mingw* | msys*)
    AC_DEFINE([NME_MODULE_PATH_VAR], ["PKG_CONFIG_SYSTEM_LIBRARY_PATH"], [Use pkgconf environment variable to determine lib path in MSYS2.])
-   CPPFLAGS="${CPPFLAGS} -DWIN32_LEAN_AND_MEAN"
-   CPPFLAGS="${CPPFLAGS} -DNTDDI_VERSION=NTDDI_WINXP -D_WIN32_WINNT=_WIN32_WINNT_WINXP"
+   CPPFLAGS="${CPPFLAGS-} -DWIN32_LEAN_AND_MEAN"
+   CPPFLAGS="${CPPFLAGS-} -DNTDDI_VERSION=NTDDI_WINXP -D_WIN32_WINNT=_WIN32_WINNT_WINXP"
    WIN32=yes
    SETCAP="chmod u+s"
    host_type=
@@ -159,11 +158,10 @@ solaris*)
    ;;
 darwin*)
    dnl some Mac OS X tendering (we use vararg macros...)
-   CPPFLAGS="$CPPFLAGS -no-cpp-precomp"
+   CPPFLAGS="${CPPFLAGS-} -no-cpp-precomp"
    SETCAP="chmod u+s"
    ;;
 *)
-   CPPFLAGS="${CPPFLAGS-}"
    SETCAP="chmod u+s"
    host_type=
    ;;
@@ -195,7 +193,7 @@ AC_CHECK_DECLS(
 		#endif
 	]]
 )
-CFLAGS="${old_CFLAGS}"
+nCFLAGS="${old_CFLAGS}"
 
 dnl Checks for LIBOPENVPN.
 PKG_CHECK_MODULES([LIBOPENVPN], [libopenvpn], [AC_DEFINE([HAVE_LIBOPENVPN], [], [Defined if LIBOPENVPN is found.])], [have_libopenvpn=no])
@@ -757,15 +755,18 @@ changequote(<<, >>)dnl
 # get the host maximum guest size:
 case "${host_cpu}" in
 i[3456789]86)
+     misc_hosts="x86"
      recode_hosts="mmap x86"
      recode_size_guest_max_host=64
+     bus_size_max_host=32
      ;;
-x86_64)
+x86_64 | amd64)
+     misc_hosts="x86"
      recode_hosts="mmap x86"
      recode_size_guest_max_host=128
+     bus_size_max_host=64
      ;;
 *) 
-     recode_hosts=
      recode_size_guest_max_host=1 ;;
 esac
 
@@ -800,21 +801,6 @@ else
    fi
    AC_MSG_RESULT([up to ${recode_size_guest_max}-bit guests using ${recode_hosts}])
 
-   # get the host maximum guest size:
-   changequote(<<, >>)dnl
-   case "${host_cpu}" in
-   i[3456789]86)
-     bus_size_max_host=32
-     ;;
-   x86_64)
-     bus_size_max_host=64
-     ;;
-   *) 
-     bus_size_max_host=
-     ;;
-   esac
-   changequote([, ])dnl
-
    dnl Configure miscellaneous host support.
    AC_MSG_CHECKING([for host recode bus size])
 
@@ -826,12 +812,6 @@ fi
 
 dnl Configure miscellaneous host support.
 AC_MSG_CHECKING([for host miscellaneous support])
-changequote(<<, >>)dnl
-case "${host_cpu}" in
-i[3456789]86 | x86_64) misc_hosts="x86" ;;
-*) misc_hosts= ;;
-esac
-changequote([, ])dnl
 
 if test "${host_os}" = emscripten; then
     misc_hosts=

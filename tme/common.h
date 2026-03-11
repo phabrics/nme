@@ -39,7 +39,7 @@
 /* includes: */
 #ifdef _TME_IMPL
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#include "config.h"
 #endif /* HAVE_CONFIG_H */
 #endif /* _TME_IMPL */
 #include <assert.h>

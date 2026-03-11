@@ -781,8 +781,10 @@ tme_fiber_threads_init()
   tme_event_del = tme_fiber_event_del;
   tme_event_ctl = tme_fiber_event_ctl;
   tme_event_wait = tme_fiber_event_wait;
+#ifdef HAVE_OPENVPN
   tme_tun_set = tme_fiber_tun_set;
   tme_socket_set = tme_fiber_socket_set;
+#endif
 }
 
 /* this exits a thread: */

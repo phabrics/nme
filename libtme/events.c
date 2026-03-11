@@ -40,6 +40,7 @@ int (*tme_event_del) _TME_P((struct tme_event_set *es, event_t event));
 int (*tme_event_ctl) _TME_P((struct tme_event_set *es, event_t event, unsigned int rwflags, void *arg));
 int (*tme_event_wait) _TME_P((struct tme_event_set *es, const struct timeval *tv, struct event_set_return *out, int outlen, void *mutex));
 
+#ifdef HAVE_OPENVPN
 unsigned int
 (*tme_tun_set) _TME_P((struct tuntap *tt,
 		       struct tme_event_set *es,
@@ -53,3 +54,4 @@ unsigned int
 			  unsigned int rwflags,
 			  void *arg,
 			  unsigned int *persistent));
+#endif
