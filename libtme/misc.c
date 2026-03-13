@@ -46,7 +46,7 @@ _TME_RCSID("$Id: misc.c,v 1.8 2010/06/05 19:02:38 fredette Exp $");
 #endif
 #ifdef _TME_HAVE_SDL3
 #include <SDL3/SDL_timer.h>
-#elif defined(_TME_HAVE_SDL)
+#elif defined(_TME_HAVE_SDL2)
 #include <SDL_timer.h>
 #endif
 
@@ -511,7 +511,7 @@ void tme_misc_set_cycles(const char *impl) {
   }
 #endif
 
-#if defined(_TME_HAVE_SDL3) || defined(_TME_HAVE_SDL)
+#if defined(_TME_HAVE_SDL3) || defined(_TME_HAVE_SDL2)
   if(def || !strcmp(impl,"sdl")) {
     printf("Using SDL counter.\n");
     tme_misc_cycles = (tme_misc_get_cycles)SDL_GetPerformanceCounter;

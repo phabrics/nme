@@ -59,7 +59,8 @@ AC_PROG_MAKE_SET
 AC_PROG_EGREP
 AC_PROG_LN_S
 
-TME_HOST_TYPES="gtk rfb sdl tun bsd openvpn"	
+dnl Possible host types and optional versions to test for (higher versions preferred when multiple options given)
+TME_HOST_TYPES="gtk4 gtk3 rfb sdl3 sdl2 tun bsd openvpn"
 AC_SUBST(TME_HOST_TYPES)
 
 AC_ARG_ENABLE(hosts,
@@ -193,7 +194,7 @@ AC_CHECK_DECLS(
 		#endif
 	]]
 )
-nCFLAGS="${old_CFLAGS}"
+CFLAGS="${old_CFLAGS}"
 
 dnl Checks for LIBOPENVPN.
 PKG_CHECK_MODULES([LIBOPENVPN], [libopenvpn], [AC_DEFINE([HAVE_LIBOPENVPN], [], [Defined if LIBOPENVPN is found.])], [have_libopenvpn=no])
@@ -204,34 +205,44 @@ PKG_CHECK_MODULES([GLIB], [glib-2.0], [AC_DEFINE([HAVE_GLIB], [], [Defined if GL
 AM_CONDITIONAL([HAVE_GLIB], [test "x${have_glib}" != xno])
 
 dnl Checks for display type support
-PKG_CHECK_MODULES([GTK], [gtk4], [have_gtk=$enable_gtk], [
-   PKG_CHECK_MODULES([GTK], [gtk+-3.0], [have_gtk=$enable_gtk], [have_gtk=no])
-])
-if test "x${have_gtk}" = xyes; then
+PKG_CHECK_MODULES([GTK4], [gtk4], [have_gtk4=$enable_gtk4], [have_gtk4=no])
+PKG_CHECK_MODULES([GTK3], [gtk+-3.0], [have_gtk3=$enable_gtk3], [have_gtk3=no])
+
+if test "x${have_gtk4}" = xyes; then
    AC_DEFINE([HAVE_GTK], [], [Defined if GTK is found & enabled.])
+   GTK_CFLAGS=${GTK4_CFLAGS}
+   GTK_LIBS=${GTK4_LIBS}
+   have_gtk3=no
+elif test "x${have_gtk3}" = xyes; then
+   AC_DEFINE([HAVE_GTK], [], [Defined if GTK is found & enabled.])
+   GTK_CFLAGS=${GTK3_CFLAGS}
+   GTK_LIBS=${GTK3_LIBS}
 fi
-AM_CONDITIONAL([HAVE_GTK], [test "x${have_gtk}" = xyes])
+AC_SUBST(GTK_CFLAGS)
+AC_SUBST(GTK_LIBS)
+AM_CONDITIONAL([HAVE_GTK], [test "x${have_gtk4}" = xyes || test "x${have_gtk3}" = xyes])
 
-PKG_CHECK_MODULES([SDL], [sdl3], [have_sdl3=$enable_sdl], [
-   PKG_CHECK_MODULES([SDL], [sdl2], [have_sdl2=$enable_sdl],
-   [AX_CHECK_COMPILE_FLAG(-sUSE_SDL=2, [have_sdl2=$enable_sdl])
-   ])
-])
+PKG_CHECK_MODULES([SDL3], [sdl3], [have_sdl3=$enable_sdl3], [have_sdl3=no])
+PKG_CHECK_MODULES([SDL2], [sdl2], [have_sdl2=$enable_sdl2],
+	   [AX_CHECK_COMPILE_FLAG(-sUSE_SDL=2, [have_sdl2=$enable_sdl2])])
 
-AX_APPEND_COMPILE_FLAGS(-sUSE_SDL=2, SDL_CFLAGS)
-AX_APPEND_LINK_FLAGS(-sUSE_SDL=2, SDL_LIBS)
+AX_APPEND_COMPILE_FLAGS(-sUSE_SDL=2, SDL2_CFLAGS)
+AX_APPEND_LINK_FLAGS(-sUSE_SDL=2, SDL2_LIBS)
 
 if test "x${have_sdl3}" = xyes; then
    AC_DEFINE([HAVE_SDL3], [], [Defined if SDL3 is found & enabled.])
-   have_sdl=yes
+   SDL_CFLAGS=${SDL3_CFLAGS}
+   SDL_LIBS=${SDL3_LIBS}
+   have_sdl2=no
 elif test "x${have_sdl2}" = xyes; then
-   AC_DEFINE([HAVE_SDL], [], [Defined if SDL2 is found & enabled.])
-   have_sdl=yes
-else
-   have_sdl=no
+   AC_DEFINE([HAVE_SDL2], [], [Defined if SDL2 is found & enabled.])
+   SDL_CFLAGS=${SDL2_CFLAGS}
+   SDL_LIBS=${SDL2_LIBS}
 fi
+AC_SUBST(SDL_CFLAGS)
+AC_SUBST(SDL_LIBS)
 
-AM_CONDITIONAL([HAVE_SDL], [test "x${have_sdl}" = xyes])
+AM_CONDITIONAL([HAVE_SDL], [test "x${have_sdl3}" = xyes || test "x${have_sdl2}" = xyes])
 
 PKG_CHECK_MODULES([RFB], [libvncclient libvncserver], [have_rfb=$enable_rfb], [have_rfb=no])
 
