@@ -33,10 +33,6 @@ EXTRA_DIST = sparc-impl.h \
 	sparc-rc-insns.c \
 	sparc-rc-ls.c
 
-# default rule for regenerating the portable shell scripts from m4 descriptions
-$(addprefix $(srcdir)/,$(noinst_SCRIPTS)): %.sh: %.m4
-	$(AUTOM4TE) -l m4sh $< > $@
-
 # target to make sparc-auto.h:
 $(srcdir)/sparc-auto.h: sparc-misc-auto.sh sparc-insns-auto.sh
 	$(SHELL) $< --header > $@

@@ -30,10 +30,6 @@ EXTRA_DIST = m68k-impl.h \
 	m68k-iset.txt \
 	m68k-opmap-make.pl
 
-# default rule for regenerating the portable shell scripts from m4 descriptions
-$(addprefix $(srcdir)/,$(noinst_SCRIPTS)): %.sh: %.m4
-	$(AUTOM4TE) -l m4sh $< > $@
-
 # target to make m68k-auto.h:
 $(srcdir)/m68k-auto.h: m68k-misc-auto.sh m68k-insns-auto.sh
 	$(SHELL) $< --header > $@

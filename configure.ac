@@ -119,18 +119,22 @@ netbsd*)
    SETCAP="chmod u+s"
    ;;
 openbsd*) 
+   CPPFLAGS="${CPPFLAGS-} -D_DEFAULT_SOURCE" 
    DEV_TAP_FILENAME='"\"/dev/tun\""'
    SETCAP="chmod u+s"
    ;;
 freebsd*) 
+   CPPFLAGS="${CPPFLAGS-} -D_DEFAULT_SOURCE" 
    DEV_TAP_FILENAME='"\"/dev/tap\""'
    SETCAP="chmod u+s"
    ;;
 dragonfly*) 
+   CPPFLAGS="${CPPFLAGS-} -D_DEFAULT_SOURCE" 
    DEV_TAP_FILENAME='"\"/dev/tap\""'
    SETCAP="chmod u+s"
    ;;
 linux*) 
+   CPPFLAGS="${CPPFLAGS-} -D_DEFAULT_SOURCE" 
    DEV_TAP_FILENAME='"\"/dev/net/tun\""'
    SETCAP="chmod u+s"
    LDFLAGS="${LDFLAGS-} -Wl,--copy-dt-needed-entries"
@@ -138,7 +142,7 @@ linux*)
    ;;
 mingw* | msys*)
    AC_DEFINE([NME_MODULE_PATH_VAR], ["PKG_CONFIG_SYSTEM_LIBRARY_PATH"], [Use pkgconf environment variable to determine lib path in MSYS2.])
-   CPPFLAGS="${CPPFLAGS-} -DWIN32_LEAN_AND_MEAN"
+   CPPFLAGS="${CPPFLAGS-} -DWIN32_LEAN_AND_MEAN -D_DEFAULT_SOURCE"
    CPPFLAGS="${CPPFLAGS-} -DNTDDI_VERSION=NTDDI_WINXP -D_WIN32_WINNT=_WIN32_WINNT_WINXP"
    WIN32=yes
    SETCAP="chmod u+s"
@@ -150,19 +154,22 @@ mingw* | msys*)
    fi
    ;;
 cygwin*)   
+   CPPFLAGS="${CPPFLAGS-} -D_DEFAULT_SOURCE" 
    WIN32=cygwin
    SETCAP="chmod u+s"
    host_type=
    ;;
 solaris*)
+   CPPFLAGS="${CPPFLAGS-} -D_DEFAULT_SOURCE" 
    SETCAP="chmod u+s"
    ;;
 darwin*)
    dnl some Mac OS X tendering (we use vararg macros...)
-   CPPFLAGS="${CPPFLAGS-} -no-cpp-precomp"
+   CPPFLAGS="${CPPFLAGS-} -no-cpp-precomp -D_DEFAULT_SOURCE"
    SETCAP="chmod u+s"
    ;;
 *)
+   CPPFLAGS="${CPPFLAGS-} -D_DEFAULT_SOURCE"
    SETCAP="chmod u+s"
    host_type=
    ;;
@@ -719,11 +726,19 @@ AC_MSG_CHECKING([for available threading models])
 # specify thread model to use as thread mode in a dual dynamic setup along with fiber mode
 
 AC_ARG_ENABLE(threads,
-[  --enable-threads    Prefer use of threads given as argument (default 'glib'). If disabled or unavailable, then defaults to 'posix'. Other current possibilities include 'sdl'.], [], [enable_threads=glib])
+[  --enable-threads    Prefer use of threads given as argument (default 'sdl'). If disabled or unavailable, then defaults to 'posix'. Other current possibilities include 'glib'.], [], [enable_threads=sdl])
 
-CPPFLAGS="${CPPFLAGS-} -D_GNU_SOURCE ${GLIB_CFLAGS} ${SDL_CFLAGS}" 
+if test "x${enable_threads}" = xsdl && test "x${have_sdl3}" = xyes; then
+   AC_DEFINE([TME_THREADS_SDL], [], [Set to value of threads argument.])
+   CPPFLAGS="${CPPFLAGS-} ${SDL_CFLAGS}" 
+elif test "x${enable_threads}" = xglib && test "x${have_glib}" != xno; then
+   AC_DEFINE([TME_THREADS_GLIB], [], [Set to value of threads argument.])
+   CPPFLAGS="${CPPFLAGS-} ${GLIB_CFLAGS}"
+   enable_threads=posix
+   AC_DEFINE([TME_THREADS_POSIX], [], [Set to value of threads argument.])
+fi
 
-AC_DEFINE_UNQUOTED([TME_THREADS_TYPE], [${enable_threads}], [Set to value of threads argument.])
+AC_DEFINE_UNQUOTED([TME_THREADS_NAME], ["${enable_threads}"], [Set to value of threads argument.])
 
 AC_MSG_RESULT($enable_threads)
 
@@ -755,8 +770,8 @@ dnl Make brackets the quote characters again.
 changequote([, ])dnl
 
 AC_ARG_ENABLE(recode,
-[  --enable-recode         enable recode (dynamic binary translation) (default=if host supports)],
-[ ], [enable_recode=$recode])
+[  --enable-recode         cpu types to enable recode on [yes for all] (dynamic binary translation) (default=x86)],
+[ ], [enable_recode=no])
 
 AC_MSG_CHECKING([for host recode support])
 
@@ -784,16 +799,7 @@ esac
 dnl Make brackets the quote characters again.
 changequote([, ])dnl
 
-keep_recode=$enable_recode
-
-for tme_recode_type in ${enable_recode}; do
-    if test "x${host_cpu}" = "x${tme_recode_type}"; then
-       keep_recode=yes
-       break
-    fi
-done
-
-if test "x${keep_recode}" != xyes; then
+if test "x${enable_recode}" != xyes; then
    recode_hosts=
    recode_size_guest_max=1
 fi
@@ -872,11 +878,13 @@ AC_ARG_ENABLE(debug,
 [  --enable-debug          compile debuggable libraries and programs (default=don't)],
 [ ], [enable_debug=no])
 if test "x${enable_debug}" != "xno"; then
-  CPPFLAGS="${CPPFLAGS-} -DENABLE_DEBUG -D_TME_SPARC_STATS -DGTK_DISABLE_SINGLE_INCLUDES -DNDEBUG" # -DTME_RECODE_DEBUG
+  CPPFLAGS="${CPPFLAGS-} -DENABLE_DEBUG -D_TME_SPARC_STATS -DGTK_DISABLE_SINGLE_INCLUDES -DNDEBUG -DNME_MODULE_DEBUG" # -DTME_RECODE_DEBUG
   if test "x${enable_debug}" != "xlocks"; then
     CPPFLAGS="${CPPFLAGS-} -DTME_NO_DEBUG_LOCKS"
   fi
-  if test "x${have_Og}" = xyes; then
+  if test "${host_os}" = emscripten || test "x${recode_hosts}" != x; then
+    CFLAGS="-g3 -O0"
+  elif test "x${have_Og}" = xyes; then
     CFLAGS="-g3 -Og"
   else
     CFLAGS="-g3 -O2"

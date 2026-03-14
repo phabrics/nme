@@ -93,3 +93,7 @@ modules-local:
 AM_CPPFLAGS = -I$(top_srcdir) -D_TME_IMPL
 AM_LDFLAGS = -module -version-info 0:0:0
 @PACKAGE@_LIBS = $(top_builddir)/generic/lib@PACKAGE@-generic.la $(top_builddir)/libtme/lib@PACKAGE@.la
+
+# default rule for regenerating the portable shell scripts from m4 descriptions
+.m4.sh:
+	$(AUTOM4TE) -l m4sh $< > $@

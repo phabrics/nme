@@ -910,8 +910,8 @@ main(int argc, char **argv)
   /* evaluate pre-threads once (to avoid synchronization problems with init code): */
   if(interactive) printf("%s> ", argv0);
 
-#ifdef __EMSCRIPTEN__
-#if defined(USE_NODEFS) && !defined(NODERAWFS)
+#if defined(__EMSCRIPTEN__) && !defined(NODERAWFS)
+#ifdef USE_NODEFS
   // mount the current folder as a NODEFS instance
   // inside of emscripten
   EM_ASM(
@@ -955,6 +955,8 @@ main(int argc, char **argv)
   /* remove all consumed characters: */
   _tmesh_remove_consumed(input_stdin);
 
+  fprintf(stderr, "Module path set to %s.\n", getenv("NME_MODULE_PATH"));
+  
   /* create our eval loop thread for interactive mode: */
   tme_thread_create_named(&tmesh_thread, "tmesh", (tme_thread_t) _tmesh_th, &interactive);
 

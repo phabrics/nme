@@ -33,7 +33,7 @@ MAINTAINERCLEANFILES = $(noinst_SCRIPTS) $(BUILT_SOURCES)
 EXTRA_DIST = $(MAINTAINERCLEANFILES) $(noinst_SCRIPTS:.sh=.m4) fb-xlat-auto.pl
 
 # default rule for regenerating the portable shell scripts from m4 descriptions
-$(addprefix $(srcdir)/,$(noinst_SCRIPTS)): %.sh: %.m4
+.m4.sh:
 	$(AUTOM4TE) -l m4sh $< > $@
 
 # target to make float-auto.c and bus-device-auto.c:

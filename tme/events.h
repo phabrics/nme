@@ -43,7 +43,16 @@
 #include <libopenvpn/link.h>
 #include <libopenvpn/options.h>
 #include <libopenvpn/openvpn-setup.h>
+#endif
 
+extern struct tme_event_set *(*tme_event_set_init) _TME_P((int *maxevents, unsigned int flags));
+extern void (*tme_event_free) _TME_P((struct tme_event_set *es));
+extern void (*tme_event_reset) _TME_P((struct tme_event_set *es));
+extern int (*tme_event_del) _TME_P((struct tme_event_set *es, event_t event));
+extern int (*tme_event_ctl) _TME_P((struct tme_event_set *es, event_t event, unsigned int rwflags, void *arg));
+extern int (*tme_event_wait) _TME_P((struct tme_event_set *es, const struct timeval *tv, struct event_set_return *out, int outlen, void *mutex));
+
+#ifdef HAVE_OPENVPN
 extern unsigned int
 (*tme_tun_set) _TME_P((struct tuntap *tt,
 		       struct tme_event_set *es,
@@ -58,13 +67,6 @@ extern unsigned int
 			  void *arg,
 			  unsigned int *persistent));
 #endif
-
-extern struct tme_event_set *(*tme_event_set_init) _TME_P((int *maxevents, unsigned int flags));
-extern void (*tme_event_free) _TME_P((struct tme_event_set *es));
-extern void (*tme_event_reset) _TME_P((struct tme_event_set *es));
-extern int (*tme_event_del) _TME_P((struct tme_event_set *es, event_t event));
-extern int (*tme_event_ctl) _TME_P((struct tme_event_set *es, event_t event, unsigned int rwflags, void *arg));
-extern int (*tme_event_wait) _TME_P((struct tme_event_set *es, const struct timeval *tv, struct event_set_return *out, int outlen, void *mutex));
 
 #endif /* !_TME_EVENTS_H */
 

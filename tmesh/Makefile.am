@@ -20,13 +20,15 @@ bin_PROGRAMS = @PACKAGE@sh
 EXTRA_DIST = @PACKAGE@sh.sh
 
 if HAVE_EMSCRIPTEN
-bin_SCRIPTS = @PACKAGE@sh.sh @PACKAGE@sh.js @PACKAGE@sh.wasm @PACKAGE@sh.data
+bin_SCRIPTS = @PACKAGE@sh.sh @PACKAGE@sh.js @PACKAGE@sh.wasm
 @PACKAGE@sh_LDADD += $(SDL_LIBS) 
 @PACKAGE@sh_LDFLAGS += -sASYNCIFY
 if USE_NODEFS
 AM_CPPFLAGS += -DUSE_NODEFS
 @PACKAGE@sh_LDADD += -lnodefs.js
+@PACKAGE@sh_LDFLAGS += -sNODERAWFS
 else
+bin_SCRIPTS += @PACKAGE@sh.data
 @PACKAGE@sh_LDFLAGS += --emrun --preload-file $(top_builddir)@$(ROOT_DIR)
 endif
 @PACKAGE@sh.js @PACKAGE@sh.wasm @PACKAGE@sh.data: @PACKAGE@sh.html
