@@ -1,8 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for The Machine Emulator machine/sun:
 
-AUTOMAKE_OPTIONS = 1.4 gnu
-
 lib_LTLIBRARIES = lib@PACKAGE@-machine-sun.la
 lib@PACKAGE@_machine_sun_la_SOURCES = sun-mmu.c \
 	sun-bwtwo.c \

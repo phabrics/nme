@@ -1,8 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for The Machine Emulator generic/:
 
-AUTOMAKE_OPTIONS = 1.4 gnu
-
 AUTOM4TE = $(SHELL) $(top_srcdir)/missing --run autom4te
 
 AM_CPPFLAGS = -I$(top_srcdir) -D_TME_IMPL -DLIBTME_GENERIC_BUILD
@@ -34,26 +32,21 @@ EXTRA_DIST = $(MAINTAINERCLEANFILES) $(noinst_SCRIPTS:.sh=.m4) fb-xlat-auto.pl
 
 # default rule for regenerating the portable shell scripts from m4 descriptions
 .m4.sh:
-	$(AUTOM4TE) -l m4sh $< > $@
+	$(AUTOM4TE) -l m4sh $< > $(srcdir)/$@
 
 # target to make float-auto.c and bus-device-auto.c:
 $(srcdir)/float-auto.c: float-auto.sh
-	$(SHELL) $< > $@
+	$(SHELL) $(srcdir)/float-auto.sh > $@
 
 $(srcdir)/bus-device-auto.c: bus-device-auto.sh
-	$(SHELL) $< > $@
+	$(SHELL) $(srcdir)/bus-device-auto.sh > $@
 
 # target to make fb-xlat-auto.c:
-if USING_X
-$(srcdir)/fb-xlat-auto.c: fb-xlat-auto.sh fb-xlat-auto.in
-	cat $*.in | xargs $(SHELL) $< > $@
+$(srcdir)/fb-xlat-auto.c: fb-xlat-auto.in fb-xlat-auto.sh
+	cat $(srcdir)/fb-xlat-auto.in | xargs $(SHELL) $(srcdir)/fb-xlat-auto.sh > $@
 
-$(srcdir)/fb-xlat-auto.in: fb-xlat-auto.pl
-	$(PERL) $< src $(NME_FB_XLAT_SRC) dst $(NME_FB_XLAT_DST) > $@ || \
-	echo "src $(NME_FB_XLAT_SRC) dst $(NME_FB_XLAT_DST)" > $@
-else
-$(srcdir)/fb-xlat-auto.c: fb-xlat-auto.sh
-	$(SHELL) $< src $(NME_FB_XLAT_SRC) dst $(NME_FB_XLAT_DST) > $@
-endif
+.pl.in:
+	$(PERL) $< src $(NME_FB_XLAT_SRC) dst $(NME_FB_XLAT_DST) > $(srcdir)/$@ || \
+	echo "src $(NME_FB_XLAT_SRC) dst $(NME_FB_XLAT_DST)" > $(srcdir)/$@
 
 SUBDIRS = . bus

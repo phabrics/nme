@@ -1,8 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for The Machine Emulator machine/sun2:
 
-AUTOMAKE_OPTIONS = 1.4 gnu
-
 pkglib_LTLIBRARIES = @PACKAGE@_machine_sun2.la
 @PACKAGE@_machine_sun2_la_SOURCES =	\
 	sun2-mainbus.c		\

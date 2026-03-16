@@ -1,8 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for The Machine Emulator tme/scsi/:
 
-AUTOMAKE_OPTIONS = 1.4 gnu
-
 tmescsidir = $(pkgincludedir)/scsi
 
 tmescsi_HEADERS = \

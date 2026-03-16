@@ -1,8 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for The Machine Emulator eth/:
 
-AUTOMAKE_OPTIONS = 1.4 gnu
-
 AM_CPPFLAGS = -I$(top_srcdir) -D_TME_IMPL
 @PACKAGE@_LIBS = $(top_builddir)/generic/lib@PACKAGE@-generic.la $(top_builddir)/libtme/lib@PACKAGE@.la
 

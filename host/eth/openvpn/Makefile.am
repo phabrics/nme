@@ -1,8 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for The Machine Emulator host/openvpn:
 
-AUTOMAKE_OPTIONS = 1.4 gnu
-
 @PACKAGE@_host_openvpn_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/..
 
 if HAVE_OPENVPN

@@ -1,8 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for The Machine Emulator ic/sparc/:
 
-AUTOMAKE_OPTIONS = 1.4 gnu
-
 AUTOM4TE = $(SHELL) $(top_srcdir)/missing --run autom4te
 
 pkglib_LTLIBRARIES = @PACKAGE@_ic_sparc.la
@@ -35,24 +33,24 @@ EXTRA_DIST = sparc-impl.h \
 
 # target to make sparc-auto.h:
 $(srcdir)/sparc-auto.h: sparc-misc-auto.sh sparc-insns-auto.sh
-	$(SHELL) $< --header > $@
+	$(SHELL) $(srcdir)/sparc-misc-auto.sh --header > $@
 	$(SHELL) $(srcdir)/sparc-insns-auto.sh --header >> $@
 
 # target to make sparc-insns-auto.c:
 $(srcdir)/sparc-insns-auto.c: sparc-insns-auto.sh sparc-misc-auto.sh
-	$(SHELL) $< > $@
+	$(SHELL) $(srcdir)/sparc-insns-auto.sh > $@
 	$(SHELL) $(srcdir)/sparc-misc-auto.sh >> $@
 
 # target to make sparc-bus-auto.c:
 $(srcdir)/sparc-bus-auto.c: sparc-bus-auto.sh
-	$(SHELL) $< > $@
+	$(SHELL) $(srcdir)/sparc-bus-auto.sh > $@
 
 # target to make sparc-fpu-auto.c:
 $(srcdir)/sparc-fpu-auto.c: sparc-fpu-auto.sh
-	$(SHELL) $< > $@
+	$(SHELL) $(srcdir)/sparc-fpu-auto.sh > $@
 
 # target to make sparc-vis-auto.c:
 $(srcdir)/sparc-vis-auto.c: sparc-vis-auto.sh
-	$(SHELL) $< > $@
+	$(SHELL) $(srcdir)/sparc-vis-auto.sh > $@
 
 include $(top_srcdir)/modules.mk

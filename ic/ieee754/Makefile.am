@@ -1,8 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for The Machine Emulator ic/ieee754/:
 
-AUTOMAKE_OPTIONS = 1.4 gnu
-
 AUTOM4TE = $(SHELL) $(top_srcdir)/missing --run autom4te
 
 @PACKAGE@icincludedir = $(pkgincludedir)/ic
@@ -23,18 +21,18 @@ EXTRA_DIST = $(MAINTAINERCLEANFILES) $(noinst_SCRIPTS:.sh=.m4) softfloat-tme.h
 
 # target to make ieee754-auto.h:
 $(srcdir)/ieee754-auto.h: ieee754-misc-auto.sh ieee754-precision.sh
-	$(SHELL) $< --header > $@
+	$(SHELL) $(srcdir)/ieee754-misc-auto.sh --header > $@
 
 # target to make ieee754-misc-auto.c:
 $(srcdir)/ieee754-misc-auto.c: ieee754-misc-auto.sh ieee754-precision.sh
-	$(SHELL) $< > $@
+	$(SHELL) $(srcdir)/ieee754-misc-auto.sh > $@
 
 # target to make ieee754-ops-auto.h:
 $(srcdir)/ieee754-ops-auto.h: ieee754-ops-auto.sh ieee754-precision.sh
-	$(SHELL) $< --header > $@
+	$(SHELL) $(srcdir)/ieee754-ops-auto.sh --header > $@
 
 # target to make ieee754-ops-auto.c:
 $(srcdir)/ieee754-ops-auto.c: ieee754-ops-auto.sh ieee754-precision.sh
-	$(SHELL) $< > $@
+	$(SHELL) $(srcdir)/ieee754-ops-auto.sh > $@
 
 include $(top_srcdir)/modules.mk

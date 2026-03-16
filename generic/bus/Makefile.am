@@ -1,8 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for The Machine Emulator generic/:
 
-AUTOMAKE_OPTIONS = 1.4 gnu
-
 AUTOM4TE = $(SHELL) $(top_srcdir)/missing --run autom4te
 
 @PACKAGE@_generic_la_CPPFLAGS = $(AM_CPPFLAGS) -DLIB@PACKAGE@_GENERIC_BUILD

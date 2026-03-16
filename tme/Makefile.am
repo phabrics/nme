@@ -1,8 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for The Machine Emulator tme/:
 
-AUTOMAKE_OPTIONS = 1.4 gnu
-
 SUBDIRS = generic ic machine scsi host bus
 
 pkginclude_HEADERS = memory.h \

@@ -1,8 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for The Machine Emulator host/sdl:
 
-AUTOMAKE_OPTIONS = 1.4 gnu
-
 @PACKAGE@_host_sdl_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/.. $(SDL_CFLAGS)
 
 if HAVE_SDL

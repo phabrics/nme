@@ -1,8 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for The Machine Emulator libtme/host/x86:
 
-AUTOMAKE_OPTIONS = 1.4 gnu
-
 EXTRA_DIST = recode-x86.c \
 	rc-x86-flags.c \
 	rc-x86-conds.c \

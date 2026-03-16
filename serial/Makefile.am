@@ -1,8 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for The Machine Emulator serial/:
 
-AUTOMAKE_OPTIONS = 1.4 gnu
-
 ##SUBDIRS = @@PACKAGE@_serial_SUBDIRS@
 ##DIST_SUBDIRS = 
 

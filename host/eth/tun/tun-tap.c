@@ -128,12 +128,24 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 #define TME_IP_ADDRS_BCAST (2)
 #define TME_IP_ADDRS_TOTAL (3)
 
-#define TME_DO_NFT defined(HAVE_LIBMNL_LIBMNL_H) && defined(HAVE_LIBNFTNL_TABLE_H) && defined(TME_NAT_NFT)
-#define TME_DO_NPF defined(HAVE_NPF_H) && defined(TME_NAT_NPF)
-#define TME_DO_PFV (defined(HAVE_NET_PFVAR_H) || defined(HAVE_NET_PF_PFVAR_H)) && defined(TME_NAT_PFV)
-#define TME_DO_IPF defined(HAVE_NETINET_IP_NAT_H) && defined(TME_NAT_IPF)
-#define TME_DO_APF TME_DO_NPF || TME_DO_PFV || TME_DO_IPF
-#define TME_DO_NAT TME_DO_NFT || TME_DO_APF
+#if defined(HAVE_LIBMNL_LIBMNL_H) && defined(HAVE_LIBNFTNL_TABLE_H) && defined(TME_NAT_NFT)
+#define TME_DO_NFT
+#endif
+#if defined(HAVE_NPF_H) && defined(TME_NAT_NPF)
+#define TME_DO_NPF
+#endif
+#if (defined(HAVE_NET_PFVAR_H) || defined(HAVE_NET_PF_PFVAR_H)) && defined(TME_NAT_PFV)
+#define TME_DO_PFV
+#endif
+#if defined(HAVE_NETINET_IP_NAT_H) && defined(TME_NAT_IPF)
+#define TME_DO_IPF
+#endif
+#if defined(TME_DO_NPF) || defined(TME_DO_PFV) || defined(TME_DO_IPF)
+#define TME_DO_APF
+#endif
+#if defined(TME_DO_NFT) || defined(TME_DO_APF)
+#define TME_DO_NAT
+#endif
 
 /* IP forwarding variables */
 // procfs (Linux)
@@ -141,15 +153,15 @@ _TME_RCSID("$Id: tun-tap.c,v 1.9 2007/02/21 01:24:50 fredette Exp $");
 // sysctl (*BSD)
 #define SYSCTLNAME "net.inet.ip.forwarding"
 
-#if TME_DO_NPF
+#ifdef TME_DO_NPF
 #define DEV_IPF_FILENAME "/dev/npf"
-#elif TME_DO_PFV
+#elif defined(TME_DO_PFV)
 #define DEV_IPF_FILENAME "/dev/pf"
 #else // TME_DO_IPF
 #define DEV_IPF_FILENAME "/dev/ipnat"
 #endif
 
-#if TME_DO_NFT
+#ifdef TME_DO_NFT
 /* nat types: */
 #define TME_NAT_TABLE (0)
 #define TME_NAT_CHAIN (1)
@@ -376,7 +388,7 @@ int _tme_tun_tap_args(const char * const args[],
 #undef NATIF
 }
 
-#if TME_DO_NFT
+#ifdef TME_DO_NFT
 static int _tme_nat_rule_add_payload(struct nft_rule *r, uint32_t base, uint32_t dreg,
 				     uint32_t offset, uint32_t len)
 {
@@ -574,7 +586,7 @@ static int _tme_nat_run(struct tme_nat *nat, int num)
 }
 #endif
 
-#if TME_DO_NPF
+#ifdef TME_DO_NPF
 npf_netmask_t get_netbits(struct in_addr netmask)
 {
   // Given a netmask address, return the CIDR bitmask representation (ie, number of bits in netmask)
@@ -638,23 +650,23 @@ NME_ELEMENT_SUB_NEW_DECL(host_tun,tap) {
 #if !defined(HAVE_FDEVNAME) && defined(HAVE_STRUCT_STAT_ST_RDEV)
   struct stat tap_buf;
 #endif
-#if TME_DO_NAT
+#ifdef TME_DO_NAT
   char nat_hosts[TME_IP_ADDRS_TOTAL][NI_MAXHOST];
   struct in_addr nat_addrs[TME_IP_ADDRS_TOTAL];
   u_int netnum;
   int forward = EOF;
 #endif
-#if TME_DO_NFT
+#ifdef TME_DO_NFT
   in_addr_t zero = 0;
   FILE *f;
   struct nft_table *table;
   struct nft_chain *prechain, *postchain;
   struct nft_rule *rule;
   struct tme_nat nat[4];
-#elif TME_DO_APF
+#elif defined(TME_DO_APF)
   int mib[4];
   size_t len;  
-#if TME_DO_NPF
+#ifdef TME_DO_NPF
   modctl_load_t mod;
   int ver;
   npf_netmask_t netbits;
@@ -662,7 +674,7 @@ NME_ELEMENT_SUB_NEW_DECL(host_tun,tap) {
   nl_nat_t *nt;
   nl_rule_t *ext, *def;
   nl_rule_t *rl, *rl2;
-#elif TME_DO_PFV
+#elif defined(TME_DO_PFV)
   // using PF for NAT
   FILE *fp;
 #else // TME_DO_IPF
@@ -895,7 +907,7 @@ NME_ELEMENT_SUB_NEW_DECL(host_tun,tap) {
 
 #define NATIF if_names[TME_IF_TYPE_NAT]
 
-#if TME_DO_NAT
+#ifdef TME_DO_NAT
   tme_log(&element->tme_element_log_handle, 0, TME_OK, 
 	  (&element->tme_element_log_handle, 
 	   "trying nat interface %s", NATIF));
@@ -932,7 +944,7 @@ NME_ELEMENT_SUB_NEW_DECL(host_tun,tap) {
   netnum = TAPINET.s_addr & TAPNETMASK.s_addr;
 #endif
 
-#if TME_DO_NFT
+#ifdef TME_DO_NFT
   /* NAT on Linux using NFTABLES */
   i=0;
 
@@ -1053,7 +1065,7 @@ NME_ELEMENT_SUB_NEW_DECL(host_tun,tap) {
   nft_rule_free(rule);
 
  exit_nat:
-#elif TME_DO_APF // !TME_DO_NFT
+#elif defined(TME_DO_APF) // !TME_DO_NFT
   /* NAT on *BSD */
 
 #if defined(TME_DO_PFV) && defined(HAVE_KLDFIND)
@@ -1078,7 +1090,7 @@ NME_ELEMENT_SUB_NEW_DECL(host_tun,tap) {
     goto exit_nat;
   }
 
-#if TME_DO_NPF
+#ifdef TME_DO_NPF
   // Load kernel modules if needed
   memset(&mod, 0, sizeof(modctl_load_t));
   mod.ml_filename="npf";
@@ -1193,7 +1205,7 @@ NME_ELEMENT_SUB_NEW_DECL(host_tun,tap) {
 	     "with forwarding from the tap interface, you may need to manually adjust the filter rules, or remove conflicting nat "
 	     "e.g., npfctl flush.  If you want ping, try 'modload npf_alg_icmp'. npf is the successor to pf (on NetBSD), so it may not be available on older systems.")));
   
-#elif TME_DO_PFV
+#elif defined(TME_DO_PFV)
   // using PF for NAT
   fp = popen("pfctl -f -", "w");
 

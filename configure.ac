@@ -101,14 +101,17 @@ AC_SUBST(LIB_DIR)
 AC_SUBST(PKG_LIB_DIR)
 AC_SUBST(ROOT_DIR)
 
+CPPFLAGS="${CPPFLAGS-} -I${ac_default_prefix}/include" # -DLT_DEBUG_LOADERS"
+LDFLAGS="${LDFLAGS-} -L${ac_default_prefix}/lib"
+
 dnl Configure for libtool.
 LT_PREREQ([2.4])
 LT_CONFIG_LTDL_DIR([libltdl])
 LT_INIT([dlopen,win32-dll])
 LT_LANG([Windows Resource])
 LTDL_INIT([installable recursive])
-CPPFLAGS="${CPPFLAGS-} -I${ac_default_prefix}/include ${LTDLINCL}" # -DLT_DEBUG_LOADERS"
-LDFLAGS="${LDFLAGS-} -L${ac_default_prefix}/lib"
+
+CPPFLAGS="${CPPFLAGS-} ${LTDLINCL}" # -DLT_DEBUG_LOADERS"
 
 dnl Configure for libopenvpn.
 lto=yes

@@ -61,9 +61,12 @@ tme_memory_bus_read16(_tme_const tme_shared tme_uint16_t *mem, tme_rwlock_t *rwl
 
   assert (bus_boundary != 0 && bus_boundary <= host_boundary);
 
+
 #ifdef TME_HAVE_INT64_T
 
-  if (host_boundary == sizeof(tme_uint64_t)) {
+ 
+ if (host_boundary == sizeof(tme_uint64_t))
+ {
 
     /* prepare to read the first 64-bit part of the memory: */
     parts64 = (_tme_const tme_shared tme_uint64_t *) (((tme_uintptr_t) mem) & (((tme_uintptr_t) 0) - (64 / 8)));
@@ -84,7 +87,8 @@ tme_memory_bus_read16(_tme_const tme_shared tme_uint16_t *mem, tme_rwlock_t *rwl
        on the left, and shift the remaining data down
        into position in the result: */
     else {
-      x = ((part64 << size_skip) >> ((64 - 16) + 0));
+      x = 
+((part64 << size_skip) >> ((64 - 16) + 0));
     }
     size_done = 64 - size_skip;
 
@@ -109,7 +113,8 @@ tme_memory_bus_read16(_tme_const tme_shared tme_uint16_t *mem, tme_rwlock_t *rwl
          on the left, and shift the remaining data down
          into position in the result: */
       else {
-        x |= ((part64 << 0) >> ((64 - 16) + size_done));
+        x |= 
+((part64 << 0) >> ((64 - 16) + size_done));
       }
     }
   }
@@ -118,7 +123,8 @@ tme_memory_bus_read16(_tme_const tme_shared tme_uint16_t *mem, tme_rwlock_t *rwl
 
 #endif /* TME_HAVE_INT64_T */
 
-  if (host_boundary == sizeof(tme_uint32_t)) {
+  if (host_boundary == sizeof(tme_uint32_t))
+ {
 
     /* prepare to read the first 32-bit part of the memory: */
     parts32 = (_tme_const tme_shared tme_uint32_t *) (((tme_uintptr_t) mem) & (((tme_uintptr_t) 0) - (32 / 8)));
@@ -139,7 +145,8 @@ tme_memory_bus_read16(_tme_const tme_shared tme_uint16_t *mem, tme_rwlock_t *rwl
        on the left, and shift the remaining data down
        into position in the result: */
     else {
-      x = ((part32 << size_skip) >> ((32 - 16) + 0));
+      x = 
+((part32 << size_skip) >> ((32 - 16) + 0));
     }
     size_done = 32 - size_skip;
 
@@ -164,12 +171,14 @@ tme_memory_bus_read16(_tme_const tme_shared tme_uint16_t *mem, tme_rwlock_t *rwl
          on the left, and shift the remaining data down
          into position in the result: */
       else {
-        x |= ((part32 << 0) >> ((32 - 16) + size_done));
+        x |= 
+((part32 << 0) >> ((32 - 16) + size_done));
       }
     }
   }
 
-  else if (host_boundary == sizeof(tme_uint16_t)) {
+  else if (host_boundary == sizeof(tme_uint16_t))
+ {
 
     /* prepare to read the first 16-bit part of the memory: */
     parts16 = (_tme_const tme_shared tme_uint16_t *) (((tme_uintptr_t) mem) & (((tme_uintptr_t) 0) - (16 / 8)));
@@ -190,7 +199,8 @@ tme_memory_bus_read16(_tme_const tme_shared tme_uint16_t *mem, tme_rwlock_t *rwl
        on the left, and shift the remaining data down
        into position in the result: */
     else {
-      x = ((((tme_uint16_t) part16) << ((16 - 16) + size_skip)) >> 0);
+      x = 
+((((tme_uint16_t) part16) << ((16 - 16) + size_skip)) >> 0);
     }
     size_done = 16 - size_skip;
 
@@ -215,7 +225,8 @@ tme_memory_bus_read16(_tme_const tme_shared tme_uint16_t *mem, tme_rwlock_t *rwl
          on the left, and shift the remaining data down
          into position in the result: */
       else {
-        x |= ((((tme_uint16_t) part16) << ((16 - 16) + 0)) >> size_done);
+        x |= 
+((((tme_uint16_t) part16) << ((16 - 16) + 0)) >> size_done);
       }
     }
   }
@@ -241,7 +252,8 @@ tme_memory_bus_read16(_tme_const tme_shared tme_uint16_t *mem, tme_rwlock_t *rwl
        on the left, and shift the remaining data down
        into position in the result: */
     else {
-      x = ((((tme_uint16_t) part8) << ((16 - 8) + size_skip)) >> 0);
+      x = 
+((((tme_uint16_t) part8) << ((16 - 8) + size_skip)) >> 0);
     }
     size_done = 8 - size_skip;
 
@@ -266,7 +278,8 @@ tme_memory_bus_read16(_tme_const tme_shared tme_uint16_t *mem, tme_rwlock_t *rwl
          on the left, and shift the remaining data down
          into position in the result: */
       else {
-        x |= ((((tme_uint16_t) part8) << ((16 - 8) + 0)) >> size_done);
+        x |= 
+((((tme_uint16_t) part8) << ((16 - 8) + 0)) >> size_done);
       }
     }
   }
@@ -302,9 +315,12 @@ tme_memory_bus_write16(tme_shared tme_uint16_t *mem, tme_uint16_t x, tme_rwlock_
 
   assert (bus_boundary != 0 && bus_boundary <= host_boundary);
 
+
 #ifdef TME_HAVE_INT64_T
 
-  if (host_boundary == sizeof(tme_uint64_t)) {
+ 
+ if (host_boundary == sizeof(tme_uint64_t))
+ {
 
     /* prepare to write the first 64-bit part of the memory: */
     parts64 = (tme_shared tme_uint64_t *) (((tme_uintptr_t) mem) & (((tme_uintptr_t) 0) - (64 / 8)));
@@ -381,7 +397,8 @@ tme_memory_bus_write16(tme_shared tme_uint16_t *mem, tme_uint16_t x, tme_rwlock_
 
 #endif /* TME_HAVE_INT64_T */
 
-  if (host_boundary == sizeof(tme_uint32_t)) {
+  if (host_boundary == sizeof(tme_uint32_t))
+ {
 
     /* prepare to write the first 32-bit part of the memory: */
     parts32 = (tme_shared tme_uint32_t *) (((tme_uintptr_t) mem) & (((tme_uintptr_t) 0) - (32 / 8)));
@@ -454,7 +471,8 @@ tme_memory_bus_write16(tme_shared tme_uint16_t *mem, tme_uint16_t x, tme_rwlock_
     }
   }
 
-  else if (host_boundary == sizeof(tme_uint16_t)) {
+  else if (host_boundary == sizeof(tme_uint16_t))
+ {
 
     /* prepare to write the first 16-bit part of the memory: */
     parts16 = (tme_shared tme_uint16_t *) (((tme_uintptr_t) mem) & (((tme_uintptr_t) 0) - (16 / 8)));
@@ -625,9 +643,12 @@ tme_memory_bus_read32(_tme_const tme_shared tme_uint32_t *mem, tme_rwlock_t *rwl
 
   assert (bus_boundary != 0 && bus_boundary <= host_boundary);
 
+
 #ifdef TME_HAVE_INT64_T
 
-  if (host_boundary == sizeof(tme_uint64_t)) {
+ 
+ if (host_boundary == sizeof(tme_uint64_t))
+ {
 
     /* prepare to read the first 64-bit part of the memory: */
     parts64 = (_tme_const tme_shared tme_uint64_t *) (((tme_uintptr_t) mem) & (((tme_uintptr_t) 0) - (64 / 8)));
@@ -648,7 +669,8 @@ tme_memory_bus_read32(_tme_const tme_shared tme_uint32_t *mem, tme_rwlock_t *rwl
        on the left, and shift the remaining data down
        into position in the result: */
     else {
-      x = ((part64 << size_skip) >> ((64 - 32) + 0));
+      x = 
+((part64 << size_skip) >> ((64 - 32) + 0));
     }
     size_done = 64 - size_skip;
 
@@ -673,7 +695,8 @@ tme_memory_bus_read32(_tme_const tme_shared tme_uint32_t *mem, tme_rwlock_t *rwl
          on the left, and shift the remaining data down
          into position in the result: */
       else {
-        x |= ((part64 << 0) >> ((64 - 32) + size_done));
+        x |= 
+((part64 << 0) >> ((64 - 32) + size_done));
       }
     }
   }
@@ -682,7 +705,8 @@ tme_memory_bus_read32(_tme_const tme_shared tme_uint32_t *mem, tme_rwlock_t *rwl
 
 #endif /* TME_HAVE_INT64_T */
 
-  if (host_boundary == sizeof(tme_uint32_t)) {
+  if (host_boundary == sizeof(tme_uint32_t))
+ {
 
     /* prepare to read the first 32-bit part of the memory: */
     parts32 = (_tme_const tme_shared tme_uint32_t *) (((tme_uintptr_t) mem) & (((tme_uintptr_t) 0) - (32 / 8)));
@@ -703,7 +727,8 @@ tme_memory_bus_read32(_tme_const tme_shared tme_uint32_t *mem, tme_rwlock_t *rwl
        on the left, and shift the remaining data down
        into position in the result: */
     else {
-      x = ((((tme_uint32_t) part32) << ((32 - 32) + size_skip)) >> 0);
+      x = 
+((((tme_uint32_t) part32) << ((32 - 32) + size_skip)) >> 0);
     }
     size_done = 32 - size_skip;
 
@@ -728,12 +753,14 @@ tme_memory_bus_read32(_tme_const tme_shared tme_uint32_t *mem, tme_rwlock_t *rwl
          on the left, and shift the remaining data down
          into position in the result: */
       else {
-        x |= ((((tme_uint32_t) part32) << ((32 - 32) + 0)) >> size_done);
+        x |= 
+((((tme_uint32_t) part32) << ((32 - 32) + 0)) >> size_done);
       }
     }
   }
 
-  else if (host_boundary == sizeof(tme_uint16_t)) {
+  else if (host_boundary == sizeof(tme_uint16_t))
+ {
 
     /* prepare to read the first 16-bit part of the memory: */
     parts16 = (_tme_const tme_shared tme_uint16_t *) (((tme_uintptr_t) mem) & (((tme_uintptr_t) 0) - (16 / 8)));
@@ -754,7 +781,8 @@ tme_memory_bus_read32(_tme_const tme_shared tme_uint32_t *mem, tme_rwlock_t *rwl
        on the left, and shift the remaining data down
        into position in the result: */
     else {
-      x = ((((tme_uint32_t) part16) << ((32 - 16) + size_skip)) >> 0);
+      x = 
+((((tme_uint32_t) part16) << ((32 - 16) + size_skip)) >> 0);
     }
     size_done = 16 - size_skip;
 
@@ -779,7 +807,8 @@ tme_memory_bus_read32(_tme_const tme_shared tme_uint32_t *mem, tme_rwlock_t *rwl
          on the left, and shift the remaining data down
          into position in the result: */
       else {
-        x |= ((((tme_uint32_t) part16) << ((32 - 16) + 0)) >> size_done);
+        x |= 
+((((tme_uint32_t) part16) << ((32 - 16) + 0)) >> size_done);
       }
     }
   }
@@ -805,7 +834,8 @@ tme_memory_bus_read32(_tme_const tme_shared tme_uint32_t *mem, tme_rwlock_t *rwl
        on the left, and shift the remaining data down
        into position in the result: */
     else {
-      x = ((((tme_uint32_t) part8) << ((32 - 8) + size_skip)) >> 0);
+      x = 
+((((tme_uint32_t) part8) << ((32 - 8) + size_skip)) >> 0);
     }
     size_done = 8 - size_skip;
 
@@ -830,7 +860,8 @@ tme_memory_bus_read32(_tme_const tme_shared tme_uint32_t *mem, tme_rwlock_t *rwl
          on the left, and shift the remaining data down
          into position in the result: */
       else {
-        x |= ((((tme_uint32_t) part8) << ((32 - 8) + 0)) >> size_done);
+        x |= 
+((((tme_uint32_t) part8) << ((32 - 8) + 0)) >> size_done);
       }
     }
   }
@@ -866,9 +897,12 @@ tme_memory_bus_write32(tme_shared tme_uint32_t *mem, tme_uint32_t x, tme_rwlock_
 
   assert (bus_boundary != 0 && bus_boundary <= host_boundary);
 
+
 #ifdef TME_HAVE_INT64_T
 
-  if (host_boundary == sizeof(tme_uint64_t)) {
+ 
+ if (host_boundary == sizeof(tme_uint64_t))
+ {
 
     /* prepare to write the first 64-bit part of the memory: */
     parts64 = (tme_shared tme_uint64_t *) (((tme_uintptr_t) mem) & (((tme_uintptr_t) 0) - (64 / 8)));
@@ -945,7 +979,8 @@ tme_memory_bus_write32(tme_shared tme_uint32_t *mem, tme_uint32_t x, tme_rwlock_
 
 #endif /* TME_HAVE_INT64_T */
 
-  if (host_boundary == sizeof(tme_uint32_t)) {
+  if (host_boundary == sizeof(tme_uint32_t))
+ {
 
     /* prepare to write the first 32-bit part of the memory: */
     parts32 = (tme_shared tme_uint32_t *) (((tme_uintptr_t) mem) & (((tme_uintptr_t) 0) - (32 / 8)));
@@ -1018,7 +1053,8 @@ tme_memory_bus_write32(tme_shared tme_uint32_t *mem, tme_uint32_t x, tme_rwlock_
     }
   }
 
-  else if (host_boundary == sizeof(tme_uint16_t)) {
+  else if (host_boundary == sizeof(tme_uint16_t))
+ {
 
     /* prepare to write the first 16-bit part of the memory: */
     parts16 = (tme_shared tme_uint16_t *) (((tme_uintptr_t) mem) & (((tme_uintptr_t) 0) - (16 / 8)));
@@ -1241,9 +1277,12 @@ tme_memory_bus_read64(_tme_const tme_shared tme_uint64_t *mem, tme_rwlock_t *rwl
 
   assert (bus_boundary != 0 && bus_boundary <= host_boundary);
 
+
 #ifdef TME_HAVE_INT64_T
 
-  if (host_boundary == sizeof(tme_uint64_t)) {
+ 
+ if (host_boundary == sizeof(tme_uint64_t))
+ {
 
     /* prepare to read the first 64-bit part of the memory: */
     parts64 = (_tme_const tme_shared tme_uint64_t *) (((tme_uintptr_t) mem) & (((tme_uintptr_t) 0) - (64 / 8)));
@@ -1264,7 +1303,8 @@ tme_memory_bus_read64(_tme_const tme_shared tme_uint64_t *mem, tme_rwlock_t *rwl
        on the left, and shift the remaining data down
        into position in the result: */
     else {
-      x = ((((tme_uint64_t) part64) << ((64 - 64) + size_skip)) >> 0);
+      x = 
+((((tme_uint64_t) part64) << ((64 - 64) + size_skip)) >> 0);
     }
     size_done = 64 - size_skip;
 
@@ -1289,7 +1329,8 @@ tme_memory_bus_read64(_tme_const tme_shared tme_uint64_t *mem, tme_rwlock_t *rwl
          on the left, and shift the remaining data down
          into position in the result: */
       else {
-        x |= ((((tme_uint64_t) part64) << ((64 - 64) + 0)) >> size_done);
+        x |= 
+((((tme_uint64_t) part64) << ((64 - 64) + 0)) >> size_done);
       }
     }
   }
@@ -1298,7 +1339,8 @@ tme_memory_bus_read64(_tme_const tme_shared tme_uint64_t *mem, tme_rwlock_t *rwl
 
 #endif /* TME_HAVE_INT64_T */
 
-  if (host_boundary == sizeof(tme_uint32_t)) {
+  if (host_boundary == sizeof(tme_uint32_t))
+ {
 
     /* prepare to read the first 32-bit part of the memory: */
     parts32 = (_tme_const tme_shared tme_uint32_t *) (((tme_uintptr_t) mem) & (((tme_uintptr_t) 0) - (32 / 8)));
@@ -1319,7 +1361,8 @@ tme_memory_bus_read64(_tme_const tme_shared tme_uint64_t *mem, tme_rwlock_t *rwl
        on the left, and shift the remaining data down
        into position in the result: */
     else {
-      x = ((((tme_uint64_t) part32) << ((64 - 32) + size_skip)) >> 0);
+      x = 
+((((tme_uint64_t) part32) << ((64 - 32) + size_skip)) >> 0);
     }
     size_done = 32 - size_skip;
 
@@ -1344,12 +1387,14 @@ tme_memory_bus_read64(_tme_const tme_shared tme_uint64_t *mem, tme_rwlock_t *rwl
          on the left, and shift the remaining data down
          into position in the result: */
       else {
-        x |= ((((tme_uint64_t) part32) << ((64 - 32) + 0)) >> size_done);
+        x |= 
+((((tme_uint64_t) part32) << ((64 - 32) + 0)) >> size_done);
       }
     }
   }
 
-  else if (host_boundary == sizeof(tme_uint16_t)) {
+  else if (host_boundary == sizeof(tme_uint16_t))
+ {
 
     /* prepare to read the first 16-bit part of the memory: */
     parts16 = (_tme_const tme_shared tme_uint16_t *) (((tme_uintptr_t) mem) & (((tme_uintptr_t) 0) - (16 / 8)));
@@ -1370,7 +1415,8 @@ tme_memory_bus_read64(_tme_const tme_shared tme_uint64_t *mem, tme_rwlock_t *rwl
        on the left, and shift the remaining data down
        into position in the result: */
     else {
-      x = ((((tme_uint64_t) part16) << ((64 - 16) + size_skip)) >> 0);
+      x = 
+((((tme_uint64_t) part16) << ((64 - 16) + size_skip)) >> 0);
     }
     size_done = 16 - size_skip;
 
@@ -1395,7 +1441,8 @@ tme_memory_bus_read64(_tme_const tme_shared tme_uint64_t *mem, tme_rwlock_t *rwl
          on the left, and shift the remaining data down
          into position in the result: */
       else {
-        x |= ((((tme_uint64_t) part16) << ((64 - 16) + 0)) >> size_done);
+        x |= 
+((((tme_uint64_t) part16) << ((64 - 16) + 0)) >> size_done);
       }
     }
   }
@@ -1421,7 +1468,8 @@ tme_memory_bus_read64(_tme_const tme_shared tme_uint64_t *mem, tme_rwlock_t *rwl
        on the left, and shift the remaining data down
        into position in the result: */
     else {
-      x = ((((tme_uint64_t) part8) << ((64 - 8) + size_skip)) >> 0);
+      x = 
+((((tme_uint64_t) part8) << ((64 - 8) + size_skip)) >> 0);
     }
     size_done = 8 - size_skip;
 
@@ -1446,7 +1494,8 @@ tme_memory_bus_read64(_tme_const tme_shared tme_uint64_t *mem, tme_rwlock_t *rwl
          on the left, and shift the remaining data down
          into position in the result: */
       else {
-        x |= ((((tme_uint64_t) part8) << ((64 - 8) + 0)) >> size_done);
+        x |= 
+((((tme_uint64_t) part8) << ((64 - 8) + 0)) >> size_done);
       }
     }
   }
@@ -1482,9 +1531,12 @@ tme_memory_bus_write64(tme_shared tme_uint64_t *mem, tme_uint64_t x, tme_rwlock_
 
   assert (bus_boundary != 0 && bus_boundary <= host_boundary);
 
+
 #ifdef TME_HAVE_INT64_T
 
-  if (host_boundary == sizeof(tme_uint64_t)) {
+ 
+ if (host_boundary == sizeof(tme_uint64_t))
+ {
 
     /* prepare to write the first 64-bit part of the memory: */
     parts64 = (tme_shared tme_uint64_t *) (((tme_uintptr_t) mem) & (((tme_uintptr_t) 0) - (64 / 8)));
@@ -1561,7 +1613,8 @@ tme_memory_bus_write64(tme_shared tme_uint64_t *mem, tme_uint64_t x, tme_rwlock_
 
 #endif /* TME_HAVE_INT64_T */
 
-  if (host_boundary == sizeof(tme_uint32_t)) {
+  if (host_boundary == sizeof(tme_uint32_t))
+ {
 
     /* prepare to write the first 32-bit part of the memory: */
     parts32 = (tme_shared tme_uint32_t *) (((tme_uintptr_t) mem) & (((tme_uintptr_t) 0) - (32 / 8)));
@@ -1659,7 +1712,8 @@ tme_memory_bus_write64(tme_shared tme_uint64_t *mem, tme_uint64_t x, tme_rwlock_
     }
   }
 
-  else if (host_boundary == sizeof(tme_uint16_t)) {
+  else if (host_boundary == sizeof(tme_uint16_t))
+ {
 
     /* prepare to write the first 16-bit part of the memory: */
     parts16 = (tme_shared tme_uint16_t *) (((tme_uintptr_t) mem) & (((tme_uintptr_t) 0) - (16 / 8)));
@@ -1884,9 +1938,12 @@ tme_memory_bus_read128(_tme_const tme_shared tme_uint128_t *mem, tme_rwlock_t *r
 
   assert (bus_boundary != 0 && bus_boundary <= host_boundary);
 
+
 #ifdef TME_HAVE_INT64_T
 
-  if (host_boundary == sizeof(tme_uint64_t)) {
+ 
+ if (host_boundary == sizeof(tme_uint64_t))
+ {
 
     /* prepare to read the first 64-bit part of the memory: */
     parts64 = (_tme_const tme_shared tme_uint64_t *) (((tme_uintptr_t) mem) & (((tme_uintptr_t) 0) - (64 / 8)));
@@ -1907,7 +1964,8 @@ tme_memory_bus_read128(_tme_const tme_shared tme_uint128_t *mem, tme_rwlock_t *r
        on the left, and shift the remaining data down
        into position in the result: */
     else {
-      x = ((((tme_uint128_t) part64) << ((128 - 64) + size_skip)) >> 0);
+      x = 
+((((tme_uint128_t) part64) << ((128 - 64) + size_skip)) >> 0);
     }
     size_done = 64 - size_skip;
 
@@ -1932,7 +1990,8 @@ tme_memory_bus_read128(_tme_const tme_shared tme_uint128_t *mem, tme_rwlock_t *r
          on the left, and shift the remaining data down
          into position in the result: */
       else {
-        x |= ((((tme_uint128_t) part64) << ((128 - 64) + 0)) >> size_done);
+        x |= 
+((((tme_uint128_t) part64) << ((128 - 64) + 0)) >> size_done);
       }
     }
   }
@@ -1941,7 +2000,8 @@ tme_memory_bus_read128(_tme_const tme_shared tme_uint128_t *mem, tme_rwlock_t *r
 
 #endif /* TME_HAVE_INT64_T */
 
-  if (host_boundary == sizeof(tme_uint32_t)) {
+  if (host_boundary == sizeof(tme_uint32_t))
+ {
 
     /* prepare to read the first 32-bit part of the memory: */
     parts32 = (_tme_const tme_shared tme_uint32_t *) (((tme_uintptr_t) mem) & (((tme_uintptr_t) 0) - (32 / 8)));
@@ -1962,7 +2022,8 @@ tme_memory_bus_read128(_tme_const tme_shared tme_uint128_t *mem, tme_rwlock_t *r
        on the left, and shift the remaining data down
        into position in the result: */
     else {
-      x = ((((tme_uint128_t) part32) << ((128 - 32) + size_skip)) >> 0);
+      x = 
+((((tme_uint128_t) part32) << ((128 - 32) + size_skip)) >> 0);
     }
     size_done = 32 - size_skip;
 
@@ -1987,12 +2048,14 @@ tme_memory_bus_read128(_tme_const tme_shared tme_uint128_t *mem, tme_rwlock_t *r
          on the left, and shift the remaining data down
          into position in the result: */
       else {
-        x |= ((((tme_uint128_t) part32) << ((128 - 32) + 0)) >> size_done);
+        x |= 
+((((tme_uint128_t) part32) << ((128 - 32) + 0)) >> size_done);
       }
     }
   }
 
-  else if (host_boundary == sizeof(tme_uint16_t)) {
+  else if (host_boundary == sizeof(tme_uint16_t))
+ {
 
     /* prepare to read the first 16-bit part of the memory: */
     parts16 = (_tme_const tme_shared tme_uint16_t *) (((tme_uintptr_t) mem) & (((tme_uintptr_t) 0) - (16 / 8)));
@@ -2013,7 +2076,8 @@ tme_memory_bus_read128(_tme_const tme_shared tme_uint128_t *mem, tme_rwlock_t *r
        on the left, and shift the remaining data down
        into position in the result: */
     else {
-      x = ((((tme_uint128_t) part16) << ((128 - 16) + size_skip)) >> 0);
+      x = 
+((((tme_uint128_t) part16) << ((128 - 16) + size_skip)) >> 0);
     }
     size_done = 16 - size_skip;
 
@@ -2038,7 +2102,8 @@ tme_memory_bus_read128(_tme_const tme_shared tme_uint128_t *mem, tme_rwlock_t *r
          on the left, and shift the remaining data down
          into position in the result: */
       else {
-        x |= ((((tme_uint128_t) part16) << ((128 - 16) + 0)) >> size_done);
+        x |= 
+((((tme_uint128_t) part16) << ((128 - 16) + 0)) >> size_done);
       }
     }
   }
@@ -2064,7 +2129,8 @@ tme_memory_bus_read128(_tme_const tme_shared tme_uint128_t *mem, tme_rwlock_t *r
        on the left, and shift the remaining data down
        into position in the result: */
     else {
-      x = ((((tme_uint128_t) part8) << ((128 - 8) + size_skip)) >> 0);
+      x = 
+((((tme_uint128_t) part8) << ((128 - 8) + size_skip)) >> 0);
     }
     size_done = 8 - size_skip;
 
@@ -2089,7 +2155,8 @@ tme_memory_bus_read128(_tme_const tme_shared tme_uint128_t *mem, tme_rwlock_t *r
          on the left, and shift the remaining data down
          into position in the result: */
       else {
-        x |= ((((tme_uint128_t) part8) << ((128 - 8) + 0)) >> size_done);
+        x |= 
+((((tme_uint128_t) part8) << ((128 - 8) + 0)) >> size_done);
       }
     }
   }
@@ -2125,9 +2192,12 @@ tme_memory_bus_write128(tme_shared tme_uint128_t *mem, tme_uint128_t x, tme_rwlo
 
   assert (bus_boundary != 0 && bus_boundary <= host_boundary);
 
+
 #ifdef TME_HAVE_INT64_T
 
-  if (host_boundary == sizeof(tme_uint64_t)) {
+ 
+ if (host_boundary == sizeof(tme_uint64_t))
+ {
 
     /* prepare to write the first 64-bit part of the memory: */
     parts64 = (tme_shared tme_uint64_t *) (((tme_uintptr_t) mem) & (((tme_uintptr_t) 0) - (64 / 8)));
@@ -2229,7 +2299,8 @@ tme_memory_bus_write128(tme_shared tme_uint128_t *mem, tme_uint128_t x, tme_rwlo
 
 #endif /* TME_HAVE_INT64_T */
 
-  if (host_boundary == sizeof(tme_uint32_t)) {
+  if (host_boundary == sizeof(tme_uint32_t))
+ {
 
     /* prepare to write the first 32-bit part of the memory: */
     parts32 = (tme_shared tme_uint32_t *) (((tme_uintptr_t) mem) & (((tme_uintptr_t) 0) - (32 / 8)));
@@ -2327,7 +2398,8 @@ tme_memory_bus_write128(tme_shared tme_uint128_t *mem, tme_uint128_t x, tme_rwlo
     }
   }
 
-  else if (host_boundary == sizeof(tme_uint16_t)) {
+  else if (host_boundary == sizeof(tme_uint16_t))
+ {
 
     /* prepare to write the first 16-bit part of the memory: */
     parts16 = (tme_shared tme_uint16_t *) (((tme_uintptr_t) mem) & (((tme_uintptr_t) 0) - (16 / 8)));

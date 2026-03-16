@@ -1,8 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for The Machine Emulator host/posix:
 
-AUTOMAKE_OPTIONS = 1.4 gnu
-
 @PACKAGE@_host_posix_la_CPPFLAGS = $(AM_CPPFLAGS)
 
 pkglib_LTLIBRARIES = @PACKAGE@_host_posix.la

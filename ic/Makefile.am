@@ -1,8 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for The Machine Emulator ic/:
 
-AUTOMAKE_OPTIONS = 1.4 gnu
-
 SUBDIRS = ieee754 m68k sparc stp22xx
 
 pkglib_LTLIBRARIES = @PACKAGE@_ic_am9513.la \

@@ -1,8 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for The Machine Emulator @PACKAGE@sh/:
 
-AUTOMAKE_OPTIONS = 1.4 gnu
-
 AM_CPPFLAGS = -I$(top_srcdir) -D_TME_IMPL $(@PACKAGE@_HOST_CFLAGS)
 
 lib_LTLIBRARIES = lib@PACKAGE@sh.la

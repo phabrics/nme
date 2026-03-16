@@ -1,8 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for The Machine Emulator host/rfb:
 
-AUTOMAKE_OPTIONS = 1.4 gnu
-
 @PACKAGE@_host_rfb_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/.. $(RFB_CFLAGS)
 
 if HAVE_RFB

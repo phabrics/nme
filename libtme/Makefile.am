@@ -1,8 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for The Machine Emulator lib@PACKAGE@/:
 
-AUTOMAKE_OPTIONS = 1.4 gnu
-
 AUTOM4TE = $(SHELL) $(top_srcdir)/missing --run autom4te
 
 SUBDIRS = host
@@ -54,14 +52,14 @@ EXTRA_DIST = log-prf.c \
 
 # default rule for regenerating the portable shell scripts from m4 descriptions
 .m4.sh:
-	$(AUTOM4TE) -l m4sh $< > $@
+	$(AUTOM4TE) -l m4sh $< > $(srcdir)/$@
 
 # target to make memory-auto.h:
-$(srcdir)/memory-auto.h: memory-auto.sh
-	$(SHELL) $< --header > $@
+.sh.h:
+	$(SHELL) $< --header > $(srcdir)/$@
 
 # target to make memory-auto.c:
-$(srcdir)/memory-auto.c: memory-auto.sh
-	$(SHELL) $< > $@
+.sh.c:
+	$(SHELL) $< > $(srcdir)/$@
 
 module.c: $(top_builddir)/tme/shlibvar.h

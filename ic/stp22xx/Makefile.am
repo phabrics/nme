@@ -1,8 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for The Machine Emulator ic/stp22xx/:
 
-AUTOMAKE_OPTIONS = 1.4 gnu
-
 pkglib_LTLIBRARIES = @PACKAGE@_ic_stp22xx.la
 @PACKAGE@_ic_stp22xx_la_SOURCES = \
   stp220x.c \
