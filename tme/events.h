@@ -34,8 +34,6 @@
 #ifndef _TME_EVENTS_H
 #define _TME_EVENTS_H
 
-#include <tme/common.h>
-
 #include <libopenvpn/syshead.h>
 #include <libopenvpn/event.h>
 #ifdef HAVE_OPENVPN

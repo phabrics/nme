@@ -31,6 +31,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <tme/common.h>
 #include <tme/events.h>
 
 struct tme_event_set *(*tme_event_set_init) _TME_P((int *maxevents, unsigned int flags));

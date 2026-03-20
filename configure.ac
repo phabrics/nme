@@ -117,26 +117,31 @@ dnl Configure for libopenvpn.
 lto=yes
 case "${host_os}" in
 netbsd*) 
+   AC_DEFINE([TARGET_NETBSD], [1], [Are we running NetBSD?])
    CPPFLAGS="${CPPFLAGS-} -D_NETBSD_SOURCE"
    DEV_TAP_FILENAME='"\"/dev/tap\""'
    SETCAP="chmod u+s"
    ;;
 openbsd*) 
+   AC_DEFINE([TARGET_OPENBSD], [1], [Are we running on OpenBSD?])
    CPPFLAGS="${CPPFLAGS-} -D_DEFAULT_SOURCE" 
    DEV_TAP_FILENAME='"\"/dev/tun\""'
    SETCAP="chmod u+s"
    ;;
 freebsd*) 
+   AC_DEFINE([TARGET_FREEBSD], [1], [Are we running on FreeBSD?])
    CPPFLAGS="${CPPFLAGS-} -D_DEFAULT_SOURCE" 
    DEV_TAP_FILENAME='"\"/dev/tap\""'
    SETCAP="chmod u+s"
    ;;
 dragonfly*) 
+   AC_DEFINE([TARGET_DRAGONFLY], [1], [Are we running on DragonFlyBSD?])
    CPPFLAGS="${CPPFLAGS-} -D_DEFAULT_SOURCE" 
    DEV_TAP_FILENAME='"\"/dev/tap\""'
    SETCAP="chmod u+s"
    ;;
 linux*) 
+   AC_DEFINE([TARGET_LINUX], [1], [Are we running on Linux?])
    CPPFLAGS="${CPPFLAGS-} -D_DEFAULT_SOURCE" 
    DEV_TAP_FILENAME='"\"/dev/net/tun\""'
    SETCAP="chmod u+s"
@@ -144,6 +149,7 @@ linux*)
 #   SETCAP="setcap cap_sys_nice,cap_net_admin,cap_net_raw+ep"
    ;;
 mingw* | msys*)
+   AC_DEFINE([TARGET_WIN32], [1], [Are we running WIN32?])
    AC_DEFINE([NME_MODULE_PATH_VAR], ["PKG_CONFIG_SYSTEM_LIBRARY_PATH"], [Use pkgconf environment variable to determine lib path in MSYS2.])
    CPPFLAGS="${CPPFLAGS-} -DWIN32_LEAN_AND_MEAN -D_DEFAULT_SOURCE"
    CPPFLAGS="${CPPFLAGS-} -DNTDDI_VERSION=NTDDI_WINXP -D_WIN32_WINNT=_WIN32_WINNT_WINXP"
@@ -163,10 +169,12 @@ cygwin*)
    host_type=
    ;;
 solaris*)
+   AC_DEFINE([TARGET_SOLARIS], [1], [Are we running on Solaris?])
    CPPFLAGS="${CPPFLAGS-} -D_DEFAULT_SOURCE" 
    SETCAP="chmod u+s"
    ;;
 darwin*)
+   AC_DEFINE([TARGET_DARWIN], [1], [Are we running on Mac OS X?])
    dnl some Mac OS X tendering (we use vararg macros...)
    CPPFLAGS="${CPPFLAGS-} -no-cpp-precomp -D_DEFAULT_SOURCE"
    SETCAP="chmod u+s"
@@ -333,7 +341,7 @@ dnl Checks for header files.
 AC_CHECK_HEADERS([unistd.h stdio.h memory.h stdarg.h stdbool.h limits.h float.h curses.h])
 AC_CHECK_HEADERS([sys/ioctl.h sys/sockio.h sys/socketio.h net/if_dl.h ioctls.h netpacket/packet.h ifaddrs.h])
 AC_CHECK_HEADERS([byteswap.h sys/endian.h])
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h poll.h sys/socket.h sys/select.h sys/time.h time.h errno.h sys/mman.h sys/uio.h])
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h poll.h sys/socket.h sys/select.h sys/time.h time.h errno.h sys/mman.h sys/uio.h sys/un.h])
 AC_CHECK_HEADERS([linux/netfilter/nf_tables.h libmnl/libmnl.h libnftnl/table.h libnftnl/chain.h libnftnl/rule.h libnftnl/expr.h])
 AC_CHECK_HEADERS([pthread_np.h sched.h cpucycles.h])
 AC_CHECK_HEADERS([X11/keysym.h rfb/keysym.h])
