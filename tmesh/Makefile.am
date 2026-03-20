@@ -33,12 +33,12 @@ endif
 	@test -f $@ || $(LN_S) .libs/$@ .
 install-exec-hook:
 	test -f $(DESTDIR)$(bindir)/@PACKAGE@sh.sh && \
-	mv -f $(DESTDIR)$(bindir)/@PACKAGE@sh.sh $(DESTDIR)$(bindir)/@PACKAGE@sh
-	mkdir -p $(DESTDIR)$(pkgdatadir)$(PKG_LIB_DIR)
-	cp -f $(DESTDIR)$(libdir)/lib@PACKAGE@*.la $(DESTDIR)$(pkgdatadir)$(LIB_DIR)
-	cp -f $(DESTDIR)$(libdir)/libltdl.la $(DESTDIR)$(pkgdatadir)$(LIB_DIR)
-	cp -f $(DESTDIR)$(pkglibdir)/*.la $(DESTDIR)$(pkgdatadir)$(PKG_LIB_DIR)
-	cp -f $(DESTDIR)$(pkglibdir)/*.txt $(DESTDIR)$(pkgdatadir)$(PKG_LIB_DIR)
+	$(LN_S) $(DESTDIR)$(bindir)/@PACKAGE@sh.sh $(DESTDIR)$(bindir)/@PACKAGE@sh
+	$(MKDIR_P) $(DESTDIR)$(pkgdatadir)$(PKG_LIB_DIR)
+	$(LN_S) $(DESTDIR)$(libdir)/lib@PACKAGE@*.la $(DESTDIR)$(pkgdatadir)$(LIB_DIR)
+	$(LN_S) $(DESTDIR)$(libdir)/libltdl.la $(DESTDIR)$(pkgdatadir)$(LIB_DIR)
+	$(LN_S) $(DESTDIR)$(pkglibdir)/*.la $(DESTDIR)$(pkgdatadir)$(PKG_LIB_DIR)
+	$(LN_S) $(DESTDIR)$(pkglibdir)/*.txt $(DESTDIR)$(pkgdatadir)$(PKG_LIB_DIR)
 	$(SETCAP) $(DESTDIR)$(bindir)/$(TGTPFX)@PACKAGE@sh$(EXEEXT)
 else
 if WIN32
@@ -53,8 +53,8 @@ EXTRA_@PACKAGE@sh_DEPENDENCIES = plugins
 NME_DIR = $(top_builddir)$(PKG_LIB_DIR)
 .PHONY: plugins
 plugins:
-	mkdir -p $(NME_DIR)
-	cp -f $(top_srcdir)/tme/*.txt $(NME_DIR)
+	$(MKDIR_P) $(NME_DIR)
+	$(LN_S) $(top_srcdir)/tme/*.txt $(NME_DIR)
 	if test -d $(top_srcdir)/machines; then \
 		$(LN_S) $(top_srcdir)/machines $(top_builddir) ; \
 	fi
@@ -62,7 +62,7 @@ plugins:
 	for mod in $(@PACKAGE@_PREOPEN); do \
 		if test $$mod != -dlopen; then \
 			echo $$mod ; \
-			cp -f $$mod $(NME_DIR) ; \
+			$(LN_S) $$mod $(NME_DIR) ; \
 		fi \
 	done
 

@@ -15,6 +15,6 @@ BUILT_SOURCES = keymap.h
 CLEANFILES = keymap.h
 
 keymap.h: keymap-make.pl keymap-def.h
-	  $(PERL) $(srcdir)/keymap-make.pl > $@ || $(CP) $(srcdir)/keymap-def.h $@
+	  $(PERL) $(srcdir)/keymap-make.pl > $@ || $(LN_S) $(srcdir)/keymap-def.h $@
 
 SUBDIRS=. gtk rfb sdl

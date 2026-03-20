@@ -201,7 +201,7 @@ _tme_modules_find(const char *top_name,
 	  return (modules_index);
 	}
 #ifdef NME_MODULE_DEBUG
-	else fprintf(stderr, "%s failed to open.", module_index_pathname);
+	else fprintf(stderr, "%s failed to open.", modules_index_pathname);
 #endif
 	/* keep trying: */
 	tme_free(modules_index_pathname);
