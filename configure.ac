@@ -124,25 +124,25 @@ netbsd*)
    ;;
 openbsd*) 
    AC_DEFINE([TARGET_OPENBSD], [1], [Are we running on OpenBSD?])
-   CPPFLAGS="${CPPFLAGS-} -D_DEFAULT_SOURCE" 
+   CPPFLAGS="${CPPFLAGS-} -D_GNU_SOURCE" 
    DEV_TAP_FILENAME='"\"/dev/tun\""'
    SETCAP="chmod u+s"
    ;;
 freebsd*) 
    AC_DEFINE([TARGET_FREEBSD], [1], [Are we running on FreeBSD?])
-   CPPFLAGS="${CPPFLAGS-} -D_DEFAULT_SOURCE" 
+   CPPFLAGS="${CPPFLAGS-} -D_GNU_SOURCE" 
    DEV_TAP_FILENAME='"\"/dev/tap\""'
    SETCAP="chmod u+s"
    ;;
 dragonfly*) 
    AC_DEFINE([TARGET_DRAGONFLY], [1], [Are we running on DragonFlyBSD?])
-   CPPFLAGS="${CPPFLAGS-} -D_DEFAULT_SOURCE" 
+   CPPFLAGS="${CPPFLAGS-} -D_GNU_SOURCE" 
    DEV_TAP_FILENAME='"\"/dev/tap\""'
    SETCAP="chmod u+s"
    ;;
 linux*) 
    AC_DEFINE([TARGET_LINUX], [1], [Are we running on Linux?])
-   CPPFLAGS="${CPPFLAGS-} -D_DEFAULT_SOURCE" 
+   CPPFLAGS="${CPPFLAGS-} -D_GNU_SOURCE" 
    DEV_TAP_FILENAME='"\"/dev/net/tun\""'
    SETCAP="chmod u+s"
    LDFLAGS="${LDFLAGS-} -Wl,--copy-dt-needed-entries"
@@ -151,7 +151,7 @@ linux*)
 mingw* | msys*)
    AC_DEFINE([TARGET_WIN32], [1], [Are we running WIN32?])
    AC_DEFINE([NME_MODULE_PATH_VAR], ["PKG_CONFIG_SYSTEM_LIBRARY_PATH"], [Use pkgconf environment variable to determine lib path in MSYS2.])
-   CPPFLAGS="${CPPFLAGS-} -DWIN32_LEAN_AND_MEAN -D_DEFAULT_SOURCE"
+   CPPFLAGS="${CPPFLAGS-} -DWIN32_LEAN_AND_MEAN -D_GNU_SOURCE"
    CPPFLAGS="${CPPFLAGS-} -DNTDDI_VERSION=NTDDI_WINXP -D_WIN32_WINNT=_WIN32_WINNT_WINXP"
    WIN32=yes
    SETCAP="chmod u+s"
@@ -163,24 +163,24 @@ mingw* | msys*)
    fi
    ;;
 cygwin*)   
-   CPPFLAGS="${CPPFLAGS-} -D_DEFAULT_SOURCE" 
+   CPPFLAGS="${CPPFLAGS-} -D_GNU_SOURCE" 
    WIN32=cygwin
    SETCAP="chmod u+s"
    host_type=
    ;;
 solaris*)
    AC_DEFINE([TARGET_SOLARIS], [1], [Are we running on Solaris?])
-   CPPFLAGS="${CPPFLAGS-} -D_DEFAULT_SOURCE" 
+   CPPFLAGS="${CPPFLAGS-} -D_GNU_SOURCE" 
    SETCAP="chmod u+s"
    ;;
 darwin*)
    AC_DEFINE([TARGET_DARWIN], [1], [Are we running on Mac OS X?])
    dnl some Mac OS X tendering (we use vararg macros...)
-   CPPFLAGS="${CPPFLAGS-} -no-cpp-precomp -D_DEFAULT_SOURCE"
+   CPPFLAGS="${CPPFLAGS-} -no-cpp-precomp -D_GNU_SOURCE"
    SETCAP="chmod u+s"
    ;;
 *)
-   CPPFLAGS="${CPPFLAGS-} -D_DEFAULT_SOURCE"
+   CPPFLAGS="${CPPFLAGS-} -D_GNU_SOURCE"
    SETCAP="chmod u+s"
    host_type=
    ;;
@@ -745,6 +745,8 @@ if test "x${enable_threads}" = xsdl && test "x${have_sdl3}" = xyes; then
 elif test "x${enable_threads}" = xglib && test "x${have_glib}" != xno; then
    AC_DEFINE([TME_THREADS_GLIB], [], [Set to value of threads argument.])
    CPPFLAGS="${CPPFLAGS-} ${GLIB_CFLAGS}"
+   enable_threads=glib
+else
    enable_threads=posix
    AC_DEFINE([TME_THREADS_POSIX], [], [Set to value of threads argument.])
 fi

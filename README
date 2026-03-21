@@ -1,0 +1,185 @@
+Welcome to The Machine Emulator
+-------------------------------
+
+This is TME: The Machine Emulator, an extensible platform for creating & implementing dynamic machine specifications and running/testing/debugging them.
+Originally conceived by Matthew Fredette at MIT, this is hoped to be the continuation & expansion of that groundbreaking project.
+Under the auspices of the Phabrics project - to be unveiled at some unspecified later time - it is meant as an independent, standalone product.
+But, enough with the pleasantries -- on to the nitty-gritty!
+
+Supported Hosts:
+
+One of the major goals of TME is to work on as many hosts as possible.  This is done by design when test machines are available, but it is obviously impossible to cover
+all platforms, even the major ones.  Nonetheless, I have tried to cover Linux & the major BSDs in use today, but resource constraints & time considerations limit
+the testing to just a few as follows -
+
+1. NetBSD - the original host platform of choice for developing TME.  Runs on the most host machine platforms.  Now includes support for autonat using NPF.
+2. OpenBSD - the most secure OS and arguably the hardest to develop for as well.  If it works here, it should work anywhere...
+3. FreeBSD - the most popular BSD.  Good for getting the word out.
+4. PC-BSD - a FreeBSD derivative with a user-friendly graphical interface. Very nice for beginners, but powerful enough for advanced system administrators.
+5. DragonflyBSD - a BSD with many modern features.  A good testbed for trying out optimizations.
+6. Fedora Linux - For now, the only Linux testbed, but other distros should follow.
+7. Arch Linux - The latest version of TME is now available in the Archlinux User Repository! It should install without any problems. Be sure to set TME_MODULE_PATH to the location of the libs as documented in Installation section. See Arch Linux-specific info in the NFTables section below for a caveat, if you wish to use TAP/NAT for Ethernet access.
+
+Another goal is to work on the latest versions of all these & more.  Expanding to other platforms is highly encouraged, and any successes or patches to make it work on
+others is encouraged.  Please send any patches or info about other platforms to phabrics@phabrics.com.  As it expands, we would like to incorporate any core patches that
+expand functionality to other platforms, while keeping the others working.  This requires a constant QA cycle across all supported platforms, so may not always be possible.
+In particular, any expansion should not break existing functionality on a known-good host.  This is another goal.
+
+It should be relatively easy to install directly from a source tarball (see below) on any of the hosts mentioned above.  Every effort has been made to make this possible with 
+minimal fuss and no extra configuration.  Another one of the main goals was to make this as self-contained a package as possible.  No other tools should be needed outside
+of the initial build process to get tmesh working.  All configuration is done with the tmesh scripts to keep things as simple as possible.
+
+Packages may be made available at some point for some of the hosts above, but should download original source from the site(s) documented below.  The original TME package 
+(which stopped at 0.8 as of this writing) is still packaged on most of these platforms.
+
+Prerequisites:
+If building from source tarball, you must have certain packages installed on your host platform of choice.  
+
+At a minimum, if not already installed, you should install these packages (latest versions should work) -
+1. bison
+2. perl
+3. GTK+3
+
+Obtaining:
+Source tarball available via anonymous access at ftp://ftp.phabrics.com/phabrics/contrib/tme-$version.tgz.
+
+Installation:
+This should be the standard GNU install as documented in INSTALL.  Some general steps ($srcdir refers to location that the source package is extracted to.)-
+
+1. tar xzf tme-$version.tgz
+2. mkdir $builddir
+3. cd $builddir
+4. $srcdir/configure --prefix=$installdir --disable-warnings (--enable-debug --disable-recode // see notes)
+5. make
+6. su 
+7. make intall
+8. (sh,ksh,bash) export TME_MODULE_PATH=$installdir/lib 
+   (csh,tcsh)    setenv TME_MODULE_PATH $installdir/lib
+
+Installation step should usually be done as root if you want to configure tap devices with ip parameters in the tmesh descriptions.  On *BSD, it will run setuid to allow this, but 
+gives up privilege immediately after.  On Linux, it will install with cap_net_raw (for bpf packet socket) & cap_net_admin (for other network functions) capabilities instead.  The environment variable
+TME_MODULE_PATH must be set to the location of the install library path... this is where the plugin modules live.  Plugin modules are normally libtool shared libraries, unless the package is configured
+with --disable-shared, in which case they are static libtool libraries.  Installable executable is normally done with shared enabled.  Setting LD_LIBRARY_PATH will not work for setuid executables, as
+it is simply ignored.  If you have trouble linking against dependent libraries, like libltdl or libnftnl, it could be because they are installed in non-standard locations. Try setting LD_LIBRARY_PATH to the location $installprefix/lib or ldconfig $installprefix/lib (for runtime linker). Alternatively, you can use --enable-ltdl-install for libltdl.  To run setuid, be sure it is allowed on the installation filesystem, i.e., the nosuid bit should not be set there, which it is usually not for standard install locations such as /usr.
+
+Note: debug doesn't have to be enabled, unless you want to run 64-bit guests.  For some reason, these only work in debug mode, but the other guests should work fine without it.
+
+Note: recode doesn't seem to currently work on 64-bit OpenBSD & NetBSD, so --disable-recode is required on these hosts.
+
+Running:
+tmesh can run in one of two modes:  headless or GUI.  
+To run headless, modify the tmesh script to create the machine with the terminal connected to a serial port and disable the screen.
+To run GUI, keep the screen configured.  See the original tme site for more details.
+tmesh usage, as documented on the TME site should still work fine - http://people.csail.mit.edu/fredette/tme/
+More info to come on the phabrics.com website.
+
+Guest platforms:
+tmesh is meant to be an extensible platform, meaning that it should be good enough to run any machine description coded according to its standards.  The standards have yet to be
+documented outside of the source code.  Right now, the only guest machines available are sun2, sun3, sun4c, and sun4u (ultra-1).  These work reasonably well right now, but stability
+improvements are an ongoing affair.  They are meant for demonstration purposes alone, but will run relatively complete emulations of certain configurations as documented on the
+original TME site.  
+
+Some guest operating systems have been tested as well.  We will try to document these as we test things out further.  It is known that both NetBSD & OpenBSD (latest versions) are known
+to work pretty well on all the guest machines.  In addition, ethernet configuration has been one of the major points of effort in this latest version of TME (the other being upgrading
+from GTK+2 to GTK+3).
+
+Ethernet:
+Ethernet configuration can be done in one of two ways:  BPF or TAP device.
+
+The BPF device was the original method for ethernet configuration.  It still works & is still supported.  Support for this method has also been added on the Linux platform through
+the equivalent Linux Socket Filter (LSF) (i.e., packet filter) facility.  It allows a direct connection to an adapter, but may not work on all adapters, particularly on Linux hosts.  Because of this limitation, support for TAP devices was added.
+
+TAP devices make a tap device, which is basically a pseudo-ethernet adapter that is created on demand.  This is as opposed to a real hardware ethernet adapter.  It is basically
+an ethernet adapter that runs in software only in the kernel.  See the sample tmesh scripts for examples.  It can be configured with an ip address, allowing it to act as an application-level gateway (ALG) to the host machine network(s).  The guest machine can be configured with an ip address/netmask in the same subnet as the tap device, thus allowing for communication between host & guest.  Afterwards,
+NAT can be set up to a real network adapter, if communication with the external net is desired, turning it into a software router.
+
+Network Address Translation:
+
+The way NAT is done is host-dependent.  There are multiple NAT alternatives from host to host, and even on the same host platforms.  We try to support the major ones here, either through autoconfiguration
+within TME itself, or by providing instructions to allow you to manually customize it to your own setup.  Currently, two NAT technologies are supported:  NFTables and NPF.  NFTables is a Linux-only solution,
+and is the next-generation packet filtering technology to replace IPTables in the future.  NPF is a NetBSD-only tech that serves a similar purpose on that platform, supplanting PF at some point presumably.
+They are both very similar in that they work in the same way as BPF.  They take a set of compiled filter rules that specify what to do with individual packets. 
+
+Both will write the rules automatically, enable IPv4 forwarding and start filtering right away.  You can disable this behaviour at compile-time (using --disable-nat) or run-time (by specifying a nat interface
+that doesn't exist on the tap nat option).  Alternatively, you may further modify the rules after starting tme to suit your own needs, but tmesh will overwrite them if you run it again -- it does not persist,
+but uses a static set of rules in the current implementation.
+
+Auto NAT:
+
+Linux/NFTables
+
+NAT support is now integrated directly into TME via the NFTables API. TME will directly write a table into the NFTables Netfilter kernel module using its native instructions as compiled through the nft tool and using libnftnl. At a minimum, libnftnl and associated headers (development package) must be installed on the host system to get this functionality. In addition, the nftables kernel module support must be configured into the kernel, but the nft tool is not required unless further manual configuration is required. Without these, it will revert to the same behaviour as 0.9, where configuration must be done manually. It may still be necessary to do further manual configuration depending on your particular host system configuration. For example, if you are still having trouble with NAT forwarding from the tap interface, you may still have to flush the iptables forward table (iptables -F FORWARD) or something similar. Further information about NFTables is available at http://wiki.nftables.org/wiki-nftables/index.php/Building_and_installing_nftables_from_sources.
+
+To see the table written out to NFTables, run "nft list table tme".  The output should be the following:
+
+table ip tme {
+	chain prerouting {
+		 type nat hook prerouting priority 0;
+	}
+
+	chain postrouting {
+		 type nat hook postrouting priority 0;
+		 ip saddr $int_net oifname $ext_if snat $host
+	}
+}
+
+where $int_net is the internal network number in CIDR format, $ext_if is the external interface to NAT to, and $host is the host name or address.
+
+NetBSD/NPF
+
+NAT support is now integrated directly into TME via the NPF API. TME will directly write a ruleset configurtion into the NPF kernel module using its native instructions as compiled through the npfctl tool and using libnpf. At a minimum, libnpf and associated headers (development package) must be installed on the host system to get this functionality. In addition, the npf kernel module support must be configured into the kernel with the same version, but the npfctl tool is not required unless further manual configuration is required. Without these, NAT will not be set up. It may still be necessary to do further manual configuration depending on your particular host system configuration. NPF is included with NetBSD 6.0 or later.  Further information available at www.netbsd.org or in the NetBSD man pages.
+
+To see the ruleset written out to NPF, run "npfctl show".  The output should be the following:
+
+map $ext_if dynamic any -> $host pass from { $int_net }
+
+group (name "external", interface $ext_if) {
+      pass stateful out final all
+}
+
+group (default) {
+      pass final all
+}
+
+where $int_net is the internal network number in CIDR format, $ext_if is the external interface to NAT to, and $host is the host name or address.
+
+Manual NAT:
+Below are instructions for manually setting up NAT on a clean machine of different platforms. You can use these instructions as-is on a clean machine, or modify them to fit into your own solution if you know
+what you're doing.
+
+As root or superuser, run the following commands from a shell as required. $ext_if is the external, physical network card to NAT to and $int_if is the internal, tap device created by the TME configuration. To learn these, use "ifconfig -a" or "ip addr show" and note the names to use here.
+
+Linux/IPTABLES NAT Configuration
+
+1. modprobe iptables_nat
+2. echo 1 > /proc/sys/net/ipv4/ip_forward
+3.iptables -F FORWARD
+4. iptables -t nat -A POSTROUTING -o $ext_if -j MASQUERADE
+5. iptables -A forward -i $ext_if -o $int_if -m state --state RELATED,ESTABLISHED -j ACCEPT
+6. iptables -A forward -i $int_if -o $ext_if -m state -j ACCEPT
+
+Note that step 3 is optional; it flushes the FORWARD chain of the filter table; this is to ensure that there are no rules that will block the NAT from working. You may or may not need to do this depending on your setup. If you omit this step and find that there are problems communicating to the external net, e.g., DNS is not working, this is probably why. This is the case, e.g., with the default iptables config on Fedora Linux.
+
+{Net,Free,Open,DragonFly}BSD/PF NAT Configuration
+
+1. kldload pf
+2. ({Free,Dragonfly}BSD) sysctl net.inet.ip.forwarding=1 
+   (NetBSD) sysctl -w net.inet.ip.forwarding=1
+3. pfctl -F all
+4. echo "pass from $int_if:network to any keep state" | pfctl -f-
+5. echo "nat on $ext_if from $int_if:network to any -> ($ext_if)" | pfctl -f-
+6. pfctl -e
+
+*Again, step 3 is optional depending on your setup. It simply flushes the rules modifier to ensure that nothing gets blocked; it's usually not required. If there are problems with communicating to the external net, this might be why.
+
+Your mileage may vary; this is what worked for me, but you may have a different setup/needs, so use your own discretion and consult who and whatever documentation is required. Again, there is much documentation on PF available. There are also other NAT solutions available on the BSDs, but this seems to be the most flexible and stable. It also has a stable ioctl API for directly programming the rules into a program. I'm also looking into using the new NPF facility in NetBSD, which seems to have an even nicer, functional programming API for direct integration into the tool.
+
+Note that OpenBSD requires only two steps (2 & 4). Again, the goal here is to get the user up and running as quickly as possible with minimal fuss, so this is by no means a comprehensive way to do IP forwarding with NAT. Much documentation exists to assist you there, but hopefully we will have a minimal function built into the tool itself so that these steps won't be required to be done outside the tool.
+
+{Net,Free,Open}BSD/IPF NAT Configuration
+
+1. ipnat $ext_if $int_net -> 0/32
+
+This is an older NAT solution, but pretty easy to set up as it requires only one step.
+
+After NAT is setup, make sure your routes are set correctly in your guests. In particular, make sure the default gateway is set to the ip address of the tap device. Also, if you want to access the external network or Internet, you will have to set up DNS. Usually, you fill in the /etc/resolv.conf with the "nameserver xx.xx.xx.xx" line where xx.xx.xx.xx. is the ip address of the nameserver - usually the same as the host machine's. This is usually all done as part of the process of installing or configuring the guest OS; refer to the guest OS documentation for more details. It is basically the same as setting it up for an internal network as specified by the TME configuration.

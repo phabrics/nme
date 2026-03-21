@@ -53,16 +53,15 @@ EXTRA_@PACKAGE@sh_DEPENDENCIES = plugins
 NME_DIR = $(top_builddir)$(PKG_LIB_DIR)
 .PHONY: plugins
 plugins:
-	$(MKDIR_P) $(NME_DIR)
-	$(LN_S) $(top_srcdir)/tme/*.txt $(NME_DIR)
-	if test -d $(top_srcdir)/machines; then \
-		$(LN_S) $(top_srcdir)/machines $(top_builddir) ; \
+	@$(MKDIR_P) $(NME_DIR)
+	@$(LN_S)f $(top_srcdir)/tme/*.txt $(NME_DIR)
+	@if test -d $(top_srcdir)/machines; then \
+		$(LN_S)f $(top_srcdir)/machines $(top_builddir) ; \
 	fi
 #	find $(top_builddir) -type f -name '*.la' -exec cp '{}' $NME_DIR ';'
-	for mod in $(@PACKAGE@_PREOPEN); do \
+	@for mod in $(@PACKAGE@_PREOPEN); do \
 		if test $$mod != -dlopen; then \
-			echo $$mod ; \
-			$(LN_S) $$mod $(NME_DIR) ; \
+			$(LN_S)f $$mod $(NME_DIR) ; \
 		fi \
 	done
 
