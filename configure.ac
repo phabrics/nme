@@ -902,6 +902,7 @@ if test "x${enable_debug}" != "xno"; then
   else
     CFLAGS="-g3 -O2"
   fi
+  lto=no
 else
   CFLAGS="-O3"
   CPPFLAGS="${CPPFLAGS-} -DTME_NO_LOG -DTME_NO_DEBUG_LOCKS -DTME_NO_AUDIT_ATOMICS -DNDEBUG"

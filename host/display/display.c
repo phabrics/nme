@@ -207,6 +207,27 @@ _tme_display_callout(struct tme_display *display,
     conn_keyboard = display->tme_display_keyboard_connection;
 
     /* if we need to call out new keyboard control information: */
+    if (callouts & TME_DISPLAY_CALLOUT_INIT) {
+
+      /* unlock the mutex: */
+      tme_mutex_unlock(&display->tme_display_mutex);
+      
+      /* do the callout: */
+      rc = (display->tme_display_init != NULL
+	    ? ((*display->tme_display_init)(display))
+	    : TME_OK);
+	
+      /* lock the mutex: */
+      tme_mutex_lock(&display->tme_display_mutex);
+      
+      /* if the callout was unsuccessful, remember that at some later
+	 time this callout should be attempted again: */
+      if (rc == TME_OK) {
+	later_callouts |= TME_DISPLAY_CALLOUT_INIT;
+      }
+    }
+
+    /* if we need to call out new keyboard control information: */
     if (callouts & TME_DISPLAY_CALLOUT_KEYBOARD_CTRL) {
 
       /* form the new ctrl: */
@@ -288,6 +309,11 @@ tme_display_update(void *disp) {
 
   _tme_display_callout(display, 0);
 
+  if (display->tme_display_callout_flags
+      & TME_DISPLAY_CALLOUT_INIT) {
+    return TME_OK;
+  }
+  
   /* loop over all screens: */
   for (screen = display->tme_display_screens;
        screen != NULL;
@@ -332,17 +358,11 @@ tme_display_update(void *disp) {
 _tme_thret
 tme_display_th_update(void *disp)
 {
-  struct tme_display *display;
-  bool rc;
+  struct tme_display *display = (struct tme_display *)disp;
   
-  display = (struct tme_display *)disp;
   tme_thread_enter(NULL);
 
-  rc = (*display->tme_display_init)(display);
-  
-  for(rc = rc && tme_display_update(disp);
-      rc;
-      rc = tme_display_update(disp))
+  while(tme_display_update(disp))
     tme_thread_sleep_yield(TME_TIME_SET_USEC(16667), NULL);
   
   /* NOTREACHED */
@@ -699,6 +719,7 @@ void tme_display_init(struct tme_element *element,
   display->tme_screen_width = 1920;
   display->tme_screen_height = 1080;
   display->tme_screen_size = (screen_size) ? (screen_size) : (sizeof(struct tme_screen));
+  display->tme_display_callout_flags = TME_DISPLAY_CALLOUT_INIT;
   
   /* start the threads: */
   tme_mutex_init(&display->tme_display_mutex);
