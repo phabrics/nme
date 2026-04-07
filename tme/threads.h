@@ -1,5 +1,3 @@
-/* $Id: threads.h,v 1.10 2010/06/05 19:36:35 fredette Exp $ */
-
 /* tme/threads.h - header file for threads: */
 
 /*
@@ -319,17 +317,17 @@ typedef off_t tme_off_t;
 #define tme_thread_close close
 #endif // !WIN32
 
-int tme_event_yield _TME_P((tme_event_t hand, void *data, size_t len, bool read, tme_mutex_t *mutex));
+int tme_event_yield _TME_P((tme_event_t hand, bool read, tme_mutex_t *mutex));
 
 static _tme_inline
 int tme_thread_read(tme_thread_handle_t hand, void *data, size_t len, tme_mutex_t *mutex) {
-  tme_event_yield(TME_EVENT_HANDLE(hand), data, len, true, mutex);
+  tme_event_yield(TME_EVENT_HANDLE(hand), true, mutex);
   return tme_read(hand, data, len);
 }
 
 static _tme_inline
 int tme_thread_write(tme_thread_handle_t hand, void *data, size_t len, tme_mutex_t *mutex) {
-  tme_event_yield(TME_EVENT_HANDLE(hand), data, len, false, mutex);
+  tme_event_yield(TME_EVENT_HANDLE(hand), false, mutex);
   return tme_write(hand, data, len);
 }
 

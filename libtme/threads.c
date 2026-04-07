@@ -628,7 +628,7 @@ void tme_threads_init(int mode) {
 
 /* this reads or writes, yielding if the event is not ready: */
 int
-tme_event_yield(tme_event_t hand, void *data, size_t len, bool read, tme_mutex_t *mutex)
+tme_event_yield(tme_event_t hand, bool read, tme_mutex_t *mutex)
 {
   int i, rc = 1, key_event = FALSE;
   struct event_set_return esr;

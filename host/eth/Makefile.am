@@ -9,4 +9,4 @@ lib@PACKAGE@_eth_la_SOURCES = eth-impl.c eth-if.h
 lib@PACKAGE@_eth_la_LDFLAGS = -version-info 0:0:0
 lib@PACKAGE@_eth_la_LIBADD = $(@PACKAGE@_LIBS)
 
-SUBDIRS=. bsd openvpn tun
+SUBDIRS=. bsd openvpn tun netmap

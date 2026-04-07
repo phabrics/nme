@@ -276,6 +276,11 @@ fi
 
 AM_CONDITIONAL([HAVE_OPENVPN], [test "x${have_openvpn}" = xyes])
 
+AC_CHECK_HEADERS([net/netmap_user.h],
+		 [have_netmap=$enable_netmap])
+
+AM_CONDITIONAL([HAVE_NETMAP], [test "x${have_netmap}" = xyes])
+
 AC_CHECK_HEADERS([linux/if_tun.h net/if_tap.h net/tap/if_tap.h net/if_tun.h],
 		 [have_tun=$enable_tun])
 
@@ -1283,9 +1288,10 @@ AC_CONFIG_FILES([Makefile
           host/display/rfb/Makefile
           host/display/sdl/Makefile
           host/eth/Makefile
-          host/eth/openvpn/Makefile
           host/eth/bsd/Makefile
           host/eth/tun/Makefile
+          host/eth/openvpn/Makefile
+          host/eth/netmap/Makefile
           bus/Makefile
           bus/multibus/Makefile
           bus/sbus/Makefile

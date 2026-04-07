@@ -1,4 +1,4 @@
-/* host/tun/tun-tap.c - Native TUN TAP Ethernet support: */
+/* host/eth/tun/tun-tap.c - Native TUN TAP Ethernet support: */
 
 /*
  * Copyright (c) 2014, 2015 Ruben Agin

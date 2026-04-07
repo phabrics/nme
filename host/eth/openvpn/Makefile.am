@@ -8,7 +8,7 @@ pkglib_LTLIBRARIES = @PACKAGE@_host_openvpn.la
 endif
 @PACKAGE@_host_openvpn_la_SOURCES = \
 	openvpn-link.c \
-	openvpn-tap.c
+	openvpn-tun.c
 @PACKAGE@_host_openvpn_la_LIBADD = ../lib@PACKAGE@-eth.la $(@PACKAGE@_LIBS)
 
 if WIN32

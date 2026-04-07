@@ -40,6 +40,7 @@ _TME_RCSID("$Id: eth-impl.h,v 1.1 2003/05/18 00:02:23 fredette Exp $");
 /* includes: */
 #include <tme/generic/ethernet.h>
 #include <tme/threads.h>
+#include <tme/events.h>
 #include <tme/misc.h>
 #ifdef HAVE_NETDB_H
 #include <netdb.h>
@@ -138,10 +139,16 @@ struct tme_ethernet {
 
   /* the Ethernet file descriptor: */
   tme_thread_handle_t tme_eth_handle;
-
+  tme_uintptr_t tme_eth_event;
+  unsigned int (*tme_eth_set) (uintptr_t handle,
+			       struct event_set *es,
+			       unsigned int rwflags,
+			       void *arg,
+			       unsigned int *persistent);
+  
   /* callbacks for ethernet i/o */
-  int (*tme_ethernet_read)(void *data);
-  int (*tme_ethernet_write)(void *data);
+  int (*tme_eth_read) _TME_P((uintptr_t hand, void *data, int len));
+  int (*tme_eth_write) _TME_P((uintptr_t hand, void *data, int len));
 
   /* the size of the packet buffer for the interface: */
   size_t tme_eth_buffer_size;

@@ -1,7 +1,7 @@
-/* host/openvpn/openvpn-tap.c - OpenVPN TUN TAP Ethernet support: */
+/* host/eth/netmap/netmap-vale.c - Netmap/VALE Ethernet support: */
 
 /*
- * Copyright (c) 2015, 2016 Ruben Agin
+ * Copyright (c) 2026 Ruben Agin
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -122,59 +122,57 @@ static int _tme_openvpn_tun_read(void *data) {
   return tun->inbuf.len;
 }
 
-/* the new TAP function: */
-NME_ELEMENT_SUB_NEW_DECL(host_openvpn,tun_tap) {
+/* the netmap function: */
+NME_ELEMENT_SUB_NEW_DECL(host_netmap,vale) {
   int rc;
-  unsigned char *hwaddr = NULL;
-  void *data = NULL;
-  struct tuntap *tt;
-  struct env_set *es;
-  u_char flags;
-  struct frame *frame;
-  int sz;
-  struct options *options = options_new();
-  tme_openvpn_tun *tun = data = tme_new0(tme_openvpn_tun, 1);
-  int arg_i = 0;
-
-  while(args[++arg_i] != NULL);
+  struct netmap_if *nifp;
+  struct netmap_ring *ring;
+  struct nmreq nmr;
+  struct ifaddrs *ifa;
+  const char *port;
+  int usage = 0, arg_i = 1;
   
-  es = openvpn_setup(args, arg_i, options);
-  frame = openvpn_setup_frame(options, &tt, NULL, es, &flags);
-  free(options);
+  nm_fd = tme_eth_alloc("/dev/netmap", _output);
+  bzero(&nmr, sizeof(nmr));
+  for (;;) {
+    /* the interface we're supposed to use: */
+    if (TME_ARG_IS(args[arg_i + 0], "port")
+	&& args[arg_i + 1] != NULL) {
+      port = args[arg_i + 1];
+      arg_i += 2;
+    }
+    /* otherwise this is a bad argument: */
+    else {
+      tme_output_append_error(_output,
+			      "%s %s", 
+			      args[arg_i],
+			      _("unexpected"));
+      usage = TRUE;
+      break;
+    }
+  }
 
-  sz = BUF_SIZE(frame);
-
-  tun->tt = tt;
-  tun->frame = frame;
-  tun->flags = flags | OPENVPN_CAN_WRITE;
-  tun->inbuf = alloc_buf(sz);
-  tun->outbuf = alloc_buf(sz);
-  
   /* find the interface we will use: */
 #ifdef HAVE_IFADDRS_H
-  unsigned int hwaddr_len;
-  struct ifaddrs *ifa;
-  
-  rc = tme_eth_ifaddrs_find(tt->actual_name, AF_UNSPEC, &ifa, &hwaddr, &hwaddr_len);
-    
-  if(hwaddr_len == TME_ETHERNET_ADDR_SIZE) {
-    tme_log(&element->tme_element_log_handle, 0, TME_OK, 
-	    (&element->tme_element_log_handle, 
-	     "hardware address on tap interface %s set to %02x:%02x:%02x:%02x:%02x:%02x",
-	     ifa->ifa_name, 
-	     hwaddr[0],
-	     hwaddr[1],
-	     hwaddr[2],
-	     hwaddr[3],
-	     hwaddr[4],
-	     hwaddr[5]));
+  rc = tme_eth_ifaddrs_find(port, AF_UNSPEC, &ifa, NULL, NULL);
+
+  if (rc != TME_OK) {
+    tme_output_append_error(_output, _("couldn't find an interface %s"), port);
+    return (ENOENT);
   }
+  
+  strncpy(nmr.nr_name, ifa->ifa_name, sizeof(nmr.nr_name));
+
+  tme_log(&element->tme_element_log_handle, 0, TME_OK, 
+	  (&element->tme_element_log_handle, 
+	   "using interface %s",
+	   nmr.nr_name));
 #endif
   rc = tme_eth_init(element,
 		    TME_INVALID_HANDLE,
 		    sz,
 		    data,
-		    hwaddr);
+		    NULL);
   
   if(rc == TME_OK) {
     /* recover our data structure: */

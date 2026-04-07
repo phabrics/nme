@@ -35,9 +35,8 @@
 
 /* includes: */
 #include "eth-if.h"
-#include <tme/events.h>
 
-typedef struct _tme_openvpn_sock {
+typedef struct _tme_openvpn_link {
   struct tme_ethernet *eth;
   struct link_socket *ls;
   struct env_set *es;
@@ -45,102 +44,61 @@ typedef struct _tme_openvpn_sock {
   u_char flags;
   struct buffer inbuf;
   struct buffer outbuf;
-} tme_openvpn_sock;
+} tme_openvpn_link;
 
-static int _tme_openvpn_sock_write(void *data) {
-  unsigned int flags;
-  struct event_set_return esr;
-  tme_openvpn_sock *sock = data;
+static int _tme_openvpn_link_write(tme_openvpn_link *link, void *data, int len) {
   struct link_socket_actual *to_addr;	/* IP address of remote */
-  int status = 1;
-  struct tme_event_set *event_set = tme_event_set_init(&status, EVENT_METHOD_FAST);
+  int status = -1;
   
-  ASSERT(buf_init(&sock->outbuf, FRAME_HEADROOM(sock->frame)));
+  ASSERT(buf_init(&link->outbuf, FRAME_HEADROOM(link->frame)));
 
-  sock->outbuf.len = sock->eth->tme_eth_data_length;
+  link->outbuf.len = link->eth->tme_eth_data_length;
   /*
    * Get the address we will be sending the packet to.
    */
-  link_socket_get_outgoing_addr(&sock->outbuf, &sock->ls->info,
+  link_socket_get_outgoing_addr(&link->outbuf, &link->ls->info,
 				&to_addr);
 
-  tme_event_reset(event_set);
-    
-  flags = EVENT_WRITE;
-    
-  tme_event_ctl(event_set, socket_event_handle(sock->ls), flags, 0);
-    
-  status = tme_event_wait(event_set, NULL, &esr, status, &sock->eth->tme_eth_mutex);
-  tme_event_free(event_set);
-  if(status<0) return status;
+  status = link_socket_write(link->ls, &link->outbuf, to_addr);
 
-  status = -1;
-
-  if(esr.rwflags & EVENT_WRITE) {
-    status = link_socket_write(sock->ls, &sock->outbuf, to_addr);
-  }
   return status;
 }
 
-static int _tme_openvpn_sock_read(void *data) {
-  unsigned int flags;
-  struct event_set_return esr;
-  tme_openvpn_sock *sock = data;
+static int _tme_openvpn_link_read(tme_openvpn_link *link, void *data, int len) {
   struct link_socket_actual from;               /* address of incoming datagram */
   int status = 1;
-  struct tme_event_set *es;
   
-  if(socket_read_residual(sock->ls))
-    esr.rwflags = EVENT_READ;
-  else {
-    es = tme_event_set_init(&status, EVENT_METHOD_FAST);
-  
-    tme_event_reset(es);
-  
-    /*
-     * On win32 we use the keyboard or an event object as a source
-     * of asynchronous signals.
-     */
-    //    wait_signal(es, (void*)&err_shift);
-  
-    flags = EVENT_READ;
-  
-    tme_socket_set(sock->ls, es, flags, (void*)0, NULL);
+  /*  if(socket_read_residual(link->ls))
+      esr.rwflags = EVENT_READ; */
+    
+  link->inbuf.len = -1;
 
-    status = tme_event_wait(es, NULL, &esr, status, &sock->eth->tme_eth_mutex);
-    tme_event_free(es);
-    if(status<0) return status;
+  ASSERT(buf_init(&link->inbuf, FRAME_HEADROOM_ADJ(link->frame, FRAME_HEADROOM_MARKER_READ_LINK)));
+  status = link_socket_read(link->ls,
+			    &link->inbuf,
+			    MAX_RW_SIZE_LINK(link->frame),
+			    &from);
+  if(socket_connection_reset(link->ls, status)) {
+    //	register_signal (c, SIGUSR1, "connection-reset"); /* SOFT-SIGUSR1 -- TCP connection reset */
+    msg (D_STREAM_ERRORS, "Connection reset, restarting [%d]", status);
+    return status;
   }
     
-  sock->inbuf.len = -1;
-
-  if(esr.rwflags & EVENT_READ) {
-    ASSERT(buf_init(&sock->inbuf, FRAME_HEADROOM_ADJ(sock->frame, FRAME_HEADROOM_MARKER_READ_LINK)));
-    status = link_socket_read(sock->ls,
-			      &sock->inbuf,
-			      MAX_RW_SIZE_LINK(sock->frame),
-			      &from);
-    if(socket_connection_reset(sock->ls, status)) {
-      //	register_signal (c, SIGUSR1, "connection-reset"); /* SOFT-SIGUSR1 -- TCP connection reset */
-      msg (D_STREAM_ERRORS, "Connection reset, restarting [%d]", status);
-      return status;
+  /* check recvfrom status */
+  check_status (status, "read", link->ls, NULL);
+  if(link->inbuf.len > 0) {
+    if(!link_socket_verify_incoming_addr(&link->inbuf, &link->ls->info, &from))
+      link_socket_bad_incoming_addr(&link->inbuf, &link->ls->info, &from);
+    link_socket_set_outgoing_addr(&link->inbuf, &link->ls->info, &from, NULL, link->es);
+    /* Did we just receive an openvpn ping packet? */
+    if (is_ping_msg (&link->inbuf)) {
+      dmsg (D_PING, "RECEIVED PING PACKET");
+      link->inbuf.len = 0; /* drop packet */
     }
-    
-    /* check recvfrom status */
-    check_status (status, "read", sock->ls, NULL);
-    if(sock->inbuf.len > 0) {
-      if(!link_socket_verify_incoming_addr(&sock->inbuf, &sock->ls->info, &from))
-	link_socket_bad_incoming_addr(&sock->inbuf, &sock->ls->info, &from);
-      link_socket_set_outgoing_addr(&sock->inbuf, &sock->ls->info, &from, NULL, sock->es);
-      /* Did we just receive an openvpn ping packet? */
-      if (is_ping_msg (&sock->inbuf)) {
-	dmsg (D_PING, "RECEIVED PING PACKET");
-	sock->inbuf.len = 0; /* drop packet */
-      }
-    }
-    sock->eth->tme_eth_buffer = BPTR(&sock->inbuf);
   }
-  return sock->inbuf.len;
+  link->eth->tme_eth_buffer = BPTR(&link->inbuf);
+
+  return link->inbuf.len;
 }
 
 /* the new TAP function: */
@@ -153,7 +111,7 @@ NME_ELEMENT_SUB_NEW_DECL(host_openvpn,socket_link) {
   struct frame *frame;
   int sz;
   struct options *options = options_new();
-  tme_openvpn_sock *sock = data = tme_new0(tme_openvpn_sock, 1);
+  tme_openvpn_link *link = data = tme_new0(tme_openvpn_link, 1);
   int arg_i = 0;
 
   while(args[++arg_i] != NULL);
@@ -164,30 +122,33 @@ NME_ELEMENT_SUB_NEW_DECL(host_openvpn,socket_link) {
 
   sz = BUF_SIZE(frame);
   
-  sock->ls = ls;
-  sock->es = es;
-  sock->frame = frame;
-  sock->flags = flags | OPENVPN_CAN_WRITE;
-  sock->inbuf = alloc_buf(sz);
-  sock->outbuf = alloc_buf(sz);
+  link->ls = ls;
+  link->es = es;
+  link->frame = frame;
+  link->flags = flags | OPENVPN_CAN_WRITE;
+  link->inbuf = alloc_buf(sz);
+  link->outbuf = alloc_buf(sz);
 
   rc = tme_eth_init(element,
 		    TME_INVALID_HANDLE,
 		    sz,
-		    data,
+		    NULL,
 		    NULL);
   
   if(rc == TME_OK) {
     /* recover our data structure: */
-    sock->eth = (struct tme_ethernet *) element->tme_element_private;
-    sock->eth->tme_ethernet_write = _tme_openvpn_sock_write;
-    sock->eth->tme_ethernet_read = _tme_openvpn_sock_read;
-    ASSERT(buf_init(&sock->inbuf, FRAME_HEADROOM_ADJ(sock->frame, FRAME_HEADROOM_MARKER_READ_LINK)));
-    ASSERT(buf_safe(&sock->inbuf, MAX_RW_SIZE_LINK(sock->frame)));
-    sock->eth->tme_eth_buffer = BPTR(&sock->inbuf);
-    ASSERT(buf_init(&sock->outbuf, FRAME_HEADROOM(sock->frame)));
-    ASSERT(buf_safe(&sock->outbuf, MAX_RW_SIZE_LINK(sock->frame)));
-    sock->eth->tme_eth_out = BPTR(&sock->outbuf);
+    link->eth = (struct tme_ethernet *) element->tme_element_private;
+    link->eth->tme_eth_handle = link;
+    link->eth->tme_eth_event = ls;  
+    link->eth->tme_eth_set = socket_set;  
+    link->eth->tme_eth_write = _tme_openvpn_link_write;
+    link->eth->tme_eth_read = _tme_openvpn_link_read;
+    ASSERT(buf_init(&link->inbuf, FRAME_HEADROOM_ADJ(link->frame, FRAME_HEADROOM_MARKER_READ_LINK)));
+    ASSERT(buf_safe(&link->inbuf, MAX_RW_SIZE_LINK(link->frame)));
+    link->eth->tme_eth_buffer = BPTR(&link->inbuf);
+    ASSERT(buf_init(&link->outbuf, FRAME_HEADROOM(link->frame)));
+    ASSERT(buf_safe(&link->outbuf, MAX_RW_SIZE_LINK(link->frame)));
+    link->eth->tme_eth_out = BPTR(&link->outbuf);
   }
   return rc;
 }

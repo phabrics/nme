@@ -1,6 +1,4 @@
-/* $Id: bsd-bpf.c,v 1.9 2007/02/21 01:24:50 fredette Exp $ */
-
-/* host/bsd/bsd-bpf.c - BSD Berkeley Packet Filter Ethernet support: */
+/* host/eth/bsd/bsd-bpf.c - BSD Berkeley Packet Filter Ethernet support: */
 
 /*
  * Copyright (c) 2001, 2003 Matt Fredette
