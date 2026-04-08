@@ -22,22 +22,25 @@ nme_PREOPEN += -dlopen ${top_builddir}/machine/sun2/nme_machine_sun2.la
 nme_PREOPEN += -dlopen ${top_builddir}/machine/sun3/nme_machine_sun3.la
 nme_PREOPEN += -dlopen ${top_builddir}/machine/sun4/nme_machine_sun4.la
 if HAVE_GTK
-nme_PREOPEN += -dlopen ${top_builddir}/host/display/gtk/nme_host_gtk.la
+nme_PREOPEN += -dlopen ${top_builddir}/host/gtk/nme_host_gtk.la
 endif
 if HAVE_RFB
-nme_PREOPEN += -dlopen ${top_builddir}/host/display/rfb/nme_host_rfb.la
+nme_PREOPEN += -dlopen ${top_builddir}/host/rfb/nme_host_rfb.la
 endif
 if HAVE_SDL
-nme_PREOPEN += -dlopen ${top_builddir}/host/display/sdl/nme_host_sdl.la
+nme_PREOPEN += -dlopen ${top_builddir}/host/sdl/nme_host_sdl.la
 endif
 if HAVE_BSD
-nme_PREOPEN += -dlopen ${top_builddir}/host/eth/bsd/nme_host_bsd.la
+nme_PREOPEN += -dlopen ${top_builddir}/host/bsd/nme_host_bsd.la
 endif
 if HAVE_OPENVPN
-nme_PREOPEN += -dlopen ${top_builddir}/host/eth/openvpn/nme_host_openvpn.la
+nme_PREOPEN += -dlopen ${top_builddir}/host/openvpn/nme_host_openvpn.la
 endif
 if HAVE_TUN
-nme_PREOPEN += -dlopen ${top_builddir}/host/eth/tun/nme_host_tun.la
+nme_PREOPEN += -dlopen ${top_builddir}/host/tun/nme_host_tun.la
+endif
+if HAVE_NETMAP
+nme_PREOPEN += -dlopen ${top_builddir}/host/netmap/nme_host_netmap.la
 endif
 nme_PREOPEN += -dlopen ${top_builddir}/host/nme_host_posix.la
 nme_PREOPEN += -dlopen ${top_builddir}/bus/multibus/nme_bus_multibus.la

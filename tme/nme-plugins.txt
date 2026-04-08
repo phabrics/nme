@@ -50,6 +50,7 @@ nme_host_openvpn_socket_link nme_host_openvpn socket_link
 nme_host_openvpn_socket_server nme_host_openvpn_socket server
 nme_host_openvpn_tun_tap nme_host_openvpn tun_tap
 nme_host_tun_tap nme_host_tun tap
+nme_host_netmap_vale nme_host_netmap vale
 nme_host_posix_disk nme_host_posix disk
 nme_host_posix_memory nme_host_posix memory
 nme_host_posix_serial nme_host_posix serial

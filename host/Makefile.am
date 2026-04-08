@@ -13,4 +13,4 @@ pkglib_LTLIBRARIES = @PACKAGE@_host_posix.la
 
 include $(top_srcdir)/modules.mk
 
-SUBDIRS = display eth
+SUBDIRS = gtk rfb sdl bsd openvpn tun netmap

@@ -21,6 +21,9 @@ pkginclude_HEADERS = memory.h \
 	recode.h \
 	token.h \
 	completion.h \
+	display.h \
+	keymap.h \
+	eth-if.h \
 	nmesh.h \
 	runlength.h
 
@@ -30,9 +33,14 @@ nme_TEXINFOS = fdl.texi
 @PACKAGE@dir = $(pkglibdir)
 dist_@PACKAGE@_DATA = @PACKAGE@-plugins.txt
 
-BUILT_SOURCES = shlibvar.h
+EXTRA_DIST = keymap-make.pl keymap-def.h
+
+BUILT_SOURCES = shlibvar.h keymap.h
 
 CLEANFILES = $(BUILT_SOURCES)
+
+keymap.h: keymap-make.pl keymap-def.h
+	  $(PERL) $(srcdir)/keymap-make.pl > $@ || $(LN_S) $(srcdir)/keymap-def.h $@
 
 # module.c needs to know the LTDL_SHLIBPATH_VAR that libltdl
 # is using:

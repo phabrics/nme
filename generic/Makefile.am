@@ -16,7 +16,10 @@ lib@PACKAGE@_generic_la_SOURCES = bus.c \
 	tape.c \
 	mouse.c \
 	float.c \
-	keyboard.c
+	keyboard.c \
+	display-mouse.c display-keyboard.c display.c \
+	eth-impl.c 
+
 lib@PACKAGE@_generic_la_LDFLAGS = -version-info 0:0:0
 lib@PACKAGE@_generic_la_LIBADD = $(top_builddir)/libtme/lib@PACKAGE@.la
 
@@ -34,16 +37,9 @@ EXTRA_DIST = $(MAINTAINERCLEANFILES) $(noinst_SCRIPTS:.sh=.m4) fb-xlat-auto.pl
 .m4.sh:
 	$(AUTOM4TE) -l m4sh $< > $(srcdir)/$@
 
-# target to make float-auto.c and bus-device-auto.c:
-$(srcdir)/float-auto.c: float-auto.sh
-	$(SHELL) $(srcdir)/float-auto.sh > $@
-
-$(srcdir)/bus-device-auto.c: bus-device-auto.sh
-	$(SHELL) $(srcdir)/bus-device-auto.sh > $@
-
 # target to make fb-xlat-auto.c:
-$(srcdir)/fb-xlat-auto.c: fb-xlat-auto.in fb-xlat-auto.sh
-	cat $(srcdir)/fb-xlat-auto.in | xargs $(SHELL) $(srcdir)/fb-xlat-auto.sh > $@
+fb-xlat-auto.c: fb-xlat-auto.in fb-xlat-auto.sh
+	cat $(srcdir)/fb-xlat-auto.in | xargs $(SHELL) $(srcdir)/fb-xlat-auto.sh > $(srcdir)/$@
 
 .pl.in:
 	$(PERL) $< src $(NME_FB_XLAT_SRC) dst $(NME_FB_XLAT_DST) > $(srcdir)/$@ || \

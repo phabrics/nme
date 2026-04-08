@@ -1283,15 +1283,13 @@ AC_CONFIG_FILES([Makefile
 	  machine/sun4u/Makefile
 	  machine/sun4u/SUN-ULTRA-1
           host/Makefile
-          host/display/Makefile
-          host/display/gtk/Makefile
-          host/display/rfb/Makefile
-          host/display/sdl/Makefile
-          host/eth/Makefile
-          host/eth/bsd/Makefile
-          host/eth/tun/Makefile
-          host/eth/openvpn/Makefile
-          host/eth/netmap/Makefile
+          host/gtk/Makefile
+          host/rfb/Makefile
+          host/sdl/Makefile
+          host/bsd/Makefile
+          host/tun/Makefile
+          host/openvpn/Makefile
+          host/netmap/Makefile
           bus/Makefile
           bus/multibus/Makefile
           bus/sbus/Makefile
