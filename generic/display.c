@@ -206,7 +206,7 @@ _tme_display_callout(struct tme_display *display,
     /* get our keyboard connection: */
     conn_keyboard = display->tme_display_keyboard_connection;
 
-    /* if we need to call out new keyboard control information: */
+    /* initialize the display once: */
     if (callouts & TME_DISPLAY_CALLOUT_INIT) {
 
       /* unlock the mutex: */
@@ -311,6 +311,7 @@ tme_display_update(void *disp) {
 
   if (display->tme_display_callout_flags
       & TME_DISPLAY_CALLOUT_INIT) {
+    tme_mutex_unlock(&display->tme_display_mutex);
     return TME_OK;
   }
   
@@ -701,7 +702,7 @@ _tme_display_connections_new(struct tme_element *element,
   return (TME_OK);
 }
 
-/* the new generic display function: */
+/* initialize the display interface and start it up (should be called last): */
 void tme_display_init(struct tme_element *element,
 		      struct tme_display *display,
 		      size_t screen_size) {
@@ -721,6 +722,10 @@ void tme_display_init(struct tme_element *element,
   display->tme_screen_size = (screen_size) ? (screen_size) : (sizeof(struct tme_screen));
   display->tme_display_callout_flags = TME_DISPLAY_CALLOUT_INIT;
   
+  /* fill the element: */
+  element->tme_element_private = display;
+  element->tme_element_connections_new = _tme_display_connections_new;
+
   /* start the threads: */
   tme_mutex_init(&display->tme_display_mutex);
 
@@ -731,7 +736,4 @@ void tme_display_init(struct tme_element *element,
   tme_threads_set_main(tme_display_update, display, &display->tme_display_mutex, TME_TIME_SET_USEC(16667));
   #endif*/
   
-  /* fill the element: */
-  element->tme_element_private = display;
-  element->tme_element_connections_new = _tme_display_connections_new;
 }

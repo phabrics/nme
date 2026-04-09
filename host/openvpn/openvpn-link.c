@@ -35,10 +35,9 @@
 
 /* includes: */
 #include <tme/eth-if.h>
+#include <tme/events.h>
 
 typedef struct _tme_openvpn_link {
-  struct tme_ethernet *eth;
-  struct link_socket *ls;
   struct env_set *es;
   struct frame *frame;
   u_char flags;
@@ -46,57 +45,77 @@ typedef struct _tme_openvpn_link {
   struct buffer outbuf;
 } tme_openvpn_link;
 
-static int _tme_openvpn_link_write(tme_openvpn_link *link, void *data, int len) {
+/* conditionally yield this thread if the event is not ready: */
+static int _tme_openvpn_link_yield(struct tme_ethernet *eth, bool read) {
+  int rc = 1;
+  struct event_set_return esr;
+  unsigned int flags = (read) ? (EVENT_READ) : (EVENT_WRITE);
+  struct tme_event_set *tme_events;
+
+  tme_events = tme_event_set_init(&rc, EVENT_METHOD_FAST);  
+  tme_event_reset(tme_events);
+  tme_socket_set((tme_event_t)eth->tme_eth_handle, tme_events, flags, (void *)0, NULL);
+  rc = tme_event_wait(tme_events, NULL, &esr, 1, &eth->tme_eth_mutex);
+  tme_event_free(tme_events);
+  
+  return rc;
+}
+
+static int _tme_openvpn_link_write(struct tme_ethernet *eth) {
+  tme_openvpn_link *link = (tme_openvpn_link *)eth->tme_eth_data;
+  struct link_socket *ls = (struct link_socket *)eth->tme_eth_handle;
   struct link_socket_actual *to_addr;	/* IP address of remote */
   int status = -1;
   
   ASSERT(buf_init(&link->outbuf, FRAME_HEADROOM(link->frame)));
 
-  link->outbuf.len = link->eth->tme_eth_data_length;
+  link->outbuf.len = eth->tme_eth_data_length;
   /*
    * Get the address we will be sending the packet to.
    */
-  link_socket_get_outgoing_addr(&link->outbuf, &link->ls->info,
+  link_socket_get_outgoing_addr(&link->outbuf, &ls->info,
 				&to_addr);
 
-  status = link_socket_write(link->ls, &link->outbuf, to_addr);
+  status = link_socket_write(ls, &link->outbuf, to_addr);
 
   return status;
 }
 
-static int _tme_openvpn_link_read(tme_openvpn_link *link, void *data, int len) {
+static int _tme_openvpn_link_read(struct tme_ethernet *eth) {
+  tme_openvpn_link *link = (tme_openvpn_link *)eth->tme_eth_data;
+  struct link_socket *ls = (struct link_socket *)eth->tme_eth_handle;
   struct link_socket_actual from;               /* address of incoming datagram */
   int status = 1;
   
-  /*  if(socket_read_residual(link->ls))
+  /*  if(socket_read_residual(ls))
       esr.rwflags = EVENT_READ; */
     
   link->inbuf.len = -1;
 
   ASSERT(buf_init(&link->inbuf, FRAME_HEADROOM_ADJ(link->frame, FRAME_HEADROOM_MARKER_READ_LINK)));
-  status = link_socket_read(link->ls,
+  status = link_socket_read(ls,
 			    &link->inbuf,
 			    MAX_RW_SIZE_LINK(link->frame),
 			    &from);
-  if(socket_connection_reset(link->ls, status)) {
+  if(socket_connection_reset(ls, status)) {
     //	register_signal (c, SIGUSR1, "connection-reset"); /* SOFT-SIGUSR1 -- TCP connection reset */
     msg (D_STREAM_ERRORS, "Connection reset, restarting [%d]", status);
     return status;
   }
     
   /* check recvfrom status */
-  check_status (status, "read", link->ls, NULL);
+  check_status (status, "read", ls, NULL);
   if(link->inbuf.len > 0) {
-    if(!link_socket_verify_incoming_addr(&link->inbuf, &link->ls->info, &from))
-      link_socket_bad_incoming_addr(&link->inbuf, &link->ls->info, &from);
-    link_socket_set_outgoing_addr(&link->inbuf, &link->ls->info, &from, NULL, link->es);
+    if(!link_socket_verify_incoming_addr(&link->inbuf, &ls->info, &from))
+      link_socket_bad_incoming_addr(&link->inbuf, &ls->info, &from);
+    link_socket_set_outgoing_addr(&link->inbuf, &ls->info, &from, NULL, link->es);
     /* Did we just receive an openvpn ping packet? */
     if (is_ping_msg (&link->inbuf)) {
       dmsg (D_PING, "RECEIVED PING PACKET");
       link->inbuf.len = 0; /* drop packet */
     }
   }
-  link->eth->tme_eth_buffer = BPTR(&link->inbuf);
+  eth->tme_eth_buffer = BPTR(&link->inbuf);
 
   return link->inbuf.len;
 }
@@ -104,14 +123,14 @@ static int _tme_openvpn_link_read(tme_openvpn_link *link, void *data, int len) {
 /* the new TAP function: */
 NME_ELEMENT_SUB_NEW_DECL(host_openvpn,socket_link) {
   int rc;
-  void *data = NULL;
   struct link_socket *ls;
   struct env_set *es;
   u_char flags = 0;
   struct frame *frame;
   int sz;
+  struct tme_ethernet *eth;
   struct options *options = options_new();
-  tme_openvpn_link *link = data = tme_new0(tme_openvpn_link, 1);
+  tme_openvpn_link *link = tme_new0(tme_openvpn_link, 1);
   int arg_i = 0;
 
   while(args[++arg_i] != NULL);
@@ -122,33 +141,29 @@ NME_ELEMENT_SUB_NEW_DECL(host_openvpn,socket_link) {
 
   sz = BUF_SIZE(frame);
   
-  link->ls = ls;
   link->es = es;
   link->frame = frame;
   link->flags = flags | OPENVPN_CAN_WRITE;
   link->inbuf = alloc_buf(sz);
   link->outbuf = alloc_buf(sz);
 
+  eth = tme_new0(struct tme_ethernet, 1);
+  eth->tme_eth_yield = _tme_openvpn_link_yield;
+  eth->tme_eth_write = _tme_openvpn_link_write;
+  eth->tme_eth_read = _tme_openvpn_link_read;
+  ASSERT(buf_init(&link->inbuf, FRAME_HEADROOM_ADJ(link->frame, FRAME_HEADROOM_MARKER_READ_LINK)));
+  ASSERT(buf_safe(&link->inbuf, MAX_RW_SIZE_LINK(link->frame)));
+  eth->tme_eth_buffer = BPTR(&link->inbuf);
+  ASSERT(buf_init(&link->outbuf, FRAME_HEADROOM(link->frame)));
+  ASSERT(buf_safe(&link->outbuf, MAX_RW_SIZE_LINK(link->frame)));
+  eth->tme_eth_out = BPTR(&link->outbuf);
+
   rc = tme_eth_init(element,
-		    TME_INVALID_HANDLE,
+		    eth,
+		    (tme_uintptr_t)ls,
 		    sz,
-		    NULL,
+		    link,
 		    NULL);
   
-  if(rc == TME_OK) {
-    /* recover our data structure: */
-    link->eth = (struct tme_ethernet *) element->tme_element_private;
-    link->eth->tme_eth_handle = link;
-    link->eth->tme_eth_event = ls;  
-    link->eth->tme_eth_set = socket_set;  
-    link->eth->tme_eth_write = _tme_openvpn_link_write;
-    link->eth->tme_eth_read = _tme_openvpn_link_read;
-    ASSERT(buf_init(&link->inbuf, FRAME_HEADROOM_ADJ(link->frame, FRAME_HEADROOM_MARKER_READ_LINK)));
-    ASSERT(buf_safe(&link->inbuf, MAX_RW_SIZE_LINK(link->frame)));
-    link->eth->tme_eth_buffer = BPTR(&link->inbuf);
-    ASSERT(buf_init(&link->outbuf, FRAME_HEADROOM(link->frame)));
-    ASSERT(buf_safe(&link->outbuf, MAX_RW_SIZE_LINK(link->frame)));
-    link->eth->tme_eth_out = BPTR(&link->outbuf);
-  }
   return rc;
 }

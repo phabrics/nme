@@ -77,24 +77,6 @@ struct tme_net_ipv4_header {
   tme_uint8_t tme_net_ipv4_header_length[2];
 };
 
-/* this reads or writes, yielding if the event is not ready: */
-static _tme_inline
-int _tme_eth_yield(struct tme_ethernet *eth, bool read)
-{
-  int rc;
-  struct event_set_return esr;
-  unsigned int flags = (read) ? (EVENT_READ) : (EVENT_WRITE);
-  struct tme_event_set *tme_events = tme_event_set_init(&rc, EVENT_METHOD_FAST);
-  
-  tme_event_reset(tme_events);
-  eth->tme_eth_set(eth->tme_eth_event, tme_events, flags, (void *)0, NULL);
-  rc = tme_event_wait(tme_events, NULL, &esr, 1, &eth->tme_eth_mutex);
-
-  tme_event_free(tme_events);
-  
-  return rc;
-}
-
 /* the ethernet callout function.  it must be called with the mutex locked: */
 static void
 _tme_eth_callout(struct tme_ethernet *eth, int new_callouts)
@@ -240,12 +222,11 @@ _tme_eth_callout(struct tme_ethernet *eth, int new_callouts)
 	eth->tme_eth_data_length = rc;
 	
 	/* do the write: */
-	status = (eth->tme_eth_set) ? (_tme_eth_yield(eth, false)) :
-	  (tme_event_yield(eth->tme_eth_event, false, &eth->tme_eth_mutex));
+	status = (eth->tme_eth_yield) ? (eth->tme_eth_yield(eth, false)) :
+	  (tme_event_yield((tme_event_t)eth->tme_eth_handle, false, &eth->tme_eth_mutex));
 
-	status = eth->tme_eth_write(eth->tme_eth_handle,
-				    eth->tme_eth_out,
-				    eth->tme_eth_data_length);
+	status = (eth->tme_eth_write) ? (eth->tme_eth_write(eth)) :
+	  (tme_write((tme_thread_handle_t)eth->tme_eth_handle, eth->tme_eth_out, eth->tme_eth_data_length));
       
 	/* writes must succeed: */
 	assert (status == rc);
@@ -318,12 +299,8 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
 	    (&eth->tme_eth_element->tme_element_log_handle,
 	     _("calling read")));
 
-    (eth->tme_eth_set) ? (_tme_eth_yield(eth, true)) :
-      (tme_event_yield(eth->tme_eth_event, true, &eth->tme_eth_mutex));
-
-    buffer_end = eth->tme_eth_read(eth->tme_eth_handle,
-				   eth->tme_eth_buffer,
-				   eth->tme_eth_buffer_size);
+    buffer_end = (eth->tme_eth_yield) ? (eth->tme_eth_yield(eth, true)) :
+      (tme_event_yield((tme_event_t)eth->tme_eth_handle, true, &eth->tme_eth_mutex));
     
     /* if the read failed: */
     if(buffer_end <= 0) {
@@ -931,25 +908,22 @@ tme_eth_connections_new(struct tme_element *element,
   return (TME_OK);
 }
 
+/* initialize the ethernet interface and start it up (should be called last): */
 int tme_eth_init(struct tme_element *element, 
+		 struct tme_ethernet *eth,
 		 uintptr_t hand,
-		 unsigned int sz, 
+  		 unsigned int sz, 
 		 void *data,
 		 unsigned char *addr)
 {
-  struct tme_ethernet *eth;
-  
-  /* start our data structure: */
-  eth = tme_new0(struct tme_ethernet, 1);
-  eth->tme_eth_element = element;
-  if(hand != TME_INVALID_HANDLE) {
-    eth->tme_eth_handle = hand;
-    eth->tme_eth_event = TME_EVENT_HANDLE(hand);  
+
+  if(eth == NULL) {
+    eth = tme_new0(struct tme_ethernet, 1);
     eth->tme_eth_buffer = tme_new(tme_uint8_t, sz);
     eth->tme_eth_out = tme_new(tme_uint8_t, TME_ETHERNET_FRAME_MAX);
-    eth->tme_eth_write = tme_write;
-    eth->tme_eth_read = tme_read;
   }
+  eth->tme_eth_handle = hand;
+  eth->tme_eth_element = element;
   eth->tme_eth_buffer_size = sz;
   eth->tme_eth_buffer_offset = 0;
   eth->tme_eth_buffer_end = 0;
@@ -957,14 +931,14 @@ int tme_eth_init(struct tme_element *element,
   eth->tme_eth_addr = addr;
   eth->tme_eth_callout_flags = TME_ETH_CALLOUT_CONFIG;
 
+  /* fill the element: */
+  element->tme_element_private = eth;
+  element->tme_element_connections_new = tme_eth_connections_new;
+
   /* start the threads: */
   tme_mutex_init(&eth->tme_eth_mutex);
   tme_cond_init(&eth->tme_eth_cond_reader);
   tme_thread_create(&eth->tme_eth_thread, (tme_thread_t) _tme_eth_th_reader, eth);
-
-  /* fill the element: */
-  element->tme_element_private = eth;
-  element->tme_element_connections_new = tme_eth_connections_new;
 
   return (TME_OK);
 }

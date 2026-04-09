@@ -150,6 +150,7 @@ int tme_cond_sleep_yield(tme_cond_t *cond, tme_mutex_t *mutex,
   return rc;
 }
 
+/* unconditionally yield this thread: */
 void tme_thread_yield(void) {
   if(!tme_thread_cooperative()) return;
   
@@ -569,6 +570,39 @@ int tme_write (tme_thread_handle_t hand, void *data, int len)
   }
   return rc;  
 }
+
+int
+tme_read_console() {
+  int i, rc = 1;
+  HANDLE hand = GetStdHandle(STD_INPUT_HANDLE);
+  
+  for(;;) {
+    INPUT_RECORD record[128];
+    DWORD numRead;
+    if((rc = GetNumberOfConsoleInputEvents(hand, &numRead)) &&
+       numRead>0 &&
+       (rc = PeekConsoleInput(hand, record, 128, &numRead))) {
+      for(i=0;i<numRead;i++) {
+	if(record[i].EventType != KEY_EVENT) {
+	  // don't care about other console events
+	  continue;
+	}
+	
+	if(!record[i].Event.KeyEvent.bKeyDown) {
+	  // really only care about keydown
+	  continue;
+	}
+	break;
+      }
+      if(i!=numRead) break;
+      rc = ReadConsoleInput(hand, record, i, &numRead);
+    }
+    //    hand->reads.status = (rc) ? (rc) : (GetLastError());
+    // if you're setup for ASCII, process this:
+    //record.Event.KeyEvent.uChar.AsciiChar
+  }
+  return rc;
+}
 #endif // !WIN32
 
 static 
@@ -623,59 +657,28 @@ void tme_threads_init(int mode) {
   win32_stdin->reads.overlapped.hEvent =
     win32_stdout->writes.overlapped.hEvent =
     win32_stderr->reads.overlapped.hEvent = NULL;
+  win32_stdin->reads.iostate = IOSTATE_IMMEDIATE_RETURN;
 #endif
 }
 
-/* this reads or writes, yielding if the event is not ready: */
+/* conditionally yield this thread if the event is not ready: */
 int
 tme_event_yield(tme_event_t hand, bool read, tme_mutex_t *mutex)
 {
-  int i, rc = 1, key_event = FALSE;
+  int rc = 1;
   struct event_set_return esr;
   struct tme_event_set *tme_events = tme_event_set_init(&rc, EVENT_METHOD_FAST);
 #ifdef WIN32
   event_t handle = &hand->rw_handle;
+
+  if(read) tme_read_queue (hand, 0);
 #else
   event_t handle = hand;
 #endif
   
-  do {
-#ifdef WIN32
-    if (read) {
-      if (hand == TME_STD_HANDLE(stdin)) {
-	INPUT_RECORD record[128];
-	DWORD numRead;
-	key_event = TRUE;
-	if((rc = GetNumberOfConsoleInputEvents(hand->handle, &numRead)) &&
-	   numRead>0 &&
-	   (rc = PeekConsoleInput(hand->handle, record, 128, &numRead))) {
-	  for(i=0;i<numRead;i++) {
-	    if(record[i].EventType != KEY_EVENT) {
-	      // don't care about other console events
-	      continue;
-	    }
-      
-	    if(!record[i].Event.KeyEvent.bKeyDown) {
-	      // really only care about keydown
-	      continue;
-	    }
-	    break;
-	  }
-	  if(i!=numRead) break;
-	  rc = ReadConsoleInput(hand->handle, record, i, &numRead);
-	}
-	hand->reads.status = (rc) ? (rc) : (GetLastError());
-	// if you're setup for ASCII, process this:
-	//record.Event.KeyEvent.uChar.AsciiChar
-      } else {
-	tme_read_queue (hand, 0);
-      }
-    }
-#endif
-    tme_event_reset(tme_events);
-    tme_event_ctl(tme_events, handle, (read) ? (EVENT_READ) : (EVENT_WRITE), 0);
-    rc = tme_event_wait(tme_events, NULL, &esr, 1, mutex);
-  } while(key_event);
+  tme_event_reset(tme_events);
+  tme_event_ctl(tme_events, handle, (read) ? (EVENT_READ) : (EVENT_WRITE), 0);
+  rc = tme_event_wait(tme_events, NULL, &esr, 1, mutex);
 
   tme_event_free(tme_events);
   

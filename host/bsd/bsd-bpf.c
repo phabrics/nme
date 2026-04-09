@@ -760,8 +760,8 @@ NME_ELEMENT_SUB_NEW_DECL(host_bsd,bpf) {
   
 #endif
   
-  rc = tme_eth_init(element, bpf_fd, packet_buffer_size, delay_time, NULL);
   element->tme_element_connections_new = _tme_bsd_bpf_connections_new;
+  rc = tme_eth_init(element, NULL, bpf_fd, packet_buffer_size, delay_time, NULL);
   return rc;
 #undef _TME_BPF_RAW_OPEN_ERROR
 }

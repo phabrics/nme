@@ -35,52 +35,72 @@
 
 /* includes: */
 #include <tme/eth-if.h>
+#include <tme/events.h>
 
 typedef struct _tme_openvpn_tun {
-  struct tme_ethernet *eth;
-  struct tuntap *tt;
   struct frame *frame;
   u_char flags;
   struct buffer inbuf;
   struct buffer outbuf;
 } tme_openvpn_tun;
 
-static int _tme_openvpn_tun_write(tme_openvpn_tun *tun, void *data, int len) {
+/* conditionally yield this thread if the event is not ready: */
+static _tme_inline
+int _tme_openvpn_tun_yield(struct tme_ethernet *eth, bool read) {
+  int rc = 1;
+  struct event_set_return esr;
+  unsigned int flags = (read) ? (EVENT_READ) : (EVENT_WRITE);
+  struct tme_event_set *tme_events;
+
+  tme_events = tme_event_set_init(&rc, EVENT_METHOD_FAST);  
+  tme_event_reset(tme_events);
+  tme_tun_set((tme_event_t)eth->tme_eth_handle, tme_events, flags, (void *)0, NULL);
+  rc = tme_event_wait(tme_events, NULL, &esr, 1, &eth->tme_eth_mutex);
+  tme_event_free(tme_events);
+  
+  return rc;
+}
+
+static int _tme_openvpn_tun_write(struct tme_ethernet *eth) {
+  tme_openvpn_tun *tun = (tme_openvpn_tun *)eth->tme_eth_data;
+  struct tuntap *tt = (struct tuntap *)eth->tme_eth_handle;
   int status = -1;
-    
+  
 #if defined(WIN32)
-  tun_show_debug(tun->tt);
+  tun_show_debug(tt);
 #endif
 
 #ifdef TUN_PASS_BUFFER
-  status = write_tun_buffered(tun->tt, &tun->outbuf);
+  status = write_tun_buffered(tt, &tun->outbuf);
 #else
-  status = write_tun(tun->tt, BPTR(&tun->outbuf), BLEN(&tun->outbuf));
+  status = write_tun(tt, BPTR(&tun->outbuf), BLEN(&tun->outbuf));
 #endif
 
-  check_status (status, "write to TUN/TAP", NULL, tun->tt);
+  check_status (status, "write to TUN/TAP", NULL, tt);
   return status;
 
 }
 
-static int _tme_openvpn_tun_read(tme_openvpn_tun *tun, void *data, int len) {
+static int _tme_openvpn_tun_read(struct tme_ethernet *eth) {
+  tme_openvpn_tun *tun = (tme_openvpn_tun *)eth->tme_eth_data;
+  struct tuntap *tt = (struct tuntap *)eth->tme_eth_handle;
   int status = 1;
     
 #if defined(WIN32)
-  tun_show_debug(tun->tt);
+  tun_show_debug(tt);
 #endif
 
   tun->inbuf.len = -1;
   
 #ifdef TUN_PASS_BUFFER
-  read_tun_buffered(tun->tt, &tun->inbuf, MAX_RW_SIZE_TUN(tun->frame));
+  read_tun_buffered(tt, &tun->inbuf, MAX_RW_SIZE_TUN(tun->frame));
 #else
   ASSERT(buf_init(&tun->inbuf, FRAME_HEADROOM(tun->frame)));
-  tun->inbuf.len = read_tun(tun->tt, BPTR(&tun->inbuf), MAX_RW_SIZE_TUN(tun->frame));
+  tun->inbuf.len = read_tun(tt, BPTR(&tun->inbuf), MAX_RW_SIZE_TUN(tun->frame));
 #endif
-  tun->eth->tme_eth_buffer = BPTR(&tun->inbuf);
+  eth->tme_eth_buffer = BPTR(&tun->inbuf);
 
-  check_status (tun->inbuf.len, "read from TUN/TAP", NULL, tun->tt);
+  check_status (tun->inbuf.len, "read from TUN/TAP", NULL, tt);
   return tun->inbuf.len;
 }
 
@@ -94,6 +114,7 @@ NME_ELEMENT_SUB_NEW_DECL(host_openvpn,tun_tap) {
   u_char flags;
   struct frame *frame;
   int sz;
+  struct tme_ethernet *eth;
   struct options *options = options_new();
   tme_openvpn_tun *tun = data = tme_new0(tme_openvpn_tun, 1);
   int arg_i = 0;
@@ -106,7 +127,6 @@ NME_ELEMENT_SUB_NEW_DECL(host_openvpn,tun_tap) {
 
   sz = BUF_SIZE(frame);
 
-  tun->tt = tt;
   tun->frame = frame;
   tun->flags = flags | OPENVPN_CAN_WRITE;
   tun->inbuf = alloc_buf(sz);
@@ -132,27 +152,24 @@ NME_ELEMENT_SUB_NEW_DECL(host_openvpn,tun_tap) {
 	     hwaddr[5]));
   }
 #endif
-  rc = tme_eth_init(element,
-		    TME_INVALID_HANDLE,
-		    sz,
-		    NULL,
-		    hwaddr);
   
-  if(rc == TME_OK) {
-    /* recover our data structure: */
-    tun->eth = (struct tme_ethernet *) element->tme_element_private;
-    tun->eth->tme_eth_handle = tun;
-    tun->eth->tme_eth_event = tt;  
-    tun->eth->tme_eth_set = tun_set;  
-    tun->eth->tme_eth_write = _tme_openvpn_tun_write;
-    tun->eth->tme_eth_read = _tme_openvpn_tun_read;
-    ASSERT(buf_init(&tun->inbuf, FRAME_HEADROOM(tun->frame)));
-    ASSERT(buf_safe(&tun->inbuf, MAX_RW_SIZE_TUN(tun->frame)));
-    tun->eth->tme_eth_buffer = BPTR(&tun->inbuf);
-    ASSERT(buf_init(&tun->outbuf, FRAME_HEADROOM_ADJ(tun->frame, FRAME_HEADROOM_MARKER_READ_LINK)));
-    ASSERT(buf_safe(&tun->outbuf, MAX_RW_SIZE_TUN(tun->frame)));
-    tun->eth->tme_eth_out = BPTR(&tun->outbuf);
-  }
+  eth = tme_new0(struct tme_ethernet, 1);
+  eth->tme_eth_yield = _tme_openvpn_tun_yield;
+  eth->tme_eth_write = _tme_openvpn_tun_write;
+  eth->tme_eth_read = _tme_openvpn_tun_read;
+  ASSERT(buf_init(&tun->inbuf, FRAME_HEADROOM(tun->frame)));
+  ASSERT(buf_safe(&tun->inbuf, MAX_RW_SIZE_TUN(tun->frame)));
+  eth->tme_eth_buffer = BPTR(&tun->inbuf);
+  ASSERT(buf_init(&tun->outbuf, FRAME_HEADROOM_ADJ(tun->frame, FRAME_HEADROOM_MARKER_READ_LINK)));
+  ASSERT(buf_safe(&tun->outbuf, MAX_RW_SIZE_TUN(tun->frame)));
+  eth->tme_eth_out = BPTR(&tun->outbuf);
+
+  rc = tme_eth_init(element,
+		    eth,
+		    (tme_uintptr_t)tt,
+		    sz,
+		    data,
+		    hwaddr);
 
   return rc;
 }

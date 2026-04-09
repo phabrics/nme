@@ -321,6 +321,11 @@ int tme_event_yield _TME_P((tme_event_t hand, bool read, tme_mutex_t *mutex));
 
 static _tme_inline
 int tme_thread_read(tme_thread_handle_t hand, void *data, size_t len, tme_mutex_t *mutex) {
+#ifdef WIN32
+  if (hand == TME_STD_HANDLE(stdin)) {
+    tme_read_console();
+  }
+#endif
   tme_event_yield(TME_EVENT_HANDLE(hand), true, mutex);
   return tme_read(hand, data, len);
 }

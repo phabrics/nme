@@ -596,8 +596,5 @@ NME_ELEMENT_SUB_NEW_DECL(host_gtk,display) {
   /* start our data structure: */
   tme_display_init(element, display, sizeof(struct tme_gtk_screen));
 
-  /* recover our data structure: */
-  display = element->tme_element_private;
-
   return (TME_OK);
 }
