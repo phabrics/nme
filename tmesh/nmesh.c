@@ -53,6 +53,7 @@ _TME_RCSID("$Id: nmesh.c,v 1.4 2009/08/30 17:06:38 fredette Exp $");
 #include <libgen.h>
 
 /* macros: */
+int nmesh_init _TME_P((int mode));
 _tme_thret nmesh_threads_run _TME_P((void));
 
 /* the binary log message buffer size: */

@@ -250,6 +250,7 @@ _tme_eth_callout(struct tme_ethernet *eth, int new_callouts)
 static _tme_thret
 _tme_eth_th_reader(struct tme_ethernet *eth)
 {
+  int status;
   ssize_t buffer_end;
   unsigned long sleep_usec;
   const struct tme_ethernet_header *ethernet_header;
@@ -301,6 +302,9 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
 
     buffer_end = (eth->tme_eth_yield) ? (eth->tme_eth_yield(eth, true)) :
       (tme_event_yield((tme_event_t)eth->tme_eth_handle, true, &eth->tme_eth_mutex));
+
+    status = (eth->tme_eth_read) ? (eth->tme_eth_read(eth)) :
+      (tme_read((tme_thread_handle_t)eth->tme_eth_handle, eth->tme_eth_out, eth->tme_eth_data_length));
     
     /* if the read failed: */
     if(buffer_end <= 0) {
