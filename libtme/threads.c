@@ -663,26 +663,27 @@ void tme_threads_init(int mode) {
 
 /* conditionally yield this thread if the event is not ready: */
 int
-tme_event_yield(tme_event_t hand, bool read, tme_mutex_t *mutex)
+tme_event_yield(tme_event_t handle, bool read, tme_mutex_t *mutex)
 {
-  int rc = 1;
+  int status = 1;
+  struct tme_event_set *es;
   struct event_set_return esr;
-  struct tme_event_set *tme_events = tme_event_set_init(&rc, EVENT_METHOD_FAST);
+  unsigned int flags = (read) ? (EVENT_READ) : (EVENT_WRITE);
 #ifdef WIN32
-  event_t handle = &hand->rw_handle;
+  event_t ev = &handle->rw_handle;
 
-  if(read) tme_read_queue (hand, 0);
+  if(read) tme_read_queue (handle, 0);
 #else
-  event_t handle = hand;
+  event_t ev = handle;
 #endif
-  
-  tme_event_reset(tme_events);
-  tme_event_ctl(tme_events, handle, (read) ? (EVENT_READ) : (EVENT_WRITE), 0);
-  rc = tme_event_wait(tme_events, NULL, &esr, 1, mutex);
 
-  tme_event_free(tme_events);
+  es = tme_event_set_init(&status, EVENT_METHOD_FAST);
+  tme_event_reset(es);
+  tme_event_ctl(es, ev, flags, 0);
+  status = tme_event_wait(es, NULL, &esr, 1, mutex);
+  tme_event_free(es);
   
-  return rc;
+  return status;
 }
 
 #ifdef _TME_HAVE_ZLIB

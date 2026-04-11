@@ -300,11 +300,11 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
 	    (&eth->tme_eth_element->tme_element_log_handle,
 	     _("calling read")));
 
-    buffer_end = (eth->tme_eth_yield) ? (eth->tme_eth_yield(eth, true)) :
+    status = (eth->tme_eth_yield) ? (eth->tme_eth_yield(eth, true)) :
       (tme_event_yield((tme_event_t)eth->tme_eth_handle, true, &eth->tme_eth_mutex));
 
-    status = (eth->tme_eth_read) ? (eth->tme_eth_read(eth)) :
-      (tme_read((tme_thread_handle_t)eth->tme_eth_handle, eth->tme_eth_out, eth->tme_eth_data_length));
+    buffer_end = (eth->tme_eth_read) ? (eth->tme_eth_read(eth)) :
+      (tme_read((tme_thread_handle_t)eth->tme_eth_handle, eth->tme_eth_buffer, eth->tme_eth_buffer_size));
     
     /* if the read failed: */
     if(buffer_end <= 0) {
@@ -394,14 +394,14 @@ _tme_eth_config(struct tme_ethernet_connection *conn_eth,
 
   /* if this Ethernet is promiscuous, we will accept all packets: */
   if(config->tme_ethernet_config_flags & TME_ETHERNET_CONFIG_PROMISC) {
-    tme_free(eth->tme_eth_addr);
+    if(eth->tme_eth_addr) tme_free(eth->tme_eth_addr);
     eth->tme_eth_addr = NULL;    
-  }
-  
-  if(config->tme_ethernet_config_addr_count > 0)
+  } else if(config->tme_ethernet_config_addr_count > 0) {
+    eth->tme_eth_addr = tme_new0(unsigned char, TME_ETHERNET_ADDR_SIZE);
     memcpy(eth->tme_eth_addr,
 	   config->tme_ethernet_config_addrs[0],
 	   TME_ETHERNET_ADDR_SIZE);
+  }
   
   return TME_OK;
 }
@@ -917,8 +917,7 @@ int tme_eth_init(struct tme_element *element,
 		 struct tme_ethernet *eth,
 		 uintptr_t hand,
   		 unsigned int sz, 
-		 void *data,
-		 unsigned char *addr)
+		 void *data)
 {
 
   if(eth == NULL) {
@@ -932,7 +931,6 @@ int tme_eth_init(struct tme_element *element,
   eth->tme_eth_buffer_offset = 0;
   eth->tme_eth_buffer_end = 0;
   eth->tme_eth_data = data;
-  eth->tme_eth_addr = addr;
   eth->tme_eth_callout_flags = TME_ETH_CALLOUT_CONFIG;
 
   /* fill the element: */

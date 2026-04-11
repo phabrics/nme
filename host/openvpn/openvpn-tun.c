@@ -47,25 +47,27 @@ typedef struct _tme_openvpn_tun {
 /* conditionally yield this thread if the event is not ready: */
 static _tme_inline
 int _tme_openvpn_tun_yield(struct tme_ethernet *eth, bool read) {
-  int rc = 1;
+  int status = 1;
+  struct tme_event_set *es;
   struct event_set_return esr;
   unsigned int flags = (read) ? (EVENT_READ) : (EVENT_WRITE);
-  struct tme_event_set *tme_events;
+  struct tuntap *tt = (struct tuntap *)eth->tme_eth_handle;
 
-  tme_events = tme_event_set_init(&rc, EVENT_METHOD_FAST);  
-  tme_event_reset(tme_events);
-  tme_tun_set((tme_event_t)eth->tme_eth_handle, tme_events, flags, (void *)0, NULL);
-  rc = tme_event_wait(tme_events, NULL, &esr, 1, &eth->tme_eth_mutex);
-  tme_event_free(tme_events);
+  es = tme_event_set_init(&status, EVENT_METHOD_FAST);  
+  tme_event_reset(es);
+  tme_tun_set(tt, es, flags, (void *)0, NULL);
+  status = tme_event_wait(es, NULL, &esr, 1, &eth->tme_eth_mutex);
+  tme_event_free(es);
   
-  return rc;
+  return status;
 }
 
 static int _tme_openvpn_tun_write(struct tme_ethernet *eth) {
   tme_openvpn_tun *tun = (tme_openvpn_tun *)eth->tme_eth_data;
   struct tuntap *tt = (struct tuntap *)eth->tme_eth_handle;
-  int status = -1;
+  int status;
   
+  tun->outbuf.len = eth->tme_eth_data_length;
 #if defined(WIN32)
   tun_show_debug(tt);
 #endif
@@ -108,7 +110,6 @@ static int _tme_openvpn_tun_read(struct tme_ethernet *eth) {
 NME_ELEMENT_SUB_NEW_DECL(host_openvpn,tun_tap) {
   int rc;
   unsigned char *hwaddr = NULL;
-  void *data = NULL;
   struct tuntap *tt;
   struct env_set *es;
   u_char flags;
@@ -116,7 +117,7 @@ NME_ELEMENT_SUB_NEW_DECL(host_openvpn,tun_tap) {
   int sz;
   struct tme_ethernet *eth;
   struct options *options = options_new();
-  tme_openvpn_tun *tun = data = tme_new0(tme_openvpn_tun, 1);
+  tme_openvpn_tun *tun = tme_new0(tme_openvpn_tun, 1);
   int arg_i = 0;
 
   while(args[++arg_i] != NULL);
@@ -164,12 +165,5 @@ NME_ELEMENT_SUB_NEW_DECL(host_openvpn,tun_tap) {
   ASSERT(buf_safe(&tun->outbuf, MAX_RW_SIZE_TUN(tun->frame)));
   eth->tme_eth_out = BPTR(&tun->outbuf);
 
-  rc = tme_eth_init(element,
-		    eth,
-		    (tme_uintptr_t)tt,
-		    sz,
-		    data,
-		    hwaddr);
-
-  return rc;
+  return tme_eth_init(element, eth, (tme_uintptr_t)tt, sz, tun);
 }

@@ -47,18 +47,21 @@ typedef struct _tme_openvpn_link {
 
 /* conditionally yield this thread if the event is not ready: */
 static int _tme_openvpn_link_yield(struct tme_ethernet *eth, bool read) {
-  int rc = 1;
+  int status = 1;
+  struct tme_event_set *es;
   struct event_set_return esr;
   unsigned int flags = (read) ? (EVENT_READ) : (EVENT_WRITE);
-  struct tme_event_set *tme_events;
-
-  tme_events = tme_event_set_init(&rc, EVENT_METHOD_FAST);  
-  tme_event_reset(tme_events);
-  tme_socket_set((tme_event_t)eth->tme_eth_handle, tme_events, flags, (void *)0, NULL);
-  rc = tme_event_wait(tme_events, NULL, &esr, 1, &eth->tme_eth_mutex);
-  tme_event_free(tme_events);
+  struct link_socket *ls = (struct link_socket *)eth->tme_eth_handle;
   
-  return rc;
+  if(socket_read_residual(ls)) return 0;
+  
+  es = tme_event_set_init(&status, EVENT_METHOD_FAST);  
+  tme_event_reset(es);
+  tme_socket_set(ls, es, flags, (void *)0, NULL);
+  status = tme_event_wait(es, NULL, &esr, 1, &eth->tme_eth_mutex);
+  tme_event_free(es);
+  
+  return status;
 }
 
 static int _tme_openvpn_link_write(struct tme_ethernet *eth) {
@@ -87,9 +90,6 @@ static int _tme_openvpn_link_read(struct tme_ethernet *eth) {
   struct link_socket_actual from;               /* address of incoming datagram */
   int status = 1;
   
-  /*  if(socket_read_residual(ls))
-      esr.rwflags = EVENT_READ; */
-    
   link->inbuf.len = -1;
 
   ASSERT(buf_init(&link->inbuf, FRAME_HEADROOM_ADJ(link->frame, FRAME_HEADROOM_MARKER_READ_LINK)));
@@ -157,13 +157,6 @@ NME_ELEMENT_SUB_NEW_DECL(host_openvpn,socket_link) {
   ASSERT(buf_init(&link->outbuf, FRAME_HEADROOM(link->frame)));
   ASSERT(buf_safe(&link->outbuf, MAX_RW_SIZE_LINK(link->frame)));
   eth->tme_eth_out = BPTR(&link->outbuf);
-
-  rc = tme_eth_init(element,
-		    eth,
-		    (tme_uintptr_t)ls,
-		    sz,
-		    link,
-		    NULL);
   
-  return rc;
+  return tme_eth_init(element, eth, (tme_uintptr_t)ls, sz, link);
 }
