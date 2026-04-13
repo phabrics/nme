@@ -318,17 +318,23 @@ typedef off_t tme_off_t;
 #endif // !WIN32
 
 int tme_event_yield _TME_P((tme_event_t hand, bool read, tme_mutex_t *mutex));
+#ifdef WIN32
 int tme_read_console();
+#endif
 
 static _tme_inline
 int tme_thread_read(tme_thread_handle_t hand, void *data, size_t len, tme_mutex_t *mutex) {
+  int rc = 1;
+  
+  do {
+    tme_event_yield(TME_EVENT_HANDLE(hand), true, mutex);
 #ifdef WIN32
-  if (hand == TME_STD_HANDLE(stdin)) {
-    tme_read_console();
-  }
+    if (hand == TME_STD_HANDLE(stdin))
+      rc = tme_read_console();
 #endif
-  tme_event_yield(TME_EVENT_HANDLE(hand), true, mutex);
-  return tme_read(hand, data, len);
+  } while(!rc);
+  
+  return (rc>0) ? (tme_read(hand, data, len)) : (rc);
 }
 
 static _tme_inline
