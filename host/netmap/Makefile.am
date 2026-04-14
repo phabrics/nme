@@ -7,6 +7,6 @@ if HAVE_NETMAP
 pkglib_LTLIBRARIES = @PACKAGE@_host_netmap.la
 endif
 @PACKAGE@_host_netmap_la_SOURCES = netmap-vale.c
-@PACKAGE@_host_netmap_la_LIBADD = ../lib@PACKAGE@-eth.la $(@PACKAGE@_LIBS)
+@PACKAGE@_host_netmap_la_LIBADD = $(@PACKAGE@_LIBS)
 
 include $(top_srcdir)/modules.mk

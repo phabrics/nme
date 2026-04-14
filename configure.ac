@@ -60,7 +60,7 @@ AC_PROG_EGREP
 AC_PROG_LN_S
 
 dnl Possible host types and optional versions to test for (higher versions preferred when multiple options given)
-TME_HOST_TYPES="gtk4 gtk3 rfb sdl3 sdl2 tun bsd openvpn"
+TME_HOST_TYPES="gtk4 gtk3 rfb sdl3 sdl2 tun bsd openvpn netmap"
 AC_SUBST(TME_HOST_TYPES)
 
 AC_ARG_ENABLE(hosts,

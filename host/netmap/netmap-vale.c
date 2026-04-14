@@ -34,92 +34,30 @@
 #include <tme/common.h>
 
 /* includes: */
-#include "eth-if.h"
-#include <tme/events.h>
+#include <tme/eth-if.h>
+#include <net/netmap_user.h>
+#include <sys/mman.h>
 
-typedef struct _tme_openvpn_tun {
-  struct tme_ethernet *eth;
-  struct tuntap *tt;
-  struct frame *frame;
-  u_char flags;
-  struct buffer inbuf;
-  struct buffer outbuf;
-} tme_openvpn_tun;
-
-static int _tme_openvpn_tun_write(void *data) {
-  unsigned int flags;
-  struct event_set_return esr;
-  tme_openvpn_tun *tun = data;
-  int status = 1;
-  struct tme_event_set *event_set = tme_event_set_init(&status, EVENT_METHOD_FAST);
+static int _tme_netmap_write(struct tme_ethernet *eth) {
+  struct netmap_if *nifp = (struct netmap_if *)eth->tme_eth_data;
+  struct netmap_ring *ring = NETMAP_TXRING(nifp, 0);
+  int i = ring->cur;
   
-  tun->outbuf.len = tun->eth->tme_eth_data_length;
-  tme_event_reset(event_set);
-    
-  flags = EVENT_WRITE;
-    
-#if defined(WIN32)
-  tun_show_debug(tun->tt);
-#endif
+  ring->slot[i].len = eth->tme_eth_data_length;
+  ring->head = ring->cur = i = nm_ring_next(ring, i);
+  eth->tme_eth_out = (tme_uint8_t *)NETMAP_BUF(ring, ring->slot[i].buf_idx);
 
-  tme_event_ctl(event_set, tun_event_handle(tun->tt), flags, 0);
-    
-  status = tme_event_wait(event_set, NULL, &esr, status, &tun->eth->tme_eth_mutex);
-  tme_event_free(event_set);
-
-  check_status (status, "event_wait", NULL, NULL);
-  if(status<=0) return status;
-
-  status = -1;
-
-  if(esr.rwflags & EVENT_WRITE) {
-#ifdef TUN_PASS_BUFFER
-    status = write_tun_buffered(tun->tt, &tun->outbuf);
-#else
-    status = write_tun(tun->tt, BPTR(&tun->outbuf), BLEN(&tun->outbuf));
-#endif
-  }
-  check_status (status, "write to TUN/TAP", NULL, tun->tt);
-  return status;
-
+  return eth->tme_eth_data_length;
 }
 
-static int _tme_openvpn_tun_read(void *data) {
-  unsigned int flags;
-  struct event_set_return esr;
-  tme_openvpn_tun *tun = data;
-  int status = 1;
-  struct tme_event_set *es = tme_event_set_init(&status, EVENT_METHOD_FAST);
+static int _tme_netmap_read(struct tme_ethernet *eth) {
+  struct netmap_if *nifp = (struct netmap_if *)eth->tme_eth_data;
+  struct netmap_ring *ring = NETMAP_TXRING(nifp, 0);
+  int i = ring->cur;
 
-  tme_event_reset(es);
-    
-  flags = EVENT_READ;
-    
-#if defined(WIN32)
-  tun_show_debug(tun->tt);
-#endif
-
-  tme_tun_set(tun->tt, es, flags, (void*)0, NULL);
-    
-  status = tme_event_wait(es, NULL, &esr, status, &tun->eth->tme_eth_mutex);
-  tme_event_free(es);
-
-  check_status (status, "event_wait", NULL, NULL);
-  if(status<=0) return status;
-
-  tun->inbuf.len = -1;
-  
-  if(esr.rwflags & EVENT_READ) {
-#ifdef TUN_PASS_BUFFER
-    read_tun_buffered(tun->tt, &tun->inbuf, MAX_RW_SIZE_TUN(tun->frame));
-#else
-    ASSERT(buf_init(&tun->inbuf, FRAME_HEADROOM(tun->frame)));
-    tun->inbuf.len = read_tun(tun->tt, BPTR(&tun->inbuf), MAX_RW_SIZE_TUN(tun->frame));
-#endif
-    tun->eth->tme_eth_buffer = BPTR(&tun->inbuf);
-  }
-  check_status (tun->inbuf.len, "read from TUN/TAP", NULL, tun->tt);
-  return tun->inbuf.len;
+  ring->head = ring->cur = i = nm_ring_next(ring, i);
+  eth->tme_eth_buffer = (tme_uint8_t *)NETMAP_BUF(ring, ring->slot[i].buf_idx);
+  return ring->slot[i].len;
 }
 
 /* the netmap function: */
@@ -130,9 +68,11 @@ NME_ELEMENT_SUB_NEW_DECL(host_netmap,vale) {
   struct nmreq nmr;
   struct ifaddrs *ifa;
   const char *port;
-  int usage = 0, arg_i = 1;
+  char *p;
+  struct tme_ethernet *eth;
+  int fd, usage = 0, arg_i = 1;
   
-  nm_fd = tme_eth_alloc("/dev/netmap", _output);
+  fd = tme_eth_alloc("/dev/netmap", _output);
   bzero(&nmr, sizeof(nmr));
   for (;;) {
     /* the interface we're supposed to use: */
@@ -168,24 +108,18 @@ NME_ELEMENT_SUB_NEW_DECL(host_netmap,vale) {
 	   "using interface %s",
 	   nmr.nr_name));
 #endif
-  rc = tme_eth_init(element,
-		    TME_INVALID_HANDLE,
-		    sz,
-		    data,
-		    NULL);
-  
-  if(rc == TME_OK) {
-    /* recover our data structure: */
-    tun->eth = (struct tme_ethernet *) element->tme_element_private;
-    tun->eth->tme_ethernet_write = _tme_openvpn_tun_write;
-    tun->eth->tme_ethernet_read = _tme_openvpn_tun_read;
-    ASSERT(buf_init(&tun->inbuf, FRAME_HEADROOM(tun->frame)));
-    ASSERT(buf_safe(&tun->inbuf, MAX_RW_SIZE_TUN(tun->frame)));
-    tun->eth->tme_eth_buffer = BPTR(&tun->inbuf);
-    ASSERT(buf_init(&tun->outbuf, FRAME_HEADROOM_ADJ(tun->frame, FRAME_HEADROOM_MARKER_READ_LINK)));
-    ASSERT(buf_safe(&tun->outbuf, MAX_RW_SIZE_TUN(tun->frame)));
-    tun->eth->tme_eth_out = BPTR(&tun->outbuf);
-  }
+  nmr.nr_version = NETMAP_API;
+  ioctl(fd, NIOCREGIF, &nmr);
+  p = mmap(0, nmr.nr_memsize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  nifp = NETMAP_IF(p, nmr.nr_offset);
 
-  return rc;
+  eth = tme_new0(struct tme_ethernet, 1);
+  eth->tme_eth_write = _tme_netmap_write;
+  eth->tme_eth_read = _tme_netmap_read;
+  ring = NETMAP_RXRING(nifp, 0);
+  eth->tme_eth_buffer = (tme_uint8_t *)NETMAP_BUF(ring, ring->slot[ring->cur].buf_idx);
+  ring = NETMAP_TXRING(nifp, 0);
+  eth->tme_eth_out = (tme_uint8_t *)NETMAP_BUF(ring, ring->slot[ring->cur].buf_idx);
+
+  return tme_eth_init(element, eth, fd, ring->nr_buf_size, nifp);
 }
