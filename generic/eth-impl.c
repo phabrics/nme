@@ -221,6 +221,11 @@ _tme_eth_callout(struct tme_ethernet *eth, int new_callouts)
 	/* set the length: */
 	eth->tme_eth_data_length = rc;
 	
+	/* read the ETH socket: */
+	tme_log(&eth->tme_eth_element->tme_element_log_handle, 1, TME_OK,
+		(&eth->tme_eth_element->tme_element_log_handle,
+		 _("calling write")));
+
 	/* do the write: */
 	status = (eth->tme_eth_yield) ? (eth->tme_eth_yield(eth, false)) :
 	  (tme_event_yield((tme_event_t)eth->tme_eth_handle, false, &eth->tme_eth_mutex));
@@ -231,6 +236,11 @@ _tme_eth_callout(struct tme_ethernet *eth, int new_callouts)
 	/* writes must succeed: */
 	assert (status == rc);
 
+	/* the read succeeded: */
+	tme_log(&eth->tme_eth_element->tme_element_log_handle, 1, TME_OK,
+		(&eth->tme_eth_element->tme_element_log_handle,
+		 _("wrote %ld bytes of packets"), (long) status));
+	
 	/* mark that we need to loop to callout to read more frames: */
 	eth->tme_eth_callout_flags |= TME_ETH_CALLOUT_READ;
       }
@@ -251,7 +261,6 @@ static _tme_thret
 _tme_eth_th_reader(struct tme_ethernet *eth)
 {
   int status;
-  ssize_t buffer_end;
   unsigned long sleep_usec;
   const struct tme_ethernet_header *ethernet_header;
   
@@ -259,6 +268,23 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
 
   /* loop forever: */
   for (;;) {
+
+    /* Filter out multicast packets we sent or unicast packets not destined for us. 
+       This should remove all duplicate packets on, i.e., tap interfaces...
+    */
+    ethernet_header = (struct tme_ethernet_header *) (eth->tme_eth_buffer);
+    
+    if ((eth->tme_eth_buffer_offset < eth->tme_eth_buffer_end) &&
+	(!eth->tme_eth_addr ||
+	 (((ethernet_header->tme_ethernet_header_dst[0] & 0x1)
+	   && memcmp(eth->tme_eth_addr,
+		     ethernet_header->tme_ethernet_header_src,
+		     TME_ETHERNET_ADDR_SIZE))
+	  ||!memcmp(eth->tme_eth_addr,
+		    ethernet_header->tme_ethernet_header_dst,
+		    TME_ETHERNET_ADDR_SIZE)))) {
+      _tme_eth_callout(eth, TME_ETH_CALLOUT_CTRL);
+    } else eth->tme_eth_buffer_end = 0;
 
     /* if the delay sleeping flag is set: */
     if (eth->tme_eth_delay_sleeping) {
@@ -300,41 +326,26 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
 	    (&eth->tme_eth_element->tme_element_log_handle,
 	     _("calling read")));
 
+    eth->tme_eth_buffer_offset = 0;
+
     status = (eth->tme_eth_yield) ? (eth->tme_eth_yield(eth, true)) :
       (tme_event_yield((tme_event_t)eth->tme_eth_handle, true, &eth->tme_eth_mutex));
 
-    buffer_end = (eth->tme_eth_read) ? (eth->tme_eth_read(eth)) :
+    eth->tme_eth_buffer_end = (eth->tme_eth_read) ? (eth->tme_eth_read(eth)) :
       (tme_read((tme_thread_handle_t)eth->tme_eth_handle, eth->tme_eth_buffer, eth->tme_eth_buffer_size));
     
     /* if the read failed: */
-    if(buffer_end <= 0) {
+    if(eth->tme_eth_buffer_end <= 0) {
       tme_log(&eth->tme_eth_element->tme_element_log_handle, 1, errno,
 	      (&eth->tme_eth_element->tme_element_log_handle,
 	       _("failed to read/write packets")));
       continue;
     }
     
-    /* Filter out multicast packets we sent or unicast packets not destined for us. 
-       This should remove all duplicate packets on, i.e., tap interfaces...
-     */
-    ethernet_header = (struct tme_ethernet_header *) (eth->tme_eth_buffer);
-    
-    if(!eth->tme_eth_addr ||
-       (((ethernet_header->tme_ethernet_header_dst[0] & 0x1)
-	 && memcmp(eth->tme_eth_addr,
-		   ethernet_header->tme_ethernet_header_src,
-		   TME_ETHERNET_ADDR_SIZE))
-	||!memcmp(eth->tme_eth_addr,
-		  ethernet_header->tme_ethernet_header_dst,
-		  TME_ETHERNET_ADDR_SIZE))) {
-      /* the read succeeded: */
-      tme_log(&eth->tme_eth_element->tme_element_log_handle, 1, TME_OK,
-	      (&eth->tme_eth_element->tme_element_log_handle,
-	       _("read %ld bytes of packets"), (long) buffer_end));
-      eth->tme_eth_buffer_offset = 0;
-      eth->tme_eth_buffer_end = buffer_end;
-      _tme_eth_callout(eth, TME_ETH_CALLOUT_CTRL);
-    }
+    /* the read succeeded: */
+    tme_log(&eth->tme_eth_element->tme_element_log_handle, 1, TME_OK,
+	    (&eth->tme_eth_element->tme_element_log_handle,
+	     _("read %ld bytes of packets"), (long)eth->tme_eth_buffer_end));
   }
   /* NOTREACHED */
   tme_thread_exit(&eth->tme_eth_mutex);

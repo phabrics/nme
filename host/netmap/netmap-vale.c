@@ -52,34 +52,40 @@ static int _tme_netmap_write(struct tme_ethernet *eth) {
 
 static int _tme_netmap_read(struct tme_ethernet *eth) {
   struct netmap_if *nifp = (struct netmap_if *)eth->tme_eth_data;
-  struct netmap_ring *ring = NETMAP_TXRING(nifp, 0);
+  struct netmap_ring *ring = NETMAP_RXRING(nifp, 0);
   int i = ring->cur;
 
-  ring->head = ring->cur = i = nm_ring_next(ring, i);
   eth->tme_eth_buffer = (tme_uint8_t *)NETMAP_BUF(ring, ring->slot[i].buf_idx);
+  ring->cur = nm_ring_next(ring, i);
+  ring->head = i;
   return ring->slot[i].len;
 }
 
 /* the netmap function: */
 NME_ELEMENT_SUB_NEW_DECL(host_netmap,vale) {
-  int rc;
+  int rc, i;
+  int saved_errno;
   struct netmap_if *nifp;
   struct netmap_ring *ring;
   struct nmreq nmr;
   struct ifaddrs *ifa;
-  const char *port;
+  const char *port = NULL;
   char *p;
   struct tme_ethernet *eth;
-  int fd, usage = 0, arg_i = 1;
-  
-  fd = tme_eth_alloc("/dev/netmap", _output);
-  bzero(&nmr, sizeof(nmr));
+  int nm_fd, usage = 0, arg_i = 1;
+#define DEV_NM_FORMAT "/dev/netmap"
+  char dev_nm_filename[sizeof(DEV_NM_FORMAT) + 4];
+
   for (;;) {
     /* the interface we're supposed to use: */
     if (TME_ARG_IS(args[arg_i + 0], "port")
 	&& args[arg_i + 1] != NULL) {
       port = args[arg_i + 1];
       arg_i += 2;
+    }
+    /* if we ran out of arguments: */
+    else if (args[arg_i + 0] == NULL) {
+      break;
     }
     /* otherwise this is a bad argument: */
     else {
@@ -91,6 +97,21 @@ NME_ELEMENT_SUB_NEW_DECL(host_netmap,vale) {
       break;
     }
   }
+
+  sprintf(dev_nm_filename, DEV_NM_FORMAT);
+  
+  nm_fd = tme_eth_alloc(dev_nm_filename, _output);
+
+  if(nm_fd < 0) {
+    saved_errno = errno;
+    tme_log(&element->tme_element_log_handle, 1, saved_errno,
+	    (&element->tme_element_log_handle,
+	     _("failed to open netmap device %s"),
+	     dev_nm_filename));
+    return (saved_errno);
+  }
+  
+  bzero(&nmr, sizeof(nmr));
 
   /* find the interface we will use: */
 #ifdef HAVE_IFADDRS_H
@@ -108,18 +129,30 @@ NME_ELEMENT_SUB_NEW_DECL(host_netmap,vale) {
 	   "using interface %s",
 	   nmr.nr_name));
 #endif
+
   nmr.nr_version = NETMAP_API;
-  ioctl(fd, NIOCREGIF, &nmr);
-  p = mmap(0, nmr.nr_memsize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  ioctl(nm_fd, NIOCREGIF, &nmr);
+  p = mmap(0, nmr.nr_memsize, PROT_READ | PROT_WRITE, MAP_SHARED, nm_fd, 0);
   nifp = NETMAP_IF(p, nmr.nr_offset);
 
   eth = tme_new0(struct tme_ethernet, 1);
   eth->tme_eth_write = _tme_netmap_write;
   eth->tme_eth_read = _tme_netmap_read;
-  ring = NETMAP_RXRING(nifp, 0);
-  eth->tme_eth_buffer = (tme_uint8_t *)NETMAP_BUF(ring, ring->slot[ring->cur].buf_idx);
+
   ring = NETMAP_TXRING(nifp, 0);
   eth->tme_eth_out = (tme_uint8_t *)NETMAP_BUF(ring, ring->slot[ring->cur].buf_idx);
 
-  return tme_eth_init(element, eth, fd, ring->nr_buf_size, nifp);
+  ring = NETMAP_RXRING(nifp, 0);
+  i = ring->cur;
+  eth->tme_eth_buffer = (tme_uint8_t *)NETMAP_BUF(ring, ring->slot[i].buf_idx);
+  if (!nm_ring_empty(ring)) {
+    ring->cur = nm_ring_next(ring, i);
+    ring->head = i;
+    eth->tme_eth_buffer_end = ring->slot[i].len;
+    tme_log(&eth->tme_eth_element->tme_element_log_handle, 1, TME_OK,
+	    (&eth->tme_eth_element->tme_element_log_handle,
+	     _("read %ld bytes of first packet"), (long)eth->tme_eth_buffer_end));
+  }
+  
+  return tme_eth_init(element, eth, nm_fd, ring->nr_buf_size, nifp);
 }
