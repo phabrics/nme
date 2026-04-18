@@ -45,7 +45,7 @@ typedef struct _tme_openvpn_tun {
 } tme_openvpn_tun;
 
 /* conditionally yield this thread if the event is not ready: */
-static _tme_inline
+static
 int _tme_openvpn_tun_yield(struct tme_ethernet *eth, bool read) {
   int status = 1;
   struct tme_event_set *es;
