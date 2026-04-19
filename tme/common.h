@@ -80,9 +80,6 @@ typedef int bool;
 /* Workaround missing in_addr_t */
 #define in_addr_t uint32_t
 #endif
-#ifdef HAVE_CURSES_H
-#include <curses.h>
-#endif
 #ifdef WIN32
 #include <windows.h>
 #endif
@@ -424,9 +421,7 @@ tme_bswap_u128(tme_uint128_t x)
 extern bool enable_fullscreen;
 
 static _tme_inline void tme_beep _TME_P((void)) {
-#ifdef HAVE_CURSES_H
-  beep();
-#elif defined(WIN32)
+#ifdef WIN32
   MessageBeep(-1);
 #else
   putchar('\a');

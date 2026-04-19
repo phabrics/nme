@@ -334,6 +334,7 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
 #define TME_BPF_TIME_GT(x,y) _TME_TIME_GT(x,y,bt_sec,bt_frac)
 #define TME_BPF_TIME_GET_FRAC(a) _TME_TIME_GET_FRAC(a,bt_frac)
 #define TME_BPF_TIME_SET_FRAC(a,x) _TME_TIME_SET_FRAC(a,x,bt_frac)
+#define TME_TIME_SET_FRAC(a) TME_TIME_SET_NSEC(TME_BPF_TIME_GET_FRAC(a))
 #define TME_BPF_TIME_INC_FRAC(a,x) _TME_TIME_INC_FRAC(a,x,bt_frac)
 #define TME_BPF_TIME_FRAC_LT(x,y,t) _TME_TIME_FRAC_LT(x,y,t,bt_frac)
 #define TME_BPF_TIME_SETV(a,s,u) _TME_TIME_SETV(a,s,u,bt_sec,bt_frac)
@@ -351,6 +352,7 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
 #define TME_BPF_TIME_GT(x,y) _TME_TIME_GT(x,y,tv_sec,tv_usec)
 #define TME_BPF_TIME_GET_FRAC(a) _TME_TIME_GET_FRAC(a,tv_usec)
 #define TME_BPF_TIME_SET_FRAC(a,x) _TME_TIME_SET_FRAC(a,x,tv_usec)
+#define TME_TIME_SET_FRAC(a) TME_TIME_SET_USEC(TME_BPF_TIME_GET_FRAC(a))
 #define TME_BPF_TIME_INC_FRAC(a,x) _TME_TIME_INC_FRAC(a,x,tv_usec)
 #define TME_BPF_TIME_FRAC_LT(x,y) _TME_TIME_FRAC_LT(x,y,tv_usec)
 #define TME_BPF_TIME_SETV(a,s,u) _TME_TIME_SETV(a,s,u,tv_sec,tv_usec)
@@ -431,9 +433,8 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
 
     /* if packets need to be delayed: */
     if (delay_time > 0) {
-      TME_TIME_SETV(tstamp, 
-		    TME_BPF_TIME_SEC(the_bpf_header.bh_tstamp), 
-		    TME_BPF_TIME_GET_FRAC(the_bpf_header.bh_tstamp));
+      tstamp = TME_TIME_SET_SEC(TME_BPF_TIME_SEC(the_bpf_header.bh_tstamp)) +
+	TME_TIME_SET_FRAC(the_bpf_header.bh_tstamp);
       /* if the current release time is before this packet's time: */
       if (tstamp > bpf->tme_eth_delay_release) {
 	/* update the current release time, by taking the current time

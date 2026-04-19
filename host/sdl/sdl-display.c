@@ -483,7 +483,7 @@ _tme_sdl_display_update(struct tme_display *display) {
 
 static void
 _tme_sdl_display_bell(struct tme_display *display) {
-  tme_beep();
+  SDL_FlashWindow(SDL_GetKeyboardFocus(), SDL_FLASH_BRIEFLY);
 }
 
 /* switch to new framebuffer contents */
