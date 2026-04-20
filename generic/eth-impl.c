@@ -269,23 +269,6 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
   /* loop forever: */
   for (;;) {
 
-    /* Filter out multicast packets we sent or unicast packets not destined for us. 
-       This should remove all duplicate packets on, i.e., tap interfaces...
-    */
-    ethernet_header = (struct tme_ethernet_header *) (eth->tme_eth_buffer);
-    
-    if ((eth->tme_eth_buffer_offset < eth->tme_eth_buffer_end) &&
-	(!eth->tme_eth_addr ||
-	 (((ethernet_header->tme_ethernet_header_dst[0] & 0x1)
-	   && memcmp(eth->tme_eth_addr,
-		     ethernet_header->tme_ethernet_header_src,
-		     TME_ETHERNET_ADDR_SIZE))
-	  ||!memcmp(eth->tme_eth_addr,
-		    ethernet_header->tme_ethernet_header_dst,
-		    TME_ETHERNET_ADDR_SIZE)))) {
-      _tme_eth_callout(eth, TME_ETH_CALLOUT_CTRL);
-    } else eth->tme_eth_buffer_end = 0;
-
     /* if the delay sleeping flag is set: */
     if (eth->tme_eth_delay_sleeping) {
 
@@ -326,7 +309,7 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
 	    (&eth->tme_eth_element->tme_element_log_handle,
 	     _("calling read")));
 
-    eth->tme_eth_buffer_offset = 0;
+    eth->tme_eth_buffer_offset = eth->tme_eth_buffer_end = 0;
 
     status = (eth->tme_eth_yield) ? (eth->tme_eth_yield(eth, true)) :
       (tme_event_yield((tme_event_t)eth->tme_eth_handle, true, &eth->tme_eth_mutex));
@@ -346,6 +329,28 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
     tme_log(&eth->tme_eth_element->tme_element_log_handle, 1, TME_OK,
 	    (&eth->tme_eth_element->tme_element_log_handle,
 	     _("read %ld bytes of packets"), (long)eth->tme_eth_buffer_end));
+
+
+    /* Filter out multicast packets we sent or unicast packets not destined for us. 
+       This should remove all duplicate packets on, i.e., tap interfaces...
+    */
+    ethernet_header = (struct tme_ethernet_header *)eth->tme_eth_buffer;
+    
+    if(!eth->tme_eth_addr ||
+	      (ethernet_header->tme_ethernet_header_dst[0] & 0x1)
+	      && memcmp(eth->tme_eth_addr,
+			ethernet_header->tme_ethernet_header_src,
+		     TME_ETHERNET_ADDR_SIZE)
+	      || !memcmp(eth->tme_eth_addr,
+			 ethernet_header->tme_ethernet_header_dst,
+			 TME_ETHERNET_ADDR_SIZE)) {
+      /* read the ETH socket: */
+      tme_log(&eth->tme_eth_element->tme_element_log_handle, 1, TME_OK,
+	      (&eth->tme_eth_element->tme_element_log_handle,
+	       _("read accepted")));
+      _tme_eth_callout(eth, TME_ETH_CALLOUT_CTRL);
+    }
+
   }
   /* NOTREACHED */
   tme_thread_exit(&eth->tme_eth_mutex);
@@ -398,10 +403,8 @@ static int
 _tme_eth_config(struct tme_ethernet_connection *conn_eth, 
 		    struct tme_ethernet_config *config)
 {
-  struct tme_ethernet *eth;
-
-  /* recover our data structures: */
-  eth = conn_eth->tme_ethernet_connection.tme_connection_element->tme_element_private;
+  struct tme_ethernet *eth = conn_eth->tme_ethernet_connection.tme_connection_element->tme_element_private;
+  struct tme_element *element = eth->tme_eth_element;
 
   /* if this Ethernet is promiscuous, we will accept all packets: */
   if(config->tme_ethernet_config_flags & TME_ETHERNET_CONFIG_PROMISC) {
@@ -412,6 +415,17 @@ _tme_eth_config(struct tme_ethernet_connection *conn_eth,
     memcpy(eth->tme_eth_addr,
 	   config->tme_ethernet_config_addrs[0],
 	   TME_ETHERNET_ADDR_SIZE);
+    tme_log(&element->tme_element_log_handle, 0, TME_OK, 
+	    (&element->tme_element_log_handle, 
+	     "hardware address on ethernet interface %s set to %02x:%02x:%02x:%02x:%02x:%02x",
+	     element->tme_element_args[0],
+	     eth->tme_eth_addr[0],
+	     eth->tme_eth_addr[1],
+	     eth->tme_eth_addr[2],
+	     eth->tme_eth_addr[3],
+	     eth->tme_eth_addr[4],
+	     eth->tme_eth_addr[5]));
+    
   }
   
   return TME_OK;

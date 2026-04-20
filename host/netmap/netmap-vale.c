@@ -80,32 +80,45 @@ static int _tme_netmap_read(struct tme_ethernet *eth) {
   return ring->slot[i].len;
 }
 
-/* the netmap function: */
-NME_ELEMENT_SUB_NEW_DECL(host_netmap,vale) {
-  int rc, i;
-  int saved_errno;
-  struct netmap_if *nifp;
-  struct netmap_ring *ring;
-  struct nmreq nmr;
-  struct ifaddrs *ifa;
-  const char *port = NULL;
-  char *p;
-  struct tme_ethernet *eth;
-  int nm_fd, usage = 0, arg_i = 1;
-#define DEV_NM_FORMAT "/dev/netmap"
-  char dev_nm_filename[sizeof(DEV_NM_FORMAT) + 4];
+#ifndef IFNAMSIZ
+#define IFNAMSIZ 16
+#endif
+#define DEV_VALE_FORMAT "vale"
+
+/* retrieve ethernet arguments */
+int _tme_netmap_args(const char * const args[], 
+		     char *vswitch,
+		     char *port,
+		     char **_output)
+{
+  int arg_i;
+  int usage;
+
+  /* check our arguments: */
+  usage = 0;
+  vswitch[0] = '\0';
+  port[0] = '\0';
+  arg_i = 1;
 
   for (;;) {
     /* the interface we're supposed to use: */
-    if (TME_ARG_IS(args[arg_i + 0], "port")
+    if (TME_ARG_IS(args[arg_i + 0], "switch")
 	&& args[arg_i + 1] != NULL) {
-      port = args[arg_i + 1];
-      arg_i += 2;
+      sprintf(vswitch, DEV_VALE_FORMAT);
+      strcat(vswitch, args[arg_i + 1]);
     }
+
+    /* the interface we're supposed to use: */
+    else if (TME_ARG_IS(args[arg_i + 0], "port")
+	&& args[arg_i + 1] != NULL) {
+      strcpy(port, args[arg_i + 1]);
+    }
+    
     /* if we ran out of arguments: */
     else if (args[arg_i + 0] == NULL) {
       break;
     }
+
     /* otherwise this is a bad argument: */
     else {
       tme_output_append_error(_output,
@@ -115,8 +128,44 @@ NME_ELEMENT_SUB_NEW_DECL(host_netmap,vale) {
       usage = TRUE;
       break;
     }
+    arg_i += 2;
   }
 
+  if (usage) {
+    tme_output_append_error(_output,
+			    "%s %s [ switch %s ]  [ port %s ]",
+			    _("usage:"),
+			    args[0],
+			    _("NAME"),
+			    _("INTERFACE"));
+    return (EINVAL);
+  }
+  return (TME_OK);
+}
+
+/* the netmap function: */
+NME_ELEMENT_SUB_NEW_DECL(host_netmap,vale) {
+  int rc, i;
+  int saved_errno;
+  struct netmap_if *nifp;
+  struct netmap_ring *ring;
+  struct nmreq nmr;
+  struct ifaddrs *ifa;
+  char port[IFNAMSIZ + 1];
+  char *p;
+  struct tme_ethernet *eth;
+  int nm_fd, usage = 0, arg_i = 1;
+#define DEV_NM_FORMAT "/dev/netmap"
+  char dev_nm_filename[sizeof(DEV_NM_FORMAT) + 4];
+
+  bzero(&nmr, sizeof(nmr));
+
+  /* get the arguments: */
+  rc = _tme_netmap_args(args, nmr.nr_name, port, _output);
+
+  if (rc != TME_OK)
+    return (ENOENT);
+  
   sprintf(dev_nm_filename, DEV_NM_FORMAT);
   
   nm_fd = tme_eth_alloc(dev_nm_filename, _output);
@@ -130,19 +179,23 @@ NME_ELEMENT_SUB_NEW_DECL(host_netmap,vale) {
     return (saved_errno);
   }
   
-  bzero(&nmr, sizeof(nmr));
-
   /* find the interface we will use: */
 #ifdef HAVE_IFADDRS_H
-  rc = tme_eth_ifaddrs_find(port, AF_UNSPEC, &ifa, NULL, NULL);
-
-  if (rc != TME_OK) {
-    tme_output_append_error(_output, _("couldn't find an interface %s"), port);
-    return (ENOENT);
+  if(strlen(nmr.nr_name)) {
+    strcat(nmr.nr_name, ":");
+    if(strlen(port))
+      strcat(nmr.nr_name, port);
+    else
+      strcat(nmr.nr_name, "0");
+  } else {
+    rc = tme_eth_ifaddrs_find(port, AF_UNSPEC, &ifa, NULL, NULL);
+    if (rc != TME_OK) {
+      tme_output_append_error(_output, _("couldn't find an interface %s"), port);
+      return (ENOENT);
+    }
+    strncpy(nmr.nr_name, ifa->ifa_name, sizeof(nmr.nr_name));
   }
   
-  strncpy(nmr.nr_name, ifa->ifa_name, sizeof(nmr.nr_name));
-
   tme_log(&element->tme_element_log_handle, 0, TME_OK, 
 	  (&element->tme_element_log_handle, 
 	   "using interface %s",
