@@ -38,7 +38,13 @@ scsibus0 at sc0: @PACKAGE@/scsi/bus
 # of your /dev/bpfN devices and you want an Ethernet device:
 #
 #ec0 at mbmem0 addr 0xe0000 ipl 3: @PACKAGE@/bus/multibus/3c400 ether "00:01:02:03:04:05"
-#bpf0 at ec0: @PACKAGE@/host/bsd/bpf
+
+# original Berkeley packet filter method for accessing ethernet connection on host
+#bpf0 at ec0: tme/host/bsd/bpf
+
+# netmap is a new raw ethernet packet access method for direct control of host NIC or a VALE switch port
+#nm0 at ec0: nme/host/netmap/vale
+#nm0 at ec0: nme/host/netmap/vale switch nme port b
 
 ## the Sun Intel Ethernet Multibus board:
 ##

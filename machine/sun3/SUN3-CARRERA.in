@@ -32,6 +32,14 @@ mainbus0 intreg	at obio0 addr 0x0A0000
 #obie0 memory at mainbus0
 #ie0 at obie0: @PACKAGE@/ic/i82586
 #bpf1 at ie0: @PACKAGE@/host/bsd/bpf
+
+# original Berkeley packet filter method for accessing ethernet connection on host
+#bpf1 at ie0: tme/host/bsd/bpf
+
+# netmap is a new raw ethernet packet access method for direct control of host NIC or a VALE switch port
+#nm0 at ie0: nme/host/netmap/vale
+#nm0 at ie0: nme/host/netmap/vale switch nme port b
+
 # OR enable tap ethernet device, an alternative method for network access
 # 2 ways to access a tap device: native or openvpn (respectively below)
 # both require setuid or equivalent permissions, which should be set up at build time

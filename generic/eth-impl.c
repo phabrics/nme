@@ -309,7 +309,7 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
 	    (&eth->tme_eth_element->tme_element_log_handle,
 	     _("calling read")));
 
-    eth->tme_eth_buffer_offset = eth->tme_eth_buffer_end = 0;
+    eth->tme_eth_buffer_offset = eth->tme_eth_buffer_end = 0; 
 
     status = (eth->tme_eth_yield) ? (eth->tme_eth_yield(eth, true)) :
       (tme_event_yield((tme_event_t)eth->tme_eth_handle, true, &eth->tme_eth_mutex));
@@ -349,7 +349,7 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
 	      (&eth->tme_eth_element->tme_element_log_handle,
 	       _("read accepted")));
       _tme_eth_callout(eth, TME_ETH_CALLOUT_CTRL);
-    }
+    } else eth->tme_eth_buffer_end = 0;
 
   }
   /* NOTREACHED */

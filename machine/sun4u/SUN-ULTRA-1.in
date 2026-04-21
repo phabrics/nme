@@ -91,6 +91,12 @@ le0 at ledma0 master: @PACKAGE@/ic/am7990
 # configurations that only need the second line below to connect to the tap network
 # via bpf.  Note that the master requires this line, too...
 #bpf0 at le0: @PACKAGE@/host/bsd/bpf interface tap0
+# original Berkeley packet filter method for accessing ethernet connection on host
+#bpf0 at le0: tme/host/bsd/bpf
+
+# netmap is a new raw ethernet packet access method for direct control of host NIC or a VALE switch port
+#nm0 at le0: nme/host/netmap/vale
+#nm0 at le0: nme/host/netmap/vale switch nme port b
 
 ## the SBus parallel port:
 ##

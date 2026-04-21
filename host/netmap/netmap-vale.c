@@ -180,7 +180,6 @@ NME_ELEMENT_SUB_NEW_DECL(host_netmap,vale) {
   }
   
   /* find the interface we will use: */
-#ifdef HAVE_IFADDRS_H
   if(strlen(nmr.nr_name)) {
     strcat(nmr.nr_name, ":");
     if(strlen(port))
@@ -188,19 +187,24 @@ NME_ELEMENT_SUB_NEW_DECL(host_netmap,vale) {
     else
       strcat(nmr.nr_name, "0");
   } else {
+#ifdef HAVE_IFADDRS_H
     rc = tme_eth_ifaddrs_find(port, AF_UNSPEC, &ifa, NULL, NULL);
-    if (rc != TME_OK) {
+    if (rc == TME_OK)
+      strncpy(nmr.nr_name, ifa->ifa_name, sizeof(nmr.nr_name));
+#else
+    if(strlen(port))
+      strncpy(nmr.nr_name, port, sizeof(nmr.nr_name));
+#endif
+    else {
       tme_output_append_error(_output, _("couldn't find an interface %s"), port);
       return (ENOENT);
     }
-    strncpy(nmr.nr_name, ifa->ifa_name, sizeof(nmr.nr_name));
   }
   
   tme_log(&element->tme_element_log_handle, 0, TME_OK, 
 	  (&element->tme_element_log_handle, 
 	   "using interface %s",
 	   nmr.nr_name));
-#endif
 
   nmr.nr_version = NETMAP_API;
   ioctl(nm_fd, NIOCREGIF, &nmr);

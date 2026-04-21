@@ -5,7 +5,14 @@
 # and you want actual network access:
 #
 le0 at sbus0 slot 0 offset 0xc00000 ipl 5 dma-offset 0xff000000: tme/ic/am7990
+
+# original Berkeley packet filter method for accessing ethernet connection on host
 #bpf0 at le0: tme/host/bsd/bpf
+
+# netmap is a new raw ethernet packet access method for direct control of host NIC or a VALE switch port
+#nm0 at le0: nme/host/netmap/vale
+#nm0 at le0: nme/host/netmap/vale switch nme port b
+
 # OR enable tap ethernet device, an alternative method for network access
 # 2 ways to access a tap device: native or openvpn (respectively below)
 # both require setuid or equivalent permissions, which should be set up at build time
