@@ -524,6 +524,9 @@ _tme_eth_read(struct tme_ethernet_connection *conn_eth,
 
     /* success: */
     rc = count;
+    tme_log(&eth->tme_eth_element->tme_element_log_handle, 1, TME_OK,
+	    (&eth->tme_eth_element->tme_element_log_handle,
+	     _("eth returned %u byte frame"), count));
     break;
   }
 
@@ -960,7 +963,8 @@ int tme_eth_init(struct tme_element *element,
 
   /* fill the element: */
   element->tme_element_private = eth;
-  element->tme_element_connections_new = tme_eth_connections_new;
+  if(!element->tme_element_connections_new)
+    element->tme_element_connections_new = tme_eth_connections_new;
 
   /* start the threads: */
   tme_mutex_init(&eth->tme_eth_mutex);

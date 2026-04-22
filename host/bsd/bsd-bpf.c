@@ -482,6 +482,9 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
 
     /* success: */
     rc = count;
+    tme_log(&bpf->tme_eth_element->tme_element_log_handle, 1, TME_OK,
+	    (&bpf->tme_eth_element->tme_element_log_handle,
+	     _("bpf returned %u byte frame"), count));
     break;
   }
 
