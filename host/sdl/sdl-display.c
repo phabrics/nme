@@ -481,10 +481,12 @@ _tme_sdl_display_update(struct tme_display *display) {
   return rc;
 }
 
+#ifdef SDL_FLASH_BRIEFLY
 static void
 _tme_sdl_display_bell(struct tme_display *display) {
   SDL_FlashWindow(SDL_GetKeyboardFocus(), SDL_FLASH_BRIEFLY);
 }
+#endif
 
 /* switch to new framebuffer contents */
 static void _tme_sdl_screen_resize(struct tme_sdl_screen *screen)
@@ -687,7 +689,9 @@ NME_ELEMENT_SUB_NEW_DECL(host_sdl,display) {
   /* set the display-specific functions: */
   display->tme_display_init = _tme_sdl_display_init;
   display->tme_display_update = _tme_sdl_display_update;
+#ifdef SDL_FLASH_BRIEFLY
   display->tme_display_bell = _tme_sdl_display_bell;
+#endif
   display->tme_screen_resize = _tme_sdl_screen_resize;
   display->tme_screen_redraw = _tme_sdl_screen_redraw;
 

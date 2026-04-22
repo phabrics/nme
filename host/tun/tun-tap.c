@@ -211,22 +211,20 @@ nat_msg_builder nat_msg_builders[] = {
 
 #endif // TME_DO_NFT
 
+#ifdef HAVE_LINUX_IF_TUN_H
 /* this is called when the ethernet configuration changes: */
 static int
 _tme_tun_tap_config(struct tme_ethernet_connection *conn_eth, 
 		    struct tme_ethernet_config *config)
 {
-#ifdef HAVE_LINUX_IF_TUN_H
   struct tme_ethernet *tap;
   TME_TUN_TAP_INSN *tap_filter;
   int tap_filter_size;
-#endif
   int rc;
 
   /* assume we will succeed: */
   rc = TME_OK;
 
-#ifdef HAVE_LINUX_IF_TUN_H
   /* recover our data structures: */
   tap = conn_eth->tme_ethernet_connection.tme_connection_element->tme_element_private;
 
@@ -275,7 +273,6 @@ _tme_tun_tap_config(struct tme_ethernet_connection *conn_eth,
   /* unlock the mutex: */
   tme_mutex_unlock(&tap->tme_eth_mutex);
 
-#endif
   /* done: */
   return (rc);
 }
@@ -292,11 +289,12 @@ _tme_tun_tap_connections_new(struct tme_element *element,
   conn_eth = (struct tme_ethernet_connection *) (*_conns);
 
   /* fill in the Ethernet connection: */
-  //  conn_eth->tme_ethernet_connection_config = _tme_tun_tap_config;
+  conn_eth->tme_ethernet_connection_config = _tme_tun_tap_config;
 
   /* done: */
   return (TME_OK);
 }
+#endif
 
 /* retrieve ethernet arguments */
 int _tme_tun_tap_args(const char * const args[], 
@@ -1294,8 +1292,9 @@ NME_ELEMENT_SUB_NEW_DECL(host_tun,tap) {
   close(dummy_fd);
 #endif // TME_DO_APF
 
+#ifdef HAVE_LINUX_IF_TUN_H
   element->tme_element_connections_new = _tme_tun_tap_connections_new;
-  
+#endif  
   return tme_eth_init(element, NULL, tap_fd, 4096, NULL);
   
 #undef TAPINET

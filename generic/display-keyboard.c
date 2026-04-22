@@ -476,10 +476,12 @@ _tme_keyboard_ctrl(struct tme_keyboard_connection *conn_keyboard,
     ->tme_keyboard_connection.tme_connection_element->tme_element_private;
 
   /* ring the bell: */
-  if (ctrl & TME_KEYBOARD_CTRL_BELL) {
-    display->tme_display_bell(display);
-  }
-
+  if (ctrl & TME_KEYBOARD_CTRL_BELL)
+    if(display->tme_display_bell)
+      display->tme_display_bell(display);
+    else
+      tme_beep();
+  
   return (TME_OK);
 }
 
