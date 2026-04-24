@@ -38,46 +38,88 @@
 #include <net/netmap_user.h>
 #include <sys/mman.h>
 
-/* conditionally yield this thread if the event is not ready: */
-static
-int _tme_netmap_yield(struct tme_ethernet *eth, bool read) {
-  struct netmap_if *nifp = (struct netmap_if *)eth->tme_eth_data;
-  struct netmap_ring *ring = (read) ? (NETMAP_RXRING(nifp, 0)) : (NETMAP_TXRING(nifp, 0));
-  int i = ring->head, status = 1;
-
-  if(!read) ring->slot[i].len = eth->tme_eth_data_length;
-  ring->head = ring->cur;
-  
-  if(nm_ring_empty(ring)) {
-    tme_log(&eth->tme_eth_element->tme_element_log_handle, 1, TME_OK,
-	    (&eth->tme_eth_element->tme_element_log_handle,
-	     _("ring empty")));
-    status = tme_event_yield((tme_event_t)eth->tme_eth_handle, read, &eth->tme_eth_mutex);
-  }
-  
-  return status;
-}
-
 static int _tme_netmap_write(struct tme_ethernet *eth) {
   struct netmap_if *nifp = (struct netmap_if *)eth->tme_eth_data;
   struct netmap_ring *ring = NETMAP_TXRING(nifp, 0);
   int i = ring->cur;
   
+  ring->slot[i].len = eth->tme_eth_data_length;
+  i = ring->head = ring->cur = nm_ring_next(ring, i);
   eth->tme_eth_out = (tme_uint8_t *)NETMAP_BUF(ring, ring->slot[i].buf_idx);
-  ring->cur = nm_ring_next(ring, i);
 
   return eth->tme_eth_data_length;
 }
 
-static int _tme_netmap_read(struct tme_ethernet *eth) {
+/* this is called by the generic ethernet connection to directly read a frame: */
+static int
+_tme_netmap_read(struct tme_ethernet_connection *conn_eth, 
+	      tme_ethernet_fid_t *_frame_id,
+	      struct tme_ethernet_frame_chunk *frame_chunks,
+	      unsigned int flags)
+{
+  struct tme_ethernet_frame_chunk frame_chunk_buffer;
+  size_t buffer_offset_next;
+  unsigned int count;
+  int rc;
+  /* recover our data structure: */
+  struct tme_ethernet *eth = conn_eth->tme_ethernet_connection.tme_connection_element->tme_element_private;
   struct netmap_if *nifp = (struct netmap_if *)eth->tme_eth_data;
   struct netmap_ring *ring = NETMAP_RXRING(nifp, 0);
   int i = ring->cur;
 
-  eth->tme_eth_buffer = (tme_uint8_t *)NETMAP_BUF(ring, ring->slot[i].buf_idx);
-  ring->cur = nm_ring_next(ring, i);
+  /* lock our mutex: */
+  tme_mutex_lock(&eth->tme_eth_mutex);
 
-  return ring->slot[i].len;
+  /* assume that we won't be able to return a packet: */
+  rc = -ENOENT;
+  
+  /* if the buffer is empty, or if we failed to read a packet,
+     wake up the reader: */
+  if (nm_ring_empty(ring)) {
+    tme_log(&eth->tme_eth_element->tme_element_log_handle, 1, TME_OK,
+	    (&eth->tme_eth_element->tme_element_log_handle,
+	     _("ring empty")));
+    eth->tme_eth_buffer_offset = eth->tme_eth_buffer_end;
+    tme_cond_notify(&eth->tme_eth_cond_reader, TRUE);
+  } else {
+    /* form the single frame chunk: */
+    frame_chunk_buffer.tme_ethernet_frame_chunk_next = NULL;
+    frame_chunk_buffer.tme_ethernet_frame_chunk_bytes
+      = (tme_uint8_t *)NETMAP_BUF(ring, ring->slot[i].buf_idx);
+    frame_chunk_buffer.tme_ethernet_frame_chunk_bytes_count
+      = ring->slot[i].len;
+    
+    /* filter out the frame: */
+    count = tme_ethernet_chunks_copy(frame_chunks, &frame_chunk_buffer);
+
+    /* success: */
+    rc = count;
+    tme_log(&eth->tme_eth_element->tme_element_log_handle, 1, TME_OK,
+	    (&eth->tme_eth_element->tme_element_log_handle,
+	     _("eth returned %u byte frame"), count));
+
+    ring->head = ring->cur = nm_ring_next(ring, i);
+  }
+  /* unlock our mutex: */
+  tme_mutex_unlock(&eth->tme_eth_mutex);
+
+  /* done: */
+  return (rc);
+}
+
+/* this makes a new connection side for a netmap: */
+static int
+_tme_netmap_connections_new(struct tme_element *element, 
+			    const char * const *args, 
+			    struct tme_connection **_conns)
+{
+  struct tme_ethernet_connection *conn_eth;
+
+  tme_eth_connections_new(element, args, _conns);
+  conn_eth = (struct tme_ethernet_connection *) (*_conns);
+  conn_eth->tme_ethernet_connection_read = _tme_netmap_read;
+
+  return (TME_OK);
 }
 
 #ifndef IFNAMSIZ
@@ -212,14 +254,13 @@ NME_ELEMENT_SUB_NEW_DECL(host_netmap,vale) {
   nifp = NETMAP_IF(p, nmr.nr_offset);
 
   eth = tme_new0(struct tme_ethernet, 1);
-  eth->tme_eth_yield = _tme_netmap_yield;
   eth->tme_eth_write = _tme_netmap_write;
   eth->tme_eth_read = _tme_netmap_read;
 
   /* set up buffer for first write: */
   ring = NETMAP_TXRING(nifp, 0);
   eth->tme_eth_out = (tme_uint8_t *)NETMAP_BUF(ring, ring->slot[ring->cur].buf_idx);
-  ring->cur = nm_ring_next(ring, i);
   
+  element->tme_element_connections_new = _tme_netmap_connections_new;
   return tme_eth_init(element, eth, nm_fd, ring->nr_buf_size, nifp);
 }

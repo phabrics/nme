@@ -309,11 +309,16 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
 	    (&eth->tme_eth_element->tme_element_log_handle,
 	     _("calling read")));
 
-    eth->tme_eth_buffer_offset = eth->tme_eth_buffer_end = 0; 
-
-    status = (eth->tme_eth_yield) ? (eth->tme_eth_yield(eth, true)) :
+    eth->tme_eth_buffer_end = (eth->tme_eth_yield) ? (eth->tme_eth_yield(eth, true)) :
       (tme_event_yield((tme_event_t)eth->tme_eth_handle, true, &eth->tme_eth_mutex));
 
+    eth->tme_eth_buffer_offset = 0; 
+
+    if(!eth->tme_eth_buffer) {
+      _tme_eth_callout(eth, TME_ETH_CALLOUT_CTRL);
+      continue;
+    }
+    
     eth->tme_eth_buffer_end = (eth->tme_eth_read) ? (eth->tme_eth_read(eth)) :
       (tme_read((tme_thread_handle_t)eth->tme_eth_handle, eth->tme_eth_buffer, eth->tme_eth_buffer_size));
     
@@ -347,7 +352,13 @@ _tme_eth_th_reader(struct tme_ethernet *eth)
       /* read the ETH socket: */
       tme_log(&eth->tme_eth_element->tme_element_log_handle, 1, TME_OK,
 	      (&eth->tme_eth_element->tme_element_log_handle,
-	       _("read accepted")));
+	       "read accepted to %02x:%02x:%02x:%02x:%02x:%02x",
+	       ethernet_header->tme_ethernet_header_dst[0],
+	       ethernet_header->tme_ethernet_header_dst[1],
+	       ethernet_header->tme_ethernet_header_dst[2],
+	       ethernet_header->tme_ethernet_header_dst[3],
+	       ethernet_header->tme_ethernet_header_dst[4],
+	       ethernet_header->tme_ethernet_header_dst[5]));
       _tme_eth_callout(eth, TME_ETH_CALLOUT_CTRL);
     } else eth->tme_eth_buffer_end = 0;
 
