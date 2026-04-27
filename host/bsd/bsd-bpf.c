@@ -325,6 +325,7 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
 {
   struct tme_ethernet *bpf;
   tme_time_t tstamp;
+  const struct tme_ethernet_header *ethernet_header;
 #ifdef BIOCSTSTAMP
   // Assume timespec (nanosecond-accuracy) macros
   struct bpf_xhdr the_bpf_header;
@@ -482,9 +483,23 @@ _tme_bsd_bpf_read(struct tme_ethernet_connection *conn_eth,
 
     /* success: */
     rc = count;
+    /* Filter out multicast packets we sent or unicast packets not destined for us. 
+       This should remove all duplicate packets on, i.e., tap interfaces...
+    */
+    ethernet_header = (struct tme_ethernet_header *)frame_chunks->tme_ethernet_frame_chunk_bytes;
+    
+    /* read the ETH socket: */
     tme_log(&bpf->tme_eth_element->tme_element_log_handle, 1, TME_OK,
 	    (&bpf->tme_eth_element->tme_element_log_handle,
-	     _("bpf returned %u byte frame"), count));
+	     "read accepted %u byte frame to %02x:%02x:%02x:%02x:%02x:%02x",
+	     count,
+	     ethernet_header->tme_ethernet_header_dst[0],
+	     ethernet_header->tme_ethernet_header_dst[1],
+	     ethernet_header->tme_ethernet_header_dst[2],
+	     ethernet_header->tme_ethernet_header_dst[3],
+	     ethernet_header->tme_ethernet_header_dst[4],
+	     ethernet_header->tme_ethernet_header_dst[5]));
+
     break;
   }
 

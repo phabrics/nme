@@ -61,6 +61,7 @@ _tme_netmap_read(struct tme_ethernet_connection *conn_eth,
   size_t buffer_offset_next;
   unsigned int count;
   int rc;
+  const struct tme_ethernet_header *ethernet_header;
   /* recover our data structure: */
   struct tme_ethernet *eth = conn_eth->tme_ethernet_connection.tme_connection_element->tme_element_private;
   struct netmap_if *nifp = (struct netmap_if *)eth->tme_eth_data;
@@ -72,25 +73,67 @@ _tme_netmap_read(struct tme_ethernet_connection *conn_eth,
 
   /* assume that we won't be able to return a packet: */
   rc = -ENOENT;
-  
-  /* if the buffer is empty, or if we failed to read a packet,
-     wake up the reader: */
-  if (nm_ring_empty(ring)) {
-    tme_log(&eth->tme_eth_element->tme_element_log_handle, 1, TME_OK,
-	    (&eth->tme_eth_element->tme_element_log_handle,
-	     _("ring empty")));
-    eth->tme_eth_buffer_offset = eth->tme_eth_buffer_end;
-    tme_cond_notify(&eth->tme_eth_cond_reader, TRUE);
-  } else {
+
+  for(;;) {
+    /* if the buffer is empty, or if we failed to read a packet,
+       wake up the reader: */
+    if (nm_ring_empty(ring)) {
+      tme_log(&eth->tme_eth_element->tme_element_log_handle, 1, TME_OK,
+	      (&eth->tme_eth_element->tme_element_log_handle,
+	       _("ring empty")));
+      eth->tme_eth_buffer_offset = eth->tme_eth_buffer_end;
+      tme_cond_notify(&eth->tme_eth_cond_reader, TRUE);
+      break;
+    }
     /* form the single frame chunk: */
     frame_chunk_buffer.tme_ethernet_frame_chunk_next = NULL;
     frame_chunk_buffer.tme_ethernet_frame_chunk_bytes
       = (tme_uint8_t *)NETMAP_BUF(ring, ring->slot[i].buf_idx);
     frame_chunk_buffer.tme_ethernet_frame_chunk_bytes_count
       = ring->slot[i].len;
+
+    /* Filter out multicast packets we sent or unicast packets not destined for us. 
+       This should remove all duplicate packets on, i.e., tap interfaces...
+    */
+    ethernet_header = (struct tme_ethernet_header *)frame_chunk_buffer.tme_ethernet_frame_chunk_bytes;
+    
+    if(!eth->tme_eth_addr ||
+	      (ethernet_header->tme_ethernet_header_dst[0] & 0x1)
+	      && memcmp(eth->tme_eth_addr,
+			ethernet_header->tme_ethernet_header_src,
+		     TME_ETHERNET_ADDR_SIZE)
+	      || !memcmp(eth->tme_eth_addr,
+			 ethernet_header->tme_ethernet_header_dst,
+			 TME_ETHERNET_ADDR_SIZE)) {
+      /* read the ETH socket: */
+      tme_log(&eth->tme_eth_element->tme_element_log_handle, 1, TME_OK,
+	      (&eth->tme_eth_element->tme_element_log_handle,
+	       "read accepted to %02x:%02x:%02x:%02x:%02x:%02x",
+	       ethernet_header->tme_ethernet_header_dst[0],
+	       ethernet_header->tme_ethernet_header_dst[1],
+	       ethernet_header->tme_ethernet_header_dst[2],
+	       ethernet_header->tme_ethernet_header_dst[3],
+	       ethernet_header->tme_ethernet_header_dst[4],
+	       ethernet_header->tme_ethernet_header_dst[5]));
+    } else {
+      /* update the buffer pointer: */
+      i = ring->head = ring->cur = nm_ring_next(ring, i);
+      continue;
+    }
     
     /* filter out the frame: */
     count = tme_ethernet_chunks_copy(frame_chunks, &frame_chunk_buffer);
+
+    /* if this is a peek: */
+    if (flags & TME_ETHERNET_READ_PEEK) {
+    }
+
+    /* otherwise, this isn't a peek: */
+    else {
+
+      /* update the buffer pointer: */
+      ring->head = ring->cur = nm_ring_next(ring, i);
+    }
 
     /* success: */
     rc = count;
@@ -98,7 +141,7 @@ _tme_netmap_read(struct tme_ethernet_connection *conn_eth,
 	    (&eth->tme_eth_element->tme_element_log_handle,
 	     _("eth returned %u byte frame"), count));
 
-    ring->head = ring->cur = nm_ring_next(ring, i);
+    break;
   }
   /* unlock our mutex: */
   tme_mutex_unlock(&eth->tme_eth_mutex);
@@ -147,7 +190,7 @@ int _tme_netmap_args(const char * const args[],
     if (TME_ARG_IS(args[arg_i + 0], "switch")
 	&& args[arg_i + 1] != NULL) {
       sprintf(vswitch, DEV_VALE_FORMAT);
-      strcat(vswitch, args[arg_i + 1]);
+      strncat(vswitch, args[arg_i + 1], IFNAMSIZ-7);
     }
 
     /* the interface we're supposed to use: */
@@ -187,7 +230,7 @@ int _tme_netmap_args(const char * const args[],
 
 /* the netmap function: */
 NME_ELEMENT_SUB_NEW_DECL(host_netmap,vale) {
-  int rc, i;
+  int rc;
   int saved_errno;
   struct netmap_if *nifp;
   struct netmap_ring *ring;
@@ -222,25 +265,27 @@ NME_ELEMENT_SUB_NEW_DECL(host_netmap,vale) {
   }
   
   /* find the interface we will use: */
-  if(strlen(nmr.nr_name)) {
+#ifdef HAVE_IFADDRS_H
+  rc = tme_eth_ifaddrs_find(port, AF_UNSPEC, &ifa, NULL, NULL);
+  if (rc == TME_OK)
+    strncpy(nmr.nr_name, ifa->ifa_name, sizeof(nmr.nr_name));
+  else
+#endif
+  if((rc=strlen(nmr.nr_name))) {
     strcat(nmr.nr_name, ":");
     if(strlen(port))
-      strcat(nmr.nr_name, port);
+      strncat(nmr.nr_name, port, IFNAMSIZ-rc-1);
     else
       strcat(nmr.nr_name, "0");
-  } else {
-#ifdef HAVE_IFADDRS_H
-    rc = tme_eth_ifaddrs_find(port, AF_UNSPEC, &ifa, NULL, NULL);
-    if (rc == TME_OK)
-      strncpy(nmr.nr_name, ifa->ifa_name, sizeof(nmr.nr_name));
-#else
+  } else
+#ifndef HAVE_IFADDRS_H
     if(strlen(port))
       strncpy(nmr.nr_name, port, sizeof(nmr.nr_name));
+    else
 #endif
-    else {
+    {      
       tme_output_append_error(_output, _("couldn't find an interface %s"), port);
       return (ENOENT);
-    }
   }
   
   tme_log(&element->tme_element_log_handle, 0, TME_OK, 
