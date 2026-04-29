@@ -308,11 +308,9 @@ _tme_gtk_screen_configure(GtkWidget         *widget,
   
   if(window) {
       screen->tme_gtk_screen_surface =
-	gdk_surface_create_similar_surface(window,
-					   CAIRO_CONTENT_COLOR,
-					   gtk_widget_get_width(widget) /* * screen->screen.tme_screen_scale */,
-					   gtk_widget_get_height(widget) // * screen->screen.tme_screen_scale
-					   );
+	cairo_image_surface_create(CAIRO_FORMAT_RGB24,
+				   width,
+				   height);
   }
 #elif GTK_MAJOR_VERSION == 3
   window = gtk_widget_get_window(widget);

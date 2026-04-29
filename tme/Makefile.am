@@ -39,8 +39,13 @@ BUILT_SOURCES = shlibvar.h keymap.h
 
 CLEANFILES = $(BUILT_SOURCES)
 
+if USING_X
 keymap.h: keymap-make.pl keymap-def.h
-	  $(PERL) $(srcdir)/keymap-make.pl > $@ || $(LN_S) $(srcdir)/keymap-def.h $@
+	$(PERL) $(srcdir)/keymap-make.pl > $@
+else
+keymap.h: keymap-def.h
+	$(LN_S) $(srcdir)/keymap-def.h $@
+endif
 
 # module.c needs to know the LTDL_SHLIBPATH_VAR that libltdl
 # is using:
