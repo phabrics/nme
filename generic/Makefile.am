@@ -39,10 +39,13 @@ EXTRA_DIST = $(MAINTAINERCLEANFILES) $(noinst_SCRIPTS:.sh=.m4) fb-xlat-auto.pl
 
 # target to make fb-xlat-auto.c:
 fb-xlat-auto.c: fb-xlat-auto.in fb-xlat-auto.sh
-	cat $(srcdir)/fb-xlat-auto.in | xargs $(SHELL) $(srcdir)/fb-xlat-auto.sh > $(srcdir)/$@
+	cat fb-xlat-auto.in | xargs $(SHELL) $(srcdir)/fb-xlat-auto.sh > $@
 
 .pl.in:
-	$(PERL) $< src $(NME_FB_XLAT_SRC) dst $(NME_FB_XLAT_DST) > $(srcdir)/$@ || \
-	echo "src $(NME_FB_XLAT_SRC) dst $(NME_FB_XLAT_DST)" > $(srcdir)/$@
+if USING_X
+	$(PERL) $< src $(NME_FB_XLAT_SRC) dst $(NME_FB_XLAT_DST) > $@
+else
+	echo "src $(NME_FB_XLAT_SRC) dst $(NME_FB_XLAT_DST)" > $@
+endif
 
 SUBDIRS = . bus
