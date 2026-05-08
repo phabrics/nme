@@ -853,21 +853,20 @@ if test "${host_os}" = emscripten; then
 fi
 AC_MSG_RESULT([${misc_hosts}])
 
-if test "x${misc_hosts}" = "xx86"; then
-  AC_CHECK_FUNC_LONG(__rdtsc, [
+AC_CHECK_FUNC_LONG(__rdtsc,
+[
   unsigned long long int x;
 
   // _mm_lfence();  // optionally wait for earlier insns to retire before reading the clock
   x = __rdtsc();
   // _mm_lfence();  // optionally block later instructions until rdtsc retires
 ],[
-#ifdef _MSC_VER
-#include <intrin.h>
-#else
-#include <x86intrin.h>
-#endif
+  #ifdef _MSC_VER
+  #include <intrin.h>
+  #else
+  #include <x86intrin.h>
+  #endif
 ])
-fi
 
 dnl Configure debugging and/or warnings.
 AC_MSG_CHECKING([for gcc --version >= 4.8])

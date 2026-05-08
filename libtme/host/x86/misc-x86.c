@@ -46,7 +46,7 @@ _TME_RCSID("$Id: misc-x86.c,v 1.2 2009/11/08 17:21:18 fredette Exp $");
 #endif
 #endif
 
-#if defined(_TME_HAVE___RDTSC) || defined(__GNUC__) && !defined(__EMSCRIPTEN__)
+#define NME_MISC_X86
 
 /* this returns the cycle counter: */
 static union tme_value64
@@ -56,7 +56,7 @@ tme_misc_x86_cycles(void)
 
 #ifdef _TME_HAVE___RDTSC
   value.tme_value64_uint = __rdtsc();
-#else
+#elif defined(__GNUC__)
   unsigned long reg_a;
   unsigned long reg_d;
 
@@ -64,8 +64,8 @@ tme_misc_x86_cycles(void)
       : "=a" (reg_a), "=d" (reg_d));
   value.tme_value64_uint32_lo = reg_a;
   value.tme_value64_uint32_hi = reg_d;
+#else
+#undef NME_MISC_X86
 #endif /* !defined(__GNUC__) */
   return (value);
 }
-
-#endif /* def _TME_HAVE___RDTSC */

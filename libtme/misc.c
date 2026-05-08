@@ -529,18 +529,18 @@ void tme_misc_set_cycles(const char *impl) {
   }
 #endif
 
-#if defined(_TME_HAVE___RDTSC) || defined(__GNUC__) && !defined(__EMSCRIPTEN__)
+  tme_misc_cycles_per_sec = tme_misc_def_cycles_per_sec;
+
+#ifdef NME_MISC_X86
   if(def || !strcmp(impl,"x86")) {
     printf("Using x86 RDTSC counter.\n");
     tme_misc_cycles = tme_misc_x86_cycles;
+    return;
   }
-  else
 #endif
-    {
-      printf("Using default built-in counter.\n");
-      tme_misc_cycles = tme_misc_def_cycles;
-    }
-  tme_misc_cycles_per_sec = tme_misc_def_cycles_per_sec;
+
+  printf("Using default built-in counter.\n");
+  tme_misc_cycles = tme_misc_def_cycles;
 
   return;
 }
