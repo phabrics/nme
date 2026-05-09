@@ -138,7 +138,7 @@ static _TME_SCSI_DEVICE_CDB_DECL(_tme_emulexmt02_cdb_inquiry)
      apparently it's impossible to install SunOS 4.1.1 on a real Sun3
      from an Emulex tape).
 
-     Because we're lazy and don't want to implement tme-scsi-1 tape
+     Because we're lazy and don't want to implement nme-scsi-1 tape
      yet, we just indicate that we're a tape.
 
      However, this has some ramifications for NetBSD/sun2 1.6*, which

@@ -59,7 +59,7 @@ const struct {
 } _tme_scsi_cdrom_list[] = {
   
   /* the generic TME SCSI-1 cdrom: */
-  { "tme-scsi-1", tme_scsi_cdrom_tme_init },
+  { "nme-scsi-1", tme_scsi_cdrom_tme_init },
 };
 
 /* this implements the CD-ROM INQUIRY command: */

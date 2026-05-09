@@ -59,7 +59,7 @@ const struct {
 } _tme_scsi_disk_list[] = {
   
   /* the generic TME SCSI-1 disk: */
-  { "tme-scsi-1", tme_scsi_disk_tme_init },
+  { "nme-scsi-1", tme_scsi_disk_tme_init },
   
   /* the ACB4000 emulation: */
   { "acb4000", tme_scsi_disk_acb4000_init },

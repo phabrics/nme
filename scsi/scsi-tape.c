@@ -59,7 +59,7 @@ const struct {
 } _tme_scsi_tape_list[] = {
   
   /* the generic TME SCSI-1 tape: */
-  { "tme-scsi-1", tme_scsi_tape_tme_init },
+  { "nme-scsi-1", tme_scsi_tape_tme_init },
   
   /* the Emulex MT02 emulation: */
   { "emulex-mt02", tme_scsi_tape_emulexmt02_init },

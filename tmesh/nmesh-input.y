@@ -356,7 +356,7 @@ _tmesh_scanner_token(struct tmesh_scanner *scanner)
       token = TMESH_TOKEN_CD;
     }  
     else if (!strcmp(string, "pwd")) {
-      token = TMESH_TOKEN_CD;
+      token = TMESH_TOKEN_PWD;
     }  
     else if (!strcmp(string, "ls")) {
       token = TMESH_TOKEN_LS;
