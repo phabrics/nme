@@ -34,7 +34,7 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.69])
-AC_INIT([nme],[0.14rc1],[phabrics@phabrics.com],[],[http://phabrics.org])
+AC_INIT([nme],[0.14rc2],[phabrics@phabrics.com],[],[http://phabrics.org])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIRS([m4])
 AC_CANONICAL_TARGET

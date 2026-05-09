@@ -52,14 +52,14 @@ EXTRA_DIST = log-prf.c \
 
 # default rule for regenerating the portable shell scripts from m4 descriptions
 .m4.sh:
-	$(AUTOM4TE) -l m4sh $< > $(srcdir)/$@
+	$(AUTOM4TE) -l m4sh $< > $@
 
 # target to make memory-auto.h:
 .sh.h:
-	$(SHELL) $< --header > $(srcdir)/$@
+	$(SHELL) $< --header > $@
 
 # target to make memory-auto.c:
 .sh.c:
-	$(SHELL) $< > $(srcdir)/$@
+	$(SHELL) $< > $@
 
 module.c: $(top_builddir)/tme/shlibvar.h

@@ -1,5 +1,5 @@
 #! /bin/sh
-# Generated from ieee754-precision.m4 by GNU Autoconf 2.72.
+# Generated from ieee754-precision.m4 by GNU Autoconf 2.73.
 ## -------------------- ##
 ## M4sh Initialization. ##
 ## -------------------- ##
@@ -11,7 +11,7 @@ then :
   emulate sh
   NULLCMD=:
   # Pre-4.2 versions of Zsh do word splitting on ${1+"$@"}, which
-  # is contrary to our usage.  Disable this feature.
+  # contradicts POSIX and common usage.  Disable this.
   alias -g '${1+"$@"}'='"$@"'
   setopt NO_GLOB_SUBST
 else case e in #(
@@ -98,7 +98,7 @@ if test "x$as_myself" = x; then
   as_myself=$0
 fi
 if test ! -f "$as_myself"; then
-  printf "%s\n" "$as_myself: error: cannot find myself; rerun with an absolute file name" >&2
+  printf '%s\n' "$as_myself: error: cannot find myself; rerun with an absolute file name" >&2
   exit 1
 fi
 
@@ -109,7 +109,7 @@ then :
   emulate sh
   NULLCMD=:
   # Pre-4.2 versions of Zsh do word splitting on \${1+\"\$@\"}, which
-  # is contrary to our usage.  Disable this feature.
+  # contradicts POSIX and common usage.  Disable this.
   alias -g '\${1+\"\$@\"}'='\"\$@\"'
   setopt NO_GLOB_SUBST
 else case e in #(
@@ -212,22 +212,25 @@ case $- in # ((((
   *x* ) as_opts=-x ;;
   * ) as_opts= ;;
 esac
-exec $CONFIG_SHELL $as_opts "$as_myself" ${1+"$@"}
+case $# in # ((
+  0) exec $CONFIG_SHELL $as_opts "$as_myself" ;;
+  *) exec $CONFIG_SHELL $as_opts "$as_myself" "$@" ;;
+esac
 # Admittedly, this is quite paranoid, since all the known shells bail
 # out after a failed 'exec'.
-printf "%s\n" "$0: could not re-execute with $CONFIG_SHELL" >&2
+printf '%s\n' "$0: could not re-execute with $CONFIG_SHELL" >&2
 exit 255
 fi
 
     if test x$as_have_required = xno
 then :
-  printf "%s\n" "$0: This script requires a shell more modern than all"
-  printf "%s\n" "$0: the shells that I found on your system."
+  printf '%s\n' "$0: This script requires a shell more modern than all"
+  printf '%s\n' "$0: the shells that I found on your system."
   if test ${ZSH_VERSION+y} ; then
-    printf "%s\n" "$0: In particular, zsh $ZSH_VERSION has bugs and should"
-    printf "%s\n" "$0: be upgraded to zsh 4.3.4 or later."
+    printf '%s\n' "$0: In particular, zsh $ZSH_VERSION has bugs and should"
+    printf '%s\n' "$0: be upgraded to zsh 4.3.4 or later."
   else
-    printf "%s\n" "$0: Please tell bug-autoconf@gnu.org about your system,
+    printf '%s\n' "$0: Please tell bug-autoconf@gnu.org about your system,
 $0: including any error possibly output before this
 $0: message. Then install a modern shell, or manually run
 $0: the script under such a shell if you do have one."
@@ -378,23 +381,23 @@ esac
 # to avoid integer overflow warnings, make sure that the exponent
 # mask is always unsigned:
 #
-printf "%s\n" ${prefix}'mask_exp="((tme_uint32_t) ${'${prefix}'mask_exp})" ;'
+printf '%s\n' ${prefix}'mask_exp="((tme_uint32_t) ${'${prefix}'mask_exp})" ;'
 
 # a mask for the sign bit can be derived from the exponent mask:
 #
-printf "%s\n" ${prefix}'mask_sign="(${'${prefix}'mask_exp} + _TME_FIELD_MASK_FACTOR(${'${prefix}'mask_exp}))" ; '
+printf '%s\n' ${prefix}'mask_sign="(${'${prefix}'mask_exp} + _TME_FIELD_MASK_FACTOR(${'${prefix}'mask_exp}))" ; '
 
 # the maximum biased exponent can be derived from the exponent mask:
 #
-printf "%s\n" ${prefix}'exp_biased_max="(${'${prefix}'mask_exp} / _TME_FIELD_MASK_FACTOR(${'${prefix}'mask_exp}))" ; '
+printf '%s\n' ${prefix}'exp_biased_max="(${'${prefix}'mask_exp} / _TME_FIELD_MASK_FACTOR(${'${prefix}'mask_exp}))" ; '
 
 # the exponent bias can be derived from the maximum biased exponent:
 #
-printf "%s\n" ${prefix}'exp_bias="(${'${prefix}'exp_biased_max} >> 1)" ; '
+printf '%s\n' ${prefix}'exp_bias="(${'${prefix}'exp_biased_max} >> 1)" ; '
 
 # make a capitalized version of the precision name:
 #
-printf "%s\n" ${prefix}'capprecision=`printf "%s\n" ${precision} | tr a-z A-Z` ; '
+printf '%s\n' ${prefix}'capprecision=`printf %s ${precision} | tr a-z A-Z` ; '
 
 # done:
 #

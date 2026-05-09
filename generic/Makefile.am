@@ -31,11 +31,15 @@ BUILT_SOURCES =	$(noinst_SCRIPTS:.sh=.c)
 
 MAINTAINERCLEANFILES = $(noinst_SCRIPTS) $(BUILT_SOURCES)
 
-EXTRA_DIST = $(MAINTAINERCLEANFILES) $(noinst_SCRIPTS:.sh=.m4) fb-xlat-auto.pl
+EXTRA_DIST = $(noinst_SCRIPTS) $(noinst_SCRIPTS:.sh=.m4) fb-xlat-auto.pl float-auto.c bus-device-auto.c
 
 # default rule for regenerating the portable shell scripts from m4 descriptions
 .m4.sh:
-	$(AUTOM4TE) -l m4sh $< > $(srcdir)/$@
+	$(AUTOM4TE) -l m4sh $< > $@
+
+# default rule for regenerating source files from portable shell scripts
+.sh.c:
+	$(SHELL) $< > $@
 
 # target to make fb-xlat-auto.c:
 fb-xlat-auto.c: fb-xlat-auto.in fb-xlat-auto.sh

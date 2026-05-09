@@ -20,19 +20,19 @@ MAINTAINERCLEANFILES = $(noinst_SCRIPTS) $(BUILT_SOURCES) ieee754-ops-auto.c
 EXTRA_DIST = $(MAINTAINERCLEANFILES) $(noinst_SCRIPTS:.sh=.m4) softfloat-tme.h
 
 # target to make ieee754-auto.h:
-$(srcdir)/ieee754-auto.h: ieee754-misc-auto.sh ieee754-precision.sh
+ieee754-auto.h: ieee754-misc-auto.sh ieee754-precision.sh
 	$(SHELL) $(srcdir)/ieee754-misc-auto.sh --header > $@
 
 # target to make ieee754-misc-auto.c:
-$(srcdir)/ieee754-misc-auto.c: ieee754-misc-auto.sh ieee754-precision.sh
+ieee754-misc-auto.c: ieee754-misc-auto.sh ieee754-precision.sh
 	$(SHELL) $(srcdir)/ieee754-misc-auto.sh > $@
 
 # target to make ieee754-ops-auto.h:
-$(srcdir)/ieee754-ops-auto.h: ieee754-ops-auto.sh ieee754-precision.sh
+ieee754-ops-auto.h: ieee754-ops-auto.sh ieee754-precision.sh
 	$(SHELL) $(srcdir)/ieee754-ops-auto.sh --header > $@
 
 # target to make ieee754-ops-auto.c:
-$(srcdir)/ieee754-ops-auto.c: ieee754-ops-auto.sh ieee754-precision.sh
+ieee754-ops-auto.c: ieee754-ops-auto.sh ieee754-precision.sh
 	$(SHELL) $(srcdir)/ieee754-ops-auto.sh > $@
 
 include $(top_srcdir)/modules.mk

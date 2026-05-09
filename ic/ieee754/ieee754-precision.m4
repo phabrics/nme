@@ -134,7 +134,7 @@ AS_ECHO([${prefix}'exp_bias="(${'${prefix}'exp_biased_max} >> 1)" ; '])
 
 # make a capitalized version of the precision name:
 #
-AS_ECHO([${prefix}'capprecision=`AS_ECHO([${precision}])]) | tr a-z A-Z` ; '
+AS_ECHO([${prefix}'capprecision=`AS_ECHO_N([${precision}])]) | tr a-z A-Z` ; '
 
 # done:
 #

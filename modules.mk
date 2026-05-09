@@ -96,8 +96,8 @@ AM_LDFLAGS = -module -version-info 0:0:0
 
 # default rule for regenerating the portable shell scripts from m4 descriptions
 .m4.sh:
-	$(AUTOM4TE) -l m4sh $< > $(srcdir)/$@
+	$(AUTOM4TE) -l m4sh $< > $@
 
 # default rule for regenerating source files from portable shell scripts
 .sh.c:
-	$(SHELL) $< > $(srcdir)/$@
+	$(SHELL) $< > $@

@@ -32,25 +32,25 @@ EXTRA_DIST = sparc-impl.h \
 	sparc-rc-ls.c
 
 # target to make sparc-auto.h:
-$(srcdir)/sparc-auto.h: sparc-misc-auto.sh sparc-insns-auto.sh
+sparc-auto.h: sparc-misc-auto.sh sparc-insns-auto.sh
 	$(SHELL) $(srcdir)/sparc-misc-auto.sh --header > $@
 	$(SHELL) $(srcdir)/sparc-insns-auto.sh --header >> $@
 
 # target to make sparc-insns-auto.c:
-$(srcdir)/sparc-insns-auto.c: sparc-insns-auto.sh sparc-misc-auto.sh
+sparc-insns-auto.c: sparc-insns-auto.sh sparc-misc-auto.sh
 	$(SHELL) $(srcdir)/sparc-insns-auto.sh > $@
 	$(SHELL) $(srcdir)/sparc-misc-auto.sh >> $@
 
 # target to make sparc-bus-auto.c:
-$(srcdir)/sparc-bus-auto.c: sparc-bus-auto.sh
+sparc-bus-auto.c: sparc-bus-auto.sh
 	$(SHELL) $(srcdir)/sparc-bus-auto.sh > $@
 
 # target to make sparc-fpu-auto.c:
-$(srcdir)/sparc-fpu-auto.c: sparc-fpu-auto.sh
+sparc-fpu-auto.c: sparc-fpu-auto.sh
 	$(SHELL) $(srcdir)/sparc-fpu-auto.sh > $@
 
 # target to make sparc-vis-auto.c:
-$(srcdir)/sparc-vis-auto.c: sparc-vis-auto.sh
+sparc-vis-auto.c: sparc-vis-auto.sh
 	$(SHELL) $(srcdir)/sparc-vis-auto.sh > $@
 
 include $(top_srcdir)/modules.mk
