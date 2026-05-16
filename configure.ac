@@ -1248,8 +1248,8 @@ ac_cv_sizeof_short="$ac_cv_sizeof_short"
 bus_size_max="$bus_size_max"
 ]])
 
-AS_IF([test "x${have_libopenvpn}" != xno], [],
-	    [test -d "$srcdir/libopenvpn"], [AC_CONFIG_SUBDIRS([libopenvpn])],
+AS_IF([test -d "$srcdir/libopenvpn"], [AC_CONFIG_SUBDIRS([libopenvpn])],
+	    [test "x${have_libopenvpn}" != xno], [],
 	    [AC_MSG_ERROR([libopenvpn package not found installed or in libopenvpn subdir])])
 
 dnl Writes files.

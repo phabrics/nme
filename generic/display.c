@@ -524,7 +524,8 @@ _tme_screen_mode_change(struct tme_fb_connection *conn_fb)
   assert (screen != NULL);
 
   /* request configuration on actual screen: */
-  _tme_screen_configure(screen);
+  if(screen->tme_screen_update != TME_SCREEN_UPDATE_INIT)
+    _tme_screen_configure(screen);
   
   /* unlock our mutex: */
   tme_mutex_unlock(&display->tme_display_mutex);
