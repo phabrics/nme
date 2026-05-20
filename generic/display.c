@@ -722,6 +722,7 @@ void tme_display_init(struct tme_element *element,
   display->tme_screen_height = 1080;
   display->tme_screen_size = (screen_size) ? (screen_size) : (sizeof(struct tme_screen));
   display->tme_display_callout_flags = TME_DISPLAY_CALLOUT_INIT;
+  display->tme_screen_mouse_keyval = display->tme_display_key_void_symbol;
   
   /* fill the element: */
   element->tme_element_private = display;

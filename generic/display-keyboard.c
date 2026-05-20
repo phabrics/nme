@@ -227,6 +227,12 @@ _tme_keyboard_key_event(int state, tme_keyboard_keyval_t key, struct tme_display
   int new_callouts;
   int rc, i;
 
+  if(key == display->tme_screen_mouse_keyval)
+    return NME_SCREEN_KEY_MOUSE;
+  
+  if(key == display->tme_screen_fullscreen_keyval)
+    return NME_SCREEN_KEY_FULLSCREEN;
+  
   /* make a tme event from this key event: */
   tme_event.tme_keyboard_event_type
     = (state&1
@@ -279,7 +285,7 @@ _tme_keyboard_key_event(int state, tme_keyboard_keyval_t key, struct tme_display
   tme_mutex_unlock(&display->tme_display_mutex);
 
   /* don't process this event any further: */
-  return (TRUE);
+  return NME_SCREEN_KEY_NONE;
 }
 
 /* this is called to look up a keysym: */

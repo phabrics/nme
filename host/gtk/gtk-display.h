@@ -91,11 +91,6 @@ typedef struct tme_gtk_screen {
   /* the name of the mouse toggle key: */
   GtkWidget *tme_gtk_screen_mouse_key;
 
-  /* if GDK_VoidSymbol, mouse mode is off.  otherwise,
-     mouse mode is on, and this is the keyval that will
-     turn mouse mode off: */
-  guint tme_gtk_screen_mouse_keyval;
-
 #if GTK_MAJOR_VERSION == 3
   cairo_format_t tme_gtk_screen_format;
   GtkEventController *key, *mouse, *motion, *event;

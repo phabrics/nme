@@ -582,6 +582,7 @@ NME_ELEMENT_SUB_NEW_DECL(host_gtk,display) {
   display->tme_display_keyval_from_name = gdk_keyval_from_name;
   display->tme_display_keyval_convert_case = gdk_keyval_convert_case;
   display->tme_display_key_void_symbol = GDK_KEY_VoidSymbol;
+  display->tme_screen_fullscreen_keyval = GDK_KEY_F11;
   display->tme_display_mouse_warp = TRUE;
   /* set the display-specific functions: */
   display->tme_display_init = _tme_gtk_display_init;

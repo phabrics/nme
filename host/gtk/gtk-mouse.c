@@ -149,6 +149,4 @@ _tme_gtk_mouse_attach(struct tme_gtk_screen *screen)
   g_signal_connect(press, "pressed", G_CALLBACK(_tme_gtk_mouse_button_down),
 		   screen); 
   
-  /* mouse mode is off: */
-  screen->tme_gtk_screen_mouse_keyval = GDK_KEY_VoidSymbol;
 }

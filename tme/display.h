@@ -58,6 +58,9 @@
 #define TME_SCREEN_UPDATE_RESIZE                (2)
 #define TME_SCREEN_UPDATE_INIT                  (3)
 #define TME_SCREEN_MAXSIZE                   (1024)
+#define NME_SCREEN_KEY_NONE                  (1)
+#define NME_SCREEN_KEY_MOUSE                 (2)
+#define NME_SCREEN_KEY_FULLSCREEN            (3)
 /* types: */
 
 struct tme_display;
@@ -167,10 +170,16 @@ struct tme_display {
   int tme_display_mouse_warp;
   
   /* a convenience pointer for any platform-specific host data: */
-  void *tme_screen_data;
+  void *tme_display_data;
 
   /* an array of keyboard modifier masks for a given display: */
   int *tme_display_keymods;
+
+  /* key to toggle mouse mode: */
+  tme_keyboard_keyval_t tme_screen_mouse_keyval;
+
+  /* key to toggle fullscreen mode: */
+  tme_keyboard_keyval_t tme_screen_fullscreen_keyval;
 
   /* the display host-specific versions of common keyboard lookup functions: */
   char *(*tme_display_keyval_name)(tme_keyboard_keyval_t);

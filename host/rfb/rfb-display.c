@@ -112,14 +112,14 @@ _tme_rfb_display_init(struct tme_display *display) {
   //  server->httpEnableProxyConnect = TRUE;
   rfbInitServer(server);
   
-  display->tme_screen_data = server;
+  display->tme_display_data = server;
   return true;
 }
 
 static bool
 _tme_rfb_display_update(struct tme_display *display) {
   long usec;
-  rfbScreenInfoPtr server = display->tme_screen_data;
+  rfbScreenInfoPtr server = display->tme_display_data;
   
   if(!rfbIsActive(server)) return false;
 
@@ -130,7 +130,7 @@ _tme_rfb_display_update(struct tme_display *display) {
 
 static void
 _tme_rfb_display_bell(struct tme_display *display) {
-  rfbSendBell(display->tme_screen_data);
+  rfbSendBell(display->tme_display_data);
 }
 
 /* switch to new framebuffer contents */
@@ -140,7 +140,7 @@ static void _tme_rfb_screen_resize(struct tme_screen *screen)
   struct tme_fb_connection *conn_fb = screen->tme_screen_fb;
   int width = conn_fb->tme_fb_connection_width;
   int height = conn_fb->tme_fb_connection_height;
-  rfbScreenInfoPtr server = screen->tme_screen_display->tme_screen_data;
+  rfbScreenInfoPtr server = screen->tme_screen_display->tme_display_data;
 
   conn_fb->tme_fb_connection_buffsz = width * height * bpp;   
   conn_fb->tme_fb_connection_scanline_pad = _tme_scanline_pad(width * bpp);
@@ -158,7 +158,7 @@ static void _tme_rfb_screen_resize(struct tme_screen *screen)
 static void
 _tme_rfb_screen_redraw(struct tme_screen *screen, int x, int y, int w, int h)
 {
-  rfbScreenInfoPtr server = screen->tme_screen_display->tme_screen_data;
+  rfbScreenInfoPtr server = screen->tme_screen_display->tme_display_data;
   
   if((char *)screen->tme_screen_fb->tme_fb_connection_buffer == server->frameBuffer)
     rfbMarkRectAsModified(server, x, y, w, h);
@@ -170,7 +170,7 @@ _tme_rfb_screen_init(struct tme_screen *screen)
 {
   struct tme_display *display = screen->tme_screen_display;
   struct tme_fb_connection *conn_fb = screen->tme_screen_fb;
-  rfbScreenInfoPtr server = display->tme_screen_data;
+  rfbScreenInfoPtr server = display->tme_display_data;
   rfbPixelFormat* format=&server->serverFormat;
 
   server->desktopName = display->tme_display_title;

@@ -52,14 +52,24 @@ _tme_gtk_keyboard_key_down(
   GdkModifierType state,
   struct tme_gtk_screen *screen)
 {
-  if(screen->tme_gtk_screen_mouse_keyval
-     != keyval)
-    return _tme_keyboard_key_event((state<<1)+1, keyval, screen->screen.tme_screen_display);
+  int kev = _tme_keyboard_key_event((state<<1)+1, keyval, screen->screen.tme_screen_display);
 
-  gtk_switch_set_active(GTK_SWITCH(screen->tme_gtk_screen_mouse_button), FALSE);
-
-  return (TRUE);
+  switch(kev) {
+  case NME_SCREEN_KEY_MOUSE:
+    gtk_switch_set_active(GTK_SWITCH(screen->tme_gtk_screen_mouse_button), FALSE);
+    break;
+  case NME_SCREEN_KEY_FULLSCREEN:
+    screen->screen.tme_screen_fb_xlat = NULL;
+    if(gtk_window_is_fullscreen(GTK_WINDOW(screen->tme_gtk_screen_window)))
+      gtk_window_unfullscreen(GTK_WINDOW(screen->tme_gtk_screen_window));
+    else
+      gtk_window_fullscreen(GTK_WINDOW(screen->tme_gtk_screen_window));
+    break;
+  default:
+    break;
+  }
   
+  return kev;
 }
 
 static gboolean
@@ -82,7 +92,7 @@ _tme_gtk_mouse_key_down(
   GdkModifierType* state,
   struct tme_gtk_screen *screen)
 {
-  struct tme_gtk_display *display;
+  struct tme_display *display;
   int rc;
   char *status;
 
@@ -90,7 +100,7 @@ _tme_gtk_mouse_key_down(
   display = screen->screen.tme_screen_display;
 
   /* lock the mutex: */
-  tme_mutex_lock(&display->display.tme_display_mutex);
+  tme_mutex_lock(&display->tme_display_mutex);
 
 #if GTK_MAJOR_VERSION == 4
   gtk_editable_set_text(GTK_EDITABLE(screen->tme_gtk_screen_mouse_key), gdk_keyval_name(keyval));
@@ -99,13 +109,12 @@ _tme_gtk_mouse_key_down(
 #endif  
 
   /* we are now in mouse mode: */
-  screen->tme_gtk_screen_mouse_keyval
-    = keyval;
+  display->tme_screen_mouse_keyval = keyval;
 
   gtk_widget_grab_focus(screen->tme_gtk_screen_draw);
 
   /* unlock the mutex: */
-  tme_mutex_unlock(&display->display.tme_display_mutex);
+  tme_mutex_unlock(&display->tme_display_mutex);
 
   return (TRUE);
 }

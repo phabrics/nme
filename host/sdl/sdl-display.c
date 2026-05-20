@@ -431,7 +431,23 @@ _tme_sdl_display_update(struct tme_display *display) {
 #else
     case SDL_EVENT_KEY_DOWN:
       keydown = 1;
-      if (e.key.key == SDLK_F11) {
+    case SDL_EVENT_KEY_UP:
+#endif
+      if (viewOnly)
+	break;
+#ifdef _TME_HAVE_SDL2
+      SDL_Keycode sym = e.key.keysym.sym;
+      SDL_Keymod mod = e.key.keysym.mod;
+
+      _tme_keyboard_key_event(keydown | mod<<1,
+			      sdl_to_tme_keysym(sym), display);
+#else
+      SDL_Keycode sym = e.key.key;
+      SDL_Keymod mod = e.key.mod;
+
+      int kev = _tme_keyboard_key_event(keydown | mod<<1,
+					sdl_to_tme_keysym(sym), display);
+      if (keydown && kev == NME_SCREEN_KEY_FULLSCREEN) {
 	for (struct tme_sdl_screen *screen = display->tme_display_screens;
 	     screen != NULL;
 	     screen = screen->screen.tme_screen_next)
@@ -441,19 +457,7 @@ _tme_sdl_display_update(struct tme_display *display) {
 	    screen->fullscreen = !screen->fullscreen;
 	  }
       }
-    case SDL_EVENT_KEY_UP:
 #endif
-      if (viewOnly)
-	break;
-#ifdef _TME_HAVE_SDL2
-      SDL_Keycode sym = e.key.keysym.sym;
-      SDL_Keymod mod = e.key.keysym.mod;
-#else
-      SDL_Keycode sym = e.key.key;
-      SDL_Keymod mod = e.key.mod;
-#endif
-      _tme_keyboard_key_event(keydown | mod<<1,
-			      sdl_to_tme_keysym(sym), display);
       if (sym == SDLK_RALT)
 	rightAltKeyDown = keydown;
       if (sym == SDLK_LALT)
@@ -680,10 +684,12 @@ NME_ELEMENT_SUB_NEW_DECL(host_sdl,display) {
   display->tme_display_keyval_from_name = gdk_keyval_from_name;
   display->tme_display_keyval_convert_case = gdk_keyval_convert_case;
   display->tme_display_key_void_symbol = GDK_KEY_VoidSymbol;
+  display->tme_screen_fullscreen_keyval = GDK_KEY_F11;
 #else
   display->tme_display_keyval_name = _tme_sdl_keyval_name;
   display->tme_display_keyval_from_name = _tme_sdl_keyval_from_name;
-  display->tme_display_key_void_symbol = SDLK_UNKNOWN;
+  display->tme_display_key_void_symbol = sdl_to_tme_keysym(SDLK_UNKNOWN);
+  display->tme_screen_fullscreen_keyval = sdl_to_tme_keysym(SDLK_F11);
 #endif
   display->tme_display_keymods = _tme_sdl_keymods;
   /* set the display-specific functions: */
