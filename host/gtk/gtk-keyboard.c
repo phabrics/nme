@@ -60,7 +60,11 @@ _tme_gtk_keyboard_key_down(
     break;
   case NME_SCREEN_KEY_FULLSCREEN:
     screen->screen.tme_screen_fb_xlat = NULL;
+#if GTK_MAJOR_VERSION == 4
     if(gtk_window_is_fullscreen(GTK_WINDOW(screen->tme_gtk_screen_window)))
+#else
+      if(!_nme_screen_fullscreen_toggle(screen))
+#endif
       gtk_window_unfullscreen(GTK_WINDOW(screen->tme_gtk_screen_window));
     else
       gtk_window_fullscreen(GTK_WINDOW(screen->tme_gtk_screen_window));

@@ -89,7 +89,6 @@ struct tme_sdl_screen {
   /* the generic screen structure */
   struct tme_screen screen;
   int sdlFlags;
-  bool fullscreen;
   SDL_Surface* sdl;
   SDL_Texture *sdlTexture;
   SDL_Renderer *sdlRenderer;
@@ -452,9 +451,9 @@ _tme_sdl_display_update(struct tme_display *display) {
 	     screen != NULL;
 	     screen = screen->screen.tme_screen_next)
 	  if(SDL_GetWindowID(screen->sdlWindow) == e.key.windowID &&
-	     SDL_SetWindowFullscreen(screen->sdlWindow, !screen->fullscreen)) {
+	     SDL_SetWindowFullscreen(screen->sdlWindow,
+				     _nme_screen_fullscreen_toggle(screen))) {
 	    screen->screen.tme_screen_fb_xlat = NULL;
-	    screen->fullscreen = !screen->fullscreen;
 	  }
       }
 #endif
@@ -512,7 +511,7 @@ static void _tme_sdl_screen_resize(struct tme_sdl_screen *screen)
   if (enableResizable)
     screen->sdlFlags |= SDL_WINDOW_RESIZABLE;
 #ifdef _TME_HAVE_SDL2
-  if (enable_fullscreen)
+  if (screen->screen.fullscreen)
     screen->sdlFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 #endif
   /* (re)create the surface used as the client's framebuffer */
@@ -607,8 +606,7 @@ static void _tme_sdl_screen_resize(struct tme_sdl_screen *screen)
 	    closest.w, closest.h, closest.pixel_density, closest.refresh_rate);
     SDL_SetWindowFullscreenMode(screen->sdlWindow, &closest);
   }
-  screen->fullscreen=enable_fullscreen;
-  SDL_SetWindowFullscreen(screen->sdlWindow, enable_fullscreen);
+  SDL_SetWindowFullscreen(screen->sdlWindow, screen->screen.fullscreen);
 
 #endif
   

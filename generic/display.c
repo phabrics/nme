@@ -599,6 +599,9 @@ _tme_screen_add(struct tme_display *display,
   /* there is no translation function: */
   screen->tme_screen_fb_xlat = NULL;
 
+  /* initialize fullscreen mode: */
+  screen->fullscreen=enable_fullscreen;
+
   /* schedule the screen initialization: */
   screen->tme_screen_update = TME_SCREEN_UPDATE_INIT;
   

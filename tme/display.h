@@ -90,6 +90,9 @@ struct tme_screen {
   /* if nonzero, the screen has changed and should be updated in the display: */
   int tme_screen_update;
 
+  /* current fullscreen mode of this screen: */
+  bool fullscreen;
+  
   /* the translation function: */
   int (*tme_screen_fb_xlat) _TME_P((struct tme_fb_connection *, 
 				    struct tme_fb_connection *));
@@ -220,6 +223,7 @@ struct tme_screen *_tme_screen_add _TME_P((struct tme_display *,
 void _tme_screen_scale_set _TME_P((struct tme_screen *screen,
 				   int scale_new));
 void _tme_screen_xlat_set _TME_P((struct tme_screen *screen));
+static _tme_inline bool _nme_screen_fullscreen_toggle(struct tme_screen *screen) { return screen->fullscreen = !screen->fullscreen; }
 void _tme_keyboard_new _TME_P((struct tme_display *));
 int _tme_keyboard_connections_new _TME_P((struct tme_display *,
 					  struct tme_connection **));
