@@ -378,9 +378,9 @@ tme_bswap_u128(tme_uint128_t x)
 #endif /* TME_HAVE_INT128_T */
 
 /* misc: */
-#ifdef __clang__
+//#ifdef __clang__
 #define ffs __builtin_ffs
-#endif
+//#endif
 
 /* versions: */
 #define TME_X_VERSION(current, age)	(((current) << 10) | (age))
@@ -419,6 +419,9 @@ tme_bswap_u128(tme_uint128_t x)
 
 /* a hint to display to use fullscreen mode if available: */
 extern bool enable_fullscreen;
+
+/* use recode if available: */
+extern bool enable_recode;
 
 static _tme_inline void tme_beep _TME_P((void)) {
 #ifdef WIN32

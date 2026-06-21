@@ -19,7 +19,7 @@ noinst_SCRIPTS = sparc-misc-auto.sh \
 	sparc-fpu-auto.sh \
 	sparc-vis-auto.sh \
 	sparc-bus-auto.sh
-BUILT_SOURCES = sparc-auto.h sparc-insns-auto.c sparc-bus-auto.c sparc-fpu-auto.c sparc-vis-auto.c
+BUILT_SOURCES = sparc-auto.h sparc-auto.c sparc-bus-auto.c sparc-fpu-auto.c sparc-vis-auto.c
 MAINTAINERCLEANFILES = $(noinst_SCRIPTS) $(BUILT_SOURCES)
 
 EXTRA_DIST = sparc-impl.h \
@@ -36,21 +36,9 @@ sparc-auto.h: sparc-misc-auto.sh sparc-insns-auto.sh
 	$(SHELL) $(srcdir)/sparc-misc-auto.sh --header > $@
 	$(SHELL) $(srcdir)/sparc-insns-auto.sh --header >> $@
 
-# target to make sparc-insns-auto.c:
-sparc-insns-auto.c: sparc-insns-auto.sh sparc-misc-auto.sh
+# target to make sparc-auto.c:
+sparc-auto.c: sparc-insns-auto.sh sparc-misc-auto.sh
 	$(SHELL) $(srcdir)/sparc-insns-auto.sh > $@
 	$(SHELL) $(srcdir)/sparc-misc-auto.sh >> $@
-
-# target to make sparc-bus-auto.c:
-sparc-bus-auto.c: sparc-bus-auto.sh
-	$(SHELL) $(srcdir)/sparc-bus-auto.sh > $@
-
-# target to make sparc-fpu-auto.c:
-sparc-fpu-auto.c: sparc-fpu-auto.sh
-	$(SHELL) $(srcdir)/sparc-fpu-auto.sh > $@
-
-# target to make sparc-vis-auto.c:
-sparc-vis-auto.c: sparc-vis-auto.sh
-	$(SHELL) $(srcdir)/sparc-vis-auto.sh > $@
 
 include $(top_srcdir)/modules.mk

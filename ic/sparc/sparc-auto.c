@@ -4554,11 +4554,13 @@ tme_sparc32_ls(struct tme_sparc *ic,
         tlb->tme_sparc_tlb_addr_first = 1;
         tlb->tme_sparc_tlb_addr_last = 0;
 #if TME_SPARC_HAVE_RECODE(ic)
-        if (ls.tme_sparc_ls_lsinfo & TME_SPARC_LSINFO_OP_FETCH) {
-          tme_sparc32_recode_chain_tlb_update(ic, &ls);
-        }
-        else {
-          tme_sparc32_recode_ls_tlb_update(ic, &ls);
+        if (enable_recode) {
+          if (ls.tme_sparc_ls_lsinfo & TME_SPARC_LSINFO_OP_FETCH) {
+            tme_sparc32_recode_chain_tlb_update(ic, &ls);
+          }
+          else {
+            tme_sparc32_recode_ls_tlb_update(ic, &ls);
+          }
         }
 #endif /* TME_SPARC_HAVE_RECODE(ic) */
 
@@ -4623,11 +4625,13 @@ tme_sparc32_ls(struct tme_sparc *ic,
 
       /* update any recode TLB entry: */
 #if TME_SPARC_HAVE_RECODE(ic)
-      if (ls.tme_sparc_ls_lsinfo & TME_SPARC_LSINFO_OP_FETCH) {
-        tme_sparc32_recode_chain_tlb_update(ic, &ls);
-      }
-      else {
-        tme_sparc32_recode_ls_tlb_update(ic, &ls);
+      if (enable_recode) {
+        if (ls.tme_sparc_ls_lsinfo & TME_SPARC_LSINFO_OP_FETCH) {
+          tme_sparc32_recode_chain_tlb_update(ic, &ls);
+        }
+        else {
+          tme_sparc32_recode_ls_tlb_update(ic, &ls);
+        }
       }
 #endif /* TME_SPARC_HAVE_RECODE(ic) */
 
@@ -11359,11 +11363,13 @@ tme_sparc64_ls(struct tme_sparc *ic,
         tlb->tme_sparc_tlb_addr_first = 1;
         tlb->tme_sparc_tlb_addr_last = 0;
 #if TME_SPARC_HAVE_RECODE(ic)
-        if (ls.tme_sparc_ls_lsinfo & TME_SPARC_LSINFO_OP_FETCH) {
-          tme_sparc64_recode_chain_tlb_update(ic, &ls);
-        }
-        else {
-          tme_sparc64_recode_ls_tlb_update(ic, &ls);
+        if (enable_recode) {
+          if (ls.tme_sparc_ls_lsinfo & TME_SPARC_LSINFO_OP_FETCH) {
+            tme_sparc64_recode_chain_tlb_update(ic, &ls);
+          }
+          else {
+            tme_sparc64_recode_ls_tlb_update(ic, &ls);
+          }
         }
 #endif /* TME_SPARC_HAVE_RECODE(ic) */
 
@@ -11428,11 +11434,13 @@ tme_sparc64_ls(struct tme_sparc *ic,
 
       /* update any recode TLB entry: */
 #if TME_SPARC_HAVE_RECODE(ic)
-      if (ls.tme_sparc_ls_lsinfo & TME_SPARC_LSINFO_OP_FETCH) {
-        tme_sparc64_recode_chain_tlb_update(ic, &ls);
-      }
-      else {
-        tme_sparc64_recode_ls_tlb_update(ic, &ls);
+      if (enable_recode) {
+        if (ls.tme_sparc_ls_lsinfo & TME_SPARC_LSINFO_OP_FETCH) {
+          tme_sparc64_recode_chain_tlb_update(ic, &ls);
+        }
+        else {
+          tme_sparc64_recode_ls_tlb_update(ic, &ls);
+        }
       }
 #endif /* TME_SPARC_HAVE_RECODE(ic) */
 

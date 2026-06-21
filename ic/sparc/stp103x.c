@@ -722,7 +722,7 @@ _tme_stp103x_update_pstate(struct tme_sparc *ic,
 #if TME_HAVE_RECODE && TME_RECODE_SIZE_GUEST_MAX > TME_RECODE_SIZE_32
   
   /* if PSTATE.AM and/or PSTATE.CLE are changing: */
-  if (__tme_predict_false(pstate_xor
+  if (enable_recode && __tme_predict_false(pstate_xor
 			  & (TME_SPARC64_PSTATE_AM
 			     | TME_SPARC64_PSTATE_CLE
 			     ))) {
@@ -875,7 +875,7 @@ TME_SPARC_FORMAT3(_tme_stp103x_rdpr, tme_uint64_t)
      deccc even on a real stp103x; "1000 ms" on the PROM on a real
      Ultra-1 delays noticeably longer than one second.
 
-     this function is a gross hack that attempts to reduce the delay.
+s     this function is a gross hack that attempts to reduce the delay.
      it modifies the original loop that calculates the delay factor to
      use (for the "best" factor) an inccc instruction instead of a
      inc, to make it more symmetric with the delay loop.

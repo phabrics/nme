@@ -342,7 +342,7 @@ _TME_RCSID("$Id: sparc-impl.h,v 1.11 2010/06/05 16:13:15 fredette Exp $");
 /* this updates the recode CWP register offsets: */
 #if TME_HAVE_RECODE
 #define _TME_SPARC_RECODE_CWP_UPDATE(ic, reg_type)		\
-  do {								\
+  if(enable_recode) {						\
     (ic)->tme_sparc_recode_window_base_offsets[0]		\
       = (ic)->tme_sparc_reg8_offset[1] * 8 * sizeof(reg_type);	\
     (ic)->tme_sparc_recode_window_base_offsets[1]		\
@@ -351,7 +351,7 @@ _TME_RCSID("$Id: sparc-impl.h,v 1.11 2010/06/05 16:13:15 fredette Exp $");
       (ic)->tme_sparc_recode_window_base_offsets[2]		\
 	= (ic)->tme_sparc_reg8_offset[0] * 8 * sizeof(reg_type);\
     }								\
-  } while (/* CONSTCOND */ 0)
+  } 
 #else  /* !TME_HAVE_RECODE */
 #define _TME_SPARC_RECODE_CWP_UPDATE(ic, reg_type)		\
   do {								\
@@ -1197,7 +1197,8 @@ tme_recode_uguest_t tme_sparc_timing_loop_assist _TME_P((struct tme_ic *, tme_re
 void tme_sparc_recode_init _TME_P((struct tme_sparc *));
 #if TME_HAVE_RECODE
 tme_recode_thunk_off_t tme_sparc_recode _TME_P((struct tme_sparc *, const struct tme_sparc_tlb *, const tme_shared tme_uint32_t *));
-void tme_sparc_recode_invalidate_all _TME_P((struct tme_sparc *));
+#define tme_sparc_recode_invalidate_all(ic) if(enable_recode) _tme_sparc_recode_invalidate_all(ic)
+void _tme_sparc_recode_invalidate_all _TME_P((struct tme_sparc *));
 tme_recode_uguest_t tme_sparc32_recode_insn_assist_redispatch _TME_P((struct tme_sparc *));
 tme_uint32_t tme_sparc32_recode_insn_current _TME_P((const struct tme_sparc *));
 void tme_sparc32_recode_chain_tlb_update _TME_P((struct tme_sparc *, const struct tme_sparc_ls *));
@@ -1221,7 +1222,7 @@ void tme_sparc_recode_verify_reg_tick _TME_P((struct tme_sparc *, void *));
 void tme_sparc_recode_verify_reg_tick_now _TME_P((struct tme_sparc *, const void *));
 void tme_sparc_recode_verify_end _TME_P((struct tme_sparc *, tme_uint32_t));
 void tme_sparc_recode_verify_end_preinstruction _TME_P((struct tme_sparc *));
-#define tme_sparc_recode_verify_replay_last_pc(ic) ((ic)->tme_sparc_recode_verify_replay_last_pc)
+#define tme_sparc_recode_verify_replay_last_pc(ic) ((enable_recode) ? ((ic)->tme_sparc_recode_verify_replay_last_pc) : (0))
 #define TME_SPARC_RECODE_VERIFY_PC_NONE		(1)
 #endif /* _TME_SPARC_RECODE_VERIFY */
 #else  /* !TME_HAVE_RECODE */

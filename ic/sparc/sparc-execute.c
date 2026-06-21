@@ -126,51 +126,53 @@ _TME_SPARC_EXECUTE_NAME(struct tme_sparc *ic)
   ic->tme_sparc_asi_mask_data = asi_mask_data;
 
 #if TME_SPARC_HAVE_RECODE(ic)
+  if(enable_recode) {
 
-  /* set the recode read/write TLB flags mask to and with the flags
+    /* set the recode read/write TLB flags mask to and with the flags
      from a read/write thunk, before being tested against the flags in
      a recode DTLB entry.  this TLB flags mask must clear flags that
      do not apply, based on the current state: */
-  ic->tme_sparc_recode_rw_tlb_flags
-    = (TME_RECODE_TLB_FLAGS_MASK(ic->tme_sparc_recode_ic)
-       - (
-
-	  /* the load and store flags for the other privilege level do
-	     not apply, because we're not at that privilege level: */
-	  (TME_SPARC_PRIV(ic)
-	   ? (TME_SPARC_RECODE_TLB_FLAG_LD_USER(ic)
-	      + TME_SPARC_RECODE_TLB_FLAG_ST_USER(ic))
-	   : (TME_SPARC_RECODE_TLB_FLAG_LD_PRIV(ic)
-	      + TME_SPARC_RECODE_TLB_FLAG_ST_PRIV(ic)))
-
-	  /* on a v9 CPU, if the ASI register has the default data
-	     ASI, but with the no-fault bit set, the ASI register is
-	     correct for no-fault loads, and the no-fault load bit
-	     doesn't apply: */
-	  + ((TME_SPARC_VERSION(ic) >= 9
-	      && ((TME_SPARC_MEMORY_FLAGS(ic) & TME_SPARC_MEMORY_FLAG_HAS_NUCLEUS) == 0
-		  || ic->tme_sparc64_ireg_tl == 0)
-	      && (ic->tme_sparc64_ireg_asi
-		  == (TME_SPARC_ASI_MASK_WHICH(asi_mask_data)
-		      + TME_SPARC64_ASI_FLAG_NO_FAULT)))
-	     ? TME_SPARC_RECODE_TLB_FLAG_LD_NF(ic)
-	     : 0)));
-
-  /* set the recode chain TLB flags mask to and with the flags from
-     the chain thunk, before being tested against the flags in a
-     recode ITLB entry.  this TLB flags mask must clear flags that do
-     not apply, based on the current state: */
-  ic->tme_sparc_recode_chain_tlb_flags
-    = (TME_RECODE_TLB_FLAGS_MASK(ic->tme_sparc_recode_ic)
-       - (
-
-	  /* the fetch flags for the other privilege level do not
-	     apply, because we're not at that privilege level: */
-	  (TME_SPARC_PRIV(ic)
-	   ? TME_SPARC_RECODE_TLB_FLAG_CHAIN_USER(ic)
-	   : TME_SPARC_RECODE_TLB_FLAG_CHAIN_PRIV(ic))
-	  ));
-
+    ic->tme_sparc_recode_rw_tlb_flags
+      = (TME_RECODE_TLB_FLAGS_MASK(ic->tme_sparc_recode_ic)
+	 - (
+	    
+	    /* the load and store flags for the other privilege level do
+	       not apply, because we're not at that privilege level: */
+	    (TME_SPARC_PRIV(ic)
+	     ? (TME_SPARC_RECODE_TLB_FLAG_LD_USER(ic)
+		+ TME_SPARC_RECODE_TLB_FLAG_ST_USER(ic))
+	     : (TME_SPARC_RECODE_TLB_FLAG_LD_PRIV(ic)
+		+ TME_SPARC_RECODE_TLB_FLAG_ST_PRIV(ic)))
+	    
+	    /* on a v9 CPU, if the ASI register has the default data
+	       ASI, but with the no-fault bit set, the ASI register is
+	       correct for no-fault loads, and the no-fault load bit
+	       doesn't apply: */
+	    + ((TME_SPARC_VERSION(ic) >= 9
+		&& ((TME_SPARC_MEMORY_FLAGS(ic) & TME_SPARC_MEMORY_FLAG_HAS_NUCLEUS) == 0
+		    || ic->tme_sparc64_ireg_tl == 0)
+		&& (ic->tme_sparc64_ireg_asi
+		    == (TME_SPARC_ASI_MASK_WHICH(asi_mask_data)
+			+ TME_SPARC64_ASI_FLAG_NO_FAULT)))
+	       ? TME_SPARC_RECODE_TLB_FLAG_LD_NF(ic)
+	       : 0)));
+    
+    /* set the recode chain TLB flags mask to and with the flags from
+       the chain thunk, before being tested against the flags in a
+       recode ITLB entry.  this TLB flags mask must clear flags that do
+       not apply, based on the current state: */
+    ic->tme_sparc_recode_chain_tlb_flags
+      = (TME_RECODE_TLB_FLAGS_MASK(ic->tme_sparc_recode_ic)
+	 - (
+	    
+	    /* the fetch flags for the other privilege level do not
+	       apply, because we're not at that privilege level: */
+	    (TME_SPARC_PRIV(ic)
+	     ? TME_SPARC_RECODE_TLB_FLAG_CHAIN_USER(ic)
+	     : TME_SPARC_RECODE_TLB_FLAG_CHAIN_PRIV(ic))
+	    ));
+    
+  }
 #endif /* TME_SPARC_HAVE_RECODE(ic) */
 
   /* create an invalid instruction TLB entry, and use it as the initial
@@ -595,93 +597,95 @@ _TME_SPARC_EXECUTE_NAME(struct tme_sparc *ic)
     ic->tme_sparc_ireg(TME_SPARC_G0_OFFSET(ic) + TME_SPARC_IREG_G0) = 0;
 
 #if TME_SPARC_HAVE_RECODE(ic)
+    if(enable_recode) {
 
-    /* if this is the idle PC, and the idle type marks the idle when
-       control reaches the idle PC: */
-    if (__tme_predict_false(pc == ic->tme_sparc_idle_pcs[0])) {
-      if (TME_SPARC_IDLE_TYPE_IS(ic,
-				 (TME_SPARC_IDLE_TYPES_TARGET_CALL
-				  | TME_SPARC_IDLE_TYPES_TARGET_BRANCH
-				  ))) {
+      /* if this is the idle PC, and the idle type marks the idle when
+	 control reaches the idle PC: */
+      if (__tme_predict_false(pc == ic->tme_sparc_idle_pcs[0])) {
+	if (TME_SPARC_IDLE_TYPE_IS(ic,
+				   (TME_SPARC_IDLE_TYPES_TARGET_CALL
+				    | TME_SPARC_IDLE_TYPES_TARGET_BRANCH
+				    ))) {
 
-	/* mark the idle: */
-	TME_SPARC_IDLE_MARK(ic);
+	  /* mark the idle: */
+	  TME_SPARC_IDLE_MARK(ic);
 
-	/* poison the previous PC to prevent all recoding, to
-	   guarantee that we always see the idle PC (if we allowed the
-	   idle PC to be recoded, it might get chained to): */
-	pc_previous = pc - sizeof(tme_uint32_t);
+	  /* poison the previous PC to prevent all recoding, to
+	     guarantee that we always see the idle PC (if we allowed the
+	     idle PC to be recoded, it might get chained to): */
+	  pc_previous = pc - sizeof(tme_uint32_t);
+	}
       }
-    }
 
-    /* if this PC does not follow the previous PC, but the next PC
-       follows this PC, this PC is a simple control transfer target: */
-    if (__tme_predict_false(((tme_sparc_ireg_t) (pc - sizeof(tme_uint32_t)))
-			    != pc_previous)) {
-      if (__tme_predict_true(((tme_sparc_ireg_t) (pc + sizeof(tme_uint32_t)))
-			     == ic->tme_sparc_ireg(TME_SPARC_IREG_PC_NEXT))) {
-	tme_recode_thunk_off_t insns_thunk = 0;
+      /* if this PC does not follow the previous PC, but the next PC
+	 follows this PC, this PC is a simple control transfer target: */
+      if (__tme_predict_false(((tme_sparc_ireg_t) (pc - sizeof(tme_uint32_t)))
+			      != pc_previous)) {
+	if (__tme_predict_true(((tme_sparc_ireg_t) (pc + sizeof(tme_uint32_t)))
+			       == ic->tme_sparc_ireg(TME_SPARC_IREG_PC_NEXT))) {
+	  tme_recode_thunk_off_t insns_thunk = 0;
 
-	/* if the current instruction TLB entry is not the invalid TLB
-	   entry, and there is an instructions thunk for this PC: */
-	if (__tme_predict_true(itlb_current != &itlb_invalid
-			       && ((insns_thunk
-				   = tme_sparc_recode(ic,
-						      itlb_current,
-						      ((const tme_shared tme_uint32_t *) 
-						       (itlb_current->tme_sparc_tlb_emulator_off_read
-							+ pc)))) != 0))) {
+	  /* if the current instruction TLB entry is not the invalid TLB
+	     entry, and there is an instructions thunk for this PC: */
+	  if (__tme_predict_true(itlb_current != &itlb_invalid
+				 && ((insns_thunk
+				      = tme_sparc_recode(ic,
+							 itlb_current,
+							 ((const tme_shared tme_uint32_t *) 
+							  (itlb_current->tme_sparc_tlb_emulator_off_read
+							   + pc)))) != 0))) {
 
-	  /* begin verifying this instructions thunk: */
-	  tme_sparc_recode_verify_begin(ic);
+	    /* begin verifying this instructions thunk: */
+	    tme_sparc_recode_verify_begin(ic);
 
-	  /* like this execution loop, the recode instructions thunks
-	     expect PC_next to be the next instruction to execute.
-	     we've already updated the PCs above, so we have to undo
-	     the update of PC_next.  NB that we don't have to undo PC
-	     or PC_next_next, since the instructions thunks don't read
-	     them: */
-	  pc = ic->tme_sparc_ireg(TME_SPARC_IREG_PC);
-	  ic->tme_sparc_ireg(TME_SPARC_IREG_PC_NEXT) = pc;
+	    /* like this execution loop, the recode instructions thunks
+	       expect PC_next to be the next instruction to execute.
+	       we've already updated the PCs above, so we have to undo
+	       the update of PC_next.  NB that we don't have to undo PC
+	       or PC_next_next, since the instructions thunks don't read
+	       them: */
+	    pc = ic->tme_sparc_ireg(TME_SPARC_IREG_PC);
+	    ic->tme_sparc_ireg(TME_SPARC_IREG_PC_NEXT) = pc;
 
-	  /* run the recode instructions thunk: */
-	  TME_SPARC_STAT_N(ic, tme_sparc_stats_insns_total, -1);
-	  tme_recode_insns_thunk_run(&ic->tme_sparc_ic,
-				     ic->tme_sparc_recode_insns_group.tme_recode_insns_group_chain_thunk,
-				     insns_thunk);
+	    /* run the recode instructions thunk: */
+	    TME_SPARC_STAT_N(ic, tme_sparc_stats_insns_total, -1);
+	    tme_recode_insns_thunk_run(&ic->tme_sparc_ic,
+				       ic->tme_sparc_recode_insns_group.tme_recode_insns_group_chain_thunk,
+				       insns_thunk);
 
-	  /* set PC_next_next from PC_next, since the recode
-	     instructions thunks usually don't.  (this won't destroy
-	     any specially set PC_next_next, because any instruction
-	     that sets one is supposed to redispatch.) */
-	  pc = ic->tme_sparc_ireg(TME_SPARC_IREG_PC_NEXT);
-	  ic->tme_sparc_ireg(TME_SPARC_IREG_PC_NEXT_NEXT) = pc + sizeof(tme_uint32_t);
+	    /* set PC_next_next from PC_next, since the recode
+	       instructions thunks usually don't.  (this won't destroy
+	       any specially set PC_next_next, because any instruction
+	       that sets one is supposed to redispatch.) */
+	    pc = ic->tme_sparc_ireg(TME_SPARC_IREG_PC_NEXT);
+	    ic->tme_sparc_ireg(TME_SPARC_IREG_PC_NEXT_NEXT) = pc + sizeof(tme_uint32_t);
 
-	  /* end verifying this instructions thunk: */
-	  tme_sparc_recode_verify_end(ic, TME_SPARC_TRAP_none);
+	    /* end verifying this instructions thunk: */
+	    tme_sparc_recode_verify_end(ic, TME_SPARC_TRAP_none);
 
-	  /* we force a PC to make it look like a control transfer has
-	     happened (one probably has), to encourage creation of
-	     another instructions thunk.  this is something like the
-	     opposite of poisoning: */
-	  ic->tme_sparc_ireg(TME_SPARC_IREG_PC) = pc;
+	    /* we force a PC to make it look like a control transfer has
+	       happened (one probably has), to encourage creation of
+	       another instructions thunk.  this is something like the
+	       opposite of poisoning: */
+	    ic->tme_sparc_ireg(TME_SPARC_IREG_PC) = pc;
 
-	  /* instead of figuring out what the currently busy
-	     instruction TLB entry is, we simply unbusy the currently
-	     busy instruction TLB token and make the current
-	     instruction TLB entry invalid: */
-	  assert (ic->_tme_sparc_itlb_current_token != NULL);
-	  tme_token_unbusy(ic->_tme_sparc_itlb_current_token);
-	  itlb_current = &itlb_invalid;
-	  tme_token_busy(&token_invalid);
-	  ic->_tme_sparc_itlb_current_token = &token_invalid;
+	    /* instead of figuring out what the currently busy
+	       instruction TLB entry is, we simply unbusy the currently
+	       busy instruction TLB token and make the current
+	       instruction TLB entry invalid: */
+	    assert (ic->_tme_sparc_itlb_current_token != NULL);
+	    tme_token_unbusy(ic->_tme_sparc_itlb_current_token);
+	    itlb_current = &itlb_invalid;
+	    tme_token_busy(&token_invalid);
+	    ic->_tme_sparc_itlb_current_token = &token_invalid;
 
-	  /* restart the loop: */
-	  continue;
+	    /* restart the loop: */
+	    continue;
+	  }
 	}
       }
     }
-
+    
 #endif /* TME_SPARC_HAVE_RECODE(ic) */
 
     /* if this is a format three instruction (op is two or three): */
@@ -882,7 +886,7 @@ _TME_SPARC_EXECUTE_NAME(struct tme_sparc *ic)
 	disp = TME_FIELD_MASK_EXTRACTS(insn, 0x003fffff);
 
 	/* if there is no recode support, and the raw displacement is zero: */
-	if (__tme_predict_false(!TME_SPARC_HAVE_RECODE(ic)
+	if (__tme_predict_false(!(TME_SPARC_HAVE_RECODE(ic) && enable_recode)
 				&& disp == 0)) {
 
 	  /* a taken branch to . is probably a timing loop.  instead
@@ -914,7 +918,7 @@ _TME_SPARC_EXECUTE_NAME(struct tme_sparc *ic)
 	/* if there is no recode support, and the delayed control
 	   transfer target is the idle PC, and this idle type marks
 	   the idle on a branch to the idle PC: */
-	if (__tme_predict_false(!TME_SPARC_HAVE_RECODE(ic)
+	if (__tme_predict_false(!(TME_SPARC_HAVE_RECODE(ic) && enable_recode)
 				&& pc_next_next == ic->tme_sparc_idle_pcs[0])) {
 	  if (TME_SPARC_IDLE_TYPE_IS(ic, TME_SPARC_IDLE_TYPES_TARGET_BRANCH)) {
 
@@ -964,7 +968,7 @@ _TME_SPARC_EXECUTE_NAME(struct tme_sparc *ic)
       /* if there is no recode support, and the delayed control
 	 transfer target is the idle PC, and this idle type marks
 	 the idle on a call to the idle PC: */
-      if (__tme_predict_false(!TME_SPARC_HAVE_RECODE(ic)
+      if (__tme_predict_false(!(TME_SPARC_HAVE_RECODE(ic) && enable_recode)
 			      && pc_next_next == ic->tme_sparc_idle_pcs[0])) {
 	if (TME_SPARC_IDLE_TYPE_IS(ic, TME_SPARC_IDLE_TYPES_TARGET_CALL)) {
 

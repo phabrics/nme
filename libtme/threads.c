@@ -42,8 +42,8 @@ pthread_attr_t *attrp;
 int thread_mode;
 tme_rwlock_t tme_rwlock_suspere;
 
-/* default fullscreen mode if available: */
 bool enable_fullscreen = false;
+bool enable_recode = false;
 
 #ifdef tme_thread_rwlock_timedrdlock
 int tme_rwlock_timedlock(tme_rwlock_t *l, tme_time_t abstime, int write) { 

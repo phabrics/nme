@@ -1898,4 +1898,4 @@ TME_SPARC_FORMAT3(tme_sparc64_illegal_instruction, tme_uint64_t)
 #undef TME_SPARC_VERSION
 #define TME_SPARC_VERSION(ic) _TME_SPARC_VERSION(ic)
 
-#include "sparc-insns-auto.c"
+#include "sparc-auto.c"

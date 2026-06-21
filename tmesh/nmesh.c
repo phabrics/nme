@@ -522,6 +522,7 @@ do_usage(const char *prog_name, char *msg)
                    \n-c, --cycle_counter    cycle counter implementation (default 'def' gives order: 'cpu','sdl','win','x86','def')  \
                    \n-m, --multi_threaded   multi-threaded mode (using %s threads or single-threaded fibers if not given) \
                    \n-f, --fullscreen       start in fullscreen mode (toggle with F11) when available (only SDL currently)   \
+                   \n-r, --recode           use recode if available (useful for testing if not working) \
                    \n-i, --interactive      interactive command-line interface (<INITIAL-CONFIG> optional here)\n",
 	  prog_name,TME_THREADS_NAME);
   
@@ -720,6 +721,10 @@ main(int argc, char **argv)
     else if (!strcmp(opt, "-f")
 	     || !strcmp(opt, "--fullscreen")) {
       enable_fullscreen = true;
+    }
+    else if (!strcmp(opt, "-r")
+	     || !strcmp(opt, "--recode")) {
+      enable_recode = true;
     }
     else if (!strcmp(opt, "-i")
 	     || !strcmp(opt, "--interactive")) {

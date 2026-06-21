@@ -178,7 +178,7 @@ _tme_sparc_recode_src_hash_invalidate(struct tme_sparc *ic,
 /* this invalidates our entire source hash and all instructions
    thunks: */
 void
-tme_sparc_recode_invalidate_all(struct tme_sparc *ic)
+_tme_sparc_recode_invalidate_all(struct tme_sparc *ic)
 {
 
   /* invalidate our entire source hash: */
