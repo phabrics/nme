@@ -875,7 +875,7 @@ TME_SPARC_FORMAT3(_tme_stp103x_rdpr, tme_uint64_t)
      deccc even on a real stp103x; "1000 ms" on the PROM on a real
      Ultra-1 delays noticeably longer than one second.
 
-s     this function is a gross hack that attempts to reduce the delay.
+     this function is a gross hack that attempts to reduce the delay.
      it modifies the original loop that calculates the delay factor to
      use (for the "best" factor) an inccc instruction instead of a
      inc, to make it more symmetric with the delay loop.

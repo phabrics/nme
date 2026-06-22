@@ -522,9 +522,9 @@ do_usage(const char *prog_name, char *msg)
                    \n-c, --cycle_counter    cycle counter implementation (default 'def' gives order: 'cpu','sdl','win','x86','def')  \
                    \n-m, --multi_threaded   multi-threaded mode (using %s threads or single-threaded fibers if not given) \
                    \n-f, --fullscreen       start in fullscreen mode (toggle with F11) when available (only SDL currently)   \
-                   \n-r, --recode           use recode if available (useful for testing if not working) \
+                   \n-r, --recode           toggle default recode mode if available (default: %s) \
                    \n-i, --interactive      interactive command-line interface (<INITIAL-CONFIG> optional here)\n",
-	  prog_name,TME_THREADS_NAME);
+	  prog_name, TME_THREADS_NAME, (enable_recode) ? ("true") : ("false"));
   
 #define fpe(msg) fprintf(stderr, "\t%s", msg);          /* Shorter */
 
@@ -724,7 +724,7 @@ main(int argc, char **argv)
     }
     else if (!strcmp(opt, "-r")
 	     || !strcmp(opt, "--recode")) {
-      enable_recode = true;
+      enable_recode = !enable_recode;
     }
     else if (!strcmp(opt, "-i")
 	     || !strcmp(opt, "--interactive")) {
@@ -774,6 +774,10 @@ main(int argc, char **argv)
 #endif
   } else
     exit(1);
+#endif
+
+#ifdef TME_HAVE_RECODE
+  if(enable_recode) printf("Using recode.\n");
 #endif
   
 #ifdef TME_THREADS_POSIX

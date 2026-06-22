@@ -34,6 +34,7 @@
 /* includes: */
 #include <tme/threads.h>
 #include <tme/events.h>
+#include <tme/recode.h>
 
 #ifdef TME_THREADS_POSIX
 pthread_attr_t *attrp;
@@ -43,7 +44,13 @@ int thread_mode;
 tme_rwlock_t tme_rwlock_suspere;
 
 bool enable_fullscreen = false;
+#ifndef TME_HAVE_RECODE
 bool enable_recode = false;
+#elif defined(TME_RECODE_SIZE_128)
+bool enable_recode = (TME_RECODE_SIZE_GUEST_MAX >= TME_RECODE_SIZE_128) ? (false) : (true);
+#else
+bool enable_recode = true;
+#endif
 
 #ifdef tme_thread_rwlock_timedrdlock
 int tme_rwlock_timedlock(tme_rwlock_t *l, tme_time_t abstime, int write) { 

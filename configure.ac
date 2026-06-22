@@ -747,7 +747,7 @@ AC_ARG_ENABLE(threads,
 if test "x${enable_threads}" = xsdl && test "x${have_sdl3}" = xyes; then
    AC_DEFINE([TME_THREADS_SDL], [], [Set to value of threads argument.])
    CPPFLAGS="${CPPFLAGS-} ${SDL_CFLAGS}" 
-elif test "x${enable_threads}" = xglib && test "x${have_glib}" != xno; then
+elif test "x${enable_threads}" != xposix && test "x${have_glib}" != xno; then
    AC_DEFINE([TME_THREADS_GLIB], [], [Set to value of threads argument.])
    CPPFLAGS="${CPPFLAGS-} ${GLIB_CFLAGS}"
    enable_threads=glib
@@ -768,10 +768,6 @@ if test "x${have_zlib}" = xyes; then
 fi
 AM_CONDITIONAL([HAVE_ZLIB], [test "x${have_zlib}" = xyes])
 
-dnl Configures for the system(s) to emulate.
-bus_size_max=64
-recode_size_guest_max=64
-
 NME_FB_XLAT_SRC="1152x900d1b1s0p32om 1152x900d8b8s0p32ommi8 1152x900d1b1s0p32omccmi8"
 AC_SUBST(NME_FB_XLAT_SRC)
 
@@ -780,53 +776,31 @@ AC_PATH_XTRA
 AX_PERL_MODULE_VERSION([X11::Protocol 0.56],[],[no_x=yes])
 AM_CONDITIONAL([USING_X], [test "x${no_x}" = x])
 
-dnl Configure recode.
-dnl Make brackets safe to use.
-changequote(<<, >>)dnl
-
-dnl Make brackets the quote characters again.
-changequote([, ])dnl
-
-AC_ARG_ENABLE(recode,
-[  --enable-recode         cpu types to enable recode on [yes for all] (dynamic binary translation) (default=x86)],
-[ ], [enable_recode=no])
-
 AC_MSG_CHECKING([for host recode support])
-
-dnl Make brackets safe to use.
-changequote(<<, >>)dnl
+dnl Configures for the system(s) to emulate.
+bus_size_max=64
+recode_size_guest_max=64
+misc_hosts="x86"
+recode_hosts="mmap x86"
 
 # get the host maximum guest size:
 case "${host_cpu}" in
 i[3456789]86)
-     misc_hosts="x86"
-     recode_hosts="mmap x86"
      recode_size_guest_max_host=64
      bus_size_max_host=32
      ;;
 x86_64 | amd64)
-     misc_hosts="x86"
-     recode_hosts="mmap x86"
      recode_size_guest_max_host=128
      bus_size_max_host=64
      ;;
 *) 
-     recode_size_guest_max_host=1 ;;
+     misc_hosts=
+     recode_hosts=
+     ;;
 esac
-
-dnl Make brackets the quote characters again.
-changequote([, ])dnl
-
-if test "x${enable_recode}" != xyes; then
-   recode_hosts=
-   recode_size_guest_max=1
-fi
 
 if test "x${recode_hosts}" = x; then
    AC_MSG_RESULT([no])
-   if test "x${enable_recode}" = xrequired; then
-      AC_MSG_ERROR([recode required but not supported on ${host}])
-   fi
 else
    if test "x${recode_size_guest_max_host}" = x; then
       AC_MSG_ERROR([internal error - no maximum recode guest size for ${host_cpu}])
