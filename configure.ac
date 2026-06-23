@@ -785,7 +785,7 @@ recode_hosts="mmap x86"
 
 # get the host maximum guest size:
 case "${host_cpu}" in
-i[3456789]86)
+i*86)
      recode_size_guest_max_host=64
      bus_size_max_host=32
      ;;
