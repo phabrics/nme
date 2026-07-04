@@ -742,7 +742,7 @@ _tme_recode_x86_insn_guest(struct tme_recode_ic *ic,
 	tme_recode_regs_src_specific(ic,
 				     insn,
 				     insn->tme_recode_insn_operand_src[0],
-				     TME_RECODE_X86_REG_HOST_ARG(1));
+				     TME_RECODE_REG_HOST_ARG(1));
       }
 
       /* if this guest function takes a defined second source operand: */
@@ -761,7 +761,7 @@ _tme_recode_x86_insn_guest(struct tme_recode_ic *ic,
 	tme_recode_regs_src_specific(ic,
 				     insn,
 				     insn->tme_recode_insn_operand_src[1],
-				     TME_RECODE_X86_REG_HOST_ARG(2));
+				     TME_RECODE_REG_HOST_ARG(2));
       }
 
       /* if this guest function returns a register value: */

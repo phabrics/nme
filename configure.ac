@@ -863,13 +863,14 @@ _gcc_is_clang
 ], [
 AC_MSG_RESULT(yes)
 have_clang=yes
+have_Og=yes
 ], [ AC_MSG_RESULT(no) ])
 
 AC_ARG_ENABLE(debug,
 [  --enable-debug          compile debuggable libraries and programs (default=don't)],
 [ ], [enable_debug=no])
 if test "x${enable_debug}" != "xno"; then
-  CPPFLAGS="${CPPFLAGS-} -DENABLE_DEBUG -D_TME_SPARC_STATS -DGTK_DISABLE_SINGLE_INCLUDES -DNDEBUG -DNME_MODULE_DEBUG" # -DTME_RECODE_DEBUG
+  CPPFLAGS="${CPPFLAGS-} -DENABLE_DEBUG -DNDEBUG -DTME_RECODE_DEBUG" # -D_TME_SPARC_STATS -DGTK_DISABLE_SINGLE_INCLUDES -DNME_MODULE_DEBUG 
   if test "x${enable_debug}" != "xlocks"; then
     CPPFLAGS="${CPPFLAGS-} -DTME_NO_DEBUG_LOCKS"
   fi
@@ -917,7 +918,7 @@ else
   fi
   if test "x${have_Og}" = xyes; then
      CFLAGS="${CFLAGS-} -Wno-unused-but-set-variable -Wno-array-bounds -Wno-type-limits -Wno-incompatible-pointer-types \
-     			-Wno-discarded-qualifiers -Wno-implicit-function-declaration -Wno-cpp -fno-strict-aliasing"
+     			-Wno-implicit-function-declaration -Wno-cpp -fno-strict-aliasing"
   fi
 fi
 

@@ -257,7 +257,7 @@ _TME_SPARC_EXECUTE_NAME(struct tme_sparc *ic)
 	if (ic->tme_sparc_runlength_update_next == 0) {
 
 	  /* update the runlength: */
-#ifndef _TME_SPARC_RECODE_VERIFY
+#if 0
 	  tme_runlength_update(&ic->tme_sparc_runlength);
 #endif /* !_TME_SPARC_RECODE_VERIFY */
 
@@ -403,7 +403,7 @@ _TME_SPARC_EXECUTE_NAME(struct tme_sparc *ic)
 
     /* update the PCs and get the PC of the instruction to execute: */
     pc = ic->tme_sparc_ireg(TME_SPARC_IREG_PC_NEXT);
-#ifndef NDEBUG
+#if 0
     if(pc == 0xffe87840 || pc == 0xffe83424)
       ic->tme_sparc_stats.tme_sparc_stats_insns_total++;
 #endif
@@ -442,7 +442,7 @@ _TME_SPARC_EXECUTE_NAME(struct tme_sparc *ic)
 				   sizeof(tme_uint32_t),
 				   sizeof(tme_sparc_ireg_t));
       insn = tme_betoh_u32(insn);
-#ifndef NDEBUG
+#if 0
       if(insn == 0xc0a00040)
 	ic->tme_sparc_stats.tme_sparc_stats_insns_total++;
 #endif

@@ -128,16 +128,18 @@ static const tme_uint8_t tme_recode_x86_reg_from_host[TME_RECODE_X86_REG_HOST_UN
   /* this returns the host register number for an argument register.
      this is only valid for n == [0,3]: */
 #ifdef WIN32
-#define TME_RECODE_X86_REG_HOST_ARG(n)	\
+#define TME_RECODE_REG_HOST_ARG(n)	\
   ((n) < 2				\
    ? TME_RECODE_REG_HOST(13-n)		\
    : TME_RECODE_REG_HOST(8+n))		
 #else
-#define TME_RECODE_X86_REG_HOST_ARG(n)	\
+#define TME_RECODE_REG_HOST_ARG(n)	\
   ((n) < 2				\
    ? TME_RECODE_REG_HOST(8+n)		\
    : TME_RECODE_REG_HOST(10+n))		
 #endif
+#define TME_RECODE_X86_REG_HOST_ARG(n)	\
+  tme_recode_x86_reg_from_host[TME_RECODE_REG_HOST_ARG(n)]
 #endif /* TME_RECODE_SIZE_HOST >= TME_RECODE_SIZE_32 */
 };
 
