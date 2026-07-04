@@ -845,13 +845,15 @@ tme_recode_host_rw_thunk_new(struct tme_recode_ic *ic,
        by a read/write thunk: */
     _tme_recode_x86_emit_reg_push(thunk_bytes, TME_RECODE_X86_REG_N(10));
     _tme_recode_x86_emit_reg_push(thunk_bytes, TME_RECODE_X86_REG_N(11));
+#ifndef WIN32
     _tme_recode_x86_emit_reg_push(thunk_bytes, TME_RECODE_X86_REG_DI);
     _tme_recode_x86_emit_reg_push(thunk_bytes, TME_RECODE_X86_REG_SI);
+#endif
     _tme_recode_x86_emit_reg_push(thunk_bytes, TME_RECODE_X86_REG_N(8));
     _tme_recode_x86_emit_reg_push(thunk_bytes, TME_RECODE_X86_REG_N(9));
 
     /* make the struct tme_ic * argument for the guest function: */
-    _tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_IC, TME_RECODE_X86_REG_DI);
+    _tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_IC, TME_RECODE_X86_REG_HOST_ARG(0));
 
     /* make the address argument for the guest function.  NB that if
        double-host-size guests are supported, but this isn't a
@@ -859,9 +861,9 @@ tme_recode_host_rw_thunk_new(struct tme_recode_ic *ic,
        most-significant half of this argument (which is okay since the
        guest functions are supposed to truncate their arguments to the
        expected size): */
-    _tme_recode_x86_emit_reg_copy(thunk_bytes, reg_x86_address, TME_RECODE_X86_REG_SI);
+    _tme_recode_x86_emit_reg_copy(thunk_bytes, reg_x86_address, TME_RECODE_X86_REG_HOST_ARG(1));
     if (TME_RECODE_SIZE_IS_DOUBLE_HOST(ic->tme_recode_ic_reg_size)) {
-      _tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_A, TME_RECODE_X86_REG_D);
+      _tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_A, TME_RECODE_X86_REG_HOST_ARG(2));
     }
 
     /* if this is a write: */
@@ -876,14 +878,22 @@ tme_recode_host_rw_thunk_new(struct tme_recode_ic *ic,
       _tme_recode_x86_emit_reg_copy(thunk_bytes,
 				    tme_recode_x86_reg_from_host[TME_RECODE_REG_HOST(0)],
 				    (TME_RECODE_SIZE_GUEST_MAX <= TME_RECODE_SIZE_HOST
-				     ? TME_RECODE_X86_REG_D
-				     : TME_RECODE_X86_REG_C));
+				     ? TME_RECODE_X86_REG_HOST_ARG(2)
+				     : TME_RECODE_X86_REG_HOST_ARG(3)));
       if (TME_RECODE_SIZE_IS_DOUBLE_HOST(ic->tme_recode_ic_reg_size)) {
+#ifdef WIN32
+	//	_tme_recode_x86_emit_reg_push(thunk_bytes, tme_recode_x86_reg_from_host[TME_RECODE_REG_HOST(0) + 1]);
+#else
 	_tme_recode_x86_emit_reg_copy(thunk_bytes, 
-				      tme_recode_x86_reg_from_host[TME_RECODE_REG_HOST(0)],
+				      tme_recode_x86_reg_from_host[TME_RECODE_REG_HOST(0) + 1],
 				      TME_RECODE_X86_REG_N(8));
+#endif
       }
     }
+        
+#ifdef WIN32
+    thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, -(32 + 8));
+#endif
 
     /* we must assume that we can't reach the guest function from the
        instruction thunk with a 32-bit displacement.  emit a direct
@@ -903,12 +913,18 @@ tme_recode_host_rw_thunk_new(struct tme_recode_ic *ic,
 	    << 8));
     thunk_bytes += 2;
 
+#ifdef WIN32
+    thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, (32 + 8));
+#endif
+    
     /* pop the caller-saved registers that aren't normally destroyed
        by a read/write thunk: */
     _tme_recode_x86_emit_reg_pop(thunk_bytes, TME_RECODE_X86_REG_N(9));
     _tme_recode_x86_emit_reg_pop(thunk_bytes, TME_RECODE_X86_REG_N(8));
+#ifndef WIN32
     _tme_recode_x86_emit_reg_pop(thunk_bytes, TME_RECODE_X86_REG_SI);
     _tme_recode_x86_emit_reg_pop(thunk_bytes, TME_RECODE_X86_REG_DI);
+#endif
     _tme_recode_x86_emit_reg_pop(thunk_bytes, TME_RECODE_X86_REG_N(11));
     _tme_recode_x86_emit_reg_pop(thunk_bytes, TME_RECODE_X86_REG_N(10));
   }

@@ -47,9 +47,9 @@ _TME_RCSID("$Id: rc-x86-flags.c,v 1.5 2010/02/15 22:21:48 fredette Exp $");
   (((TME_RECODE_SIZE_HOST == TME_RECODE_SIZE_32				\
      || (flags_group)->tme_recode_flags_group_guest_func == NULL)	\
     ? TME_RECODE_X86_REG_A						\
-    : TME_RECODE_X86_REG_N(9))						\
+    : TME_RECODE_X86_REG_N(9) + WOFF/2)					\
    + (flags_reg_index))
-#define _TME_RECODE_X86_FLAGS_REG_COUNT   (3)
+#define _TME_RECODE_X86_FLAGS_REG_COUNT   (3 - WOFF/2)
 
 /* this adds a one-byte-opcode ModRM instruction to a thunk, that
    addresses the stacked host flags of a particular size: */
@@ -672,13 +672,13 @@ tme_recode_host_flags_thunk_new(struct tme_recode_ic *ic,
       /* copy the struct tme_ic * for the guest function: */
       _tme_recode_x86_emit_reg_copy(thunk_bytes,
 				    TME_RECODE_X86_REG_IC,
-				    TME_RECODE_X86_REG_DI);
+				    TME_RECODE_X86_REG_HOST_ARG(0));
 
       /* copy the (least-significant half of) the first source operand
 	 for the guest function: */
       _tme_recode_x86_emit_reg_copy(thunk_bytes,
 				    tme_recode_x86_reg_from_host[TME_RECODE_X86_REG_HOST_SUBS_SRC0 + 0],
-				    TME_RECODE_X86_REG_SI);
+				    TME_RECODE_X86_REG_HOST_ARG(1));
 
       /* if double-host-size guests are supported: */
       if (TME_RECODE_SIZE_GUEST_MAX > TME_RECODE_SIZE_HOST) {
@@ -687,15 +687,20 @@ tme_recode_host_flags_thunk_new(struct tme_recode_ic *ic,
 	   for the guest function: */
 	_tme_recode_x86_emit_reg_copy(thunk_bytes,
 				      tme_recode_x86_reg_from_host[TME_RECODE_X86_REG_HOST_SUBS_SRC0 + 1],
-				      TME_RECODE_X86_REG_D);
+				      TME_RECODE_X86_REG_HOST_ARG(2));
 
 	/* copy the second source operand for the guest function: */
 	_tme_recode_x86_emit_reg_copy(thunk_bytes,
 				      tme_recode_x86_reg_from_host[TME_RECODE_X86_REG_HOST_SUBS_SRC1 + 0],
-				      TME_RECODE_X86_REG_C);
+				      TME_RECODE_X86_REG_HOST_ARG(3));
+
+#ifdef WIN32
+	//    thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, -(32 + 8));
+#else
 	_tme_recode_x86_emit_reg_copy(thunk_bytes,
 				      tme_recode_x86_reg_from_host[TME_RECODE_X86_REG_HOST_SUBS_SRC1 + 1],
 				      TME_RECODE_X86_REG_N(8));
+#endif
 
 	/* push the destination operand for the guest function: */
 	_tme_recode_x86_emit_reg_push(thunk_bytes, tme_recode_x86_reg_from_host[TME_RECODE_X86_REG_HOST_SUBS_DST + 1]);
@@ -728,12 +733,12 @@ tme_recode_host_flags_thunk_new(struct tme_recode_ic *ic,
 	/* copy the second source operand for the guest function: */
 	_tme_recode_x86_emit_reg_copy(thunk_bytes,
 				      tme_recode_x86_reg_from_host[TME_RECODE_X86_REG_HOST_SUBS_SRC1],
-				      TME_RECODE_X86_REG_D);
+				      TME_RECODE_X86_REG_HOST_ARG(2));
 
 	/* copy the destination operand for the guest function: */
 	_tme_recode_x86_emit_reg_copy(thunk_bytes,
 				      tme_recode_x86_reg_from_host[TME_RECODE_X86_REG_HOST_SUBS_DST],
-				      TME_RECODE_X86_REG_C);
+				      TME_RECODE_X86_REG_HOST_ARG(3));
 
 	/* NB that when double-host-size guests are not supported, we
 	   will always chain to the guest function, so we don't have
@@ -1151,15 +1156,20 @@ tme_recode_host_flags_thunk_new(struct tme_recode_ic *ic,
 
     /* if this is an x86-64 host, and double-host-size guests are not
        supported, and we have things to remove from the stack: */
-    if (TME_RECODE_SIZE_HOST > TME_RECODE_SIZE_32
-	&& TME_RECODE_SIZE_GUEST_MAX <= TME_RECODE_SIZE_HOST
-	&& stack_adjust != 0) {
-
-      /* we can chain to the guest function, so adjust the stack
-	 pointer now: */
-      thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, stack_adjust);
-      stack_adjust = 0;
-    }
+    if (TME_RECODE_SIZE_HOST > TME_RECODE_SIZE_32)
+      if(TME_RECODE_SIZE_GUEST_MAX <= TME_RECODE_SIZE_HOST
+	 && stack_adjust != 0) {
+	
+	/* we can chain to the guest function, so adjust the stack
+	   pointer now: */
+	thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, stack_adjust);
+	stack_adjust = 0;
+      }
+#ifdef WIN32
+      else {
+	thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, -(32 + 8));
+      }
+#endif    
 
     /* jmp or call the guest function: */
     tme_recode_x86_insns_finish(ic, thunk_bytes);
@@ -1180,6 +1190,11 @@ tme_recode_host_flags_thunk_new(struct tme_recode_ic *ic,
     /* do any stack adjust: */
     if (stack_adjust != 0) {
       thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, stack_adjust);
+#ifdef WIN32
+      if(flags_thunk->tme_recode_x86_flags_thunk_has_guest_func) {
+	thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, (32 + 8));
+      }
+#endif    
     }
 
     /* return to the instruction thunk: */

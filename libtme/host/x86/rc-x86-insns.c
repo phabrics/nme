@@ -722,18 +722,18 @@ _tme_recode_x86_insn_guest(struct tme_recode_ic *ic,
       /* move the first and second source operands into the function
 	 argument registers: */
       if (insn->tme_recode_insn_operand_src[0] != TME_RECODE_OPERAND_UNDEF) {
-	_tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_BP, TME_RECODE_X86_REG_SI);
-	_tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_A, TME_RECODE_X86_REG_D);
+	_tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_BP, TME_RECODE_X86_REG_HOST_ARG(1));
+	_tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_A, TME_RECODE_X86_REG_HOST_ARG(2));
       }
       if (insn->tme_recode_insn_operand_src[1] != TME_RECODE_OPERAND_UNDEF) {
-	_tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_N(10), TME_RECODE_X86_REG_C);
+	_tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_N(10), TME_RECODE_X86_REG_HOST_ARG(3));
 	_tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_N(11), TME_RECODE_X86_REG_N(8));
       }
     }
 
     /* otherwise, this is not a double-host-size guest: */
     else {
-
+      
       /* if this guest function takes a defined first source operand: */
       if (insn->tme_recode_insn_operand_src[0] != TME_RECODE_OPERAND_UNDEF) {
 
@@ -813,14 +813,18 @@ _tme_recode_x86_insn_guest(struct tme_recode_ic *ic,
 	     undefined, which is okay since the guest functions are
 	     supposed to truncate their arguments to the expected
 	     size: */
-	  _tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_D, TME_RECODE_X86_REG_C);
+	  _tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_HOST_ARG(2), TME_RECODE_X86_REG_HOST_ARG(3));
 	}
       }
     }
 
     /* emit a movq %ic, %rdi: */
-    _tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_IC, TME_RECODE_X86_REG_DI);
+    _tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_IC, TME_RECODE_X86_REG_HOST_ARG(0));
 
+#ifdef WIN32
+      thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, -(32 + 8));
+#endif
+    
     /* we must assume that we can't reach the guest function from the
        instruction thunk with a 32-bit displacement.  emit a direct
        call to the guest function using %rax: */
@@ -838,6 +842,10 @@ _tme_recode_x86_insn_guest(struct tme_recode_ic *ic,
 					TME_RECODE_X86_OPCODE_GRP5_CALL)
 	    << 8));
     thunk_bytes += 2;
+
+#ifdef WIN32
+    thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, (32 + 8));
+#endif
   }
 
   /* if the guest function returned a register value, and this is a

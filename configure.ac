@@ -156,7 +156,7 @@ mingw* | msys*)
    WIN32=yes
    SETCAP="chmod u+s"
    host_type=
-   if test "x${enable_shared}" = "xno" || test "x${host_cpu}" = "xi686"; then
+   if test "x${enable_shared}" = "xno"; then
       lto=${GCC}
    else
       lto=no

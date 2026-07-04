@@ -239,16 +239,18 @@ _tme_recode_x86_chain_epilogue(struct tme_recode_ic *ic)
 					     - TME_RECODE_SIZE_8));
 
   /* pop all callee-saved registers: */
-  if (TME_RECODE_SIZE_HOST > TME_RECODE_SIZE_32) {
+#if defined(WIN32) || (TME_RECODE_SIZE_HOST == TME_RECODE_SIZE_32)
+    _tme_recode_x86_emit_reg_pop(thunk_bytes, TME_RECODE_X86_REG_DI);
+    _tme_recode_x86_emit_reg_pop(thunk_bytes, TME_RECODE_X86_REG_SI);
+#endif
+  
+#if TME_RECODE_SIZE_HOST > TME_RECODE_SIZE_32
     _tme_recode_x86_emit_reg_pop(thunk_bytes, TME_RECODE_X86_REG_N(15));
     _tme_recode_x86_emit_reg_pop(thunk_bytes, TME_RECODE_X86_REG_N(14));
     _tme_recode_x86_emit_reg_pop(thunk_bytes, TME_RECODE_X86_REG_N(13));
     _tme_recode_x86_emit_reg_pop(thunk_bytes, TME_RECODE_X86_REG_N(12));
-  }
-  else {
-    _tme_recode_x86_emit_reg_pop(thunk_bytes, TME_RECODE_X86_REG_DI);
-    _tme_recode_x86_emit_reg_pop(thunk_bytes, TME_RECODE_X86_REG_SI);
-  }
+#endif
+
   _tme_recode_x86_emit_reg_pop(thunk_bytes, TME_RECODE_X86_REG_B);
   _tme_recode_x86_emit_reg_pop(thunk_bytes, TME_RECODE_X86_REG_BP);
 
@@ -408,8 +410,8 @@ _tme_recode_x86_chain_fixup_targets(struct tme_recode_ic *ic)
   else {
 
     /* copy the arguments for the guest jump chain function: */
-    _tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_IC, TME_RECODE_X86_REG_DI);
-    _tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_CHAIN_FIXUP_ADDRESS, TME_RECODE_X86_REG_SI);
+    _tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_IC, TME_RECODE_X86_REG_HOST_ARG(0));
+    _tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_CHAIN_FIXUP_ADDRESS, TME_RECODE_X86_REG_HOST_ARG(1));
 
     /* we don't need to adjust the stack.  NB that the instructions
        thunk, where the stack pointer is 16-byte aligned, jumped to
@@ -1493,28 +1495,28 @@ _tme_recode_x86_chain_prologue(struct tme_recode_ic *ic,
   /* push all callee-saved registers: */
   _tme_recode_x86_emit_reg_push(thunk_bytes, TME_RECODE_X86_REG_BP);
   _tme_recode_x86_emit_reg_push(thunk_bytes, TME_RECODE_X86_REG_B);
-  if (TME_RECODE_SIZE_HOST > TME_RECODE_SIZE_32) {
+#if TME_RECODE_SIZE_HOST > TME_RECODE_SIZE_32
     _tme_recode_x86_emit_reg_push(thunk_bytes, TME_RECODE_X86_REG_N(12));
     _tme_recode_x86_emit_reg_push(thunk_bytes, TME_RECODE_X86_REG_N(13));
     _tme_recode_x86_emit_reg_push(thunk_bytes, TME_RECODE_X86_REG_N(14));
     _tme_recode_x86_emit_reg_push(thunk_bytes, TME_RECODE_X86_REG_N(15));
-  }
-  else {
+#endif
+#if defined(WIN32) || (TME_RECODE_SIZE_HOST == TME_RECODE_SIZE_32)
     _tme_recode_x86_emit_reg_push(thunk_bytes, TME_RECODE_X86_REG_SI);
     _tme_recode_x86_emit_reg_push(thunk_bytes, TME_RECODE_X86_REG_DI);
-  }
-
+#endif
+    
   /* the instructions thunk offset and address will be in the si register: */
-  reg_x86_insns_thunk = TME_RECODE_X86_REG_SI;
+    reg_x86_insns_thunk = TME_RECODE_X86_REG_HOST_ARG(1);
 
   /* if this is an x86-64 host: */
   if (TME_RECODE_SIZE_HOST > TME_RECODE_SIZE_32) {
 
     /* copy the struct tme_ic * argument into the ic register: */
-    _tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_DI, TME_RECODE_X86_REG_IC);
+    _tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_HOST_ARG(0), TME_RECODE_X86_REG_IC);
 
     /* the instructions thunk offset is already in the second argument register: */
-    assert (reg_x86_insns_thunk == TME_RECODE_X86_REG_SI);
+    assert (reg_x86_insns_thunk == TME_RECODE_X86_REG_HOST_ARG(1));
   }
 
   /* otherwise, this is an ia32 host: */

@@ -98,18 +98,27 @@ static const tme_uint8_t tme_recode_x86_reg_from_host[TME_RECODE_X86_REG_HOST_UN
      the a, d, and c registers, which is good because they don't
      require a rex prefix when used with setcc. */
 #define TME_RECODE_X86_REG_HOST_SUBS_DST	TME_RECODE_REG_HOST(0)
-  TME_RECODE_X86_REG_N(12),	/* host reg 0 */
-  TME_RECODE_X86_REG_N(13),	/* host reg 1 */
-  TME_RECODE_X86_REG_N(14),	/* host reg 2 */
-  TME_RECODE_X86_REG_N(15),	/* host reg 3 */
-#define TME_RECODE_X86_REG_HOST_SUBS_SRC1	TME_RECODE_REG_HOST(4)
-  TME_RECODE_X86_REG_BP,	/* host reg 4 */
-#define TME_RECODE_X86_REG_HOST_FREE_CALL	TME_RECODE_REG_HOST(5)
-  TME_RECODE_X86_REG_A,		/* host reg 5 */
-  TME_RECODE_X86_REG_N(10),	/* host reg 6 */
-  TME_RECODE_X86_REG_N(11),	/* host reg 7 */
+#ifdef WIN32
+  TME_RECODE_X86_REG_DI,	/* host reg 0 */
+  TME_RECODE_X86_REG_SI,	/* host reg 1 */
+#define WOFF 2
+#else
+#define WOFF 0
+#endif
+  TME_RECODE_X86_REG_N(12),	/* host reg 0 + WOFF */
+  TME_RECODE_X86_REG_N(13),	/* host reg 1 + WOFF */
+  TME_RECODE_X86_REG_N(14),	/* host reg 2 + WOFF */
+  TME_RECODE_X86_REG_N(15),	/* host reg 3 + WOFF */
+#define TME_RECODE_X86_REG_HOST_SUBS_SRC1	(TME_RECODE_REG_HOST(4) + WOFF)
+  TME_RECODE_X86_REG_BP,	/* host reg 4 + WOFF */
+#define TME_RECODE_X86_REG_HOST_FREE_CALL	(TME_RECODE_REG_HOST(5) + WOFF)
+  TME_RECODE_X86_REG_A,		/* host reg 5 + WOFF */
+  TME_RECODE_X86_REG_N(10),	/* host reg 6 + WOFF */
+  TME_RECODE_X86_REG_N(11),	/* host reg 7 + WOFF */
+#ifndef WIN32
   TME_RECODE_X86_REG_DI,	/* host reg 8 */
   TME_RECODE_X86_REG_SI,	/* host reg 9 */
+#endif
   TME_RECODE_X86_REG_N(8),	/* host reg 10 */
   TME_RECODE_X86_REG_N(9),	/* host reg 11 */
 #define TME_RECODE_X86_REG_HOST_SUBS_SRC0	TME_RECODE_REG_HOST(12)
@@ -117,12 +126,18 @@ static const tme_uint8_t tme_recode_x86_reg_from_host[TME_RECODE_X86_REG_HOST_UN
   TME_RECODE_X86_REG_C,		/* not a true host register */
 
   /* this returns the host register number for an argument register.
-     this is only valid for n == 1 and n == 2: */
+     this is only valid for n == [0,3]: */
+#ifdef WIN32
 #define TME_RECODE_X86_REG_HOST_ARG(n)	\
-  ((n) == 1				\
-   ? TME_RECODE_REG_HOST(9)		\
-   : TME_RECODE_REG_HOST(12))		\
-
+  ((n) < 2				\
+   ? TME_RECODE_REG_HOST(13-n)		\
+   : TME_RECODE_REG_HOST(8+n))		
+#else
+#define TME_RECODE_X86_REG_HOST_ARG(n)	\
+  ((n) < 2				\
+   ? TME_RECODE_REG_HOST(8+n)		\
+   : TME_RECODE_REG_HOST(10+n))		
+#endif
 #endif /* TME_RECODE_SIZE_HOST >= TME_RECODE_SIZE_32 */
 };
 

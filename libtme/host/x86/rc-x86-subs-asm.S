@@ -52,8 +52,13 @@
 #define TME_RECODE_BITS_DOUBLE_HOST(x)		_TME_CONCAT(x, 128)
 #define TME_RECODE_X86_OPN(x)			_TME_CONCAT(x, q)
 #define TME_RECODE_X86_REGN(x)			_TME_CONCAT(%r, x)
+#ifdef WIN32
+#define TME_RECODE_X86_REG_HOST_SUBS_DST_N	%rdi
+#define TME_RECODE_X86_REG_HOST_SUBS_DST_L	%edi
+#else
 #define TME_RECODE_X86_REG_HOST_SUBS_DST_N	%r12
 #define TME_RECODE_X86_REG_HOST_SUBS_DST_L	%r12d
+#endif
 #define TME_RECODE_X86_REG_HOST_SUBS_SRC1_N	%rbp
 #define TME_RECODE_X86_REG_HOST_SUBS_SRC1_L	%ebp
 #define TME_RECODE_X86_REG_HOST_SUBS_SRC1_W	%bp
@@ -265,9 +270,15 @@ tme_recode_x86_\insn\size:
 	# the shifts:
 	#
 #ifdef __x86_64__
+#ifdef WIN32
+tme_recode_x86_double_shift tme_recode_x86_shll128 shlq shldq %rsi %rdi
+tme_recode_x86_double_shift tme_recode_x86_shrl128 shrq shrdq %rdi %rsi
+tme_recode_x86_double_shift tme_recode_x86_shra128 sarq shrdq %rdi %rsi 1
+#else
 tme_recode_x86_double_shift tme_recode_x86_shll128 shlq shldq %r13 %r12
 tme_recode_x86_double_shift tme_recode_x86_shrl128 shrq shrdq %r12 %r13
 tme_recode_x86_double_shift tme_recode_x86_shra128 sarq shrdq %r12 %r13 1
+#endif
 tme_recode_x86_shift shll 64 shlq
 tme_recode_x86_shift shrl 64 shrq
 tme_recode_x86_shift shra 64 sarq
