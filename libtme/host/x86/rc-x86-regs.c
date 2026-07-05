@@ -65,7 +65,7 @@ _TME_RCSID("$Id: rc-x86-regs.c,v 1.5 2010/02/15 22:23:15 fredette Exp $");
 #define TME_RECODE_X86_REG_HOST_UNDEF		(TME_RECODE_REG_HOST_UNDEF + 1)
 static const tme_uint8_t tme_recode_x86_reg_from_host[TME_RECODE_X86_REG_HOST_UNDEF] = {
 #if (TME_RECODE_SIZE_HOST <= TME_RECODE_SIZE_32)
-
+#define WOFF 0
 #define TME_RECODE_X86_REG_HOST_SUBS_DST	TME_RECODE_REG_HOST(0)
   TME_RECODE_X86_REG_DI,	/* host reg 0 */
   TME_RECODE_X86_REG_SI,	/* host reg 1 */
