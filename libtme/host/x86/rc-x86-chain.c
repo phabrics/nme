@@ -305,7 +305,7 @@ _tme_recode_x86_chain_fixup_arg2(tme_uint8_t *thunk_bytes,
   else {
 
     /* load the third argument register: */
-    thunk_bytes[0] = TME_RECODE_X86_OPCODE_MOV_Iv_Gv(TME_RECODE_X86_REG_D);
+    thunk_bytes[0] = TME_RECODE_X86_OPCODE_MOV_Iv_Gv(TME_RECODE_X86_REG_HOST_ARG(2));
     *((tme_uint32_t *) &thunk_bytes[1]) = chain_info;
     thunk_bytes += 1 + sizeof(tme_uint32_t);
   }
@@ -1507,7 +1507,7 @@ _tme_recode_x86_chain_prologue(struct tme_recode_ic *ic,
 #endif
     
   /* the instructions thunk offset and address will be in the si register: */
-    reg_x86_insns_thunk = TME_RECODE_X86_REG_HOST_ARG(1);
+    reg_x86_insns_thunk = TME_RECODE_X86_REG_SI;
 
   /* if this is an x86-64 host: */
   if (TME_RECODE_SIZE_HOST > TME_RECODE_SIZE_32) {
@@ -1515,8 +1515,13 @@ _tme_recode_x86_chain_prologue(struct tme_recode_ic *ic,
     /* copy the struct tme_ic * argument into the ic register: */
     _tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_HOST_ARG(0), TME_RECODE_X86_REG_IC);
 
+#ifdef WIN32
+    /* copy the struct tme_ic * argument into the ic register: */
+    _tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_HOST_ARG(1), reg_x86_insns_thunk);
+#endif
+    
     /* the instructions thunk offset is already in the second argument register: */
-    assert (reg_x86_insns_thunk == TME_RECODE_X86_REG_HOST_ARG(1));
+    assert (reg_x86_insns_thunk == TME_RECODE_X86_REG_SI);
   }
 
   /* otherwise, this is an ia32 host: */

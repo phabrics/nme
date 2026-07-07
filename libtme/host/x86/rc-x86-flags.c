@@ -1156,7 +1156,7 @@ tme_recode_host_flags_thunk_new(struct tme_recode_ic *ic,
 
     /* if this is an x86-64 host, and double-host-size guests are not
        supported, and we have things to remove from the stack: */
-    if (TME_RECODE_SIZE_HOST > TME_RECODE_SIZE_32)
+    if (TME_RECODE_SIZE_HOST > TME_RECODE_SIZE_32) {
       if(TME_RECODE_SIZE_GUEST_MAX <= TME_RECODE_SIZE_HOST
 	 && stack_adjust != 0) {
 	
@@ -1170,7 +1170,8 @@ tme_recode_host_flags_thunk_new(struct tme_recode_ic *ic,
 	thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, -(32 + 8));
       }
 #endif    
-
+    }
+    
     /* jmp or call the guest function: */
     tme_recode_x86_insns_finish(ic, thunk_bytes);
     _tme_recode_x86_emit_transfer_func(ic,
