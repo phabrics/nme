@@ -160,6 +160,21 @@ tme_recode_host_rw_thunk_new(struct tme_recode_ic *ic,
   if (!tme_recode_host_thunk_start(ic)) {
     abort();
   }
+
+  /* the x86-64 ABI requires that the stack pointer be 16-byte
+     aligned immediately before a call instruction.  inside an
+     insn thunk, the stack pointer is 16-byte aligned immediately
+     before a call to a read/write thunk, which means at the
+     beginning of a read/write thunk it is only 8-byte aligned
+     (because of the return address for the read/write thunk).
+
+     on x86-64, we want to use at least one movdqa, which requires
+     us to align the stack pointer: */
+  stack_adjust
+    = (TME_RECODE_SIZE_HOST == TME_RECODE_SIZE_32
+       ? 0
+       : TME_BIT(TME_RECODE_SIZE_HOST - TME_RECODE_SIZE_8));
+
   rw_thunk = tme_new(struct tme_recode_rw_thunk, 1);
   rw_thunk->tme_recode_x86_rw_thunk_subs
     = tme_recode_build_to_thunk_off(ic, ic->tme_recode_ic_thunk_build_next);
@@ -297,20 +312,6 @@ tme_recode_host_rw_thunk_new(struct tme_recode_ic *ic,
       /* NB: in this case, we assume that the host is capable of SSE2
 	 instructions.  this seems reasonable: */
 
-      /* the x86-64 ABI requires that the stack pointer be 16-byte
-	 aligned immediately before a call instruction.  inside an
-	 insn thunk, the stack pointer is 16-byte aligned immediately
-	 before a call to a read/write thunk, which means at the
-	 beginning of a read/write thunk it is only 8-byte aligned
-	 (because of the return address for the read/write thunk).
-
-	 on x86-64, we want to use at least one movdqa, which requires
-	 us to align the stack pointer: */
-      stack_adjust
-	= (TME_RECODE_SIZE_HOST == TME_RECODE_SIZE_32
-	   ? 0
-	   : TME_BIT(TME_RECODE_SIZE_HOST - TME_RECODE_SIZE_8));
-
       /* if this is a write: */
       if (rw->tme_recode_rw_write) {
 
@@ -337,6 +338,8 @@ tme_recode_host_rw_thunk_new(struct tme_recode_ic *ic,
 					   -(stack_adjust
 					     + TME_BIT(rw->tme_recode_rw_memory_size
 						       - TME_RECODE_SIZE_8)));
+
+
       }
 
       /* emit one of: 
@@ -425,7 +428,13 @@ tme_recode_host_rw_thunk_new(struct tme_recode_ic *ic,
       /* discard any double-host-size value we wrote, and any stack
 	 pointer alignment: */
       if (stack_adjust) {
-	thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, -stack_adjust);
+	thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, stack_adjust);
+      }
+
+      /* if this was a write: */
+      if (rw->tme_recode_rw_write) {
+	/* after the write, we will need to discard the value: */
+	stack_adjust -= TME_BIT(rw->tme_recode_rw_memory_size - TME_RECODE_SIZE_8);
       }
     }
 
@@ -892,7 +901,11 @@ tme_recode_host_rw_thunk_new(struct tme_recode_ic *ic,
     }
         
 #ifdef WIN32
-    thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, -(32 + 8));
+    thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, -(32 + 8 + stack_adjust));
+#else
+    if (stack_adjust) {
+      thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, -stack_adjust);
+    }
 #endif
 
     /* we must assume that we can't reach the guest function from the
@@ -914,7 +927,11 @@ tme_recode_host_rw_thunk_new(struct tme_recode_ic *ic,
     thunk_bytes += 2;
 
 #ifdef WIN32
-    thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, (32 + 8));
+    thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, (32 + 8 + stack_adjust));
+#else
+    if (stack_adjust) {
+      thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, stack_adjust);
+    }
 #endif
     
     /* pop the caller-saved registers that aren't normally destroyed
