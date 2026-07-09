@@ -10,7 +10,6 @@ EXTRA_DIST = recode-x86.c \
 	rc-x86-insns.c \
 	rc-x86-regs.c \
 	rc-x86-subs.S \
-	rc-x86-subs.c \
 	misc-x86.c
 
 noinst_SCRIPTS = rc-x86-subs
