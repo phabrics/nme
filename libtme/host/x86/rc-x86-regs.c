@@ -77,6 +77,7 @@ static const tme_uint8_t tme_recode_x86_reg_from_host[TME_RECODE_X86_REG_HOST_UN
   TME_RECODE_X86_REG_D,		/* host reg 4 */
   TME_RECODE_X86_REG_C,		/* not a true host register */
 
+#define NME_STACK_ADJUST 0
   /* this returns the host register number for an argument register.
      this is only valid for n == 1 and n == 2: */
 #define TME_RECODE_X86_REG_HOST_ARG(n)		TME_RECODE_REG_HOST_UNDEF
@@ -128,11 +129,13 @@ static const tme_uint8_t tme_recode_x86_reg_from_host[TME_RECODE_X86_REG_HOST_UN
   /* this returns the host register number for an argument register.
      this is only valid for n == [0,3]: */
 #ifdef WIN32
+#define NME_STACK_ADJUST 0x20
 #define TME_RECODE_REG_HOST_ARG(n)	\
   ((n) < 2				\
    ? TME_RECODE_REG_HOST(13-n)		\
    : TME_RECODE_REG_HOST(8+n))		
 #else
+#define NME_STACK_ADJUST 0
 #define TME_RECODE_REG_HOST_ARG(n)	\
   ((n) < 2				\
    ? TME_RECODE_REG_HOST(8+n)		\

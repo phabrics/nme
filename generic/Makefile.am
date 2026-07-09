@@ -42,14 +42,15 @@ EXTRA_DIST = $(noinst_SCRIPTS) $(noinst_SCRIPTS:.sh=.m4) fb-xlat-auto.pl float-a
 	$(SHELL) $< > $@
 
 # target to make fb-xlat-auto.c:
+if USING_X
 fb-xlat-auto.c: fb-xlat-auto.in fb-xlat-auto.sh
 	cat fb-xlat-auto.in | xargs $(SHELL) $(srcdir)/fb-xlat-auto.sh > $@
 
 .pl.in:
-if USING_X
 	$(PERL) $< src $(NME_FB_XLAT_SRC) dst $(NME_FB_XLAT_DST) > $@
 else
-	echo "src $(NME_FB_XLAT_SRC) dst $(NME_FB_XLAT_DST)" > $@
+fb-xlat-auto.c: fb-xlat-auto.sh
+	echo "src $(NME_FB_XLAT_SRC) dst $(NME_FB_XLAT_DST)" | xargs $(SHELL) $(srcdir)/fb-xlat-auto.sh > $@
 endif
 
 SUBDIRS = . bus

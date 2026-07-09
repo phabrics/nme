@@ -821,9 +821,8 @@ _tme_recode_x86_insn_guest(struct tme_recode_ic *ic,
     /* emit a movq %ic, %rdi: */
     _tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_IC, TME_RECODE_X86_REG_HOST_ARG(0));
 
-#ifdef WIN32
-      thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, -(32 + 8));
-#endif
+    if(NME_STACK_ADJUST)
+      thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, -NME_STACK_ADJUST);
     
     /* we must assume that we can't reach the guest function from the
        instruction thunk with a 32-bit displacement.  emit a direct
@@ -843,9 +842,8 @@ _tme_recode_x86_insn_guest(struct tme_recode_ic *ic,
 	    << 8));
     thunk_bytes += 2;
 
-#ifdef WIN32
-    thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, (32 + 8));
-#endif
+    if(NME_STACK_ADJUST)
+      thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, NME_STACK_ADJUST);
   }
 
   /* if the guest function returned a register value, and this is a

@@ -770,7 +770,8 @@ tme_recode_host_rw_thunk_new(struct tme_recode_ic *ic,
        the) guest address: */
     thunk_bytes
       = _tme_recode_x86_tlb_ref(thunk_bytes,
-				TME_RECODE_SIZE_HOST,
+				TME_MIN(TME_RECODE_SIZE_HOST,
+					rw->tme_recode_rw_address_type.tme_recode_address_type_size),
 				(TME_RECODE_X86_OPCODE_BINOP_XOR
 				 + TME_RECODE_X86_OPCODE_BINOP_Ev_Gv),
 				TME_RECODE_X86_REG_TLB,
@@ -900,13 +901,10 @@ tme_recode_host_rw_thunk_new(struct tme_recode_ic *ic,
       }
     }
         
-#ifdef WIN32
-    thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, -(32 + 8 + stack_adjust));
-#else
+    stack_adjust += NME_STACK_ADJUST;
     if (stack_adjust) {
       thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, -stack_adjust);
     }
-#endif
 
     /* we must assume that we can't reach the guest function from the
        instruction thunk with a 32-bit displacement.  emit a direct
@@ -926,13 +924,9 @@ tme_recode_host_rw_thunk_new(struct tme_recode_ic *ic,
 	    << 8));
     thunk_bytes += 2;
 
-#ifdef WIN32
-    thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, (32 + 8 + stack_adjust));
-#else
     if (stack_adjust) {
       thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, stack_adjust);
     }
-#endif
     
     /* pop the caller-saved registers that aren't normally destroyed
        by a read/write thunk: */

@@ -4,20 +4,13 @@ prog=$(basename $0)
 
 echo '/* automatically generated, do not edit! */'
 echo ''
-echo -n '#if TME_RECODE_SIZE_HOST '
-if test `uname -p` = i386; then echo -n '=='; else echo -n '>'; fi
-echo ' TME_RECODE_SIZE_32'
-echo ''
 gcc -o $prog.o -c $0.S || cc -o $prog.o -c $0.S
-echo '/* offsets in the hand-coded '`uname -p`' x86 recode subs: */'
+echo '/* offsets in the hand-coded x86 recode subs: */'
 nm $prog.o | \
     awk '/ T / { print "#define " $3 "\t(0x" $1 ")" }'
 echo ''
-echo '/* the hand-coded '`uname -p`' x86 recode subs: */'
 objcopy --output-target=binary $prog.o $prog.bin
 echo 'static const tme_uint8_t _tme_recode_x86_subs[] = {'
 hexdump -e '16/1 "0x%02x, " "\n"' $prog.bin | \
     sed -e 's/0x  ,/0x00,/g'
 echo '};'
-echo ''
-echo '#endif /* TME_RECODE_SIZE_HOST */'

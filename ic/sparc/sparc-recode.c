@@ -51,10 +51,10 @@ _TME_RCSID("$Id: sparc-recode.c,v 1.6 2010/06/05 18:42:35 fredette Exp $");
 
 /* this returns a read/write thunk index for an opcode: */
 #define TME_SPARC_RECODE_RW_THUNK_INDEX(ic, address_size, endian, no_fault, opcode_0_3) \
-  ((opcode_0_3)							\
-   + ((TME_SPARC_VERSION(ic) >= 9)				\
-      * ((16 * ((no_fault) != 0))				\
-	 + (32 * ((endian) == TME_ENDIAN_LITTLE))		\
+  ((opcode_0_3)								\
+   + ((TME_SPARC_VERSION(ic) >= 9)					\
+      * ((16 * ((no_fault) != 0))					\
+	 + (32 * ((endian) == TME_ENDIAN_LITTLE))			\
 	 + (64 * (TME_SPARC_RECODE_SIZE(ic) - (address_size))))))
 
 /* how many source address hash positions are probed: */
@@ -1008,11 +1008,13 @@ tme_sparc_recode_init(struct tme_sparc *ic)
 
 #ifdef TME_RECODE_DEBUG
 
-  /* dumps the ic flags/conds: */
-  tme_sparc_recode_dump_ic(ic);
+  if(enable_recode) {
+    /* dumps the ic flags/conds: */
+    tme_sparc_recode_dump_ic(ic);
 
-  /* dumps the instructions: */
-  tme_sparc_recode_dump_insns(ic);
+    /* dumps the instructions: */
+    tme_sparc_recode_dump_insns(ic);
+  }
 #endif
 
 #else  /* !TME_HAVE_RECODE */

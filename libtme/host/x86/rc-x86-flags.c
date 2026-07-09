@@ -1165,11 +1165,9 @@ tme_recode_host_flags_thunk_new(struct tme_recode_ic *ic,
 	thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, stack_adjust);
 	stack_adjust = 0;
       }
-#ifdef WIN32
-      else {
-	thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, -(32 + 8));
+      else if(NME_STACK_ADJUST) {
+	thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, -NME_STACK_ADJUST);
       }
-#endif    
     }
     
     /* jmp or call the guest function: */
@@ -1191,11 +1189,9 @@ tme_recode_host_flags_thunk_new(struct tme_recode_ic *ic,
     /* do any stack adjust: */
     if (stack_adjust != 0) {
       thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, stack_adjust);
-#ifdef WIN32
-      if(flags_thunk->tme_recode_x86_flags_thunk_has_guest_func) {
-	thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, (32 + 8));
+      if(flags_thunk->tme_recode_x86_flags_thunk_has_guest_func && (NME_STACK_ADJUST != 0)) {
+	thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, NME_STACK_ADJUST);
       }
-#endif    
     }
 
     /* return to the instruction thunk: */
