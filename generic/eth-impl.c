@@ -783,7 +783,7 @@ tme_eth_ifaddrs_find(const char *ifa_name_user, int family, struct ifaddrs **_if
 
     switch(family) {
     case AF_UNSPEC:
-      strncpy(ifa_name, ifa->ifa_name, IFNAMSIZ);
+      snprintf(ifa_name, sizeof(ifa_name), "%s", ifa->ifa_name);
       break;
     case AF_INET:
       if(ifa->ifa_addr->sa_family != AF_INET) continue;
@@ -900,7 +900,7 @@ int tme_eth_alloc(char *dev_filename, char **_output)
 
     /* form the name of the next device to try, then try opening
        it. if we succeed, we're done: */
-    sprintf(dev_filename, "%s%d", dev_fn, minor++);
+    snprintf(dev_filename, strlen(dev_fn) + sizeof(dev_minor), "%s%d", dev_fn, minor++);
     tme_output_append_error(_output, "trying %s\n", dev_filename);
   }
 
