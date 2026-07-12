@@ -45,7 +45,6 @@ static struct tme_threads_t {
   tme_time_t tme_threads_delay;
 } tme_threads;
 static tme_cond_t tme_cond_start;
-static tme_time_t tme_cond_delay = TME_TIME_SET_SEC(5);
 
 // Set main thread loop iteration function & argument
 void nmesh_threads_set_main(tme_threads_fn1 run, void *arg, tme_mutex_t *mutex, tme_time_t delay) {

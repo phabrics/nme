@@ -874,7 +874,7 @@ if test "x${enable_debug}" != "xno"; then
   if test "x${enable_debug}" != "xlocks"; then
     CPPFLAGS="${CPPFLAGS-} -DTME_NO_DEBUG_LOCKS"
   fi
-  if test "${host_os}" = emscripten || test "x${recode_hosts}" != x; then
+  if test "${host_os}" = emscripten; then
     CFLAGS="-g3 -O0"
   elif test "x${have_Og}" = xyes; then
     CFLAGS="-g3 -Og"

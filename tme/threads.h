@@ -45,20 +45,6 @@
 #define TME_THREADS_ERRNO(rc)	(rc)
 
 typedef tme_uint64_t tme_time_t;
-#define TME_NSEC_PER_TICK (1000000000 / TME_FRAC_PER_SEC)
-#define TME_FRAC_PER_MSEC (TME_FRAC_PER_SEC / 1000)
-#define TME_FRAC_PER_USEC (TME_FRAC_PER_SEC / 1000000)
-
-#define TME_TIME_GET_SEC(a) ((a) / TME_FRAC_PER_SEC)
-#define TME_TIME_GET_MSEC(a) ((a) / TME_FRAC_PER_MSEC)
-#define TME_TIME_GET_USEC(a) ((a) / TME_FRAC_PER_USEC)
-#define TME_TIME_GET_NSEC(a) ((a) * TME_NSEC_PER_TICK)
-#define TME_TIME_SET_SEC(a) ((tme_time_t)(a) * TME_FRAC_PER_SEC)
-#define TME_TIME_SET_MSEC(a) ((tme_time_t)(a) * TME_FRAC_PER_MSEC)
-#define TME_TIME_SET_USEC(a) ((tme_time_t)(a) * TME_FRAC_PER_USEC)
-#define TME_TIME_SET_NSEC(a) ((tme_time_t)(a) / TME_NSEC_PER_TICK)
-
-/* setjmp/longjmp threading: */
 
 #ifdef TME_THREADS_SDL
 #include "threads-sdl.h"
@@ -74,7 +60,71 @@ typedef tme_uint64_t tme_time_t;
 
 #include "threads-fiber.h"
 
+static _tme_inline tme_time_t tme_thread_def_time _TME_P((void)) {
+#ifdef WIN32
+  #define TME_DEF_FRAC_PER_SEC 10000000
+  FILETIME filetime;
+  ULARGE_INTEGER _time;
+  GetSystemTimeAsFileTime(&filetime);
+  _time.u.HighPart = filetime.dwHighDateTime;
+  _time.u.LowPart = filetime.dwLowDateTime;
+#ifdef TME_HAVE_INT64_T
+  return _time.QuadPart;
+#else
+  return (_time.u.LowPart) | (_time.u.HighPart << 32);
+#endif
+#elif defined(USE_GETTIMEOFDAY) || !defined(_TME_HAVE_CLOCK_GETTIME)
+#define TME_DEF_FRAC_PER_SEC 1000000
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  return tv.tv_sec * TME_DEF_FRAC_PER_SEC + tv.tv_usec;
+#else
+#define TME_DEF_FRAC_PER_SEC 1000000000
+  struct timespec ts;
+  clock_gettime(CLOCK_REALTIME, &ts);
+  return ts.tv_sec * TME_DEF_FRAC_PER_SEC + ts.tv_nsec;
+#endif
+}
+
 extern int thread_mode;
+
+#ifdef TME_THREAD_FRAC_PER_SEC
+#define TME_FRAC_PER_SEC ((thread_mode) ? (TME_THREAD_FRAC_PER_SEC) : (TME_DEF_FRAC_PER_SEC))
+#else
+#define TME_FRAC_PER_SEC TME_DEF_FRAC_PER_SEC
+#define tme_thread_time tme_thread_def_time
+#endif
+
+#define TME_NSEC_PER_TICK (1000000000 / TME_FRAC_PER_SEC)
+#define TME_FRAC_PER_MSEC (TME_FRAC_PER_SEC / 1000)
+#define TME_FRAC_PER_USEC (TME_FRAC_PER_SEC / 1000000)
+
+#define TME_TIME_GET_SEC(a) ((a) / TME_FRAC_PER_SEC)
+#define TME_TIME_GET_MSEC(a) ((a) / TME_FRAC_PER_MSEC)
+#define TME_TIME_GET_USEC(a) ((a) / TME_FRAC_PER_USEC)
+#define TME_TIME_GET_NSEC(a) ((a) * TME_NSEC_PER_TICK)
+#define TME_TIME_SET_SEC(a) ((tme_time_t)(a) * TME_FRAC_PER_SEC)
+#define TME_TIME_SET_MSEC(a) ((tme_time_t)(a) * TME_FRAC_PER_MSEC)
+#define TME_TIME_SET_USEC(a) ((tme_time_t)(a) * TME_FRAC_PER_USEC)
+#define TME_TIME_SET_NSEC(a) ((tme_time_t)(a) / TME_NSEC_PER_TICK)
+
+static _tme_inline void tme_thread_get_timeout(tme_time_t sleep, tme_thread_time_t *timeout, int abs) {
+#ifdef TME_THREADS_SDL
+  /* ignore abs argument as we SDL API assumes relative time: */
+  *(timeout) = TME_TIME_GET_MSEC(sleep);
+#endif
+#ifdef TME_THREADS_GLIB
+  if(abs) sleep += tme_thread_time();
+  *(timeout) = TME_TIME_GET_USEC(sleep);
+#endif
+#ifdef TME_THREADS_POSIX
+  if(abs) sleep += tme_thread_time();
+  timeout->tv_sec = TME_TIME_GET_SEC(sleep);
+  timeout->tv_nsec = TME_TIME_GET_NSEC(sleep % TME_FRAC_PER_SEC);
+#endif
+}
+
+#define tme_get_timeout(s,t,a) ((thread_mode) ? (tme_thread_get_timeout(s,&((t).thread),a)) : ((t).fiber=(s)))
 
 typedef struct tme_rwlock {
   union {
@@ -163,8 +213,6 @@ typedef union {
   tme_thread_time_t thread;
   tme_time_t fiber;
 } tme_timeout_t;
-
-#define tme_get_timeout(s,t,a) ((thread_mode) ? (tme_thread_get_timeout(s,&((t).thread),a)) : ((t).fiber=(s)))
 
 void tme_thread_yield _TME_P((void));
 

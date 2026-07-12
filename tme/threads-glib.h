@@ -70,16 +70,19 @@ typedef GCond tme_thread_cond_t;
 #define TME_THREAD_DEADLOCK_SLEEP	abort
 
 /* time: */
-#define TME_FRAC_PER_SEC G_USEC_PER_SEC
-
+#ifdef TME_THREAD_FRAC_PER_SEC
+#error "Multiple conflicting thread models defined in glib"
+#else
+#ifdef G_NSEC_PER_SEC
+#define TME_THREAD_FRAC_PER_SEC G_NSEC_PER_SEC
+#define tme_thread_time g_get_monotonic_time_ns
+#else
+#define TME_THREAD_FRAC_PER_SEC G_USEC_PER_SEC
 #define tme_thread_time g_get_monotonic_time
+#endif
+#endif
 
 typedef gint64 tme_thread_time_t;
-
-static _tme_inline void tme_thread_get_timeout(tme_time_t sleep, tme_thread_time_t *timeout, int abs) {
-  if(abs) sleep += tme_thread_time();
-  *(timeout) = TME_TIME_GET_USEC(sleep);
-}
 
 /* threads: */
 typedef gpointer _tme_thret;

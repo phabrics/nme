@@ -83,42 +83,7 @@ typedef pthread_cond_t tme_thread_cond_t;
 #define TME_THREAD_TIMEDLOCK		(1000)
 #define TME_THREAD_DEADLOCK_SLEEP	abort
 
-/* time: */
-static _tme_inline tme_time_t tme_thread_time _TME_P((void)) {
-#ifdef WIN32
-  #define TME_FRAC_PER_SEC 10000000
-  FILETIME filetime;
-  ULARGE_INTEGER _time;
-  GetSystemTimeAsFileTime(&filetime);
-  _time.u.HighPart = filetime.dwHighDateTime;
-  _time.u.LowPart = filetime.dwLowDateTime;
-#ifdef TME_HAVE_INT64_T
-  return _time.QuadPart;
-#else
-  return (_time.u.LowPart) | (_time.u.HighPart << 32);
-#endif
-#elif defined(USE_GETTIMEOFDAY) || !defined(_TME_HAVE_CLOCK_GETTIME)
-#define TME_FRAC_PER_SEC 1000000
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  return TME_TIME_SET_SEC(tv.tv_sec)
-    +TME_TIME_SET_USEC(tv.tv_usec);
-#else
-#define TME_FRAC_PER_SEC 1000000000
-  struct timespec ts;
-  clock_gettime(CLOCK_REALTIME, &ts);
-  return TME_TIME_SET_SEC(ts.tv_sec)
-    +TME_TIME_SET_NSEC(ts.tv_nsec);
-#endif
-}
-
 typedef struct timespec tme_thread_time_t;
-
-static _tme_inline void tme_thread_get_timeout(tme_time_t sleep, tme_thread_time_t *timeout, int abs) {
-  if(abs) sleep += tme_thread_time();
-  timeout->tv_sec = TME_TIME_GET_SEC(sleep);
-  timeout->tv_nsec = TME_TIME_GET_NSEC(sleep % TME_FRAC_PER_SEC);
-}
 
 /* threads: */
 typedef void *_tme_thret;

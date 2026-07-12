@@ -73,7 +73,11 @@ typedef SDL_Condition *tme_thread_cond_t;
 #define TME_THREAD_DEADLOCK_SLEEP	abort
 
 /* time: */
-#define TME_FRAC_PER_SEC SDL_NS_PER_SECOND
+#ifdef TME_THREAD_FRAC_PER_SEC
+#error "Multiple conflicting thread models defined in sdl"
+#else
+#define TME_THREAD_FRAC_PER_SEC SDL_NS_PER_SECOND
+#endif
 
 static _tme_inline tme_time_t tme_thread_time _TME_P((void)) {
   SDL_Time ticks;
@@ -82,9 +86,6 @@ static _tme_inline tme_time_t tme_thread_time _TME_P((void)) {
 }
 
 typedef tme_int32_t tme_thread_time_t;
-
-/* ignore abs argument as we SDL API assumes relative time: */
-#define tme_thread_get_timeout(sleep, timeout, abs) (*(timeout) = TME_TIME_GET_MSEC(sleep))
 
 /* threads: */
 typedef int *_tme_thret;
