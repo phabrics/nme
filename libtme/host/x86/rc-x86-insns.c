@@ -727,7 +727,9 @@ _tme_recode_x86_insn_guest(struct tme_recode_ic *ic,
       }
       if (insn->tme_recode_insn_operand_src[1] != TME_RECODE_OPERAND_UNDEF) {
 	_tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_N(10), TME_RECODE_X86_REG_HOST_ARG(3));
+#ifndef WIN32
 	_tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_N(11), TME_RECODE_X86_REG_N(8));
+#endif
       }
     }
 

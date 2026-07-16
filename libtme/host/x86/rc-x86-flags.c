@@ -669,17 +669,14 @@ tme_recode_host_flags_thunk_new(struct tme_recode_ic *ic,
     /* otherwise, this is an x86-64 host: */
     else {
 
-      /* copy the struct tme_ic * for the guest function: */
-      _tme_recode_x86_emit_reg_copy(thunk_bytes,
-				    TME_RECODE_X86_REG_IC,
-				    TME_RECODE_X86_REG_HOST_ARG(0));
-
       /* copy the (least-significant half of) the first source operand
 	 for the guest function: */
+#ifndef WIN32
       _tme_recode_x86_emit_reg_copy(thunk_bytes,
 				    tme_recode_x86_reg_from_host[TME_RECODE_X86_REG_HOST_SUBS_SRC0 + 0],
 				    TME_RECODE_X86_REG_HOST_ARG(1));
-
+#endif
+      
       /* if double-host-size guests are supported: */
       if (TME_RECODE_SIZE_GUEST_MAX > TME_RECODE_SIZE_HOST) {
 
@@ -744,6 +741,11 @@ tme_recode_host_flags_thunk_new(struct tme_recode_ic *ic,
 	   will always chain to the guest function, so we don't have
 	   to worry about the ABI stack alignment like we do above: */
       }
+
+      /* copy the struct tme_ic * for the guest function. NB first arg should be loaded last to avoid conflicts: */
+      _tme_recode_x86_emit_reg_copy(thunk_bytes,
+				    TME_RECODE_X86_REG_IC,
+				    TME_RECODE_X86_REG_HOST_ARG(0));
     }
 
     /* we will also have to remove any stack padding: */
@@ -1165,11 +1167,13 @@ tme_recode_host_flags_thunk_new(struct tme_recode_ic *ic,
 	thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, stack_adjust);
 	stack_adjust = 0;
       }
-      else if(NME_STACK_ADJUST) {
-	thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, -NME_STACK_ADJUST);
-      }
     }
     
+    if(stack_adjust && NME_STACK_ADJUST) {
+      thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, -NME_STACK_ADJUST);
+      stack_adjust += NME_STACK_ADJUST;
+    }
+       
     /* jmp or call the guest function: */
     tme_recode_x86_insns_finish(ic, thunk_bytes);
     _tme_recode_x86_emit_transfer_func(ic,
@@ -1189,9 +1193,6 @@ tme_recode_host_flags_thunk_new(struct tme_recode_ic *ic,
     /* do any stack adjust: */
     if (stack_adjust != 0) {
       thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, stack_adjust);
-      if(flags_thunk->tme_recode_x86_flags_thunk_has_guest_func && (NME_STACK_ADJUST != 0)) {
-	thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, NME_STACK_ADJUST);
-      }
     }
 
     /* return to the instruction thunk: */
@@ -1255,7 +1256,7 @@ _tme_recode_x86_flags_thunk_ops(struct tme_recode_flags_thunk *flags_thunk,
   /* do any stack padding needed for the host ABI: */
   stack_adjust = flags_thunk->tme_recode_x86_flags_thunk_stack_padding;
   if (stack_adjust != 0) {
-    thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, stack_adjust);
+    thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, -stack_adjust);
   }
 
   /* we need to track the stack adjust here for binops that test the

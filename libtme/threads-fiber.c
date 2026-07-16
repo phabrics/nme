@@ -42,7 +42,7 @@ _TME_RCSID("$Id: threads-fiber.c,v 1.18 2010/06/05 19:10:28 fredette Exp $");
 #include <stdlib.h>
 #if defined(__EMSCRIPTEN__) && !defined(USE_SJLJ)
 #include <emscripten/fiber.h>
-#elif !defined(WIN32)
+#elif !defined(WIN32) || defined(TME_HAVE_RECODE)
 #define USE_SJLJ
 #endif
 #ifdef USE_SJLJ

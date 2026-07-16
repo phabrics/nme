@@ -409,9 +409,9 @@ _tme_recode_x86_chain_fixup_targets(struct tme_recode_ic *ic)
   /* otherwise, this is an x86-64 host: */
   else {
 
-    /* copy the arguments for the guest jump chain function: */
-    _tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_IC, TME_RECODE_X86_REG_HOST_ARG(0));
+    /* copy the arguments for the guest jump chain function. NB first arg should be loaded last to avoid conflicts: */
     _tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_CHAIN_FIXUP_ADDRESS, TME_RECODE_X86_REG_HOST_ARG(1));
+    _tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_IC, TME_RECODE_X86_REG_HOST_ARG(0));
 
     /* we don't need to adjust the stack.  NB that the instructions
        thunk, where the stack pointer is 16-byte aligned, jumped to

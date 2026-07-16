@@ -862,9 +862,6 @@ tme_recode_host_rw_thunk_new(struct tme_recode_ic *ic,
     _tme_recode_x86_emit_reg_push(thunk_bytes, TME_RECODE_X86_REG_N(8));
     _tme_recode_x86_emit_reg_push(thunk_bytes, TME_RECODE_X86_REG_N(9));
 
-    /* make the struct tme_ic * argument for the guest function: */
-    _tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_IC, TME_RECODE_X86_REG_HOST_ARG(0));
-
     /* make the address argument for the guest function.  NB that if
        double-host-size guests are supported, but this isn't a
        double-host-size guest, we use a garbage word as the
@@ -901,6 +898,9 @@ tme_recode_host_rw_thunk_new(struct tme_recode_ic *ic,
       }
     }
         
+    /* make the struct tme_ic * argument for the guest function: */
+    _tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_IC, TME_RECODE_X86_REG_HOST_ARG(0));
+
     stack_adjust += NME_STACK_ADJUST;
     if (stack_adjust) {
       thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, -stack_adjust);
