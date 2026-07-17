@@ -511,20 +511,20 @@ void tme_misc_set_cycles(const char *impl) {
   }
 #endif
 
-#if defined(_TME_HAVE_SDL3) || defined(_TME_HAVE_SDL2)
-  if(def || !strcmp(impl,"sdl")) {
-    printf("Using SDL counter.\n");
-    tme_misc_cycles = (tme_misc_get_cycles)SDL_GetPerformanceCounter;
-    tme_misc_cycles_per_sec = (tme_misc_cycle_freq)SDL_GetPerformanceFrequency;
-    return;
-  }
-#endif
-
 #ifdef WIN32
   if(def || !strcmp(impl,"win")) {
     printf("Using Win32 counter.\n");
     tme_misc_cycles = tme_misc_win32_cycles;
     tme_misc_cycles_per_sec = tme_misc_win32_cycles_per_sec;
+    return;
+  }
+#endif
+
+#if defined(_TME_HAVE_SDL3) || defined(_TME_HAVE_SDL2)
+  if(def || !strcmp(impl,"sdl")) {
+    printf("Using SDL counter.\n");
+    tme_misc_cycles = (tme_misc_get_cycles)SDL_GetPerformanceCounter;
+    tme_misc_cycles_per_sec = (tme_misc_cycle_freq)SDL_GetPerformanceFrequency;
     return;
   }
 #endif

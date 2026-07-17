@@ -44,8 +44,9 @@ AM_INIT_AUTOMAKE([subdir-objects])
 AM_EXTRA_RECURSIVE_TARGETS([modules])
 AC_PROG_CC
 AM_PROG_CC_C_O
+AM_PROG_AS
 AM_SILENT_RULES([yes])
-AC_PREFIX_PROGRAM([tmesh])
+AC_PREFIX_PROGRAM([nmesh])
 
 dnl Write configuration out to config.h through config.h.in.
 AC_CONFIG_HEADERS([config.h])
@@ -58,6 +59,9 @@ AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 AC_PROG_EGREP
 AC_PROG_LN_S
+
+AC_CHECK_PROG([OBJCOPY], [objcopy], [objcopy], [])
+AC_CHECK_PROG([HEXDUMP], [hexdump], [hexdump], [])
 
 dnl Possible host types and optional versions to test for (higher versions preferred when multiple options given)
 TME_HOST_TYPES="gtk4 gtk3 rfb sdl3 sdl2 tun bsd openvpn netmap"

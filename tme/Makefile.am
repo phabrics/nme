@@ -50,11 +50,11 @@ endif
 # module.c needs to know the LTDL_SHLIBPATH_VAR that libltdl
 # is using:
 shlibvar.h: $(top_builddir)/config.h Makefile
-	grep LT_MODULE_PATH_VAR $(top_builddir)/config.h > $@
-	grep LT_DLSEARCH_PATH $(top_builddir)/config.h >> $@
-	echo -n "#define NME_PACKAGE_PATH \"" >> $@
-	echo -n ${LIB_DIR} | tr -d "\n\r\f" >> $@
-	echo \" >> $@
-	echo -n "#define NME_PREFIX_PATH \"" >> $@
-	echo -n ${ROOT_DIR} | tr -d "\n\r\f" >> $@
-	echo \" >> $@
+	$(GREP) LT_MODULE_PATH_VAR $(top_builddir)/config.h > $@
+	$(GREP) LT_DLSEARCH_PATH $(top_builddir)/config.h >> $@
+	@echo -n "#define NME_PACKAGE_PATH \"" >> $@
+	@echo -n ${LIB_DIR} | tr -d "\n\r\f" >> $@
+	@echo \" >> $@
+	@echo -n "#define NME_PREFIX_PATH \"" >> $@
+	@echo -n ${ROOT_DIR} | tr -d "\n\r\f" >> $@
+	@echo \" >> $@

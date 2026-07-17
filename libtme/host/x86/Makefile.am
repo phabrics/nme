@@ -12,13 +12,26 @@ EXTRA_DIST = recode-x86.c \
 	rc-x86-subs.S \
 	misc-x86.c
 
-noinst_SCRIPTS = rc-x86-subs
-
 BUILT_SOURCES = rc-x86-subs.c
 
-MAINTAINERCLEANFILES = $(noinst_SCRIPTS) $(BUILT_SOURCES)
+MAINTAINERCLEANFILES = $(BUILT_SOURCES)
 
-EXTRA_DIST += $(noinst_SCRIPTS)
+.S.o:
+	$(CCAS) $(CCASFLAGS) -o $@ -c $<
 
-rc-x86-subs.c: rc-x86-subs rc-x86-subs.S
-	$(SHELL) $(srcdir)/rc-x86-subs > $@
+.o.bin:
+	$(OBJCOPY) --output-target=binary $< $@
+
+.o.nm:
+	$(NM) $< > $@
+
+rc-x86-subs.c: rc-x86-subs.bin rc-x86-subs.nm
+	@echo '/* automatically generated, do not edit! */' > $@
+	@echo '' >> $@
+	@echo '/* offsets in the hand-coded x86 recode subs: */' >> $@
+	$(AWK) '/ T / { print "#define " $$3 "\t(0x" $$1 ")" }' rc-x86-subs.nm >> $@
+	@echo '' >> $@
+	@echo 'static const tme_uint8_t _tme_recode_x86_subs[] = {' >> $@
+	$(HEXDUMP) -e '16/1 "0x%02x, " "\n"' rc-x86-subs.bin | \
+	$(SED) -e 's/0x  ,/0x00,/g' >> $@
+	@echo '};' >> $@
