@@ -198,7 +198,11 @@ tme_recode_x86_\insn\size:
 .endif
 .else
 #ifdef __x86_64__
+#ifdef WIN32 
+	.byte	0x48
+#else
 	.byte	0x48 + (1 << 0) + (1 << 2) # TME_RECODE_X86_REX_R(TME_RECODE_SIZE_64, %r12) + TME_RECODE_X86_REX_B(0, %r12)
+#endif	
 #endif /* __x86_64__ */
 	.byte	0x0f			# TME_RECODE_X86_OPCODE_ESC_0F
 .ifc \insn,shra
@@ -206,7 +210,7 @@ tme_recode_x86_\insn\size:
 .else
 	.byte	0xb7 - ((\size / 8) & 1)	# TME_RECODE_X86_OPCODE0F_MOVZ_Ew_Gv or TME_RECODE_X86_OPCODE0F_MOVZ_Eb_Gv
 .endif
-#ifdef __x86_64__
+#if defined(__x86_64__) && !defined(WIN32)
 	.byte	(0xc0 + (12 % 8)) + ((12 % 8) << 3) # %r12, %r12
 #else  /* !__x86_64__ */
 	.byte	(0xc0 + 7) + (7 << 3) # %edi, %edi

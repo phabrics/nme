@@ -25,7 +25,10 @@ MAINTAINERCLEANFILES = $(BUILT_SOURCES)
 .o.nm:
 	$(NM) $< > $@
 
-rc-x86-subs.c: rc-x86-subs.bin rc-x86-subs.nm
+.o.dis:
+	$(OBJDUMP) -d $< > $@
+
+rc-x86-subs.c: rc-x86-subs.bin rc-x86-subs.nm rc-x86-subs.dis
 	@echo '/* automatically generated, do not edit! */' > $@
 	@echo '' >> $@
 	@echo '/* offsets in the hand-coded x86 recode subs: */' >> $@
