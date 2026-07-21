@@ -416,7 +416,10 @@ _tme_recode_x86_chain_fixup_targets(struct tme_recode_ic *ic)
     /* we don't need to adjust the stack.  NB that the instructions
        thunk, where the stack pointer is 16-byte aligned, jumped to
        us, so we don't have to align it for the x86-64 ABI: */
-    stack_adjust = 0;
+    stack_adjust = NME_STACK_ADJUST;
+    if(NME_STACK_ADJUST) {
+      thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, -NME_STACK_ADJUST);
+    }
   }
 
   /* call the chain fixup function: */
@@ -1753,7 +1756,7 @@ tme_recode_chain_fixup(struct tme_recode_ic *ic,
     return_imm32 = TME_RECODE_X86_CHAIN_RETURN_ADDRESS(ic, insns_thunk_return);
     tme_recode_thunk_off_write(ic,
 			       (chain_fixup
-				- (5
+				- (5 + 2
 				   + sizeof(tme_uint32_t))),
 			       tme_uint32_t,
 			       return_imm32);
