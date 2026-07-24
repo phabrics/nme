@@ -669,9 +669,10 @@ tme_recode_host_flags_thunk_new(struct tme_recode_ic *ic,
     /* otherwise, this is an x86-64 host: */
     else {
 
+	/* On x64 with 64-bit max recode size, the SRC0 value is already in RDX: */
+#ifndef WIN32
       /* copy the (least-significant half of) the first source operand
 	 for the guest function: */
-#ifndef WIN32
       _tme_recode_x86_emit_reg_copy(thunk_bytes,
 				    tme_recode_x86_reg_from_host[TME_RECODE_X86_REG_HOST_SUBS_SRC0 + 0],
 				    TME_RECODE_X86_REG_HOST_ARG(1));
@@ -680,6 +681,38 @@ tme_recode_host_flags_thunk_new(struct tme_recode_ic *ic,
       /* if double-host-size guests are supported: */
       if (TME_RECODE_SIZE_GUEST_MAX > TME_RECODE_SIZE_HOST) {
 
+#ifdef WIN32
+
+	/* copy the most-significant half of the first source operand
+	   for the guest function: */
+	_tme_recode_x86_emit_reg_push(thunk_bytes, tme_recode_x86_reg_from_host[TME_RECODE_X86_REG_HOST_SUBS_SRC0 + 1]);
+
+	/* copy the (least-significant half of) the first source operand
+	   for the guest function: */
+	_tme_recode_x86_emit_reg_push(thunk_bytes, tme_recode_x86_reg_from_host[TME_RECODE_X86_REG_HOST_SUBS_SRC0 + 0]);
+
+	/* On x64 with 128-bit max recode size, the value is passed as a pointer to a value on the stack: */
+	_tme_recode_x86_emit_reg_copy(thunk_bytes,
+				      TME_RECODE_X86_REG_SP,
+				      TME_RECODE_X86_REG_HOST_ARG(1));
+
+	/* copy the most-significant half of the first source operand
+	   for the guest function: */
+	_tme_recode_x86_emit_reg_push(thunk_bytes, tme_recode_x86_reg_from_host[TME_RECODE_X86_REG_HOST_SUBS_SRC1 + 1]);
+
+	/* copy the (least-significant half of) the first source operand
+	   for the guest function: */
+	_tme_recode_x86_emit_reg_push(thunk_bytes, tme_recode_x86_reg_from_host[TME_RECODE_X86_REG_HOST_SUBS_SRC1 + 0]);
+
+	/* On x64 with 128-bit max recode size, the value is passed as a pointer to a value on the stack: */
+	_tme_recode_x86_emit_reg_copy(thunk_bytes,
+				      TME_RECODE_X86_REG_SP,
+				      TME_RECODE_X86_REG_HOST_ARG(2));
+	
+	/* before returning to the insn thunk, we will need to remove
+	   the source operands argument from the stack: */
+	stack_adjust += 2 * sizeof(tme_recode_uguest_t);
+#else
 	/* copy the most-significant half of the first source operand
 	   for the guest function: */
 	_tme_recode_x86_emit_reg_copy(thunk_bytes,
@@ -691,18 +724,22 @@ tme_recode_host_flags_thunk_new(struct tme_recode_ic *ic,
 				      tme_recode_x86_reg_from_host[TME_RECODE_X86_REG_HOST_SUBS_SRC1 + 0],
 				      TME_RECODE_X86_REG_HOST_ARG(3));
 
-#ifdef WIN32
-	//    thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, -(32 + 8));
-#else
 	_tme_recode_x86_emit_reg_copy(thunk_bytes,
 				      tme_recode_x86_reg_from_host[TME_RECODE_X86_REG_HOST_SUBS_SRC1 + 1],
 				      TME_RECODE_X86_REG_N(8));
 #endif
-
+	
 	/* push the destination operand for the guest function: */
 	_tme_recode_x86_emit_reg_push(thunk_bytes, tme_recode_x86_reg_from_host[TME_RECODE_X86_REG_HOST_SUBS_DST + 1]);
 	_tme_recode_x86_emit_reg_push(thunk_bytes, tme_recode_x86_reg_from_host[TME_RECODE_X86_REG_HOST_SUBS_DST + 0]);
 
+#ifdef WIN32
+	/* On x64 with 128-bit max recode size, the value is passed as a pointer to a value on the stack: */
+	_tme_recode_x86_emit_reg_copy(thunk_bytes,
+				      TME_RECODE_X86_REG_SP,
+				      TME_RECODE_X86_REG_HOST_ARG(3));
+#endif
+	
 	/* before returning to the insn thunk, we will need to remove
 	   the destination operand argument from the stack: */
 	stack_adjust += sizeof(tme_recode_uguest_t);
@@ -746,6 +783,12 @@ tme_recode_host_flags_thunk_new(struct tme_recode_ic *ic,
       _tme_recode_x86_emit_reg_copy(thunk_bytes,
 				    TME_RECODE_X86_REG_IC,
 				    TME_RECODE_X86_REG_HOST_ARG(0));
+
+      /* allocate any shadow store space needed by, e.g., x64 */
+      if(NME_STACK_ADJUST) {
+	thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, -NME_STACK_ADJUST);
+	stack_adjust += NME_STACK_ADJUST;
+      }
     }
 
     /* we will also have to remove any stack padding: */
@@ -1168,12 +1211,7 @@ tme_recode_host_flags_thunk_new(struct tme_recode_ic *ic,
 	stack_adjust = 0;
       }
     }
-    
-    if(stack_adjust && NME_STACK_ADJUST) {
-      thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, -NME_STACK_ADJUST);
-      stack_adjust += NME_STACK_ADJUST;
-    }
-       
+           
     /* jmp or call the guest function: */
     tme_recode_x86_insns_finish(ic, thunk_bytes);
     _tme_recode_x86_emit_transfer_func(ic,

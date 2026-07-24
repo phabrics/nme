@@ -770,8 +770,7 @@ tme_recode_host_rw_thunk_new(struct tme_recode_ic *ic,
        the) guest address: */
     thunk_bytes
       = _tme_recode_x86_tlb_ref(thunk_bytes,
-				TME_MIN(TME_RECODE_SIZE_HOST,
-					rw->tme_recode_rw_address_type.tme_recode_address_type_size),
+				TME_RECODE_SIZE_HOST,
 				(TME_RECODE_X86_OPCODE_BINOP_XOR
 				 + TME_RECODE_X86_OPCODE_BINOP_Ev_Gv),
 				TME_RECODE_X86_REG_TLB,

@@ -1756,7 +1756,10 @@ tme_recode_chain_fixup(struct tme_recode_ic *ic,
     return_imm32 = TME_RECODE_X86_CHAIN_RETURN_ADDRESS(ic, insns_thunk_return);
     tme_recode_thunk_off_write(ic,
 			       (chain_fixup
-				- (5 + 2
+				- (5
+#ifdef WIN32
+				   + 2
+#endif
 				   + sizeof(tme_uint32_t))),
 			       tme_uint32_t,
 			       return_imm32);

@@ -489,7 +489,8 @@ _tme_recode_x86_insn_guest(struct tme_recode_ic *ic,
 {
   tme_uint8_t *thunk_bytes;
   unsigned long reg_host_free;
-
+  int stack_adjust;
+  
   /* since a guest function may fault and never return, we have to
      clean all dirty host registers so that all guest registers are
      correct in the guest ic state at the time of the fault: */
@@ -499,6 +500,10 @@ _tme_recode_x86_insn_guest(struct tme_recode_ic *ic,
      must take an undefined second source operand: */
   assert (insn->tme_recode_insn_operand_src[0] != TME_RECODE_OPERAND_UNDEF
 	  || insn->tme_recode_insn_operand_src[1] == TME_RECODE_OPERAND_UNDEF);
+
+  /* assume that we won't need to remove anything from the stack
+     before returning to the insn thunk: */
+  stack_adjust = 0;
 
   /* if this is an ia32 host: */
   if (TME_RECODE_SIZE_HOST == TME_RECODE_SIZE_32) {
@@ -647,8 +652,11 @@ _tme_recode_x86_insn_guest(struct tme_recode_ic *ic,
   else {
 
     /* if this is a double-host-size guest: */
+#ifdef WIN32
+    if (TME_RECODE_SIZE_GUEST_MAX > TME_RECODE_SIZE_HOST) {
+#else
     if (TME_RECODE_SIZE_IS_DOUBLE_HOST(ic->tme_recode_ic_reg_size)) {
-
+#endif
       /* if this guest function takes an undefined first source operand: */
       if (insn->tme_recode_insn_operand_src[0] == TME_RECODE_OPERAND_UNDEF) {
 
@@ -657,7 +665,9 @@ _tme_recode_x86_insn_guest(struct tme_recode_ic *ic,
 	   won't reserve it by loading the first source operand: */
 	if (insn->tme_recode_insn_operand_dst != TME_RECODE_OPERAND_NULL) {
 	  tme_recode_regs_host_reserve(ic,
-				       TME_RECODE_X86_REG_HOST_FREE_CALL - 1);
+				       (TME_RECODE_SIZE_IS_DOUBLE_HOST(ic->tme_recode_ic_reg_size)
+					? (TME_RECODE_X86_REG_HOST_FREE_CALL - 1)
+					: TME_RECODE_X86_REG_HOST_FREE_CALL));
 	}
       }
 
@@ -672,7 +682,10 @@ _tme_recode_x86_insn_guest(struct tme_recode_ic *ic,
 	tme_recode_regs_src_specific(ic,
 				     insn,
 				     insn->tme_recode_insn_operand_src[0],
-				     TME_RECODE_X86_REG_HOST_FREE_CALL - 1);
+				     (TME_RECODE_SIZE_IS_DOUBLE_HOST(ic->tme_recode_ic_reg_size)
+				      ? (TME_RECODE_X86_REG_HOST_FREE_CALL - 1)
+				      : TME_RECODE_X86_REG_HOST_FREE_CALL));
+
       }
 
       /* if this guest function takes a defined second source operand: */
@@ -719,6 +732,68 @@ _tme_recode_x86_insn_guest(struct tme_recode_ic *ic,
       /* start more instructions: */
       tme_recode_x86_insns_start(ic, thunk_bytes);
 
+#ifdef WIN32
+
+      /* if this guest function takes undefined source operand: */
+      if (insn->tme_recode_insn_operand_src[0] == TME_RECODE_OPERAND_UNDEF) {
+
+	/* push garbage source operands for the guest function: */
+	thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, - (int) (sizeof(tme_recode_uguest_t)));
+      }
+
+      /* otherwise, this guest function takes at least one defined
+	 source operand: */
+      
+      /* push the first source operand for the guest function.  NB that
+	 if double-host-size guests are supported, but this isn't a
+	 double-host-size guest, we use a garbage word on the stack as
+	 the most-significant half of that argument (which is okay since
+	 the guest functions are supposed to truncate their arguments to
+	 the expected size): */
+      else if (TME_RECODE_SIZE_IS_DOUBLE_HOST(ic->tme_recode_ic_reg_size)) {
+	_tme_recode_x86_emit_reg_push(thunk_bytes, TME_RECODE_X86_REG_A);
+	_tme_recode_x86_emit_reg_push(thunk_bytes, TME_RECODE_X86_REG_BP);
+      }
+      else {
+	if (TME_RECODE_SIZE_GUEST_MAX > TME_RECODE_SIZE_HOST) {
+	  thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, - (int) (sizeof(tme_recode_uguest_t) / 2));
+	}
+	_tme_recode_x86_emit_reg_push(thunk_bytes, TME_RECODE_X86_REG_A);
+      }
+
+      /* On x64 with 128-bit max recode size, the value is passed as a pointer to a value on the stack: */
+      _tme_recode_x86_emit_reg_copy(thunk_bytes,
+				    TME_RECODE_X86_REG_SP,
+				    TME_RECODE_X86_REG_HOST_ARG(1));
+
+      /* if this guest function takes undefined source operand: */
+      if (insn->tme_recode_insn_operand_src[1] == TME_RECODE_OPERAND_UNDEF) {
+
+	/* push garbage source operands for the guest function: */
+	thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, - (int) (sizeof(tme_recode_uguest_t)));
+      }
+      /* push the second source operand for the guest function.  if
+	 double-host size guests are supported, assume that this is a
+	 double-host-size guest and push the most-significant half of
+	 the argument first.  if this isn't a double-host-size guest,
+	 this will push some unknown register (which is okay since the
+	 guest functions are supposed to truncate their arguments to the
+	 expected size): */
+      else {
+	if (TME_RECODE_SIZE_GUEST_MAX > TME_RECODE_SIZE_HOST) {
+	  _tme_recode_x86_emit_reg_push(thunk_bytes,
+					TME_RECODE_X86_REG_N(11));
+	}
+	_tme_recode_x86_emit_reg_push(thunk_bytes,
+				      TME_RECODE_X86_REG_N(10));
+      }
+      /* On x64 with 128-bit max recode size, the value is passed as a pointer to a value on the stack: */
+      _tme_recode_x86_emit_reg_copy(thunk_bytes,
+				    TME_RECODE_X86_REG_SP,
+				    TME_RECODE_X86_REG_HOST_ARG(2));
+
+      stack_adjust += 2 * sizeof(tme_recode_uguest_t);
+#else
       /* move the first and second source operands into the function
 	 argument registers: */
       if (insn->tme_recode_insn_operand_src[0] != TME_RECODE_OPERAND_UNDEF) {
@@ -727,10 +802,9 @@ _tme_recode_x86_insn_guest(struct tme_recode_ic *ic,
       }
       if (insn->tme_recode_insn_operand_src[1] != TME_RECODE_OPERAND_UNDEF) {
 	_tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_N(10), TME_RECODE_X86_REG_HOST_ARG(3));
-#ifndef WIN32
 	_tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_N(11), TME_RECODE_X86_REG_N(8));
-#endif
       }
+#endif
     }
 
     /* otherwise, this is not a double-host-size guest: */
@@ -823,8 +897,11 @@ _tme_recode_x86_insn_guest(struct tme_recode_ic *ic,
     /* emit a movq %ic, %rdi: */
     _tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_IC, TME_RECODE_X86_REG_HOST_ARG(0));
 
-    if(NME_STACK_ADJUST)
+    /* allocate any shadow store space needed by, e.g., x64 */
+    if(NME_STACK_ADJUST) {
       thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, -NME_STACK_ADJUST);
+      stack_adjust += NME_STACK_ADJUST;
+    }
     
     /* we must assume that we can't reach the guest function from the
        instruction thunk with a 32-bit displacement.  emit a direct
@@ -844,8 +921,8 @@ _tme_recode_x86_insn_guest(struct tme_recode_ic *ic,
 	    << 8));
     thunk_bytes += 2;
 
-    if(NME_STACK_ADJUST)
-      thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, NME_STACK_ADJUST);
+    if(stack_adjust)
+      thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, stack_adjust);
   }
 
   /* if the guest function returned a register value, and this is a
