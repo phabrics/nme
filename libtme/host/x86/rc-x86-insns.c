@@ -652,14 +652,14 @@ _tme_recode_x86_insn_guest(struct tme_recode_ic *ic,
   else {
 
     /* if this is a double-host-size guest: */
+    if((TME_RECODE_SIZE_IS_DOUBLE_HOST(ic->tme_recode_ic_reg_size))
 #ifdef WIN32
-    if (TME_RECODE_SIZE_GUEST_MAX > TME_RECODE_SIZE_HOST) {
-#else
-    if (TME_RECODE_SIZE_IS_DOUBLE_HOST(ic->tme_recode_ic_reg_size)) {
+       || (TME_RECODE_SIZE_GUEST_MAX > TME_RECODE_SIZE_HOST)
 #endif
+       ) {
       /* if this guest function takes an undefined first source operand: */
       if (insn->tme_recode_insn_operand_src[0] == TME_RECODE_OPERAND_UNDEF) {
-
+	
 	/* if this guest function returns a register value, we need to
 	   reserve the host register(s) for the return value, since we
 	   won't reserve it by loading the first source operand: */
@@ -755,9 +755,7 @@ _tme_recode_x86_insn_guest(struct tme_recode_ic *ic,
 	_tme_recode_x86_emit_reg_push(thunk_bytes, TME_RECODE_X86_REG_BP);
       }
       else {
-	if (TME_RECODE_SIZE_GUEST_MAX > TME_RECODE_SIZE_HOST) {
-	  thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, - (int) (sizeof(tme_recode_uguest_t) / 2));
-	}
+	thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, - (int) (sizeof(tme_recode_uguest_t) / 2));
 	_tme_recode_x86_emit_reg_push(thunk_bytes, TME_RECODE_X86_REG_A);
       }
 
@@ -780,10 +778,8 @@ _tme_recode_x86_insn_guest(struct tme_recode_ic *ic,
 	 guest functions are supposed to truncate their arguments to the
 	 expected size): */
       else {
-	if (TME_RECODE_SIZE_GUEST_MAX > TME_RECODE_SIZE_HOST) {
-	  _tme_recode_x86_emit_reg_push(thunk_bytes,
-					TME_RECODE_X86_REG_N(11));
-	}
+	_tme_recode_x86_emit_reg_push(thunk_bytes,
+				      TME_RECODE_X86_REG_N(11));
 	_tme_recode_x86_emit_reg_push(thunk_bytes,
 				      TME_RECODE_X86_REG_N(10));
       }

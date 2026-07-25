@@ -861,6 +861,46 @@ tme_recode_host_rw_thunk_new(struct tme_recode_ic *ic,
     _tme_recode_x86_emit_reg_push(thunk_bytes, TME_RECODE_X86_REG_N(8));
     _tme_recode_x86_emit_reg_push(thunk_bytes, TME_RECODE_X86_REG_N(9));
 
+    /* do any stack pointer alignment: */
+    if (stack_adjust) {
+      thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, -stack_adjust);
+    }
+
+#if defined(WIN32) && (TME_RECODE_SIZE_GUEST_MAX > TME_RECODE_SIZE_HOST)
+    /* make the address argument for the guest function.  NB that if
+       double-host-size guests are supported, but this isn't a
+       double-host-size guest, we use a garbage word as the
+       most-significant half of this argument (which is okay since the
+       guest functions are supposed to truncate their arguments to the
+       expected size): */
+    _tme_recode_x86_emit_reg_push(thunk_bytes, TME_RECODE_X86_REG_A);
+    _tme_recode_x86_emit_reg_push(thunk_bytes, reg_x86_address);
+
+    /* On x64 with 128-bit max recode size, the value is passed as a pointer to a value on the stack: */
+    _tme_recode_x86_emit_reg_copy(thunk_bytes,
+				  TME_RECODE_X86_REG_SP,
+				  TME_RECODE_X86_REG_HOST_ARG(1));
+    
+    stack_adjust += sizeof(tme_recode_uguest_t);
+    /* if this is a write: */
+    if (rw->tme_recode_rw_write) {
+
+      /* make the value argument for the guest function.  NB that if
+	 double-host-size guests are supported, but this isn't a
+	 double-host-size guest, we use a garbage word as the
+	 most-significant half of this argument (which is okay since
+	 the guest functions are supposed to truncate their arguments
+	 to the expected size): */
+      _tme_recode_x86_emit_reg_push(thunk_bytes, tme_recode_x86_reg_from_host[TME_RECODE_REG_HOST(0) + 1]);
+      _tme_recode_x86_emit_reg_push(thunk_bytes, tme_recode_x86_reg_from_host[TME_RECODE_REG_HOST(0)]);
+
+      /* On x64 with 128-bit max recode size, the value is passed as a pointer to a value on the stack: */
+      _tme_recode_x86_emit_reg_copy(thunk_bytes,
+				    TME_RECODE_X86_REG_SP,
+				    TME_RECODE_X86_REG_HOST_ARG(2));
+      stack_adjust += sizeof(tme_recode_uguest_t);
+    }
+#else 
     /* make the address argument for the guest function.  NB that if
        double-host-size guests are supported, but this isn't a
        double-host-size guest, we use a garbage word as the
@@ -887,22 +927,19 @@ tme_recode_host_rw_thunk_new(struct tme_recode_ic *ic,
 				     ? TME_RECODE_X86_REG_HOST_ARG(2)
 				     : TME_RECODE_X86_REG_HOST_ARG(3)));
       if (TME_RECODE_SIZE_IS_DOUBLE_HOST(ic->tme_recode_ic_reg_size)) {
-#ifdef WIN32
-	//	_tme_recode_x86_emit_reg_push(thunk_bytes, tme_recode_x86_reg_from_host[TME_RECODE_REG_HOST(0) + 1]);
-#else
 	_tme_recode_x86_emit_reg_copy(thunk_bytes, 
 				      tme_recode_x86_reg_from_host[TME_RECODE_REG_HOST(0) + 1],
 				      TME_RECODE_X86_REG_N(8));
-#endif
       }
     }
+#endif
         
     /* make the struct tme_ic * argument for the guest function: */
     _tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_IC, TME_RECODE_X86_REG_HOST_ARG(0));
 
     stack_adjust += NME_STACK_ADJUST;
-    if (stack_adjust) {
-      thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, -stack_adjust);
+    if (NME_STACK_ADJUST) {
+      thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, -NME_STACK_ADJUST);
     }
 
     /* we must assume that we can't reach the guest function from the
