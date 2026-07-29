@@ -734,6 +734,12 @@ _tme_recode_x86_insn_guest(struct tme_recode_ic *ic,
 
 #ifdef WIN32
 
+#ifdef winx64
+      /* allocate space on stack for return value: */
+      stack_adjust += sizeof(tme_recode_uguest_t);
+      thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, -stack_adjust);
+#endif
+      
       /* if this guest function takes undefined source operand: */
       if (insn->tme_recode_insn_operand_src[0] == TME_RECODE_OPERAND_UNDEF) {
 
@@ -921,16 +927,50 @@ _tme_recode_x86_insn_guest(struct tme_recode_ic *ic,
       thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, stack_adjust);
   }
 
-  /* if the guest function returned a register value, and this is a
-     double-host-size guest: */
-  if (insn->tme_recode_insn_operand_dst != TME_RECODE_OPERAND_NULL
-      && TME_RECODE_SIZE_IS_DOUBLE_HOST(ic->tme_recode_ic_reg_size)) {
+  if (insn->tme_recode_insn_operand_dst != TME_RECODE_OPERAND_NULL) {
+  
+#if defined(winx64) && (TME_RECODE_SIZE_GUEST_MAX > TME_RECODE_SIZE_HOST)
+    /* For double-sized hosts, read the low value:
+       emit the opcode part of a movl (%address), %reg or a movq (%address), %reg */
+    thunk_bytes[0]
+      = (TME_RECODE_X86_OPCODE_BINOP_MOV
+	 + TME_RECODE_X86_OPCODE_BINOP_Ev_Gv);
+      thunk_bytes[1] =
+	(TME_RECODE_SIZE_IS_DOUBLE_HOST(ic->tme_recode_ic_reg_size))
+	? (TME_RECODE_X86_MOD_OPREG_RM(TME_RECODE_X86_MOD_RM_EA(TME_RECODE_X86_REG_A),
+				       TME_RECODE_X86_REG(TME_RECODE_X86_REG_BP)))
+	: (TME_RECODE_X86_MOD_OPREG_RM(TME_RECODE_X86_MOD_RM_EA(TME_RECODE_X86_REG_A),
+				       TME_RECODE_X86_REG(TME_RECODE_X86_REG_A)));
+      
+    thunk_bytes += 2;
+#endif
 
-    /* move the guest function return value from d:a into ax:bp: */
-    _tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_A, TME_RECODE_X86_REG_BP);
-    _tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_D, TME_RECODE_X86_REG_A);
+    /* if the guest function returned a register value, and this is a
+       double-host-size guest: */
+    if(TME_RECODE_SIZE_IS_DOUBLE_HOST(ic->tme_recode_ic_reg_size)) {
+
+#ifdef winx64
+      /* The Windows x64 ABI returns 128-bit values by a pointer stored in RAX.
+	 For double-sized hosts, read the high value: */
+      
+      /* emit one of:
+	 movl 4(%address), %reg
+	 movq 8(%address), %reg
+      */
+      thunk_bytes[0] = TME_RECODE_X86_OPCODE_BINOP_MOV + TME_RECODE_X86_OPCODE_BINOP_Ev_Gv;
+      thunk_bytes[1]
+	= TME_RECODE_X86_MOD_OPREG_RM(TME_RECODE_X86_MOD_RM_EA_DISP8(TME_RECODE_X86_REG_A),
+				      TME_RECODE_X86_REG(TME_RECODE_X86_REG_A));
+      thunk_bytes[2] = TME_BIT(TME_RECODE_SIZE_HOST - TME_RECODE_SIZE_8);
+      thunk_bytes += 3;
+
+#else
+      /* move the guest function return value from d:a into ax:bp: */
+      _tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_A, TME_RECODE_X86_REG_BP);
+      _tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_D, TME_RECODE_X86_REG_A);
+#endif
+    }
   }
-
   /* finish these instructions: */
   tme_recode_x86_insns_finish(ic, thunk_bytes);
 }

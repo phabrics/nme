@@ -576,12 +576,14 @@ tme_recode_host_reg_imm(struct tme_recode_ic *ic,
   /* get the immediate: */
   imm = insn->tme_recode_insn_imm_uguest;
 
+#ifndef WIN32
   /* if the immediate is zero: */
   if (imm == 0) {
 
     /* zero this host register: */
     return (tme_recode_host_reg_zero(ic, insn, reg_host));
   }
+#endif
 
   /* start more instructions: */
   tme_recode_x86_insns_start(ic, thunk_bytes);

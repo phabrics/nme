@@ -229,6 +229,13 @@ _tme_recode_x86_chain_epilogue(struct tme_recode_ic *ic)
   /* start more instructions: */
   tme_recode_x86_insns_start(ic, thunk_bytes);
 
+  /*
+  *((tme_uint32_t *)thunk_bytes++) = TME_RECODE_X86_NOP4;
+  *((tme_uint32_t *)thunk_bytes++) = TME_RECODE_X86_NOP4;
+  *((tme_uint32_t *)thunk_bytes++) = TME_RECODE_X86_NOP4;
+  *((tme_uint32_t *)thunk_bytes++) = TME_RECODE_X86_NOP4;
+  */
+  
   /* set the instructions thunk offset of the chain epilogue: */
   ic->tme_recode_x86_ic_chain_epilogue = tme_recode_build_to_thunk_off(ic, thunk_bytes);
 
@@ -290,6 +297,9 @@ static tme_uint8_t *
 _tme_recode_x86_chain_fixup_arg2(tme_uint8_t *thunk_bytes,
 				 tme_uint32_t chain_info)
 {
+  unsigned long reg_x86;
+  unsigned int size_part;
+  unsigned int rex;
 
   /* if this is an ia32 host: */
   if (TME_RECODE_SIZE_HOST == TME_RECODE_SIZE_32) {
@@ -304,8 +314,29 @@ _tme_recode_x86_chain_fixup_arg2(tme_uint8_t *thunk_bytes,
   /* otherwise, this is an x86-64 host: */
   else {
 
+    reg_x86 = TME_RECODE_X86_REG_HOST_ARG(2);
+    
+    /* if this is an x86-64 host: */
+    if (TME_RECODE_SIZE_HOST > TME_RECODE_SIZE_32) {
+
+      /* if the most significant 32 bits of the immediate are zero, we
+	 can move a 32-bit immediate instead of a 64-bit immediate: */
+      size_part
+	= (TME_RECODE_SIZE_32
+	   + ((((tme_uintptr_t) chain_info)
+	       & (((((tme_uintptr_t) 1)
+		    << TME_BIT(TME_RECODE_SIZE_HOST - 1)) - 1)
+		  << TME_BIT(TME_RECODE_SIZE_HOST - 1)))
+	      != 0));
+
+      /* emit any rex prefix: */
+      rex = TME_RECODE_X86_REX_B(size_part, reg_x86);
+      thunk_bytes[0] = rex;
+      thunk_bytes += (rex > 0);
+    }
+
     /* load the third argument register: */
-    thunk_bytes[0] = TME_RECODE_X86_OPCODE_MOV_Iv_Gv(TME_RECODE_X86_REG_HOST_ARG(2));
+    thunk_bytes[0] = TME_RECODE_X86_OPCODE_MOV_Iv_Gv(reg_x86);
     *((tme_uint32_t *) &thunk_bytes[1]) = chain_info;
     thunk_bytes += 1 + sizeof(tme_uint32_t);
   }
@@ -1757,9 +1788,6 @@ tme_recode_chain_fixup(struct tme_recode_ic *ic,
     tme_recode_thunk_off_write(ic,
 			       (chain_fixup
 				- (5
-#ifdef WIN32
-				   + 2
-#endif
 				   + sizeof(tme_uint32_t))),
 			       tme_uint32_t,
 			       return_imm32);

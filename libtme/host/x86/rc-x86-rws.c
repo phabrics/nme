@@ -861,12 +861,20 @@ tme_recode_host_rw_thunk_new(struct tme_recode_ic *ic,
     _tme_recode_x86_emit_reg_push(thunk_bytes, TME_RECODE_X86_REG_N(8));
     _tme_recode_x86_emit_reg_push(thunk_bytes, TME_RECODE_X86_REG_N(9));
 
+#if defined(WIN32) && (TME_RECODE_SIZE_GUEST_MAX > TME_RECODE_SIZE_HOST)
+
+#ifdef winx64
+    /* allocate space on stack for return value: */
+    if (!rw->tme_recode_rw_write) {
+      stack_adjust += sizeof(tme_recode_uguest_t);
+    }
+#endif
+    
     /* do any stack pointer alignment: */
     if (stack_adjust) {
       thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, -stack_adjust);
     }
 
-#if defined(WIN32) && (TME_RECODE_SIZE_GUEST_MAX > TME_RECODE_SIZE_HOST)
     /* make the address argument for the guest function.  NB that if
        double-host-size guests are supported, but this isn't a
        double-host-size guest, we use a garbage word as the
@@ -900,6 +908,10 @@ tme_recode_host_rw_thunk_new(struct tme_recode_ic *ic,
 				    TME_RECODE_X86_REG_HOST_ARG(2));
       stack_adjust += sizeof(tme_recode_uguest_t);
     }
+    stack_adjust += NME_STACK_ADJUST;
+    if (NME_STACK_ADJUST) {
+      thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, -NME_STACK_ADJUST);
+    }
 #else 
     /* make the address argument for the guest function.  NB that if
        double-host-size guests are supported, but this isn't a
@@ -932,15 +944,15 @@ tme_recode_host_rw_thunk_new(struct tme_recode_ic *ic,
 				      TME_RECODE_X86_REG_N(8));
       }
     }
-#endif
+    stack_adjust += NME_STACK_ADJUST;
+    if (stack_adjust) {
+      thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, -stack_adjust);
+    }
         
+#endif
+
     /* make the struct tme_ic * argument for the guest function: */
     _tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_IC, TME_RECODE_X86_REG_HOST_ARG(0));
-
-    stack_adjust += NME_STACK_ADJUST;
-    if (NME_STACK_ADJUST) {
-      thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, -NME_STACK_ADJUST);
-    }
 
     /* we must assume that we can't reach the guest function from the
        instruction thunk with a 32-bit displacement.  emit a direct
@@ -978,10 +990,67 @@ tme_recode_host_rw_thunk_new(struct tme_recode_ic *ic,
 
   /* if this is a read: */
   if (!rw->tme_recode_rw_write) {
+    
+#if defined(winx64) && (TME_RECODE_SIZE_GUEST_MAX > TME_RECODE_SIZE_HOST)
+    /* emit any rex prefix: */
+    rex
+      = (TME_RECODE_X86_REX_B(0, reg_x86_address)
+	 | TME_RECODE_X86_REX_R(TME_RECODE_SIZE_HOST,
+				tme_recode_x86_reg_from_host[reg_host_value_0]));
+    if (rex != 0) {
+      *(thunk_bytes++) = rex;
+    }
 
+    /* For double-sized hosts, read the low value:
+       emit the opcode part of a movl (%address), %reg or a movq (%address), %reg */
+    thunk_bytes[0]
+      = (TME_RECODE_X86_OPCODE_BINOP_MOV
+	 + TME_RECODE_X86_OPCODE_BINOP_Ev_Gv);
+
+    /* emit the modR/M byte for this instruction: */
+    /* NB: a disp8 EA must be used when the base register is bp or r13: */
+    if (TME_RECODE_X86_REG(reg_x86_address) == TME_RECODE_X86_REG_BP) {
+      thunk_bytes[1]
+	= TME_RECODE_X86_MOD_OPREG_RM(TME_RECODE_X86_MOD_RM_EA_DISP8(reg_x86_address),
+				      TME_RECODE_X86_REG(tme_recode_x86_reg_from_host[reg_host_value_0]));
+      thunk_bytes[2] = 0;
+      thunk_bytes += 3;
+    }
+    else {
+      thunk_bytes[1]
+	= TME_RECODE_X86_MOD_OPREG_RM(TME_RECODE_X86_MOD_RM_EA(reg_x86_address),
+				      TME_RECODE_X86_REG(tme_recode_x86_reg_from_host[reg_host_value_0]));
+      thunk_bytes += 2;
+    }
+
+#endif
+    
     /* if this is a double-host-size guest: */
     if (TME_RECODE_SIZE_IS_DOUBLE_HOST(ic->tme_recode_ic_reg_size)) {
+      
+#ifdef winx64
+      /* The Windows x64 ABI returns 128-bit values by a pointer stored in RAX.
+	 For double-sized hosts, read the high value: */
+      
+      /* emit one of:
+	 movl 4(%address), %reg
+	 movq 8(%address), %reg
+      */
+      rex
+	= (TME_RECODE_X86_REX_R(TME_RECODE_SIZE_HOST,
+				tme_recode_x86_reg_from_host[reg_host_value_1])
+	   | TME_RECODE_X86_REX_B(0, TME_RECODE_X86_REG_A));
+      if (rex != 0) {
+	*(thunk_bytes++) = rex;
+      }
+      thunk_bytes[0] = TME_RECODE_X86_OPCODE_BINOP_MOV + TME_RECODE_X86_OPCODE_BINOP_Ev_Gv;
+      thunk_bytes[1]
+	= TME_RECODE_X86_MOD_OPREG_RM(TME_RECODE_X86_MOD_RM_EA_DISP8(TME_RECODE_X86_REG_A),
+				      TME_RECODE_X86_REG(tme_recode_x86_reg_from_host[reg_host_value_1]));
+      thunk_bytes[2] = TME_BIT(TME_RECODE_SIZE_HOST - TME_RECODE_SIZE_8);
+      thunk_bytes += 3;
 
+#else
       /* move the value read into the expected return registers: */
       _tme_recode_x86_emit_reg_copy(thunk_bytes,
 				    TME_RECODE_X86_REG_A,
@@ -989,6 +1058,7 @@ tme_recode_host_rw_thunk_new(struct tme_recode_ic *ic,
       _tme_recode_x86_emit_reg_copy(thunk_bytes,
 				    TME_RECODE_X86_REG_D,
 				    tme_recode_x86_reg_from_host[reg_host_value_1]);
+#endif
     }
 
     /* otherwise, this is not a double-host-size guest: */
