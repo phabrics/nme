@@ -99,7 +99,11 @@ _TME_RCSID("$Id: recode-x86.h,v 1.5 2010/02/07 17:16:56 fredette Exp $");
    host registers, so this must match the number of elements in
    tme_recode_x86_reg_from_host[]: */
 #if TME_RECODE_SIZE_HOST > 5
+#ifdef DISABLE_BP_REG
+#define TME_RECODE_REG_HOST_UNDEF	(12)
+#else
 #define TME_RECODE_REG_HOST_UNDEF	(13)
+#endif
 #else  /* TME_RECODE_SIZE_HOST == 5 */
 #define TME_RECODE_REG_HOST_UNDEF	(5)
 #endif /* TME_RECODE_SIZE_HOST == 5 */

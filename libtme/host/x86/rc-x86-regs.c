@@ -110,20 +110,25 @@ static const tme_uint8_t tme_recode_x86_reg_from_host[TME_RECODE_X86_REG_HOST_UN
   TME_RECODE_X86_REG_N(13),	/* host reg 1 + WOFF */
   TME_RECODE_X86_REG_N(14),	/* host reg 2 + WOFF */
   TME_RECODE_X86_REG_N(15),	/* host reg 3 + WOFF */
-#define TME_RECODE_X86_REG_HOST_SUBS_SRC1	(TME_RECODE_REG_HOST(4) + WOFF)
-  TME_RECODE_X86_REG_BP,	/* host reg 4 + WOFF */
-#define TME_RECODE_X86_REG_HOST_FREE_CALL	(TME_RECODE_REG_HOST(5) + WOFF)
-  TME_RECODE_X86_REG_A,		/* host reg 5 + WOFF */
-  TME_RECODE_X86_REG_N(10),	/* host reg 6 + WOFF */
-  TME_RECODE_X86_REG_N(11),	/* host reg 7 + WOFF */
-#ifndef WIN32
-  TME_RECODE_X86_REG_DI,	/* host reg 8 */
-  TME_RECODE_X86_REG_SI,	/* host reg 9 */
+#ifdef DISABLE_BP_REG
+#define BPOFF 0
+#else
+#define BPOFF 1
+  TME_RECODE_X86_REG_BP,	/* host reg 3 + WOFF + BPOFF */
 #endif
-  TME_RECODE_X86_REG_N(8),	/* host reg 10 */
-  TME_RECODE_X86_REG_N(9),	/* host reg 11 */
-#define TME_RECODE_X86_REG_HOST_SUBS_SRC0	TME_RECODE_REG_HOST(12)
-  TME_RECODE_X86_REG_D,		/* host reg 12 */
+#define TME_RECODE_X86_REG_HOST_SUBS_SRC1	(TME_RECODE_REG_HOST(3) + WOFF + BPOFF)
+#define TME_RECODE_X86_REG_HOST_FREE_CALL	(TME_RECODE_REG_HOST(4) + WOFF + BPOFF)
+  TME_RECODE_X86_REG_A,		/* host reg 4 + WOFF + BPOFF */
+  TME_RECODE_X86_REG_N(10),	/* host reg 5 + WOFF + BPOFF */
+  TME_RECODE_X86_REG_N(11),	/* host reg 6 + WOFF + BPOFF */
+#ifndef WIN32
+  TME_RECODE_X86_REG_DI,	/* host reg 7 + BPOFF */
+  TME_RECODE_X86_REG_SI,	/* host reg 8 + BPOFF */
+#endif
+  TME_RECODE_X86_REG_N(8),	/* host reg 9 + BPOFF */
+  TME_RECODE_X86_REG_N(9),	/* host reg 10 + BPOFF */
+#define TME_RECODE_X86_REG_HOST_SUBS_SRC0	(TME_RECODE_REG_HOST(11) + BPOFF)
+  TME_RECODE_X86_REG_D,		/* host reg 11 + BPOFF  */
   TME_RECODE_X86_REG_C,		/* not a true host register */
 
   /* this returns the host register number for an argument register.
@@ -131,15 +136,15 @@ static const tme_uint8_t tme_recode_x86_reg_from_host[TME_RECODE_X86_REG_HOST_UN
 #ifdef WIN32
 #define NME_STACK_ADJUST 0x20
 #define TME_RECODE_REG_HOST_ARG(n)	\
-  ((n) < 2				\
-   ? TME_RECODE_REG_HOST(13-n)		\
-   : TME_RECODE_REG_HOST(8+n))		
+  (((n) < 2				\
+    ? TME_RECODE_REG_HOST(12-n)		\
+    : TME_RECODE_REG_HOST(7+n)) + BPOFF)
 #else
 #define NME_STACK_ADJUST 0
 #define TME_RECODE_REG_HOST_ARG(n)	\
-  ((n) < 2				\
-   ? TME_RECODE_REG_HOST(8+n)		\
-   : TME_RECODE_REG_HOST(10+n))		
+  (((n) < 2				\
+    ? TME_RECODE_REG_HOST(7+n)		\
+    : TME_RECODE_REG_HOST(9+n)) + BPOFF)
 #endif
 #define TME_RECODE_X86_REG_HOST_ARG(n)	\
   tme_recode_x86_reg_from_host[TME_RECODE_REG_HOST_ARG(n)]

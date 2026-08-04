@@ -259,6 +259,9 @@ _tme_recode_x86_chain_epilogue(struct tme_recode_ic *ic)
 #endif
 
   _tme_recode_x86_emit_reg_pop(thunk_bytes, TME_RECODE_X86_REG_B);
+#ifdef DISABLE_BP_REG
+  _tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_BP, TME_RECODE_X86_REG_SP);
+#endif
   _tme_recode_x86_emit_reg_pop(thunk_bytes, TME_RECODE_X86_REG_BP);
 
   /* emit the return: */
@@ -1528,6 +1531,9 @@ _tme_recode_x86_chain_prologue(struct tme_recode_ic *ic,
 
   /* push all callee-saved registers: */
   _tme_recode_x86_emit_reg_push(thunk_bytes, TME_RECODE_X86_REG_BP);
+#ifdef DISABLE_BP_REG
+  _tme_recode_x86_emit_reg_copy(thunk_bytes, TME_RECODE_X86_REG_SP, TME_RECODE_X86_REG_BP);
+#endif
   _tme_recode_x86_emit_reg_push(thunk_bytes, TME_RECODE_X86_REG_B);
 #if TME_RECODE_SIZE_HOST > TME_RECODE_SIZE_32
     _tme_recode_x86_emit_reg_push(thunk_bytes, TME_RECODE_X86_REG_N(12));

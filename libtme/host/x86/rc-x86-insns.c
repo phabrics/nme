@@ -104,7 +104,7 @@ _tme_recode_x86_insn_subs(struct tme_recode_ic *ic,
      second source operand.  if this is a double-host-size guest, we
      must free both the a register and the other least-significant
      host register, otherwise we only need to free the a register: */
-#if (TME_RECODE_X86_REG_HOST_SUBS_SRC1 & 1) != 0
+#if (TME_RECODE_X86_REG_HOST_SUBS_SRC1 & 1) != 1 - BPOFF
 #error "TME_RECODE_X86_REG_HOST_ values changed"
 #endif
   assert (tme_recode_x86_reg_from_host[TME_RECODE_X86_REG_HOST_SUBS_SRC1 + 1] == TME_RECODE_X86_REG_A);
@@ -527,7 +527,7 @@ _tme_recode_x86_insn_guest(struct tme_recode_ic *ic,
 
       /* if this is a double-host-size guest, load the second source
 	 operand into %eax:%ebp, otherwise load it into %eax: */
-#if (TME_RECODE_X86_REG_HOST_FREE_CALL & 1) != 1
+#if (TME_RECODE_X86_REG_HOST_FREE_CALL & 1) != BPOFF
 #error "TME_RECODE_X86_REG_HOST_ values changed"
 #endif
       tme_recode_regs_src_specific(ic,
@@ -676,7 +676,7 @@ _tme_recode_x86_insn_guest(struct tme_recode_ic *ic,
 
 	/* load the first source operand into the first host register
 	   pair that is destroyed by the call: */
-#if (TME_RECODE_X86_REG_HOST_FREE_CALL & 1) != 1
+#if (TME_RECODE_X86_REG_HOST_FREE_CALL & 1) != BPOFF
 #error "TME_RECODE_X86_REG_HOST_ values changed"
 #endif
 	tme_recode_regs_src_specific(ic,
@@ -1007,7 +1007,7 @@ _tme_recode_x86_insn_rw(struct tme_recode_ic *ic,
 
   /* if this is a double-host-size guest, load the guest address into
      the a:bp register pair, otherwise load it into the a register: */
-#if (TME_RECODE_X86_REG_HOST_FREE_CALL & 1) != 1
+#if (TME_RECODE_X86_REG_HOST_FREE_CALL & 1) != BPOFF
 #error "TME_RECODE_X86_REG_HOST_ values changed"
 #endif
   reg_host_address
@@ -1181,7 +1181,7 @@ _tme_recode_x86_insn_emit(struct tme_recode_ic *ic,
 	   register, and this is freed by _tme_recode_x86_insn_subs(),
 	   so we only need to free the others: */
 	assert (tme_recode_x86_reg_from_host[TME_RECODE_X86_REG_HOST_FREE_CALL] == TME_RECODE_X86_REG_A);
-#if (TME_RECODE_X86_REG_HOST_FREE_CALL & 1) != 1
+#if (TME_RECODE_X86_REG_HOST_FREE_CALL & 1) != BPOFF
 #error "TME_RECODE_X86_REG_HOST_ values changed"
 #endif
 	tme_recode_regs_host_free_many(ic, TME_RECODE_X86_REG_HOST_FREE_CALL + 1);

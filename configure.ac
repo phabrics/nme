@@ -352,7 +352,7 @@ AC_CHECK_HEADERS([sys/ioctl.h sys/sockio.h sys/socketio.h net/if_dl.h ioctls.h n
 AC_CHECK_HEADERS([byteswap.h sys/endian.h])
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h poll.h sys/socket.h sys/select.h sys/time.h time.h errno.h sys/mman.h sys/uio.h sys/un.h])
 AC_CHECK_HEADERS([linux/netfilter/nf_tables.h libmnl/libmnl.h libnftnl/table.h libnftnl/chain.h libnftnl/rule.h libnftnl/expr.h])
-AC_CHECK_HEADERS([pthread_np.h sched.h cpucycles.h])
+AC_CHECK_HEADERS([pthread_np.h sched.h cpucycles.h libunwind.h])
 AC_CHECK_HEADERS([X11/keysym.h rfb/keysym.h])
 AC_CHECK_HEADERS([sys/param.h sys/linker.h sys/sysctl.h sys/module.h npf.h net/npf_ncode.h pcap/pcap.h], [], [],
 [#ifdef HAVE_SYS_PARAM_H
@@ -660,6 +660,10 @@ AC_SEARCH_LIBS([cpucycles], [cpucycles], [
 AC_DEFINE(HAVE_CPUCYCLES, [], [Define if you have pthread_setschedparam.])
 ])
 
+AC_SEARCH_LIBS([unw_getcontext], [unwind], [
+AC_DEFINE(HAVE_UNWIND_GETCONTEXT, [], [Define if you have libunwind getcontext.])
+])
+
 dnl Invoke compatibility library in LIBOBJDIR
 AC_CHECK_FUNCS([basename daemon dirname gettimeofday inet_ntop inet_pton])
 AC_CHECK_FUNCS([mmap munmap mprotect msync mlock munlock])
@@ -874,9 +878,12 @@ AC_ARG_ENABLE(debug,
 [  --enable-debug          compile debuggable libraries and programs (default=don't)],
 [ ], [enable_debug=no])
 if test "x${enable_debug}" != "xno"; then
-  CPPFLAGS="${CPPFLAGS-} -DENABLE_DEBUG -DNDEBUG -DTME_RECODE_DEBUG" # -D_TME_SPARC_STATS -DGTK_DISABLE_SINGLE_INCLUDES -DNME_MODULE_DEBUG 
+  CPPFLAGS="${CPPFLAGS-} -DENABLE_DEBUG -DNDEBUG" # -D_TME_SPARC_STATS -DGTK_DISABLE_SINGLE_INCLUDES -DNME_MODULE_DEBUG 
   if test "x${enable_debug}" != "xlocks"; then
     CPPFLAGS="${CPPFLAGS-} -DTME_NO_DEBUG_LOCKS"
+  fi
+  if test "${enable_debug}" = "recode"; then
+    CPPFLAGS="${CPPFLAGS-} -DTME_RECODE_DEBUG -DDISABLE_REG_BP"
   fi
   if test "${host_os}" = emscripten; then
     CFLAGS="-g3 -O0"
