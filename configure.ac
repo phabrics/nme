@@ -883,7 +883,7 @@ if test "x${enable_debug}" != "xno"; then
     CPPFLAGS="${CPPFLAGS-} -DTME_NO_DEBUG_LOCKS"
   fi
   if test "${enable_debug}" = "recode"; then
-    CPPFLAGS="${CPPFLAGS-} -DTME_RECODE_DEBUG -DDISABLE_REG_BP"
+    CPPFLAGS="${CPPFLAGS-} -DTME_RECODE_DEBUG -DDISABLE_BP_REG"
   fi
   if test "${host_os}" = emscripten; then
     CFLAGS="-g3 -O0"

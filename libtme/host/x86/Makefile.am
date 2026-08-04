@@ -17,7 +17,7 @@ BUILT_SOURCES = rc-x86-subs.c
 MAINTAINERCLEANFILES = $(BUILT_SOURCES)
 
 .S.o:
-	$(CCAS) $(CCASFLAGS) -o $@ -c $<
+	$(CCAS) $(CPPFLAGS) $(CCASFLAGS) -o $@ -c $<
 
 .o.bin:
 	$(OBJCOPY) --output-target=binary $< $@
