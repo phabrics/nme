@@ -1425,7 +1425,6 @@ _tme_recode_x86_chain_in(struct tme_recode_ic *ic,
     else if ((disp32
 	      = _tme_recode_x86_chain_ip_disp32(ic,
 						(thunk_bytes
-						 + 1 /* testb */
 						 + 1 /* modR/M */
 						 + sizeof(disp32)
 						 + 1 /* imm8 */),

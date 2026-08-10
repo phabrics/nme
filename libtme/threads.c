@@ -41,6 +41,7 @@ pthread_attr_t *attrp;
 #endif
 
 int thread_mode;
+int thread_coop;
 tme_rwlock_t tme_rwlock_suspere;
 
 bool enable_fullscreen = false;
@@ -646,7 +647,8 @@ void tme_threads_init(int mode) {
 #endif
   } else
     tme_fiber_threads_init();
-  
+
+  tme_thread_init();
   tme_rwlock_init(&tme_rwlock_suspere);
 
 #ifdef WIN32

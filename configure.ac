@@ -1161,7 +1161,7 @@ TMEEOF
 	      && TME_MEMORY_ALIGNMENT_ATOMIC(type) != 0 \
               && _tme_memory_address_test(mem, TME_MEMORY_ALIGNMENT_ATOMIC(type) - 1, align_min) == 0))
 
-#if __GNUC__ > 3 && __GNUC_MINOR__ > 7
+#ifdef __GNUC__ 
 #define tme_memory_barrier(address, size, barrier) __atomic_thread_fence(__ATOMIC_SEQ_CST)
 
 #define TME_MEMORY_ALIGNMENT_ATOMIC(type) ((__atomic_always_lock_free(sizeof(type), 0)) ? (sizeof(type)) : (0))

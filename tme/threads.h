@@ -46,6 +46,9 @@
 
 typedef tme_uint64_t tme_time_t;
 
+extern int thread_mode;
+extern int thread_coop;
+
 #ifdef TME_THREADS_SDL
 #include "threads-sdl.h"
 #endif
@@ -85,8 +88,6 @@ static _tme_inline tme_time_t tme_thread_def_time _TME_P((void)) {
   return ts.tv_sec * TME_DEF_FRAC_PER_SEC + ts.tv_nsec;
 #endif
 }
-
-extern int thread_mode;
 
 #ifdef TME_THREAD_FRAC_PER_SEC
 #define TME_FRAC_PER_SEC ((thread_mode) ? (TME_THREAD_FRAC_PER_SEC) : (TME_DEF_FRAC_PER_SEC))
@@ -160,6 +161,10 @@ int tme_rwlock_wrunlock _TME_P((tme_rwlock_t *l));
 int tme_rwlock_trywrlock _TME_P((tme_rwlock_t *l));
 
 /* thread suspension: */
+#ifndef tme_thread_init
+#define tme_thread_init() thread_coop=FALSE
+#endif
+
 #ifndef tme_thread_cooperative
 #define tme_thread_cooperative() (thread_mode == FALSE)
 #endif
