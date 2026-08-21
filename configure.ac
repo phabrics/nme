@@ -34,7 +34,7 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Checks that we are given a good source directory.
 AC_PREREQ([2.69])
-AC_INIT([nme],[0.14rc3],[phabrics@phabrics.com],[],[http://phabrics.org])
+AC_INIT([nme],[0.14rc4],[phabrics@phabrics.com],[],[http://phabrics.org])
 AC_CONFIG_SRCDIR([ic/m68k/m68k-impl.h])
 AC_CONFIG_MACRO_DIRS([m4])
 AC_CANONICAL_TARGET
@@ -878,17 +878,14 @@ AC_ARG_ENABLE(debug,
 [  --enable-debug          compile debuggable libraries and programs (default=don't)],
 [ ], [enable_debug=no])
 if test "x${enable_debug}" != "xno"; then
-  CPPFLAGS="${CPPFLAGS-} -DENABLE_DEBUG -DNDEBUG" # -D_TME_SPARC_STATS -DGTK_DISABLE_SINGLE_INCLUDES -DNME_MODULE_DEBUG 
+  CPPFLAGS="${CPPFLAGS-} -DENABLE_DEBUG -DNDEBUG -DTME_RECODE_DEBUG -DDISABLE_BP_REG -D_TME_SPARC_STATS" # -DGTK_DISABLE_SINGLE_INCLUDES -DNME_MODULE_DEBUG 
   if test "x${enable_debug}" != "xlocks"; then
     CPPFLAGS="${CPPFLAGS-} -DTME_NO_DEBUG_LOCKS"
-  fi
-  if test "${enable_debug}" = "recode"; then
-    CPPFLAGS="${CPPFLAGS-} -DTME_RECODE_DEBUG -DDISABLE_BP_REG"
   fi
   if test "${host_os}" = emscripten; then
     CFLAGS="-g3 -O0"
   elif test "x${have_Og}" = xyes; then
-    CFLAGS="-g3 -Og"
+    CFLAGS="-g3 -Og -fno-omit-frame-pointer"
   else
     CFLAGS="-g3 -O2"
   fi

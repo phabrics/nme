@@ -986,6 +986,23 @@ tme_recode_host_rw_thunk_new(struct tme_recode_ic *ic,
 #endif
     _tme_recode_x86_emit_reg_pop(thunk_bytes, TME_RECODE_X86_REG_N(11));
     _tme_recode_x86_emit_reg_pop(thunk_bytes, TME_RECODE_X86_REG_N(10));
+
+    thunk_bytes[0] = TME_RECODE_X86_OPCODE_GRP3_Eb;
+    thunk_bytes = _tme_recode_x86_emit_ic_modrm(thunk_bytes + 1,
+						ic->tme_recode_ic_status_offset,
+						TME_RECODE_X86_OPCODE_GRP3_TEST);
+  
+    /* emit the $imm8, andf if the guest instruction signaled a redispatch, jump
+       to the chain epilogue: */
+    thunk_bytes[0] = TME_RECODE_IC_STATUS_REDISPATCH;
+    *((tme_uint16_t *) &thunk_bytes[1])
+      = (TME_RECODE_X86_OPCODE_ESC_0F
+	 + (TME_RECODE_X86_OPCODE0F_JCC(TME_RECODE_X86_COND_NOT | TME_RECODE_X86_COND_Z)
+	    << 8));
+    thunk_bytes += 1 + 2 + sizeof(tme_int32_t);
+    ((tme_int32_t *) thunk_bytes)[-1]
+      = (ic->tme_recode_x86_ic_chain_epilogue
+	 - tme_recode_build_to_thunk_off(ic, thunk_bytes));
   }
 
   /* if this is a read: */

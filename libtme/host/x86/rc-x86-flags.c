@@ -47,9 +47,11 @@ _TME_RCSID("$Id: rc-x86-flags.c,v 1.5 2010/02/15 22:21:48 fredette Exp $");
   (((TME_RECODE_SIZE_HOST == TME_RECODE_SIZE_32				\
      || (flags_group)->tme_recode_flags_group_guest_func == NULL)	\
     ? TME_RECODE_X86_REG_A						\
-    : TME_RECODE_X86_REG_N(9) + WOFF/2)					\
+    : ((BPOFF || flags_reg_index) 					\
+       ? (TME_RECODE_X86_REG_N(9) + BPOFF * WOFF/2)			\
+       : (TME_RECODE_X86_REG_BP))) 					\
    + (flags_reg_index))
-#define _TME_RECODE_X86_FLAGS_REG_COUNT   (3 - WOFF/2)
+#define _TME_RECODE_X86_FLAGS_REG_COUNT   (3 - BPOFF * WOFF/2)
 
 /* this adds a one-byte-opcode ModRM instruction to a thunk, that
    addresses the stacked host flags of a particular size: */

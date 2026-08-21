@@ -1017,6 +1017,9 @@ struct tme_sparc {
   tme_recode_ras_entry_t _tme_sparc_recode_chain_ras[16];
   tme_uint32_t _tme_sparc_recode_chain_ras_pointer;
 
+  /* the chain status: */
+  tme_uint8_t _tme_sparc_recode_status;
+
   /* the recode cacheable source memories: */
   struct tme_sparc_recode_cacheable tme_sparc_recode_cacheables[TME_SPARC_RECODE_CACHEABLES_MAX];
 

@@ -484,6 +484,11 @@ _tme_sparc_recode_chain_init(struct tme_sparc *ic)
     = (((char *) &ic->_tme_sparc_recode_chain_ras_pointer)
        - (char *) ic);
 
+  /* set the offset of the ic status: */
+  ic->tme_sparc_recode_ic->tme_recode_ic_status_offset
+    = (((char *) &ic->_tme_sparc_recode_status)
+       - (char *) ic);
+  
   /* make the chain thunk: */
   chain.tme_recode_chain_reg_guest = TME_SPARC_IREG_PC_NEXT;
   chain_address_type = &chain.tme_recode_chain_address_type;

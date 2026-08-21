@@ -653,6 +653,12 @@ _TME_SPARC_EXECUTE_NAME(struct tme_sparc *ic)
 				       ic->tme_sparc_recode_insns_group.tme_recode_insns_group_chain_thunk,
 				       insns_thunk);
 
+	    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+	      /* clear the redispatch flag: */
+	      ic->_tme_sparc_recode_status &= ~TME_RECODE_IC_STATUS_REDISPATCH;
+	      tme_sparc_redispatch(ic);
+	    }
+
 	    /* set PC_next_next from PC_next, since the recode
 	       instructions thunks usually don't.  (this won't destroy
 	       any specially set PC_next_next, because any instruction

@@ -661,6 +661,8 @@ union tme_recode_reginfo {
 #define tme_recode_reginfo_tags_ruses _tme_recode_reginfo_uint16s[1]
 #endif /* WORDS_BIGENDIAN */
 
+#define TME_RECODE_IC_STATUS_REDISPATCH 1
+
 /* a recode ic: */
 struct tme_recode_ic {
 
@@ -733,6 +735,9 @@ struct tme_recode_ic {
      stack pointer: */
   tme_int32_t tme_recode_ic_chain_ras_pointer_offset;
 
+  /* the struct tme_ic offset of the tme_uint8_t chain status: */
+  tme_int32_t tme_recode_ic_status_offset;
+  
   /* the struct tme_ic offsets of window base registers, which are
      also tme_int32_t struct tme_ic offsets: */
   tme_int32_t tme_recode_ic_window_base_offsets[TME_RECODE_REG_GUEST_WINDOW_UNDEF];

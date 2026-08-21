@@ -481,7 +481,8 @@ tme_sparc_recode_insn_assist_redispatch(struct tme_sparc *ic)
   if (__tme_predict_false(redispatch_required)) {
 
     /* do the redispatch: */
-    tme_sparc_redispatch(ic);
+    ic->_tme_sparc_recode_status |= TME_RECODE_IC_STATUS_REDISPATCH;
+    //tme_sparc_redispatch(ic);
   }
 
   return (0);
