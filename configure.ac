@@ -878,14 +878,14 @@ AC_ARG_ENABLE(debug,
 [  --enable-debug          compile debuggable libraries and programs (default=don't)],
 [ ], [enable_debug=no])
 if test "x${enable_debug}" != "xno"; then
-  CPPFLAGS="${CPPFLAGS-} -DENABLE_DEBUG -DNDEBUG -DTME_RECODE_DEBUG -DDISABLE_BP_REG -D_TME_SPARC_STATS" # -DGTK_DISABLE_SINGLE_INCLUDES -DNME_MODULE_DEBUG 
+  CPPFLAGS="${CPPFLAGS-} -DENABLE_DEBUG -DNDEBUG -DTME_RECODE_DEBUG -D_TME_SPARC_STATS" # -DGTK_DISABLE_SINGLE_INCLUDES -DNME_MODULE_DEBUG -DDDISABLE_BP_REG
   if test "x${enable_debug}" != "xlocks"; then
     CPPFLAGS="${CPPFLAGS-} -DTME_NO_DEBUG_LOCKS"
   fi
   if test "${host_os}" = emscripten; then
     CFLAGS="-g3 -O0"
   elif test "x${have_Og}" = xyes; then
-    CFLAGS="-g3 -Og -fno-omit-frame-pointer"
+    CFLAGS="-g3 -Og"
   else
     CFLAGS="-g3 -O2"
   fi
