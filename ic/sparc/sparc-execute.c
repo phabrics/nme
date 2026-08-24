@@ -649,13 +649,18 @@ _TME_SPARC_EXECUTE_NAME(struct tme_sparc *ic)
 
 	    /* run the recode instructions thunk: */
 	    TME_SPARC_STAT_N(ic, tme_sparc_stats_insns_total, -1);
+
+	    /* set the recode running flag: */
+	    ic->_tme_sparc_recode_status = TME_RECODE_IC_STATUS_RUNNING;
+
 	    tme_recode_insns_thunk_run(&ic->tme_sparc_ic,
 				       ic->tme_sparc_recode_insns_group.tme_recode_insns_group_chain_thunk,
 				       insns_thunk);
 
+	    /* clear the recode running flag: */
+	    ic->_tme_sparc_recode_status &= ~TME_RECODE_IC_STATUS_RUNNING;
+
 	    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
-	      /* clear the redispatch flag: */
-	      ic->_tme_sparc_recode_status &= ~TME_RECODE_IC_STATUS_REDISPATCH;
 	      tme_sparc_redispatch(ic);
 	    }
 

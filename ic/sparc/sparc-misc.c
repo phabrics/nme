@@ -877,8 +877,19 @@ tme_sparc_redispatch(struct tme_sparc *ic)
 {
   struct tme_token *token;
 
-  /* end any recode verifying: */
-  tme_sparc_recode_verify_end(ic, TME_SPARC_TRAP_none);
+  if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+    /* clear the recode redispatch flag: */
+    ic->_tme_sparc_recode_status &= ~TME_RECODE_IC_STATUS_REDISPATCH;
+  } else {
+    /* end any recode verifying: */
+    tme_sparc_recode_verify_end(ic, TME_SPARC_TRAP_none);
+  }
+  
+  if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_RUNNING) {
+    /* set the recode redispatch flag: */
+    ic->_tme_sparc_recode_status |= TME_RECODE_IC_STATUS_REDISPATCH;
+    return;
+  }
 
   /* if we have a busy instruction TLB entry: */
   token = ic->_tme_sparc_itlb_current_token;
@@ -1064,7 +1075,8 @@ tme_sparc32_trap(struct tme_sparc *ic, tme_uint32_t trap)
   /* reset traps are handled specially: */
   if (__tme_predict_false(trap == TME_SPARC32_TRAP_reset)) {
     tme_sparc_do_reset(ic);
-    /* NOTREACHED */
+    /* return if we are deferring the redispatch: */
+    return;
   }  
 
   /* "The processor enters error_mode state when a trap occurs while
@@ -1097,6 +1109,8 @@ tme_sparc32_trap(struct tme_sparc *ic, tme_uint32_t trap)
 	    (TME_SPARC_LOG_HANDLE(ic),
 	     _("took a trap while traps disabled, processor reset")));
     tme_sparc32_trap(ic, TME_SPARC32_TRAP_reset);
+    /* return if we are deferring the redispatch: */
+    return;
   }
 
   /* "Traps are disabled: ET <- 0.

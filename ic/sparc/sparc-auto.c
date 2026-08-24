@@ -1301,6 +1301,10 @@ TME_SPARC_FORMAT3(tme_sparc32_ldb, tme_uint32_t)
                             &TME_SPARC_FORMAT3_RD,
                             (TME_SPARC_LSINFO_OP_LD
                              | (8 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
   }
 
   /* get the byte order of this transfer: */
@@ -4492,8 +4496,14 @@ tme_sparc32_ls(struct tme_sparc *ic,
       /* unbusy this TLB, since the trap function may not return: */
       tme_bus_tlb_unbusy(&tlb->tme_sparc_tlb_bus_tlb);
 
-      /* call the trap function, which will not return if it traps: */
+      /* call the trap function, which will only return if
+	 the fault is cleared or if we are deferring the trap: */
       (*ic->_tme_sparc_ls_trap)(ic, &ls);
+
+      /* if there was a fault and we are deferring the trap, stop now to handle it: */
+      if (__tme_predict_false(ls.tme_sparc_ls_faults != TME_SPARC_LS_FAULT_NONE)) {
+	break;
+      }
 
       /* rebusy this TLB: */
       tme_bus_tlb_busy(&tlb->tme_sparc_tlb_bus_tlb);

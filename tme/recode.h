@@ -661,7 +661,8 @@ union tme_recode_reginfo {
 #define tme_recode_reginfo_tags_ruses _tme_recode_reginfo_uint16s[1]
 #endif /* WORDS_BIGENDIAN */
 
-#define TME_RECODE_IC_STATUS_REDISPATCH 1
+#define TME_RECODE_IC_STATUS_RUNNING    (1<<0)
+#define TME_RECODE_IC_STATUS_REDISPATCH (1<<1)
 
 /* a recode ic: */
 struct tme_recode_ic {
