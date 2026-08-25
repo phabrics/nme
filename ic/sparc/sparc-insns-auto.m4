@@ -1034,7 +1034,12 @@ for arch in 32 64; do
 	    fi
 	    AS_ECHO(["(${size} / 8)));"])
 	    
-	    if test ${slow} = store || ${alternate}; then
+	    AS_ECHO(["    /* if we are redispatching due to a trap, then we must return to handle it: */"])
+	    AS_ECHO(["    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {"])
+	    AS_ECHO(["      return;"])
+	    AS_ECHO(["    }"])
+
+    	    if test ${slow} = store || ${alternate}; then
 		AS_ECHO([""])
 		AS_ECHO(["    /* if the slow ${slow} function did the transfer: */"])
 		AS_ECHO(["    if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {"])

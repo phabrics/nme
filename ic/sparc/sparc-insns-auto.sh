@@ -1297,7 +1297,12 @@ for arch in 32 64; do
 	    fi
 	    printf '%s\n' "(${size} / 8)));"
 
-	    if test ${slow} = store || ${alternate}; then
+	    printf '%s\n' "    /* if we are redispatching due to a trap, then we must return to handle it: */"
+	    printf '%s\n' "    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {"
+	    printf '%s\n' "      return;"
+	    printf '%s\n' "    }"
+
+    	    if test ${slow} = store || ${alternate}; then
 		printf '%s\n' ""
 		printf '%s\n' "    /* if the slow ${slow} function did the transfer: */"
 		printf '%s\n' "    if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {"

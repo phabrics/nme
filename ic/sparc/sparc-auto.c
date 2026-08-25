@@ -1301,6 +1301,10 @@ TME_SPARC_FORMAT3(tme_sparc32_ldb, tme_uint32_t)
                             &TME_SPARC_FORMAT3_RD,
                             (TME_SPARC_LSINFO_OP_LD
                              | (8 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
   }
 
   /* get the byte order of this transfer: */
@@ -1414,6 +1418,10 @@ TME_SPARC_FORMAT3(tme_sparc32_stb, tme_uint32_t)
                             &TME_SPARC_FORMAT3_RD,
                             (TME_SPARC_LSINFO_OP_ST
                              | (8 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow store function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -1517,6 +1525,10 @@ TME_SPARC_FORMAT3(tme_sparc32_ldh, tme_uint32_t)
                             &TME_SPARC_FORMAT3_RD,
                             (TME_SPARC_LSINFO_OP_LD
                              | (16 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
   }
 
   /* get the byte order of this transfer: */
@@ -1634,6 +1646,10 @@ TME_SPARC_FORMAT3(tme_sparc32_sth, tme_uint32_t)
                             &TME_SPARC_FORMAT3_RD,
                             (TME_SPARC_LSINFO_OP_ST
                              | (16 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow store function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -1737,6 +1753,10 @@ TME_SPARC_FORMAT3(tme_sparc32_ld, tme_uint32_t)
                             &TME_SPARC_FORMAT3_RD,
                             (TME_SPARC_LSINFO_OP_LD
                              | (32 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
   }
 
   /* get the byte order of this transfer: */
@@ -1848,6 +1868,10 @@ TME_SPARC_FORMAT3(tme_sparc32_st, tme_uint32_t)
                             &TME_SPARC_FORMAT3_RD,
                             (TME_SPARC_LSINFO_OP_ST
                              | (32 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow store function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -1959,6 +1983,10 @@ TME_SPARC_FORMAT3(tme_sparc32_ldd, tme_uint32_t)
                             (TME_SPARC_LSINFO_OP_LD
                              | TME_SPARC_LSINFO_LDD_STD
                              | (64 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
   }
 
   /* get the byte order of this transfer: */
@@ -2084,6 +2112,10 @@ TME_SPARC_FORMAT3(tme_sparc32_std, tme_uint32_t)
                             (TME_SPARC_LSINFO_OP_ST
                              | TME_SPARC_LSINFO_LDD_STD
                              | (64 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow store function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -2187,6 +2219,10 @@ TME_SPARC_FORMAT3(tme_sparc32_ldstub, tme_uint32_t)
                             &TME_SPARC_FORMAT3_RD,
                             (TME_SPARC_LSINFO_OP_ATOMIC
                              | (8 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow store function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -2309,6 +2345,10 @@ TME_SPARC_FORMAT3(tme_sparc32_ldstuba, tme_uint32_t)
                              | TME_SPARC_LSINFO_ASI(TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF))
                              | TME_SPARC_LSINFO_A
                              | (8 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow store function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -2437,6 +2477,10 @@ TME_SPARC_FORMAT3(tme_sparc32_swap, tme_uint32_t)
                             &TME_SPARC_FORMAT3_RD,
                             (TME_SPARC_LSINFO_OP_ATOMIC
                              | (32 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow store function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -2575,6 +2619,10 @@ TME_SPARC_FORMAT3(tme_sparc32_swapa, tme_uint32_t)
                              | TME_SPARC_LSINFO_ASI(TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF))
                              | TME_SPARC_LSINFO_A
                              | (32 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow store function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -2702,6 +2750,10 @@ TME_SPARC_FORMAT3(tme_sparc32_ldba, tme_uint32_t)
                              | TME_SPARC_LSINFO_ASI(TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF))
                              | TME_SPARC_LSINFO_A
                              | (8 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow load function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -2839,6 +2891,10 @@ TME_SPARC_FORMAT3(tme_sparc32_stba, tme_uint32_t)
                              | TME_SPARC_LSINFO_ASI(TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF))
                              | TME_SPARC_LSINFO_A
                              | (8 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow store function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -2948,6 +3004,10 @@ TME_SPARC_FORMAT3(tme_sparc32_ldha, tme_uint32_t)
                              | TME_SPARC_LSINFO_ASI(TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF))
                              | TME_SPARC_LSINFO_A
                              | (16 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow load function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -3089,6 +3149,10 @@ TME_SPARC_FORMAT3(tme_sparc32_stha, tme_uint32_t)
                              | TME_SPARC_LSINFO_ASI(TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF))
                              | TME_SPARC_LSINFO_A
                              | (16 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow store function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -3198,6 +3262,10 @@ TME_SPARC_FORMAT3(tme_sparc32_lda, tme_uint32_t)
                              | TME_SPARC_LSINFO_ASI(TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF))
                              | TME_SPARC_LSINFO_A
                              | (32 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow load function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -3333,6 +3401,10 @@ TME_SPARC_FORMAT3(tme_sparc32_sta, tme_uint32_t)
                              | TME_SPARC_LSINFO_ASI(TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF))
                              | TME_SPARC_LSINFO_A
                              | (32 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow store function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -3450,6 +3522,10 @@ TME_SPARC_FORMAT3(tme_sparc32_ldda, tme_uint32_t)
                              | TME_SPARC_LSINFO_ASI(TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF))
                              | TME_SPARC_LSINFO_A
                              | (64 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow load function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -3601,6 +3677,10 @@ TME_SPARC_FORMAT3(tme_sparc32_stda, tme_uint32_t)
                              | TME_SPARC_LSINFO_ASI(TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF))
                              | TME_SPARC_LSINFO_A
                              | (64 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow store function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -6292,6 +6372,10 @@ TME_SPARC_FORMAT3(tme_sparc64_ldb, tme_uint64_t)
                             &TME_SPARC_FORMAT3_RD,
                             (TME_SPARC_LSINFO_OP_LD
                              | (8 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
   }
 
   /* get the byte order of this transfer: */
@@ -6417,6 +6501,10 @@ TME_SPARC_FORMAT3(tme_sparc64_stb, tme_uint64_t)
                             &TME_SPARC_FORMAT3_RD,
                             (TME_SPARC_LSINFO_OP_ST
                              | (8 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow store function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -6532,6 +6620,10 @@ TME_SPARC_FORMAT3(tme_sparc64_ldh, tme_uint64_t)
                             &TME_SPARC_FORMAT3_RD,
                             (TME_SPARC_LSINFO_OP_LD
                              | (16 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
   }
 
   /* get the byte order of this transfer: */
@@ -6661,6 +6753,10 @@ TME_SPARC_FORMAT3(tme_sparc64_sth, tme_uint64_t)
                             &TME_SPARC_FORMAT3_RD,
                             (TME_SPARC_LSINFO_OP_ST
                              | (16 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow store function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -6777,6 +6873,10 @@ TME_SPARC_FORMAT3(tme_sparc64_ld, tme_uint64_t)
                             &TME_SPARC_FORMAT3_RD,
                             (TME_SPARC_LSINFO_OP_LD
                              | (32 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
   }
 
   /* get the byte order of this transfer: */
@@ -6906,6 +7006,10 @@ TME_SPARC_FORMAT3(tme_sparc64_st, tme_uint64_t)
                             &TME_SPARC_FORMAT3_RD,
                             (TME_SPARC_LSINFO_OP_ST
                              | (32 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow store function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -7029,6 +7133,10 @@ TME_SPARC_FORMAT3(tme_sparc64_ldd, tme_uint64_t)
                             (TME_SPARC_LSINFO_OP_LD
                              | TME_SPARC_LSINFO_LDD_STD
                              | (64 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
   }
 
   /* get the byte order of this transfer: */
@@ -7166,6 +7274,10 @@ TME_SPARC_FORMAT3(tme_sparc64_std, tme_uint64_t)
                             (TME_SPARC_LSINFO_OP_ST
                              | TME_SPARC_LSINFO_LDD_STD
                              | (64 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow store function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -7284,6 +7396,10 @@ TME_SPARC_FORMAT3(tme_sparc64_ldstub, tme_uint64_t)
                             &TME_SPARC_FORMAT3_RD,
                             (TME_SPARC_LSINFO_OP_ATOMIC
                              | (8 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow store function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -7442,6 +7558,10 @@ TME_SPARC_FORMAT3(tme_sparc64_ldstuba, tme_uint64_t)
                              | TME_SPARC_LSINFO_ASI(TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF))
                              | TME_SPARC_LSINFO_A
                              | (8 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow store function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -7585,6 +7705,10 @@ TME_SPARC_FORMAT3(tme_sparc64_swap, tme_uint64_t)
                             &TME_SPARC_FORMAT3_RD,
                             (TME_SPARC_LSINFO_OP_ATOMIC
                              | (32 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow store function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -7759,6 +7883,10 @@ TME_SPARC_FORMAT3(tme_sparc64_swapa, tme_uint64_t)
                              | TME_SPARC_LSINFO_ASI(TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF))
                              | TME_SPARC_LSINFO_A
                              | (32 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow store function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -7919,6 +8047,10 @@ TME_SPARC_FORMAT3(tme_sparc64_ldba, tme_uint64_t)
                              | TME_SPARC_LSINFO_ASI(TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF))
                              | TME_SPARC_LSINFO_A
                              | (8 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow load function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -8089,6 +8221,10 @@ TME_SPARC_FORMAT3(tme_sparc64_stba, tme_uint64_t)
                              | TME_SPARC_LSINFO_ASI(TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF))
                              | TME_SPARC_LSINFO_A
                              | (8 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow store function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -8231,6 +8367,10 @@ TME_SPARC_FORMAT3(tme_sparc64_ldha, tme_uint64_t)
                              | TME_SPARC_LSINFO_ASI(TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF))
                              | TME_SPARC_LSINFO_A
                              | (16 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow load function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -8405,6 +8545,10 @@ TME_SPARC_FORMAT3(tme_sparc64_stha, tme_uint64_t)
                              | TME_SPARC_LSINFO_ASI(TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF))
                              | TME_SPARC_LSINFO_A
                              | (16 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow store function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -8548,6 +8692,10 @@ TME_SPARC_FORMAT3(tme_sparc64_lda, tme_uint64_t)
                              | TME_SPARC_LSINFO_ASI(TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF))
                              | TME_SPARC_LSINFO_A
                              | (32 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow load function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -8722,6 +8870,10 @@ TME_SPARC_FORMAT3(tme_sparc64_sta, tme_uint64_t)
                              | TME_SPARC_LSINFO_ASI(TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF))
                              | TME_SPARC_LSINFO_A
                              | (32 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow store function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -8872,6 +9024,10 @@ TME_SPARC_FORMAT3(tme_sparc64_ldda, tme_uint64_t)
                              | TME_SPARC_LSINFO_ASI(TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF))
                              | TME_SPARC_LSINFO_A
                              | (64 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow load function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -9056,6 +9212,10 @@ TME_SPARC_FORMAT3(tme_sparc64_stda, tme_uint64_t)
                              | TME_SPARC_LSINFO_ASI(TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF))
                              | TME_SPARC_LSINFO_A
                              | (64 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow store function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -9582,6 +9742,10 @@ TME_SPARC_FORMAT3(tme_sparc64_ldx, tme_uint64_t)
                             &TME_SPARC_FORMAT3_RD,
                             (TME_SPARC_LSINFO_OP_LD
                              | (64 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
   }
 
   /* get the byte order of this transfer: */
@@ -9705,6 +9869,10 @@ TME_SPARC_FORMAT3(tme_sparc64_stx, tme_uint64_t)
                             &TME_SPARC_FORMAT3_RD,
                             (TME_SPARC_LSINFO_OP_ST
                              | (64 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow store function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -9847,6 +10015,10 @@ TME_SPARC_FORMAT3(tme_sparc64_ldxa, tme_uint64_t)
                              | TME_SPARC_LSINFO_ASI(TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF))
                              | TME_SPARC_LSINFO_A
                              | (64 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow load function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -10015,6 +10187,10 @@ TME_SPARC_FORMAT3(tme_sparc64_stxa, tme_uint64_t)
                              | TME_SPARC_LSINFO_ASI(TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF))
                              | TME_SPARC_LSINFO_A
                              | (64 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow store function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -10364,6 +10540,10 @@ TME_SPARC_FORMAT3(tme_sparc64_casa, tme_uint64_t)
                              | TME_SPARC_LSINFO_ASI(TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF))
                              | TME_SPARC_LSINFO_A
                              | (32 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow store function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
@@ -10545,6 +10725,10 @@ TME_SPARC_FORMAT3(tme_sparc64_casxa, tme_uint64_t)
                              | TME_SPARC_LSINFO_ASI(TME_SPARC_ASI_MASK_WHICH(asi_mask_data & ~TME_SPARC_ASI_MASK_FLAG_UNDEF))
                              | TME_SPARC_LSINFO_A
                              | (64 / 8)));
+    /* if we are redispatching due to a trap, then we must return to handle it: */
+    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+      return;
+    }
 
     /* if the slow store function did the transfer: */
     if (__tme_predict_false(memory == TME_EMULATOR_OFF_UNDEF)) {
