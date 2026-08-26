@@ -1035,7 +1035,7 @@ for arch in 32 64; do
 	    AS_ECHO(["(${size} / 8)));"])
 	    
 	    AS_ECHO(["    /* if we are redispatching due to a trap, then we must return to handle it: */"])
-	    AS_ECHO(["    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {"])
+	    AS_ECHO(["    if(ic->_tme_sparc_recode_status & TME_RECODE_REDISPATCH) {"])
 	    AS_ECHO(["      return;"])
 	    AS_ECHO(["    }"])
 

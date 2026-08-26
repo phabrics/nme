@@ -877,17 +877,17 @@ tme_sparc_redispatch(struct tme_sparc *ic)
 {
   struct tme_token *token;
 
-  if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {
+  if(ic->_tme_sparc_recode_status & TME_RECODE_REDISPATCH) {
     /* clear the recode redispatch flag: */
-    ic->_tme_sparc_recode_status &= ~TME_RECODE_IC_STATUS_REDISPATCH;
+    ic->_tme_sparc_recode_status &= ~TME_RECODE_REDISPATCH;
   } else {
     /* end any recode verifying: */
     tme_sparc_recode_verify_end(ic, TME_SPARC_TRAP_none);
   }
   
-  if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_RUNNING) {
+  if(ic->_tme_sparc_recode_status & TME_RECODE_ENABLE) {
     /* set the recode redispatch flag: */
-    ic->_tme_sparc_recode_status |= TME_RECODE_IC_STATUS_REDISPATCH;
+    ic->_tme_sparc_recode_status |= TME_RECODE_REDISPATCH;
     return;
   }
 

@@ -44,14 +44,17 @@ int thread_mode;
 int thread_coop;
 tme_rwlock_t tme_rwlock_suspere;
 
-bool enable_fullscreen = false;
+/* use recode if available and defer redispatch if requested: */
 #ifndef TME_HAVE_RECODE
-bool enable_recode = false;
+tme_uint8_t enable_recode = 0;
 #elif defined(WIN32)
-bool enable_recode = (TME_RECODE_SIZE_GUEST_MAX >= TME_RECODE_SIZE_128) ? (false) : (true);
+tme_uint8_t enable_recode = (TME_RECODE_SIZE_GUEST_MAX >= TME_RECODE_SIZE_128) ? (0) : (TME_RECODE_ENABLE);
 #else
-bool enable_recode = true;
+tme_uint8_t enable_recode = TME_RECODE_ENABLE;
 #endif
+
+/* a hint to display to use fullscreen mode if available: */
+bool enable_fullscreen = false;
 
 #ifdef tme_thread_rwlock_timedrdlock
 int tme_rwlock_timedlock(tme_rwlock_t *l, tme_time_t abstime, int write) { 

@@ -482,6 +482,39 @@ _tme_recode_x86_insn_shift_imm(struct tme_recode_ic *ic,
   tme_recode_x86_insns_finish(ic, thunk_bytes);
 }
 
+/* this emits a read or a write instruction: */
+static void
+_tme_recode_x86_insn_redispatch(struct tme_recode_ic *ic)
+{
+  tme_uint8_t *thunk_bytes;
+  
+  if(!(enable_recode & TME_RECODE_ENABLE)) return;
+  if(!(enable_recode & TME_RECODE_REDISPATCH)) return;
+
+  /* start another instruction: */
+  tme_recode_x86_insns_start(ic, thunk_bytes);
+
+  thunk_bytes[0] = TME_RECODE_X86_OPCODE_GRP3_Eb;
+  thunk_bytes = _tme_recode_x86_emit_ic_modrm(thunk_bytes + 1,
+					      ic->tme_recode_ic_status_offset,
+					      TME_RECODE_X86_OPCODE_GRP3_TEST);
+  
+  /* emit the $imm8, andf if the guest instruction signaled a redispatch, jump
+     to the chain epilogue: */
+  thunk_bytes[0] = TME_RECODE_REDISPATCH;
+  *((tme_uint16_t *) &thunk_bytes[1])
+    = (TME_RECODE_X86_OPCODE_ESC_0F
+       + (TME_RECODE_X86_OPCODE0F_JCC(TME_RECODE_X86_COND_NOT | TME_RECODE_X86_COND_Z)
+	  << 8));
+  thunk_bytes += 1 + 2 + sizeof(tme_int32_t);
+  ((tme_int32_t *) thunk_bytes)[-1]
+    = (ic->tme_recode_x86_ic_chain_epilogue
+       - tme_recode_build_to_thunk_off(ic, thunk_bytes));
+
+  /* finish this instruction: */
+  tme_recode_x86_insns_finish(ic, thunk_bytes);
+}
+
 /* this emits a guest instruction: */
 static void
 _tme_recode_x86_insn_guest(struct tme_recode_ic *ic,
@@ -927,22 +960,8 @@ _tme_recode_x86_insn_guest(struct tme_recode_ic *ic,
       thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, stack_adjust);
   }
 
-  thunk_bytes[0] = TME_RECODE_X86_OPCODE_GRP3_Eb;
-  thunk_bytes = _tme_recode_x86_emit_ic_modrm(thunk_bytes + 1,
-					      ic->tme_recode_ic_status_offset,
-					      TME_RECODE_X86_OPCODE_GRP3_TEST);
-  
-  /* emit the $imm8, andf if the guest instruction signaled a redispatch, jump
-     to the chain epilogue: */
-  thunk_bytes[0] = TME_RECODE_IC_STATUS_REDISPATCH;
-  *((tme_uint16_t *) &thunk_bytes[1])
-    = (TME_RECODE_X86_OPCODE_ESC_0F
-       + (TME_RECODE_X86_OPCODE0F_JCC(TME_RECODE_X86_COND_NOT | TME_RECODE_X86_COND_Z)
-	  << 8));
-  thunk_bytes += 1 + 2 + sizeof(tme_int32_t);
-  ((tme_int32_t *) thunk_bytes)[-1]
-    = (ic->tme_recode_x86_ic_chain_epilogue
-       - tme_recode_build_to_thunk_off(ic, thunk_bytes));
+  /* emit a redispatch check if necessary: */
+  _tme_recode_x86_insn_redispatch(ic);
 
   if (insn->tme_recode_insn_operand_dst != TME_RECODE_OPERAND_NULL) {
   
@@ -952,12 +971,12 @@ _tme_recode_x86_insn_guest(struct tme_recode_ic *ic,
     thunk_bytes[0]
       = (TME_RECODE_X86_OPCODE_BINOP_MOV
 	 + TME_RECODE_X86_OPCODE_BINOP_Ev_Gv);
-      thunk_bytes[1] =
-	(TME_RECODE_SIZE_IS_DOUBLE_HOST(ic->tme_recode_ic_reg_size))
-	? (TME_RECODE_X86_MOD_OPREG_RM(TME_RECODE_X86_MOD_RM_EA(TME_RECODE_X86_REG_A),
-				       TME_RECODE_X86_REG(TME_RECODE_X86_REG_BP)))
-	: (TME_RECODE_X86_MOD_OPREG_RM(TME_RECODE_X86_MOD_RM_EA(TME_RECODE_X86_REG_A),
-				       TME_RECODE_X86_REG(TME_RECODE_X86_REG_A)));
+    thunk_bytes[1] =
+      (TME_RECODE_SIZE_IS_DOUBLE_HOST(ic->tme_recode_ic_reg_size))
+      ? (TME_RECODE_X86_MOD_OPREG_RM(TME_RECODE_X86_MOD_RM_EA(TME_RECODE_X86_REG_A),
+				     TME_RECODE_X86_REG(TME_RECODE_X86_REG_BP)))
+      : (TME_RECODE_X86_MOD_OPREG_RM(TME_RECODE_X86_MOD_RM_EA(TME_RECODE_X86_REG_A),
+				     TME_RECODE_X86_REG(TME_RECODE_X86_REG_A)));
       
     thunk_bytes += 2;
 #endif
@@ -1096,25 +1115,11 @@ _tme_recode_x86_insn_rw(struct tme_recode_ic *ic,
   *((tme_uint32_t *) thunk_bytes) = rw_thunk->tme_recode_x86_rw_thunk_extend;
   thunk_bytes += rw_thunk->tme_recode_x86_rw_thunk_extend_size;
 
-  thunk_bytes[0] = TME_RECODE_X86_OPCODE_GRP3_Eb;
-  thunk_bytes = _tme_recode_x86_emit_ic_modrm(thunk_bytes + 1,
-					      ic->tme_recode_ic_status_offset,
-					      TME_RECODE_X86_OPCODE_GRP3_TEST);
-  
-  /* emit the $imm8, andf if the guest instruction signaled a redispatch, jump
-     to the chain epilogue: */
-  thunk_bytes[0] = TME_RECODE_IC_STATUS_REDISPATCH;
-  *((tme_uint16_t *) &thunk_bytes[1])
-    = (TME_RECODE_X86_OPCODE_ESC_0F
-       + (TME_RECODE_X86_OPCODE0F_JCC(TME_RECODE_X86_COND_NOT | TME_RECODE_X86_COND_Z)
-	  << 8));
-  thunk_bytes += 1 + 2 + sizeof(tme_int32_t);
-  ((tme_int32_t *) thunk_bytes)[-1]
-    = (ic->tme_recode_x86_ic_chain_epilogue
-	 - tme_recode_build_to_thunk_off(ic, thunk_bytes));
-
-/* finish this instruction: */
+  /* finish this instruction: */
   tme_recode_x86_insns_finish(ic, thunk_bytes);
+
+  /* emit a redispatch check if necessary: */
+  _tme_recode_x86_insn_redispatch(ic);
 }
 
 /* this recodes one instruction: */

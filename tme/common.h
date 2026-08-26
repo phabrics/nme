@@ -417,11 +417,14 @@ tme_bswap_u128(tme_uint128_t x)
 #define TME_ARG_IS(s, x)	((s) != NULL && !strcmp(s, x))
 #define TME_OK			(0)
 
+/* use recode if available and defer redispatch if requested: */
+#define TME_RECODE_ENABLE     (1<<0)
+#define TME_RECODE_REDISPATCH (1<<1)
+
+extern tme_uint8_t enable_recode;
+
 /* a hint to display to use fullscreen mode if available: */
 extern bool enable_fullscreen;
-
-/* use recode if available: */
-extern bool enable_recode;
 
 static _tme_inline void tme_beep _TME_P((void)) {
 #ifdef WIN32
