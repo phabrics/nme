@@ -1298,7 +1298,7 @@ for arch in 32 64; do
 	    printf '%s\n' "(${size} / 8)));"
 
 	    printf '%s\n' "    /* if we are redispatching due to a trap, then we must return to handle it: */"
-	    printf '%s\n' "    if(ic->_tme_sparc_recode_status & TME_RECODE_IC_STATUS_REDISPATCH) {"
+	    printf '%s\n' "    if(ic->_tme_sparc_recode_status & TME_RECODE_REDISPATCH) {"
 	    printf '%s\n' "      return;"
 	    printf '%s\n' "    }"
 

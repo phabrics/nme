@@ -960,9 +960,6 @@ _tme_recode_x86_insn_guest(struct tme_recode_ic *ic,
       thunk_bytes = _tme_recode_x86_emit_adjust_sp(thunk_bytes, stack_adjust);
   }
 
-  /* emit a redispatch check if necessary: */
-  _tme_recode_x86_insn_redispatch(ic);
-
   if (insn->tme_recode_insn_operand_dst != TME_RECODE_OPERAND_NULL) {
   
 #if defined(winx64) && (TME_RECODE_SIZE_GUEST_MAX > TME_RECODE_SIZE_HOST)
@@ -1009,6 +1006,9 @@ _tme_recode_x86_insn_guest(struct tme_recode_ic *ic,
   }
   /* finish these instructions: */
   tme_recode_x86_insns_finish(ic, thunk_bytes);
+
+  /* emit a redispatch check if necessary: */
+  _tme_recode_x86_insn_redispatch(ic);
 }
 
 /* this emits a read or a write instruction: */

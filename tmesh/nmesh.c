@@ -519,10 +519,10 @@ do_usage(const char *prog_name, char *msg)
   fprintf(stderr, "usage: %s [OPTIONS] <INITIAL-CONFIG> \
                    \nwhere OPTIONS are:			   \
                    \n--log LOGFILE          log to LOGFILE		\
-                   \n-c, --cycle_counter    cycle counter implementation (default 'def' gives order: 'cpu','sdl','win','x86','def')  \
+                   \n-c, --cycle <counter>  cycle counter implementation (default 'def' gives order: 'cpu','sdl','win','x86','def')  \
                    \n-m, --multi_threaded   multi-threaded mode (using %s threads or single-threaded fibers if not given) \
                    \n-f, --fullscreen       start in fullscreen mode (toggle with F11) when available (only SDL currently)   \
-                   \n-r, --recode           toggle default recode mode if available (default: %d) \
+                   \n-r, --recode <mode>    set recode mode to the union of available flag bits ENABLE [1] and REDISPATCH [2] (default: %d) \
                    \n-i, --interactive      interactive command-line interface (<INITIAL-CONFIG> optional here)\n",
 	  prog_name, TME_THREADS_NAME, enable_recode);
   
@@ -724,7 +724,12 @@ main(int argc, char **argv)
     }
     else if (!strcmp(opt, "-r")
 	     || !strcmp(opt, "--recode")) {
-      enable_recode = !enable_recode;
+      if (++arg_i < argc) {
+	enable_recode=strtoul(argv[arg_i], NULL, 0);
+      } else {
+	arg_i = argc;
+	break;
+      }
     }
     else if (!strcmp(opt, "-i")
 	     || !strcmp(opt, "--interactive")) {
@@ -776,9 +781,7 @@ main(int argc, char **argv)
     exit(1);
 #endif
 
-#ifdef TME_HAVE_RECODE
-  if(enable_recode) printf("Using recode.\n");
-#endif
+  printf("Recode mode=%d.\n", enable_recode);
   
 #ifdef TME_THREADS_POSIX
   thread = pthread_self();
