@@ -23,11 +23,11 @@ _tme_sparc32_alternate_asi_mask(struct tme_sparc *ic)
   asi_data = TME_FIELD_MASK_EXTRACTU(TME_SPARC_INSN, (0xff << 5));
 
   /* this is a privileged instruction: */
-  TME_SPARC_INSN_PRIV;
+  _TME_SPARC_INSN_PRIV(0);
 
   /* if the i bit is one, this is an illegal instruction: */
   if (__tme_predict_false(TME_SPARC_INSN & TME_BIT(13))) {
-    TME_SPARC_INSN_ILL(ic);
+    _TME_SPARC_INSN_ILL(ic,0);
   }
 
   /* get the flags for this ASI: */
@@ -65,7 +65,7 @@ _tme_sparc32_fpu_mem_fpreg(struct tme_sparc *ic,
 
   /* NB: this checks for various traps by their priority order: */
 
-  TME_SPARC_INSN_FPU_ENABLED;
+  _TME_SPARC_INSN_FPU_ENABLED(NULL);
 
   /* get the floating-point format: */
   float_format = float_buffer->tme_float_format;
@@ -151,7 +151,10 @@ _tme_sparc32_fpu_mem_fpreg(struct tme_sparc *ic,
   return (&ic->tme_sparc_fpu_fpregs[fpreg_number]);
 }
 #define _tme_sparc32_fpu_mem(ic) \
-  do { _tme_sparc32_fpu_mem_fpreg(ic, 0, &_tme_sparc_float_null); } while (/* CONSTCOND */ 0)
+  do { \
+    _tme_sparc32_fpu_mem_fpreg(ic, 0, &_tme_sparc_float_null); \
+    if(ic->_tme_sparc_recode_status & TME_RECODE_REDISPATCH) return; \
+  } while (/* CONSTCOND */ 0)
 
 /* this does a sparc32 "add SRC1, SRC2, DST": */
 TME_SPARC_FORMAT3(tme_sparc32_add, tme_uint32_t)
@@ -3781,6 +3784,11 @@ TME_SPARC_FORMAT3(tme_sparc32_ldf, tme_uint32_t)
                                  misaligned,
                                  &float_buffer);
 
+  /* if we are redispatching due to a trap, then we must return to handle it: */
+  if(ic->_tme_sparc_recode_status & TME_RECODE_REDISPATCH) {
+    return;
+  }
+
   /* do the load: */
   tme_sparc32_ld(ic, _rs1, _rs2, &ic->tme_sparc_ireg_uint32(TME_SPARC_IREG_FPX));
 
@@ -3813,6 +3821,11 @@ TME_SPARC_FORMAT3(tme_sparc32_lddf, tme_uint32_t)
     = _tme_sparc32_fpu_mem_fpreg(ic,
                                  misaligned,
                                  &float_buffer);
+
+  /* if we are redispatching due to a trap, then we must return to handle it: */
+  if(ic->_tme_sparc_recode_status & TME_RECODE_REDISPATCH) {
+    return;
+  }
 
   /* do the load: */
   tme_sparc32_ldd(ic, _rs1, _rs2, &ic->tme_sparc_ireg_uint32(TME_SPARC_IREG_FPX));
@@ -3867,6 +3880,11 @@ TME_SPARC_FORMAT3(tme_sparc32_stf, tme_uint32_t)
                                  misaligned,
                                  &float_buffer);
 
+  /* if we are redispatching due to a trap, then we must return to handle it: */
+  if(ic->_tme_sparc_recode_status & TME_RECODE_REDISPATCH) {
+    return;
+  }
+
   /* get this single floating-point register in IEEE754 single-precision format: */
   value_single = tme_ieee754_single_value_get(fpreg, &float_buffer.tme_float_value_ieee754_single);
 
@@ -3901,6 +3919,11 @@ TME_SPARC_FORMAT3(tme_sparc32_stdf, tme_uint32_t)
     = _tme_sparc32_fpu_mem_fpreg(ic,
                                  misaligned,
                                  &float_buffer);
+
+  /* if we are redispatching due to a trap, then we must return to handle it: */
+  if(ic->_tme_sparc_recode_status & TME_RECODE_REDISPATCH) {
+    return;
+  }
 
   /* get this double floating-point register in IEEE754 double-precision format: */
   value_double = tme_ieee754_double_value_get(fpreg, &float_buffer.tme_float_value_ieee754_double);
@@ -4929,7 +4952,7 @@ _tme_sparc64_fpu_mem_fpreg(struct tme_sparc *ic,
 
   /* NB: this checks for various traps by their priority order: */
 
-  TME_SPARC_INSN_FPU_ENABLED;
+  _TME_SPARC_INSN_FPU_ENABLED(NULL);
 
   /* get the floating-point format: */
   float_format = float_buffer->tme_float_format;
@@ -5026,7 +5049,10 @@ _tme_sparc64_fpu_mem_fpreg(struct tme_sparc *ic,
   return (&ic->tme_sparc_fpu_fpregs[fpreg_number]);
 }
 #define _tme_sparc64_fpu_mem(ic) \
-  do { _tme_sparc64_fpu_mem_fpreg(ic, 0, &_tme_sparc_float_null); } while (/* CONSTCOND */ 0)
+  do { \
+    _tme_sparc64_fpu_mem_fpreg(ic, 0, &_tme_sparc_float_null); \
+    if(ic->_tme_sparc_recode_status & TME_RECODE_REDISPATCH) return; \
+  } while (/* CONSTCOND */ 0)
 
 /* this does a sparc64 "add SRC1, SRC2, DST": */
 TME_SPARC_FORMAT3(tme_sparc64_add, tme_uint64_t)
@@ -9330,6 +9356,11 @@ TME_SPARC_FORMAT3(tme_sparc64_ldf, tme_uint64_t)
                                  misaligned,
                                  &float_buffer);
 
+  /* if we are redispatching due to a trap, then we must return to handle it: */
+  if(ic->_tme_sparc_recode_status & TME_RECODE_REDISPATCH) {
+    return;
+  }
+
   /* do the load: */
   tme_sparc64_ld(ic, _rs1, _rs2, &ic->tme_sparc_ireg_uint64(TME_SPARC_IREG_FPX));
 
@@ -9363,6 +9394,11 @@ TME_SPARC_FORMAT3(tme_sparc64_lddf, tme_uint64_t)
     = _tme_sparc64_fpu_mem_fpreg(ic,
                                  misaligned,
                                  &float_buffer);
+
+  /* if we are redispatching due to a trap, then we must return to handle it: */
+  if(ic->_tme_sparc_recode_status & TME_RECODE_REDISPATCH) {
+    return;
+  }
 
   /* if bit two of the address is set, and this SPARC supports
      32-bit-aligned lddf instructions: */
@@ -9459,6 +9495,11 @@ TME_SPARC_FORMAT3(tme_sparc64_stf, tme_uint64_t)
                                  misaligned,
                                  &float_buffer);
 
+  /* if we are redispatching due to a trap, then we must return to handle it: */
+  if(ic->_tme_sparc_recode_status & TME_RECODE_REDISPATCH) {
+    return;
+  }
+
   /* get this single floating-point register in IEEE754 single-precision format: */
   value_single = tme_ieee754_single_value_get(fpreg, &float_buffer.tme_float_value_ieee754_single);
 
@@ -9494,6 +9535,11 @@ TME_SPARC_FORMAT3(tme_sparc64_stdf, tme_uint64_t)
     = _tme_sparc64_fpu_mem_fpreg(ic,
                                  misaligned,
                                  &float_buffer);
+
+  /* if we are redispatching due to a trap, then we must return to handle it: */
+  if(ic->_tme_sparc_recode_status & TME_RECODE_REDISPATCH) {
+    return;
+  }
 
   /* get this double floating-point register in IEEE754 double-precision format: */
   value_double = tme_ieee754_double_value_get(fpreg, &float_buffer.tme_float_value_ieee754_double);
@@ -10246,6 +10292,11 @@ TME_SPARC_FORMAT3(tme_sparc64_ldfa, tme_uint64_t)
                                  misaligned,
                                  &float_buffer);
 
+  /* if we are redispatching due to a trap, then we must return to handle it: */
+  if(ic->_tme_sparc_recode_status & TME_RECODE_REDISPATCH) {
+    return;
+  }
+
   /* do the load: */
   tme_sparc64_lda(ic, _rs1, _rs2, &ic->tme_sparc_ireg_uint64(TME_SPARC_IREG_FPX));
 
@@ -10282,6 +10333,11 @@ TME_SPARC_FORMAT3(tme_sparc64_lddfa, tme_uint64_t)
     = _tme_sparc64_fpu_mem_fpreg(ic,
                                  misaligned,
                                  &float_buffer);
+
+  /* if we are redispatching due to a trap, then we must return to handle it: */
+  if(ic->_tme_sparc_recode_status & TME_RECODE_REDISPATCH) {
+    return;
+  }
 
   /* if bit two of the address is set, and this SPARC supports
      32-bit-aligned lddfa instructions: */
@@ -10341,6 +10397,11 @@ TME_SPARC_FORMAT3(tme_sparc64_stfa, tme_uint64_t)
                                  misaligned,
                                  &float_buffer);
 
+  /* if we are redispatching due to a trap, then we must return to handle it: */
+  if(ic->_tme_sparc_recode_status & TME_RECODE_REDISPATCH) {
+    return;
+  }
+
   /* get this single floating-point register in IEEE754 single-precision format: */
   value_single = tme_ieee754_single_value_get(fpreg, &float_buffer.tme_float_value_ieee754_single);
 
@@ -10379,6 +10440,11 @@ TME_SPARC_FORMAT3(tme_sparc64_stdfa, tme_uint64_t)
     = _tme_sparc64_fpu_mem_fpreg(ic,
                                  misaligned,
                                  &float_buffer);
+
+  /* if we are redispatching due to a trap, then we must return to handle it: */
+  if(ic->_tme_sparc_recode_status & TME_RECODE_REDISPATCH) {
+    return;
+  }
 
   /* get this double floating-point register in IEEE754 double-precision format: */
   value_double = tme_ieee754_double_value_get(fpreg, &float_buffer.tme_float_value_ieee754_double);

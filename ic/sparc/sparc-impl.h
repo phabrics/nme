@@ -557,7 +557,8 @@ _TME_RCSID("$Id: sparc-impl.h,v 1.11 2010/06/05 16:13:15 fredette Exp $");
 #define TME_SPARC_FORMAT3_RD_ODD(iregs)	(*(_rd + (&(((struct tme_ic *) NULL)->iregs(1)) - &(((struct tme_ic *) NULL)->iregs(0)))))
 #define TME_SPARC_INSN			ic->_tme_sparc_insn
 #define TME_SPARC_INSN_OK		return
-#define TME_SPARC_INSN_TRAP(trap)			\
+#define TME_SPARC_INSN_TRAP(trap) _TME_SPARC_INSN_TRAP(trap,)
+#define _TME_SPARC_INSN_TRAP(trap,ret)			\
   do {							\
     if (TME_SPARC_VERSION(ic) < 9) {			\
       tme_sparc32_trap(ic, trap);			\
@@ -566,21 +567,23 @@ _TME_RCSID("$Id: sparc-impl.h,v 1.11 2010/06/05 16:13:15 fredette Exp $");
       tme_sparc64_trap(ic, trap);			\
     }							\
     if(ic->_tme_sparc_recode_status & TME_RECODE_REDISPATCH) { \
-      return;						\
+      return ret;					\
     }							\
   } while (/* CONSTCOND */ 0)
-#define TME_SPARC_INSN_PRIV				\
+#define TME_SPARC_INSN_PRIV _TME_SPARC_INSN_PRIV()
+#define _TME_SPARC_INSN_PRIV(ret)			\
   do {							\
     if (__tme_predict_false(!TME_SPARC_PRIV(ic))) {	\
-      TME_SPARC_INSN_TRAP(TME_SPARC_VERSION(ic) < 9	\
+      _TME_SPARC_INSN_TRAP(TME_SPARC_VERSION(ic) < 9	\
 			  ? TME_SPARC32_TRAP_privileged_instruction \
-			  : TME_SPARC64_TRAP_privileged_opcode); \
+			  : TME_SPARC64_TRAP_privileged_opcode, ret);   \
     }							\
   } while (/* CONSTCOND */ 0)
-#define TME_SPARC_INSN_FPU_ENABLED			\
+#define TME_SPARC_INSN_FPU_ENABLED _TME_SPARC_INSN_FPU_ENABLED()
+#define _TME_SPARC_INSN_FPU_ENABLED(ret)		\
   do {							\
     if (__tme_predict_false(TME_SPARC_FPU_IS_DISABLED(ic))) { \
-      TME_SPARC_INSN_TRAP(TME_SPARC_TRAP(ic,fp_disabled));\
+      _TME_SPARC_INSN_TRAP(TME_SPARC_TRAP(ic,fp_disabled), ret);   \
     }							 \
   } while (/* CONSTCOND */ 0)
 #define TME_SPARC_INSN_FPU				\
@@ -592,8 +595,9 @@ _TME_RCSID("$Id: sparc-impl.h,v 1.11 2010/06/05 16:13:15 fredette Exp $");
     }							\
   } while (/* CONSTCOND */ 0)
 
-#define TME_SPARC_INSN_ILL(ic)				\
-  TME_SPARC_INSN_TRAP(TME_SPARC_TRAP(ic,illegal_instruction))
+#define TME_SPARC_INSN_ILL(ic) _TME_SPARC_INSN_ILL(ic,)
+#define _TME_SPARC_INSN_ILL(ic,ret)			\
+  _TME_SPARC_INSN_TRAP(TME_SPARC_TRAP(ic,illegal_instruction), ret)
 
 /* logging: */
 #define TME_SPARC_LOG_HANDLE(ic)				\
