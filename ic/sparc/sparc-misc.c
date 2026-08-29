@@ -1065,6 +1065,8 @@ tme_sparc32_trap(struct tme_sparc *ic, tme_uint32_t trap)
   unsigned int cwp;
   unsigned int cwp_offset;
   unsigned int reg_17;
+  tme_uint32_t tt;
+  tme_uint32_t pc, pc_next;
 
   /* end any recode verifying: */
   tme_sparc_recode_verify_end(ic, trap);
@@ -1139,7 +1141,7 @@ tme_sparc32_trap(struct tme_sparc *ic, tme_uint32_t trap)
 
   /* "The trapped program counters are saved in local registers 1 and
      2 of the new window: r[17] <- PC, r[18] <- nPC." */
-  ic->tme_sparc_ireg_uint32(reg_17 + 0) = ic->tme_sparc_ireg_uint32(TME_SPARC_IREG_PC);
+  pc = ic->tme_sparc_ireg_uint32(reg_17 + 0) = ic->tme_sparc_ireg_uint32(TME_SPARC_IREG_PC);
   ic->tme_sparc_ireg_uint32(reg_17 + 1) = ic->tme_sparc_ireg_uint32(TME_SPARC_IREG_PC_NEXT);
 
   /* "The tt field is written to the particular value that identifies
@@ -1149,16 +1151,19 @@ tme_sparc32_trap(struct tme_sparc *ic, tme_uint32_t trap)
 
   /* "If the trap is not a reset trap, control is transferred into the
      trap table: PC <- TBR, nPC <- TBR + 4." */
-  ic->tme_sparc_ireg_uint32(TME_SPARC_IREG_PC_NEXT) = ic->tme_sparc32_ireg_tbr;
+  pc_next = ic->tme_sparc_ireg_uint32(TME_SPARC_IREG_PC_NEXT) = ic->tme_sparc32_ireg_tbr;
   ic->tme_sparc_ireg_uint32(TME_SPARC_IREG_PC_NEXT_NEXT) = ic->tme_sparc32_ireg_tbr + sizeof(tme_uint32_t);
 
+  /* get this trap's tt value: */
+  tt = TME_SPARC_TRAP_TT(trap);
+
   /* log the trap: */
-  tme_sparc_log(ic, 200 + TME_SPARC_TRAP_PRIORITY(trap), TME_OK,
+  tme_sparc_log(ic, 200 + tt, TME_OK,
 		(TME_SPARC_LOG_HANDLE(ic),
 		 _("trap tt 0x%03" TME_PRIx32 " handler-%%pc 0x%08" TME_PRIx32),
-		 TME_SPARC_TRAP_TT(trap),
-		 ic->tme_sparc_ireg_uint32(TME_SPARC_IREG_PC_NEXT)));
-
+		 tt,
+		 pc_next));
+  
   /* redispatch: */
   ic->_tme_sparc_mode = TME_SPARC_MODE_EXECUTION;
   tme_sparc_redispatch(ic);

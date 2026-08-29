@@ -565,6 +565,9 @@ _TME_RCSID("$Id: sparc-impl.h,v 1.11 2010/06/05 16:13:15 fredette Exp $");
     else {						\
       tme_sparc64_trap(ic, trap);			\
     }							\
+    if(ic->_tme_sparc_recode_status & TME_RECODE_REDISPATCH) { \
+      return;						\
+    }							\
   } while (/* CONSTCOND */ 0)
 #define TME_SPARC_INSN_PRIV				\
   do {							\
