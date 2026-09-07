@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for The Machine Emulator host/posix:
 
-@PACKAGE@_host_posix_la_CPPFLAGS = $(AM_CPPFLAGS)
+@PACKAGE@_host_posix_la_CPPFLAGS = $(AM_CPPFLAGS) $(LIBOPENVPN_CFLAGS)
 
 pkglib_LTLIBRARIES = @PACKAGE@_host_posix.la
 @PACKAGE@_host_posix_la_SOURCES = posix-memory.c \
@@ -9,7 +9,11 @@ pkglib_LTLIBRARIES = @PACKAGE@_host_posix.la
 	posix-tape.c \
 	posix-serial.c
 
-@PACKAGE@_host_posix_la_LIBADD = $(@PACKAGE@_LIBS)
+@PACKAGE@_host_posix_la_LIBADD = $(@PACKAGE@_LIBS) $(LIBOPENVPN_LIBS)
+
+if !HAVE_LIBOPENVPN
+@PACKAGE@_host_posix_la_LIBADD += $(top_builddir)/libopenvpn/libopenvpn.la
+endif
 
 include $(top_srcdir)/modules.mk
 

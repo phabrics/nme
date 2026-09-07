@@ -1065,7 +1065,7 @@ tme_sparc32_trap(struct tme_sparc *ic, tme_uint32_t trap)
   unsigned int cwp;
   unsigned int cwp_offset;
   unsigned int reg_17;
-  tme_uint32_t tt;
+  tme_uint32_t tt, prio;
   tme_uint32_t pc, pc_next;
 
   /* end any recode verifying: */
@@ -1157,8 +1157,11 @@ tme_sparc32_trap(struct tme_sparc *ic, tme_uint32_t trap)
   /* get this trap's tt value: */
   tt = TME_SPARC_TRAP_TT(trap);
 
+  /* get this trap's priority: */
+  prio = TME_SPARC_TRAP_PRIORITY(trap);
+
   /* log the trap: */
-  tme_sparc_log(ic, 200 + tt, TME_OK,
+  tme_sparc_log(ic, 200 + prio, EPERM,
 		(TME_SPARC_LOG_HANDLE(ic),
 		 _("trap tt 0x%03" TME_PRIx32 " handler-%%pc 0x%08" TME_PRIx32),
 		 tt,

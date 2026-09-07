@@ -755,9 +755,11 @@ AC_ARG_ENABLE(threads,
 if test "x${enable_threads}" = xsdl && test "x${have_sdl3}" = xyes; then
    AC_DEFINE([TME_THREADS_SDL], [], [Set to value of threads argument.])
    CPPFLAGS="${CPPFLAGS-} ${SDL_CFLAGS}" 
+   LIBS="${LIBS-} ${SDL_LIBS}"
 elif test "x${enable_threads}" != xposix && test "x${have_glib}" != xno; then
    AC_DEFINE([TME_THREADS_GLIB], [], [Set to value of threads argument.])
    CPPFLAGS="${CPPFLAGS-} ${GLIB_CFLAGS}"
+   LIBS="${LIBS-} ${GLIB_LIBS}"
    enable_threads=glib
 else
    enable_threads=posix
