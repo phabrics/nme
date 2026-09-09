@@ -48,7 +48,7 @@ tme_rwlock_t tme_rwlock_suspere;
 #ifndef TME_HAVE_RECODE
 tme_uint8_t enable_recode = 0;
 #elif defined(WIN32)
-tme_uint8_t enable_recode = (TME_RECODE_SIZE_GUEST_MAX >= TME_RECODE_SIZE_128) ? (0) : (TME_RECODE_ENABLE);
+tme_uint8_t enable_recode = (TME_RECODE_SIZE_GUEST_MAX >= TME_RECODE_SIZE_128) ? (0) : (TME_RECODE_ENABLE | TME_RECODE_REDISPATCH);
 #else
 tme_uint8_t enable_recode = TME_RECODE_ENABLE;
 #endif
@@ -553,18 +553,18 @@ tme_off_t tme_thread_seek (tme_thread_handle_t hand, tme_off_t off, int where) {
 
 int tme_read (tme_thread_handle_t hand, void *data, int len)
 {
-  int rc;
+  int sz;
   struct buffer buf;
 
   if (hand == TME_STD_HANDLE(stdin)) {
-    ReadFile(hand->handle, data, len, &rc, NULL);
-    if(!rc) rc=-1;
+    if(!ReadFile(hand->handle, data, len, &sz, NULL))
+      return -1;
   }
   else {
     buf_set_write(&buf, data, len);
-    rc = tme_finalize (hand->handle, &hand->reads, &buf);
+    sz = tme_finalize (hand->handle, &hand->reads, &buf);
   }
-  return rc;
+  return sz;
 }
 
 int tme_write (tme_thread_handle_t hand, void *data, int len)
@@ -584,14 +584,15 @@ int tme_write (tme_thread_handle_t hand, void *data, int len)
 
 int
 tme_read_console() {
-  int i, rc;
+  int i, j;
+  BOOL rc;
   HANDLE hand = GetStdHandle(STD_INPUT_HANDLE);
   INPUT_RECORD record[128];
   DWORD numRead = 0;
   
   rc = GetNumberOfConsoleInputEvents(hand, &numRead);
   if(rc && numRead>0) rc = PeekConsoleInput(hand, record, 128, &numRead);
-  for(i=0;i<numRead;i++) {
+  for(i=0;rc && i<numRead;i++) {
     if(record[i].EventType != KEY_EVENT) {
       // don't care about other console events
       continue;
@@ -604,13 +605,15 @@ tme_read_console() {
     break;
   }
   //  numRead -= i;
-  if(numRead==i) 
+  j = numRead;
+  numRead = 0;
+  if(rc && i) 
     rc = ReadConsoleInput(hand, record, i, &numRead);
   //    hand->reads.status = (rc) ? (rc) : (GetLastError());
   // if you're setup for ASCII, process this:
   //record.Event.KeyEvent.uChar.AsciiChar
 
-  return (rc) ? (numRead-i) : (-1);
+  return (rc) ? (j-numRead) : (-1);
 }
 #endif // !WIN32
 

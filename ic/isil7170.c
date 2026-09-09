@@ -333,7 +333,7 @@ _tme_isil7170_th_timer(struct tme_isil7170 *isil7170)
       if (now > isil7170->tme_isil7170_int_sample_time) {
 	if (isil7170->tme_isil7170_int_sample > 0) {
 	  tme_log(TME_ISIL7170_LOG_HANDLE(isil7170),
-		  0, TME_OK,
+		  20, EBUSY,
 		  (TME_ISIL7170_LOG_HANDLE(isil7170),
 		   "timer interrupt rate: %llu/sec",
 		   (TME_TIME_SET_SEC(isil7170->tme_isil7170_int_sample)

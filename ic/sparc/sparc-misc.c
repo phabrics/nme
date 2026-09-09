@@ -182,39 +182,40 @@ _tme_sparc_th(struct tme_sparc *ic)
   /* we use longjmp to redispatch: */
   do { } while (setjmp(ic->_tme_sparc_dispatcher));
 
-  /* we must not have a busy instruction TLB entry: */
-  assert (ic->_tme_sparc_itlb_current_token == NULL);
+  for(;;) {
+    /* we must not have a busy instruction TLB entry: */
+    assert (ic->_tme_sparc_itlb_current_token == NULL);
 
-  /* dispatch on the current mode: */
-  switch (ic->_tme_sparc_mode) {
+    /* dispatch on the current mode: */
+    switch (ic->_tme_sparc_mode) {
 
-  case TME_SPARC_MODE_EXECUTION:
+    case TME_SPARC_MODE_EXECUTION:
 
-    /* if we may update the runlength with this instruction burst,
-       note its start time: */
-    if (ic->tme_sparc_runlength_update_next == 0
-	&& (ic->_tme_sparc_instruction_burst_remaining
-	    == ic->_tme_sparc_instruction_burst)) {
-      ic->tme_sparc_runlength.tme_runlength_cycles_start = tme_misc_cycles();
+      /* if we may update the runlength with this instruction burst,
+	 note its start time: */
+      if (ic->tme_sparc_runlength_update_next == 0
+	  && (ic->_tme_sparc_instruction_burst_remaining
+	      == ic->_tme_sparc_instruction_burst)) {
+	ic->tme_sparc_runlength.tme_runlength_cycles_start = tme_misc_cycles();
+      }
+      
+      (*ic->_tme_sparc_execute)(ic);
+      break;
+      
+    case TME_SPARC_MODE_STOP:
+    case TME_SPARC_MODE_HALT:
+    case TME_SPARC_MODE_OFF:
+      tme_sparc_idle(ic);
+      break;
+      
+    case TME_SPARC_MODE_TIMING_LOOP:
+      tme_sparc_timing_loop_finish(ic);
+      break;
+      
+    default:
+      abort();
     }
-
-    (*ic->_tme_sparc_execute)(ic);
-    /* NOTREACHED */
-
-  case TME_SPARC_MODE_STOP:
-  case TME_SPARC_MODE_HALT:
-  case TME_SPARC_MODE_OFF:
-    tme_sparc_idle(ic);
-    /* NOTREACHED */
-
-  case TME_SPARC_MODE_TIMING_LOOP:
-    tme_sparc_timing_loop_finish(ic);
-    /* NOTREACHED */
-
-  default:
-    abort();
   }
-  /* NOTREACHED */
   tme_thread_exit(&ic->tme_sparc_external_mutex);
 }
 
@@ -293,13 +294,13 @@ _tme_sparc_command(struct tme_element *element, const char * const * args, char 
     if (!TME_ARG_IS(args[2], "none")) {
 
       /* check for a supported idle type: */
-#define _TME_SPARC_IDLE_TYPE(x, s)		\
-  do {						\
-    if (TME_SPARC_IDLE_TYPE_IS_SUPPORTED(ic, x)	\
-      && TME_ARG_IS(args[2], s)) {		\
-      ic->tme_sparc_idle_type = (x);		\
-    }						\
-  } while (/* CONSTCOND */ 0)
+#define _TME_SPARC_IDLE_TYPE(x, s)			\
+      do {						\
+	if (TME_SPARC_IDLE_TYPE_IS_SUPPORTED(ic, x)	\
+	    && TME_ARG_IS(args[2], s)) {		\
+	  ic->tme_sparc_idle_type = (x);		\
+	}						\
+      } while (/* CONSTCOND */ 0)
       _TME_SPARC_IDLE_TYPE(TME_SPARC_IDLE_TYPE_NETBSD32_TYPE_0, "netbsd32-type-0");
       _TME_SPARC_IDLE_TYPE(TME_SPARC_IDLE_TYPE_SUNOS32_TYPE_0, "sunos32-type-0");
       _TME_SPARC_IDLE_TYPE(TME_SPARC_IDLE_TYPE_NETBSD32_TYPE_1, "netbsd32-type-1");
@@ -319,14 +320,14 @@ _tme_sparc_command(struct tme_element *element, const char * const * args, char 
 				_("usage:"),
 				args[0]);
 
-      /* add in the supported idle types: */
-#define _TME_SPARC_IDLE_TYPE(x, s)		\
-  do {						\
-    if (TME_SPARC_IDLE_TYPE_IS_SUPPORTED(ic, x)) {\
-      tme_output_append_error(_output, " | %s",	\
-			      s);		\
-    }						\
-  } while (/* CONSTCOND */ 0)
+	/* add in the supported idle types: */
+#define _TME_SPARC_IDLE_TYPE(x, s)				\
+	do {							\
+	  if (TME_SPARC_IDLE_TYPE_IS_SUPPORTED(ic, x)) {	\
+	    tme_output_append_error(_output, " | %s",		\
+				    s);				\
+	  }							\
+	} while (/* CONSTCOND */ 0)
 	_TME_SPARC_IDLE_TYPE(TME_SPARC_IDLE_TYPE_NETBSD32_TYPE_0, "netbsd32-type-0");
 	_TME_SPARC_IDLE_TYPE(TME_SPARC_IDLE_TYPE_SUNOS32_TYPE_0, "sunos32-type-0");
 	_TME_SPARC_IDLE_TYPE(TME_SPARC_IDLE_TYPE_NETBSD32_TYPE_1, "netbsd32-type-1");
@@ -877,20 +878,9 @@ tme_sparc_redispatch(struct tme_sparc *ic)
 {
   struct tme_token *token;
 
-  if(ic->_tme_sparc_recode_status & TME_RECODE_REDISPATCH) {
-    /* clear the recode redispatch flag: */
-    ic->_tme_sparc_recode_status &= ~TME_RECODE_REDISPATCH;
-  } else {
-    /* end any recode verifying: */
-    tme_sparc_recode_verify_end(ic, TME_SPARC_TRAP_none);
-  }
+  /* end any recode verifying: */
+  tme_sparc_recode_verify_end(ic, TME_SPARC_TRAP_none);
   
-  if(ic->_tme_sparc_recode_status & TME_RECODE_ENABLE) {
-    /* set the recode redispatch flag: */
-    ic->_tme_sparc_recode_status |= TME_RECODE_REDISPATCH;
-    return;
-  }
-
   /* if we have a busy instruction TLB entry: */
   token = ic->_tme_sparc_itlb_current_token;
   if (__tme_predict_true(token != NULL)) {
@@ -904,7 +894,11 @@ tme_sparc_redispatch(struct tme_sparc *ic)
 #ifdef _TME_SPARC_STATS
   ic->tme_sparc_stats.tme_sparc_stats_redispatches++;
 #endif /* _TME_SPARC_STATS */
-  longjmp(ic->_tme_sparc_dispatcher, 1);
+  if(ic->_tme_sparc_recode_status & TME_RECODE_ENABLE)
+    /* set the recode redispatch flag: */
+    ic->_tme_sparc_recode_status |= TME_RECODE_REDISPATCH;
+  else
+    longjmp(ic->_tme_sparc_dispatcher, 1);
 }
 
 /* our global verify hook function: */

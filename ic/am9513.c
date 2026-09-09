@@ -473,7 +473,7 @@ _tme_am9513_th_timer(struct tme_am9513 *am9513)
 	  >= TME_AM9513_TRACK_INT_RATE) {
 	if (counter->tme_am9513_counter_int_sample > 0) {
 	  tme_log(TME_AM9513_LOG_HANDLE(am9513),
-		  0, TME_OK,
+		  20, EBUSY,
 		  (TME_AM9513_LOG_HANDLE(am9513),
 		   "timer %d interrupt rate: %ld %llu/sec [%llu,%u,%u,%llu]",
 		   counter_i,

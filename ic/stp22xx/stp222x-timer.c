@@ -76,7 +76,7 @@ _tme_stp222x_timer_update(struct tme_stp222x_timer *timer)
 
       /* log the interrupt rate: */
       tme_log(TME_STP222X_LOG_HANDLE(timer->tme_stp222x_timer_stp222x),
-	      0, TME_OK,
+	      20, EBUSY,
 	      (TME_STP222X_LOG_HANDLE(timer->tme_stp222x_timer_stp222x),
 	       "timer %d timer interrupt rate: %llu/sec",
 	       (timer == &timer->tme_stp222x_timer_stp222x->tme_stp222x_timers[1]),

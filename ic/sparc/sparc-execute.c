@@ -662,7 +662,9 @@ _TME_SPARC_EXECUTE_NAME(struct tme_sparc *ic)
 	    ic->_tme_sparc_recode_status &= ~TME_RECODE_ENABLE;
 
 	    if(ic->_tme_sparc_recode_status & TME_RECODE_REDISPATCH) {
-	      tme_sparc_redispatch(ic);
+	      /* clear the recode status redispatch flag: */
+	      ic->_tme_sparc_recode_status &= ~TME_RECODE_REDISPATCH;
+	      return;
 	    }
 
 	    /* set PC_next_next from PC_next, since the recode
