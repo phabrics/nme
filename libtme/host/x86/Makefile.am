@@ -20,7 +20,8 @@ MAINTAINERCLEANFILES = $(BUILT_SOURCES)
 	$(CCAS) $(CPPFLAGS) $(CCASFLAGS) -o $@ -c $<
 
 .o.bin:
-	$(OBJCOPY) --output-target=binary $< $@
+	$(OBJDUMP) -s -j .text $< | \
+	$(AWK) '/  / { print $$2 $$3 $$4 $$5 }' > $@
 
 .o.nm:
 	$(NM) $< > $@
@@ -28,13 +29,14 @@ MAINTAINERCLEANFILES = $(BUILT_SOURCES)
 .o.dis:
 	$(OBJDUMP) -d $< > $@
 
-rc-x86-subs.c: rc-x86-subs.bin rc-x86-subs.nm rc-x86-subs.dis
+rc-x86-subs.c: rc-x86-subs.nm rc-x86-subs.dis rc-x86-subs.bin
 	@echo '/* automatically generated, do not edit! */' > $@
 	@echo '' >> $@
 	@echo '/* offsets in the hand-coded x86 recode subs: */' >> $@
 	$(AWK) '/ T / { print "#define " $$3 "\t(0x" $$1 ")" }' rc-x86-subs.nm >> $@
 	@echo '' >> $@
 	@echo 'static const tme_uint8_t _tme_recode_x86_subs[] = {' >> $@
-	$(HEXDUMP) -e '16/1 "0x%02x, " "\n"' rc-x86-subs.bin | \
-	$(SED) -e 's/0x  ,/0x00,/g' >> $@
+	while IFS= read -r -n2 char; do \
+	if [[ "x$$char" != x ]]; then printf '%s' "0x$$char, " ; fi \
+	done < rc-x86-subs.bin | $(SED) -e 's/0x[\ \.H1][\ \.H1],/0x00,/g' >> $@
 	@echo '};' >> $@
