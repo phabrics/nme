@@ -5,7 +5,7 @@ AUTOM4TE = $(SHELL) $(top_srcdir)/missing --run autom4te
 
 SUBDIRS = host
 
-AM_CPPFLAGS = -I$(top_srcdir) -D_TME_IMPL $(LTDLINCL) $(LIBOPENVPN_CFLAGS) $(ZLIB_CFLAGS)
+AM_CPPFLAGS = -I$(top_srcdir) -D_TME_IMPL $(LTDLINCL) $(LIBOPENVPN_CFLAGS) $(ZLIB_CFLAGS) $(GLIB_CFLAGS) $(SDL_CFLAGS)
 
 lib_LTLIBRARIES = lib@PACKAGE@.la
 pkginclude_HEADERS = memory-auto.h
@@ -31,7 +31,7 @@ lib@PACKAGE@_la_SOURCES = misc-host.c \
 	runlength.c \
 	alloc.c
 
-lib@PACKAGE@_la_LIBADD = $(LIBLTDL) $(LIBOPENVPN_LIBS) $(ZLIB_LIBS)
+lib@PACKAGE@_la_LIBADD = $(LIBLTDL) $(LIBOPENVPN_LIBS) $(ZLIB_LIBS) $(GLIB_LIBS) $(SDL_LIBS)
 
 if !HAVE_LIBOPENVPN
 lib@PACKAGE@_la_LIBADD += $(top_builddir)/libopenvpn/libopenvpn.la
