@@ -38,7 +38,5 @@ rc-x86-subs.c: rc-x86-subs.nm rc-x86-subs.dmp rc-x86-subs.bin
 	$(AWK) '/ T / { print "#define " $$3 "\t(0x" $$1 ")" }' rc-x86-subs.nm >> $@
 	@echo '' >> $@
 	@echo 'static const tme_uint8_t _tme_recode_x86_subs[] = {' >> $@
-	while IFS= read -r -n2 char; do \
-	if [[ "x$$char" != x ]]; then printf '%s' "0x$$char, " ; fi \
-	done < rc-x86-subs.bin >> $@
+	$(AWK) '{ for(i=1;i<length($$0);i+=2) printf("0x%s, ", substr($$0,i,2)); printf("\n") }' rc-x86-subs.bin >> $@
 	@echo '};' >> $@
