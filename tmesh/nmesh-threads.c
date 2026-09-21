@@ -57,13 +57,15 @@ void nmesh_threads_set_main(tme_threads_fn1 run, void *arg, tme_mutex_t *mutex, 
 
 int nmesh_init(int mode) {
   /* initialize the threading system: */
-  tme_threads.tme_threads_run = (mode) ? (tme_threads_main_iter) : (tme_fiber_main_iter);
+  tme_threads.tme_threads_run = (mode & NME_THREADS_ENABLE) ? (tme_threads_main_iter) : (tme_fiber_main_iter);
   tme_threads.tme_threads_arg = 0;
   tme_threads.tme_threads_mutex = NULL;
-  tme_threads.tme_threads_delay = (mode) ? (TME_TIME_SET_SEC(10)) : (0);
+  tme_threads.tme_threads_delay = (mode & NME_THREADS_ENABLE) ? (TME_TIME_SET_SEC(10)) : (0);
   tme_threads_init(mode);
 
-  fprintf(stderr, "Using %s threads.\n", (mode) ? (TME_THREADS_NAME) : "fiber");
+  fprintf(stderr, "Using %s %s threads.\n",
+	  (mode&NME_THREADS_COOP) ? "cooperative" : "default",
+	  (mode & NME_THREADS_ENABLE) ? (TME_THREADS_NAME) : "fiber");	  
   
   /* Synchronization primitive provided to allow sequential
      execution of pre-thread initialization code. It is used
@@ -81,7 +83,7 @@ _tme_thret nmesh_threads_run(void) {
   
   /* Run the main loop */
 #ifdef __EMSCRIPTEN__
-  if(thread_mode)
+  if(thread_mode & NME_THREADS_ENABLE)
     // Receives a function to call and some user data to provide it.
     emscripten_request_animation_frame_loop(tme_threads.tme_threads_run, tme_threads.tme_threads_arg);
   else

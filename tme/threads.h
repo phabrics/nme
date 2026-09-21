@@ -46,8 +46,10 @@
 
 typedef tme_uint64_t tme_time_t;
 
+/* thread mode flags: */
+#define NME_THREADS_ENABLE      (1<<0)
+#define NME_THREADS_COOP     (1<<1)
 extern int thread_mode;
-extern int thread_coop;
 
 #ifdef TME_THREADS_SDL
 #include "threads-sdl.h"
@@ -90,7 +92,7 @@ static _tme_inline tme_time_t tme_thread_def_time _TME_P((void)) {
 }
 
 #ifdef TME_THREAD_FRAC_PER_SEC
-#define TME_FRAC_PER_SEC ((thread_mode) ? (TME_THREAD_FRAC_PER_SEC) : (TME_DEF_FRAC_PER_SEC))
+#define TME_FRAC_PER_SEC ((thread_mode & NME_THREADS_ENABLE) ? (TME_THREAD_FRAC_PER_SEC) : (TME_DEF_FRAC_PER_SEC))
 #else
 #define TME_FRAC_PER_SEC TME_DEF_FRAC_PER_SEC
 #define tme_thread_time tme_thread_def_time
@@ -125,7 +127,7 @@ static _tme_inline void tme_thread_get_timeout(tme_time_t sleep, tme_thread_time
 #endif
 }
 
-#define tme_get_timeout(s,t,a) ((thread_mode) ? (tme_thread_get_timeout(s,&((t).thread),a)) : ((t).fiber=(s)))
+#define tme_get_timeout(s,t,a) ((thread_mode & NME_THREADS_ENABLE) ? (tme_thread_get_timeout(s,&((t).thread),a)) : ((t).fiber=(s)))
 
 typedef struct tme_rwlock {
   union {
@@ -137,10 +139,10 @@ typedef struct tme_rwlock {
 
 extern tme_rwlock_t tme_rwlock_suspere;
 
-#define tme_thread_op(func,arg) ((thread_mode) ? (tme_thread_##func(&(arg)->thread)) : (tme_fiber_##func(&(arg)->fiber)))
-#define tme_thread_opt(func,arg) ((thread_mode) ? (tme_thread_##func((arg).thread)) : (tme_fiber_##func((arg).fiber)))
-#define tme_thread_op2(func,arg,arg2) ((thread_mode) ? (tme_thread_##func(&(arg)->thread,&(arg2)->thread)) : (tme_fiber_##func(&(arg)->fiber,&(arg2)->fiber)))
-#define tme_thread_opt3(func,arg,arg2,arg3) ((thread_mode) ? (tme_thread_##func(&(arg)->thread,&(arg2)->thread,(arg3).thread)) : (tme_fiber_##func(&(arg)->fiber,&(arg2)->fiber,(arg3).fiber)))
+#define tme_thread_op(func,arg) ((thread_mode & NME_THREADS_ENABLE) ? (tme_thread_##func(&(arg)->thread)) : (tme_fiber_##func(&(arg)->fiber)))
+#define tme_thread_opt(func,arg) ((thread_mode & NME_THREADS_ENABLE) ? (tme_thread_##func((arg).thread)) : (tme_fiber_##func((arg).fiber)))
+#define tme_thread_op2(func,arg,arg2) ((thread_mode & NME_THREADS_ENABLE) ? (tme_thread_##func(&(arg)->thread,&(arg2)->thread)) : (tme_fiber_##func(&(arg)->fiber,&(arg2)->fiber)))
+#define tme_thread_opt3(func,arg,arg2,arg3) ((thread_mode & NME_THREADS_ENABLE) ? (tme_thread_##func(&(arg)->thread,&(arg2)->thread,(arg3).thread)) : (tme_fiber_##func(&(arg)->fiber,&(arg2)->fiber,(arg3).fiber)))
 
 static _tme_inline void tme_rwlock_init _TME_P((tme_rwlock_t *l)) {
   (l)->writer = 0;
@@ -160,15 +162,11 @@ int tme_rwlock_wrlock _TME_P((tme_rwlock_t *l));
 int tme_rwlock_wrunlock _TME_P((tme_rwlock_t *l));
 int tme_rwlock_trywrlock _TME_P((tme_rwlock_t *l));
 
-/* thread suspension: */
-#ifndef tme_thread_init
-#define tme_thread_init() thread_coop=FALSE
-#endif
-
 #ifndef tme_thread_cooperative
-#define tme_thread_cooperative() (thread_mode == FALSE)
+#define tme_thread_cooperative() (~thread_mode & NME_THREADS_ENABLE || thread_mode & NME_THREADS_COOP)
 #endif
 
+/* thread suspension: */
 #define _tme_thread_suspended()	        if(!tme_thread_cooperative()) tme_rwlock_rdunlock(&tme_rwlock_suspere)
 #define _tme_thread_resumed()	        if(!tme_thread_cooperative()) _tme_rwlock_rdlock(&tme_rwlock_suspere)
 #define tme_thread_suspend_others()	_tme_thread_suspended();if(!tme_thread_cooperative()) _tme_rwlock_wrlock(&tme_rwlock_suspere)
@@ -179,9 +177,9 @@ int tme_rwlock_timedlock _TME_P((tme_rwlock_t *l, tme_time_t abstime, int write)
 #define tme_rwlock_timedrdlock(l,sec) tme_rwlock_timedlock(l,sec,0)
 #define tme_rwlock_timedwrlock(l,sec) tme_rwlock_timedlock(l,sec,1)
 #else
-// TODO: why do thread_mode trylocks not work here?
-#define tme_rwlock_timedrdlock(l,sec)     ((thread_mode) ? (tme_rwlock_rdlock(l)) : (tme_rwlock_tryrdlock(l)))
-#define tme_rwlock_timedwrlock(l,sec)     ((thread_mode) ? (tme_rwlock_wrlock(l)) : (tme_rwlock_trywrlock(l)))
+// TODO: why do thread_mode & NME_THREADS_ENABLE trylocks not work here?
+#define tme_rwlock_timedrdlock(l,sec)     ((thread_mode & NME_THREADS_ENABLE) ? (tme_rwlock_rdlock(l)) : (tme_rwlock_tryrdlock(l)))
+#define tme_rwlock_timedwrlock(l,sec)     ((thread_mode & NME_THREADS_ENABLE) ? (tme_rwlock_wrlock(l)) : (tme_rwlock_trywrlock(l)))
 #endif
 
 /* mutexes: */
@@ -247,7 +245,7 @@ static _tme_inline void tme_thread_enter _TME_P((tme_mutex_t *mutex)) {
   if(!init) {
     return;
   }
-  init=thread_mode;
+  init=thread_mode & NME_THREADS_ENABLE;
 #endif
   _tme_thread_resumed();
   if(mutex)
@@ -259,7 +257,7 @@ int tme_thread_sleep_yield _TME_P((tme_time_t time, tme_mutex_t *mutex));
 void tme_threads_init(int mode);
 
 /* time: */
-#define tme_thread_get_time() ((thread_mode) ? (tme_thread_time()) : (tme_fiber_get_time()))
+#define tme_thread_get_time() ((thread_mode & NME_THREADS_ENABLE) ? (tme_thread_time()) : (tme_fiber_get_time()))
 
 #if defined(_TME_HAVE_GMTIME_R) || defined(_TME_HAVE_GMTIME_S) || defined(_TME_HAVE_GMTIME)
 typedef struct tm tme_date_t;
@@ -403,7 +401,7 @@ typedef union {
 
 static _tme_inline
 void tme_thread_create_named _TME_P((tme_threadid_t *thr, const char *name, tme_thread_t func, void *arg)) {
-  if(thread_mode) 
+  if(thread_mode & NME_THREADS_ENABLE) 
     (thr)->thread = tme_thread_new(name,func,arg);
   else
     (thr)->fiber = tme_fiber_new(name,func,arg);
@@ -413,7 +411,7 @@ void tme_thread_create_named _TME_P((tme_threadid_t *thr, const char *name, tme_
 #define tme_thread_exit(m) return _tme_thread_exit(m)
 
 static _tme_inline _tme_thret _tme_thread_exit _TME_P((tme_mutex_t *mutex)) {
-  if(thread_mode) {
+  if(thread_mode & NME_THREADS_ENABLE) {
     _tme_thread_suspended();  
     if(mutex)
       tme_thread_mutex_unlock(&mutex->thread);
@@ -423,7 +421,7 @@ static _tme_inline _tme_thret _tme_thread_exit _TME_P((tme_mutex_t *mutex)) {
 
 /* A default main iterator for use in the main thread loop */
 static _tme_inline void tme_threads_main_iter _TME_P((void *usec)) {
-  if(!thread_mode) tme_fiber_main_iter(usec);
+  if(~thread_mode & NME_THREADS_ENABLE) tme_fiber_main_iter(usec);
   //  g_usleep((usec) ? (uintptr_t)usec : 1000000);
 }
 

@@ -288,7 +288,7 @@ _tme_sparc_recode_ls_assist_ld(struct tme_ic *_ic,
        recoded.  we have no way of knowing if it is or isn't.  if it
        isn't, this new load instruction may have different rs1, rs2,
        and rd fields than the original load instruction: */
-    assert(0);
+    //    assert(0);
   }
 
   TME_SPARC_STAT(ic, tme_sparc_stats_recode_assist_opcode[sparc_opcode]);

@@ -41,7 +41,6 @@ pthread_attr_t *attrp;
 #endif
 
 int thread_mode;
-int thread_coop;
 tme_rwlock_t tme_rwlock_suspere;
 
 /* use recode if available and defer redispatch if requested: */
@@ -114,7 +113,7 @@ int tme_rwlock_wrlock(tme_rwlock_t *l) {
   _tme_thread_suspended();
   _tme_rwlock_wrlock(l);
 
-  if(thread_mode) (l)->writer = tme_thread_self();
+  if(thread_mode & NME_THREADS_ENABLE) (l)->writer = tme_thread_self();
   _tme_thread_resumed();
 
   return TME_OK;
@@ -123,7 +122,7 @@ int tme_rwlock_wrlock(tme_rwlock_t *l) {
 int tme_rwlock_trywrlock(tme_rwlock_t *l) {
   int rc = tme_thread_op(rwlock_trywrlock,&(l)->lock);
 
-  if(rc==TME_OK && thread_mode) (l)->writer = tme_thread_self();
+  if(rc==TME_OK && thread_mode & NME_THREADS_ENABLE) (l)->writer = tme_thread_self();
   return rc;
 }
 
@@ -168,7 +167,7 @@ void tme_thread_yield(void) {
   _tme_thread_suspended();
 
 #ifdef _tme_thread_yield 
-  if(thread_mode)
+  if(thread_mode & NME_THREADS_ENABLE)
     _tme_thread_yield();
   else
 #endif
@@ -639,7 +638,14 @@ int tme_thread_event_wait(struct tme_event_set *es, const struct timeval *tv, st
 }
 
 void tme_threads_init(int mode) {
-  if((thread_mode=mode)) {
+  thread_mode=mode;
+  if(mode & NME_THREADS_ENABLE) {
+#ifdef TME_THREADS_POSIX
+    int policy;
+    struct sched_param param;
+    if(pthread_getschedparam(pthread_self(), &policy, &param) &&
+       (policy == SCHED_FIFO)) thread_mode|=NME_THREADS_COOP;
+#endif
     /* initialize the runtime event callback handlers: */
     tme_event_set_init = event_set_init;
     tme_event_free = event_free;
@@ -654,7 +660,6 @@ void tme_threads_init(int mode) {
   } else
     tme_fiber_threads_init();
 
-  tme_thread_init();
   tme_rwlock_init(&tme_rwlock_suspere);
 
 #ifdef WIN32

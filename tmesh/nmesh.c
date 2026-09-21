@@ -552,11 +552,11 @@ do_usage(const char *prog_name, char *msg)
                    \nwhere OPTIONS are:			   \
                    \n--log LOGFILE          log to LOGFILE		\
                    \n-c, --cycle <counter>  cycle counter implementation (default 'def' gives order: 'cpu','sdl','win','x86','def')  \
-                   \n-m, --multi_threaded   multi-threaded mode (using %s threads or single-threaded fibers if not given) \
                    \n-f, --fullscreen       start in fullscreen mode (toggle with F11) when available (only SDL currently)   \
+                   \n-i, --interactive      interactive command-line interface (<INITIAL-CONFIG> optional here) \
                    \n-r, --recode <mode>    set recode mode to the union of available flag bits ENABLE [1] and REDISPATCH [2] (default: %d) \
-                   \n-i, --interactive      interactive command-line interface (<INITIAL-CONFIG> optional here)\n",
-	  prog_name, TME_THREADS_NAME, enable_recode);
+                   \n-t, --thread <mode>    set thread mode to the union of available flag bits ENABLE [1] and COOPERATIVE [2] (default: %d)\n", \
+	  prog_name, enable_recode, thread_mode);
   
 #define fpe(msg) fprintf(stderr, "\t%s", msg);          /* Shorter */
 
@@ -636,7 +636,7 @@ main(int argc, char **argv)
   char *config_filename;
   char *config_dirname;
   const char *log_filename;
-  int multi_threaded, interactive;
+  int enable_thread, interactive;
   struct tmesh_io io;
   struct tmesh_support support;
   struct _tmesh_input *input_stdin;
@@ -668,7 +668,8 @@ main(int argc, char **argv)
   config_filename = NULL;
   config_dirname = NULL;
   log_filename = "-";
-  multi_threaded = interactive = FALSE;
+  enable_thread = thread_mode;
+  interactive = FALSE;
   if ((argv0 = strrchr(argv[0], '/')) == NULL) argv0 = argv[0]; else argv0++;
   for (arg_i = 1;
        (arg_i < argc
@@ -746,13 +747,13 @@ main(int argc, char **argv)
 	break;
       }
     }
-    else if (!strcmp(opt, "-m")
-	     || !strcmp(opt, "--multi_threaded")) {
-      multi_threaded = TRUE;
-    }
     else if (!strcmp(opt, "-f")
 	     || !strcmp(opt, "--fullscreen")) {
       enable_fullscreen = true;
+    }
+    else if (!strcmp(opt, "-i")
+	     || !strcmp(opt, "--interactive")) {
+      interactive = TRUE;
     }
     else if (!strcmp(opt, "-r")
 	     || !strcmp(opt, "--recode")) {
@@ -763,9 +764,14 @@ main(int argc, char **argv)
 	break;
       }
     }
-    else if (!strcmp(opt, "-i")
-	     || !strcmp(opt, "--interactive")) {
-      interactive = TRUE;
+    else if (!strcmp(opt, "-t")
+	     || !strcmp(opt, "--thread")) {
+      if (++arg_i < argc) {
+	enable_thread=strtoul(argv[arg_i], NULL, 0);
+      } else {
+	arg_i = argc;
+	break;
+      }
     }
     else {
       if (strcmp(opt, "-h")
@@ -795,7 +801,7 @@ main(int argc, char **argv)
   tme_misc_set_cycles(cycles_impl);
   
   /* initialize libnmesh: */
-  (void) nmesh_init(multi_threaded);
+  (void) nmesh_init(enable_thread);
 
   /* initialize libtme: */
   tme_module_init();

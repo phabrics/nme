@@ -102,17 +102,6 @@ static _tme_inline pthread_attr_t *tme_thread_defattr() {
   return attrp;
 }
 
-static _tme_inline void _tme_thread_init() {
-  int policy;
-  struct sched_param param;
-  if(!pthread_getschedparam(pthread_self(), &policy, &param))
-    return;
-  thread_coop = (policy == SCHED_FIFO);
-}
-
-#define tme_thread_init() _tme_thread_init()
-#define tme_thread_cooperative() (!thread_mode || thread_coop)
-
 #define _tme_thread_yield sched_yield
 
 #else

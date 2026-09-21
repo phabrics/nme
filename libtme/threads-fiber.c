@@ -40,14 +40,10 @@ _TME_RCSID("$Id: threads-fiber.c,v 1.18 2010/06/05 19:10:28 fredette Exp $");
 #include <tme/threads.h>
 #include <tme/events.h>
 #include <stdlib.h>
-#if defined(__EMSCRIPTEN__) && !defined(USE_SJLJ)
+#ifdef __EMSCRIPTEN__
 #include <emscripten/fiber.h>
-#elif !defined(WIN32) // || defined(TME_HAVE_RECODE)
-#define USE_SJLJ
 #endif
-#ifdef USE_SJLJ
 #include <setjmp.h>
-#endif
 
 /* thread states: */
 #define TME_FIBER_THREAD_STATE_BLOCKED		(1)
@@ -73,15 +69,15 @@ struct tme_fiber_thread {
   struct tme_fiber_thread *state_next;
   struct tme_fiber_thread **state_prev;
 
-#if defined(__EMSCRIPTEN__) && !defined(USE_SJLJ)
+#ifdef __EMSCRIPTEN__
   emscripten_fiber_t tme_fiber_context;
   char tme_fiber_asyncify_stack[1024];
   char tme_fiber_c_stack[4096]  __attribute__((aligned(16)));
-#else
+#endif  
+
   /* the thread function: */
   tme_thread_t tme_fiber_thread_func;
   void *tme_fiber_thread_func_private;
-#endif  
 
   /* any condition that this thread is waiting on: */
   tme_fiber_cond_t *tme_fiber_thread_cond;
@@ -145,43 +141,43 @@ static int tme_fiber_thread_exiting;
 /* the fiber function interface to the platform-specific implementations: */
 
 static inline void tme_fiber_convert(tme_fiber_thread_t *thread) {
-#ifdef USE_SJLJ
   thread->tme_fiber_thread_func = NULL;
-#elif defined(__EMSCRIPTEN__)
-  emscripten_fiber_init_from_current_context(&thread->tme_fiber_context,
-					     thread->tme_fiber_asyncify_stack,
-					     sizeof(thread->tme_fiber_asyncify_stack));
+  if(thread_mode&NME_THREADS_COOP) {
+#ifdef __EMSCRIPTEN__
+    emscripten_fiber_init_from_current_context(&thread->tme_fiber_context,
+					       thread->tme_fiber_asyncify_stack,
+					       sizeof(thread->tme_fiber_asyncify_stack));
 #elif defined(WIN32)
-  thread->tme_fiber_thread_func = ConvertThreadToFiber(NULL);
+    thread->tme_fiber_thread_func = ConvertThreadToFiber(NULL);
 #endif
+  }
 }
 
 static inline void tme_fiber_create(tme_fiber_thread_t *thread,
 				    tme_thread_t func,
 				    void *func_private) {
-#ifdef USE_SJLJ
   thread->tme_fiber_thread_func_private = func_private;
   thread->tme_fiber_thread_func = func;
-#elif defined(__EMSCRIPTEN__)
-  emscripten_fiber_init(&thread->tme_fiber_context,
-			func,
-			func_private,
-			thread->tme_fiber_c_stack,
-			sizeof(thread->tme_fiber_c_stack),
-			thread->tme_fiber_asyncify_stack,
-			sizeof(thread->tme_fiber_asyncify_stack));
+  if(thread_mode&NME_THREADS_COOP) {
+#ifdef __EMSCRIPTEN__
+    emscripten_fiber_init(&thread->tme_fiber_context,
+			  func,
+			  func_private,
+			  thread->tme_fiber_c_stack,
+			  sizeof(thread->tme_fiber_c_stack),
+			  thread->tme_fiber_asyncify_stack,
+			  sizeof(thread->tme_fiber_asyncify_stack));
 #elif defined(WIN32)
-  thread->tme_fiber_thread_func = CreateFiber(0,
-					      func,
-					      func_private);
+    thread->tme_fiber_thread_func = CreateFiber(0,
+						func,
+						func_private);
 #endif
+  }
 }
 
-#ifdef USE_SJLJ
 /* this is a jmp_buf back to the dispatcher: */
 static jmp_buf tme_fiber_dispatcher_jmp;
-#define tme_fiber_switch(old_thread, new_thread)
-#else
+
 static inline void tme_fiber_switch(tme_fiber_thread_t *old_thread,
 				    tme_fiber_thread_t *new_thread) {
 #ifdef __EMSCRIPTEN__
@@ -191,7 +187,6 @@ static inline void tme_fiber_switch(tme_fiber_thread_t *old_thread,
   SwitchToFiber(new_thread->tme_fiber_thread_func);
 #endif
 }
-#endif
 
 /* the main loop events: */
 static struct tme_fiber_event_set *tme_fiber_main_events;
@@ -404,19 +399,19 @@ tme_fiber_dispatch(volatile int passes)
       
       /* when this active thread yields, we'll return here, where we
 	 will continue the inner dispatching loop: */
-#ifdef USE_SJLJ
-      rc_one = setjmp(tme_fiber_dispatcher_jmp);
-      if (rc_one) {
-	continue;
-      }
+      if(thread_mode&NME_THREADS_COOP) {
+	tme_fiber_switch(&tme_fiber_thread_blocked, thread);
+      } else {
+	rc_one = setjmp(tme_fiber_dispatcher_jmp);
+	if (rc_one) {
+	  continue;
+	}
 
-      /* run this thread.  if it happens to return, just call
-         tme_fiber_exit(): */
-      (*thread->tme_fiber_thread_func)(thread->tme_fiber_thread_func_private);
-      //      tme_fiber_exit();
-#else
-      tme_fiber_switch(&tme_fiber_thread_blocked, thread);
-#endif
+	/* run this thread.  if it happens to return, just call
+	   tme_fiber_exit(): */
+	(*thread->tme_fiber_thread_func)(thread->tme_fiber_thread_func_private);
+	//      tme_fiber_exit();
+      }
     }
   }
 
@@ -756,6 +751,9 @@ tme_fiber_threads_init()
 {
   int num = TME_NUM_EVENTS;
   
+#if !defined(__EMSCRIPTEN__) && !defined(WIN32)
+  thread_mode &= ~NME_THREADS_COOP;
+#endif
   /* there are no threads: */
   tme_fiber_threads_all = NULL;
   tme_fiber_threads_timeout = NULL;
@@ -977,11 +975,10 @@ tme_fiber_yield(void)
   }
 
   /* jump back to the dispatcher: */
-#ifdef USE_SJLJ
-  longjmp(tme_fiber_dispatcher_jmp, TRUE);
-#else
-  tme_fiber_switch(thread, &tme_fiber_thread_blocked);
-#endif
+  if(thread_mode&NME_THREADS_COOP)
+    tme_fiber_switch(thread, &tme_fiber_thread_blocked);
+  else
+    longjmp(tme_fiber_dispatcher_jmp, TRUE);
 }
 
 #ifndef TME_NO_DEBUG_LOCKS

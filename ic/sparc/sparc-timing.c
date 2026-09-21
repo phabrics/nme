@@ -1027,7 +1027,7 @@ tme_sparc_timing_loop_finish(struct tme_sparc *ic)
 
     /* save a redispatch and resume execution directly: */
     (*ic->_tme_sparc_execute)(ic);
-    abort();
+    //    abort();
   }
 
   /* otherwise, threads are preemptive: */
