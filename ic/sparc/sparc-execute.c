@@ -664,6 +664,11 @@ _TME_SPARC_EXECUTE_NAME(struct tme_sparc *ic)
 	    if(ic->_tme_sparc_recode_status & TME_RECODE_REDISPATCH) {
 	      /* clear the recode status redispatch flag: */
 	      ic->_tme_sparc_recode_status &= ~TME_RECODE_REDISPATCH;
+	      if(ic->_tme_sparc_recode_status & TME_RECODE_YIELD) {
+		/* clear the recode status yield flag: */
+		ic->_tme_sparc_recode_status &= ~TME_RECODE_YIELD;
+		tme_thread_yield();
+	      }
 	      return;
 	    }
 

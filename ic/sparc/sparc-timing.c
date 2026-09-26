@@ -743,15 +743,21 @@ _tme_sparc_timing_loop_start(struct tme_sparc *ic,
   /* otherwise, we're not blocking: */
   else {
 
-    /* do the simple yield: */
-    tme_thread_yield();
+    if(ic->_tme_sparc_recode_status & TME_RECODE_ENABLE) {
+      /* set the recode redispatch & yield flags: */
+      ic->_tme_sparc_recode_status |= TME_RECODE_REDISPATCH | TME_RECODE_YIELD;
+    } else {
+      /* do the simple yield: */
+      tme_thread_yield();
+    }
   }
 
   /* finish the timing loop: */
   tme_sparc_timing_loop_finish(ic);
 
-  /* relock the instruction TLB entry: */
-  tme_sparc_callout_relock(ic);
+  if(~ic->_tme_sparc_recode_status & TME_RECODE_REDISPATCH)
+    /* relock the instruction TLB entry: */
+    tme_sparc_callout_relock(ic);
 
   /* unwind back to instruction execution: */
   return;
@@ -962,8 +968,14 @@ tme_sparc_timing_loop_finish(struct tme_sparc *ic)
        happened: */
     assert (!TME_SPARC_TIMING_YIELD_BLOCK);
 
-    /* yield: */
-    tme_thread_yield();
+    if(ic->_tme_sparc_recode_status & TME_RECODE_ENABLE) {
+      /* set the recode redispatch & yield flags: */
+      ic->_tme_sparc_recode_status |= TME_RECODE_REDISPATCH | TME_RECODE_YIELD;
+      return;
+    } else {
+      /* do the simple yield: */
+      tme_thread_yield();
+    }
   }
 
   /* get the number of cycles elapsed: */
@@ -1026,7 +1038,7 @@ tme_sparc_timing_loop_finish(struct tme_sparc *ic)
     ic->_tme_sparc_mode = TME_SPARC_MODE_EXECUTION;
 
     /* save a redispatch and resume execution directly: */
-    (*ic->_tme_sparc_execute)(ic);
+    //    (*ic->_tme_sparc_execute)(ic);
     //    abort();
   }
 

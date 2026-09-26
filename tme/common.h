@@ -420,6 +420,7 @@ tme_bswap_u128(tme_uint128_t x)
 /* use recode if available and defer redispatch if requested: */
 #define TME_RECODE_ENABLE     (1<<0)
 #define TME_RECODE_REDISPATCH (1<<1)
+#define TME_RECODE_YIELD (1<<2)
 
 extern tme_uint8_t enable_recode;
 
