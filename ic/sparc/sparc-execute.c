@@ -357,17 +357,16 @@ _TME_SPARC_EXECUTE_NAME(struct tme_sparc *ic)
 
       /* if this is a cooperative threading system: */
       if(tme_thread_cooperative()) {
-
 	/* unbusy the current instruction TLB entry: */
 	assert (ic->_tme_sparc_itlb_current_token
 		== itlb_current->tme_sparc_tlb_bus_tlb.tme_bus_tlb_token);
 	tme_sparc_tlb_unbusy(itlb_current);
 	ic->_tme_sparc_itlb_current_token = NULL;
-
-	/* yield: */
-	tme_thread_yield();
       }
       
+      /* yield: */
+      tme_thread_yield();
+
       /* if we may update the runlength with this instruction burst,
 	 note its start time: */
       if (ic->tme_sparc_runlength_update_next == 0) {
@@ -668,8 +667,7 @@ _TME_SPARC_EXECUTE_NAME(struct tme_sparc *ic)
 		/* clear the recode status yield flag: */
 		ic->_tme_sparc_recode_status &= ~TME_RECODE_YIELD;
 		tme_thread_yield();
-	      }
-	      return;
+	      } else return;
 	    }
 
 	    /* set PC_next_next from PC_next, since the recode

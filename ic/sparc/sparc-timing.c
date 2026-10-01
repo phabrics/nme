@@ -746,6 +746,7 @@ _tme_sparc_timing_loop_start(struct tme_sparc *ic,
     if(ic->_tme_sparc_recode_status & TME_RECODE_ENABLE) {
       /* set the recode redispatch & yield flags: */
       ic->_tme_sparc_recode_status |= TME_RECODE_REDISPATCH | TME_RECODE_YIELD;
+      return;
     } else {
       /* do the simple yield: */
       tme_thread_yield();

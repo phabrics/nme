@@ -713,6 +713,7 @@ tme_fiber_event_wait(struct tme_fiber_event_set *es, const struct timeval *timeo
   return event_wait(es->es, &timeout_out, out, outlen);
 }
 
+#ifdef HAVE_OPENVPN
 static unsigned int
 tme_fiber_tun_set (struct tuntap *tt,
 		   struct tme_fiber_event_set *es,
@@ -744,6 +745,7 @@ tme_fiber_socket_set (struct link_socket *s,
   es->es = _es;
   return rc;
 }
+#endif
 
 /* this initializes the threads system: */
 void
