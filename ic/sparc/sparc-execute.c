@@ -355,8 +355,8 @@ _TME_SPARC_EXECUTE_NAME(struct tme_sparc *ic)
 	}
       }
 
-      /* if this is a cooperative threading system: */
-      if(tme_thread_cooperative()) {
+      /* if this is a default cooperative threading system (setjmp/longjmp): */
+      if(!thread_mode) {
 	/* unbusy the current instruction TLB entry: */
 	assert (ic->_tme_sparc_itlb_current_token
 		== itlb_current->tme_sparc_tlb_bus_tlb.tme_bus_tlb_token);

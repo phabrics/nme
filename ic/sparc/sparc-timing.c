@@ -703,8 +703,8 @@ _tme_sparc_timing_loop_start(struct tme_sparc *ic,
   assert (ic->_tme_sparc_itlb_current_token != NULL);
   tme_token_unbusy(ic->_tme_sparc_itlb_current_token);
 
-  /* if threads are cooperative: */
-  if (tme_thread_cooperative()) {
+  /* if this is a default cooperative threading system (setjmp/longjmp): */
+  if (!thread_mode) {
 
     /* forget the instruction TLB entry: */
     ic->_tme_sparc_itlb_current_token = NULL;
